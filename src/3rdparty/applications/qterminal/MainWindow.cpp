@@ -135,7 +135,9 @@ void MainWindow::finished(QObject *obj)
 
 void MainWindow::currentChanged(int)
 {
-  tabs->currentWidget()->setFocus(Qt::OtherFocusReason);
+  if(tabs->currentIndex() >= 0) {
+    tabs->currentWidget()->setFocus(Qt::OtherFocusReason);
+  }
 }
 
 void MainWindow::newSession()
