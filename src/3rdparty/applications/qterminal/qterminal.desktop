@@ -1,0 +1,11 @@
+[Translation]
+File=QtopiaApplications
+Context=Applications
+Comment[Desktop Entry/Name]=Terminal
+[Desktop Entry]
+CanFastload=0
+Type=Application
+Exec=qterminal
+Icon=qterminal/konsole
+Name[]=Terminal
+CanFastload=0

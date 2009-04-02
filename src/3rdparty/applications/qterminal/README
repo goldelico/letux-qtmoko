@@ -1,0 +1,23 @@
+Qtopia Port Author: Alessandro Briosi <tsdogs@briosix.org>
+Refernces:
+This is a Qtopia Terminal Console app.
+Source code is taken from KDE4 Konsole for the gui part (is partial not the whole functionality has been ported, and I'm not really sure many is needed on a PXA device anyway ).
+The Pty backend for now it comes from the opie-console as Konsole is still using the K3Process, and I don't quite understand how this ptys and dup of stdin are working :) in QProcess ...
+
+LICENSE: GPL v2 or superior (I think)
+
+DONE: 
+Profiles are somehow handled now... (qterminal.conf and colorscheme + keytab
+Colors and Keyboards should work
+
+TODO:
+Plenty I think, but the app seems to be usable
+Profiles
+
+BIG NOTE:
+there needs to be a dejavu-mono font on the destination device, or at least some fixed font, as the default condensed is misshandled.
+probably adding  would do the job
+-font dejavu_mono:9,10,12
+
+If anyone who reads this file knows how to force this setting into the pro file,drop in a line.
+ 

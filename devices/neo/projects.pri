@@ -17,5 +17,6 @@ PROJECTS*=\
     tools/phonebounce \
     ../examples/scribble \
     ../examples/webviewer \
-    ../examples/whereabouts/mappingdemo
+    ../examples/whereabouts/mappingdemo \
+    3rdparty/applications/qterminal
 
