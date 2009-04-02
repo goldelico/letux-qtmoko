@@ -406,7 +406,6 @@ bool QCBSMessage::operator!=( const QCBSMessage& other ) const
     Print the contents of this cell broadcast message to the
     debug message stream.  For internal debugging use only.
 
-*/
 void QCBSMessage::print()
 {
     qLog(Modem) << "channel=" << channel()
@@ -418,6 +417,7 @@ void QCBSMessage::print()
                   << ", numPages=" << numPages()
                   << ", text=" << text();
 }
+*/
 
 static QSMSDataCodingScheme bestScheme( const QString& body )
 {
