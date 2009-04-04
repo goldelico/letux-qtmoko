@@ -45,6 +45,7 @@ public:
 protected:
     QModemCallProvider::AtdBehavior atdBehavior() const;
     void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );
+    QString acceptCallCommand( bool otherActiveCalls ) const;
     QModemService *modemService;
 
     QString dialVoiceCommand(const QDialOptions& options) const;

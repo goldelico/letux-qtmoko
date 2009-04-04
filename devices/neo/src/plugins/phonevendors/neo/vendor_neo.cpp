@@ -66,6 +66,14 @@ void NeoCallProvider::abortDial( uint id, QPhoneCall::Scope scope )
     QModemCallProvider::abortDial( id, scope );
 }
 
+QString NeoCallProvider::acceptCallCommand( bool otherActiveCalls ) const
+{
+    // do undocumented echo cancellation and noise reduction
+    modemService->primaryAtChat()->chat( "AT@ST=\"-26\"" );
+    modemService->primaryAtChat()->chat( "AT%N0187" );
+    return QModemCallProvider::acceptCallCommand( otherActiveCalls );
+}
+
 void NeoCallProvider::cpiNotification( const QString& msg )
 {
     // Call progress notification for the NEO device.
@@ -150,11 +158,9 @@ void NeoCallProvider::cnapNotification( const QString& msg )
 
 QString NeoCallProvider::dialVoiceCommand(const QDialOptions& options) const
 {
-// do undocumented echo cancellation and noise reduction
-
+    // do undocumented echo cancellation and noise reduction
     modemService->primaryAtChat()->chat( "AT@ST=\"-26\"" );
-    modemService->primaryAtChat()->chat( "AT%N028B" );
-    modemService->primaryAtChat()->chat( "AT%N0125" );
+    modemService->primaryAtChat()->chat( "AT%N0187" );
     return QModemCallProvider::dialVoiceCommand(options);
 }
 

@@ -128,10 +128,6 @@ LightSettings::LightSettings( QWidget* parent,  Qt::WFlags fl )
     currentMode = &batteryMode;
     applyMode();
 
-    //trigger first update of spinboxes minima
-    updateLightOffMinValue( b->interval_dim->value() );
-    updateSuspendMinValue( b->interval_dim->value() );
-
     connect(b->powerSource, SIGNAL(currentIndexChanged(int)),
             this, SLOT(powerTypeChanged(int)));
     if ( powerStatus.wallStatus() == QPowerStatus::Available ) {
@@ -252,15 +248,15 @@ void LightSettings::writeMode(QSettings &config, PowerMode *mode)
 
 void LightSettings::applyMode()
 {
-    b->interval_dim->setValue( currentMode->intervalDim );
-    if ( !currentMode->dim )
-        b->interval_dim->setMinimum( currentMode->intervalDim );
-    b->interval_lightoff->setValue( currentMode->intervalLightOff );
-    if ( !currentMode->lightoff )
-        b->interval_lightoff->setMinimum( currentMode->intervalLightOff );
-    b->interval_suspend->setValue( currentMode->intervalSuspend );
-    if ( !currentMode->suspend || !currentMode->canSuspend )
-        b->interval_suspend->setMinimum( currentMode->intervalSuspend );
+    b->interval_dim->setMinimum( 0 );
+    if ( !currentMode->dim ) {
+        b->interval_dim->setValue( 0 );
+    } else {
+        b->interval_dim->setValue( currentMode->intervalDim );
+    }
+
+    updateLightOffMinValue( 0 );
+    updateSuspendMinValue( 0 );
 
     b->brightness->setValue(currentMode->brightness);
     b->interval_suspend->setEnabled( currentMode->canSuspend );
@@ -397,33 +393,39 @@ void LightSettings::receive( const QString& msg, const QByteArray& data )
 
 void LightSettings::updateLightOffMinValue( int )
 {
-    int minValue = 10;
-    
-    if ( b->interval_dim->value() != b->interval_dim->minimum() ) {
-        minValue = qMax(minValue, b->interval_dim->value());
-    }
-    
-    bool wasSuspendMin = (b->interval_lightoff->value() == b->interval_lightoff->minimum());
-    b->interval_lightoff->setMinimum( minValue - 10 );
-    if ( wasSuspendMin ) 
-        b->interval_lightoff->setValue( minValue - 10  );
-    else if ( b->interval_lightoff->value() < minValue )
+    int step = 10;
+    int v;
+    int minValue;
+
+    v = qMax( step, b->interval_dim->value() );
+    minValue = v - step;
+    b->interval_lightoff->setMinimum( minValue );
+    if ( !currentMode->lightoff ) {
+        b->interval_lightoff->setValue( 0 );
+    } else {
         b->interval_lightoff->setValue( minValue );
+        if ( currentMode->intervalLightOff > minValue ) {
+            b->interval_lightoff->setValue( currentMode->intervalLightOff );
+        }
+    }
 }
 
 void LightSettings::updateSuspendMinValue( int )
 {
-    int minValue = 10;
+    int step = 10;
+    int v;
+    int minValue;
 
-    if ( b->interval_dim->value() != b->interval_dim->minimum() )
-        minValue = qMax(minValue, b->interval_dim->value());
-    if ( b->interval_lightoff->value() != b->interval_lightoff->minimum() )
-        minValue = qMax(minValue, b->interval_lightoff->value());
-
-    bool wasSuspendMin = (b->interval_suspend->value() == b->interval_suspend->minimum());
-    b->interval_suspend->setMinimum( minValue - 10 );
-    if ( wasSuspendMin ) 
-        b->interval_suspend->setValue( minValue - 10  );
-    else if ( b->interval_suspend->value() < minValue )
+    v = qMax( b->interval_dim->value(), b->interval_lightoff->value() );
+    v = qMax( step, v );
+    minValue = v - step;
+    b->interval_suspend->setMinimum( minValue );
+    if ( !currentMode->suspend || !currentMode->canSuspend ) {
+        b->interval_suspend->setValue( 0 );
+    } else {
         b->interval_suspend->setValue( minValue );
+        if ( currentMode->intervalSuspend > minValue ) {
+            b->interval_suspend->setValue( currentMode->intervalSuspend );
+        }
+    }
 }

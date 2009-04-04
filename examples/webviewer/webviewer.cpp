@@ -228,6 +228,11 @@ public:
         urlEdit->setText(str);
     }
 
+    void selectAll()
+    {
+        urlEdit->selectAll();
+    }
+
     QString text()
     {
         return urlEdit->text();
@@ -1121,7 +1126,10 @@ void WebViewer::goTo()
 {
     URLDialog dlg(this);
     if (!view->url().isEmpty())
+    {
         dlg.setText(view->url().toString());
+        dlg.selectAll();
+    }
     if (dlg.exec() == QDialog::Accepted) {
         QUrl url(dlg.text());
         view->load(url);

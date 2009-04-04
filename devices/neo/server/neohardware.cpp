@@ -161,28 +161,27 @@ void NeoHardware::shutdownRequested()
 
 bool NeoHardware::getCableStatus()
 {
-    // since the Neo's do not let us know if we startup with usb connected
-    // any other way..
+    // These code from NeoBattery::isCharging()
+    // Seems better than the origin method
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QString chgState;
-    if (QFileInfo("/sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/chgstate").exists()) {
+    QString chargeFile;
+    if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
          //freerunner
-        chgState = "/sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/chgstate";
-    } else {
-        //1973
-        chgState = "/sys/devices/platform/s3c2410-i2c/i2c-adapter/i2c-0/0-0008/chgstate";
+        chargeFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/status";
     }
-    QString inStr;
 
-    QFile chgstate( chgState);
-    chgstate.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&chgstate);
-    in >> inStr;
 
-    chgstate.close();
-    qLog(PowerManagement) << inStr;
+    QString charge;
 
-    if (inStr.contains("enabled")) {
+    QFile chargeState( chargeFile);
+    chargeState.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&chargeState);
+    in >> charge;
+    qLog(PowerManagement) << __PRETTY_FUNCTION__ << charge;
+    // Charging  Discharging  Not charging
+    // ac        battery      ac/full
+    chargeState.close();
+    if (charge != ("Discharging")) {
         return true;
     } else {
         return false;
