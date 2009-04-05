@@ -41,8 +41,11 @@ QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
     if (QFileInfo("/sys/class/backlight/gta01-bl/max_brightness").exists() ) {
         //ficgta01
         maxBrightness.setFileName("/sys/class/backlight/gta01-bl/max_brightness");
+    } else if (QFileInfo("/sys/class/backlight/gta02-bl/max_brightness").exists() ) {
+        //ficgta02, recent kernel (> 2.6.28 )
+        maxBrightness.setFileName("/sys/class/backlight/gta02-bl/max_brightness");
     } else {
-        //ficgta02
+        //ficgta02, 'older' kernel (< 2.6.28 )
         maxBrightness.setFileName("/sys/class/backlight/pcf50633-bl/max_brightness");
     }
     if(!maxBrightness.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -74,6 +77,9 @@ QTOPIABASE_EXPORT void qpe_setBrightness(int b)
     if (QFileInfo("/sys/class/backlight/gta01-bl/brightness").exists() ) {
         brightness.setFileName("/sys/class/backlight/gta01-bl/brightness");
         //ficgta01
+    } else if (QFileInfo("/sys/class/backlight/gta02-bl/brightness").exists() ) {
+        //ficgta02, recent kernel (> 2.6.28 )
+        brightness.setFileName("/sys/class/backlight/gta02-bl/brightness");
     } else {
         brightness.setFileName("/sys/class/backlight/pcf50633-bl/brightness");
         //ficgta02

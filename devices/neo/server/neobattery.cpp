@@ -67,6 +67,9 @@ NeoBattery::NeoBattery(QObject *parent)
     if ( QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
         QTimer::singleShot( 10 * 1000, this, SLOT(updateSysStatus()));
         isSmartBattery = true;
+    }else if ( QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+        QTimer::singleShot( 10 * 1000, this, SLOT(updateSysStatus()));
+        isSmartBattery = true;
     } else {
 // 1973 only has dumb battery and must use apm
         QTimer::singleShot( 10 * 1000, this, SLOT(updateDumbStatus()));
@@ -204,6 +207,8 @@ bool NeoBattery::isCharging()
     if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
          //freerunner
         chargeFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/status";
+    }else if ( QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+        chargeFile = "/sys/class/power_supply/battery/status";
     }
 
 
@@ -255,6 +260,8 @@ int NeoBattery::getCapacity()
     if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/capacity").exists()) {
          //freerunner
         strCapacityFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/capacity";
+    }else if ( QFileInfo("/sys/class/power_supply/battery/capacity").exists()) {
+        strCapacityFile = "/sys/class/power_supply/battery/capacity";
     }
 
     int capacity = 0;
@@ -287,6 +294,8 @@ int NeoBattery::getTimeToFull()
     if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_full_now").exists()) {
          //freerunner
         timeToFullFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_full_now";
+    }else if ( QFileInfo("/sys/class/power_supply/battery/time_to_full_now").exists()) {
+        timeToFullFile = "/sys/class/power_supply/battery/time_to_full_now";
     }
 
     int time = 0;
@@ -314,6 +323,8 @@ int NeoBattery::getTimeRemaining()
     if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_empty_now").exists()) {
          //freerunner
         timeToEmptyFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_empty_now";
+    }else if ( QFileInfo("/sys/class/power_supply/battery/time_to_empty_now").exists()) {
+        timeToEmptyFile = "/sys/class/power_supply/battery/time_to_empty_now";
     }
 
     int time = 0;
