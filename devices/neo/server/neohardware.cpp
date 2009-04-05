@@ -169,9 +169,9 @@ bool NeoHardware::getCableStatus()
          //freerunner
         chargeFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/status";
     }
-    else if (QFileInfo("/sys/class/power_supply/usb/online").exists()) {
+    else if (QFileInfo("/sys/class/power_supply/battery/status").exists()) {
          //freerunner kernel > 2.6.28
-        chargeFile = "/sys/class/power_supply/usb/online";
+        chargeFile = "/sys/class/power_supply/battery/status";
     }
 
 
@@ -185,7 +185,7 @@ bool NeoHardware::getCableStatus()
     // Charging  Discharging  Not charging
     // ac        battery      ac/full
     chargeState.close();
-    return (charge != ("Discharging") && charge != "0" );
+    return (charge != "Discharging");
 }
 
 #endif // QT_QWS_NEO
