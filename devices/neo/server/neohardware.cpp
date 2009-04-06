@@ -44,6 +44,16 @@
 #include <linux/input.h>
 
 #include <sys/ioctl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <linux/types.h>
+#include <linux/netlink.h>
+#include <QTcpSocket>
+#include <QtDebug>
 
 QTOPIA_TASK(NeoHardware, NeoHardware);
 
@@ -52,9 +62,30 @@ NeoHardware::NeoHardware()
       vsoUsbCable("/Hardware/UsbGadget"),
       vsoNeoHardware("/Hardware/Neo")
 {
+    struct sockaddr_nl snl;
     adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
 
     qLog(Hardware) << "neohardware";
+
+    memset(&snl, 0x00, sizeof(struct sockaddr_nl));
+    snl.nl_family = AF_NETLINK;
+    snl.nl_pid = getpid();
+    snl.nl_groups = 1;
+    snl.nl_groups = 0x1;
+
+    int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+    if (hotplug_sock == -1) {
+        qLog(Hardware) << "error getting uevent socket: "<< strerror(errno);
+    }else{ 
+      if ( bind(hotplug_sock, (struct sockaddr *) &snl, sizeof(struct sockaddr_nl)) < 0) {
+        qLog(Hardware) << "uevent bind failed: "<< strerror(errno);
+        hotplug_sock = -1;
+      }else{
+	    ueventSocket = new QTcpSocket(this);
+	    ueventSocket->setSocketDescriptor(hotplug_sock);
+	    connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+      }
+    }
 
     cableConnected(getCableStatus());
 
@@ -75,6 +106,54 @@ NeoHardware::NeoHardware()
 
 NeoHardware::~NeoHardware()
 {
+}
+
+char *NeoHardware::findAttribute(char *buf, int len, const char *token)
+{
+int pos=0;
+
+  while (pos<len)
+  {
+    if(strncmp(&buf[pos],token,strlen(token))==0)
+	return(&buf[pos+strlen(token)]);
+    pos=pos+strlen(&buf[pos])+1;
+  }
+  return(buf);
+}
+
+void NeoHardware::uevent()
+{
+#define UEVENT_BUFFER_SIZE 1024
+char buffer[UEVENT_BUFFER_SIZE];
+char *value;
+
+  int bytesAvail = ueventSocket->bytesAvailable();
+  int readCount = UEVENT_BUFFER_SIZE;
+  if (bytesAvail < readCount)
+      readCount = bytesAvail;
+  ueventSocket->read(&buffer[0],readCount);
+  if(strcmp(buffer,"change@/class/power_supply/usb")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
+    qDebug()<<"usb change event; online='"<<value<<"'";
+    cableConnected(atoi(value));
+  }else if(strcmp(buffer,"change@/class/power_supply/ac")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
+    qDebug()<<"ac change event; online="<<value;
+  }else if(strcmp(buffer,"change@/class/power_supply/adapter")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
+    qDebug()<<"power_supply change event; online="<<value;
+  }else if(strcmp(buffer,"change@/class/power_supply/battery")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_CAPACITY=");
+    qDebug()<<"battery change event charge%="<<value<<"%";
+  }else if(strcmp(buffer,"change@/class/switch/headset")==0)
+  {
+    value=findAttribute(buffer,readCount,"SWITCH_STATE=");
+    qDebug()<<"headset change event, switch_state="<<value;
+ }
 }
 
 void NeoHardware::findHardwareVersion()
