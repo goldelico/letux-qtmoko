@@ -136,11 +136,12 @@ char *value;
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
     qDebug()<<"usb change event; online='"<<value<<"'";
-    cableConnected(atoi(value));
+    cableConnected(getCableStatus());
   }else if(strcmp(buffer,"change@/class/power_supply/ac")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
     qDebug()<<"ac change event; online="<<value;
+    cableConnected(getCableStatus());
   }else if(strcmp(buffer,"change@/class/power_supply/adapter")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
