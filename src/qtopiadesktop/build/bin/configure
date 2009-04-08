@@ -134,26 +134,28 @@ my %licenseInfo = ();
 $licenseInfo{Product} = "Qt Extended Sync Agent";
 checkLicenseKey();
 
-# Remove any license files left over
-if ( !configopt("depot") ) {
-    for my $location ( $qt_depot_path ) {
-        for my $file ( glob("$location/LICENSE*"), glob("$location/.LICENSE*") ) {
-            unlink $file;
-        }
-        my $source = "$depotpath/".$licenseInfo{LicenseFile};
-        my $dest = "$location/".$licenseInfo{DestLicenseFile};
-        if ( -f $dest ) {
-            unlink $dest;
-        }
-        copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/".$licenseInfo{DestLicenseFile});
-        if ( $isWindows ) {
-            # configure.exe doesn't know about LICENSE.Qtopia, just put in all of the .LICENSE* files
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-US");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION-US");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP-US");
+if ( $qtVersionStr[1] == 4 || ($qtVersionStr[1] == 5 && $qtVersionStr[2] == 0) ) {
+    # Remove any license files left over
+    if ( !configopt("depot") ) {
+        for my $location ( $qt_depot_path ) {
+            for my $file ( glob("$location/LICENSE*"), glob("$location/.LICENSE*") ) {
+                unlink $file;
+            }
+            my $source = "$depotpath/".$licenseInfo{LicenseFile};
+            my $dest = "$location/".$licenseInfo{DestLicenseFile};
+            if ( -f $dest ) {
+                unlink $dest;
+            }
+            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/".$licenseInfo{DestLicenseFile});
+            if ( $isWindows ) {
+                # configure.exe doesn't know about LICENSE.Qtopia, just put in all of the .LICENSE* files
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-US");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION-US");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP-US");
+            }
         }
     }
 }
