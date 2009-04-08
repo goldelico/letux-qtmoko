@@ -3124,7 +3124,7 @@ if ( opt("qtopia_ui") && !opt("qte_config") ) {
                "-DQT_QWS_DISABLE_FLUSHCLIPPING ".
                "-confirm-license";
     if ($qtVersionStr[1] >= 5) {
-        $args .= " -no-scripttools";
+        $args .= " -no-gtkstyle -no-scripttools";
     }
     if ( opt("qws") ) {
         $args .= " -depths 8,16,18,24,32 -qconfig $qconfig".
@@ -5264,6 +5264,9 @@ sub setup_dqt_config
     my $args = "-platform $qt_platform ".
                "-no-stl -no-exceptions -no-webkit -no-xmlpatterns -no-phonon -fast ".
                "-confirm-license";
+    if ( $qtVersionStr[1] >= 5 ) {
+        $args .= " -no-gtkstyle";
+    }
     map { $args .= " -no-sql-".basename($_) if ( basename($_) ne "tmp" && -d $_ ); } glob("$qt_depot_path/src/plugins/sqldrivers/*");
     $args .= " -qt-sql-sqlite";
     $args .= " -no-dbus -no-openssl".

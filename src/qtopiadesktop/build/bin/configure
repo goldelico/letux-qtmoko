@@ -1984,6 +1984,9 @@ sub setup_dqt_config
     my $args = "-platform $qt_platform ".
                "-no-stl -no-exceptions -no-webkit -no-xmlpatterns -no-phonon -no-qt3support -fast ".
                "-confirm-license";
+    if ( $qtVersionStr[1] >= 5 ) {
+        $args .= " -no-gtkstyle";
+    }
     map { $args .= " -no-sql-".basename($_) if ( basename($_) ne "tmp" && -d $_ ); } glob("$qt_depot_path/src/plugins/sqldrivers/*");
     $args .= " -qt-sql-sqlite";
     if ( !$isWindows ) {
