@@ -163,7 +163,8 @@ QRect TestAbstractItemView::visualRect(QString const &item) const
     }
 
     // Allow testwidgets to make decisions based on the view associated with this item.
-    q->model()->setProperty("_q_qtuitest_itemview", q);
+    QVariant view = QVariant::fromValue((QObject*)q);
+    q->model()->setProperty("_q_qtuitest_itemview", view);
     ListWidget* lw = qtuitest_cast<ListWidget*>(q->model());
     if (!lw) {
         QString model;
