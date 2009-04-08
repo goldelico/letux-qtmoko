@@ -1612,7 +1612,11 @@ sub checkLicenseKey
     if ( -f "$depotpath/LICENSE.GPL" && configopt("free") ) {
         $licenseInfo{Product} .= " Open Source";
         $licenseInfo{LicenseFile} = "LICENSE.GPL";
-        $licenseInfo{DestLicenseFile} = "LICENSE.GPL2";
+        if ( $qtVersionStr[1] == 4 ) {
+            $licenseInfo{DestLicenseFile} = "LICENSE.GPL2";
+        } else {
+            $licenseInfo{DestLicenseFile} = "LICENSE.QtopiaGPL";
+        }
     } elsif ( -f "$depotpath/LICENSE.TROLL" && configopt("depot") ) {
         $licenseInfo{Product} .= " Qt Software Internal";
         $licenseInfo{LicenseFile} = "LICENSE.TROLL";
