@@ -1411,12 +1411,14 @@ sub getQtVersion
 
     if ( open(IN, "$qt_depot_path/src/corelib/global/qglobal.h" ) ) {
         while ( defined($_ = <IN>) ) {
-            if ( /QT_VERSION_STR\s+"(\d+\.\d+\.\d+)"/ ) {
+            if ( /QT_VERSION_STR\s+"(\d+\.\d+\.\d+)(.*)"/ ) {
                 $qtVersionStr = $1;
+                my $extra = $2;
                 ( $qtMajorVersion, $qtMinorVersion, $qtRevVersion ) = ( $qtVersionStr =~ /(\d+)\.(\d+)\.(\d+)/ );
                 $qtVersionStr[0] = $qtMajorVersion;
                 $qtVersionStr[1] = $qtMinorVersion;
                 $qtVersionStr[2] = $qtRevVersion;
+                $qtVersionStr[3] = $extra;
                 last;
             }
         }
