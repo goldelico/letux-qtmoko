@@ -74,11 +74,7 @@ static const char* mode_to_string[] = {
 
 static bool setAudioScenario(NeoAudioScenario audioScenario)
 {
-    QString confDir;
-    if (QDir("/etc/alsa").exists())
-        confDir = "/etc/alsa/";
-    else
-        confDir = "/usr/share/openmoko/scenarios/";
+    QString confDir = "/usr/share/openmoko/scenarios/";
 
     const char* mode = mode_to_string[static_cast<int>(audioScenario)];
     QString cmd = "/usr/sbin/alsactl -f " + confDir + mode + ".state restore";

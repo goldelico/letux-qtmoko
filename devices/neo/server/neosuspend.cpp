@@ -66,10 +66,7 @@ bool NeoSuspend::suspend()
 {
     qLog(PowerManagement)<< __PRETTY_FUNCTION__;
 
-      QProcess apm;
-      apm.start("apm", QStringList() << "-s");
-      apm.waitForFinished(-1);
-/*      QFile powerStateFile("/sys/power/state");
+    QFile powerStateFile("/sys/power/state");
     if( !powerStateFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
         qWarning()<<"File not opened";
     } else {
@@ -77,7 +74,6 @@ bool NeoSuspend::suspend()
         out << "mem";
         powerStateFile.close();
     }
-*/
     return true;
 }
 

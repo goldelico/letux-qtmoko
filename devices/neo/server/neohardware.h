@@ -24,6 +24,7 @@
 
 #include <QObject>
 #include <QProcess>
+#include <QTcpSocket>
 
 #include <qvaluespace.h>
 #include <linux/input.h>
@@ -48,15 +49,18 @@ private:
      QValueSpaceObject vsoUsbCable;
      QValueSpaceObject vsoNeoHardware;
      QtopiaIpcAdaptor *adaptor;
+     QTcpSocket *ueventSocket;
 
      void findHardwareVersion();
      QtopiaIpcAdaptor *audioMgr;
-      
+     char *findAttribute(char *buf, int len, const char *token);
+ 
 private slots:
      void headphonesInserted(bool);
      void cableConnected(bool);
      void shutdownRequested();
      bool getCableStatus();
+     void uevent();
 
 };
 

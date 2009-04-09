@@ -155,7 +155,10 @@ NeoKbdHandler::NeoKbdHandler()
 
     powerHandler = new FicLinuxInputEventHandler(this);
     if (QFileInfo("/dev/input/event4").exists()){
-        ok =  powerHandler->openByName("GTA02 PMU events");
+        ok =  powerHandler->openByName("PCF50633 PMU events");
+        if(!ok) {
+            ok =  powerHandler->openByName("GTA02 PMU events");
+        }
         isFreerunner = true;
     } else {
         ok =  powerHandler->openByName("FIC Neo1973 PMU events");
