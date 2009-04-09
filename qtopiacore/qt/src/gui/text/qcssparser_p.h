@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,9 +58,12 @@
 #include <QtCore/QVariant>
 #include <QtCore/QPair>
 #include <QtCore/QSize>
+#include <QtCore/QMultiHash>
 #include <QtGui/QFont>
 #include <QtGui/QPalette>
 #include <QtGui/QIcon>
+#include <QtCore/QSharedData>
+
 
 #ifndef QT_NO_CSSPARSER
 
@@ -350,7 +357,45 @@ struct Q_GUI_EXPORT Value
     inline Value() : type(Unknown) { }
     Type type;
     QVariant variant;
+    QString toString() const;
 };
+
+struct ColorData {
+    ColorData() : type(Invalid) {}
+    ColorData(const QColor &col) : color(col) , type(Color) {}
+    ColorData(QPalette::ColorRole r) : role(r) , type(Role) {}
+    QColor color;
+    QPalette::ColorRole role;
+    enum { Invalid, Color, Role} type;
+};
+
+struct BrushData {
+    BrushData() : type(Invalid) {}
+    BrushData(const QBrush &br) : brush(br) , type(Brush) {}
+    BrushData(QPalette::ColorRole r) : role(r) , type(Role) {}
+    QBrush brush;
+    QPalette::ColorRole role;
+    enum { Invalid, Brush, Role, DependsOnThePalette } type;
+};
+
+struct BackgroundData {
+    BrushData brush;
+    QString image;
+    Repeat repeat;
+    Qt::Alignment alignment;
+};
+
+struct LengthData {
+    qreal number;
+    enum { None, Px, Ex, Em } unit;
+};
+
+struct BorderData {
+    LengthData width;
+    BorderStyle style;
+    BrushData color;
+};
+
 
 // 1. StyleRule - x:hover, y:clicked > z:checked { prop1: value1; prop2: value2; }
 // 2. QVector<Selector> - x:hover, y:clicked z:checked
@@ -360,12 +405,18 @@ struct Q_GUI_EXPORT Value
 
 struct Q_GUI_EXPORT Declaration
 {
-    inline Declaration() : propertyId(UnknownProperty), important(false) {}
-    QString property;
-    Property propertyId;
-    inline bool isEmpty() const { return property.isEmpty() && propertyId == UnknownProperty; }
-    QVector<Value> values;
-    bool important;
+    struct DeclarationData : public QSharedData
+    {
+        inline DeclarationData() : propertyId(UnknownProperty), important(false) {}
+        QString property;
+        Property propertyId;
+        QVector<Value> values;
+        QVariant parsed;
+        bool important;
+    };
+    QExplicitlySharedDataPointer<DeclarationData> d;
+    inline Declaration() : d(new DeclarationData()) {}
+    inline bool isEmpty() const { return d->property.isEmpty() && d->propertyId == UnknownProperty; }
 
     // helper functions
     QColor colorValue(const QPalette & = QPalette()) const;
@@ -441,7 +492,7 @@ const quint64 PseudoClass_Open             = Q_UINT64_C(0x0000040000000000);
 const quint64 PseudoClass_EditFocus        = Q_UINT64_C(0x0000080000000000);
 const quint64 PseudoClass_Alternate        = Q_UINT64_C(0x0000100000000000);
 // The Any specifier is never generated, but can be used as a wildcard in searches.
-const quint64 PseudoClass_Any              = Q_UINT64_C(0x0000200000000000);
+const quint64 PseudoClass_Any              = Q_UINT64_C(0x0000ffffffffffff);
 const int NumPseudos = 46;
 
 struct Q_GUI_EXPORT Pseudo
@@ -523,7 +574,7 @@ struct Q_GUI_EXPORT ValueExtractor
 private:
     void extractFont();
     void borderValue(const Declaration &decl, int *width, QCss::BorderStyle *style, QBrush *color);
-    int lengthValue(const Value& v);
+    LengthData lengthValue(const Value& v);
     void lengthValues(const Declaration &decl, int *m);
     QSize sizeValue(const Declaration &decl);
     void sizeValues(const Declaration &decl, QSize *radii);
@@ -537,8 +588,10 @@ private:
 
 struct Q_GUI_EXPORT StyleRule
 {
+    StyleRule() : order(0) { }
     QVector<Selector> selectors;
     QVector<Declaration> declarations;
+    int order;
 };
 
 struct Q_GUI_EXPORT MediaRule
@@ -570,17 +623,21 @@ enum StyleSheetOrigin {
 struct Q_GUI_EXPORT StyleSheet
 {
     StyleSheet() : origin(StyleSheetOrigin_Unspecified), depth(0) { }
-    QVector<StyleRule> styleRules;
+    QVector<StyleRule> styleRules;  //only contains rules that are not indexed
     QVector<MediaRule> mediaRules;
     QVector<PageRule> pageRules;
     QVector<ImportRule> importRules;
     StyleSheetOrigin origin;
     int depth; // applicable only for inline style sheets
+    QMultiHash<QString, StyleRule> nameIndex;
+    QMultiHash<QString, StyleRule> idIndex;
+    void buildIndexes(Qt::CaseSensitivity nameCaseSensitivity = Qt::CaseSensitive);
 };
 
 class Q_GUI_EXPORT StyleSelector
 {
 public:
+    StyleSelector() : nameCaseSensitivity(Qt::CaseSensitive)  {}
     virtual ~StyleSelector();
 
     union NodePtr {
@@ -591,11 +648,11 @@ public:
     QVector<StyleRule> styleRulesForNode(NodePtr node);
     QVector<Declaration> declarationsForNode(NodePtr node, const char *extraPseudo = 0);
 
-    virtual bool nodeNameEquals(NodePtr node, const QString& nodeName) const = 0;
+    virtual bool nodeNameEquals(NodePtr node, const QString& nodeName) const;
     virtual QString attribute(NodePtr node, const QString &name) const = 0;
-    virtual bool hasAttribute(NodePtr node, const QString &name) const = 0;
     virtual bool hasAttributes(NodePtr node) const = 0;
     virtual QStringList nodeIds(NodePtr node) const;
+    virtual QStringList nodeNames(NodePtr node) const = 0;
     virtual bool isNullNode(NodePtr node) const = 0;
     virtual NodePtr parentNode(NodePtr node) const = 0;
     virtual NodePtr previousSiblingNode(NodePtr node) const = 0;
@@ -604,9 +661,10 @@ public:
 
     QVector<StyleSheet> styleSheets;
     QString medium;
+    Qt::CaseSensitivity nameCaseSensitivity;
 private:
-    void matchRules(NodePtr node, const QVector<StyleRule> &rules, StyleSheetOrigin origin,
-                    int depth, QVector<QPair<int, StyleRule> > *weightedRules);
+    void matchRule(NodePtr node, const StyleRule &rules, StyleSheetOrigin origin,
+                    int depth, QMap<uint, StyleRule> *weightedRules);
     bool selectorMatches(const Selector &rule, NodePtr node);
     bool basicSelectorMatches(const BasicSelector &rule, NodePtr node);
 };
@@ -683,7 +741,7 @@ public:
     Parser(const QString &css, bool file = false);
 
     void init(const QString &css, bool file = false);
-    bool parse(StyleSheet *styleSheet);
+    bool parse(StyleSheet *styleSheet, Qt::CaseSensitivity nameCaseSensitivity = Qt::CaseSensitive);
     Symbol errorSymbol();
 
     bool parseImport(ImportRule *importRule);
@@ -766,6 +824,12 @@ public:
 } // namespace QCss
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE( QCss::BackgroundData )
+Q_DECLARE_METATYPE( QCss::LengthData )
+Q_DECLARE_METATYPE( QCss::BorderData )
+
+
 #endif // QT_NO_CSSPARSER
 
 #endif

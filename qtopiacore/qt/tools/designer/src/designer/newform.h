@@ -1,54 +1,65 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #ifndef NEWFORM_H
 #define NEWFORM_H
 
-#include "ui_newform.h"
-
 #include <QtGui/QDialog>
-#include <QtCore/QStringList>
 
 QT_BEGIN_NAMESPACE
 
-class QIODevice;
-class QTreeWidgetItem;
+namespace qdesigner_internal {
+    class DeviceProfile;
+}
 
+class QDesignerFormEditorInterface;
+class QDesignerNewFormWidgetInterface;
 class QDesignerWorkbench;
+
+class QCheckBox;
+class QAbstractButton;
+class QPushButton;
+class QDialogButtonBox;
+class QImage;
+class QIODevice;
 
 class NewForm: public QDialog
 {
@@ -56,41 +67,36 @@ class NewForm: public QDialog
     Q_DISABLE_COPY(NewForm)
 
 public:
-    NewForm(QDesignerWorkbench *workbench, QWidget *parentWidget, const QString &fileName = QString());
+    NewForm(QDesignerWorkbench *workbench,
+            QWidget *parentWidget,
+            // Use that file name instead of a temporary one
+            const QString &fileName = QString());
+
     virtual ~NewForm();
 
-    QDesignerWorkbench *workbench() const;
+    // Convenience for implementing file dialogs with preview
+    static QImage grabForm(QDesignerFormEditorInterface *core,
+                           QIODevice &file,
+                           const QString &workingDir,
+                           const qdesigner_internal::DeviceProfile &dp);
 
 private slots:
-    void on_buttonBox_clicked(QAbstractButton *btn);
-    void on_treeWidget_itemActivated(QTreeWidgetItem *item);
-    void on_treeWidget_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *);
-    void on_treeWidget_itemPressed(QTreeWidgetItem *item);
+    void slotButtonBoxClicked(QAbstractButton *btn);
     void recentFileChosen();
+    void slotCurrentTemplateChanged(bool templateSelected);
+    void slotTemplateActivated();
 
 private:
-    QPixmap formPreviewPixmap(const QString &fileName) const;
-    QPixmap formPreviewPixmap(QIODevice &file, const QString &workingDir = QString()) const;
-    QPixmap formPreviewPixmap(const QTreeWidgetItem *item);
+    QDialogButtonBox *createButtonBox();
+    bool openTemplate(QString *ptrToErrorMessage);
 
-    void loadFrom(const QString &path, bool resourceFile, const QString &uiExtension,
-                  const QString &selectedItem, QTreeWidgetItem *&selectedItemFound);
-    void loadFrom(const QString &title, const QStringList &nameList,
-                  const QString &selectedItem, QTreeWidgetItem *&selectedItemFound);
-
-private:
-    bool openTemplate(const QTreeWidgetItem *item, QString *errorMessage);
-
-    typedef QMap<const QTreeWidgetItem *, QPixmap> ItemPixmapMap;
-    ItemPixmapMap m_itemPixmapMap;
-
+    QString m_fileName;
+    QDesignerNewFormWidgetInterface *m_newFormWidget;
     QDesignerWorkbench *m_workbench;
-    Ui::NewForm ui;
+    QCheckBox *m_chkShowOnStartup;
     QPushButton *m_createButton;
     QPushButton *m_recentButton;
-    QString m_fileName;
-    QTreeWidgetItem *m_currentItem;
-    QTreeWidgetItem *m_acceptedItem;
+    QDialogButtonBox *m_buttonBox;
 };
 
 QT_END_NAMESPACE

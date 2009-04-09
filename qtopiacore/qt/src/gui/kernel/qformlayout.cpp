@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -183,9 +187,9 @@ public:
 
     int insertRow(int row);
     void insertRows(int row, int count);
-    void setItem(int row, int column, QLayoutItem *item, bool fullRow = false);
-    void setLayout(int row, int column, QLayout *layout, bool fullRow = false);
-    void setWidget(int row, int column, QWidget *widget, bool fullRow = false);
+    void setItem(int row, QFormLayout::ItemRole role, QLayoutItem *item);
+    void setLayout(int row, QFormLayout::ItemRole role, QLayout *layout);
+    void setWidget(int row, QFormLayout::ItemRole role, QWidget *widget);
 
     void arrangeWidgets(const QVector<QLayoutStruct>& layouts, QRect &rect);
 
@@ -944,8 +948,10 @@ void QFormLayoutPrivate::insertRows(int row, int count)
     }
 }
 
-void QFormLayoutPrivate::setItem(int row, int column, QLayoutItem *item, bool fullRow)
+void QFormLayoutPrivate::setItem(int row, QFormLayout::ItemRole role, QLayoutItem *item)
 {
+    const bool fullRow = role == QFormLayout::SpanningRole;
+    const int column =  role == QFormLayout::SpanningRole ? 1 : static_cast<int>(role);
     if (uint(row) >= uint(m_matrix.rowCount()) || uint(column) > 1U) {
         qWarning("QFormLayoutPrivate::setItem: Invalid cell (%d, %d)", row, column);
         return;
@@ -966,21 +972,21 @@ void QFormLayoutPrivate::setItem(int row, int column, QLayoutItem *item, bool fu
     m_things.append(i);
 }
 
-void QFormLayoutPrivate::setLayout(int row, int column, QLayout *layout, bool fullRow)
+void QFormLayoutPrivate::setLayout(int row, QFormLayout::ItemRole role, QLayout *layout)
 {
     if (layout) {
         Q_Q(QFormLayout);
         q->addChildLayout(layout);
-        setItem(row, column, layout, fullRow);
+        setItem(row, role, layout);
     }
 }
 
-void QFormLayoutPrivate::setWidget(int row, int column, QWidget *widget, bool fullRow)
+void QFormLayoutPrivate::setWidget(int row, QFormLayout::ItemRole role, QWidget *widget)
 {
     if (widget) {
         Q_Q(QFormLayout);
         q->addChildWidget(widget);
-        setItem(row, column, QLayoutPrivate::createWidgetItem(q, widget), fullRow);
+        setItem(row, role, QLayoutPrivate::createWidgetItem(q, widget));
     }
 }
 
@@ -1018,10 +1024,9 @@ QStyle* QFormLayoutPrivate::getStyle() const
     \o \bold{Adherence to the different platform's look and feel guidelines.}
 
         For example, the
-        \l{http://developer.apple.com/documentation/UserExperience/Conceptual/OSXHIGuidelines/}{Mac
-        OS X Aqua} and KDE guidelines specify that the labels should
-        be right-aligned, whereas Windows and GNOME applications
-        normally use left-alignment.
+        \l{Mac OS X Aqua} and KDE guidelines specify that the
+        labels should be right-aligned, whereas Windows and GNOME
+        applications normally use left-alignment.
 
     \o \bold{Support for wrapping long rows.}
 
@@ -1062,13 +1067,11 @@ QStyle* QFormLayoutPrivate::getStyle() const
            corresponds to what we would get using a two-column
            QGridLayout.)
         \o Style based on the
-           \l{http://developer.apple.com/documentation/UserExperience/Conceptual/OSXHIGuidelines/}{Mac
-           OS X Aqua guidelines}. Labels are right-aligned, the
-           fields don't grow beyond their size hint, and the form is
-           horizontally centered.
+           \l{Mac OS X Aqua} guidelines. Labels are right-aligned,
+           the fields don't grow beyond their size hint, and the
+           form is horizontally centered.
         \o Recommended style for
-           \l{http://www.kdedevelopers.org/node/2345}{KDE
-           applications}. Similar to MacStyle, except that the form
+           \l{KDE applications}. Similar to MacStyle, except that the form
            is left-aligned and all fields grow to fill the available
            space.
         \o Default style for Qt Extended styles. Labels are right-aligned,
@@ -1146,6 +1149,7 @@ QStyle* QFormLayoutPrivate::getStyle() const
 
     \value LabelRole A label widget.
     \value FieldRole A field widget.
+    \value SpanningRole A widget that spans label and field columns.
 
     \sa itemAt(), getItemPosition()
 */
@@ -1254,9 +1258,9 @@ void QFormLayout::insertRow(int row, QWidget *label, QWidget *field)
 
     row = d->insertRow(row);
     if (label)
-        d->setWidget(row, 0, label);
+        d->setWidget(row, LabelRole, label);
     if (field)
-        d->setWidget(row, 1, field);
+        d->setWidget(row, FieldRole, field);
     invalidate();
 }
 
@@ -1269,9 +1273,9 @@ void QFormLayout::insertRow(int row, QWidget *label, QLayout *field)
 
     row = d->insertRow(row);
     if (label)
-        d->setWidget(row, 0, label);
+        d->setWidget(row, LabelRole, label);
     if (field)
-        d->setLayout(row, 1, field);
+        d->setLayout(row, FieldRole, field);
     invalidate();
 }
 
@@ -1322,7 +1326,7 @@ void QFormLayout::insertRow(int row, QWidget *widget)
     }
 
     row = d->insertRow(row);
-    d->setWidget(row, 1, widget, true /* full row */);
+    d->setWidget(row, SpanningRole, widget);
     invalidate();
 }
 
@@ -1343,7 +1347,7 @@ void QFormLayout::insertRow(int row, QLayout *layout)
     }
 
     row = d->insertRow(row);
-    d->setLayout(row, 1, layout, true /* full row */);
+    d->setLayout(row, SpanningRole, layout);
     invalidate();
 }
 
@@ -1355,7 +1359,7 @@ void QFormLayout::addItem(QLayoutItem *item)
     Q_D(QFormLayout);
 
     int row = d->insertRow(d->m_matrix.rowCount());
-    d->setItem(row, 1, item);
+    d->setItem(row, FieldRole, item);
     invalidate();
 }
 
@@ -1559,11 +1563,19 @@ QLayoutItem *QFormLayout::itemAt(int row, ItemRole role) const
     Q_D(const QFormLayout);
     if (uint(row) >= uint(d->m_matrix.rowCount()))
         return 0;
-    int col = (role == LabelRole) ? 0 : 1;
-    QFormLayoutItem *item = d->m_matrix(row, col);
-    if (!item)
-        return 0;
-    return item->item;
+    switch (role) {
+    case SpanningRole:
+        if (QFormLayoutItem *item = d->m_matrix(row, 1))
+            if (item->fullRow)
+                return item->item;
+        break;
+    case LabelRole:
+    case FieldRole:
+        if (QFormLayoutItem *item = d->m_matrix(row, (role == LabelRole) ? 0 : 1))
+            return item->item;
+        break;
+    }
+    return 0;
 }
 
 /*!
@@ -1586,8 +1598,14 @@ void QFormLayout::getItemPosition(int index, int *rowPtr, ItemRole *rolePtr) con
 
     if (rowPtr)
         *rowPtr = row;
-    if (rolePtr && col != -1)
-        *rolePtr = ItemRole(col);
+    if (rolePtr && col != -1) {
+        const bool spanning = col == 1 && d->m_matrix(row, col)->fullRow;
+        if (spanning) {
+            *rolePtr = SpanningRole;
+        } else {
+            *rolePtr = ItemRole(col);
+        }
+    }
 }
 
 /*!
@@ -1989,6 +2007,7 @@ void QFormLayout::setLayout(int row, ItemRole role, QLayout *layout)
 
     If the cell is already occupied, the \a item is not inserted and an error message is
     sent to the console.
+    The \a item spans both columns.
 
     \warning Do not use this function to add child layouts or child
     widget items. Use setLayout() or setWidget() instead.

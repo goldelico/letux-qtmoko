@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -366,7 +370,7 @@ int HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, CodeMark
 
                 // Add all classes in the modules listed for that edition.
                 QMap<QString, const Node *> editionClasses;
-                foreach (QString moduleName, editionModuleMap[editionName]) {
+                foreach (const QString &moduleName, editionModuleMap[editionName]) {
                     if (moduleClassMap.contains(moduleName))
                         editionClasses.unite(moduleClassMap[moduleName]);
                 }
@@ -375,15 +379,15 @@ int HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, CodeMark
                 // should be excluded from the edition.
 
                 QMultiMap <QString, Node *> groups = tre->groups();
-                foreach (QString groupName, editionGroupMap[editionName]) {
+                foreach (const QString &groupName, editionGroupMap[editionName]) {
                     QList<Node *> groupClasses;
                     if (groupName.startsWith("-")) {
                         groupClasses = groups.values(groupName.mid(1));
-                        foreach (Node *node, groupClasses)
+                        foreach (const Node *node, groupClasses)
                             editionClasses.remove(node->name());
                     } else {
                         groupClasses = groups.values(groupName);
-                        foreach (Node *node, groupClasses)
+                        foreach (const Node *node, groupClasses)
                             editionClasses.insert(node->name(), node);
                     }
                 }
@@ -409,7 +413,7 @@ int HtmlGenerator::generateAtom(const Atom *atom, const Node *relative, CodeMark
             const FakeNode *fake = static_cast<const FakeNode *>(relative);
             if (fake && !fake->groupMembers().isEmpty()) {
                 QMap<QString, const Node *> groupMembersMap;
-                foreach (Node *node, fake->groupMembers()) {
+                foreach (const Node *node, fake->groupMembers()) {
                     if (node->type() == Node::Fake)
                         groupMembersMap[fullName(node, relative, marker)] = node;
                 }
@@ -927,12 +931,12 @@ void HtmlGenerator::generateClassLikeNode(const InnerNode *inner, CodeMarker *ma
                     if (enume->flagsType())
                         names << enume->flagsType()->name();
 
-                    foreach (QString enumName,
+                    foreach (const QString &enumName,
                              enume->doc().enumItemNames().toSet()
                              - enume->doc().omitEnumItemNames().toSet())
                         names << plainCode(marker->markedUpEnumValue(enumName, enume));
                 }
-                foreach (QString name, names)
+                foreach (const QString &name, names)
                     classSection.keywords += qMakePair(name, linkForNode(*m, 0));
             }
             ++m;
@@ -1060,7 +1064,7 @@ void HtmlGenerator::generateFakeNode( const FakeNode *fake, CodeMarker *marker )
 
     if (!fake->groupMembers().isEmpty()) {
         QMap<QString, const Node *> groupMembersMap;
-        foreach (Node *node, fake->groupMembers()) {
+        foreach (const Node *node, fake->groupMembers()) {
             if (node->type() == Node::Class || node->type() == Node::Namespace)
                 groupMembersMap[node->name()] = node;
         }
@@ -1119,7 +1123,7 @@ void HtmlGenerator::generateHeader(const QString& title, const Node *node,
              "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
 
     QString shortVersion;
-    if ( project != "Qtopia" ) {
+    if ( (project != "Qtopia") && (project != "Qt Extended") ) {
         shortVersion = project + " " + shortVersion + ": ";
         if (node && !node->doc().location().isEmpty())
             out() << "<!-- " << node->doc().location().filePath() << " -->\n";
@@ -1233,12 +1237,12 @@ void HtmlGenerator::generateHeader(const QString& title, const Node *node,
         }
     }
 
-    foreach (QString stylesheet, stylesheets) {
+    foreach (const QString &stylesheet, stylesheets) {
         out() << "  <link href=\"" << stylesheet << "\" rel=\"stylesheet\" "
               << "type=\"text/css\" />\n";
     }
 
-    foreach (QString customHeadElement, customHeadElements) {
+    foreach (const QString &customHeadElement, customHeadElements) {
         out() << "  " << customHeadElement << "\n";
     }
 
@@ -1536,7 +1540,7 @@ void HtmlGenerator::generateClassHierarchy(const Node *relative, CodeMarker *mar
             stack.top().erase(stack.top().begin());
 
             QMap<QString, const Node *> newTop;
-            foreach (RelatedClass d, child->derivedClasses()) {
+            foreach (const RelatedClass &d, child->derivedClasses()) {
                 if (d.access != Node::Private)
                     newTop.insert(d.node->name(), d.node);
             }
@@ -1554,7 +1558,7 @@ void HtmlGenerator::generateAnnotatedList(const Node *relative, CodeMarker *mark
     out() << "<p><table width=\"100%\" class=\"annotated\" cellpadding=\"2\" cellspacing=\"1\" border=\"0\">\n";
 
     int row = 0;
-    foreach (QString name, nodeMap.keys()) {
+    foreach (const QString &name, nodeMap.keys()) {
         const Node *node = nodeMap[name];
 
         if (++row % 2 == 1)
@@ -1931,7 +1935,7 @@ void HtmlGenerator::generateOverviewList(const Node *relative, CodeMarker * /* m
     // pages in that group are listed for completeness.
 
     if (!fakeNodeMap.isEmpty()) {
-        foreach (QString groupTitle, groupTitlesMap.keys()) {
+        foreach (const QString &groupTitle, groupTitlesMap.keys()) {
             const FakeNode *groupNode = groupTitlesMap[groupTitle];
             out() << QString("<h3><a href=\"%1\">%2</a></h3>\n").arg(
                         linkForNode(groupNode, relative)).arg(
@@ -1941,8 +1945,8 @@ void HtmlGenerator::generateOverviewList(const Node *relative, CodeMarker * /* m
                 continue;
 
             out() << "<ul>\n";
-            
-            foreach (FakeNode *fakeNode, fakeNodeMap[groupNode]) {
+
+            foreach (const FakeNode *fakeNode, fakeNodeMap[groupNode]) {
                 QString title = fakeNode->fullTitle();
                 if (title.startsWith("The "))
                     title.remove(0, 4);
@@ -1956,7 +1960,7 @@ void HtmlGenerator::generateOverviewList(const Node *relative, CodeMarker * /* m
     if (!uncategorizedNodeMap.isEmpty()) {
         out() << QString("<h3>Miscellaneous</h3>\n");
         out() << "<ul>\n";
-        foreach (FakeNode *fakeNode, uncategorizedNodeMap) {
+        foreach (const FakeNode *fakeNode, uncategorizedNodeMap) {
             QString title = fakeNode->fullTitle();
             if (title.startsWith("The "))
                 title.remove(0, 4);
@@ -1994,7 +1998,7 @@ void HtmlGenerator::generateSectionList(const Section& section, const Node *rela
             if ( twoColumn && i == (int) (section.members.count() + 1) / 2 )
                 out() << "</ul></td><td valign=\"top\"><ul>\n";
 
-            out() << "<li><div class=\"fn\"/>";
+            out() << "<li><div class=\"fn\"></div>";
             if (style == CodeMarker::Accessors)
                 out() << "<b>";
             generateSynopsis( *m, relative, marker, style );
@@ -2021,7 +2025,7 @@ void HtmlGenerator::generateSectionInheritedList(const Section& section, const N
 {
     QList<QPair<ClassNode *, int> >::ConstIterator p = section.inherited.begin();
     while ( p != section.inherited.end() ) {
-        out() << "<li><div class=\"fn\"/>";
+        out() << "<li><div class=\"fn\"></div>";
         out() << (*p).second << " ";
         if ( (*p).second == 1 ) {
             out() << section.singularMember;
@@ -2080,7 +2084,9 @@ QString HtmlGenerator::cleanRef( const QString& ref )
     const QChar c = ref[0];
     const uint u = c.unicode();
 
-    if ( (u >= 'a' && u <= 'z') || (u >= 'A' && u <= 'Z') ) {
+    if ( (u >= 'a' && u <= 'z') ||
+         (u >= 'A' && u <= 'Z') ||
+         (u >= '0' && u <= '9') ) {
         clean += c;
     } else if ( u == '~' ) {
         clean += "dtor.";
@@ -2159,7 +2165,7 @@ QString HtmlGenerator::protect( const QString& string )
         } else if (ch == QLatin1Char('>')) {
             APPEND("&gt;");
         } else if (ch == QLatin1Char('"')) {
-            APPEND("&quot;");        
+            APPEND("&quot;");
         } else if (ch.unicode() > 0x00FF
                    || (ch == QLatin1Char('*') && i + 1 < n && string.at(i) == QLatin1Char('/'))
                    || (ch == QLatin1Char('.') && i > 2 && string.at(i - 2) == QLatin1Char('.'))) {
@@ -2203,7 +2209,7 @@ bool parseArg(const QString &src, const QString &tag, int *pos, int n,
 
 #define SKIP_SPACE \
     while (i < n && src[i] == ' ') \
-        ++i; 
+        ++i;
 
     int i = *pos;
     int j = i;
@@ -2241,7 +2247,7 @@ bool parseArg(const QString &src, const QString &tag, int *pos, int n,
             while (i < n && src[i] != '"')
                 ++i;
             *par1 = QStringRef(&src, j, i - j);
-            SKIP_CHAR('"'); 
+            SKIP_CHAR('"');
             SKIP_SPACE;
         } else {
             if (debug)
@@ -2376,7 +2382,7 @@ QString HtmlGenerator::highlightedCode(const QString& markedCode, CodeMarker *ma
             html += src.at(i++);
         }
     }
- 
+
     // replace all
     // "<@comment>" -> "<span class=\"comment\">";
     // "<@preprocessor>" -> "<span class=\"preprocessor\">";
@@ -2415,7 +2421,7 @@ QString HtmlGenerator::highlightedCode(const QString& markedCode, CodeMarker *ma
         if (src.at(i) == charLangle) {
             bool handled = false;
             for (int k = 0; k != 8; ++k) {
-                const QString & tag = spanTags[2 * k]; 
+                const QString & tag = spanTags[2 * k];
                 if (tag == QStringRef(&src, i, tag.length())) {
                     html += spanTags[2 * k + 1];
                     i += tag.length();
@@ -2960,7 +2966,7 @@ void HtmlGenerator::generateMacRef(const Node *node, CodeMarker *marker)
         return;
 
     QStringList macRefs = marker->macRefsForNode(node);
-    foreach (QString macRef, macRefs)
+    foreach (const QString &macRef, macRefs)
         out() << "<a name=\"" << "//apple_ref/" << macRef << "\" />\n";
 }
 

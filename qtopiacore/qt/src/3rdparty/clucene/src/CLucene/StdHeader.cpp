@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 *
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "CLucene/util/Misc.h"
@@ -46,7 +46,10 @@ char* _LUCENE_BLANK_ASTRING = "";
 #    endif
 #endif
 
-#if defined(LUCENE_DISABLE_HASHING)
+//This causes confusion, because CLucene doesn't really need hashed maps/sets. My experience with the
+//hash maps on linux are that there are no significant improvements in using them (infact it adversely
+//affected performance... therefore we'll just silently ignore
+/*#if defined(LUCENE_DISABLE_HASHING)
 #    if defined(_LUCENE_PRAGMA_WARNINGS)
 #        pragma message ("==================Hashing not available or is disabled! CLucene may run slower than optimal ==================")
 #    else
@@ -54,7 +57,7 @@ char* _LUCENE_BLANK_ASTRING = "";
 #            warning "==================Hashing not available or is disabled! CLucene may run slower than optimal =================="
 #        endif
 #    endif
-#endif
+#endif*/
 #endif
 
 //clears all static memory. do not attempt to do anything else

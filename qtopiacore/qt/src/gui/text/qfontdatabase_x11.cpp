@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -1258,8 +1262,8 @@ static void checkSymbolFont(QtFontFamily *family)
     }
     for (int i = 0; i < f->face->num_charmaps; ++i) {
         FT_CharMap cm = f->face->charmaps[i];
-        if (cm->encoding == ft_encoding_adobe_custom
-            || cm->encoding == ft_encoding_symbol) {
+        if (cm->encoding == FT_ENCODING_ADOBE_CUSTOM
+            || cm->encoding == FT_ENCODING_MS_SYMBOL) {
             for (int x = QFontDatabase::Latin; x < QFontDatabase::Other; ++x)
                 family->writingSystems[x] = QtFontFamily::Unsupported;
             family->writingSystems[QFontDatabase::Other] = QtFontFamily::Supported;
@@ -1573,7 +1577,7 @@ static void FcFontSetRemove(FcFontSet *fs, int at)
 }
 
 static QFontEngine *tryPatternLoad(FcPattern *p, int screen,
-                                   const QFontDef &request, int script)
+                                   const QFontDef &request, int script, FcPattern **matchedPattern = 0)
 {
 #ifdef FONT_MATCH_DEBUG
     FcChar8 *fam;
@@ -1590,9 +1594,16 @@ static QFontEngine *tryPatternLoad(FcPattern *p, int screen,
     FcDefaultSubstitute(pattern);
     FcResult res;
     FcPattern *match = FcFontMatch(0, pattern, &res);
+
+    if (matchedPattern)
+	*matchedPattern = 0;
+
     QFontEngineX11FT *engine = 0;
     if (!match) // probably no fonts available.
         goto done;
+
+    if (matchedPattern)
+	*matchedPattern = FcPatternDuplicate(match);
 
     if (script != QUnicodeTables::Common) {
         // skip font if it doesn't support the language we want
@@ -1633,6 +1644,10 @@ static QFontEngine *tryPatternLoad(FcPattern *p, int screen,
     }
 done:
     FcPatternDestroy(pattern);
+    if (!engine && matchedPattern && *matchedPattern) {
+        FcPatternDestroy(*matchedPattern);
+        *matchedPattern = 0;
+    }
     return engine;
 }
 
@@ -1648,7 +1663,7 @@ FcFontSet *qt_fontSetForPattern(FcPattern *pattern, const QFontDef &request)
     FcBool forceScalable = request.styleStrategy & QFont::ForceOutline;
 
     // remove fonts if they are not scalable (and should be)
-    if (forceScalable) {
+    if (forceScalable && fs) {
         for (int i = 0; i < fs->nfont; ++i) {
             FcPattern *font = fs->fonts[i];
             FcResult res;
@@ -1681,21 +1696,26 @@ static QFontEngine *loadFc(const QFontPrivate *fp, int script, const QFontDef &r
 #endif
 
     QFontEngine *fe = 0;
-    fe = tryPatternLoad(pattern, fp->screen, request, script);
+    FcPattern *matchedPattern = 0;
+    fe = tryPatternLoad(pattern, fp->screen, request, script, &matchedPattern);
     if (!fe) {
         FcFontSet *fs = qt_fontSetForPattern(pattern, request);
 
-        for (int i = 0; !fe && i < fs->nfont; ++i)
-            fe = tryPatternLoad(fs->fonts[i], fp->screen, request, script);
-        FcFontSetDestroy(fs);
+        if (fs) {
+            for (int i = 0; !fe && i < fs->nfont; ++i)
+                fe = tryPatternLoad(fs->fonts[i], fp->screen, request, script, &matchedPattern);
+            FcFontSetDestroy(fs);
+        }
         FM_DEBUG("engine for script %d is %s\n", script, fe ? fe->fontDef.family.toLatin1().data(): "(null)");
     }
     if (fe
         && script == QUnicodeTables::Common
         && !(request.styleStrategy & QFont::NoFontMerging) && !fe->symbol) {
-        fe = new QFontEngineMultiFT(fe, pattern, fp->screen, request);
+        fe = new QFontEngineMultiFT(fe, matchedPattern, pattern, fp->screen, request);
     } else {
         FcPatternDestroy(pattern);
+        if (matchedPattern)
+            FcPatternDestroy(matchedPattern);
     }
     return fe;
 }

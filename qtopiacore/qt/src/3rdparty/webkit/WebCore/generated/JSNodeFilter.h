@@ -18,66 +18,84 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNodeFilter_H
-#define JSNodeFilter_H
+#ifndef JSNodeFilter_h
+#define JSNodeFilter_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class NodeFilter;
 
-class JSNodeFilter : public KJS::DOMObject {
+class JSNodeFilter : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSNodeFilter(KJS::ExecState*, NodeFilter*);
+    JSNodeFilter(PassRefPtr<JSC::Structure>, PassRefPtr<NodeFilter>);
     virtual ~JSNodeFilter();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
     virtual void mark();
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // The Constructor Attribute
-        ConstructorAttrNum, 
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
-        // Functions
-        AcceptNodeFuncNum
-    };
+    // Custom functions
+    JSC::JSValuePtr acceptNode(JSC::ExecState*, const JSC::ArgList&);
     NodeFilter* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<NodeFilter> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, NodeFilter*);
-NodeFilter* toNodeFilter(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, NodeFilter*);
+PassRefPtr<NodeFilter> toNodeFilter(JSC::JSValuePtr);
 
-class JSNodeFilterPrototype : public KJS::JSObject {
+class JSNodeFilterPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSNodeFilterPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSNodeFilterPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSNodeFilterPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSNodeFilterPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsNodeFilterPrototypeFunctionAcceptNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsNodeFilterConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsNodeFilterFILTER_ACCEPT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterFILTER_REJECT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterFILTER_SKIP(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_ALL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_ELEMENT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_ATTRIBUTE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_TEXT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_CDATA_SECTION(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_ENTITY_REFERENCE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_ENTITY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_PROCESSING_INSTRUCTION(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_COMMENT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_DOCUMENT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_DOCUMENT_TYPE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_DOCUMENT_FRAGMENT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFilterSHOW_NOTATION(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

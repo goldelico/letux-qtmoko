@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,11 @@
 
 QT_BEGIN_NAMESPACE
 
+extern bool qt_sendSpontaneousEvent(QObject*, QEvent*);
+#if defined(Q_OS_WINCE)
+extern void qt_wince_show_SIP(bool show);   // defined in qguifunctions_wince.cpp
+#endif
+
 DEFINE_GUID(IID_IActiveIMMApp,
 0x08c0e040, 0x62d1, 0x11d1, 0x93, 0x26, 0x0, 0x60, 0xb0, 0x67, 0xb8, 0x6e);
 
@@ -74,6 +83,10 @@ DEFINE_GUID(IID_IActiveIMMMessagePumpOwner,
 
 interface IEnumRegisterWordW;
 interface IEnumInputContext;
+
+
+bool qt_sendSpontaneousEvent(QObject*, QEvent*);
+
 
 #define IFMETHOD HRESULT STDMETHODCALLTYPE
 
@@ -552,6 +565,7 @@ void QWinInputContext::reset()
         QInputMethodEvent e;
         if (imeComposition)
             e.setCommitString(*imeComposition);
+         imePosition = -1;
          qt_sendSpontaneousEvent(fw, &e);
     }
 
@@ -722,11 +736,19 @@ inline void enableIme(QWidget *w,  bool value)
         // enable ime
         if (defaultContext)
             ImmAssociateContext(w->effectiveWinId(), defaultContext);
+#ifdef Q_OS_WINCE
+        if (qApp->autoSipEnabled())
+            qt_wince_show_SIP(true);
+#endif
     } else {
         // disable ime
         HIMC oldimc = ImmAssociateContext(w->effectiveWinId(), 0);
         if (!defaultContext)
             defaultContext = oldimc;
+#ifdef Q_OS_WINCE
+        if (qApp->autoSipEnabled())
+            qt_wince_show_SIP(false);
+#endif
     }
 }
 

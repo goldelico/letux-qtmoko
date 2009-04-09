@@ -23,136 +23,108 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGScriptElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedString.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGScriptElement.h"
 
-using namespace KJS;
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGScriptElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGScriptElementTableEntries[] =
+static const HashTableValue JSSVGScriptElementTableValues[4] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "type", JSSVGScriptElement::TypeAttrNum, DontDelete, 0, &JSSVGScriptElementTableEntries[3] },
-    { "externalResourcesRequired", JSSVGScriptElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "href", JSSVGScriptElement::HrefAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "type", DontDelete, (intptr_t)jsSVGScriptElementType, (intptr_t)setJSSVGScriptElementType },
+    { "href", DontDelete|ReadOnly, (intptr_t)jsSVGScriptElementHref, (intptr_t)0 },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGScriptElementExternalResourcesRequired, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGScriptElementTable = 
-{
-    2, 4, JSSVGScriptElementTableEntries, 3
-};
+static const HashTable JSSVGScriptElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSSVGScriptElementTableValues, 0 };
+#else
+    { 8, 7, JSSVGScriptElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGScriptElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGScriptElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGScriptElementPrototypeTable = 
-{
-    2, 1, JSSVGScriptElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGScriptElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGScriptElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGScriptElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGScriptElementPrototype::info = { "SVGScriptElementPrototype", 0, &JSSVGScriptElementPrototypeTable, 0 };
+const ClassInfo JSSVGScriptElementPrototype::s_info = { "SVGScriptElementPrototype", 0, &JSSVGScriptElementPrototypeTable, 0 };
 
 JSObject* JSSVGScriptElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGScriptElementPrototype>(exec, "[[JSSVGScriptElement.prototype]]");
+    return getDOMPrototype<JSSVGScriptElement>(exec);
 }
 
-const ClassInfo JSSVGScriptElement::info = { "SVGScriptElement", &JSSVGElement::info, &JSSVGScriptElementTable, 0 };
+const ClassInfo JSSVGScriptElement::s_info = { "SVGScriptElement", &JSSVGElement::s_info, &JSSVGScriptElementTable, 0 };
 
-JSSVGScriptElement::JSSVGScriptElement(ExecState* exec, SVGScriptElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGScriptElement::JSSVGScriptElement(PassRefPtr<Structure> structure, PassRefPtr<SVGScriptElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGScriptElementPrototype::self(exec));
+}
+
+JSObject* JSSVGScriptElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGScriptElementPrototype(JSSVGScriptElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGScriptElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGScriptElement, JSSVGElement>(exec, &JSSVGScriptElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGScriptElement, Base>(exec, &JSSVGScriptElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGScriptElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGScriptElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        SVGScriptElement* imp = static_cast<SVGScriptElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case HrefAttrNum: {
-        SVGScriptElement* imp = static_cast<SVGScriptElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGScriptElement* imp = static_cast<SVGScriptElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+    SVGScriptElement* imp = static_cast<SVGScriptElement*>(static_cast<JSSVGScriptElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
 }
 
-void JSSVGScriptElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGScriptElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGScriptElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGScriptElementTable, this);
+    SVGScriptElement* imp = static_cast<SVGScriptElement*>(static_cast<JSSVGScriptElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGScriptElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGScriptElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        SVGScriptElement* imp = static_cast<SVGScriptElement*>(impl());
+    SVGScriptElement* imp = static_cast<SVGScriptElement*>(static_cast<JSSVGScriptElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+void JSSVGScriptElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGScriptElement, Base>(exec, propertyName, value, &JSSVGScriptElementTable, this, slot);
+}
+
+void setJSSVGScriptElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGScriptElement* imp = static_cast<SVGScriptElement*>(static_cast<JSSVGScriptElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
 }
 
 

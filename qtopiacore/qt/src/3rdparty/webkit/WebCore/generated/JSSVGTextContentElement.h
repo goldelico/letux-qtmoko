@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTextContentElement_H
-#define JSSVGTextContentElement_H
+#ifndef JSSVGTextContentElement_h
+#define JSSVGTextContentElement_h
 
 
 #if ENABLE(SVG)
@@ -31,53 +31,70 @@ namespace WebCore {
 class SVGTextContentElement;
 
 class JSSVGTextContentElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGTextContentElement(KJS::ExecState*, SVGTextContentElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGTextContentElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGTextContentElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        TextLengthAttrNum, LengthAdjustAttrNum, RequiredFeaturesAttrNum, RequiredExtensionsAttrNum, 
-        SystemLanguageAttrNum, XmllangAttrNum, XmlspaceAttrNum, ExternalResourcesRequiredAttrNum, 
-        ClassNameAttrNum, StyleAttrNum, 
-
-        // Functions
-        GetNumberOfCharsFuncNum, GetComputedTextLengthFuncNum, GetSubStringLengthFuncNum, GetStartPositionOfCharFuncNum, 
-        GetEndPositionOfCharFuncNum, GetExtentOfCharFuncNum, GetRotationOfCharFuncNum, GetCharNumAtPositionFuncNum, 
-        SelectSubStringFuncNum, HasExtensionFuncNum
-    };
-};
-
-
-class JSSVGTextContentElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGTextContentElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
-};
-
-class JSSVGTextContentElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGTextContentElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
+
+
+class JSSVGTextContentElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGTextContentElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetNumberOfChars(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetComputedTextLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetSubStringLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetStartPositionOfChar(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetEndPositionOfChar(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetExtentOfChar(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetRotationOfChar(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetCharNumAtPosition(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionSelectSubString(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionHasExtension(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTextContentElementPrototypeFunctionGetPresentationAttribute(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGTextContentElementTextLength(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementLengthAdjust(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementRequiredFeatures(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementRequiredExtensions(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementSystemLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementXmllang(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGTextContentElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGTextContentElementXmlspace(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGTextContentElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGTextContentElementExternalResourcesRequired(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementClassName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGTextContentElementLENGTHADJUST_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementLENGTHADJUST_SPACING(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTextContentElementLENGTHADJUST_SPACINGANDGLYPHS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

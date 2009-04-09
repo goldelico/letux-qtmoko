@@ -32,6 +32,7 @@ Cpp.ignoretokens        = QAXFACTORY_EXPORT \
                           Q_EXPORT_CODECS_KR \
                           Q_EXPORT_PLUGIN \
                           Q_GFX_INLINE \
+                          Q_AUTOTEST_EXPORT \
                           Q_GUI_EXPORT \
                           Q_GUI_EXPORT_INLINE \
                           Q_GUI_EXPORT_STYLE_CDE \
@@ -53,6 +54,7 @@ Cpp.ignoretokens        = QAXFACTORY_EXPORT \
                           Q_SQL_EXPORT \
                           Q_SVG_EXPORT \
                           Q_SCRIPT_EXPORT \
+                          Q_SCRIPTTOOLS_EXPORT \
                           Q_TESTLIB_EXPORT \
                           Q_TYPENAME \
                           Q_XML_EXPORT \

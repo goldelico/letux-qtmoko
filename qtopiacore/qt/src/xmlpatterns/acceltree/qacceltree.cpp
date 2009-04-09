@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -180,9 +184,11 @@ QXmlNodeModelIndex::NodeKind AccelTree::kind(const QXmlNodeModelIndex &ni) const
     return kind(toPreNumber(ni));
 }
 
-QXmlNodeModelIndex::DocumentOrder AccelTree::compareOrder(const QXmlNodeModelIndex &ni1, const QXmlNodeModelIndex &ni2) const
+QXmlNodeModelIndex::DocumentOrder AccelTree::compareOrder(const QXmlNodeModelIndex &ni1,
+                                                          const QXmlNodeModelIndex &ni2) const
 {
-    Q_ASSERT_X(ni1.model() == ni2.model(), Q_FUNC_INFO, "The API docs guarantees the two nodes are from the same model");
+    Q_ASSERT_X(ni1.model() == ni2.model(), Q_FUNC_INFO,
+               "The API docs guarantees the two nodes are from the same model");
 
     const PreNumber p1 = ni1.data();
     const PreNumber p2 = ni2.data();
@@ -210,12 +216,37 @@ QXmlNodeModelIndex AccelTree::parent(const QXmlNodeModelIndex &ni) const
         return createIndex(p);
 }
 
-QXmlNodeModelIndex::Iterator::Ptr AccelTree::iterate(const QXmlNodeModelIndex &ni, QXmlNodeModelIndex::Axis axis) const
+QXmlNodeModelIndex::Iterator::Ptr AccelTree::iterate(const QXmlNodeModelIndex &ni,
+                                                     QXmlNodeModelIndex::Axis axis) const
 {
     const PreNumber preNumber = toPreNumber(ni);
 
     switch(axis)
     {
+        case QXmlNodeModelIndex::AxisChildOrTop:
+        {
+            if(!hasParent(preNumber))
+            {
+                switch(kind(preNumber))
+                {
+                    case QXmlNodeModelIndex::Comment:
+                    /* Fallthrough. */
+                    case QXmlNodeModelIndex::ProcessingInstruction:
+                    /* Fallthrough. */
+                    case QXmlNodeModelIndex::Element:
+                    /* Fallthrough. */
+                    case QXmlNodeModelIndex::Text:
+                        return makeSingletonIterator(ni);
+                    case QXmlNodeModelIndex::Attribute:
+                    /* Fallthrough. */
+                    case QXmlNodeModelIndex::Document:
+                    /* Fallthrough. */
+                    case QXmlNodeModelIndex::Namespace:
+                        /* Do nothing. */;
+                }
+            }
+            /* Else, fallthrough to AxisChild. */
+        }
         case QXmlNodeModelIndex::AxisChild:
         {
             if(hasChildren(preNumber))
@@ -254,6 +285,12 @@ QXmlNodeModelIndex::Iterator::Ptr AccelTree::iterate(const QXmlNodeModelIndex &n
                 return makeEmptyIterator<QXmlNodeModelIndex>();
             else
                 return QXmlNodeModelIndex::Iterator::Ptr(new FollowingIterator(this, preNumber));
+        }
+        case QXmlNodeModelIndex::AxisAttributeOrTop:
+        {
+            if(!hasParent(preNumber) && kind(preNumber) == QXmlNodeModelIndex::Attribute)
+                return makeSingletonIterator(ni);
+            /* Else, falthrough to AxisAttribute. */
         }
         case QXmlNodeModelIndex::AxisAttribute:
         {
@@ -574,7 +611,8 @@ void AccelTree::copyNodeTo(const QXmlNodeModelIndex &node,
             receiver->startElement(elementName);
 
             if(!settings.testFlag(InheritNamespaces))
-                receiver->namespaceBinding(QXmlName(StandardNamespaces::StopNamespaceInheritance, 0, StandardPrefixes::StopNamespaceInheritance));
+                receiver->namespaceBinding(QXmlName(StandardNamespaces::StopNamespaceInheritance, 0,
+                                                    StandardPrefixes::StopNamespaceInheritance));
 
             if(settings.testFlag(PreserveNamespaces))
                 node.sendNamespaces(receiver);

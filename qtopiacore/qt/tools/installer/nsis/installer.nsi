@@ -1,37 +1,41 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+;; Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ;; Contact: Qt Software Information (qt-info@nokia.com)
 ;;
 ;; This file is part of the Windows installer of the Qt Toolkit.
 ;;
+;; $QT_BEGIN_LICENSE:LGPL$
 ;; Commercial Usage
 ;; Licensees holding valid Qt Commercial licenses may use this file in
 ;; accordance with the Qt Commercial License Agreement provided with the
 ;; Software or, alternatively, in accordance with the terms contained in
 ;; a written agreement between you and Nokia.
 ;;
+;; GNU Lesser General Public License Usage
+;; Alternatively, this file may be used under the terms of the GNU Lesser
+;; General Public License version 2.1 as published by the Free Software
+;; Foundation and appearing in the file LICENSE.LGPL included in the
+;; packaging of this file.  Please review the following information to
+;; ensure the GNU Lesser General Public License version 2.1 requirements
+;; will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+;;
+;; In addition, as a special exception, Nokia gives you certain
+;; additional rights. These rights are described in the Nokia Qt LGPL
+;; Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+;; package.
 ;;
 ;; GNU General Public License Usage
 ;; Alternatively, this file may be used under the terms of the GNU
-;; General Public License versions 2.0 or 3.0 as published by the Free
-;; Software Foundation and appearing in the file LICENSE.GPL included in
-;; the packaging of this file.  Please review the following information
-;; to ensure GNU General Public Licensing requirements will be met:
-;; http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-;; http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-;; exception, Nokia gives you certain additional rights. These rights
-;; are described in the Nokia Qt GPL Exception version 1.3, included in
-;; the file GPL_EXCEPTION.txt in this package.
-;;
-;; Qt for Windows(R) Licensees
-;; As a special exception, Nokia, as the sole copyright holder for Qt
-;; Designer, grants users of the Qt/Eclipse Integration plug-in the
-;; right for the Qt/Eclipse Integration to link to functionality
-;; provided by Qt Designer and its related libraries.
+;; General Public License version 3.0 as published by the Free Software
+;; Foundation and appearing in the file LICENSE.GPL included in the
+;; packaging of this file.  Please review the following information to
+;; ensure the GNU General Public License version 3.0 requirements will be
+;; met: http://www.gnu.org/copyleft/gpl.html.
 ;;
 ;; If you are unsure which license is appropriate for your use, please
 ;; contact the sales department at qt-sales@nokia.com.
+;; $QT_END_LICENSE$
 ;;
 ;; This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 ;; WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -43,7 +47,7 @@
 !include "includes\global.nsh"
 
 !define PRODUCT_PUBLISHER "Nokia Corporation and/or its subsidiary(-ies)"
-!define PRODUCT_WEB_SITE "http://www.trolltech.com"
+!define PRODUCT_WEB_SITE "http://qtsoftware.com"
 
 !define INSTALL_ICON "images\install.ico"
 !define WELCOME_PAGE_ICON "images\qt-wizard.bmp"
@@ -210,7 +214,7 @@ Section -CommonSection
   WriteRegStr SHCTX "$PRODUCT_UNIQUE_KEY" "Publisher" "${PRODUCT_PUBLISHER}"
 
   WriteIniStr "$INSTDIR\${PRODUCT_NAME}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
-  CreateShortCut "$SMPROGRAMS\$STARTMENU_STRING\Trolltech.com.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
+  CreateShortCut "$SMPROGRAMS\$STARTMENU_STRING\QtSoftware.com.lnk" "$INSTDIR\${PRODUCT_NAME}.url"
   CreateShortCut "$SMPROGRAMS\$STARTMENU_STRING\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.lnk" "$INSTDIR\uninst.exe"
   SetOutPath "$INSTDIR"
 SectionEnd
@@ -401,7 +405,7 @@ Section Uninstall
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
   Delete "$INSTDIR\uninst.exe"
   Delete "$SMPROGRAMS\$STARTMENU_STRING\Uninstall ${PRODUCT_NAME} ${PRODUCT_VERSION}.lnk"
-  Delete "$SMPROGRAMS\$STARTMENU_STRING\Trolltech.com.lnk"
+  Delete "$SMPROGRAMS\$STARTMENU_STRING\QtSoftware.com.lnk"
 
   RMDir "$SMPROGRAMS\$STARTMENU_STRING"
   RMDir "$INSTDIR"

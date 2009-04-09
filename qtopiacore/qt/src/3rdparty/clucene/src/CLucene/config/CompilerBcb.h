@@ -31,19 +31,17 @@
 //java long type
 typedef __int64 int64_t; 
 typedef unsigned __int64 uint64_t;
-//#define LUCENE_INT64_MAX _I64_MAX
 
 //java int type
 typedef int int32_t;
 typedef unsigned int uint32_t;
-//#define LUCENE_INT32_MAX INT_MAX
 
 //java byte type
 typedef unsigned char uint8_t;
-//#define LUCENE_UINT8_MAX UCHAR_MAX
 
 //floating point type
-typedef double float_t;
+//we are going to use qreal now
+//typedef double float_t;
 
 //required type
 typedef int intptr_t;

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,7 +50,7 @@
 #include "qfiledialog.h"
 #include <QtCore/qdir.h>
 #include <QtGui/qfilesystemmodel.h>
-#include <QtGui/qitemdelegate.h>
+#include <QtGui/qstyleditemdelegate.h>
 #include <QtGui/qprinter.h>
 
 #include <QtGui/qdialogbuttonbox.h>
@@ -66,6 +70,8 @@
 #include <private/qprinterinfo_unix_p.h>
 
 QT_BEGIN_NAMESPACE
+
+extern int qt_printerRealNumCopies(QPaintEngine *);
 
 class QOptionTreeItem;
 class QPPDOptionsModel;
@@ -227,11 +233,11 @@ public:
     void parseChoices(QOptionTreeItem* parent);
 };
 
-class QPPDOptionsEditor : public QItemDelegate
+class QPPDOptionsEditor : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    QPPDOptionsEditor(QObject* parent = 0) : QItemDelegate(parent) {};
+    QPPDOptionsEditor(QObject* parent = 0) : QStyledItemDelegate(parent) {};
     ~QPPDOptionsEditor() {};
 
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const;
@@ -257,16 +263,12 @@ QPrintPropertiesDialog::QPrintPropertiesDialog(QAbstractPrintDialog *parent)
     this->setLayout(lay);
     QWidget *content = new QWidget(this);
     widget.setupUi(content);
-    m_buttons = new QDialogButtonBox(QDialogButtonBox::Close, Qt::Horizontal, this);
+    m_buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
     lay->addWidget(content);
     lay->addWidget(m_buttons);
 
-#if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
-    widget.cupsPropertiesPage->setEnabled(false); // will be enabled if this is a cups printer.
-#else
-    widget.tabs->removeTab(1);
-#endif
-    connect(m_buttons->button(QDialogButtonBox::Close), SIGNAL(released()), this, SLOT(accept()));
+    connect(m_buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(accept()));
+    connect(m_buttons->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(reject()));
 }
 
 QPrintPropertiesDialog::~QPrintPropertiesDialog()
@@ -322,9 +324,9 @@ void QPrintPropertiesDialog::selectPrinter()
             for (int i = 0; i < m_cupsOptionsModel->rowCount(); ++i)
                 widget.treeView->expand(m_cupsOptionsModel->index(i,0));
 
-            widget.cupsPropertiesPage->setEnabled(true);
+            widget.tabs->setTabEnabled(1, true); // enable the advanced tab
         } else {
-            widget.cupsPropertiesPage->setEnabled(false);
+            widget.tabs->setTabEnabled(1, false);
         }
 
     } else
@@ -339,7 +341,7 @@ void QPrintPropertiesDialog::selectPdfPsPrinter(const QPrinter *p)
 {
     widget.treeView->setModel(0);
     widget.pageSetup->selectPdfPsPrinter(p);
-    widget.cupsPropertiesPage->setEnabled(false);
+    widget.tabs->setTabEnabled(1, false); // disable the advanced tab
 }
 
 void QPrintPropertiesDialog::showEvent(QShowEvent* event)
@@ -436,7 +438,7 @@ void QPrintDialogPrivate::applyPrinterProperties(QPrinter *p)
     case QPrinter::DuplexShortSide:
         options.duplexShort->setChecked(true); break;
     }
-    options.copies->setValue(p->numCopies());
+    options.copies->setValue(qt_printerRealNumCopies(p->paintEngine()));
     options.collate->setChecked(p->collateCopies());
     options.reverse->setChecked(p->pageOrder() == QPrinter::LastPageFirst);
     top->d->applyPrinterProperties(p);
@@ -571,7 +573,18 @@ void QPrintDialogPrivate::selectPrinter(QCUPSSupport *cups)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-QPrintDialog::QPrintDialog(QPrinter *printer, QWidget *parent) : QAbstractPrintDialog(*(new QPrintDialogPrivate), printer, parent)
+QPrintDialog::QPrintDialog(QPrinter *printer, QWidget *parent)
+    : QAbstractPrintDialog(*(new QPrintDialogPrivate), printer, parent)
+{
+    Q_D(QPrintDialog);
+    d->init();
+}
+
+/*!
+    Constructs a print dialog with the given \a parent.
+*/
+QPrintDialog::QPrintDialog(QWidget *parent)
+    : QAbstractPrintDialog(*(new QPrintDialogPrivate), 0, parent)
 {
     Q_D(QPrintDialog);
     d->init();
@@ -581,12 +594,18 @@ QPrintDialog::~QPrintDialog()
 {
 }
 
-int QPrintDialog::exec()
+void QPrintDialog::setVisible(bool visible)
 {
     Q_D(QPrintDialog);
 
-    d->updateWidgets();
+    if (visible)
+        d->updateWidgets();
 
+    QAbstractPrintDialog::setVisible(visible);
+}
+
+int QPrintDialog::exec()
+{
     return QDialog::exec();
 }
 
@@ -648,13 +667,16 @@ QUnixPrintWidgetPrivate::QUnixPrintWidgetPrivate(QUnixPrintWidget *p)
         cupsPrinters = cups->availablePrinters();
 
         for (int i = 0; i < cupsPrinterCount; ++i) {
-            widget.printers->addItem(QString::fromLocal8Bit(cupsPrinters[i].name));
+            QString printerName(QString::fromLocal8Bit(cupsPrinters[i].name));
+            if (cupsPrinters[i].instance)
+                printerName += QLatin1String("/") + QString::fromLocal8Bit(cupsPrinters[i].instance);
+
+            widget.printers->addItem(printerName);
             if (cupsPrinters[i].is_default)
                 widget.printers->setCurrentIndex(i);
         }
-        // the model depends on valid ppd. so before enabling
-        // the properties button we make sure the ppd is in fact
-        // valid.
+        // the model depends on valid ppd. so before enabling the
+        // properties button we make sure the ppd is in fact valid.
         if (cupsPrinterCount && cups->currentPPD()) {
             widget.properties->setEnabled(true);
         }
@@ -710,6 +732,8 @@ void QUnixPrintWidgetPrivate::updateWidget()
             widget.printers->setCurrentIndex(widget.printers->count() - 2);
         else if (printer->outputFormat() == QPrinter::PostScriptFormat)
             widget.printers->setCurrentIndex(widget.printers->count() - 1);
+        widget.filename->setEnabled(true);
+        widget.lOutput->setEnabled(true);
     }
 
     widget.filename->setVisible(printToFile);
@@ -728,7 +752,8 @@ QUnixPrintWidgetPrivate::~QUnixPrintWidgetPrivate()
 
 void QUnixPrintWidgetPrivate::_q_printerChanged(int index)
 {
-    Q_ASSERT(index >= 0);
+    if (index < 0)
+        return;
     const int printerCount = widget.printers->count();
     widget.filename->setEnabled(false);
     widget.lOutput->setEnabled(false);
@@ -736,11 +761,19 @@ void QUnixPrintWidgetPrivate::_q_printerChanged(int index)
     if (filePrintersAdded) {
         Q_ASSERT(index != printerCount - 3); // separator
         if (index > printerCount - 3) { // PDF or postscript
+            bool pdfPrinter = (index == printerCount - 2);
             widget.location->setText(QPrintDialog::tr("Local file"));
-            widget.type->setText(QPrintDialog::tr("Write %1 file").arg(index == printerCount - 2 ?
-                                                                       QString::fromLatin1("PDF") : QString::fromLatin1("Postscript")));
+            widget.type->setText(QPrintDialog::tr("Write %1 file").arg(pdfPrinter ? QString::fromLatin1("PDF")
+                                                                       : QString::fromLatin1("PostScript")));
             widget.properties->setEnabled(true);
             widget.filename->setEnabled(true);
+            QString filename = widget.filename->text();
+            QString suffix = QFileInfo(filename).suffix();
+            if (pdfPrinter && suffix == QLatin1String("ps"))
+                filename = filename.replace(QLatin1String(".ps"), QLatin1String(".pdf"));
+            if (!pdfPrinter && suffix == QLatin1String("pdf"))
+                filename = filename.replace(QLatin1String(".pdf"), QLatin1String(".ps"));
+            widget.filename->setText(filename);
             widget.lOutput->setEnabled(true);
             if (propertiesDialog)
                 propertiesDialog->selectPdfPsPrinter(printer);
@@ -833,15 +866,21 @@ void QUnixPrintWidgetPrivate::applyPrinterProperties(QPrinter *p)
         if (cur.left(home.length()) != home)
             cur = home;
 #ifdef Q_WS_X11
-        if (p->docName().isEmpty())
-            cur += QLatin1String("print.pdf");
-        else {
+        if (p->docName().isEmpty()) {
+            if (p->outputFormat() == QPrinter::PostScriptFormat)
+                cur += QLatin1String("print.ps");
+            else
+                cur += QLatin1String("print.pdf");
+        } else {
             QRegExp re(QString::fromLatin1("(.*)\\.\\S+"));
             if (re.exactMatch(p->docName()))
                 cur += re.cap(1);
             else
                 cur += p->docName();
-            cur += QLatin1String(".pdf");
+            if (p->outputFormat() == QPrinter::PostScriptFormat)
+                cur += QLatin1String(".ps");
+            else
+                cur += QLatin1String(".pdf");
         }
 #endif
         widget.filename->setText(cur);
@@ -903,12 +942,17 @@ void QUnixPrintWidgetPrivate::_q_btnPropertiesClicked()
 {
     if (propertiesDialog == 0) {
         propertiesDialog = new QPrintPropertiesDialog(q);
+        propertiesDialog->setResult(QDialog::Rejected);
+    }
+
+    if (propertiesDialog->result() == QDialog::Rejected) {
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
         propertiesDialog->setCups(cups);
 #endif
         propertiesDialog->applyPrinterProperties(q->printer());
 
-        if (widget.printers->currentIndex() > widget.printers->count() - 3) // PDF or postscript
+        if (q->isOptionEnabled(QPrintDialog::PrintToFile)
+            && (widget.printers->currentIndex() > widget.printers->count() - 3)) // PDF or postscript
             propertiesDialog->selectPdfPsPrinter(q->printer());
         else
             propertiesDialog->selectPrinter();
@@ -938,7 +982,7 @@ void QUnixPrintWidgetPrivate::setupPrinter()
         printer->setOutputFileName(QString());
     }
 
-    if (propertiesDialog)
+    if (propertiesDialog && propertiesDialog->result() == QDialog::Accepted)
         propertiesDialog->setupPrinter();
 }
 

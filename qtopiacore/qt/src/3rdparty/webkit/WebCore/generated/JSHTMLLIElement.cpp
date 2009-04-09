@@ -25,143 +25,147 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLLIElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLLIElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLLIElementTableEntries[] =
+static const HashTableValue JSHTMLLIElementTableValues[4] =
 {
-    { "constructor", JSHTMLLIElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "type", JSHTMLLIElement::TypeAttrNum, DontDelete, 0, 0 },
-    { "value", JSHTMLLIElement::ValueAttrNum, DontDelete, 0, 0 }
+    { "type", DontDelete, (intptr_t)jsHTMLLIElementType, (intptr_t)setJSHTMLLIElementType },
+    { "value", DontDelete, (intptr_t)jsHTMLLIElementValue, (intptr_t)setJSHTMLLIElementValue },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLLIElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLIElementTable = 
-{
-    2, 3, JSHTMLLIElementTableEntries, 3
-};
+static const HashTable JSHTMLLIElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSHTMLLIElementTableValues, 0 };
+#else
+    { 9, 7, JSHTMLLIElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLLIElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLLIElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLIElementConstructorTable = 
-{
-    2, 1, JSHTMLLIElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLLIElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLLIElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLLIElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLLIElementConstructor : public DOMObject {
 public:
     JSHTMLLIElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLLIElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLLIElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLLIElementConstructor::info = { "HTMLLIElementConstructor", 0, &JSHTMLLIElementConstructorTable, 0 };
+const ClassInfo JSHTMLLIElementConstructor::s_info = { "HTMLLIElementConstructor", 0, &JSHTMLLIElementConstructorTable, 0 };
 
 bool JSHTMLLIElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLLIElementConstructor, DOMObject>(exec, &JSHTMLLIElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLLIElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLLIElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLLIElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLIElementPrototypeTable = 
-{
-    2, 1, JSHTMLLIElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLLIElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLLIElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLLIElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLLIElementPrototype::info = { "HTMLLIElementPrototype", 0, &JSHTMLLIElementPrototypeTable, 0 };
+const ClassInfo JSHTMLLIElementPrototype::s_info = { "HTMLLIElementPrototype", 0, &JSHTMLLIElementPrototypeTable, 0 };
 
 JSObject* JSHTMLLIElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLLIElementPrototype>(exec, "[[JSHTMLLIElement.prototype]]");
+    return getDOMPrototype<JSHTMLLIElement>(exec);
 }
 
-const ClassInfo JSHTMLLIElement::info = { "HTMLLIElement", &JSHTMLElement::info, &JSHTMLLIElementTable, 0 };
+const ClassInfo JSHTMLLIElement::s_info = { "HTMLLIElement", &JSHTMLElement::s_info, &JSHTMLLIElementTable, 0 };
 
-JSHTMLLIElement::JSHTMLLIElement(ExecState* exec, HTMLLIElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLLIElement::JSHTMLLIElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLLIElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLLIElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLLIElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLLIElementPrototype(JSHTMLLIElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLLIElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLLIElement, JSHTMLElement>(exec, &JSHTMLLIElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLLIElement, Base>(exec, &JSHTMLLIElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLLIElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLLIElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        HTMLLIElement* imp = static_cast<HTMLLIElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case ValueAttrNum: {
-        HTMLLIElement* imp = static_cast<HTMLLIElement*>(impl());
-
-        return jsNumber(imp->value());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLLIElement* imp = static_cast<HTMLLIElement*>(static_cast<JSHTMLLIElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
 }
 
-void JSHTMLLIElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLLIElementValue(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLLIElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLLIElementTable, this);
+    HTMLLIElement* imp = static_cast<HTMLLIElement*>(static_cast<JSHTMLLIElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->value());
 }
 
-void JSHTMLLIElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLLIElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        HTMLLIElement* imp = static_cast<HTMLLIElement*>(impl());
-
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ValueAttrNum: {
-        HTMLLIElement* imp = static_cast<HTMLLIElement*>(impl());
-
-        imp->setValue(value->toInt32(exec));
-        break;
-    }
-    }
+    return static_cast<JSHTMLLIElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLLIElement::getConstructor(ExecState* exec)
+void JSHTMLLIElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLLIElementConstructor>(exec, "[[HTMLLIElement.constructor]]");
+    lookupPut<JSHTMLLIElement, Base>(exec, propertyName, value, &JSHTMLLIElementTable, this, slot);
 }
+
+void setJSHTMLLIElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLIElement* imp = static_cast<HTMLLIElement*>(static_cast<JSHTMLLIElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLIElementValue(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLIElement* imp = static_cast<HTMLLIElement*>(static_cast<JSHTMLLIElement*>(thisObject)->impl());
+    imp->setValue(value->toInt32(exec));
+}
+
+JSValuePtr JSHTMLLIElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLLIElementConstructor>(exec);
+}
+
 
 }

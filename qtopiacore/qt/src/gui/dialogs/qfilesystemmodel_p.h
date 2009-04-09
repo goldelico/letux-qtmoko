@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -80,8 +84,13 @@ public:
     {
     public:
         QFileSystemNode(const QString &filename = QString(), QFileSystemNode *p = 0)
-            : fileName(filename), populatedChildren(false), parent(p), info(0) {}
+            : fileName(filename), populatedChildren(false), isVisible(false), parent(p), info(0) {}
         ~QFileSystemNode() {
+            QHash<QString, QFileSystemNode*>::const_iterator i = children.constBegin();
+            while (i != children.constEnd()) {
+                    delete i.value();
+                    ++i;
+            }
             delete info;
             info = 0;
             parent = 0;
@@ -89,10 +98,10 @@ public:
 
         QString fileName;
 
-        inline qint64 size() const { if (info && !info->isDir()) return info->size; return 0; }
+        inline qint64 size() const { if (info && !info->isDir()) return info->size(); return 0; }
         inline QString type() const { if (info) return info->displayType; return QLatin1String(""); }
-        inline QDateTime lastModified() const { if (info) return info->lastModified; return QDateTime(); }
-        inline QFile::Permissions permissions() const { if (info) return info->permissions; return 0; }
+        inline QDateTime lastModified() const { if (info) return info->lastModified(); return QDateTime(); }
+        inline QFile::Permissions permissions() const { if (info) return info->permissions(); return 0; }
         inline bool isReadable() const { return ((permissions() & QFile::ReadUser) != 0); }
         inline bool isWritable() const { return ((permissions() & QFile::WriteUser) != 0); }
         inline bool isExecutable() const { return ((permissions() & QFile::ExeUser) != 0); }
@@ -105,25 +114,25 @@ public:
         }
         inline bool isFile() const { if (info) return info->isFile(); return true; }
         inline bool isSystem() const { if (info) return info->isSystem(); return true; }
-        inline bool isHidden() const { if (info) return info->isHidden; return false; }
-        inline bool isSymLink() const { if (info) return info->isSymLink; return false; }
-        inline bool caseSensitive() const { if (info) return info->caseSensitive; return false; }
+        inline bool isHidden() const { if (info) return info->isHidden(); return false; }
+        inline bool isSymLink() const { if (info) return info->isSymLink(); return false; }
+        inline bool caseSensitive() const { if (info) return info->isCaseSensitive(); return false; }
         inline QIcon icon() const { if (info) return info->icon; return QIcon(); }
 
         inline bool operator <(const QFileSystemNode &node) const {
             if (caseSensitive() || node.caseSensitive())
                 return fileName < node.fileName;
-            return fileName.toLower() < node.fileName.toLower();
+            return QString::compare(fileName, node.fileName, Qt::CaseInsensitive) < 0;
         }
         inline bool operator >(const QString &name) const {
             if (caseSensitive())
                 return fileName > name;
-            return fileName.toLower() > name.toLower();
+            return QString::compare(fileName, name, Qt::CaseInsensitive) > 0;
         }
         inline bool operator <(const QString &name) const {
             if (caseSensitive())
                 return fileName < name;
-            return fileName.toLower() < name.toLower();
+            return QString::compare(fileName, name, Qt::CaseInsensitive) < 0;
         }
         inline bool operator !=(const QExtendedInformation &fileInfo) const {
             return !operator==(fileInfo);
@@ -131,7 +140,7 @@ public:
         bool operator ==(const QString &name) const {
             if (caseSensitive())
                 return fileName == name;
-            return fileName.toLower() == name.toLower();
+            return QString::compare(fileName, name, Qt::CaseInsensitive) == 0;
         }
         bool operator ==(const QExtendedInformation &fileInfo) const {
             return info && (*info == fileInfo);
@@ -141,33 +150,36 @@ public:
 
         void populate(const QExtendedInformation &fileInfo) {
             if (!info)
-                info = new QExtendedInformation();
+                info = new QExtendedInformation(fileInfo.fileInfo());
             (*info) = fileInfo;
         }
 
         // children shouldn't normally be accessed directly, use node()
-        inline int visibleLocation(int childRow) {
-            return visibleChildren.indexOf(childRow);
+        inline int visibleLocation(QString childName) {
+            return visibleChildren.indexOf(childName);
         }
         void updateIcon(QFileIconProvider *iconProvider, const QString &path) {
             if (info)
                 info->icon = iconProvider->icon(QFileInfo(path));
-            for (int i = 0; i < children.count(); ++i) {
-                children[i].updateIcon(iconProvider, path + QLatin1Char('/') + children[i].fileName);
+            QHash<QString, QFileSystemNode *>::const_iterator iterator;
+            for(iterator = children.constBegin() ; iterator != children.constEnd() ; ++iterator) {
+                iterator.value()->updateIcon(iconProvider, path + QLatin1Char('/') + iterator.value()->fileName);
             }
         }
 
         void retranslateStrings(QFileIconProvider *iconProvider, const QString &path) {
             if (info)
                 info->displayType = iconProvider->type(QFileInfo(path));
-            for (int i = 0; i < children.count(); ++i) {
-                children[i].retranslateStrings(iconProvider, path + QLatin1Char('/') + children[i].fileName);
+            QHash<QString, QFileSystemNode *>::const_iterator iterator;
+            for(iterator = children.constBegin() ; iterator != children.constEnd() ; ++iterator) {
+                 iterator.value()->retranslateStrings(iconProvider, path + QLatin1Char('/') + iterator.value()->fileName);
             }
         }
 
         bool populatedChildren;
-        QList<QFileSystemNode> children;
-        QList<int> visibleChildren;
+        bool isVisible;
+        QHash<QString,QFileSystemNode *> children;
+        QList<QString> visibleChildren;
         QFileSystemNode *parent;
 
     private:
@@ -203,8 +215,8 @@ public:
     QModelIndex index(const QFileSystemNode *node) const;
     bool filtersAcceptsNode(const QFileSystemNode *node) const;
     bool passNameFilters(const QFileSystemNode *node) const;
-    void removeNode(QFileSystemNode *parentNode, int itemLocation);
-    int addNode(QFileSystemNode *parentNode, const QString &fileName);
+    void removeNode(QFileSystemNode *parentNode, const QString &name);
+    QFileSystemNode* addNode(QFileSystemNode *parentNode, const QString &fileName);
     void addVisibleFiles(QFileSystemNode *parentNode, const QStringList &newFiles);
     void removeVisibleFile(QFileSystemNode *parentNode, int visibleLocation);
     void sortChildren(int column, Qt::SortOrder order, const QModelIndex &parent);
@@ -232,34 +244,12 @@ public:
 
     static bool caseInsensitiveLessThan(const QString &s1, const QString &s2)
     {
-       return s1.toLower() < s2.toLower();
+       return QString::compare(s1, s2, Qt::CaseInsensitive) < 0;
     }
 
     static bool nodeCaseInsensitiveLessThan(const QFileSystemModelPrivate::QFileSystemNode &s1, const QFileSystemModelPrivate::QFileSystemNode &s2)
     {
-       return s1.fileName.toLower() < s2.fileName.toLower();
-    }
-
-    inline int findChild(const QFileSystemNode *parent, const QFileSystemNode &node) const {
-        QList<QFileSystemNode>::const_iterator iterator;
-        if (parent->caseSensitive())
-            iterator = (qBinaryFind(parent->children.begin(), parent->children.end(), node));
-        else
-            iterator = (qBinaryFind(parent->children.begin(), parent->children.end(), node, nodeCaseInsensitiveLessThan));
-        if (iterator == parent->children.end())
-            return -1;
-        int location = (iterator - parent->children.begin());
-        Q_ASSERT(location < parent->children.count());
-        return location;
-    }
-
-    inline int findWhereToInsertChild(const QFileSystemNode *parent, const QFileSystemNode *node) const {
-        QList<QFileSystemNode>::const_iterator iterator;
-        if (parent->caseSensitive()) {
-            iterator = (qUpperBound(parent->children.begin(), parent->children.end(), *node));
-        } else
-            iterator = (qUpperBound(parent->children.begin(), parent->children.end(), *node, QFileSystemModelPrivate::nodeCaseInsensitiveLessThan));
-        return (iterator - parent->children.begin());
+       return QString::compare(s1.fileName, s2.fileName, Qt::CaseInsensitive) < 0;
     }
 
     QIcon icon(const QModelIndex &index) const;

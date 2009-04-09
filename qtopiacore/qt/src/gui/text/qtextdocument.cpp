@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -563,6 +567,10 @@ void QTextDocument::markContentsDirty(int from, int length)
     Otherwise, the metrics of the paint device as set on
     QAbstractTextDocumentLayout::setPaintDevice() will be used.
 
+    Using design metrics makes a layout have a width that is no longer dependent on hinting
+    and pixel-rounding. This means that WYSIWYG text layout becomes possible because the width
+    scales much more linearly based on paintdevice metrics than it would otherwise.
+
     By default, this property is false.
 */
 
@@ -652,6 +660,35 @@ qreal QTextDocument::idealWidth() const
 }
 
 /*!
+    \property QTextDocument::documentMargin
+    \since 4.5
+
+     The margin around the document. The default is 4.
+*/
+qreal QTextDocument::documentMargin() const
+{
+    Q_D(const QTextDocument);
+    return d->documentMargin;
+}
+
+void QTextDocument::setDocumentMargin(qreal margin)
+{
+    Q_D(QTextDocument);
+    if (d->documentMargin != margin) {
+        d->documentMargin = margin;
+
+        QTextFrame* root = rootFrame();
+        QTextFrameFormat format = root->frameFormat();
+        format.setMargin(margin);
+        root->setFrameFormat(format);
+
+        if (d->lout)
+            d->lout->documentChanged(0, 0, d->length());
+    }
+}
+
+
+/*!
     \property QTextDocument::indentWidth
     \since 4.4
 
@@ -680,8 +717,14 @@ qreal QTextDocument::indentWidth() const
 void QTextDocument::setIndentWidth(qreal width)
 {
     Q_D(QTextDocument);
-    d->indentWidth = width;
+    if (d->indentWidth != width) {
+        d->indentWidth = width;
+        if (d->lout)
+            d->lout->documentChanged(0, 0, d->length());
+    }
 }
+
+
 
 
 /*!
@@ -744,12 +787,61 @@ QSizeF QTextDocument::size() const
     The value of this property is undefined in documents with tables or frames.
 
     By default, if defined, this property contains a value of 1.
+    \sa lineCount(), characterCount()
 */
 int QTextDocument::blockCount() const
 {
     Q_D(const QTextDocument);
     return d->blockMap().numNodes();
 }
+
+
+/*!
+  \since 4.5
+
+  Returns the number of lines of this document (if the layout supports
+  this). Otherwise, this is identical to the number of blocks.
+
+  \sa blockCount(), characterCount()
+ */
+int QTextDocument::lineCount() const
+{
+    Q_D(const QTextDocument);
+    return d->blockMap().length(2);
+}
+
+/*!
+  \since 4.5
+
+  Returns the number of characters of this document.
+
+  \sa blockCount(), characterAt()
+ */
+int QTextDocument::characterCount() const
+{
+    Q_D(const QTextDocument);
+    return d->length();
+}
+
+/*!
+  \since 4.5
+
+  Returns the character at position \a pos, or a null character if the
+  position is out of range.
+
+  \sa characterCount()
+ */
+QChar QTextDocument::characterAt(int pos) const
+{
+    Q_D(const QTextDocument);
+    if (pos < 0 || pos >= d->length())
+        return QChar();
+    QTextDocumentPrivate::FragmentIterator fragIt = d->find(pos);
+    const QTextFragmentData * const frag = fragIt.value();
+    const int offsetInFragment = qMax(0, pos - fragIt.position());
+    return d->text.at(frag->stringPosition + offsetInFragment);
+}
+
 
 /*!
     \property QTextDocument::defaultStyleSheet
@@ -773,6 +865,7 @@ void QTextDocument::setDefaultStyleSheet(const QString &sheet)
     d->defaultStyleSheet = sheet;
     QCss::Parser parser(sheet);
     d->parsedDefaultStyleSheet = QCss::StyleSheet();
+    d->parsedDefaultStyleSheet.origin = QCss::StyleSheetOrigin_UserAgent;
     parser.parse(&d->parsedDefaultStyleSheet);
 }
 
@@ -968,11 +1061,25 @@ QString QTextDocument::toPlainText() const
 {
     Q_D(const QTextDocument);
     QString txt = d->plainText();
-    txt.replace(QTextBeginningOfFrame, QLatin1Char('\n'));
-    txt.replace(QTextEndOfFrame, QLatin1Char('\n'));
-    txt.replace(QChar::ParagraphSeparator, QLatin1Char('\n'));
-    txt.replace(QChar::LineSeparator, QLatin1Char('\n'));
-    txt.replace(QChar::Nbsp, QLatin1Char(' '));
+
+    QChar *uc = txt.data();
+    QChar *e = uc + txt.size();
+
+    for (; uc != e; ++uc) {
+        switch (uc->unicode()) {
+        case 0xfdd0: // QTextBeginningOfFrame
+        case 0xfdd1: // QTextEndOfFrame
+        case QChar::ParagraphSeparator:
+        case QChar::LineSeparator:
+            *uc = QLatin1Char('\n');
+            break;
+        case QChar::Nbsp:
+            *uc = QLatin1Char(' ');
+            break;
+        default:
+            ;
+        }
+    }
     return txt;
 }
 
@@ -1307,7 +1414,19 @@ QTextBlock QTextDocument::findBlock(int pos) const
 QTextBlock QTextDocument::findBlockByNumber(int blockNumber) const
 {
     Q_D(const QTextDocument);
-    return QTextBlock(docHandle(), d->blockMap().findNodeByIndex(blockNumber));
+    return QTextBlock(docHandle(), d->blockMap().findNode(blockNumber, 1));
+}
+
+/*!
+    \since 4.5
+    Returns the text block that contains the specified \a lineNumber.
+
+    \sa QTextBlock::firstLineNumber()
+*/
+QTextBlock QTextDocument::findBlockByLineNumber(int lineNumber) const
+{
+    Q_D(const QTextDocument);
+    return QTextBlock(docHandle(), d->blockMap().findNode(lineNumber, 2));
 }
 
 /*!
@@ -1505,6 +1624,9 @@ void QTextDocument::print(QPrinter *printer) const
 {
     Q_D(const QTextDocument);
 
+    if (!printer || !printer->isValid())
+        return;
+
     if (!d->title.isEmpty())
         printer->setDocName(d->title);
 
@@ -1680,6 +1802,8 @@ UserCanceled:
     not be found in the cache, loadResource is called to try to load
     the resource. loadResource should then use addResource to add the
     resource to the cache.
+
+    \sa QTextDocument::ResourceType
 */
 QVariant QTextDocument::resource(int type, const QUrl &name) const
 {
@@ -1892,7 +2016,7 @@ QString QTextHtmlExporter::toHtml(const QByteArray &encoding, ExportMode mode)
     rootFmt.clearProperty(QTextFormat::BackgroundBrush);
 
     QTextFrameFormat defaultFmt;
-    defaultFmt.setMargin(DefaultRootFrameMargin);
+    defaultFmt.setMargin(doc->documentMargin());
 
     if (rootFmt == defaultFmt)
         emitFrame(doc->rootFrame()->begin());
@@ -2309,7 +2433,8 @@ void QTextHtmlExporter::emitBlockAttributes(const QTextBlock &block)
     QLatin1String style(" style=\"");
     html += style;
 
-    if (block.begin().atEnd()) {
+    const bool emptyBlock = block.begin().atEnd();
+    if (emptyBlock) {
         html += QLatin1String("-qt-paragraph-type:empty;");
     }
 
@@ -2334,8 +2459,11 @@ void QTextHtmlExporter::emitBlockAttributes(const QTextBlock &block)
 
     emitPageBreakPolicy(format.pageBreakPolicy());
 
-    const QTextCharFormat blockCharFmt = block.charFormat();
-    QTextCharFormat diff = formatDifference(defaultCharFormat, blockCharFmt).toCharFormat();
+    QTextCharFormat diff;
+    if (emptyBlock) { // only print character properties when we don't expect them to be repeated by actual text in the parag
+        const QTextCharFormat blockCharFmt = block.charFormat();
+        diff = formatDifference(defaultCharFormat, blockCharFmt).toCharFormat();
+    }
 
     diff.clearProperty(QTextFormat::BackgroundBrush);
     if (format.hasProperty(QTextFormat::BackgroundBrush)) {
@@ -2346,15 +2474,6 @@ void QTextHtmlExporter::emitBlockAttributes(const QTextBlock &block)
 
     if (!diff.properties().isEmpty())
         emitCharFormatStyle(diff);
-
-#if 0
-    QBrush blockCharFmtBg = blockCharFmt.background();
-    if (blockCharFmtBg.style() != Qt::NoBrush) {
-        html += QLatin1String(" -qt-blockcharfmt-background-color:");
-        html += blockCharFmtBg.color().name();
-        html += QLatin1Char(';');
-    }
-#endif
 
     html += QLatin1Char('"');
 
@@ -2442,18 +2561,6 @@ void QTextHtmlExporter::emitBlock(const QTextBlock &block)
     emitBlockAttributes(block);
 
     html += QLatin1Char('>');
-
-    QTextCharFormat blockCharFmt = block.charFormat();
-    const QTextBlockFormat blockFmt = block.blockFormat();
-
-    blockCharFmt.clearProperty(QTextFormat::BackgroundBrush);
-    if (blockFmt.hasProperty(QTextFormat::BackgroundBrush)) {
-        QBrush bg = blockFmt.background();
-        if (bg.style() != Qt::NoBrush)
-            blockCharFmt.setProperty(QTextFormat::BackgroundBrush, blockFmt.property(QTextFormat::BackgroundBrush));
-    }
-
-    defaultCharFormat.merge(blockCharFmt);
 
     QTextBlock::Iterator it = block.begin();
     if (fragmentMarkers && !it.atEnd() && block == doc->begin())

@@ -1,48 +1,54 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#include <QtCore/QEventLoop>
 #include <QtCore/QFile>
+#include <QtCore/QTextCodec>
 #include <QtCore/QTimer>
 #include <QtCore/QXmlStreamReader>
 
 #include <QtNetwork/QNetworkRequest>
 
 #include "qacceltreebuilder_p.h"
+#include "qatomicstring_p.h"
+#include "qautoptr_p.h"
 #include "qcommonsequencetypes_p.h"
 
 #include "qacceltreeresourceloader_p.h"
@@ -57,48 +63,46 @@ static inline uint qHash(const QUrl &uri)
 }
 
 AccelTreeResourceLoader::AccelTreeResourceLoader(const NamePool::Ptr &np,
-                                                 QNetworkAccessManager *const manager,
-                                                 ReportContext *const context) : m_namePool(np)
-                                                                               , m_networkAccessManager(manager)
-                                                                               , m_context(context)
+                                                 const NetworkAccessDelegator::Ptr &manager) : m_namePool(np)
+                                                                                             , m_networkAccessDelegator(manager)
 {
     Q_ASSERT(m_namePool);
-    Q_ASSERT(m_networkAccessManager);
+    Q_ASSERT(m_networkAccessDelegator);
 }
 
 bool AccelTreeResourceLoader::retrieveDocument(const QUrl &uri,
                                                const ReportContext::Ptr &context)
 {
     Q_ASSERT(uri.isValid());
-    AccelTreeBuilder<true> builder(uri, uri, m_namePool, m_context);
+    AccelTreeBuilder<true> builder(uri, uri, m_namePool, context.data());
 
-    QNetworkReply *const reply = load(uri, m_networkAccessManager, context);
+    const AutoPtr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
 
     if(!reply)
         return false;
 
     bool success = false;
-    try
-    {
-        success = streamToReceiver(reply, &builder, m_namePool, context, uri);
-    }
-    catch(const QPatternist::Exception)
-    {
-        delete reply;
-        throw; /* Let the exception continue to propagate. */
-    }
+    success = streamToReceiver(reply.data(), &builder, m_namePool, context, uri);
 
-    delete reply;
     m_loadedDocuments.insert(uri, builder.builtDocument());
     return success;
+}
+
+QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
+                                             const NetworkAccessDelegator::Ptr &networkDelegator,
+                                             const ReportContext::Ptr &context)
+{
+    return load(uri,
+                networkDelegator->managerFor(uri),
+                context);
 }
 
 QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
                                              QNetworkAccessManager *const networkManager,
                                              const ReportContext::Ptr &context)
 {
-    Q_ASSERT(uri.isValid());
     Q_ASSERT(networkManager);
+    Q_ASSERT(uri.isValid());
 
     NetworkLoop networkLoop;
 
@@ -109,7 +113,7 @@ QNetworkReply *AccelTreeResourceLoader::load(const QUrl &uri,
 
     if(networkLoop.exec())
     {
-        const QString errorMessage(reply->errorString());
+        const QString errorMessage(escape(reply->errorString()));
 
         /* Note, we delete reply before we exit this function with error(). */
         delete reply;
@@ -227,7 +231,7 @@ bool AccelTreeResourceLoader::streamToReceiver(QIODevice *const dev,
             case QXmlStreamReader::Invalid:
             {
                 if(context)
-                    context->error(reader.errorString(), ReportContext::FODC0002, QSourceLocation(uri, reader.lineNumber(), reader.columnNumber()));
+                    context->error(escape(reader.errorString()), ReportContext::FODC0002, QSourceLocation(uri, reader.lineNumber(), reader.columnNumber()));
 
                 return false;
             }
@@ -272,6 +276,135 @@ SequenceType::Ptr AccelTreeResourceLoader::announceDocument(const QUrl &uri, con
 bool AccelTreeResourceLoader::isDocumentAvailable(const QUrl &uri)
 {
     return retrieveDocument(uri, ReportContext::Ptr());
+}
+
+static inline uint qHash(const QPair<QUrl, QString> &desc)
+{
+    /* Probably a lousy hash. */
+    return qHash(desc.first) + qHash(desc.second);
+}
+
+bool AccelTreeResourceLoader::retrieveUnparsedText(const QUrl &uri,
+                                                   const QString &encoding,
+                                                   const ReportContext::Ptr &context,
+                                                   const SourceLocationReflection *const where)
+{
+    const AutoPtr<QNetworkReply> reply(load(uri, m_networkAccessDelegator, context));
+
+    if(!reply)
+        return false;
+
+    const QTextCodec * codec;
+    if(encoding.isEmpty())
+    {
+        /* XSL Transformations (XSLT) Version 2.0 16.2 Reading Text Files:
+         *
+         * "if the media type of the resource is text/xml or application/xml
+         * (see [RFC2376]), or if it matches the conventions text/\*+xml or
+         * application/\*+xml (see [RFC3023] and/or its successors), then the
+         * encoding is recognized as specified in [XML 1.0]"
+         */
+        codec = QTextCodec::codecForMib(106);
+    }
+    else
+    {
+        codec = QTextCodec::codecForName(encoding.toLatin1());
+        if(codec && context)
+        {
+            context->error(QtXmlPatterns::tr("%1 is an unsupported encoding.").arg(formatURI(encoding)),
+                           ReportContext::XTDE1190,
+                           where);
+        }
+        else
+            return false;
+    }
+
+    QTextCodec::ConverterState converterState;
+    const QByteArray inData(reply->readAll());
+    const QString result(codec->toUnicode(inData.constData(), inData.length(), &converterState));
+
+    if(converterState.invalidChars)
+    {
+        if(context)
+        {
+            context->error(QtXmlPatterns::tr("%1 contains octets which are disallowed in "
+                                             "the requested encoding %2.").arg(formatURI(uri),
+                                                                               formatURI(encoding)),
+                           ReportContext::XTDE1190,
+                           where);
+        }
+        else
+            return false;
+    }
+
+    const int len = result.length();
+    /* This code is a candidate for threading. Divide and conqueror. */
+    for(int i = 0; i < len; ++i)
+    {
+        if(!QXmlUtils::isChar(result.at(i)))
+        {
+            if(context)
+            {
+                context->error(QtXmlPatterns::tr("The codepoint %1, occurring in %2 using encoding %3, "
+                                                 "is an invalid XML character.").arg(formatData(result.at(i)),
+                                                                                     formatURI(uri),
+                                                                                     formatURI(encoding)),
+                               ReportContext::XTDE1190,
+                               where);
+            }
+            else
+                return false;
+        }
+    }
+
+    m_unparsedTexts.insert(qMakePair(uri, encoding), result);
+    return true;
+}
+
+bool AccelTreeResourceLoader::isUnparsedTextAvailable(const QUrl &uri,
+                                                      const QString &encoding)
+{
+    return retrieveUnparsedText(uri, encoding, ReportContext::Ptr(), 0);
+}
+
+Item AccelTreeResourceLoader::openUnparsedText(const QUrl &uri,
+                                               const QString &encoding,
+                                               const ReportContext::Ptr &context,
+                                               const SourceLocationReflection *const where)
+{
+    const QString &text = m_unparsedTexts.value(qMakePair(uri, encoding));
+
+    if(text.isNull())
+    {
+        if(retrieveUnparsedText(uri, encoding, context, where))
+            return openUnparsedText(uri, encoding, context, where);
+        else
+            return Item();
+    }
+    else
+        return AtomicString::fromValue(text);
+}
+
+QSet<QUrl> AccelTreeResourceLoader::deviceURIs() const
+{
+     QHash<QUrl, AccelTree::Ptr>::const_iterator it(m_loadedDocuments.constBegin());
+     const QHash<QUrl, AccelTree::Ptr>::const_iterator end(m_loadedDocuments.constEnd());
+     QSet<QUrl> retval;
+
+     while (it != end)
+     {
+         if(it.key().toString().startsWith(QLatin1String("tag:trolltech.com,2007:QtXmlPatterns:QIODeviceVariable:")))
+             retval.insert(it.key());
+
+         ++it;
+     }
+
+     return retval;
+}
+
+void AccelTreeResourceLoader::clear(const QUrl &uri)
+{
+    m_loadedDocuments.remove(uri);
 }
 
 QT_END_NAMESPACE

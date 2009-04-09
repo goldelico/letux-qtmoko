@@ -1,7 +1,7 @@
 /*
  * This file is part of the theme implementation for form controls in WebCore.
  *
- * Copyright (C) 2007 Trolltech
+ * Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,6 +34,7 @@ QT_END_NAMESPACE
 namespace WebCore {
 
 class RenderStyle;
+class HTMLMediaElement;
 
 class RenderThemeQt : public RenderTheme
 {
@@ -44,7 +45,7 @@ public:
     virtual bool supportsHover(const RenderStyle*) const;
     virtual bool supportsFocusRing(const RenderStyle* style) const;
 
-    virtual short baselinePosition(const RenderObject* o) const;
+    virtual int baselinePosition(const RenderObject* o) const;
 
     // A method asking if the control changes its tint when the window has focus or not.
     virtual bool controlSupportsTints(const RenderObject*) const;
@@ -55,7 +56,7 @@ public:
     virtual void adjustRepaintRect(const RenderObject* o, IntRect& r);
 
     virtual bool isControlStyled(const RenderStyle*, const BorderData&,
-                                 const BackgroundLayer&, const Color&) const;
+                                 const FillLayer&, const Color&) const;
 
     // The platform selection color.
     virtual Color platformActiveSelectionBackgroundColor() const;
@@ -68,6 +69,12 @@ public:
     virtual int minimumMenuListSize(RenderStyle*) const;
 
     virtual void adjustSliderThumbSize(RenderObject*) const;
+
+    virtual double caretBlinkInterval() const;
+
+#if ENABLE(VIDEO)
+    virtual String extraMediaControlsStyleSheet();
+#endif
 
 protected:
     virtual bool paintCheckbox(RenderObject* o, const RenderObject::PaintInfo& i, const IntRect& r);
@@ -106,15 +113,33 @@ protected:
 
     virtual void adjustSearchFieldResultsDecorationStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
     virtual bool paintSearchFieldResultsDecoration(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
-private:
-    bool supportsFocus(EAppearance) const;
 
-    EAppearance applyTheme(QStyleOption&, RenderObject*) const;
+#if ENABLE(VIDEO)
+    virtual bool paintMediaFullscreenButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaPlayButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaMuteButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaSeekBackButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaSeekForwardButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaSliderTrack(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+    virtual bool paintMediaSliderThumb(RenderObject*, const RenderObject::PaintInfo&, const IntRect&);
+
+private:
+    HTMLMediaElement* getMediaElementFromRenderObject(RenderObject* o) const;
+    void paintMediaBackground(QPainter* painter, const IntRect& r) const;
+    QColor getMediaControlForegroundColor(RenderObject* o = 0) const;
+#endif
+
+private:
+    bool supportsFocus(ControlPart) const;
+
+    ControlPart applyTheme(QStyleOption&, RenderObject*) const;
 
     void setButtonPadding(RenderStyle*) const;
     void setPopupPadding(RenderStyle*) const;
 
+#ifdef Q_WS_MAC
     int m_buttonFontPixelSize;
+#endif
     QString m_buttonFontFamily;
 
     QStyle* m_fallbackStyle;
@@ -125,6 +150,7 @@ class StylePainter
 {
 public:
     explicit StylePainter(const RenderObject::PaintInfo& paintInfo);
+    explicit StylePainter(GraphicsContext* context);
     ~StylePainter();
 
     bool isValid() const { return painter && style; }
@@ -141,6 +167,8 @@ public:
     { style->drawComplexControl(cc, &opt, painter, widget); }
 
 private:
+    void init(GraphicsContext* context);
+
     QBrush oldBrush;
     bool oldAntialiasing;
 

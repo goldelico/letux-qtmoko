@@ -1,15 +1,20 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_index_SegmentMerger_
 #define _lucene_index_SegmentMerger_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
+
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/RAMDirectory.h"
@@ -34,7 +39,8 @@ CL_NS_DEF(index)
 * @see #merge
 * @see #add
 */
-class SegmentMerger:LUCENE_BASE {
+class SegmentMerger : LUCENE_BASE
+{
 	bool useCompoundFile;
 	
 	CL_NS(store)::RAMIndexOutput* skipBuffer;
@@ -49,9 +55,10 @@ class SegmentMerger:LUCENE_BASE {
 	//Directory of the segment
 	CL_NS(store)::Directory* directory;     
 	//name of the new segment
-	const char* segment;
+	QString segment;
 	//Set of IndexReaders
-	CL_NS(util)::CLVector<IndexReader*,CL_NS(util)::Deletor::Object<IndexReader> > readers;
+	CL_NS(util)::CLVector<IndexReader*,
+        CL_NS(util)::Deletor::Object<IndexReader> > readers;
 	//Field Infos for t	he FieldInfo instances of all fields
 	FieldInfos* fieldInfos;
 
@@ -75,7 +82,7 @@ public:
 	* @param name The name of the new segment
 	* @param compoundFile true if the new segment should use a compoundFile
 	*/
-	SegmentMerger( IndexWriter* writer, const char* name );
+	SegmentMerger( IndexWriter* writer, const QString& name );
 
 	//Destructor
 	~SegmentMerger();
@@ -94,7 +101,8 @@ public:
 	IndexReader* segmentReader(const int32_t i);
 	
 	/**
-	* Merges the readers specified by the {@link #add} method into the directory passed to the constructor
+	* Merges the readers specified by the {@link #add} method into the
+    * directory passed to the constructor
 	* @return The number of documents that were merged
 	* @throws IOException
 	*/
@@ -106,7 +114,8 @@ public:
 	*/
 	void closeReaders();
 private:
-	void addIndexed(IndexReader* reader, FieldInfos* fieldInfos, CL_NS(util)::StringArrayWithDeletor& names, 
+	void addIndexed(IndexReader* reader, FieldInfos* fieldInfos,
+        CL_NS(util)::StringArrayWithDeletor& names, 
 		bool storeTermVectors, bool storePositionWithTermVector,
 		bool storeOffsetWithTermVector);
 
@@ -151,8 +160,10 @@ private:
 	//Merges the norms for all fields 
 	void mergeNorms();
 	
-	void createCompoundFile(const char* filename, CL_NS(util)::AStringArrayWithDeletor& files);
+	void createCompoundFile(const QString& filename, QStringList& files);
 	friend class IndexWriter; //allow IndexWriter to use createCompoundFile
 };
+
 CL_NS_END
+
 #endif

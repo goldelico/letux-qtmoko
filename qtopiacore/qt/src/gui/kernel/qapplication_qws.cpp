@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -135,7 +142,7 @@ bool qws_sw_cursor = true;
 bool qws_accel = true;            // ### never set
 QByteArray qws_display_spec(":0");
 Q_GUI_EXPORT int qws_display_id = 0;
-int qws_client_id = 0;
+Q_GUI_EXPORT int qws_client_id = 0;
 QWidget *qt_pressGrab = 0;
 QWidget *qt_mouseGrb = 0;
 int *qt_last_x = 0;
@@ -273,7 +280,7 @@ static TransformFunc getTransformationFunction()
 #  ifndef QT_NO_LIBRARY
         // symbol is not built into the library, search for the plugin
         const QStringList paths = QApplication::libraryPaths();
-        foreach (QString path, paths) {
+        foreach (const QString &path, paths) {
             const QString file = path + QLatin1String("/gfxdrivers/libqgfxtransformed");
             func = (TransformFunc)QLibrary::resolve(file,
                                                     "qws_setScreenTransformation");
@@ -1858,6 +1865,11 @@ void QWSDisplay::setRawMouseEventFilter(void (*filter)(QWSMouseEvent *))
         qt_fbdpy->d->setMouseFilter(filter);
 }
 
+/*!
+  \relates QScreen
+
+  Here it is. \a transformation and \a screenNo
+ */
 void QWSDisplay::setTransformation(int transformation, int screenNo)
 {
     QWSScreenTransformCommand cmd;
@@ -2151,6 +2163,10 @@ static int read_int_env_var(const char *var, int defaultvalue)
 
 void qt_init(QApplicationPrivate *priv, int type)
 {
+#ifdef QT_NO_QWS_MULTIPROCESS
+    if (type == QApplication::GuiClient)
+        type = QApplication::GuiServer;
+#endif
     if (type == QApplication::GuiServer)
         qt_is_gui_used = false; //we'll turn it on in a second
     qws_sw_cursor = read_bool_env_var("QWS_SW_CURSOR",qws_sw_cursor);
@@ -2270,18 +2286,13 @@ void qt_init(QApplicationPrivate *priv, int type)
     if(qt_is_gui_used) {
         init_display();
 #ifndef QT_NO_QWS_MANAGER
-        if (decoration.isEmpty()) {
-#ifndef QT_NO_QWS_DECORATION_STYLED
-            decoration = QString::fromLatin1("styled");
-#else
-            decoration = QString::fromLatin1("default");
-#endif
+        if (decoration.isEmpty() && !qws_decoration) {
+            const QStringList keys = QDecorationFactory::keys();
+            if (!keys.isEmpty())
+                decoration = keys.first();
         }
-        qws_decoration = QApplication::qwsSetDecoration(decoration);
-#ifndef QT_NO_QWS_DECORATION_DEFAULT
-        if (!qws_decoration)
-            QApplication::qwsSetDecoration(new QDecorationDefault);
-#endif
+        if (!decoration.isEmpty())
+            qws_decoration = QApplication::qwsSetDecoration(decoration);
 #endif // QT_NO_QWS_MANAGER
 #ifndef QT_NO_QWS_INPUTMETHODS
         qApp->setInputContext(new QWSInputContext);
@@ -2292,11 +2303,6 @@ void qt_init(QApplicationPrivate *priv, int type)
     if (qws_screen_is_interlaced)
         QApplication::setStyle(new QInterlaceStyle);
 */
-}
-
-bool qt_sendSpontaneousEvent(QObject *obj, QEvent *event)
-{
-    return QCoreApplication::sendSpontaneousEvent(obj, event);
 }
 
 /*****************************************************************************
@@ -2532,7 +2538,8 @@ void QApplicationPrivate::applyQWSSpecificCommandLineArguments(QWidget *main_wid
     if (mwGeometry) { // parse geometry
         int x = 0;
         int y = 0;
-        int w, h;
+        int w = 0;
+        int h = 0;
         int m = parseGeometry(mwGeometry, &x, &y, &w, &h);
         QSize minSize = main_widget->minimumSize();
         QSize maxSize = main_widget->maximumSize();
@@ -2761,6 +2768,7 @@ int QApplication::qwsProcessEvent(QWSEvent* event)
             QMouseEvent outside(QEvent::MouseMove, pos, pos, Qt::NoButton, 0, 0);
             QApplication::sendSpontaneousEvent(d->last_manager, &outside);
             d->last_manager = 0;
+            qt_last_cursor = 0xffffffff; //decoration is like another window; must redo cursor
         }
     }
 #endif // QT_NO_QWS_MANAGER
@@ -3321,7 +3329,7 @@ bool QETWidget::translateWheelEvent(const QWSMouseEvent *me)
     // OR Vertical wheel   w/  Alt  ==> Horizontal wheeling
     //    ..all other permutations  ==> Vertical wheeling
     int axis = mouse.delta / 120; // WHEEL_DELTA?
-    Qt::Orientation orient = ((axis == 2 || axis == -2) && (mouse.state & Qt::AltModifier == 0))
+    Qt::Orientation orient = ((axis == 2 || axis == -2) && ((mouse.state & Qt::AltModifier) == 0))
                              ||((axis == 1 || axis == -1) && mouse.state & Qt::AltModifier)
                              ? Qt::Horizontal : Qt::Vertical;
 
@@ -3630,9 +3638,6 @@ bool QETWidget::translateRegionEvent(const QWSRegionEvent *event)
     case QWSRegionEvent::Allocation:
         region.translate(-mapToGlobal(QPoint()));
         surface->setClipRegion(region);
-        break;
-    case QWSRegionEvent::Request:
-        setGeometry(region.boundingRect());
         break;
 #ifdef QT_QWS_CLIENTBLIT
     case QWSRegionEvent::DirectPaint:

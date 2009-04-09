@@ -1,37 +1,41 @@
- /****************************************************************************
+/****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@ TRANSLATOR qdesigner_internal::Sentinel
 #include "actionprovider_p.h"
 #include "qdesigner_utils_p.h"
 #include "qdesigner_objectinspector_p.h"
+#include "promotiontaskmenu_p.h"
 
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerPropertyEditorInterface>
@@ -67,9 +72,7 @@ Q_DECLARE_METATYPE(QAction*)
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-    typedef QList<QAction*> ActionList;
-}
+typedef QList<QAction*> ActionList;
 
 namespace qdesigner_internal {
 // ------------------- ToolBarEventFilter
@@ -82,8 +85,23 @@ void ToolBarEventFilter::install(QToolBar *tb)
 
 ToolBarEventFilter::ToolBarEventFilter(QToolBar *tb) :
     QObject(tb),
-    m_toolBar(tb)
+    m_toolBar(tb),
+    m_promotionTaskMenu(0)
 {
+}
+
+ToolBarEventFilter *ToolBarEventFilter::eventFilterOf(const QToolBar *tb)
+{
+    // Look for 1st order children only..otherwise, we might get filters of nested widgets
+    const QObjectList children = tb->children();
+    const QObjectList::const_iterator cend = children.constEnd();
+    for (QObjectList::const_iterator it = children.constBegin(); it != cend; ++it) {
+        QObject *o = *it;
+        if (!o->isWidgetType())
+            if (ToolBarEventFilter *ef = qobject_cast<ToolBarEventFilter *>(o))
+                return ef;
+    }
+    return 0;
 }
 
 bool ToolBarEventFilter::eventFilter (QObject *watched, QEvent *event)
@@ -122,47 +140,61 @@ bool ToolBarEventFilter::eventFilter (QObject *watched, QEvent *event)
     return QObject::eventFilter (watched, event);
 }
 
+ActionList ToolBarEventFilter::contextMenuActions(const QPoint &globalPos)
+{
+    ActionList rc;
+    const int index = actionIndexAt(m_toolBar, m_toolBar->mapFromGlobal(globalPos), m_toolBar->orientation());
+    const ActionList actions = m_toolBar->actions();
+    QAction *action = index != -1 ?actions.at(index) : 0;
+    QVariant itemData;
+
+    // Insert before
+    if (action && index != 0 && !action->isSeparator()) {
+        QAction *newSeperatorAct = new QAction(tr("Insert Separator before '%1'").arg(action->objectName()), 0);
+        qVariantSetValue(itemData, action);
+        newSeperatorAct->setData(itemData);
+        connect(newSeperatorAct, SIGNAL(triggered()), this, SLOT(slotInsertSeparator()));
+        rc.push_back(newSeperatorAct);
+    }
+
+    // Append separator
+    if (actions.empty() || !actions.back()->isSeparator()) {
+        QAction *newSeperatorAct = new QAction(tr("Append Separator"), 0);
+        qVariantSetValue(itemData, static_cast<QAction*>(0));
+        newSeperatorAct->setData(itemData);
+        connect(newSeperatorAct, SIGNAL(triggered()), this, SLOT(slotInsertSeparator()));
+        rc.push_back(newSeperatorAct);
+    }
+    // Promotion
+    if (!m_promotionTaskMenu)
+        m_promotionTaskMenu = new PromotionTaskMenu(m_toolBar, PromotionTaskMenu::ModeSingleWidget, this);
+    m_promotionTaskMenu->addActions(formWindow(), PromotionTaskMenu::LeadingSeparator|PromotionTaskMenu::TrailingSeparator, rc);
+    // Remove
+    if (action) {
+        QAction *a = new QAction(tr("Remove action '%1'").arg(action->objectName()), 0);
+        qVariantSetValue(itemData, action);
+        a->setData(itemData);
+        connect(a, SIGNAL(triggered()), this, SLOT(slotRemoveSelectedAction()));
+        rc.push_back(a);
+    }
+
+    QAction *remove_toolbar = new QAction(tr("Remove Toolbar '%1'").arg(m_toolBar->objectName()), 0);
+    connect(remove_toolbar, SIGNAL(triggered()), this, SLOT(slotRemoveToolBar()));
+    rc.push_back(remove_toolbar);
+    return rc;
+}
+
 bool ToolBarEventFilter::handleContextMenuEvent(QContextMenuEvent * event )
 {
     event->accept();
 
     const QPoint globalPos = event->globalPos();
-    const int index = actionIndexAt(m_toolBar, m_toolBar->mapFromGlobal(globalPos), m_toolBar->orientation());
-    const ActionList actions = m_toolBar->actions();
-    QAction *action = index != -1 ?actions.at(index) : 0;
-    QVariant itemData;
+    const ActionList al = contextMenuActions(event->globalPos());
+
     QMenu menu(0);
-
-    // Insert before
-    if (action && index != 0 && !action->isSeparator()) {
-        QAction *newSeperatorAct = menu.addAction(tr("Insert Separator before '%1'").arg(action->objectName()));
-        qVariantSetValue(itemData, action);
-        newSeperatorAct->setData(itemData);
-        connect(newSeperatorAct, SIGNAL(triggered()), this, SLOT(slotInsertSeparator()));
-    }
-
-    // Append separator
-    if (actions.empty() || !actions.back()->isSeparator()) {
-        QAction *newSeperatorAct = menu.addAction(tr("Append Separator"));
-        qVariantSetValue(itemData, static_cast<QAction*>(0));
-        newSeperatorAct->setData(itemData);
-        connect(newSeperatorAct, SIGNAL(triggered()), this, SLOT(slotInsertSeparator()));
-    }
-    // Remove
-    if (!menu.actions().empty())
-        menu.addSeparator();
-
-    // Remove
-    if (action) {
-        QAction *a = menu.addAction(tr("Remove action '%1'").arg(action->objectName()));
-        qVariantSetValue(itemData, action);
-        a->setData(itemData);
-        connect(a, SIGNAL(triggered()), this, SLOT(slotRemoveSelectedAction()));
-    }
-
-    QAction *remove_toolbar = menu.addAction(tr("Remove Toolbar '%1'").arg(m_toolBar->objectName()));
-    connect(remove_toolbar, SIGNAL(triggered()), this, SLOT(slotRemoveToolBar()));
-
+    const ActionList::const_iterator acend = al.constEnd();
+    for (ActionList::const_iterator it = al.constBegin(); it != acend; ++it)
+        menu.addAction(*it);
     menu.exec(globalPos);
     return true;
 }

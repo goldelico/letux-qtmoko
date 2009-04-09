@@ -2,9 +2,9 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/tutorials/addressbook.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/tutorials/addressbook.qdoc -->
 <head>
-  <title>Qt 4.4: Address Book 5 - Adding a Find Function</title>
+  <title>Qt 4.5: Address Book 5 - Adding a Find Function</title>
   <link rel="prev" href="tutorials-addressbook-part4.html" />
   <link rel="contents" href="tutorials-addressbook.html" />
   <link rel="next" href="tutorials-addressbook-part6.html" />
@@ -13,7 +13,7 @@
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [Previous: <a href="tutorials-addressbook-part4.html">Address Book 4 - Editing and Removing Addresses</a>]
@@ -84,7 +84,7 @@
      connect(findButton, SIGNAL(clicked()), this, SLOT(accept()));
  }</pre>
 <p>We set the layout and window title, as well as connect the signals to their respective slots. Notice that <tt>findButton</tt>'s <a href="qabstractbutton.html#clicked">clicked()</a> signal is connected to to <tt>findClicked()</tt> and <a href="qdialog.html#accept">accept()</a>. The <a href="qdialog.html#accept">accept()</a> slot provided by <a href="qdialog.html">QDialog</a> hides the dialog and sets the result code to <a href="qdialog.html#DialogCode-enum">Accepted</a>. We use this function to help <tt>AddressBook</tt>'s <tt>findContact()</tt> function know when the <tt>FindDialog</tt> object has been closed. This will be further explained when discussing the <tt>findContact()</tt> function.</p>
-<p align="center"><img src="images/addressbook-tutorial-part5-signals-and-slots.png" /></p><p>In <tt>findClicked()</tt>, we validate to ensure that the user did not click the <b>Find</b> button without entering a contact's name. Then, we set <tt>findText</tt> to the search string, extracted from <tt>lineEdit</tt>. After that, we clear the contents of <tt>lineEdit</tt> and hide the dialog.</p>
+<p align="center"><img src="images/addressbook-tutorial-part5-signals-and-slots.png" /></p><p>In <tt>findClicked()</tt>, we validate <tt>lineEdit</tt> to ensure that the user did not click the <b>Find</b> button without entering a contact's name. Then, we set <tt>findText</tt> to the search string, extracted from <tt>lineEdit</tt>. After that, we clear the contents of <tt>lineEdit</tt> and hide the dialog.</p>
 <pre> void FindDialog::findClicked()
  {
      QString text = lineEdit-&gt;text();
@@ -106,7 +106,7 @@
  }</pre>
 <a name="defining-the-addressbook-class"></a>
 <h2>Defining the AddressBook Class</h2>
-<p>In ensure we can use <tt>FindDialog</tt> from within our <tt>AddressBook</tt> class, we include <tt>finddialog.h</tt> in the <tt>addressbook.h</tt> file.</p>
+<p>To ensure we can use <tt>FindDialog</tt> from within our <tt>AddressBook</tt> class, we include <tt>finddialog.h</tt> in the <tt>addressbook.h</tt> file.</p>
 <pre> #include &quot;finddialog.h&quot;</pre>
 <p>So far, all our address book features have a <a href="qpushbutton.html">QPushButton</a> and a corresponding slot. Similarly, for the <b>Find</b> feature we have <tt>findButton</tt> and <tt>findContact()</tt>.</p>
 <p>The <tt>findButton</tt> is declared as a private variable and the <tt>findContact()</tt> function is declared as a public slot.</p>
@@ -154,8 +154,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

@@ -18,45 +18,59 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSScreen_H
-#define JSScreen_H
+#ifndef JSScreen_h
+#define JSScreen_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class Screen;
 
-class JSScreen : public KJS::DOMObject {
+class JSScreen : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSScreen(KJS::ExecState*, Screen*);
+    JSScreen(PassRefPtr<JSC::Structure>, PassRefPtr<Screen>);
     virtual ~JSScreen();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        HeightAttrNum, WidthAttrNum, ColorDepthAttrNum, PixelDepthAttrNum, 
-        AvailLeftAttrNum, AvailTopAttrNum, AvailHeightAttrNum, AvailWidthAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     Screen* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<Screen> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, Screen*);
-Screen* toScreen(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, Screen*);
+Screen* toScreen(JSC::JSValuePtr);
 
-class JSScreenPrototype : public KJS::JSObject {
+class JSScreenPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSScreenPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSScreenPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsScreenHeight(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenColorDepth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenPixelDepth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenAvailLeft(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenAvailTop(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenAvailHeight(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsScreenAvailWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

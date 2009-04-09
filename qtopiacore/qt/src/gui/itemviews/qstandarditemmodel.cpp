@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,8 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qbitarray.h>
+#include <QtCore/qmimedata.h>
 
 #include <private/qstandarditemmodel_p.h>
 #include <qdebug.h>
@@ -245,10 +251,7 @@ void QStandardItemPrivate::sortChildren(int column, Qt::SortOrder order)
         qStableSort(sortable.begin(), sortable.end(), gt);
     }
 
-    QModelIndexList oldPersistentIndexes;
-    if (model)
-        oldPersistentIndexes = model->persistentIndexList();
-    QVector<QPair<QModelIndex, QModelIndex> > changedPersistentIndexes;
+    QModelIndexList changedPersistentIndexesFrom, changedPersistentIndexesTo;
     QVector<QStandardItem*> sorted_children(children.count());
     for (int i = 0; i < rowCount(); ++i) {
         int r = (i < sortable.count()
@@ -259,10 +262,10 @@ void QStandardItemPrivate::sortChildren(int column, Qt::SortOrder order)
             sorted_children[childIndex(i, c)] = itm;
             if (model) {
                 QModelIndex from = model->createIndex(r, c, q);
-                if (oldPersistentIndexes.contains(from)) {
+                if (model->d_func()->persistent.indexes.contains(from)) {
                     QModelIndex to = model->createIndex(i, c, q);
-                    changedPersistentIndexes.append(
-                        QPair<QModelIndex, QModelIndex>(from, to));
+                    changedPersistentIndexesFrom.append(from);
+                    changedPersistentIndexesTo.append(to);
                 }
             }
         }
@@ -271,9 +274,7 @@ void QStandardItemPrivate::sortChildren(int column, Qt::SortOrder order)
     children = sorted_children;
 
     if (model) {
-        QPair<QModelIndex, QModelIndex> indexPair;
-        foreach (indexPair, changedPersistentIndexes)
-            model->changePersistentIndex(indexPair.first, indexPair.second);
+        model->changePersistentIndexList(changedPersistentIndexesFrom, changedPersistentIndexesTo);
     }
 
     QVector<QStandardItem*>::iterator it;
@@ -285,12 +286,42 @@ void QStandardItemPrivate::sortChildren(int column, Qt::SortOrder order)
 
 /*!
   \internal
+  set the model of this item and all its children
+  */
+void QStandardItemPrivate::setModel(QStandardItemModel *mod)
+{
+    if (children.isEmpty()) {
+        if (model)
+            model->d_func()->invalidatePersistentIndex(model->indexFromItem(q_ptr));
+        model = mod;
+    } else {
+        QStack<QStandardItem*> stack;
+        stack.push(q_ptr);
+        while (!stack.isEmpty()) {
+            QStandardItem *itm = stack.pop();
+            if (itm->d_func()->model) {
+                itm->d_func()->model->d_func()->invalidatePersistentIndex(itm->d_func()->model->indexFromItem(itm));
+            }
+            itm->d_func()->model = mod;
+            const QVector<QStandardItem*> &childList = itm->d_func()->children;
+            for (int i = 0; i < childList.count(); ++i) {
+                QStandardItem *chi = childList.at(i);
+                if (chi)
+                    stack.push(chi);
+            }
+        }
+    }
+}
+
+/*!
+  \internal
 */
 QStandardItemModelPrivate::QStandardItemModelPrivate()
     : root(new QStandardItem),
       itemPrototype(0),
       sortRole(Qt::DisplayRole)
 {
+    root->setFlags(Qt::ItemIsDropEnabled);
 }
 
 /*!
@@ -771,7 +802,7 @@ QStandardItem *QStandardItem::parent() const
     reimplementation should call emitDataChanged() if you do not call
     the base implementation of setData(). This will ensure that e.g.
     views using the model are notified of the changes.
-    
+
     \note The default implementation treats Qt::EditRole and Qt::DisplayRole
     as referring to the same data.
 
@@ -785,7 +816,7 @@ void QStandardItem::setData(const QVariant &value, int role)
     for (it = d->values.begin(); it != d->values.end(); ++it) {
         if ((*it).role == role) {
             if (value.isValid()) {
-                if ((*it).value == value)
+                if ((*it).value.type() == value.type() && (*it).value == value)
                     return;
                 (*it).value = value;
             } else {
@@ -804,9 +835,9 @@ void QStandardItem::setData(const QVariant &value, int role)
 /*!
     Returns the item's data for the given \a role, or an invalid
     QVariant if there is no data for the role.
-    
+
     \note The default implementation treats Qt::EditRole and Qt::DisplayRole
-    as referring to the same data.  
+    as referring to the same data.
 */
 QVariant QStandardItem::data(int role) const
 {
@@ -1692,9 +1723,9 @@ QStandardItem *QStandardItem::takeChild(int row, int column)
     int index = d->childIndex(row, column);
     if (index != -1) {
         item = d->children.at(index);
-        d->children.replace(index, 0);
         if (item)
             item->d_func()->setParentAndModel(0, 0);
+        d->children.replace(index, 0);
     }
     return item;
 }
@@ -1800,7 +1831,7 @@ bool QStandardItem::operator<(const QStandardItem &other) const
 /*!
     Sorts the children of the item using the given \a order, by the values in
     the given \a column.
-    
+
     \note This function is recursive, therefore it sorts the children of the
     item, its grandchildren, etc.
 
@@ -2624,7 +2655,7 @@ Qt::ItemFlags QStandardItemModel::flags(const QModelIndex &index) const
 {
     Q_D(const QStandardItemModel);
     if (!d->indexValid(index))
-        return Qt::ItemIsDropEnabled;
+        return d->root->flags();
     QStandardItem *item = d->itemFromIndex(index);
     if (item)
         return item->flags();
@@ -2847,6 +2878,228 @@ void QStandardItemModel::sort(int column, Qt::SortOrder order)
   \fn QObject *QStandardItemModel::parent() const
   \internal
 */
+
+
+/*!
+  \reimp
+*/
+QStringList QStandardItemModel::mimeTypes() const
+{
+    return QAbstractItemModel::mimeTypes() <<  QLatin1String("application/x-qstandarditemmodeldatalist");
+}
+
+/*!
+  \reimp
+*/
+QMimeData *QStandardItemModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData *data = QAbstractItemModel::mimeData(indexes);
+    if(!data)
+        return 0;
+
+    QString format = QLatin1String("application/x-qstandarditemmodeldatalist");
+    if (!mimeTypes().contains(format))
+        return data;
+    QByteArray encoded;
+    QDataStream stream(&encoded, QIODevice::WriteOnly);
+    
+    QSet<QStandardItem*> itemsSet;
+    QStack<QStandardItem*> stack;
+    itemsSet.reserve(indexes.count());
+    stack.reserve(indexes.count());
+    foreach (const QModelIndex &index, indexes) {
+        QStandardItem *item = itemFromIndex(index);
+        itemsSet << item;
+        stack.push(item);
+    }
+    
+    //remove duplicates childrens
+    {
+        QSet<QStandardItem *> seen;
+        while (!stack.isEmpty()) {
+            QStandardItem *itm = stack.pop();
+            if (seen.contains(itm))
+                continue;
+            seen.insert(itm);
+            
+            const QVector<QStandardItem*> &childList = itm->d_func()->children;
+            for (int i = 0; i < childList.count(); ++i) {
+                QStandardItem *chi = childList.at(i);
+                if (chi) {
+                    QSet<QStandardItem *>::iterator it = itemsSet.find(chi);
+                    if (it != itemsSet.end()) {
+                        itemsSet.erase(it);
+                    }
+                    stack.push(chi);
+                }
+            }
+        }
+    }
+    
+    stack.reserve(itemsSet.count());
+    foreach (QStandardItem *item, itemsSet) {
+        stack.push(item);
+    }
+    
+    //stream everything recursively
+    while (!stack.isEmpty()) {
+        QStandardItem *item = stack.pop();
+        if(itemsSet.contains(item)) { //if the item is selection 'top-level', strem its position
+            stream << item->row() << item->column(); 
+        }
+        if(item) {
+            stream << *item << item->columnCount() << item->d_ptr->children.count();
+            stack += item->d_ptr->children;
+        } else {
+            QStandardItem dummy;
+            stream << dummy << 0 << 0;
+        }
+    }
+
+    data->setData(format, encoded);
+    return data;
+}
+
+
+/* \internal
+    Used by QStandardItemModel::dropMimeData
+    stream out an item and his children 
+ */
+static void decodeDataRecursive(QDataStream &stream, QStandardItem *item)
+{
+    int colCount, childCount;
+    stream >> *item;
+    stream >> colCount >> childCount;
+    item->setColumnCount(colCount);
+    
+    int childPos = childCount;
+    
+    while(childPos > 0) {
+        childPos--;
+        QStandardItem *child = new QStandardItem;
+        decodeDataRecursive(stream, child);
+        item->setChild( childPos / colCount, childPos % colCount, child);
+    }
+}
+
+
+/*!
+  \reimp
+*/
+bool QStandardItemModel::dropMimeData(const QMimeData *data, Qt::DropAction action,
+                                      int row, int column, const QModelIndex &parent)
+{
+    // check if the action is supported
+    if (!data || !(action == Qt::CopyAction || action == Qt::MoveAction))
+        return false;
+    // check if the format is supported
+    QString format = QLatin1String("application/x-qstandarditemmodeldatalist");
+    if (!data->hasFormat(format))
+        return QAbstractItemModel::dropMimeData(data, action, row, column, parent);
+
+    if (row > rowCount(parent))
+        row = rowCount(parent);
+    if (row == -1)
+        row = rowCount(parent);
+    if (column == -1)
+        column = 0;
+
+    // decode and insert
+    QByteArray encoded = data->data(format);
+    QDataStream stream(&encoded, QIODevice::ReadOnly);
+
+
+    //code based on QAbstractItemModel::decodeData
+    // adapted to work with QStandardItem
+    int top = INT_MAX;
+    int left = INT_MAX;
+    int bottom = 0;
+    int right = 0;
+    QVector<int> rows, columns;
+    QVector<QStandardItem *> items;
+
+    while (!stream.atEnd()) {
+        int r, c;
+        QStandardItem *item = new QStandardItem;
+        stream >> r >> c;
+        decodeDataRecursive(stream, item);
+
+        rows.append(r);
+        columns.append(c);
+        items.append(item);
+        top = qMin(r, top);
+        left = qMin(c, left);
+        bottom = qMax(r, bottom);
+        right = qMax(c, right);
+    }
+
+    // insert the dragged items into the table, use a bit array to avoid overwriting items,
+    // since items from different tables can have the same row and column
+    int dragRowCount = 0;
+    int dragColumnCount = right - left + 1;
+
+    // Compute the number of continuous rows upon insertion and modify the rows to match
+    QVector<int> rowsToInsert(bottom + 1);
+    for (int i = 0; i < rows.count(); ++i)
+        rowsToInsert[rows.at(i)] = 1;
+    for (int i = 0; i < rowsToInsert.count(); ++i) {
+        if (rowsToInsert[i] == 1){
+            rowsToInsert[i] = dragRowCount;
+            ++dragRowCount;
+        }
+    }
+    for (int i = 0; i < rows.count(); ++i)
+        rows[i] = top + rowsToInsert[rows[i]];
+
+    QBitArray isWrittenTo(dragRowCount * dragColumnCount);
+
+    // make space in the table for the dropped data
+    int colCount = columnCount(parent);
+    if (colCount < dragColumnCount + column) {
+        insertColumns(colCount, dragColumnCount + column - colCount, parent);
+        colCount = columnCount(parent);
+    }
+    insertRows(row, dragRowCount, parent);
+
+    row = qMax(0, row);
+    column = qMax(0, column);
+
+    QStandardItem *parentItem = itemFromIndex (parent);
+    if (!parentItem)
+        parentItem = invisibleRootItem();
+
+    QVector<QPersistentModelIndex> newIndexes(items.size());
+    // set the data in the table
+    for (int j = 0; j < items.size(); ++j) {
+        int relativeRow = rows.at(j) - top;
+        int relativeColumn = columns.at(j) - left;
+        int destinationRow = relativeRow + row;
+        int destinationColumn = relativeColumn + column;
+        int flat = (relativeRow * dragColumnCount) + relativeColumn;
+        // if the item was already written to, or we just can't fit it in the table, create a new row
+        if (destinationColumn >= colCount || isWrittenTo.testBit(flat)) {
+            destinationColumn = qBound(column, destinationColumn, colCount - 1);
+            destinationRow = row + dragRowCount;
+            insertRows(row + dragRowCount, 1, parent);
+            flat = (dragRowCount * dragColumnCount) + relativeColumn;
+            isWrittenTo.resize(++dragRowCount * dragColumnCount);
+        }
+        if (!isWrittenTo.testBit(flat)) {
+            newIndexes[j] = index(destinationRow, destinationColumn, parentItem->index());
+            isWrittenTo.setBit(flat);
+        }
+    }
+
+    for(int k = 0; k < newIndexes.size(); k++) {
+        if (newIndexes.at(k).isValid()) {
+            parentItem->setChild(newIndexes.at(k).row(), newIndexes.at(k).column(), items.at(k));
+        } else {
+            delete items.at(k);
+        }
+    }
+
+    return true;
+}
 
 QT_END_NAMESPACE
 

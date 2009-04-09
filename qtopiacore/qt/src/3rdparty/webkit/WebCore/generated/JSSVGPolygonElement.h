@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPolygonElement_H
-#define JSSVGPolygonElement_H
+#ifndef JSSVGPolygonElement_h
+#define JSSVGPolygonElement_h
 
 
 #if ENABLE(SVG)
@@ -31,52 +31,61 @@ namespace WebCore {
 class SVGPolygonElement;
 
 class JSSVGPolygonElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGPolygonElement(KJS::ExecState*, SVGPolygonElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPolygonElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPolygonElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        RequiredFeaturesAttrNum, RequiredExtensionsAttrNum, SystemLanguageAttrNum, XmllangAttrNum, 
-        XmlspaceAttrNum, ExternalResourcesRequiredAttrNum, ClassNameAttrNum, StyleAttrNum, 
-        TransformAttrNum, NearestViewportElementAttrNum, FarthestViewportElementAttrNum, PointsAttrNum, 
-        AnimatedPointsAttrNum, 
-
-        // Functions
-        HasExtensionFuncNum, GetBBoxFuncNum, GetCTMFuncNum, GetScreenCTMFuncNum, 
-        GetTransformToElementFuncNum
-    };
-};
-
-
-class JSSVGPolygonElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSSVGPolygonElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
-};
-
-class JSSVGPolygonElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGPolygonElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
 };
+
+
+class JSSVGPolygonElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGPolygonElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionHasExtension(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionGetPresentationAttribute(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionGetBBox(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionGetCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionGetScreenCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPolygonElementPrototypeFunctionGetTransformToElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGPolygonElementRequiredFeatures(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementRequiredExtensions(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementSystemLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementXmllang(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPolygonElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPolygonElementXmlspace(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPolygonElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPolygonElementExternalResourcesRequired(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementClassName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementTransform(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementNearestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementFarthestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementPoints(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPolygonElementAnimatedPoints(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

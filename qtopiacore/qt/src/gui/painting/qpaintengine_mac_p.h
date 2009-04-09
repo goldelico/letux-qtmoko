@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,9 @@
 #include "private/qpaintengine_p.h"
 #include "private/qpolygonclipper_p.h"
 #include "QtCore/qhash.h"
+#ifndef QT_MAC_NO_QUICKDRAW
+#include <private/qwidget_p.h>
+#endif
 
 typedef struct CGColorSpace *CGColorSpaceRef;
 QT_BEGIN_NAMESPACE
@@ -62,6 +69,107 @@ extern int qt_defaultDpi();
 extern int qt_defaultDpiX();
 extern int qt_defaultDpiY();
 
+#ifndef QT_MAC_NO_QUICKDRAW
+class QMacSavedPortInfo
+{
+    RgnHandle clip;
+    GWorldPtr world;
+    GDHandle handle;
+    PenState pen; //go pennstate
+    RGBColor back, fore;
+    bool valid_gworld;
+    void init();
+
+public:
+    inline QMacSavedPortInfo() { init(); }
+    inline QMacSavedPortInfo(QPaintDevice *pd) { init(); setPaintDevice(pd); }
+    inline QMacSavedPortInfo(QPaintDevice *pd, const QRect &r)
+        { init(); setPaintDevice(pd); setClipRegion(r); }
+    inline QMacSavedPortInfo(QPaintDevice *pd, const QRegion &r)
+        { init(); setPaintDevice(pd); setClipRegion(r); }
+    ~QMacSavedPortInfo();
+    static inline bool setClipRegion(const QRect &r);
+    static inline bool setClipRegion(const QRegion &r);
+    static inline bool setPaintDevice(QPaintDevice *);
+};
+
+inline bool
+QMacSavedPortInfo::setClipRegion(const QRect &rect)
+{
+    Rect r;
+    SetRect(&r, rect.x(), rect.y(), rect.right()+1, rect.bottom()+1);
+    ClipRect(&r);
+    return true;
+}
+
+inline bool
+QMacSavedPortInfo::setClipRegion(const QRegion &r)
+{
+    if(r.isEmpty())
+        return setClipRegion(QRect());
+    QMacSmartQuickDrawRegion rgn(r.toQDRgn());
+    SetClip(rgn);
+    return true;
+}
+
+inline bool
+QMacSavedPortInfo::setPaintDevice(QPaintDevice *pd)
+{
+    if(!pd)
+        return false;
+    bool ret = true;
+    extern GrafPtr qt_mac_qd_context(const QPaintDevice *); // qpaintdevice_mac.cpp
+    if(pd->devType() == QInternal::Widget)
+        SetPortWindowPort(qt_mac_window_for(static_cast<QWidget*>(pd)));
+    else if(pd->devType() == QInternal::Pixmap || pd->devType() == QInternal::Printer)
+        SetGWorld((GrafPtr)qt_mac_qd_context(pd), 0); //set the gworld
+    return ret;
+}
+
+inline void
+QMacSavedPortInfo::init()
+{
+    GetBackColor(&back);
+    GetForeColor(&fore);
+    GetGWorld(&world, &handle);
+    valid_gworld = true;
+    clip = NewRgn();
+    GetClip(clip);
+    GetPenState(&pen);
+}
+
+inline QMacSavedPortInfo::~QMacSavedPortInfo()
+{
+    bool set_state = false;
+    if(valid_gworld) {
+        set_state = IsValidPort(world);
+        if(set_state)
+            SetGWorld(world,handle); //always do this one first
+    } else {
+        setPaintDevice(qt_mac_safe_pdev);
+    }
+    if(set_state) {
+        SetClip(clip);
+        SetPenState(&pen);
+        RGBForeColor(&fore);
+        RGBBackColor(&back);
+    }
+    DisposeRgn(clip);
+}
+#else
+class QMacSavedPortInfo
+{
+public:
+    inline QMacSavedPortInfo() { }
+    inline QMacSavedPortInfo(QPaintDevice *) { }
+    inline QMacSavedPortInfo(QPaintDevice *, const QRect &) { }
+    inline QMacSavedPortInfo(QPaintDevice *, const QRegion &) { }
+    ~QMacSavedPortInfo() { }
+    static inline bool setClipRegion(const QRect &) { return false; }
+    static inline bool setClipRegion(const QRegion &) { return false; }
+    static inline bool setPaintDevice(QPaintDevice *) { return false; }
+};
+#endif
 
 class QCoreGraphicsPaintEnginePrivate;
 class QCoreGraphicsPaintEngine : public QPaintEngine
@@ -143,11 +251,9 @@ class QCoreGraphicsPaintEnginePrivate : public QPaintEnginePrivate
     Q_DECLARE_PUBLIC(QCoreGraphicsPaintEngine)
 public:
     QCoreGraphicsPaintEnginePrivate()
+        : hd(0), shading(0), stackCount(0), complexXForm(false)
     {
-        hd = 0;
-        shading = 0;
     }
-
 
     struct {
         QPen pen;
@@ -163,6 +269,7 @@ public:
     //cg structures
     CGContextRef hd;
     CGShadingRef shading;
+    int stackCount;
     bool complexXForm;
     enum { CosmeticNone, CosmeticTransformPath, CosmeticSetPenWidth } cosmeticPen;
 
@@ -174,8 +281,11 @@ public:
     enum { CGStroke=0x01, CGEOFill=0x02, CGFill=0x04 };
     void drawPath(uchar ops, CGMutablePathRef path = 0);
     void setClip(const QRegion *rgn=0);
-    void setFillBrush(const QBrush &brush, const QPointF &origin=QPoint());
+    void resetClip();
+    void setFillBrush(const QPointF &origin=QPoint());
     void setStrokePen(const QPen &pen);
+    inline void saveGraphicsState();
+    inline void restoreGraphicsState();
     float penOffset();
     QPointF devicePixelSize(CGContextRef context);
     float adjustPenWidth(float penWidth);
@@ -191,6 +301,19 @@ public:
         CGContextSetTextMatrix(hd, xform);
     }
 };
+
+inline void QCoreGraphicsPaintEnginePrivate::saveGraphicsState()
+{
+    ++stackCount;
+    CGContextSaveGState(hd);
+}
+
+inline void QCoreGraphicsPaintEnginePrivate::restoreGraphicsState()
+{
+    --stackCount;
+    Q_ASSERT(stackCount >= 0);
+    CGContextRestoreGState(hd);
+}
 
 class QMacQuartzPaintDevice : public QPaintDevice
 {

@@ -18,66 +18,66 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathEvaluator_H
-#define JSXPathEvaluator_H
+#ifndef JSXPathEvaluator_h
+#define JSXPathEvaluator_h
 
 
 #if ENABLE(XPATH)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class XPathEvaluator;
 
-class JSXPathEvaluator : public KJS::DOMObject {
+class JSXPathEvaluator : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSXPathEvaluator(KJS::ExecState*, XPathEvaluator*);
+    JSXPathEvaluator(PassRefPtr<JSC::Structure>, PassRefPtr<XPathEvaluator>);
     virtual ~JSXPathEvaluator();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // The Constructor Attribute
-        ConstructorAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // Functions
-        CreateExpressionFuncNum, CreateNSResolverFuncNum, EvaluateFuncNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     XPathEvaluator* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<XPathEvaluator> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, XPathEvaluator*);
-XPathEvaluator* toXPathEvaluator(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, XPathEvaluator*);
+XPathEvaluator* toXPathEvaluator(JSC::JSValuePtr);
 
-class JSXPathEvaluatorPrototype : public KJS::JSObject {
+class JSXPathEvaluatorPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSXPathEvaluatorPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSXPathEvaluatorPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSXPathEvaluatorPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSXPathEvaluatorPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsXPathEvaluatorPrototypeFunctionCreateExpression(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsXPathEvaluatorPrototypeFunctionCreateNSResolver(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsXPathEvaluatorPrototypeFunctionEvaluate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsXPathEvaluatorConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

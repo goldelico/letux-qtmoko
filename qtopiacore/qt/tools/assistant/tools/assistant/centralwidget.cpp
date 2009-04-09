@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -63,6 +67,7 @@
 #include <QtGui/QPageSetupDialog>
 
 #include <QtHelp/QHelpEngine>
+#include <QtHelp/QHelpSearchEngine>
 
 QT_BEGIN_NAMESPACE
 
@@ -121,7 +126,7 @@ FindWidget::FindWidget(QWidget *parent)
 
     checkWholeWords = new QCheckBox(tr("Whole words"), this);
     hboxLayout->addWidget(checkWholeWords);
-#if defined(USE_WEBKIT)
+#if !defined(QT_NO_WEBKIT)
     checkWholeWords->hide();
 #endif
 
@@ -166,6 +171,8 @@ CentralWidget::CentralWidget(QHelpEngine *engine, MainWindow *parent)
     , printer(0)
     , m_searchWidget(0)
 {
+    staticCentralWidget = this;
+
     lastTabPage = 0;
     globalActionList.clear();
     collectionFile = helpEngine->collectionFile();
@@ -224,13 +231,12 @@ CentralWidget::CentralWidget(QHelpEngine *engine, MainWindow *parent)
                 this, SLOT(showTabBarContextMenu(const QPoint&)));
     }
 
-    staticCentralWidget = this;
-    QPalette p = palette();
+    QPalette p = qApp->palette();
     p.setColor(QPalette::Inactive, QPalette::Highlight,
         p.color(QPalette::Active, QPalette::Highlight));
     p.setColor(QPalette::Inactive, QPalette::HighlightedText,
         p.color(QPalette::Active, QPalette::HighlightedText));
-    setPalette(p);    
+    qApp->setPalette(p);
 }
 
 CentralWidget::~CentralWidget()
@@ -246,7 +252,7 @@ CentralWidget::~CentralWidget()
         HelpViewer *viewer = qobject_cast<HelpViewer*>(tabWidget->widget(i));
         if (viewer && viewer->source().isValid()) {
             currentPages.append(viewer->source().toString()).append(sep);
-#if defined(USE_WEBKIT)
+#if !defined(QT_NO_WEBKIT)
             zoomCount.append(QString::number(viewer->textSizeMultiplier())).
                 append(sep);
 #else
@@ -256,7 +262,7 @@ CentralWidget::~CentralWidget()
     }
     engine.setCustomValue(QLatin1String("LastTabPage"), lastTabPage);
     engine.setCustomValue(QLatin1String("LastShownPages"), currentPages);
-#if defined(USE_WEBKIT)
+#if !defined(QT_NO_WEBKIT)
     engine.setCustomValue(QLatin1String("LastPagesZoomWebView"), zoomCount);
 #else
     engine.setCustomValue(QLatin1String("LastPagesZoomTextBrowser"), zoomCount);
@@ -297,7 +303,7 @@ void CentralWidget::zoomOut()
 
 void CentralWidget::findNext()
 {
-	find(findWidget->editFind->text(), true, false);
+    find(findWidget->editFind->text(), true, false);
 }
 
 void CentralWidget::nextPage()
@@ -329,7 +335,7 @@ void CentralWidget::previousPage()
 
 void CentralWidget::findPrevious()
 {
-	find(findWidget->editFind->text(), false, true);
+    find(findWidget->editFind->text(), false, true);
 }
 
 void CentralWidget::closeTab()
@@ -365,7 +371,7 @@ void CentralWidget::setSource(const QUrl &url)
 
 void CentralWidget::setLastShownPages()
 {
-#if defined(USE_WEBKIT)
+#if !defined(QT_NO_WEBKIT)
     QLatin1String zoom("LastPagesZoomWebView");
 #else
     QLatin1String zoom("LastPagesZoomTextBrowser");
@@ -380,7 +386,11 @@ void CentralWidget::setLastShownPages()
             split(QLatin1Char('|'), QString::SkipEmptyParts).toVector();
         if (zoomList.isEmpty())
             zoomList.fill(QLatin1String("0.0"), lastShownPageList.size());
-        
+        else if(zoomList.count() < lastShownPageList.count()) {
+            zoomList.insert(zoomList.count(),
+                lastShownPageList.count() - zoomList.count(), QLatin1String("0.0"));
+        }
+
         QVector<QString>::const_iterator zIt = zoomList.constBegin();
         QStringList::const_iterator it = lastShownPageList.constBegin();
         for (; it != lastShownPageList.constEnd(); ++it, ++zIt)
@@ -450,7 +460,7 @@ void CentralWidget::print()
     initPrinter();
 
     QPrintDialog *dlg = new QPrintDialog(printer, this);
-#if !defined(USE_WEBKIT)
+#if defined(QT_NO_WEBKIT)
     if (viewer->textCursor().hasSelection())
         dlg->addEnabledOption(QAbstractPrintDialog::PrintSelection);
 #endif
@@ -549,20 +559,44 @@ void CentralWidget::setGlobalActions(const QList<QAction*> &actions)
 
 void CentralWidget::setSourceInNewTab(const QUrl &url, qreal zoom)
 {
-    HelpViewer* viewer = new HelpViewer(helpEngine, this);
+    HelpViewer* viewer;
+
+#if defined(QT_NO_WEBKIT)
+    viewer = currentHelpViewer();
+    if (viewer && viewer->launchedWithExternalApp(url))
+        return;
+#endif
+
+    viewer = new HelpViewer(helpEngine, this);
     viewer->installEventFilter(this);
     viewer->setSource(url);
     viewer->setFocus(Qt::OtherFocusReason);
-    tabWidget->setCurrentIndex(tabWidget->addTab(viewer, quoteTabTitle(viewer->documentTitle())));
+    tabWidget->setCurrentIndex(tabWidget->addTab(viewer,
+        quoteTabTitle(viewer->documentTitle())));
 
     QFont font = qApp->font();
-    if (helpEngine->customValue(QLatin1String("useBrowserFont")).toBool()) {
+    bool userFont = helpEngine->customValue(QLatin1String("useBrowserFont")).toBool();
+    if (userFont) {
         font = qVariantValue<QFont>(helpEngine->customValue(
             QLatin1String("browserFont")));
     }
 
-#if defined(USE_WEBKIT)
+#if !defined(QT_NO_WEBKIT)
+    QWebSettings* settings = QWebSettings::globalSettings();
+    if (!userFont) {
+        int fontSize = settings->fontSize(QWebSettings::DefaultFontSize);
+        QString fontFamily = settings->fontFamily(QWebSettings::StandardFont);
+        font = QFont(fontFamily, fontSize);
+    }
+
+    QWebView* view = qobject_cast<QWebView*> (viewer);
+    if (view) {
+        settings = view->settings();
+        settings->setFontFamily(QWebSettings::StandardFont, font.family());
+        settings->setFontSize(QWebSettings::DefaultFontSize, font.pointSize());
+    } else if (viewer) {
     viewer->setFont(font);
+    }
     viewer->setTextSizeMultiplier(zoom == 0.0 ? 1.0 : zoom);
 #else
     font.setPointSize((int)(font.pointSize() + zoom));
@@ -573,23 +607,23 @@ void CentralWidget::setSourceInNewTab(const QUrl &url, qreal zoom)
     connectSignals();
 }
 
-void CentralWidget::findCurrentText(const QString &text)
-{
-    find(text, false, false);
-}
-
 HelpViewer *CentralWidget::newEmptyTab()
 {
     HelpViewer* viewer = new HelpViewer(helpEngine, this);
     viewer->installEventFilter(this);
     viewer->setFocus(Qt::OtherFocusReason);
-#if !defined(USE_WEBKIT)
+#if defined(QT_NO_WEBKIT)
     viewer->setDocumentTitle(tr("unknown"));
 #endif
     tabWidget->setCurrentIndex(tabWidget->addTab(viewer, tr("unknown")));
 
     connectSignals();
     return viewer;
+}
+
+void CentralWidget::findCurrentText(const QString &text)
+{
+    find(text, false, false);
 }
 
 void CentralWidget::connectSignals()
@@ -626,10 +660,26 @@ void CentralWidget::activateTab(bool onlyHelpViewer)
 
 void CentralWidget::setTabTitle(const QUrl& url)
 {
+    int tab = lastTabPage;
+    HelpViewer* viewer = currentHelpViewer();
+
+#if !defined(QT_NO_WEBKIT)
+    if (!viewer || viewer->source() != url) {
+        QTabBar *tabBar = qFindChild<QTabBar*>(tabWidget);
+        for (tab = 0; tab < tabBar->count(); ++tab) {
+            viewer = qobject_cast<HelpViewer*>(tabWidget->widget(tab));
+            if (viewer && viewer->source() == url)
+                break;
+        }
+    }
+#else
     Q_UNUSED(url)
-    const HelpViewer* viewer = currentHelpViewer();
-    if (viewer)
-        tabWidget->setTabText(lastTabPage, quoteTabTitle(viewer->documentTitle().trimmed()));
+#endif
+
+    if (viewer) {
+        tabWidget->setTabText(tab,
+            quoteTabTitle(viewer->documentTitle().trimmed()));
+    }
 }
 
 void CentralWidget::currentPageChanged(int index)
@@ -710,9 +760,14 @@ bool CentralWidget::eventFilter(QObject *object, QEvent *e)
         QKeyEvent *ke = static_cast<QKeyEvent*>(e);
         if (ke->key() == Qt::Key_Backspace) {
             HelpViewer *viewer = currentHelpViewer();
-            if (viewer && viewer->isBackwardAvailable())
+#if defined(QT_NO_WEBKIT)
+            if (viewer && viewer->isBackwardAvailable()) {
+#else
+            if (viewer && viewer->isBackwardAvailable() && !viewer->hasFocus()) {
+#endif
                 viewer->backward();
-            return true;
+                return true;
+            }
         }
     }
 
@@ -746,18 +801,18 @@ bool CentralWidget::eventFilter(QObject *object, QEvent *e)
 
 void CentralWidget::keyPressEvent(QKeyEvent *e)
 {
-	QString text = e->text();
-	if (text.startsWith(QLatin1Char('/'))) {
-		if (!findBar->isVisible()) {
-			findBar->show();
-			findWidget->editFind->clear();
-		} else {
-			findWidget->editFind->selectAll();
-		}
-		findWidget->editFind->setFocus();
-		return;
-	}
-	QWidget::keyPressEvent(e);
+    QString text = e->text();
+    if (text.startsWith(QLatin1Char('/'))) {
+        if (!findBar->isVisible()) {
+            findBar->show();
+            findWidget->editFind->clear();
+        } else {
+            findWidget->editFind->selectAll();
+        }
+        findWidget->editFind->setFocus();
+        return;
+    }
+    QWidget::keyPressEvent(e);
 }
 
 void CentralWidget::find(QString ttf, bool forward, bool backward)
@@ -770,14 +825,14 @@ void CentralWidget::find(QString ttf, bool forward, bool backward)
     QPalette p = findWidget->editFind->palette();
     p.setColor(QPalette::Active, QPalette::Base, Qt::white);
 
-#if defined(USE_WEBKIT)
-    Q_UNUSED(backward)
+#if !defined(QT_NO_WEBKIT)
+    Q_UNUSED(forward)
     Q_UNUSED(doc)
     Q_UNUSED(browser)
 
     if (viewer) {
         QWebPage::FindFlags options;
-        if (!forward)
+        if (backward)
             options |= QWebPage::FindBackward;
 
         if (findWidget->checkCase->isChecked())
@@ -853,7 +908,7 @@ void CentralWidget::find(QString ttf, bool forward, bool backward)
     if (!findWidget->isVisible())
         findWidget->show();
 
-#if !defined(USE_WEBKIT)
+#if defined(QT_NO_WEBKIT)
     if (browser)
         browser->setTextCursor(newCursor);
 #endif
@@ -872,14 +927,39 @@ void CentralWidget::activateSearch()
 void CentralWidget::updateBrowserFont()
 {
     QFont font = qApp->font();
-    if (helpEngine->customValue(QLatin1String("useBrowserFont")).toBool())
-        font = qVariantValue<QFont>(helpEngine->customValue(QLatin1String("browserFont")));
+    bool userFont = helpEngine->customValue(QLatin1String("useBrowserFont")).toBool();
+    if (userFont) {
+        font = qVariantValue<QFont>(helpEngine->customValue(
+            QLatin1String("browserFont")));
+    }
+
+#if !defined(QT_NO_WEBKIT)
+    QWebSettings* settings = QWebSettings::globalSettings();
+    if (!userFont) {
+        int fontSize = settings->fontSize(QWebSettings::DefaultFontSize);
+        QString fontFamily = settings->fontFamily(QWebSettings::StandardFont);
+        font = QFont(fontFamily, fontSize);
+    }
+#endif
 
     QWidget* widget = 0;
     for (int i = 0; i < tabWidget->count(); ++i) {
         widget = tabWidget->widget(i);
-        if (widget->font() != font)
+#if !defined(QT_NO_WEBKIT)
+        QWebView* view = qobject_cast<QWebView*> (widget);
+        if (view) {
+            settings = view->settings();
+            settings->setFontFamily(QWebSettings::StandardFont, font.family());
+            settings->setFontSize(QWebSettings::DefaultFontSize, font.pointSize());
+        } else if (widget) {
+            if (!userFont)
+                font = qApp->font();
             widget->setFont(font);
+        }
+#else
+        if (widget && widget->font() != font)
+            widget->setFont(font);
+#endif
     }
 }
 
@@ -888,9 +968,9 @@ void CentralWidget::createSearchWidget(QHelpSearchEngine *searchEngine)
     if (!m_searchWidget) {
         m_searchWidget = new SearchWidget(searchEngine, this);
         connect(m_searchWidget, SIGNAL(requestShowLink(const QUrl&)), this,
-            SLOT(setSource(const QUrl&)));
+            SLOT(setSourceFromSearch(const QUrl&)));
         connect(m_searchWidget, SIGNAL(requestShowLinkInNewTab(const QUrl&)), this,
-            SLOT(setSourceInNewTab(const QUrl&)));
+            SLOT(setSourceFromSearchInNewTab(const QUrl&)));
     }
     tabWidget->insertTab(0, m_searchWidget, tr("Search"));
 }
@@ -904,6 +984,97 @@ QString CentralWidget::quoteTabTitle(const QString &title) const
 {
     QString s = title;
     return s.replace(QLatin1Char('&'), QLatin1String("&&"));
+}
+
+void
+CentralWidget::setSourceFromSearch(const QUrl &url)
+{
+    setSource(url);
+    highlightSearchTerms();
+}
+
+void
+CentralWidget::setSourceFromSearchInNewTab(const QUrl &url)
+{
+    setSourceInNewTab(url);
+    highlightSearchTerms();
+}
+
+void
+CentralWidget::highlightSearchTerms()
+{
+#if defined(QT_NO_WEBKIT)
+    HelpViewer *viewer = currentHelpViewer();
+    if (!viewer)
+        return;
+
+    QHelpSearchEngine* searchEngine = helpEngine->searchEngine();
+    QList<QHelpSearchQuery> queryList = searchEngine->query();
+
+    QStringList terms;
+    foreach (QHelpSearchQuery query, queryList) {
+        switch (query.fieldName) {
+            default: break;
+            case QHelpSearchQuery::ALL: {
+            case QHelpSearchQuery::PHRASE:
+            case QHelpSearchQuery::DEFAULT:
+            case QHelpSearchQuery::ATLEAST:
+                foreach (QString term, query.wordList)
+                    terms.append(term.remove(QLatin1String("\"")));
+            }
+        }
+    }
+
+    viewer->viewport()->setUpdatesEnabled(false);
+
+    QTextCharFormat marker;
+    marker.setForeground(Qt::red);
+
+    QTextCursor firstHit;
+
+    QTextCursor c = viewer->textCursor();
+    c.beginEditBlock();
+    foreach (const QString& term, terms) {
+        c.movePosition(QTextCursor::Start);
+        viewer->setTextCursor(c);
+
+        while (viewer->find(term, QTextDocument::FindWholeWords)) {
+            QTextCursor hit = viewer->textCursor();
+            if (firstHit.isNull() || hit.position() < firstHit.position())
+                firstHit = hit;
+
+            hit.mergeCharFormat(marker);
+        }
+    }
+
+    if (firstHit.isNull()) {
+        firstHit = viewer->textCursor();
+        firstHit.movePosition(QTextCursor::Start);
+    }
+    firstHit.clearSelection();
+    c.endEditBlock();
+    viewer->setTextCursor(firstHit);
+
+    viewer->viewport()->setUpdatesEnabled(true);
+#endif
+}
+
+void CentralWidget::closeTabAt(int index)
+{
+    HelpViewer *viewer = qobject_cast<HelpViewer*>(tabWidget->widget(index));
+    tabWidget->removeTab(index);
+    QTimer::singleShot(0, viewer, SLOT(deleteLater()));
+}
+
+QMap<int, QString> CentralWidget::currentSourceFileList() const
+{
+    QMap<int, QString> sourceList;
+    for (int i = 1; i < tabWidget->count(); ++i) {
+        HelpViewer *viewer = qobject_cast<HelpViewer*>(tabWidget->widget(i));
+        if (viewer && viewer->source().isValid())
+            sourceList.insert(i, viewer->source().host());
+    }
+    return sourceList;
 }
 
 QT_END_NAMESPACE

@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimationElement_H
-#define JSSVGAnimationElement_H
+#ifndef JSSVGAnimationElement_h
+#define JSSVGAnimationElement_h
 
 
-#if ENABLE(SVG)
+#if ENABLE(SVG_ANIMATION)
 
 #include "JSSVGElement.h"
 
@@ -31,50 +31,55 @@ namespace WebCore {
 class SVGAnimationElement;
 
 class JSSVGAnimationElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGAnimationElement(KJS::ExecState*, SVGAnimationElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGAnimationElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimationElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        TargetElementAttrNum, RequiredFeaturesAttrNum, RequiredExtensionsAttrNum, SystemLanguageAttrNum, 
-        ExternalResourcesRequiredAttrNum, 
-
-        // Functions
-        GetStartTimeFuncNum, GetCurrentTimeFuncNum, GetSimpleDurationFuncNum, HasExtensionFuncNum
-    };
-};
-
-
-class JSSVGAnimationElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSSVGAnimationElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
-};
-
-class JSSVGAnimationElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGAnimationElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
 };
+
+
+class JSSVGAnimationElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGAnimationElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionGetStartTime(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionGetCurrentTime(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionGetSimpleDuration(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionHasExtension(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionBeginElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionBeginElementAt(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionEndElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnimationElementPrototypeFunctionEndElementAt(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGAnimationElementTargetElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimationElementRequiredFeatures(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimationElementRequiredExtensions(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimationElementSystemLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimationElementExternalResourcesRequired(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG_ANIMATION)
 
 #endif

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -81,15 +85,13 @@ public:
 
     virtual void execute(QScriptContextPrivate *context);
 
-    class Instance: public QScriptFunction {
+    class Instance: public QScriptObjectData {
     public:
         Instance() { }
-        virtual void finalize(QScriptEngine *engine);
+        virtual void finalize(QScriptEnginePrivate *engine);
         virtual ~Instance() {}
 
         static Instance *get(const QScriptValueImpl &object, QScriptClassInfo *klass = 0);
-
-        virtual void execute(QScriptContextPrivate *context);
 
     public:
         QPointer<QObject> value;
@@ -146,6 +148,7 @@ public:
     }
 
     int mostGeneralMethod(QMetaMethod *out = 0) const;
+    QList<int> overloadedIndexes() const;
 
     inline int initialIndex() const { return m_initialIndex; }
     inline bool maybeOverloaded() const { return m_maybeOverloaded; }
@@ -166,7 +169,7 @@ public:
 
     class Instance: public QScriptFunction {
     public:
-        Instance() { value = 0; ctor.invalidate(); }
+        Instance() : value(0) { }
         virtual ~Instance() { }
 
         static Instance *get(const QScriptValueImpl &object, QScriptClassInfo *klass);
@@ -176,6 +179,7 @@ public:
     public:
         const QMetaObject *value;
         QScriptValueImpl ctor;
+        QScriptValueImpl prototype;
     };
 
     inline Instance *get(const QScriptValueImpl &object) const
@@ -271,6 +275,11 @@ public:
     inline int enumeratorIndex() const
     { Q_ASSERT(isMetaEnum()); return m_typeId; }
 
+    inline bool operator==(const QScriptMetaType &other) const
+    {
+        return (m_kind == other.m_kind) && (m_typeId == other.m_typeId);
+    }
+
     static inline QScriptMetaType variant()
     { return QScriptMetaType(Variant); }
 
@@ -337,6 +346,9 @@ public:
 
     inline QScriptMetaType type(int index) const
     { return m_types.at(index); }
+
+    inline QVector<QScriptMetaType> types() const
+    { return m_types; }
 
 private:
     QByteArray m_name;

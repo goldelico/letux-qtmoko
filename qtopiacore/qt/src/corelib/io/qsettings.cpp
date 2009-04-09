@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,10 @@
 #include "qmutex.h"
 #include "qlibraryinfo.h"
 #include "qtemporaryfile.h"
+
+#ifndef QT_NO_TEXTCODEC
+#  include "qtextcodec.h"
+#endif
 
 #ifndef QT_NO_GEOM_VARIANT
 #include "qsize.h"
@@ -130,9 +138,13 @@ static bool isLikelyToBeNfs(int handle)
     return qt_isEvilFsTypeName(buf.f_fstypename);
 }
 
-#elif (defined(Q_OS_LINUX) || defined(Q_OS_HURD)) && !defined(QT_LSB)
+#elif defined(Q_OS_LINUX) || defined(Q_OS_HURD)
 QT_BEGIN_INCLUDE_NAMESPACE
 # include <sys/vfs.h>
+# ifdef QT_LINUXBASE
+   // LSB 3.2 has fstatfs in sys/statfs.h, sys/vfs.h is just an empty dummy header
+#  include <sys/statfs.h>
+# endif
 QT_END_INCLUDE_NAMESPACE
 # ifndef NFS_SUPER_MAGIC
 #  define NFS_SUPER_MAGIC       0x00006969
@@ -166,7 +178,11 @@ static bool isLikelyToBeNfs(int handle)
     struct statvfs buf;
     if (fstatvfs(handle, &buf) != 0)
         return false;
+#if defined(Q_OS_NETBSD)
+    return qt_isEvilFsTypeName(buf.f_fstypename);
+#else
     return qt_isEvilFsTypeName(buf.f_basetype);
+#endif
 }
 #else
 static inline bool isLikelyToBeNfs(int /* handle */)
@@ -271,7 +287,7 @@ void QConfFile::clearCache()
 // QSettingsPrivate
 
 QSettingsPrivate::QSettingsPrivate(QSettings::Format format)
-    : format(format), scope(QSettings::UserScope /* nothing better to put */), spec(0), fallbacks(true),
+    : format(format), scope(QSettings::UserScope /* nothing better to put */), iniCodec(0), spec(0), fallbacks(true),
       pendingChanges(false), status(QSettings::NoError)
 {
 }
@@ -279,7 +295,7 @@ QSettingsPrivate::QSettingsPrivate(QSettings::Format format)
 QSettingsPrivate::QSettingsPrivate(QSettings::Format format, QSettings::Scope scope,
                                    const QString &organization, const QString &application)
     : format(format), scope(scope), organizationName(organization), applicationName(application),
-      spec(0), fallbacks(true), pendingChanges(false), status(QSettings::NoError)
+      iniCodec(0), spec(0), fallbacks(true), pendingChanges(false), status(QSettings::NoError)
 {
 }
 
@@ -647,7 +663,7 @@ bool QSettingsPrivate::iniUnescapedKey(const QByteArray &key, int from, int to, 
     return lowercaseOnly;
 }
 
-void QSettingsPrivate::iniEscapedString(const QString &str, QByteArray &result)
+void QSettingsPrivate::iniEscapedString(const QString &str, QByteArray &result, QTextCodec *codec)
 {
     bool needsQuotes = false;
     bool escapeNextIfDigit = false;
@@ -703,10 +719,15 @@ void QSettingsPrivate::iniEscapedString(const QString &str, QByteArray &result)
             result += (char)ch;
             break;
         default:
-            if (ch <= 0x1F || ch >= 0x7F) {
+            if (ch <= 0x1F || (ch >= 0x7F && !codec)) {
                 result += "\\x";
                 result += QByteArray::number(ch, 16);
                 escapeNextIfDigit = true;
+#ifndef QT_NO_TEXTCODEC
+            } else if (codec) {
+                // slow
+                result += codec->fromUnicode(str.at(i));
+#endif
             } else {
                 result += (char)ch;
             }
@@ -729,7 +750,7 @@ inline static void iniChopTrailingSpaces(QString &str)
         str.truncate(n--);
 }
 
-void QSettingsPrivate::iniEscapedStringList(const QStringList &strs, QByteArray &result)
+void QSettingsPrivate::iniEscapedStringList(const QStringList &strs, QByteArray &result, QTextCodec *codec)
 {
     if (strs.isEmpty()) {
         /*
@@ -747,13 +768,14 @@ void QSettingsPrivate::iniEscapedStringList(const QStringList &strs, QByteArray 
         for (int i = 0; i < strs.size(); ++i) {
             if (i != 0)
                 result += ", ";
-            iniEscapedString(strs.at(i), result);
+            iniEscapedString(strs.at(i), result, codec);
         }
     }
 }
 
 bool QSettingsPrivate::iniUnescapedStringList(const QByteArray &str, int from, int to,
-                                              QString &stringResult, QStringList &stringListResult)
+                                              QString &stringResult, QStringList &stringListResult,
+                                              QTextCodec *codec)
 {
     static const char escapeCodes[][2] =
     {
@@ -854,11 +876,18 @@ StNormal:
                 ++j;
             }
 
-            int n = stringResult.size();
-            stringResult.resize(n + (j - i));
-            QChar *resultData = stringResult.data() + n;
-            for (int k = i; k < j; ++k)
-                *resultData++ = QLatin1Char(str.at(k));
+#ifndef QT_NO_TEXTCODEC
+            if (codec) {
+                stringResult += codec->toUnicode(str.constData() + i, j - i);
+            } else
+#endif
+            {
+                int n = stringResult.size();
+                stringResult.resize(n + (j - i));
+                QChar *resultData = stringResult.data() + n;
+                for (int k = i; k < j; ++k)
+                    *resultData++ = QLatin1Char(str.at(k));
+            }
             i = j;
         }
         }
@@ -1775,7 +1804,7 @@ bool QConfFileSettingsPrivate::readIniFile(const QByteArray &data,
 }
 
 bool QConfFileSettingsPrivate::readIniSection(const QSettingsKey &section, const QByteArray &data,
-                                              ParsedSettingsMap *settingsMap)
+                                              ParsedSettingsMap *settingsMap, QTextCodec *codec)
 {
     QStringList strListValue;
     bool sectionIsLowercase = (section == section.originalCaseKey());
@@ -1808,7 +1837,7 @@ bool QConfFileSettingsPrivate::readIniSection(const QSettingsKey &section, const
         QString strValue;
         strValue.reserve(lineLen - (valueStart - lineStart));
         bool isStringList = iniUnescapedStringList(data, valueStart, lineStart + lineLen,
-                                                   strValue, strListValue);
+                                                   strValue, strListValue, codec);
         QVariant variant;
         if (isStringList) {
             variant = stringListToVariantList(strListValue);
@@ -1938,9 +1967,9 @@ bool QConfFileSettingsPrivate::writeIniFile(QIODevice &device, const ParsedSetti
             */
             if (value.type() == QVariant::StringList
                     || (value.type() == QVariant::List && value.toList().size() != 1)) {
-                iniEscapedStringList(variantListToStringList(value.toList()), block);
+                iniEscapedStringList(variantListToStringList(value.toList()), block, iniCodec);
             } else {
-                iniEscapedString(variantToString(value), block);
+                iniEscapedString(variantToString(value), block, iniCodec);
             }
             block += eol;
             if (device.write(block) == -1) {
@@ -1958,7 +1987,7 @@ void QConfFileSettingsPrivate::ensureAllSectionsParsed(QConfFile *confFile) cons
     const UnparsedSettingsMap::const_iterator end = confFile->unparsedIniSections.constEnd();
 
     for (; i != end; ++i) {
-        if (!QConfFileSettingsPrivate::readIniSection(i.key(), i.value(), &confFile->originalKeys))
+        if (!QConfFileSettingsPrivate::readIniSection(i.key(), i.value(), &confFile->originalKeys, iniCodec))
             setStatus(QSettings::FormatError);
     }
     confFile->unparsedIniSections.clear();
@@ -1986,7 +2015,7 @@ void QConfFileSettingsPrivate::ensureSectionParsed(QConfFile *confFile,
             return;
     }
 
-    if (!QConfFileSettingsPrivate::readIniSection(i.key(), i.value(), &confFile->originalKeys))
+    if (!QConfFileSettingsPrivate::readIniSection(i.key(), i.value(), &confFile->originalKeys, iniCodec))
         setStatus(QSettings::FormatError);
     confFile->unparsedIniSections.erase(i);
 }
@@ -2373,13 +2402,13 @@ void QConfFileSettingsPrivate::ensureSectionParsed(QConfFile *confFile,
 
     \section2 Accessing Common Registry Settings on Windows
 
-    On windows, it is possible for a key to have both a value and subkeys.
+    On Windows, it is possible for a key to have both a value and subkeys.
     Its default value is accessed by using "Default" or "." in
     place of a subkey:
 
     \snippet doc/src/snippets/code/src_corelib_io_qsettings.cpp 6
 
-    On other platforms than windows, "Default" and "." would be
+    On other platforms than Windows, "Default" and "." would be
     treated as regular subkeys.
 
     \section2 Platform Limitations
@@ -2508,6 +2537,13 @@ void QConfFileSettingsPrivate::ensureSectionParsed(QConfFile *confFile,
         overwriting other keys, if you save something using the a key
         such as "General/someKey", the key will be located in the
         "%General" section, \e not in the "General" section.
+
+    \o  Following the philosophy that we should be liberal in what
+        we accept and conservative in what we generate, QSettings
+        will accept Latin-1 encoded INI files, but generate pure
+        ASCII files, where non-ASCII values are encoded using standard
+        INI escape sequences. To make the INI files more readable (but
+        potentially less compatible), call setIniCodec().
     \endlist
 
     \sa registerFormat(), setPath()
@@ -2827,6 +2863,61 @@ QString QSettings::applicationName() const
     Q_D(const QSettings);
     return d->applicationName;
 }
+
+#ifndef QT_NO_TEXTCODEC
+
+/*!
+    \since 4.5
+
+    Sets the codec for accessing INI files (including \c .conf files on Unix)
+    to \a codec. The codec is used for decoding any data that is read from
+    the INI file, and for encoding any data that is written to the file. By
+    default, no codec is used, and non-ASCII characters are encoded using
+    standard INI escape sequences.
+
+    \warning The codec must be set immediately after creating the QSettings
+    object, before accessing any data.
+
+    \sa iniCodec()
+*/
+void QSettings::setIniCodec(QTextCodec *codec)
+{
+    Q_D(QSettings);
+    d->iniCodec = codec;
+}
+
+/*!
+    \since 4.5
+    \overload
+
+    Sets the codec for accessing INI files (including \c .conf files on Unix)
+    to the QTextCodec for the encoding specified by \a codecName. Common
+    values for \c codecName include "ISO 8859-1", "UTF-8", and "UTF-16".
+    If the encoding isn't recognized, nothing happens.
+
+    \sa QTextCodec::codecForName()
+*/
+void QSettings::setIniCodec(const char *codecName)
+{
+    Q_D(QSettings);
+    if (QTextCodec *codec = QTextCodec::codecForName(codecName))
+        d->iniCodec = codec;
+}
+
+/*!
+    \since 4.5
+
+    Returns the codec that is used for accessing INI files. By default,
+    no codec is used, so a null pointer is returned.
+*/
+
+QTextCodec *QSettings::iniCodec() const
+{
+    Q_D(const QSettings);
+    return d->iniCodec;
+}
+
+#endif // QT_NO_TEXTCODEC
 
 /*!
     Returns a status code indicating the first error that was met by

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -392,17 +396,19 @@ static const char *currentTabTextKey = "currentTabText";
 static const char *currentTabNameKey = "currentTabName";
 static const char *currentTabIconKey = "currentTabIcon";
 static const char *currentTabToolTipKey = "currentTabToolTip";
+static const char *currentTabWhatsThisKey = "currentTabWhatsThis";
 
 QTabWidgetPropertySheet::QTabWidgetPropertySheet(QTabWidget *object, QObject *parent) :
     QDesignerPropertySheet(object, parent),
     m_tabWidget(object)
 {
-    createFakeProperty(QLatin1String(currentTabTextKey), QString());
+    createFakeProperty(QLatin1String(currentTabTextKey), qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
     createFakeProperty(QLatin1String(currentTabNameKey), QString());
     createFakeProperty(QLatin1String(currentTabIconKey), qVariantFromValue(qdesigner_internal::PropertySheetIconValue()));
     if (formWindowBase())
         formWindowBase()->addReloadableProperty(this, indexOf(QLatin1String(currentTabIconKey)));
-    createFakeProperty(QLatin1String(currentTabToolTipKey), QString());
+    createFakeProperty(QLatin1String(currentTabToolTipKey), qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
+    createFakeProperty(QLatin1String(currentTabWhatsThisKey), qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
 }
 
 QTabWidgetPropertySheet::TabWidgetProperty QTabWidgetPropertySheet::tabWidgetPropertyFromName(const QString &name)
@@ -410,10 +416,11 @@ QTabWidgetPropertySheet::TabWidgetProperty QTabWidgetPropertySheet::tabWidgetPro
     typedef QHash<QString, TabWidgetProperty> TabWidgetPropertyHash;
     static TabWidgetPropertyHash tabWidgetPropertyHash;
     if (tabWidgetPropertyHash.empty()) {
-        tabWidgetPropertyHash.insert(QLatin1String(currentTabTextKey),    PropertyCurrentTabText);
-        tabWidgetPropertyHash.insert(QLatin1String(currentTabNameKey),    PropertyCurrentTabName);
-        tabWidgetPropertyHash.insert(QLatin1String(currentTabIconKey),    PropertyCurrentTabIcon);
-        tabWidgetPropertyHash.insert(QLatin1String(currentTabToolTipKey), PropertyCurrentTabToolTip);
+        tabWidgetPropertyHash.insert(QLatin1String(currentTabTextKey),      PropertyCurrentTabText);
+        tabWidgetPropertyHash.insert(QLatin1String(currentTabNameKey),      PropertyCurrentTabName);
+        tabWidgetPropertyHash.insert(QLatin1String(currentTabIconKey),      PropertyCurrentTabIcon);
+        tabWidgetPropertyHash.insert(QLatin1String(currentTabToolTipKey),   PropertyCurrentTabToolTip);
+        tabWidgetPropertyHash.insert(QLatin1String(currentTabWhatsThisKey), PropertyCurrentTabWhatsThis);
     }
     return tabWidgetPropertyHash.value(name, PropertyTabWidgetNone);
 }
@@ -428,22 +435,29 @@ void QTabWidgetPropertySheet::setProperty(int index, const QVariant &value)
 
     // index-dependent
     const int currentIndex = m_tabWidget->currentIndex();
-    if (currentIndex == -1)
+    QWidget *currentWidget = m_tabWidget->currentWidget();
+    if (!currentWidget)
         return;
 
     switch (tabWidgetProperty) {
     case PropertyCurrentTabText:
-        m_tabWidget->setTabText(currentIndex, value.toString());
+        m_tabWidget->setTabText(currentIndex, qvariant_cast<QString>(resolvePropertyValue(index, value)));
+        m_pageToData[currentWidget].text = qVariantValue<qdesigner_internal::PropertySheetStringValue>(value);
         break;
     case PropertyCurrentTabName:
-        m_tabWidget->widget(currentIndex)->setObjectName(value.toString());
+        currentWidget->setObjectName(value.toString());
         break;
     case PropertyCurrentTabIcon:
         m_tabWidget->setTabIcon(currentIndex, qvariant_cast<QIcon>(resolvePropertyValue(index, value)));
-        m_pageToIcon[currentIndex] = qVariantValue<qdesigner_internal::PropertySheetIconValue>(value);
+        m_pageToData[currentWidget].icon = qVariantValue<qdesigner_internal::PropertySheetIconValue>(value);
         break;
     case PropertyCurrentTabToolTip:
-        m_tabWidget->setTabToolTip(currentIndex, value.toString());
+        m_tabWidget->setTabToolTip(currentIndex, qvariant_cast<QString>(resolvePropertyValue(index, value)));
+        m_pageToData[currentWidget].tooltip = qVariantValue<qdesigner_internal::PropertySheetStringValue>(value);
+        break;
+    case PropertyCurrentTabWhatsThis:
+        m_tabWidget->setTabWhatsThis(currentIndex, qvariant_cast<QString>(resolvePropertyValue(index, value)));
+        m_pageToData[currentWidget].whatsthis = qVariantValue<qdesigner_internal::PropertySheetStringValue>(value);
         break;
     case PropertyTabWidgetNone:
         break;
@@ -464,23 +478,31 @@ QVariant QTabWidgetPropertySheet::property(int index) const
         return  QDesignerPropertySheet::property(index);
 
     // index-dependent
-    const int currentIndex = m_tabWidget->currentIndex();
-    if (currentIndex == -1) {
+    QWidget *currentWidget = m_tabWidget->currentWidget();
+    if (!currentWidget) {
         if (tabWidgetProperty == PropertyCurrentTabIcon)
             return qVariantFromValue(qdesigner_internal::PropertySheetIconValue());
+        if (tabWidgetProperty == PropertyCurrentTabText)
+            return qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
+        if (tabWidgetProperty == PropertyCurrentTabToolTip)
+            return qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
+        if (tabWidgetProperty == PropertyCurrentTabWhatsThis)
+            return qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
         return QVariant(QString());
     }
 
     // index-dependent
     switch (tabWidgetProperty) {
     case PropertyCurrentTabText:
-        return m_tabWidget->tabText(currentIndex);
+        return qVariantFromValue(m_pageToData.value(currentWidget).text);
     case PropertyCurrentTabName:
-        return m_tabWidget->widget(currentIndex)->objectName();
+        return currentWidget->objectName();
     case PropertyCurrentTabIcon:
-        return qVariantFromValue(m_pageToIcon.value(currentIndex));
+        return qVariantFromValue(m_pageToData.value(currentWidget).icon);
     case PropertyCurrentTabToolTip:
-        return m_tabWidget->tabToolTip(currentIndex);
+        return qVariantFromValue(m_pageToData.value(currentWidget).tooltip);
+    case PropertyCurrentTabWhatsThis:
+        return qVariantFromValue(m_pageToData.value(currentWidget).whatsthis);
     case PropertyTabWidgetNone:
         break;
     }
@@ -494,19 +516,29 @@ bool QTabWidgetPropertySheet::reset(int index)
         return QDesignerPropertySheet::reset(index);
 
     // index-dependent
-    const int currentIndex = m_tabWidget->currentIndex();
-    if (currentIndex == -1)
+    QWidget *currentWidget = m_tabWidget->currentWidget();
+    if (!currentWidget)
         return false;
 
     // index-dependent
     switch (tabWidgetProperty) {
-    case PropertyCurrentTabText:
     case PropertyCurrentTabName:
+        setProperty(index, QString());
+        break;
     case PropertyCurrentTabToolTip:
+        m_pageToData[currentWidget].tooltip = qdesigner_internal::PropertySheetStringValue();
+        setProperty(index, QString());
+        break;
+    case PropertyCurrentTabWhatsThis:
+        m_pageToData[currentWidget].whatsthis = qdesigner_internal::PropertySheetStringValue();
+        setProperty(index, QString());
+        break;
+    case PropertyCurrentTabText:
+        m_pageToData[currentWidget].text = qdesigner_internal::PropertySheetStringValue();
         setProperty(index, QString());
         break;
     case PropertyCurrentTabIcon:
-        m_pageToIcon.remove(index);
+        m_pageToData[currentWidget].icon = qdesigner_internal::PropertySheetIconValue();
         setProperty(index, QIcon());
         break;
     case PropertyTabWidgetNone:
@@ -521,6 +553,7 @@ bool QTabWidgetPropertySheet::checkProperty(const QString &propertyName)
     case PropertyCurrentTabText:
     case PropertyCurrentTabName:
     case PropertyCurrentTabToolTip:
+    case PropertyCurrentTabWhatsThis:
     case PropertyCurrentTabIcon:
         return false;
     default:

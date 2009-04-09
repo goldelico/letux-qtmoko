@@ -25,132 +25,134 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLHtmlElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLHtmlElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLHtmlElementTableEntries[] =
+static const HashTableValue JSHTMLHtmlElementTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "version", JSHTMLHtmlElement::VersionAttrNum, DontDelete, 0, &JSHTMLHtmlElementTableEntries[2] },
-    { "constructor", JSHTMLHtmlElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "version", DontDelete, (intptr_t)jsHTMLHtmlElementVersion, (intptr_t)setJSHTMLHtmlElementVersion },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLHtmlElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHtmlElementTable = 
-{
-    2, 3, JSHTMLHtmlElementTableEntries, 2
-};
+static const HashTable JSHTMLHtmlElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSHTMLHtmlElementTableValues, 0 };
+#else
+    { 4, 3, JSHTMLHtmlElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLHtmlElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLHtmlElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHtmlElementConstructorTable = 
-{
-    2, 1, JSHTMLHtmlElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLHtmlElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHtmlElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHtmlElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLHtmlElementConstructor : public DOMObject {
 public:
     JSHTMLHtmlElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLHtmlElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLHtmlElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLHtmlElementConstructor::info = { "HTMLHtmlElementConstructor", 0, &JSHTMLHtmlElementConstructorTable, 0 };
+const ClassInfo JSHTMLHtmlElementConstructor::s_info = { "HTMLHtmlElementConstructor", 0, &JSHTMLHtmlElementConstructorTable, 0 };
 
 bool JSHTMLHtmlElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLHtmlElementConstructor, DOMObject>(exec, &JSHTMLHtmlElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHtmlElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLHtmlElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLHtmlElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHtmlElementPrototypeTable = 
-{
-    2, 1, JSHTMLHtmlElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLHtmlElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHtmlElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHtmlElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLHtmlElementPrototype::info = { "HTMLHtmlElementPrototype", 0, &JSHTMLHtmlElementPrototypeTable, 0 };
+const ClassInfo JSHTMLHtmlElementPrototype::s_info = { "HTMLHtmlElementPrototype", 0, &JSHTMLHtmlElementPrototypeTable, 0 };
 
 JSObject* JSHTMLHtmlElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLHtmlElementPrototype>(exec, "[[JSHTMLHtmlElement.prototype]]");
+    return getDOMPrototype<JSHTMLHtmlElement>(exec);
 }
 
-const ClassInfo JSHTMLHtmlElement::info = { "HTMLHtmlElement", &JSHTMLElement::info, &JSHTMLHtmlElementTable, 0 };
+const ClassInfo JSHTMLHtmlElement::s_info = { "HTMLHtmlElement", &JSHTMLElement::s_info, &JSHTMLHtmlElementTable, 0 };
 
-JSHTMLHtmlElement::JSHTMLHtmlElement(ExecState* exec, HTMLHtmlElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLHtmlElement::JSHTMLHtmlElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLHtmlElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLHtmlElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLHtmlElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLHtmlElementPrototype(JSHTMLHtmlElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLHtmlElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLHtmlElement, JSHTMLElement>(exec, &JSHTMLHtmlElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLHtmlElement, Base>(exec, &JSHTMLHtmlElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHtmlElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLHtmlElementVersion(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case VersionAttrNum: {
-        HTMLHtmlElement* imp = static_cast<HTMLHtmlElement*>(impl());
-
-        return jsString(imp->version());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLHtmlElement* imp = static_cast<HTMLHtmlElement*>(static_cast<JSHTMLHtmlElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->version());
 }
 
-void JSHTMLHtmlElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLHtmlElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLHtmlElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLHtmlElementTable, this);
+    return static_cast<JSHTMLHtmlElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-void JSHTMLHtmlElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSHTMLHtmlElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case VersionAttrNum: {
-        HTMLHtmlElement* imp = static_cast<HTMLHtmlElement*>(impl());
-
-        imp->setVersion(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    lookupPut<JSHTMLHtmlElement, Base>(exec, propertyName, value, &JSHTMLHtmlElementTable, this, slot);
 }
 
-JSValue* JSHTMLHtmlElement::getConstructor(ExecState* exec)
+void setJSHTMLHtmlElementVersion(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSHTMLHtmlElementConstructor>(exec, "[[HTMLHtmlElement.constructor]]");
+    HTMLHtmlElement* imp = static_cast<HTMLHtmlElement*>(static_cast<JSHTMLHtmlElement*>(thisObject)->impl());
+    imp->setVersion(valueToStringWithNullCheck(exec, value));
 }
+
+JSValuePtr JSHTMLHtmlElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLHtmlElementConstructor>(exec);
+}
+
 
 }

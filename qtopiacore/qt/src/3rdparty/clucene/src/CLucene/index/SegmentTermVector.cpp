@@ -132,10 +132,10 @@ SegmentTermPositionVector::~SegmentTermPositionVector(){
 				for ( size_t j=0;j<offs.length;j++ ){
 					_CLDELETE_ARRAY(offs.values);
 				}
-				_CLDELETE_ARRAY(offsets->values);
 			}
 		}
-		_CLDELETE(offsets);
+		_CLDELETE_ARRAY(offsets->values);
+        _CLDELETE(offsets);
 	}
 	if ( positions ){
 		for (size_t i=0;i<positions->length;i++){
@@ -144,9 +144,9 @@ SegmentTermPositionVector::~SegmentTermPositionVector(){
 				for ( size_t j=0;j<pos.length;j++ ){
 					_CLDELETE_ARRAY(pos.values);
 				}
-				_CLDELETE_ARRAY(positions->values);
 			}
 		}
+        _CLDELETE_ARRAY(positions->values);
 		_CLDELETE(positions);
 	}
 }

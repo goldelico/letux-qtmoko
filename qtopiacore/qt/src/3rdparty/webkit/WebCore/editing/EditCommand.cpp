@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -41,20 +41,14 @@
 
 namespace WebCore {
 
-using namespace EventNames;
-
 EditCommand::EditCommand(Document* document) 
     : m_document(document)
-    , m_startingSelection(document->frame()->selectionController()->selection())
-    , m_endingSelection(m_startingSelection)
-    , m_startingRootEditableElement(m_startingSelection.rootEditableElement())
-    , m_endingRootEditableElement(m_startingRootEditableElement)
     , m_parent(0)
 {
     ASSERT(m_document);
     ASSERT(m_document->frame());
     DeleteButtonController* deleteButton = m_document->frame()->editor()->deleteButtonController();
-    setStartingSelection(avoidIntersectionWithNode(m_document->frame()->selectionController()->selection(), deleteButton ? deleteButton->containerElement() : 0));
+    setStartingSelection(avoidIntersectionWithNode(m_document->frame()->selection()->selection(), deleteButton ? deleteButton->containerElement() : 0));
     setEndingSelection(m_startingSelection);
 }
 
@@ -85,19 +79,18 @@ void EditCommand::apply()
             }
         }
     }
+    
+    // Changes to the document may have been made since the last editing operation that 
+    // require a layout, as in <rdar://problem/5658603>.  Low level operations, like 
+    // RemoveNodeCommand, don't require a layout because the high level operations that 
+    // use them perform one if one is necessary (like for the creation of VisiblePositions).
+    if (!m_parent)
+        updateLayout();
 
-    DeleteButtonController *deleteButtonController = frame->editor()->deleteButtonController();
+    DeleteButtonController* deleteButtonController = frame->editor()->deleteButtonController();
     deleteButtonController->disable();
     doApply();
     deleteButtonController->enable();
-
-    // FIXME: Improve typing style.
-    // See this bug: <rdar://problem/3769899> Implementation of typing style needs improvement
-    if (!preservesTypingStyle()) {
-        setTypingStyle(0);
-        if (!m_parent)
-            frame->editor()->setRemovedAnchor(0);
-    }
 
     if (!m_parent) {
         updateLayout();
@@ -112,7 +105,14 @@ void EditCommand::unapply()
  
     Frame* frame = m_document->frame();
     
-    DeleteButtonController *deleteButtonController = frame->editor()->deleteButtonController();
+    // Changes to the document may have been made since the last editing operation that 
+    // require a layout, as in <rdar://problem/5658603>.  Low level operations, like 
+    // RemoveNodeCommand, don't require a layout because the high level operations that 
+    // use them perform one if one is necessary (like for the creation of VisiblePositions).
+    if (!m_parent)
+        updateLayout();
+    
+    DeleteButtonController* deleteButtonController = frame->editor()->deleteButtonController();
     deleteButtonController->disable();
     doUnapply();
     deleteButtonController->enable();
@@ -129,8 +129,15 @@ void EditCommand::reapply()
     ASSERT(m_document->frame());
  
     Frame* frame = m_document->frame();
+    
+    // Changes to the document may have been made since the last editing operation that 
+    // require a layout, as in <rdar://problem/5658603>.  Low level operations, like 
+    // RemoveNodeCommand, don't require a layout because the high level operations that 
+    // use them perform one if one is necessary (like for the creation of VisiblePositions).
+    if (!m_parent)
+        updateLayout();
 
-    DeleteButtonController *deleteButtonController = frame->editor()->deleteButtonController();
+    DeleteButtonController* deleteButtonController = frame->editor()->deleteButtonController();
     deleteButtonController->disable();
     doReapply();
     deleteButtonController->enable();
@@ -154,7 +161,7 @@ EditAction EditCommand::editingAction() const
 void EditCommand::setStartingSelection(const Selection& s)
 {
     Element* root = s.rootEditableElement();
-    for (EditCommand* cmd = this; cmd; cmd = cmd->m_parent) {
+    for (EditCommand* cmd = this; ; cmd = cmd->m_parent) {
         cmd->m_startingSelection = s;
         cmd->m_startingRootEditableElement = root;
         if (!cmd->m_parent || cmd->m_parent->isFirstCommand(cmd))
@@ -169,20 +176,6 @@ void EditCommand::setEndingSelection(const Selection &s)
         cmd->m_endingSelection = s;
         cmd->m_endingRootEditableElement = root;
     }
-}
-
-void EditCommand::setTypingStyle(PassRefPtr<CSSMutableStyleDeclaration> style)
-{
-    // FIXME: Improve typing style.
-    // See this bug: <rdar://problem/3769899> Implementation of typing style needs improvement
-    if (!m_parent) {
-        // Special more-efficient case for where there's only one command that
-        // takes advantage of the ability of PassRefPtr to pass its ref to a RefPtr.
-        m_typingStyle = style;
-        return;
-    }
-    for (EditCommand* cmd = this; cmd; cmd = cmd->m_parent)
-        cmd->m_typingStyle = style.get(); // must use get() to avoid setting parent styles to 0
 }
 
 bool EditCommand::preservesTypingStyle() const
@@ -204,8 +197,8 @@ PassRefPtr<CSSMutableStyleDeclaration> EditCommand::styleAtPosition(const Positi
 {
     RefPtr<CSSMutableStyleDeclaration> style = positionBeforeTabSpan(pos).computedStyle()->copyInheritableProperties();
  
-    // FIXME: Improve typing style.
-    // See this bug: <rdar://problem/3769899> Implementation of typing style needs improvement
+    // FIXME: It seems misleading to also include the typing style when returning the style at some arbitrary
+    // position in the document.
     CSSMutableStyleDeclaration* typingStyle = document()->frame()->typingStyle();
     if (typingStyle)
         style->merge(typingStyle);

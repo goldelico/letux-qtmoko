@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,8 +58,10 @@
 #if !defined(QT_NO_GRAPHICSVIEW) || (QT_EDITION & QT_MODULE_GRAPHICSVIEW) != QT_MODULE_GRAPHICSVIEW
 
 #include "qgraphicsscene_bsp_p.h"
+#include "qgraphicsitem_p.h"
 
 #include <private/qobject_p.h>
+#include <QtCore/qbitarray.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qset.h>
@@ -74,6 +80,8 @@ class QGraphicsScenePrivate : public QObjectPrivate
 public:
     QGraphicsScenePrivate();
     void init();
+
+    quint32 changedSignalMask;
 
     QGraphicsScene::ItemIndexMethod indexMethod;
     int bspTreeDepth;
@@ -102,11 +110,16 @@ public:
     QSet<QGraphicsItem *> selectedItems;
     QList<QGraphicsItem *> unindexedItems;
     QList<QGraphicsItem *> indexedItems;
+    QList<QGraphicsItem *> dirtyItems;
     QList<QGraphicsItem *> pendingUpdateItems;
     QList<QGraphicsItem *> unpolishedItems;
     QMap<QGraphicsItem *, QPointF> movingItemsInitialPositions;
     void _q_updateLater();
     void _q_polishItems();
+
+    void _q_resetDirtyItems();
+    void resetDirtyItemsLater();
+    bool dirtyItemResetPending;
 
     QList<int> freeItemIndexes;
     bool regenerateIndex;
@@ -123,6 +136,7 @@ public:
     bool restartIndexTimer;
     void startIndexTimer();
 
+    bool stickyFocus;
     bool hasFocus;
     QGraphicsItem *focusItem;
     QGraphicsItem *lastFocusItem;
@@ -183,16 +197,65 @@ public:
     void mousePressEventHandler(QGraphicsSceneMouseEvent *mouseEvent);
     QGraphicsWidget *windowForItem(const QGraphicsItem *item) const;
 
-    static bool closestItemFirst(const QGraphicsItem *item1, const QGraphicsItem *item2);
-    static void sortItems(QList<QGraphicsItem *> *itemList);
+    QList<QGraphicsItem *> items_helper(const QRectF &rect,
+                                        Qt::ItemSelectionMode mode,
+                                        Qt::SortOrder order) const;
+    QList<QGraphicsItem *> items_helper(const QPolygonF &rect,
+                                        Qt::ItemSelectionMode mode,
+                                        Qt::SortOrder order) const;
+    QList<QGraphicsItem *> items_helper(const QPainterPath &rect,
+                                        Qt::ItemSelectionMode mode,
+                                        Qt::SortOrder order) const;
+    void childItems_helper(QList<QGraphicsItem *> *items,
+                           const QGraphicsItem *parent,
+                           const QRectF &rect,
+                           Qt::ItemSelectionMode mode) const;
+    void childItems_helper(QList<QGraphicsItem *> *items,
+                           const QGraphicsItem *parent,
+                           const QPolygonF &polygon,
+                           Qt::ItemSelectionMode mode) const;
+    void childItems_helper(QList<QGraphicsItem *> *items,
+                           const QGraphicsItem *parent,
+                           const QPainterPath &path,
+                           Qt::ItemSelectionMode mode) const;
 
-    static void drawItemHelper(QGraphicsItem *item, QPainter *painter,
-                               const QStyleOptionGraphicsItem *option, QWidget *widget,
-                               bool painterStateProtection);
+    bool sortCacheEnabled;
+    bool updatingSortCache;
+    void invalidateSortCache();
+    static void climbTree(QGraphicsItem *item, int *stackingOrder);
+    void _q_updateSortCache();
+
+    static bool closestItemFirst_withoutCache(const QGraphicsItem *item1, const QGraphicsItem *item2);
+    static bool closestItemLast_withoutCache(const QGraphicsItem *item1, const QGraphicsItem *item2);
+
+    static inline bool closestItemFirst_withCache(const QGraphicsItem *item1, const QGraphicsItem *item2)
+    { 
+        return item1->d_ptr->globalStackingOrder < item2->d_ptr->globalStackingOrder;
+    }
+    static inline bool closestItemLast_withCache(const QGraphicsItem *item1, const QGraphicsItem *item2)
+    {
+        return item1->d_ptr->globalStackingOrder >= item2->d_ptr->globalStackingOrder;
+    }
+
+    static void sortItems(QList<QGraphicsItem *> *itemList, Qt::SortOrder order, bool cached);
+
+    void drawItemHelper(QGraphicsItem *item, QPainter *painter,
+                        const QStyleOptionGraphicsItem *option, QWidget *widget,
+                        bool painterStateProtection);
     
     QStyle *style;
     QFont font;
+    void setFont_helper(const QFont &font);
+    void resolveFont();
+    void updateFont(const QFont &font);
     QPalette palette;
+    void setPalette_helper(const QPalette &palette);
+    void resolvePalette();
+    void updatePalette(const QPalette &palette);
+
+    mutable QVector<QTransform> sceneTransformCache;
+    mutable QBitArray validTransforms;
+    mutable QVector<int> freeSceneTransformSlots;
 };
 
 QT_END_NAMESPACE

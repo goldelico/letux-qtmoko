@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,7 @@
 #include <qvarlengtharray.h>
 #include <qdebug.h>
 #include <qcoreapplication.h>
+#include <qmath.h>
 
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
@@ -59,6 +64,7 @@
 #include <private/qt_mac_p.h>
 #include <private/qtextengine_p.h>
 #include <private/qwidget_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 
 #include <string.h>
 
@@ -67,32 +73,68 @@ QT_BEGIN_NAMESPACE
 extern int qt_antialiasing_threshold; // QApplication.cpp
 
 /*****************************************************************************
-  Internal variables and functions
- *****************************************************************************/
-//#define QMAC_NATIVE_GRADIENTS
-
-/*****************************************************************************
   External functions
  *****************************************************************************/
 extern CGImageRef qt_mac_create_imagemask(const QPixmap &px, const QRectF &sr); //qpixmap_mac.cpp
 extern QPoint qt_mac_posInWindow(const QWidget *w); //qwidget_mac.cpp
-extern WindowPtr qt_mac_window_for(const QWidget *); //qwidget_mac.cpp
+extern OSWindowRef qt_mac_window_for(const QWidget *); //qwidget_mac.cpp
 extern CGContextRef qt_mac_cg_context(const QPaintDevice *); //qpaintdevice_mac.cpp
 extern void qt_mac_dispose_rgn(RgnHandle r); //qregion_mac.cpp
 extern QPixmap qt_pixmapForBrush(int, bool); //qbrush.cpp
+
+void qt_mac_clip_cg(CGContextRef hd, const QRegion &rgn, CGAffineTransform *orig_xform);
+
 
 //Implemented for qt_mac_p.h
 QMacCGContext::QMacCGContext(QPainter *p)
 {
     QPaintEngine *pe = p->paintEngine();
-    if(pe->type() == QPaintEngine::MacPrinter)
+    if (pe->type() == QPaintEngine::MacPrinter)
         pe = static_cast<QMacPrintEngine*>(pe)->paintEngine();
     pe->syncState();
     context = 0;
     if(pe->type() == QPaintEngine::CoreGraphics)
         context = static_cast<QCoreGraphicsPaintEngine*>(pe)->handle();
-    else if(pe->type() == QPaintEngine::Raster)
-        context = static_cast<QRasterPaintEngine*>(pe)->macCGContext();
+
+    int devType = p->device()->devType();
+    if (pe->type() == QPaintEngine::Raster
+            && (devType == QInternal::Widget || devType == QInternal::Pixmap)) {
+
+        extern CGColorSpaceRef qt_mac_colorSpaceForDeviceType(const QPaintDevice *paintDevice);
+        CGColorSpaceRef colorspace = qt_mac_colorSpaceForDeviceType(pe->paintDevice());
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
+        uint flags = kCGImageAlphaPremultipliedFirst;
+#ifdef kCGBitmapByteOrder32Host //only needed because CGImage.h added symbols in the minor version
+        if(QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4)
+            flags |= kCGBitmapByteOrder32Host;
+#endif
+#else
+        CGImageAlphaInfo flags = kCGImageAlphaPremultipliedFirst;
+#endif
+        const QImage *image = (const QImage *) pe->paintDevice();
+
+        context = CGBitmapContextCreate((void *) image->bits(), image->width(), image->height(),
+                                        8, image->bytesPerLine(), colorspace, flags);
+
+        CGContextTranslateCTM(context, 0, image->height());
+        CGContextScaleCTM(context, 1, -1);
+
+        if (devType == QInternal::Widget) {
+            QRegion clip = p->paintEngine()->systemClip();
+            if (p->hasClipping()) {
+                if (clip.isEmpty())
+                    clip = p->clipRegion();
+                else
+                    clip &= p->clipRegion();
+            }
+            qt_mac_clip_cg(context, clip, 0);
+
+            QPainterState *state = static_cast<QPainterState *>(pe->state);
+            Q_ASSERT(state);
+            if (!state->redirection_offset.isNull())
+                CGContextTranslateCTM(context, -state->redirection_offset.x(), -state->redirection_offset.y());
+        }
+    }
     CGContextRetain(context);
 }
 
@@ -126,38 +168,77 @@ inline static QCFType<CGColorRef> cgColorForQColor(const QColor &col, QPaintDevi
     return CGColorCreate(qt_mac_colorSpaceForDeviceType(pdev), components);
 }
 
-#ifdef QMAC_NATIVE_GRADIENTS
-//gradiant callback
-static void qt_mac_color_gradient_function(void *info, const float *in, float *out)
+// There's architectural problems with using native gradients
+// on the Mac at the moment, so disable them.
+// #define QT_MAC_USE_NATIVE_GRADIENTS
+
+#ifdef QT_MAC_USE_NATIVE_GRADIENTS
+static bool drawGradientNatively(const QGradient *gradient)
+{
+    return gradient->spread() == QGradient::PadSpread;
+}
+
+// gradiant callback
+static void qt_mac_color_gradient_function(void *info, const CGFloat *in, CGFloat *out)
 {
     QBrush *brush = static_cast<QBrush *>(info);
-    QGradientStops stops = brush->gradient()->stops();
-    QColor c1 = stops.first().second;
-    QColor c2 = stops.last().second;
-    const float red = qt_mac_convert_color_to_cg(c1.red());
-    out[0] = red + in[0] * (qt_mac_convert_color_to_cg(c2.red())-red);
-    const float green = qt_mac_convert_color_to_cg(c1.green());
-    out[1] = green + in[0] * (qt_mac_convert_color_to_cg(c2.green())-green);
-    const float blue = qt_mac_convert_color_to_cg(c1.blue());
-    out[2] = blue + in[0] * (qt_mac_convert_color_to_cg(c2.blue())-blue);
-    const float alpha = qt_mac_convert_color_to_cg(c1.alpha());
-    out[3] = alpha + in[0] * (qt_mac_convert_color_to_cg(c2.alpha()) - alpha);
+    Q_ASSERT(brush && brush->gradient());
+
+    const QGradientStops stops = brush->gradient()->stops();
+    const int n = stops.count();
+    Q_ASSERT(n >= 1);
+    const QGradientStop *begin = stops.constBegin();
+    const QGradientStop *end = begin + n;
+
+    qreal p = in[0];
+    const QGradientStop *i = begin;
+    while (i != end && i->first < p)
+        ++i;
+
+    QRgb c;
+    if (i == begin) {
+        c = begin->second.rgba();
+    } else if (i == end) {
+        c = (end - 1)->second.rgba();
+    } else {
+        const QGradientStop &s1 = *(i - 1);
+        const QGradientStop &s2 = *i;
+        qreal p1 = s1.first;
+        qreal p2 = s2.first;
+        QRgb c1 = s1.second.rgba();
+        QRgb c2 = s2.second.rgba();
+        int idist = 256 * (p - p1) / (p2 - p1);
+        int dist = 256 - idist;
+        c = qRgba(INTERPOLATE_PIXEL_256(qRed(c1), dist, qRed(c2), idist),
+                  INTERPOLATE_PIXEL_256(qGreen(c1), dist, qGreen(c2), idist),
+                  INTERPOLATE_PIXEL_256(qBlue(c1), dist, qBlue(c2), idist),
+                  INTERPOLATE_PIXEL_256(qAlpha(c1), dist, qAlpha(c2), idist));
+    }
+
+    out[0] = qt_mac_convert_color_to_cg(qRed(c));
+    out[1] = qt_mac_convert_color_to_cg(qGreen(c));
+    out[2] = qt_mac_convert_color_to_cg(qBlue(c));
+    out[3] = qt_mac_convert_color_to_cg(qAlpha(c));
 }
 #endif
 
 //clipping handling
-static void qt_mac_clip_cg_reset(CGContextRef hd)
+void QCoreGraphicsPaintEnginePrivate::resetClip()
 {
-    //setup xforms
+    static bool inReset = false;
+    if (inReset)
+        return;
+    inReset = true;
+
     CGAffineTransform old_xform = CGContextGetCTM(hd);
+
+    //setup xforms
     CGContextConcatCTM(hd, CGAffineTransformInvert(old_xform));
-
-    //do the clip reset
-    QRect qrect = QRect(0, 0, 99999, 999999);
-    Rect qdr; SetRect(&qdr, qrect.left(), qrect.top(), qrect.right(),
-            qrect.bottom());
-    ClipCGContextToRegion(hd, &qdr, QRegion(qrect).handle(true));
-
+    while (stackCount > 0) {
+        restoreGraphicsState();
+    }
+    saveGraphicsState();
+    inReset = false;
     //reset xforms
     CGContextConcatCTM(hd, CGAffineTransformInvert(CGContextGetCTM(hd)));
     CGContextConcatCTM(hd, old_xform);
@@ -262,7 +343,7 @@ CGColorSpaceRef QCoreGraphicsPaintEngine::macDisplayColorSpace(const QWidget *wi
     if (err == noErr) {
         colorSpace = CGColorSpaceCreateWithPlatformColorSpace(displayProfile);
     } else if (widget) {
-        return macDisplayColorSpace(0); // fall back on main display    
+        return macDisplayColorSpace(0); // fall back on main display
     }
 
     if (colorSpace == 0)
@@ -292,7 +373,7 @@ void QCoreGraphicsPaintEngine::cleanUpMacColorSpaces()
     m_displayColorSpaceHash.clear();
 }
 
-void qt_mac_clip_cg(CGContextRef hd, const QRegion &rgn, const QPoint *pt, CGAffineTransform *orig_xform)
+void qt_mac_clip_cg(CGContextRef hd, const QRegion &rgn, CGAffineTransform *orig_xform)
 {
     CGAffineTransform old_xform = CGAffineTransformIdentity;
     if(orig_xform) { //setup xforms
@@ -306,17 +387,23 @@ void qt_mac_clip_cg(CGContextRef hd, const QRegion &rgn, const QPoint *pt, CGAff
     if(rgn.isEmpty()) {
         CGContextAddRect(hd, CGRectMake(0, 0, 0, 0));
     } else {
-        QVector<QRect> rects = rgn.rects();
-        const int count = rects.size();
-        for(int i = 0; i < count; i++) {
-            const QRect &r = rects[i];
-            CGRect mac_r = CGRectMake(r.x(), r.y(), r.width(), r.height());
-            if(pt) {
-                mac_r.origin.x -= pt->x();
-                mac_r.origin.y -= pt->y();
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+        if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
+            QCFType<HIMutableShapeRef> shape = rgn.toHIMutableShape();
+            Q_ASSERT(!HIShapeIsEmpty(shape));
+            HIShapeReplacePathInCGContext(shape, hd);
+        } else
+#endif
+        {
+            QVector<QRect> rects = rgn.rects();
+            const int count = rects.size();
+            for(int i = 0; i < count; i++) {
+                const QRect &r = rects[i];
+                CGRect mac_r = CGRectMake(r.x(), r.y(), r.width(), r.height());
+                CGContextAddRect(hd, mac_r);
             }
-            CGContextAddRect(hd, mac_r);
         }
+
     }
     CGContextClip(hd);
 
@@ -396,7 +483,7 @@ static void qt_mac_draw_pattern(void *info, CGContextRef c)
                 rect.origin.x = x * w;
                 for(int y = 0; y < QMACPATTERN_MASK_MULTIPLIER; ++y) {
                     rect.origin.y = y * h;
-                    HIViewDrawCGImage(pm_ctx, &rect, swatch);
+                    qt_mac_drawCGImage(pm_ctx, &rect, swatch);
                 }
             }
             pat->image = qt_mac_create_imagemask(pm, pm.rect());
@@ -425,9 +512,7 @@ static void qt_mac_draw_pattern(void *info, CGContextRef c)
         CGContextSetFillColorWithColor(c, cgColorForQColor(pat->foreground, pat->pdev));
     }
     CGRect rect = CGRectMake(0, 0, w, h);
-
-    HIViewDrawCGImage(c, &rect, pat->image);
-
+    qt_mac_drawCGImage(c, &rect, pat->image);
     if(needRestore)
         CGContextRestoreGState(c);
 }
@@ -443,22 +528,21 @@ static void qt_mac_dispose_pattern(void *info)
 
 inline static QPaintEngine::PaintEngineFeatures qt_mac_cg_features()
 {
-    // Supports all except gradients...
     QPaintEngine::PaintEngineFeatures ret(QPaintEngine::AllFeatures
                                           & ~QPaintEngine::PaintOutsidePaintEvent
                                           & ~QPaintEngine::PerspectiveTransform
-                                          & (~(QPaintEngine::ConicalGradientFill | QPaintEngine::BrushStroke))
-#ifndef QMAC_NATIVE_GRADIENTS
-                                          & (~(QPaintEngine::LinearGradientFill|QPaintEngine::RadialGradientFill))
-#endif
-        );
+                                          & ~QPaintEngine::ConicalGradientFill
+                                          & ~QPaintEngine::LinearGradientFill
+                                          & ~QPaintEngine::RadialGradientFill
+                                          & ~QPaintEngine::BrushStroke);
+
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
     if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4) {
-        ret |= QPaintEngine::BlendModes;
+        ;
     } else
 #endif
     {
-        ret &= ~(QPaintEngine::BlendModes);
+        ret &= ~QPaintEngine::BlendModes;
     }
     return ret;
 }
@@ -495,9 +579,9 @@ QCoreGraphicsPaintEngine::begin(QPaintDevice *pdev)
     d->pixelSize = QPoint(1,1);
     d->hd = qt_mac_cg_context(pdev);
     if(d->hd) {
-        CGContextSaveGState(d->hd);
+        d->saveGraphicsState();
         d->orig_xform = CGContextGetCTM(d->hd);
-        if(d->shading) {
+        if (d->shading) {
             CGShadingRelease(d->shading);
             d->shading = 0;
         }
@@ -513,7 +597,7 @@ QCoreGraphicsPaintEngine::begin(QPaintDevice *pdev)
         if((w->windowType() == Qt::Desktop)) {
             if(!unclipped)
                 qWarning("QCoreGraphicsPaintEngine::begin: Does not support clipped desktop on Mac OS X");
-            ShowWindow(qt_mac_window_for(w));
+            // ## need to do [qt_mac_window_for(w) makeKeyAndOrderFront]; (need to rename the file)
         } else if(unclipped) {
             qWarning("QCoreGraphicsPaintEngine::begin: Does not support unclipped painting");
         }
@@ -538,15 +622,21 @@ QCoreGraphicsPaintEngine::end()
 {
     Q_D(QCoreGraphicsPaintEngine);
     setActive(false);
-    if(d->pdev->devType() == QInternal::Widget && static_cast<QWidget*>(d->pdev)->windowType() == Qt::Desktop)
+    if(d->pdev->devType() == QInternal::Widget && static_cast<QWidget*>(d->pdev)->windowType() == Qt::Desktop) {
+#ifndef QT_MAC_USE_COCOA
         HideWindow(qt_mac_window_for(static_cast<QWidget*>(d->pdev)));
+#else
+//        // ### need to do [qt_mac_window_for(static_cast<QWidget *>(d->pdev)) orderOut]; (need to rename)
+#endif
+
+	}
     if(d->shading) {
         CGShadingRelease(d->shading);
         d->shading = 0;
     }
     d->pdev = 0;
     if(d->hd) {
-        CGContextRestoreGState(d->hd);
+        d->restoreGraphicsState();
         CGContextSynchronize(d->hd);
         CGContextRelease(d->hd);
         d->hd = 0;
@@ -559,46 +649,56 @@ QCoreGraphicsPaintEngine::updateState(const QPaintEngineState &state)
 {
     Q_D(QCoreGraphicsPaintEngine);
     QPaintEngine::DirtyFlags flags = state.state();
-    if(flags & DirtyTransform)
+
+    if (flags & DirtyTransform)
         updateMatrix(state.transform());
-    if(flags & DirtyPen)
-        updatePen(state.pen());
-    if(flags & (DirtyBrush|DirtyBrushOrigin))
-        updateBrush(state.brush(), state.brushOrigin());
-    if(flags & DirtyFont)
-        updateFont(state.font());
-    if (flags & DirtyOpacity)
-        updateOpacity(state.opacity());
-    if (state.state() & DirtyClipEnabled) {
+
+    if (flags & DirtyClipEnabled) {
         if (state.isClipEnabled())
             updateClipPath(painter()->clipPath(), Qt::ReplaceClip);
         else
             updateClipPath(QPainterPath(), Qt::NoClip);
     }
-    if(flags & DirtyClipPath) {
+
+    if (flags & DirtyClipPath) {
         updateClipPath(state.clipPath(), state.clipOperation());
-    } else if(flags & DirtyClipRegion) {
+    } else if (flags & DirtyClipRegion) {
         updateClipRegion(state.clipRegion(), state.clipOperation());
     }
-    if(flags & DirtyHints)
+
+    // If the clip has changed we need to update all other states
+    // too, since they are included in the system context on OSX,
+    // and changing the clip resets that context back to scratch.
+    if (flags & (DirtyClipPath | DirtyClipRegion | DirtyClipEnabled))
+        flags |= AllDirty;
+
+    if (flags & DirtyPen)
+        updatePen(state.pen());
+    if (flags & (DirtyBrush|DirtyBrushOrigin))
+        updateBrush(state.brush(), state.brushOrigin());
+    if (flags & DirtyFont)
+        updateFont(state.font());
+    if (flags & DirtyOpacity)
+        updateOpacity(state.opacity());
+    if (flags & DirtyHints)
         updateRenderHints(state.renderHints());
     if (flags & DirtyCompositionMode)
         updateCompositionMode(state.compositionMode());
 
     if (flags & (DirtyPen | DirtyTransform)) {
-        if(!d->current.pen.isCosmetic()) {
+        if (!d->current.pen.isCosmetic()) {
             d->cosmeticPen = QCoreGraphicsPaintEnginePrivate::CosmeticNone;
-        } else if(d->current.transform.m11() < d->current.transform.m22()-1.0 ||
+        } else if (d->current.transform.m11() < d->current.transform.m22()-1.0 ||
                   d->current.transform.m11() > d->current.transform.m22()+1.0) {
             d->cosmeticPen = QCoreGraphicsPaintEnginePrivate::CosmeticTransformPath;
             d->cosmeticPenSize = d->adjustPenWidth(d->current.pen.widthF());
-            if(!d->cosmeticPenSize)
+            if (!d->cosmeticPenSize)
                 d->cosmeticPenSize = 1.0;
         } else {
             d->cosmeticPen = QCoreGraphicsPaintEnginePrivate::CosmeticSetPenWidth;
             static const float sqrt2 = sqrt(2);
             qreal width = d->current.pen.widthF();
-            if(!width)
+            if (!width)
                 width = 1;
             d->cosmeticPenSize = sqrt(pow(d->pixelSize.y(), 2) + pow(d->pixelSize.x(), 2)) / sqrt2 * width;
         }
@@ -620,11 +720,23 @@ QCoreGraphicsPaintEngine::updateBrush(const QBrush &brush, const QPointF &brushO
     Q_D(QCoreGraphicsPaintEngine);
     Q_ASSERT(isActive());
     d->current.brush = brush;
-    if(d->shading) {
+
+#ifdef QT_MAC_USE_NATIVE_GRADIENTS
+    // Quartz supports only pad spread
+    if (const QGradient *gradient = brush.gradient()) {
+        if (drawGradientNatively(gradient)) {
+            gccaps |= QPaintEngine::LinearGradientFill | QPaintEngine::RadialGradientFill;
+        } else {
+            gccaps &= ~(QPaintEngine::LinearGradientFill | QPaintEngine::RadialGradientFill);
+        }
+    }
+#endif
+
+    if (d->shading) {
         CGShadingRelease(d->shading);
         d->shading = 0;
     }
-    d->setFillBrush(brush, brushOrigin);
+    d->setFillBrush(brushOrigin);
 }
 
 void
@@ -647,12 +759,12 @@ QCoreGraphicsPaintEngine::updateMatrix(const QTransform &transform)
 {
     Q_D(QCoreGraphicsPaintEngine);
     Q_ASSERT(isActive());
-    
-    if (qt_is_nan(transform.m11()) || qt_is_nan(transform.m12()) || qt_is_nan(transform.m13()) 
-	|| qt_is_nan(transform.m21()) || qt_is_nan(transform.m22()) || qt_is_nan(transform.m23()) 
+
+    if (qt_is_nan(transform.m11()) || qt_is_nan(transform.m12()) || qt_is_nan(transform.m13())
+	|| qt_is_nan(transform.m21()) || qt_is_nan(transform.m22()) || qt_is_nan(transform.m23())
 	|| qt_is_nan(transform.m31()) || qt_is_nan(transform.m32()) || qt_is_nan(transform.m33()))
 	return;
-    
+
     d->current.transform = transform;
     d->setTransform(transform.isIdentity() ? 0 : &transform);
     d->complexXForm = (transform.m11() != 1 || transform.m22() != 1
@@ -787,13 +899,13 @@ QCoreGraphicsPaintEngine::drawPoints(const QPointF *points, int pointCount)
     bool doRestore = false;
     if(d->cosmeticPen == QCoreGraphicsPaintEnginePrivate::CosmeticNone && !(state->renderHints() & QPainter::Antialiasing)) {
         //we don't want adjusted pens for point rendering
-       doRestore = true;
-       CGContextSaveGState(d->hd);
-       CGContextSetLineWidth(d->hd, d->current.pen.widthF());
+        doRestore = true;
+        d->saveGraphicsState();
+        CGContextSetLineWidth(d->hd, d->current.pen.widthF());
     }
     d->drawPath(QCoreGraphicsPaintEnginePrivate::CGStroke, path);
     if (doRestore)
-        CGContextRestoreGState(d->hd);
+        d->restoreGraphicsState();
     CGPathRelease(path);
     if (d->current.pen.capStyle() == Qt::FlatCap)
         CGContextSetLineCap(d->hd, kCGLineCapButt);
@@ -876,7 +988,7 @@ void QCoreGraphicsPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, co
     bool isBitmap = (pm.depth() == 1);
     if (isBitmap) {
         doRestore = true;
-        CGContextSaveGState(d->hd);
+        d->saveGraphicsState();
 
         const QColor &col = d->current.pen.color();
         CGContextSetFillColorWithColor(d->hd, cgColorForQColor(col, d->pdev));
@@ -902,10 +1014,9 @@ void QCoreGraphicsPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, co
     } else {
         image = (CGImageRef)pm.macCGHandle();
     }
-
-    HIViewDrawCGImage(d->hd, &rect, image);
+    qt_mac_drawCGImage(d->hd, &rect, image);
     if (doRestore)
-        CGContextRestoreGState(d->hd);
+        d->restoreGraphicsState();
 }
 
 static void drawImageReleaseData (void *info, const void *, size_t)
@@ -989,7 +1100,7 @@ void QCoreGraphicsPaintEngine::drawImage(const QRectF &r, const QImage &img, con
                     CGImageGetAlphaInfo(cgimage), dataProvider, 0, false, kCGRenderingIntentDefault);
         }
     }
-    HIViewDrawCGImage(d->hd, &rect, cgimage);
+    qt_mac_drawCGImage(d->hd, &rect, cgimage);
 }
 
 void QCoreGraphicsPaintEngine::initialize()
@@ -1017,7 +1128,7 @@ QCoreGraphicsPaintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap
         return;
 
     //save the old state
-    CGContextSaveGState(d->hd);
+    d->saveGraphicsState();
 
     //setup the pattern
     QMacPattern *qpattern = new QMacPattern;
@@ -1045,7 +1156,7 @@ QCoreGraphicsPaintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap
     CGContextFillRect(d->hd, mac_rect);
 
     //restore the state
-    CGContextRestoreGState(d->hd);
+    d->restoreGraphicsState();
     //cleanup
     CGColorSpaceRelease(cs);
     CGPatternRelease(pat);
@@ -1054,7 +1165,6 @@ QCoreGraphicsPaintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap
 void QCoreGraphicsPaintEngine::drawTextItem(const QPointF &pos, const QTextItem &item)
 {
     Q_D(QCoreGraphicsPaintEngine);
-
     if (d->current.transform.type() == QTransform::TxProject
 #ifndef QMAC_NATIVE_GRADIENTS
         || painter()->pen().brush().gradient()  //Just let the base engine "emulate" the gradient
@@ -1084,10 +1194,14 @@ void QCoreGraphicsPaintEngine::drawTextItem(const QPointF &pos, const QTextItem 
     if(textAA != lineAA)
         CGContextSetShouldAntialias(d->hd, textAA);
 
-    if (ti.num_glyphs) {
+    if (ti.glyphs.numGlyphs) {
         switch (fe->type()) {
         case QFontEngine::Mac:
+#ifdef QT_MAC_USE_COCOA
+            static_cast<QCoreTextFontEngine *>(fe)->draw(d->hd, pos.x(), pos.y(), ti, paintDevice()->height());
+#else
             static_cast<QFontEngineMac *>(fe)->draw(d->hd, pos.x(), pos.y(), ti, paintDevice()->height());
+#endif
             break;
         case QFontEngine::Box:
             d->drawBoxTextItem(pos, ti);
@@ -1205,6 +1319,8 @@ QCoreGraphicsPaintEngine::updateCompositionMode(QPainter::CompositionMode mode)
             break;
         case QPainter::CompositionMode_Xor:
             cg_mode = kCGBlendModeXOR;
+            break;
+        default:
             break;
         }
         if (cg_mode > -1) {
@@ -1327,25 +1443,11 @@ QCoreGraphicsPaintEngine::updateRenderHints(QPainter::RenderHints hints)
 /*
     Returns the size of one device pixel in user-space coordinates.
 */
-QPointF QCoreGraphicsPaintEnginePrivate::devicePixelSize(CGContextRef context)
+QPointF QCoreGraphicsPaintEnginePrivate::devicePixelSize(CGContextRef)
 {
-    CGPoint p1;  p1.x = 0;  p1.y = 0;
-    CGPoint p2;  p2.x = 1;  p2.y = 1;
-
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
-    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4) {
-        const CGPoint convertedP1 = CGContextConvertPointToUserSpace(context, p1);
-        const CGPoint convertedP2 = CGContextConvertPointToUserSpace(context, p2);
-        return QPointF(convertedP2.x - convertedP1.x, convertedP2.y - convertedP1.y);
-    } else
-# endif
-    {
-        const CGAffineTransform invertedCurrentTransform = CGAffineTransformInvert(CGContextGetCTM(context));
-        const CGPoint convertedP1 = CGPointApplyAffineTransform(p1, invertedCurrentTransform);
-        const CGPoint convertedP2 = CGPointApplyAffineTransform(p2, invertedCurrentTransform);
-        // The order of the points is switched in this case.
-        return QPointF(qAbs(convertedP1.x - convertedP2.x), qAbs(convertedP1.y - convertedP2.y));
-    }
+    QPointF p1 = current.transform.inverted().map(QPointF(0, 0));
+    QPointF p2 = current.transform.inverted().map(QPointF(1, 1));
+    return QPointF(qAbs(p2.x() - p1.x()), qAbs(p2.y() - p1.y()));
 }
 
 /*
@@ -1425,7 +1527,7 @@ QCoreGraphicsPaintEnginePrivate::setStrokePen(const QPen &pen)
     }
     CGContextSetLineDash(hd, pen.dashOffset() * cglinewidth, linedashes.data(), linedashes.size());
 
-    //color
+    // color
     CGContextSetStrokeColorWithColor(hd, cgColorForQColor(pen.color(), pdev));
 }
 
@@ -1453,36 +1555,57 @@ static const uchar *qt_mac_patternForBrush(int brushStyle)
         hor_pat, ver_pat, cross_pat, bdiag_pat, fdiag_pat, dcross_pat };
     return pat_tbl[brushStyle - Qt::Dense1Pattern];
 }
-void
-QCoreGraphicsPaintEnginePrivate::setFillBrush(const QBrush &brush, const QPointF &offset)
+
+void QCoreGraphicsPaintEnginePrivate::setFillBrush(const QPointF &offset)
 {
-    //pattern
-    Qt::BrushStyle bs = brush.style();
-    if(bs == Qt::LinearGradientPattern) {
-#ifdef QMAC_NATIVE_GRADIENTS
-        CGFunctionCallbacks callbacks = { 0, qt_mac_color_gradient_function, 0 };
-        CGFunctionRef fill_func = CGFunctionCreate(const_cast<void *>(reinterpret_cast<const void *>(&brush)),
-                1, 0, 4, 0, &callbacks);
-        CGColorSpaceRef grad_colorspace = macGenericColorSpace();
-        const QLinearGradient *linGrad = static_cast<const QLinearGradient*>(brush.gradient());
-        const QPointF start = linGrad->start(), stop = linGrad->finalStop();
-        d->shading = CGShadingCreateAxial(grad_colorspace, CGPointMake(start.x(), start.y()),
-                CGPointMake(stop.x(), stop.y()), fill_func, true, true);
-        CGFunctionRelease(fill_func);
+    // pattern
+    Qt::BrushStyle bs = current.brush.style();
+#ifdef QT_MAC_USE_NATIVE_GRADIENTS
+    if (bs == Qt::LinearGradientPattern || bs == Qt::RadialGradientPattern) {
+        const QGradient *grad = static_cast<const QGradient*>(current.brush.gradient());
+        if (drawGradientNatively(grad)) {
+            Q_ASSERT(grad->spread() == QGradient::PadSpread);
+
+            static const CGFloat domain[] = { 0.0f, +1.0f };
+            static const CGFunctionCallbacks callbacks = { 0, qt_mac_color_gradient_function, 0 };
+            CGFunctionRef fill_func = CGFunctionCreate(reinterpret_cast<void *>(&current.brush),
+                    1, domain, 4, 0, &callbacks);
+
+            CGColorSpaceRef colorspace = qt_mac_colorSpaceForDeviceType(pdev);
+            if (bs == Qt::LinearGradientPattern) {
+                const QLinearGradient *linearGrad = static_cast<const QLinearGradient *>(grad);
+                const QPointF start(linearGrad->start());
+                const QPointF stop(linearGrad->finalStop());
+                shading = CGShadingCreateAxial(colorspace, CGPointMake(start.x(), start.y()),
+                                               CGPointMake(stop.x(), stop.y()), fill_func, true, true);
+            } else {
+                Q_ASSERT(bs == Qt::RadialGradientPattern);
+                const QRadialGradient *radialGrad = static_cast<const QRadialGradient *>(grad);
+                QPointF center(radialGrad->center());
+                QPointF focal(radialGrad->focalPoint());
+                qreal radius = radialGrad->radius();
+                shading = CGShadingCreateRadial(colorspace, CGPointMake(focal.x(), focal.y()),
+                                                0.0, CGPointMake(center.x(), center.y()), radius, fill_func, false, true);
+            }
+
+            CGFunctionRelease(fill_func);
+        }
+    } else
 #endif
-    } else if(bs == Qt::RadialGradientPattern || bs == Qt::ConicalGradientPattern) {
-#ifdef QMAC_NATIVE_GRADIENTS
-        qWarning("QCoreGraphicsPaintEngine: Unhandled gradient %d", (int)bs);
+    if(bs != Qt::SolidPattern && bs != Qt::NoBrush
+#ifndef QT_MAC_USE_NATIVE_GRADIENTS
+       && (bs < Qt::LinearGradientPattern || bs > Qt::ConicalGradientPattern)
 #endif
-    } else if(bs != Qt::SolidPattern && bs != Qt::NoBrush) {
+        )
+    {
         QMacPattern *qpattern = new QMacPattern;
         qpattern->pdev = pdev;
         CGFloat components[4] = { 1.0, 1.0, 1.0, 1.0 };
         CGColorSpaceRef base_colorspace = 0;
         if(bs == Qt::TexturePattern) {
-            qpattern->data.pixmap = brush.texture();
+            qpattern->data.pixmap = current.brush.texture();
             if(qpattern->data.pixmap.isQBitmap()) {
-                const QColor &col = brush.color();
+                const QColor &col = current.brush.color();
                 components[0] = qt_mac_convert_color_to_cg(col.red());
                 components[1] = qt_mac_convert_color_to_cg(col.green());
                 components[2] = qt_mac_convert_color_to_cg(col.blue());
@@ -1492,20 +1615,20 @@ QCoreGraphicsPaintEnginePrivate::setFillBrush(const QBrush &brush, const QPointF
             qpattern->as_mask = true;
 
             qpattern->data.bytes = qt_mac_patternForBrush(bs);
-            const QColor &col = brush.color();
+            const QColor &col = current.brush.color();
             components[0] = qt_mac_convert_color_to_cg(col.red());
             components[1] = qt_mac_convert_color_to_cg(col.green());
             components[2] = qt_mac_convert_color_to_cg(col.blue());
             base_colorspace = QCoreGraphicsPaintEngine::macGenericColorSpace();
         }
         int width = qpattern->width(), height = qpattern->height();
-        qpattern->foreground = brush.color();
+        qpattern->foreground = current.brush.color();
 
         CGColorSpaceRef fill_colorspace = CGColorSpaceCreatePattern(base_colorspace);
         CGContextSetFillColorSpace(hd, fill_colorspace);
 
         CGAffineTransform xform = CGContextGetCTM(hd);
-        xform = CGAffineTransformConcat(qt_mac_convert_transform_to_cg(brush.transform()), xform);
+        xform = CGAffineTransformConcat(qt_mac_convert_transform_to_cg(current.brush.transform()), xform);
         xform = CGAffineTransformTranslate(xform, offset.x(), offset.y());
 
         CGPatternCallbacks callbks;
@@ -1520,7 +1643,7 @@ QCoreGraphicsPaintEnginePrivate::setFillBrush(const QBrush &brush, const QPointF
         CGPatternRelease(fill_pattern);
         CGColorSpaceRelease(fill_colorspace);
     } else if(bs != Qt::NoBrush) {
-        CGContextSetFillColorWithColor(hd, cgColorForQColor(brush.color(), pdev));
+        CGContextSetFillColorWithColor(hd, cgColorForQColor(current.brush.color(), pdev));
     }
 }
 
@@ -1529,18 +1652,12 @@ QCoreGraphicsPaintEnginePrivate::setClip(const QRegion *rgn)
 {
     Q_Q(QCoreGraphicsPaintEngine);
     if(hd) {
-        qt_mac_clip_cg_reset(hd);
-        QPoint mp(0, 0);
-        if(pdev->devType() == QInternal::Widget) {
-            QWidget *w = static_cast<QWidget*>(pdev);
-            mp = qt_mac_posInWindow(w);
-            qt_mac_clip_cg(hd, w->d_func()->clippedRegion(), &mp, &orig_xform);
-        }
+        resetClip();
         QRegion sysClip = q->systemClip();
         if(!sysClip.isEmpty())
-            qt_mac_clip_cg(hd, sysClip, 0, &orig_xform);
+            qt_mac_clip_cg(hd, sysClip, &orig_xform);
         if(rgn)
-            qt_mac_clip_cg(hd, *rgn, 0, 0);
+            qt_mac_clip_cg(hd, *rgn, 0);
     }
 }
 
@@ -1582,20 +1699,27 @@ void QCoreGraphicsPaintEnginePrivate::drawPath(uchar ops, CGMutablePathRef path)
     Q_Q(QCoreGraphicsPaintEngine);
     Q_ASSERT((ops & (CGFill | CGEOFill)) != (CGFill | CGEOFill)); //can't really happen
     if((ops & (CGFill | CGEOFill))) {
-        if(current.brush.style() == Qt::LinearGradientPattern) {
+        if (shading) {
             Q_ASSERT(path);
             CGContextBeginPath(hd);
             CGContextAddPath(hd, path);
-            CGContextSaveGState(hd);
-            if(ops & CGFill)
+            saveGraphicsState();
+            if (ops & CGFill)
                 CGContextClip(hd);
-            else if(ops & CGEOFill)
+            else if (ops & CGEOFill)
                 CGContextEOClip(hd);
+            if (current.brush.gradient()->coordinateMode() == QGradient::ObjectBoundingMode) {
+                CGRect boundingBox = CGPathGetBoundingBox(path);
+                CGContextConcatCTM(hd,
+                    CGAffineTransformMake(boundingBox.size.width, 0,
+                                          0, boundingBox.size.height,
+                                          boundingBox.origin.x, boundingBox.origin.y));
+            }
             CGContextDrawShading(hd, shading);
-            CGContextRestoreGState(hd);
+            restoreGraphicsState();
             ops &= ~CGFill;
             ops &= ~CGEOFill;
-        } else if(current.brush.style() == Qt::NoBrush) {
+        } else if (current.brush.style() == Qt::NoBrush) {
             ops &= ~CGFill;
             ops &= ~CGEOFill;
         }
@@ -1618,7 +1742,7 @@ void QCoreGraphicsPaintEnginePrivate::drawPath(uchar ops, CGMutablePathRef path)
                                   !(q->state->renderHints() & QPainter::Antialiasing));
     if(ops & CGStroke) {
         if (needContextSave)
-            CGContextSaveGState(hd);
+            saveGraphicsState();
         CGContextBeginPath(hd);
 
         // Translate a fraction of a pixel size in the y direction
@@ -1658,7 +1782,7 @@ void QCoreGraphicsPaintEnginePrivate::drawPath(uchar ops, CGMutablePathRef path)
 
         CGContextStrokePath(hd);
         if (needContextSave)
-            CGContextRestoreGState(hd);
+            restoreGraphicsState();
     }
 }
 

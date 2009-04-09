@@ -18,49 +18,69 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMimeTypeArray_H
-#define JSMimeTypeArray_H
+#ifndef JSMimeTypeArray_h
+#define JSMimeTypeArray_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class MimeTypeArray;
 
-class JSMimeTypeArray : public KJS::DOMObject {
+class JSMimeTypeArray : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSMimeTypeArray(KJS::ExecState*, MimeTypeArray*);
+    JSMimeTypeArray(PassRefPtr<JSC::Structure>, PassRefPtr<MimeTypeArray>);
     virtual ~JSMimeTypeArray();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        LengthAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    virtual void getPropertyNames(JSC::ExecState*, JSC::PropertyNameArray&);
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     MimeTypeArray* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<MimeTypeArray> m_impl;
+    static JSC::JSValuePtr indexGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 private:
-    static KJS::JSValue* indexGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
-private:
-    static bool canGetItemsForName(KJS::ExecState*, MimeTypeArray*, const KJS::Identifier&);
-    static KJS::JSValue* nameGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
+    static bool canGetItemsForName(JSC::ExecState*, MimeTypeArray*, const JSC::Identifier&);
+    static JSC::JSValuePtr nameGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, MimeTypeArray*);
-MimeTypeArray* toMimeTypeArray(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, MimeTypeArray*);
+MimeTypeArray* toMimeTypeArray(JSC::JSValuePtr);
 
-class JSMimeTypeArrayPrototype : public KJS::JSObject {
+class JSMimeTypeArrayPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSMimeTypeArrayPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSMimeTypeArrayPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsMimeTypeArrayPrototypeFunctionItem(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsMimeTypeArrayPrototypeFunctionNamedItem(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsMimeTypeArrayLength(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsMimeTypeArrayConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

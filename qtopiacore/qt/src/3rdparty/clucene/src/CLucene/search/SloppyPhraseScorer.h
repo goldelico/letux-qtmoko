@@ -27,7 +27,7 @@ CL_NS_DEF(search)
 		}
 
 	protected:
-		float_t phraseFreq();
+		qreal phraseFreq();
 	};
 CL_NS_END
 #endif

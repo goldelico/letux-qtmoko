@@ -1,47 +1,51 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "simtexth.h"
-#include "metatranslator.h"
+#include "translator.h"
 
-#include <QString>
-#include <QList>
+#include <QtCore/QByteArray>
+#include <QtCore/QString>
+#include <QtCore/QList>
 
-#include <string.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -135,12 +139,16 @@ struct CoMatrix
       words.  Some operations are performed on words for more efficiency.
     */
     union {
-    quint8 b[52];
-    quint32 w[13];
+        quint8 b[52];
+        quint32 w[13];
     };
 
     CoMatrix() { memset( b, 0, 52 ); }
-    CoMatrix( const char *text ) {
+
+    CoMatrix(const QString &str)
+    {
+        QByteArray ba = str.toUtf8();
+        const char *text = ba.constData();
         char c = '\0', d;
         memset( b, 0, 52 );
         /*
@@ -148,15 +156,15 @@ struct CoMatrix
           loops 30% faster and 20% as readable.
         */
         while ( (d = *text) != '\0' ) {
-            setCoocc( c, d );
+            setCoOccurence( c, d );
             if ( (c = *++text) != '\0' ) {
-                setCoocc( d, c );
+                setCoOccurence( d, c );
                 text++;
             }
         }
     }
 
-    void setCoocc( char c, char d ) {
+    void setCoOccurence( char c, char d ) {
         int k = indexOf[(uchar) c] + 20 * indexOf[(uchar) d];
         b[k >> 3] |= (1 << (k & 0x7));
     }
@@ -169,37 +177,34 @@ struct CoMatrix
     }
 };
 
-static inline CoMatrix reunion( const CoMatrix& m, const CoMatrix& n )
+static inline CoMatrix reunion(const CoMatrix &m, const CoMatrix &n)
 {
     CoMatrix p;
-    for ( int i = 0; i < 13; i++ )
-    p.w[i] = m.w[i] | n.w[i];
+    for (int i = 0; i < 13; ++i)
+        p.w[i] = m.w[i] | n.w[i];
     return p;
 }
 
-static inline CoMatrix intersection( const CoMatrix& m, const CoMatrix& n )
+static inline CoMatrix intersection(const CoMatrix &m, const CoMatrix &n)
 {
     CoMatrix p;
-    for ( int i = 0; i < 13; i++ )
-    p.w[i] = m.w[i] & n.w[i];
+    for (int i = 0; i < 13; ++i)
+        p.w[i] = m.w[i] & n.w[i];
     return p;
 }
 
 StringSimilarityMatcher::StringSimilarityMatcher(const QString &stringToMatch)
 {
-    m_cm = new CoMatrix( stringToMatch.toLatin1().constData() );
+    m_cm = new CoMatrix(stringToMatch);
     m_length = stringToMatch.length();
 }
 
 int StringSimilarityMatcher::getSimilarityScore(const QString &strCandidate)
 {
-    CoMatrix cmTarget( strCandidate.toLatin1().constData() );
-    int targetLen = strCandidate.length();
-    int delta = qAbs( m_length - targetLen );
-
+    CoMatrix cmTarget(strCandidate);
+    int delta = qAbs(m_length - strCandidate.size());
     int score = ( (intersection(*m_cm, cmTarget).worth() + 1) << 10 ) /
         ( reunion(*m_cm, cmTarget).worth() + (delta << 1) + 1 );
-
     return score;
 }
 
@@ -210,59 +215,58 @@ StringSimilarityMatcher::~StringSimilarityMatcher()
 
 /**
  * Checks how similar two strings are.
- * The return value is the score, and a higher score is more similar than one with a low score.
+ * The return value is the score, and a higher score is more similar
+ * than one with a low score.
  * Linguist considers a score over 190 to be a good match.
  * \sa StringSimilarityMatcher
  */
-int getSimilarityScore(const QString &str1, const char* str2)
+int getSimilarityScore(const QString &str1, const QString &str2)
 {
-    CoMatrix cmTarget( str2 );
-    int targetLen = qstrlen( str2 );
-    CoMatrix cm( str1.toLatin1().constData() );
-    int delta = qAbs( (int) str1.length() - targetLen );
+    CoMatrix cmTarget(str2);
+    CoMatrix cm(str1);
+    int delta = qAbs(str1.size() - str2.size());
 
-    int score = ( (intersection(cm, cmTarget).worth() + 1) << 10 ) /
-        ( reunion(cm, cmTarget).worth() + (delta << 1) + 1 );
+    int score = ( (intersection(cm, cmTarget).worth() + 1) << 10 )
+        / ( reunion(cm, cmTarget).worth() + (delta << 1) + 1 );
 
     return score;
 }
 
-CandidateList similarTextHeuristicCandidates( const MetaTranslator *tor,
-                        const char *text,
-                        int maxCandidates )
+CandidateList similarTextHeuristicCandidates(const Translator *tor,
+    const QString &text, int maxCandidates)
 {
     QList<int> scores;
     CandidateList candidates;
 
     TML all = tor->translatedMessages();
 
-    foreach (const TranslatorMessage &mtm, all ) {
-        if ( mtm.type() == TranslatorMessage::Unfinished ||
-             mtm.translation().isEmpty() )
+    foreach (const TranslatorMessage &mtm, all) {
+        if (mtm.type() == TranslatorMessage::Unfinished
+            || mtm.translation().isEmpty())
             continue;
 
-        QString s = tor->toUnicode( mtm.sourceText(), mtm.utf8() );
+        QString s = mtm.sourceText();
         int score = getSimilarityScore(s, text);
 
-        if ( (int) candidates.count() == maxCandidates &&
-             score > scores[maxCandidates - 1] )
-            candidates.removeAt( candidates.size()-1 );
-        if ( (int) candidates.count() < maxCandidates && score >= textSimilarityThreshold ) {
+        if (candidates.size() == maxCandidates && score > scores[maxCandidates - 1] )
+            candidates.removeLast();
+
+        if (candidates.size() < maxCandidates && score >= textSimilarityThreshold) {
             Candidate cand( s, mtm.translation() );
 
             int i;
-            for ( i = 0; i < (int) candidates.size(); i++ ) {
-                if ( score >= scores.at(i) ) {
-                    if ( score == scores.at(i) ) {
-                        if ( candidates.at(i) == cand )
+            for (i = 0; i < candidates.size(); i++) {
+                if (score >= scores.at(i)) {
+                    if (score == scores.at(i)) {
+                        if (candidates.at(i) == cand)
                             goto continue_outer_loop;
                     } else {
                         break;
                     }
                 }
             }
-            scores.insert( i, score );
-            candidates.insert( i, cand );
+            scores.insert(i, score);
+            candidates.insert(i, cand);
         }
         continue_outer_loop:
         ;

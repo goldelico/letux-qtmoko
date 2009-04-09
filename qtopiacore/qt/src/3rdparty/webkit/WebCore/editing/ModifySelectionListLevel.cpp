@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -119,7 +119,7 @@ void ModifySelectionListLevelCommand::insertSiblingNodeRangeAfter(Node* startNod
     }
 }
 
-void ModifySelectionListLevelCommand::appendSiblingNodeRange(Node* startNode, Node* endNode, Node* newParent)
+void ModifySelectionListLevelCommand::appendSiblingNodeRange(Node* startNode, Node* endNode, Element* newParent)
 {
     Node* node = startNode;
     while (1) {
@@ -178,14 +178,16 @@ void IncreaseSelectionListLevelCommand::doApply()
     Node* previousItem = startListChild->renderer()->previousSibling()->element();
     if (isListElement(previousItem)) {
         // move nodes up into preceding list
-        appendSiblingNodeRange(startListChild, endListChild, previousItem);
+        appendSiblingNodeRange(startListChild, endListChild, static_cast<Element*>(previousItem));
         m_listElement = previousItem;
     } else {
         // create a sublist for the preceding element and move nodes there
-        RefPtr<Node> newParent;
+        RefPtr<Element> newParent;
         switch (m_listType) {
             case InheritedListType:
-                newParent = startListChild->parentNode()->cloneNode(false);
+                newParent = startListChild->parentElement();
+                if (newParent)
+                    newParent = newParent->cloneElement();
                 break;
             case OrderedList:
                 newParent = createOrderedListElement(document());
@@ -204,7 +206,7 @@ bool IncreaseSelectionListLevelCommand::canIncreaseSelectionListLevel(Document* 
 {
     Node* startListChild;
     Node* endListChild;
-    return canIncreaseListLevel(document->frame()->selectionController()->selection(), startListChild, endListChild);
+    return canIncreaseListLevel(document->frame()->selection()->selection(), startListChild, endListChild);
 }
 
 PassRefPtr<Node> IncreaseSelectionListLevelCommand::increaseSelectionListLevelWithType(Document* document, Type listType)
@@ -213,7 +215,7 @@ PassRefPtr<Node> IncreaseSelectionListLevelCommand::increaseSelectionListLevelWi
     ASSERT(document->frame());
     RefPtr<IncreaseSelectionListLevelCommand> modCommand = new IncreaseSelectionListLevelCommand(document, listType);
     modCommand->apply();
-    return modCommand->m_listElement.get();
+    return modCommand->m_listElement;
 }
 
 PassRefPtr<Node> IncreaseSelectionListLevelCommand::increaseSelectionListLevel(Document* document)
@@ -258,7 +260,7 @@ void DecreaseSelectionListLevelCommand::doApply()
 
     Node* previousItem = startListChild->renderer()->previousSibling() ? startListChild->renderer()->previousSibling()->element() : 0;
     Node* nextItem = endListChild->renderer()->nextSibling() ? endListChild->renderer()->nextSibling()->element() : 0;
-    Node* listNode = startListChild->parentNode();
+    Element* listNode = startListChild->parentElement();
 
     if (!previousItem) {
         // at start of sublist, move the child(ren) to before the sublist
@@ -269,9 +271,9 @@ void DecreaseSelectionListLevelCommand::doApply()
     } else if (!nextItem) {
         // at end of list, move the child(ren) to after the sublist
         insertSiblingNodeRangeAfter(startListChild, endListChild, listNode);    
-    } else {
+    } else if (listNode) {
         // in the middle of list, split the list and move the children to the divide
-        splitElement(static_cast<Element*>(listNode), startListChild);
+        splitElement(listNode, startListChild);
         insertSiblingNodeRangeBefore(startListChild, endListChild, listNode);
     }
 }
@@ -280,7 +282,7 @@ bool DecreaseSelectionListLevelCommand::canDecreaseSelectionListLevel(Document* 
 {
     Node* startListChild;
     Node* endListChild;
-    return canDecreaseListLevel(document->frame()->selectionController()->selection(), startListChild, endListChild);
+    return canDecreaseListLevel(document->frame()->selection()->selection(), startListChild, endListChild);
 }
 
 void DecreaseSelectionListLevelCommand::decreaseSelectionListLevel(Document* document)

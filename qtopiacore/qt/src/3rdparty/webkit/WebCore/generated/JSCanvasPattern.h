@@ -18,38 +18,43 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCanvasPattern_H
-#define JSCanvasPattern_H
+#ifndef JSCanvasPattern_h
+#define JSCanvasPattern_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class CanvasPattern;
 
-class JSCanvasPattern : public KJS::DOMObject {
+class JSCanvasPattern : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSCanvasPattern(KJS::ExecState*, CanvasPattern*);
+    JSCanvasPattern(PassRefPtr<JSC::Structure>, PassRefPtr<CanvasPattern>);
     virtual ~JSCanvasPattern();
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
     CanvasPattern* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<CanvasPattern> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, CanvasPattern*);
-CanvasPattern* toCanvasPattern(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, CanvasPattern*);
+CanvasPattern* toCanvasPattern(JSC::JSValuePtr);
 
-class JSCanvasPatternPrototype : public KJS::JSObject {
+class JSCanvasPatternPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSCanvasPatternPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSCanvasPatternPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 

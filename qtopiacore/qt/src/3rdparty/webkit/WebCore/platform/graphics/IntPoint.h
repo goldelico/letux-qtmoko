@@ -48,9 +48,20 @@ typedef struct tagPOINTS POINTS;
 QT_BEGIN_NAMESPACE
 class QPoint;
 QT_END_NAMESPACE
+#elif PLATFORM(GTK)
+typedef struct _GdkPoint GdkPoint;
 #endif
 #if PLATFORM(SYMBIAN)
 class TPoint;
+#endif
+
+#if PLATFORM(WX)
+class wxPoint;
+#endif
+
+#if PLATFORM(SKIA)
+struct SkPoint;
+struct SkIPoint;
 #endif
 
 namespace WebCore {
@@ -68,6 +79,23 @@ public:
 
     void move(int dx, int dy) { m_x += dx; m_y += dy; }
     
+    IntPoint expandedTo(const IntPoint& other) const
+    {
+        return IntPoint(m_x > other.m_x ? m_x : other.m_x,
+            m_y > other.m_y ? m_y : other.m_y);
+    }
+
+    IntPoint shrunkTo(const IntPoint& other) const
+    {
+        return IntPoint(m_x < other.m_x ? m_x : other.m_x,
+            m_y < other.m_y ? m_y : other.m_y);
+    }
+
+    void clampNegativeToZero()
+    {
+        *this = expandedTo(IntPoint());
+    }
+
 #if PLATFORM(CG)
     explicit IntPoint(const CGPoint&); // don't do this implicitly since it's lossy
     operator CGPoint() const;
@@ -86,10 +114,24 @@ public:
 #elif PLATFORM(QT)
     IntPoint(const QPoint&);
     operator QPoint() const;
+#elif PLATFORM(GTK)
+    IntPoint(const GdkPoint&);
+    operator GdkPoint() const;
 #endif
 #if PLATFORM(SYMBIAN)
     IntPoint(const TPoint&);
     operator TPoint() const;
+#endif
+
+#if PLATFORM(WX)
+    IntPoint(const wxPoint&);
+    operator wxPoint() const;
+#endif
+
+#if PLATFORM(SKIA)
+    IntPoint(const SkIPoint&);
+    operator SkIPoint() const;
+    operator SkPoint() const;
 #endif
 
 private:

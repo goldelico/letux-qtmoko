@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -75,6 +79,7 @@ class QAlphaWidget: public QWidget, private QEffects
     Q_OBJECT
 public:
     QAlphaWidget(QWidget* w, Qt::WindowFlags f = 0);
+    ~QAlphaWidget();
 
     void run(int time);
 
@@ -90,9 +95,9 @@ protected slots:
 private:
     QPixmap pm;
     double alpha;
-    QImage back;
-    QImage front;
-    QImage mixed;
+    QImage backImage;
+    QImage frontImage;
+    QImage mixedImage;
     QPointer<QAccessWidget> widget;
     int duration;
     int elapsed;
@@ -117,6 +122,15 @@ QAlphaWidget::QAlphaWidget(QWidget* w, Qt::WindowFlags f)
     widget = (QAccessWidget*)w;
     windowOpacity = w->windowOpacity();
     alpha = 0;
+}
+
+QAlphaWidget::~QAlphaWidget()
+{
+#ifdef Q_WS_WIN
+    // Restore user-defined opacity value
+    if (widget && QSysInfo::WindowsVersion >= QSysInfo::WV_2000 && QSysInfo::WindowsVersion < QSysInfo::WV_NT_based)
+        widget->setWindowOpacity(windowOpacity);
+#endif
 }
 
 /*
@@ -165,14 +179,14 @@ void QAlphaWidget::run(int time)
         move(widget->geometry().x(),widget->geometry().y());
         resize(widget->size().width(), widget->size().height());
 
-        front = QPixmap::grabWidget(widget).toImage();
-        back = QPixmap::grabWindow(QApplication::desktop()->winId(),
+        frontImage = QPixmap::grabWidget(widget).toImage();
+        backImage = QPixmap::grabWindow(QApplication::desktop()->winId(),
                                     widget->geometry().x(), widget->geometry().y(),
                                     widget->geometry().width(), widget->geometry().height()).toImage();
 
-        if (!back.isNull() && checkTime.elapsed() < duration / 2) {
-            mixed = back.copy();
-            pm = QPixmap::fromImage(mixed);
+        if (!backImage.isNull() && checkTime.elapsed() < duration / 2) {
+            mixedImage = backImage.copy();
+            pm = QPixmap::fromImage(mixedImage);
             show();
             setEnabled(false);
 
@@ -292,7 +306,7 @@ void QAlphaWidget::render()
         deleteLater();
     } else {
         alphaBlend();
-        pm = QPixmap::fromImage(mixed);
+        pm = QPixmap::fromImage(mixedImage);
         repaint();
     }
 }
@@ -305,15 +319,15 @@ void QAlphaWidget::alphaBlend()
     const int a = qRound(alpha*256);
     const int ia = 256 - a;
 
-    const int sw = front.width();
-    const int sh = front.height();
-    const int bpl = front.bytesPerLine();
-    switch(front.depth()) {
+    const int sw = frontImage.width();
+    const int sh = frontImage.height();
+    const int bpl = frontImage.bytesPerLine();
+    switch(frontImage.depth()) {
     case 32:
         {
-            uchar *mixed_data = mixed.bits();
-            const uchar *back_data = back.bits();
-            const uchar *front_data = front.bits();
+            uchar *mixed_data = mixedImage.bits();
+            const uchar *back_data = backImage.bits();
+            const uchar *front_data = frontImage.bits();
 
             for (int sy = 0; sy < sh; sy++) {
                 quint32* mixed = (quint32*)mixed_data;
@@ -567,7 +581,7 @@ void QRollEffect::scroll()
 void qScrollEffect(QWidget* w, QEffects::DirFlags orient, int time)
 {
     if (q_roll) {
-        delete q_roll;
+        q_roll->deleteLater();
         q_roll = 0;
     }
 
@@ -589,7 +603,7 @@ void qScrollEffect(QWidget* w, QEffects::DirFlags orient, int time)
 void qFadeEffect(QWidget* w, int time)
 {
     if (q_blend) {
-        delete q_blend;
+        q_blend->deleteLater();
         q_blend = 0;
     }
 

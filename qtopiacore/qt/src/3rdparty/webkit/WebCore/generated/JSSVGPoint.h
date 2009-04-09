@@ -18,67 +18,69 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPoint_H
-#define JSSVGPoint_H
+#ifndef JSSVGPoint_h
+#define JSSVGPoint_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 #include "FloatPoint.h"
 #include "JSSVGPODTypeWrapper.h"
 
 namespace WebCore {
 
-class JSSVGPoint : public KJS::DOMObject {
+class JSSVGPoint : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGPoint(KJS::ExecState*, JSSVGPODTypeWrapper<FloatPoint>*);
+    JSSVGPoint(PassRefPtr<JSC::Structure>, PassRefPtr<JSSVGPODTypeWrapper<FloatPoint> >, SVGElement* context);
     virtual ~JSSVGPoint();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        XAttrNum, YAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // Functions
-        MatrixTransformFuncNum
-    };
     JSSVGPODTypeWrapper<FloatPoint>* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
+    RefPtr<SVGElement> m_context;
     RefPtr<JSSVGPODTypeWrapper<FloatPoint> > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, JSSVGPODTypeWrapper<FloatPoint>*);
-FloatPoint toSVGPoint(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, JSSVGPODTypeWrapper<FloatPoint>*, SVGElement* context);
+FloatPoint toSVGPoint(JSC::JSValuePtr);
 
-class JSSVGPointPrototype : public KJS::JSObject {
+class JSSVGPointPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSSVGPointPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSSVGPointPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGPointPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSSVGPointPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsSVGPointPrototypeFunctionMatrixTransform(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGPointX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPointX(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPointY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPointY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

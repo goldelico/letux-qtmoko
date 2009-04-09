@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLLIElement_H
-#define JSHTMLLIElement_H
+#ifndef JSHTMLLIElement_h
+#define JSHTMLLIElement_h
 
 #include "JSHTMLElement.h"
 
@@ -28,34 +28,39 @@ namespace WebCore {
 class HTMLLIElement;
 
 class JSHTMLLIElement : public JSHTMLElement {
+    typedef JSHTMLElement Base;
 public:
-    JSHTMLLIElement(KJS::ExecState*, HTMLLIElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSHTMLLIElement(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLLIElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        TypeAttrNum, ValueAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
 
 
-class JSHTMLLIElementPrototype : public KJS::JSObject {
+class JSHTMLLIElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSHTMLLIElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSHTMLElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSHTMLLIElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsHTMLLIElementType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLLIElementType(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLLIElementValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLLIElementValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLLIElementConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

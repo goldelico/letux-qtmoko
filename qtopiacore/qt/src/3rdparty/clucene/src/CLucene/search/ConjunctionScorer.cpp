@@ -128,8 +128,8 @@ CL_NS_DEF(search)
     return doNext();
   }
 
-  float_t ConjunctionScorer::score(){
-    float_t score = 0.0f;                           // sum scores
+  qreal ConjunctionScorer::score(){
+    qreal score = 0.0f;                           // sum scores
     CL_NS_STD(list)<Scorer*>::const_iterator i = scorers.begin();
 	while (i!=scorers.end()){
       score += (*i)->score();

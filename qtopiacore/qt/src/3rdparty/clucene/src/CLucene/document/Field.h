@@ -37,7 +37,7 @@ private:
     jstreams::StreamBase<char>* _streamValue;
 
 	int config;
-	float_t boost;
+	qreal boost;
 	bool omitNorms;
 public:
 	enum Store{ 
@@ -145,7 +145,7 @@ public:
 	_CL_DEPRECATED( new Field(*) ) static Field* Text(const TCHAR* name, CL_NS(util)::Reader* value, const bool storeTermVector=false);
 
 	/**  The name of the field (e.g., "date", "subject", "title", "body", etc.)
-	/*	as an interned string. */
+	*	as an interned string. */
 	const TCHAR* name(); ///<returns reference
 
 	/** The value of the field as a String, or null.  If null, the Reader value
@@ -222,7 +222,7 @@ public:
 	*
 	* @see #setBoost(float)
 	*/
-	float_t getBoost();
+	qreal getBoost();
       
 	/** Sets the boost factor hits on this field.  This value will be
 	* multiplied into the score of all hits on this this field of this
@@ -240,7 +240,7 @@ public:
 	* @see Similarity#lengthNorm(String, int)
 	* @see Similarity#encodeNorm(float)
 	*/
-	void setBoost(float_t value);
+	void setBoost(qreal value);
 
 	/** True iff the value of the filed is stored as binary */
 	bool isBinary();

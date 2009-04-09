@@ -1,15 +1,20 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_index_IndexWriter_
 #define _lucene_index_IndexWriter_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
+
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 
 #include "CLucene/analysis/AnalysisHeader.h"
 #include "CLucene/util/VoidList.h"
@@ -44,40 +49,53 @@ from the index.
 
 @see IndexModifier IndexModifier supports the important methods of IndexWriter plus deletion
 */
-class IndexWriter:LUCENE_BASE {
-	class LockWith2:public CL_NS(store)::LuceneLockWith<void>{
+class IndexWriter : LUCENE_BASE
+{
+	class LockWith2 : public CL_NS(store)::LuceneLockWith<void>
+    {
 	public:
-		CL_NS(util)::CLVector<SegmentReader*>* segmentsToDelete;
-		IndexWriter* writer;
-		bool create;
+		LockWith2(CL_NS(store)::LuceneLock* lock,
+                  int64_t lockWaitTimeout,
+                  IndexWriter* wr,
+                  CL_NS(util)::CLVector<SegmentReader*>* std,
+                  bool create);
+
+        ~LockWith2() {}
+
 		void doBody();
-		LockWith2(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout,
-				IndexWriter* wr, 
-				CL_NS(util)::CLVector<SegmentReader*>* std,
-				bool create);
-		~LockWith2(){
-		}
+
+    private:
+        bool create;
+        IndexWriter* writer;
+		CL_NS(util)::CLVector<SegmentReader*>* segmentsToDelete;
 	};
 	friend class LockWith2;
 
-	class LockWithCFS:public CL_NS(store)::LuceneLockWith<void>{
+	class LockWithCFS : public CL_NS(store)::LuceneLockWith<void>
+    {
 	public:
+		LockWithCFS(CL_NS(store)::LuceneLock* lock,
+                    int64_t lockWaitTimeout,
+                    CL_NS(store)::Directory* dir,
+                    IndexWriter* wr,
+                    const QString& segName,
+                    const QStringList& ftd);
+		
+        ~LockWithCFS() {}
+
+        void doBody();
+
+    private:
+		QString segName;        
+        IndexWriter* writer;
 		CL_NS(store)::Directory* directory;
-		IndexWriter* writer;
-		const char* segName;
-		CL_NS(util)::AStringArrayWithDeletor* filesToDelete;
-		void doBody();
-		LockWithCFS(CL_NS(store)::LuceneLock* lock, int64_t lockWaitTimeout, 
-				CL_NS(store)::Directory* dir, 
-				IndexWriter* wr, 
-				const char* segName, 
-				CL_NS(util)::AStringArrayWithDeletor* ftd);
-		~LockWithCFS(){
-		}
+		QStringList filesToDelete;
 	};
     friend class IndexWriter::LockWithCFS;
 
-	bool isOpen; //indicates if the writers is open - this way close can be called multiple times
+    // indicates if the writers is open - this way close can be called multiple
+    // times
+    bool isOpen;
 
 	// how to analyze text
 	CL_NS(analysis)::Analyzer* analyzer;
@@ -92,7 +110,8 @@ class IndexWriter:LUCENE_BASE {
 	bool useCompoundFile;
 	bool closeDir;
 
-	CL_NS(store)::TransactionalRAMDirectory* ramDirectory; // for temp segs
+    // for temp segs
+	CL_NS(store)::TransactionalRAMDirectory* ramDirectory;
 
 	CL_NS(store)::LuceneLock* writeLock;
 
@@ -104,7 +123,7 @@ class IndexWriter:LUCENE_BASE {
 	CL_NS(store)::Directory* directory;		
 		
 		
-	int32_t getSegmentsCounter(){ return segmentInfos->counter; }
+	int32_t getSegmentsCounter() { return segmentInfos.counter; }
 	int32_t maxFieldLength;
 	int32_t mergeFactor;
 	int32_t minMergeDocs;
@@ -117,7 +136,7 @@ public:
 	DEFINE_MUTEX(THIS_LOCK)
 	
 	// Release the write lock, if needed. 
-	SegmentInfos* segmentInfos;
+	SegmentInfos segmentInfos;
   
 	// Release the write lock, if needed.
 	~IndexWriter();
@@ -164,7 +183,8 @@ public:
 	/**
 	* Sets the maximum time to wait for a write lock (in milliseconds).
 	*/
-	void setWriteLockTimeout(int64_t writeLockTimeout) { this->writeLockTimeout = writeLockTimeout; }
+	void setWriteLockTimeout(int64_t writeLockTimeout)
+    { this->writeLockTimeout = writeLockTimeout; }
 	/**
 	* @see #setWriteLockTimeout
 	*/
@@ -177,14 +197,15 @@ public:
 	/**
 	* Sets the maximum time to wait for a commit lock (in milliseconds).
 	*/
-	void setCommitLockTimeout(int64_t commitLockTimeout) { this->commitLockTimeout = commitLockTimeout; }
+	void setCommitLockTimeout(int64_t commitLockTimeout)
+    { this->commitLockTimeout = commitLockTimeout; }
 	/**
 	* @see #setCommitLockTimeout
 	*/
 	int64_t getCommitLockTimeout() { return commitLockTimeout; }
 
-	static const char* WRITE_LOCK_NAME; //"write.lock";
-	static const char* COMMIT_LOCK_NAME; //"commit.lock";
+	static const QLatin1String WRITE_LOCK_NAME; //"write.lock";
+	static const QLatin1String COMMIT_LOCK_NAME; //"commit.lock";
 	
 	/**
 	* Default value is 10. Change using {@link #setMergeFactor(int)}.
@@ -282,7 +303,8 @@ public:
 	*  if it does not exist, and <code>create</code> is
 	*  <code>false</code>
 	*/
-	IndexWriter(const char* path, CL_NS(analysis)::Analyzer* a, const bool create, const bool closeDir=true);
+	IndexWriter(const QString& path, CL_NS(analysis)::Analyzer* a,
+        const bool create, const bool closeDir = true);
 	
 	
 	/**Constructs an IndexWriter for the index in <code>d</code>.  Text will be
@@ -290,33 +312,27 @@ public:
 	*  empty index will be created in <code>d</code>, replacing the index already
 	*  there, if any.
 	*/
-	IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a, const bool create, const bool closeDir=false);
+	IndexWriter(CL_NS(store)::Directory* d, CL_NS(analysis)::Analyzer* a,
+        const bool create, const bool closeDir = false);
 
-	/**
-	* Flushes all changes to an index, closes all associated files, and closes
-	* the directory that the index is stored in.
-	*/
+    // Flushes all changes to an index, closes all associated files, and closes
+    // the directory that the index is stored in.
 	void close();
 
-	/**Returns the number of documents currently in this index.
-	*  synchronized
-	*/
+	// Returns the number of documents currently in this index. synchronized
 	int32_t docCount();
 
 
-	/**
-	* Adds a document to this index, using the provided analyzer instead of the
-	* value of {@link #getAnalyzer()}.  If the document contains more than
-	* {@link #setMaxFieldLength(int)} terms for a given field, the remainder are
-	* discarded.
-	*/
-	void addDocument(CL_NS(document)::Document* doc, CL_NS(analysis)::Analyzer* analyzer=NULL);
+    // Adds a document to this index, using the provided analyzer instead of
+    // the value of {@link #getAnalyzer()}.  If the document contains more than
+    // {@link #setMaxFieldLength(int)} terms for a given field, the remainder
+    // are discarded.
+	void addDocument(CL_NS(document)::Document* doc,
+        CL_NS(analysis)::Analyzer* analyzer = NULL);
   
 
-	/**Merges all segments together into a single segment, optimizing an index
-	*  for search.
-	*@synchronized
-	*/
+	// Merges all segments together into a single segment, optimizing an index
+	// for search. synchronized
 	void optimize();
 
 
@@ -361,7 +377,8 @@ public:
 	*
 	* @see Similarity#setDefault(Similarity)
 	*/
-	void setSimilarity(CL_NS(search)::Similarity* similarity) { this->similarity = similarity; }
+	void setSimilarity(CL_NS(search)::Similarity* similarity)
+    { this->similarity = similarity; }
 
 	/** Expert: Return the Similarity implementation used by this IndexWriter.
 	*
@@ -379,33 +396,30 @@ private:
 	/** Incremental segment merger. */
 	void maybeMergeSegments();
 
-	/** Pops segments off of segmentInfos stack down to minSegment, merges them,
-	* 	and pushes the merged index onto the top of the segmentInfos stack.
-	*/
+	// Pops segments off of segmentInfos stack down to minSegment, merges them,
+	// and pushes the merged index onto the top of the segmentInfos stack.
 	void mergeSegments(const uint32_t minSegment);
 	
-	/** Merges the named range of segments, replacing them in the stack with a
-	* single segment. */
+	// Merges the named range of segments, replacing them in the stack with a
+	// single segment.
 	void mergeSegments(const uint32_t minSegment, const uint32_t end);
 
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files);
-	void readDeleteableFiles(CL_NS(util)::AStringArrayWithDeletor& files);
-	void writeDeleteableFiles(CL_NS(util)::AStringArrayWithDeletor& files);
-    
-	/*
-	* Some operating systems (e.g. Windows) don't permit a file to be deleted
-	* while it is opened for read (e.g. by another process or thread). So we
-	* assume that when a delete fails it is because the file is open in another
-	* process, and queue the file for subsequent deletion.
-	*/
+    // Some operating systems (e.g. Windows) don't permit a file to be deleted
+    // while it is opened for read (e.g. by another process or thread). So we
+    // assume that when a delete fails it is because the file is open in another
+    // process, and queue the file for subsequent deletion.
 	void deleteSegments(CL_NS(util)::CLVector<SegmentReader*>* segments);
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files, CL_NS(store)::Directory* directory);
-	void deleteFiles(CL_NS(util)::AStringArrayWithDeletor& files, CL_NS(util)::AStringArrayWithDeletor& deletable);
 
+	void deleteFiles(const QStringList& files);
+	void readDeleteableFiles(QStringList& files);
+	void deleteFiles(const QStringList& files, QStringList& deletable);
+    void deleteFiles(const QStringList& files, CL_NS(store)::Directory* directory);
+	void writeDeleteableFiles(const QStringList& files);
 
 	// synchronized
-	char* newSegmentName();
+	QString newSegmentName();
 };
 
 CL_NS_END
+
 #endif

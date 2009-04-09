@@ -3,8 +3,6 @@
 # Only used on platforms with CONFIG += precompile_header
 PRECOMPILED_HEADER = kernel/qt_gui_pch.h
 
-# enable a workaround for a miscompilation on AVR32
-equals(QT_ARCH, avr32):CONFIG -= precompile_header
 
 KERNEL_P= kernel
 HEADERS += \
@@ -38,7 +36,8 @@ HEADERS += \
 	kernel/qstackedlayout.h \
 	kernel/qtooltip.h \
 	kernel/qwhatsthis.h \
-	kernel/qwidget.h \
+        kernel/qwidget.h \
+        kernel/qwidget_p.h \
 	kernel/qwidgetaction.h \
 	kernel/qwidgetaction_p.h \
 	kernel/qwindowdefs.h \
@@ -74,6 +73,8 @@ SOURCES += \
 	kernel/qkeymapper.cpp
 
 win32 {
+	DEFINES += QT_NO_DIRECTDRAW
+
 	SOURCES += \
 		kernel/qapplication_win.cpp \
 		kernel/qclipboard_win.cpp \
@@ -85,9 +86,12 @@ win32 {
 		kernel/qwidget_win.cpp \
 		kernel/qole_win.cpp \
 		kernel/qkeymapper_win.cpp
+
+        !contains(DEFINES, QT_NO_DIRECTDRAW):LIBS += ddraw.lib
 }
 
 unix:x11 {
+	INCLUDEPATH += ../3rdparty/xorg
 	HEADERS += \
 		kernel/qx11embed_x11.h \
 		kernel/qx11info_x11.h
@@ -133,7 +137,8 @@ embedded {
 		kernel/qeventdispatcher_qws.cpp \
 		kernel/qsound_qws.cpp \
 		kernel/qwidget_qws.cpp \
-		kernel/qkeymapper_qws.cpp
+		kernel/qkeymapper_qws.cpp \
+		kernel/qsessionmanager_qws.cpp
 
         contains(QT_CONFIG, glib) {
             SOURCES += \
@@ -148,21 +153,40 @@ embedded {
 
 !embedded:!x11:mac {
 	SOURCES += \
-		kernel/qapplication_mac.cpp \
 		kernel/qclipboard_mac.cpp \
-                kernel/qeventdispatcher_mac.cpp \
 		kernel/qmime_mac.cpp \
-		kernel/qdnd_mac.cpp \
-		kernel/qdesktopwidget_mac.cpp \
-		kernel/qwidget_mac.cpp \
+		kernel/qt_mac.cpp \
 		kernel/qkeymapper_mac.cpp
 
         OBJECTIVE_SOURCES += \
                 kernel/qcursor_mac.mm \
-                kernel/qsound_mac.mm
+                kernel/qdnd_mac.mm \
+                kernel/qsound_mac.mm  \
+                kernel/qapplication_mac.mm \
+		kernel/qwidget_mac.mm \
+		kernel/qcocoapanel_mac.mm \
+		kernel/qcocoaview_mac.mm \
+		kernel/qcocoawindow_mac.mm \
+		kernel/qcocoawindowdelegate_mac.mm \
+                kernel/qcocoamenuloader_mac.mm \
+                kernel/qcocoaapplication_mac.mm \
+                kernel/qcocoaapplicationdelegate_mac.mm \
+                kernel/qt_cocoa_helpers_mac.mm \
+		kernel/qdesktopwidget_mac.mm \
+                kernel/qeventdispatcher_mac.mm
 
         HEADERS += \
+                kernel/qt_cocoa_helpers_mac_p.h \
+                kernel/qcocoaapplication_mac_p.h \
+                kernel/qcocoaapplicationdelegate_mac_p.h \
                 kernel/qeventdispatcher_mac_p.h
+
+        MENU_NIB.files = mac/qt_menu.nib 
+        MENU_NIB.path = Resources 
+        MENU_NIB.version = Versions
+        QMAKE_BUNDLE_DATA += MENU_NIB 
+        RESOURCES += mac/maccursors.qrc
+
         LIBS += -framework AppKit
 }
 

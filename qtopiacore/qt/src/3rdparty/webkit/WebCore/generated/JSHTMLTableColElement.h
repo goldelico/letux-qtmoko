@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTableColElement_H
-#define JSHTMLTableColElement_H
+#ifndef JSHTMLTableColElement_h
+#define JSHTMLTableColElement_h
 
 #include "JSHTMLElement.h"
 
@@ -28,35 +28,47 @@ namespace WebCore {
 class HTMLTableColElement;
 
 class JSHTMLTableColElement : public JSHTMLElement {
+    typedef JSHTMLElement Base;
 public:
-    JSHTMLTableColElement(KJS::ExecState*, HTMLTableColElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSHTMLTableColElement(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLTableColElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        AlignAttrNum, ChAttrNum, ChOffAttrNum, SpanAttrNum, 
-        VAlignAttrNum, WidthAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
 
 
-class JSHTMLTableColElementPrototype : public KJS::JSObject {
+class JSHTMLTableColElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSHTMLTableColElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSHTMLElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSHTMLTableColElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsHTMLTableColElementAlign(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementCh(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementCh(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementChOff(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementChOff(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementSpan(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementSpan(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementVAlign(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementVAlign(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableColElementWidth(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableColElementConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

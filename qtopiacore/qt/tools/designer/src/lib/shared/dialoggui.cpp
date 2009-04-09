@@ -1,48 +1,147 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "dialoggui_p.h"
 
+#include <QtGui/QFileIconProvider>
+#include <QtGui/QIcon>
+#include <QtGui/QImage>
+#include <QtGui/QImageReader>
+#include <QtGui/QPixmap>
+
+#include <QtCore/QFileInfo>
+#include <QtCore/QFile>
+#include <QtCore/QSet>
+
+// QFileDialog on X11 does not provide an image preview. Display icons.
+#ifdef Q_WS_X11
+#  define IMAGE_PREVIEW
+#endif
+
 QT_BEGIN_NAMESPACE
 
 namespace qdesigner_internal {
 
-DialogGui::DialogGui()
+// Icon provider that reads out the known image formats
+class IconProvider : public QFileIconProvider {
+    Q_DISABLE_COPY(IconProvider)
+
+public:
+    IconProvider();
+    virtual QIcon icon (const QFileInfo &info) const;
+
+    inline bool loadCheck(const QFileInfo &info) const;
+    QImage loadImage(const QString &fileName) const;
+
+private:
+    QSet<QString> m_imageFormats;
+};
+
+IconProvider::IconProvider()
 {
+    // Determine a list of readable extensions (upper and lower case)
+    typedef QList<QByteArray> ByteArrayList;
+    const ByteArrayList fmts = QImageReader::supportedImageFormats();
+    const ByteArrayList::const_iterator cend = fmts.constEnd();
+    for (ByteArrayList::const_iterator it = fmts.constBegin(); it != cend; ++it) {
+        const QString suffix = QString::fromUtf8(it->constData());
+        m_imageFormats.insert(suffix.toLower());
+        m_imageFormats.insert(suffix.toUpper());
+
+    }
+}
+
+// Check by extension and type if this appears to be a loadable image
+bool IconProvider::loadCheck(const QFileInfo &info) const
+{
+    if (info.isFile() && info.isReadable()) {
+        const QString suffix = info.suffix();
+        if (!suffix.isEmpty())
+            return m_imageFormats.contains(suffix);
+    }
+    return false;
+}
+
+QImage IconProvider::loadImage(const QString &fileName) const
+{
+    QFile file(fileName);
+    if (file.open(QIODevice::ReadOnly)) {
+        QImageReader imgReader(&file);
+        if (imgReader.canRead()) {
+            QImage image;
+            if (imgReader.read(&image))
+                return image;
+        }
+    }
+    return QImage();
+}
+
+QIcon IconProvider::icon (const QFileInfo &info) const
+{
+    // Don't get stuck on large images.
+    const qint64 maxSize = 131072;
+    if (loadCheck(info) && info.size() < maxSize) {
+        const QImage image = loadImage(info.absoluteFilePath());
+        if (!image.isNull())
+            return QIcon(QPixmap::fromImage(image, Qt::ThresholdDither|Qt::AutoColor));
+    }
+    return QFileIconProvider::icon(info);
+}
+
+// ---------------- DialogGui
+DialogGui::DialogGui() :
+    m_iconProvider(0)
+{
+}
+
+DialogGui::~DialogGui()
+{
+    delete m_iconProvider;
+}
+
+QFileIconProvider *DialogGui::ensureIconProvider()
+{
+    if (!m_iconProvider)
+        m_iconProvider = new IconProvider;
+    return m_iconProvider;
 }
 
 QMessageBox::StandardButton
@@ -112,6 +211,55 @@ QString DialogGui::getSaveFileName(QWidget *parent, const QString &caption, cons
 {
     return QFileDialog::getSaveFileName(parent, caption, dir, filter, selectedFilter, options);
 }
+
+void DialogGui::initializeImageFileDialog(QFileDialog &fileDialog, QFileDialog::Options options, QFileDialog::FileMode fm)
+{
+    fileDialog.setConfirmOverwrite( !(options & QFileDialog::DontConfirmOverwrite) );
+    fileDialog.setResolveSymlinks( !(options & QFileDialog::DontResolveSymlinks) );
+    fileDialog.setIconProvider(ensureIconProvider());
+    fileDialog.setFileMode(fm);
+}
+
+QString DialogGui::getOpenImageFileName(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedFilter, QFileDialog::Options options )
+{
+
+#ifdef IMAGE_PREVIEW
+    QFileDialog fileDialog(parent, caption, dir, filter);
+    initializeImageFileDialog(fileDialog, options, QFileDialog::ExistingFile);
+    if (fileDialog.exec() != QDialog::Accepted)
+        return QString();
+
+    const QStringList selectedFiles = fileDialog.selectedFiles();
+    if (selectedFiles.empty())
+        return QString();
+
+    if (selectedFilter)
+        *selectedFilter =  fileDialog.selectedFilter();
+
+    return selectedFiles.front();
+#else
+    return getOpenFileName(parent, caption, dir, filter, selectedFilter, options);
+#endif
+}
+
+QStringList DialogGui::getOpenImageFileNames(QWidget *parent, const QString &caption, const QString &dir, const QString &filter, QString *selectedFilter, QFileDialog::Options options )
+{
+#ifdef IMAGE_PREVIEW
+    QFileDialog fileDialog(parent, caption, dir, filter);
+    initializeImageFileDialog(fileDialog, options, QFileDialog::ExistingFiles);
+    if (fileDialog.exec() != QDialog::Accepted)
+        return QStringList();
+
+    const QStringList selectedFiles = fileDialog.selectedFiles();
+    if (!selectedFiles.empty() && selectedFilter)
+        *selectedFilter =  fileDialog.selectedFilter();
+
+    return selectedFiles;
+#else
+      return getOpenFileNames(parent, caption, dir, filter, selectedFilter, options);
+#endif
+}
+
 }
 
 QT_END_NAMESPACE

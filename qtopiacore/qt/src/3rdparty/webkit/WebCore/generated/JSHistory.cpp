@@ -24,121 +24,149 @@
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
 #include "History.h"
+#include "JSHistoryCustom.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHistory)
+
 /* Hash table */
 
-static const HashEntry JSHistoryTableEntries[] =
+static const HashTableValue JSHistoryTableValues[2] =
 {
-    { "length", JSHistory::LengthAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "length", DontDelete|ReadOnly, (intptr_t)jsHistoryLength, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHistoryTable = 
-{
-    2, 1, JSHistoryTableEntries, 1
-};
+static const HashTable JSHistoryTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHistoryTableValues, 0 };
+#else
+    { 2, 1, JSHistoryTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSHistoryPrototypeTableEntries[] =
+static const HashTableValue JSHistoryPrototypeTableValues[4] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "forward", JSHistory::ForwardFuncNum, DontDelete|Function, 0, 0 },
-    { "back", JSHistory::BackFuncNum, DontDelete|Function, 0, &JSHistoryPrototypeTableEntries[3] },
-    { "go", JSHistory::GoFuncNum, DontDelete|Function, 1, 0 }
+    { "back", DontDelete|Function, (intptr_t)jsHistoryPrototypeFunctionBack, (intptr_t)0 },
+    { "forward", DontDelete|Function, (intptr_t)jsHistoryPrototypeFunctionForward, (intptr_t)0 },
+    { "go", DontDelete|Function, (intptr_t)jsHistoryPrototypeFunctionGo, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHistoryPrototypeTable = 
-{
-    2, 4, JSHistoryPrototypeTableEntries, 3
-};
+static const HashTable JSHistoryPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSHistoryPrototypeTableValues, 0 };
+#else
+    { 9, 7, JSHistoryPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHistoryPrototype::info = { "HistoryPrototype", 0, &JSHistoryPrototypeTable, 0 };
+const ClassInfo JSHistoryPrototype::s_info = { "HistoryPrototype", 0, &JSHistoryPrototypeTable, 0 };
 
 JSObject* JSHistoryPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHistoryPrototype>(exec, "[[JSHistory.prototype]]");
+    return getDOMPrototype<JSHistory>(exec);
 }
 
 bool JSHistoryPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHistoryPrototypeFunction, JSObject>(exec, &JSHistoryPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHistoryPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHistory::info = { "History", 0, &JSHistoryTable, 0 };
+const ClassInfo JSHistory::s_info = { "History", 0, &JSHistoryTable, 0 };
 
-JSHistory::JSHistory(ExecState* exec, History* impl)
-    : m_impl(impl)
+JSHistory::JSHistory(PassRefPtr<Structure> structure, PassRefPtr<History> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSHistoryPrototype::self(exec));
 }
 
 JSHistory::~JSHistory()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSHistory::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHistoryPrototype(JSHistoryPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSHistory::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHistory, KJS::DOMObject>(exec, &JSHistoryTable, this, propertyName, slot);
+    if (customGetOwnPropertySlot(exec, propertyName, slot))
+        return true;
+    return getStaticValueSlot<JSHistory, Base>(exec, &JSHistoryTable, this, propertyName, slot);
 }
 
-JSValue* JSHistory::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHistoryLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case LengthAttrNum: {
-        History* imp = static_cast<History*>(impl());
-
-        return jsNumber(imp->length());
-    }
-    }
-    return 0;
+    History* imp = static_cast<History*>(static_cast<JSHistory*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-JSValue* JSHistoryPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+void JSHistory::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSHistory::info))
-      return throwError(exec, TypeError);
-
-    History* imp = static_cast<History*>(static_cast<JSHistory*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHistory::BackFuncNum: {
-
-        imp->back();
-        return jsUndefined();
-    }
-    case JSHistory::ForwardFuncNum: {
-
-        imp->forward();
-        return jsUndefined();
-    }
-    case JSHistory::GoFuncNum: {
-        bool distanceOk;
-        int distance = args[0]->toInt32(exec, distanceOk);
-        if (!distanceOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->go(distance);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    if (customPut(exec, propertyName, value, slot))
+        return;
+    Base::put(exec, propertyName, value, slot);
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, History* obj)
+
+void JSHistory::getPropertyNames(ExecState* exec, PropertyNameArray& propertyNames)
 {
-    return KJS::cacheDOMObject<History, JSHistory>(exec, obj);
+    if (customGetPropertyNames(exec, propertyNames))
+        return;
+     Base::getPropertyNames(exec, propertyNames);
 }
-History* toHistory(KJS::JSValue* val)
+
+JSValuePtr jsHistoryPrototypeFunctionBack(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return val->isObject(&JSHistory::info) ? static_cast<JSHistory*>(val)->impl() : 0;
+    if (!thisValue->isObject(&JSHistory::s_info))
+        return throwError(exec, TypeError);
+    JSHistory* castedThisObj = static_cast<JSHistory*>(asObject(thisValue));
+    History* imp = static_cast<History*>(castedThisObj->impl());
+
+    imp->back();
+    return jsUndefined();
+}
+
+JSValuePtr jsHistoryPrototypeFunctionForward(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHistory::s_info))
+        return throwError(exec, TypeError);
+    JSHistory* castedThisObj = static_cast<JSHistory*>(asObject(thisValue));
+    History* imp = static_cast<History*>(castedThisObj->impl());
+
+    imp->forward();
+    return jsUndefined();
+}
+
+JSValuePtr jsHistoryPrototypeFunctionGo(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHistory::s_info))
+        return throwError(exec, TypeError);
+    JSHistory* castedThisObj = static_cast<JSHistory*>(asObject(thisValue));
+    History* imp = static_cast<History*>(castedThisObj->impl());
+    int distance = args.at(exec, 0)->toInt32(exec);
+
+    imp->go(distance);
+    return jsUndefined();
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, History* object)
+{
+    return getDOMObjectWrapper<JSHistory>(exec, object);
+}
+History* toHistory(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSHistory::s_info) ? static_cast<JSHistory*>(asObject(value))->impl() : 0;
 }
 
 }

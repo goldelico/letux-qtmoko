@@ -32,20 +32,29 @@
 
 #include "QualifiedName.h"
 
-namespace WebCore { namespace XLinkNames {
+namespace WebCore {
+
+ namespace XLinkNames {
 
 #ifndef DOM_XLinkNAMES_HIDE_GLOBALS
 // Namespace
 extern const WebCore::AtomicString xlinkNamespaceURI;
 
 // Attributes
-    extern const WebCore::QualifiedName actuateAttr;
-    extern const WebCore::QualifiedName arcroleAttr;
-    extern const WebCore::QualifiedName hrefAttr;
-    extern const WebCore::QualifiedName roleAttr;
-    extern const WebCore::QualifiedName showAttr;
-    extern const WebCore::QualifiedName titleAttr;
-    extern const WebCore::QualifiedName typeAttr;
+extern const WebCore::QualifiedName actuateAttr;
+extern char actuateAttrString[];
+extern const WebCore::QualifiedName arcroleAttr;
+extern char arcroleAttrString[];
+extern const WebCore::QualifiedName hrefAttr;
+extern char hrefAttrString[];
+extern const WebCore::QualifiedName roleAttr;
+extern char roleAttrString[];
+extern const WebCore::QualifiedName showAttr;
+extern char showAttrString[];
+extern const WebCore::QualifiedName titleAttr;
+extern char titleAttrString[];
+extern const WebCore::QualifiedName typeAttr;
+extern char typeAttrString[];
 
 
 WebCore::QualifiedName** getXLinkAttr(size_t* size);

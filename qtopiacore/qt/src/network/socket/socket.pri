@@ -29,15 +29,18 @@ unix:SOURCES += socket/qnativesocketengine_unix.cpp \
                 socket/qlocalsocket_unix.cpp \
                 socket/qlocalserver_unix.cpp
 
+
 win32:SOURCES += socket/qnativesocketengine_win.cpp \
                 socket/qlocalsocket_win.cpp \
                 socket/qlocalserver_win.cpp
 
 wince*: {
-    SOURCES -= socket/qlocalsocket.cpp \
-               socket/qlocalserver.cpp \
-               socket/qlocalsocket_win.cpp \
+    SOURCES -= socket/qlocalsocket_win.cpp \
                socket/qlocalserver_win.cpp
+    SOURCES += socket/qlocalsocket_tcp.cpp \
+               socket/qlocalserver_tcp.cpp
 
-    DEFINES += QT_NO_LOCALSOCKET QT_NO_LOCALSERVER
+    DEFINES += QT_LOCALSOCKET_TCP
 }
+
+

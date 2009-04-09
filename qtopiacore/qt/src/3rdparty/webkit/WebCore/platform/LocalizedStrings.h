@@ -30,7 +30,7 @@ namespace WebCore {
 
     class String;
     class IntSize;
-
+    
     String inputElementAltText();
     String resetButtonDefaultLabel();
     String searchableIndexIntroduction();
@@ -52,6 +52,12 @@ namespace WebCore {
     String contextMenuItemTagReload();
     String contextMenuItemTagCut();
     String contextMenuItemTagPaste();
+#if PLATFORM(GTK)
+    String contextMenuItemTagDelete();
+    String contextMenuItemTagSelectAll();
+    String contextMenuItemTagInputMethods();
+    String contextMenuItemTagUnicode();
+#endif
     String contextMenuItemTagNoGuessesFound();
     String contextMenuItemTagIgnoreSpelling();
     String contextMenuItemTagLearnSpelling();
@@ -70,6 +76,7 @@ namespace WebCore {
     String contextMenuItemTagUnderline();
     String contextMenuItemTagOutline();
     String contextMenuItemTagWritingDirectionMenu();
+    String contextMenuItemTagTextDirectionMenu();
     String contextMenuItemTagDefaultDirection();
     String contextMenuItemTagLeftToRight();
     String contextMenuItemTagRightToLeft();
@@ -93,8 +100,23 @@ namespace WebCore {
     String AXListMarkerText();
     String AXImageMapText();
     String AXHeadingText();
+    String AXDefinitionListTermText();
+    String AXDefinitionListDefinitionText();
+    
+    String AXButtonActionVerb();
+    String AXRadioButtonActionVerb();
+    String AXTextFieldActionVerb();
+    String AXCheckedCheckBoxActionVerb();
+    String AXUncheckedCheckBoxActionVerb();
+    String AXLinkActionVerb();
 
+    String multipleFileUploadText(unsigned numberOfFiles);
     String unknownFileSizeText();
+
+#if PLATFORM(WIN)
+    String uploadFileText();
+    String allFilesText();
+#endif
 
     String imageTitle(const String& filename, const IntSize& size);
 }

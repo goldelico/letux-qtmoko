@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,34 @@
 
 QT_BEGIN_NAMESPACE
 
+class QGraphicsItemPrivate;
+
+class QGraphicsItemCache
+{
+public:
+    QGraphicsItemCache() : allExposed(false) { }
+
+    // ItemCoordinateCache only
+    QRect boundingRect;
+    QSize fixedSize;
+    QString key;
+
+    // DeviceCoordinateCache only
+    struct DeviceData {
+        QTransform lastTransform;
+        QPoint cacheIndent;
+        QString key;
+    };
+    QMap<QPaintDevice *, DeviceData> deviceData;
+
+    // List of logical exposed rects
+    QVector<QRectF> exposed;
+    bool allExposed;
+
+    // Empty cache
+    void purge();
+};
+
 class Q_AUTOTEST_EXPORT QGraphicsItemPrivate
 {
     Q_DECLARE_PUBLIC(QGraphicsItem)
@@ -63,10 +95,11 @@ public:
         ExtraTransform,
         ExtraToolTip,
         ExtraCursor,
-        ExtraPixmapKey,
-        ExtraInvalidateRect,
+        ExtraCacheData,
         ExtraMaxDeviceCoordCacheSize,
-        ExtraBoundingRegionGranularity
+        ExtraBoundingRegionGranularity,
+        ExtraOpacity,
+        ExtraEffectiveOpacity
     };
 
     enum AncestorFlag {
@@ -77,26 +110,37 @@ public:
     };
 
     inline QGraphicsItemPrivate()
-        : z(0), scene(0), parent(0), index(-1), q_ptr(0)
+        : z(0),
+        scene(0),
+        parent(0),
+        index(-1),
+        depth(0),
+        acceptedMouseButtons(0x1f),
+        visible(1),
+        explicitlyHidden(0),
+        enabled(1),
+        explicitlyDisabled(0),
+        selected(0),
+        acceptsHover(0),
+        acceptDrops(0),
+        isMemberOfGroup(0),
+        handlesChildEvents(0),
+        itemDiscovered(0),
+        hasTransform(0),
+        hasCursor(0),
+        ancestorFlags(0),
+        cacheMode(0),
+        hasBoundingRegionGranularity(0),
+        flags(0),
+        hasOpacity(0),
+        isWidget(0),
+        dirty(0),
+        dirtyChildren(0),
+        localCollisionHack(0),
+        globalStackingOrder(-1),
+        sceneTransformIndex(-1),
+        q_ptr(0)
     {
-        acceptedMouseButtons = 0x1f;
-        visible = 1;
-        explicitlyHidden = 0;
-        enabled = 1;
-        explicitlyDisabled = 0;
-        selected = 0;
-        acceptsHover = 0;
-        acceptDrops = 0;
-        isMemberOfGroup = 0;
-        handlesChildEvents = 0;
-        itemDiscovered = 0;
-        hasTransform = 0;
-        hasCursor = 0;
-        ancestorFlags = 0;
-        cacheMode = 0;
-        hasBoundingRegionGranularity = 0;
-        flags = 0;
-        isWidget = 0;
     }
 
     inline virtual ~QGraphicsItemPrivate()
@@ -111,11 +155,30 @@ public:
 
     // ### Qt 5: Remove. Workaround for reimplementation added after Qt 4.4.
     virtual QVariant inputMethodQueryHelper(Qt::InputMethodQuery query) const;
+    static bool movableAncestorIsSelected(const QGraphicsItem *item);
 
+    void setPosHelper(const QPointF &pos, bool update);
     void setVisibleHelper(bool newVisible, bool explicitly, bool update = true);
     void setEnabledHelper(bool newEnabled, bool explicitly, bool update = true);
     void updateHelper(const QRectF &rect = QRectF(), bool force = false);
-    void fullUpdateHelper();
+    void fullUpdateHelper(bool childrenOnly = false);
+    void resolveEffectiveOpacity(qreal effectiveParentOpacity);
+    void resolveDepth(int parentDepth);
+    void invalidateSceneTransformCache();
+
+    virtual void resolveFont(uint inheritedMask)
+    {
+        for (int i = 0; i < children.size(); ++i)
+            children.at(i)->d_ptr->resolveFont(inheritedMask);
+    }
+
+    virtual void resolvePalette(uint inheritedMask)
+    {
+        for (int i = 0; i < children.size(); ++i)
+            children.at(i)->d_ptr->resolveFont(inheritedMask);
+    }
+
+    virtual bool isProxyWidget() const;
 
     inline QVariant extra(Extra type) const
     {
@@ -167,12 +230,18 @@ public:
     };
     QList<ExtraStruct> extras;
 
+    QGraphicsItemCache *extraItemCache() const;
+    void removeExtraItemCache();
+
     QPointF pos;
     qreal z;
     QGraphicsScene *scene;
     QGraphicsItem *parent;
     QList<QGraphicsItem *> children;
     int index;
+    int depth;
+
+    // Packed 32 bytes
     quint32 acceptedMouseButtons : 5;
     quint32 visible : 1;
     quint32 explicitlyHidden : 1;
@@ -189,8 +258,18 @@ public:
     quint32 ancestorFlags : 3;
     quint32 cacheMode : 2;
     quint32 hasBoundingRegionGranularity : 1;
-    quint32 flags : 8;
+    quint32 flags : 9;
+
+    // New 32 bytes
+    quint32 hasOpacity : 1;
     quint32 isWidget : 1;
+    quint32 dirty : 1;    
+    quint32 dirtyChildren : 1;    
+    quint32 localCollisionHack : 1;
+
+    // Optional stacking order
+    int globalStackingOrder;
+    int sceneTransformIndex;
 
     QGraphicsItem *q_ptr;
 };

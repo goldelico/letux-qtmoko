@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,8 @@
 #ifndef OBJECTINSPECTORMODEL_H
 #define OBJECTINSPECTORMODEL_H
 
+#include <layoutinfo_p.h>
+
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QIcon>
 #include <QtCore/QModelIndex>
@@ -62,27 +68,65 @@ QT_BEGIN_NAMESPACE
 class QDesignerFormWindowInterface;
 
 namespace qdesigner_internal {
-    struct ObjectData {
+
+    // Data structure containing the fixed item type icons
+    struct ObjectInspectorIcons {
+        QIcon layoutIcons[LayoutInfo::UnknownLayout + 1];
+    };
+
+    struct ModelRecursionContext;
+
+    // Data structure representing one item of the object inspector.
+    class ObjectData {
+    public:
+        enum Type {
+            Object,
+            Action,
+            SeparatorAction,
+            ChildWidget,         // A child widget
+            LayoutableContainer, // A container that can be laid out
+            LayoutWidget,        // A QLayoutWidget
+            ExtensionContainer   // QTabWidget and the like, container extension
+        };
+
         typedef QList<QStandardItem *> StandardItemList;
 
-        ObjectData(QObject *parent = 0, QObject *object = 0);
+        explicit ObjectData(QObject *parent, QObject *object, const ModelRecursionContext &ctx);
+        ObjectData();
+
+        inline Type     type()       const { return m_type; }
+        inline QObject *object()     const { return m_object; }
+        inline QObject *parent()     const { return m_parent; }
+        inline QString  objectName() const { return m_objectName; }
 
         bool equals(const ObjectData & me) const;
-        bool operator==(const ObjectData &e2) const { return equals(e2); }
-        bool operator!=(const ObjectData &e2) const { return !equals(e2); }
 
-        enum ChangedMask { ClassNameChanged = 1, ObjectNameChanged = 2, IconChanged = 4 };
+        enum ChangedMask { ClassNameChanged = 1, ObjectNameChanged = 2,
+                           ClassIconChanged = 4, TypeChanged = 8,
+                           LayoutTypeChanged = 16};
+
         unsigned compare(const ObjectData & me) const;
 
-        void setItems(const StandardItemList &row) const;
-        void setItemsDisplayData(const StandardItemList &row, unsigned mask) const;
+        // Initially set up a row
+        void setItems(const StandardItemList &row, const ObjectInspectorIcons &icons) const;
+        // Update row data according to change mask
+        void setItemsDisplayData(const StandardItemList &row, const ObjectInspectorIcons &icons, unsigned mask) const;
+
+    private:
+        void initObject(const ModelRecursionContext &ctx);
+        void initWidget(QWidget *w, const ModelRecursionContext &ctx);
 
         QObject *m_parent;
         QObject *m_object;
+        Type m_type;
         QString m_className;
         QString m_objectName;
-        QIcon m_icon;
+        QIcon m_classIcon;
+        LayoutInfo::Type m_managedLayoutType;
     };
+
+    inline bool operator==(const ObjectData &e1, const ObjectData &e2) { return e1.equals(e2); }
+    inline bool operator!=(const ObjectData &e1, const ObjectData &e2) { return !e1.equals(e2); }
 
     typedef QList<ObjectData> ObjectModel;
 
@@ -105,12 +149,14 @@ namespace qdesigner_internal {
         virtual bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
 
     private:
+        typedef QMultiMap<QObject *,QModelIndex> ObjectIndexMultiMap;
+
         void rebuild(const ObjectModel &newModel);
         void updateItemContents(ObjectModel &oldModel, const ObjectModel &newModel);
         void clearItems();
         StandardItemList rowAt(QModelIndex index) const;
 
-        typedef QMultiMap<QObject *,QModelIndex> ObjectIndexMultiMap;
+        ObjectInspectorIcons m_icons;
         ObjectIndexMultiMap m_objectIndexMultiMap;
         ObjectModel m_model;
         QPointer<QDesignerFormWindowInterface> m_formWindow;

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,7 +62,7 @@ QT_BEGIN_NAMESPACE
 namespace QPatternist
 {
     /**
-     * A FunctionFactoryCollection instance is a FunctionFactory in its own right,
+     * @short A FunctionFactoryCollection instance is a FunctionFactory in its own right,
      * but looks in its contained collection of factories for requested functions.
      *
      * @note the order of adding function libraries is significant.
@@ -88,18 +92,22 @@ namespace QPatternist
 
         /**
          * @return a FunctionFactory containing all core functions and constructor
-         * functions required for XPath 2.0, plus Patternist's
-         * implementation defined functions. The functions specified for XQuery 1.0
-         * are the same as for XPath 2.0 so this FunctionFactory work well for XQuery
+         * functions required for XPath 2.. The functions specified for XQuery 1.0
+         * are the same as for XPath 2.0 so this FunctionFactory work for XQuery
          * as well.
          */
         static FunctionFactory::Ptr xpath20Factory(const NamePool::Ptr &np);
 
         /**
-         * @return a FunctionFactory containing all core functions required for XPath 1.0
-         * plus Patternist's implementation defined functions.
+         * @return a FunctionFactory containing all core functions required for XPath 1.0.
          */
         static FunctionFactory::Ptr xpath10Factory();
+
+        /**
+         * @return a FunctionFactory containing all core functions required for XSL-T 2.0
+         * functions.
+         */
+        static FunctionFactory::Ptr xslt20Factory(const NamePool::Ptr &np);
     };
 }
 

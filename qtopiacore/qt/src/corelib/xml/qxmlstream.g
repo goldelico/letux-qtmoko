@@ -1,37 +1,41 @@
 ----------------------------------------------------------------------------
 --
--- Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+-- Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 -- Contact: Qt Software Information (qt-info@nokia.com)
 --
 -- This file is part of the QtCore module of the Qt Toolkit.
 --
+-- $QT_BEGIN_LICENSE:LGPL$
 -- Commercial Usage
 -- Licensees holding valid Qt Commercial licenses may use this file in
 -- accordance with the Qt Commercial License Agreement provided with the
 -- Software or, alternatively, in accordance with the terms contained in
 -- a written agreement between you and Nokia.
 --
+-- GNU Lesser General Public License Usage
+-- Alternatively, this file may be used under the terms of the GNU Lesser
+-- General Public License version 2.1 as published by the Free Software
+-- Foundation and appearing in the file LICENSE.LGPL included in the
+-- packaging of this file.  Please review the following information to
+-- ensure the GNU Lesser General Public License version 2.1 requirements
+-- will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+--
+-- In addition, as a special exception, Nokia gives you certain
+-- additional rights. These rights are described in the Nokia Qt LGPL
+-- Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+-- package.
 --
 -- GNU General Public License Usage
 -- Alternatively, this file may be used under the terms of the GNU
--- General Public License versions 2.0 or 3.0 as published by the Free
--- Software Foundation and appearing in the file LICENSE.GPL included in
--- the packaging of this file.  Please review the following information
--- to ensure GNU General Public Licensing requirements will be met:
--- http://www.fsf.org/licensing/licenses/info/GPLv2.html and
--- http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
--- exception, Nokia gives you certain additional rights. These rights
--- are described in the Nokia Qt GPL Exception version 1.3, included in
--- the file GPL_EXCEPTION.txt in this package.
---
--- Qt for Windows(R) Licensees
--- As a special exception, Nokia, as the sole copyright holder for Qt
--- Designer, grants users of the Qt/Eclipse Integration plug-in the
--- right for the Qt/Eclipse Integration to link to functionality
--- provided by Qt Designer and its related libraries.
+-- General Public License version 3.0 as published by the Free Software
+-- Foundation and appearing in the file LICENSE.GPL included in the
+-- packaging of this file.  Please review the following information to
+-- ensure the GNU General Public License version 3.0 requirements will be
+-- met: http://www.gnu.org/copyleft/gpl.html.
 --
 -- If you are unsure which license is appropriate for your use, please
 -- contact the sales department at qt-sales@nokia.com.
+-- $QT_END_LICENSE$
 --
 -- This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 -- WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -41,9 +45,6 @@
 %parser QXmlStreamReader_Table
 
 %merged_output qxmlstream_p.h
-
-%expect 0
-
 
 %token NOTOKEN
 %token SPACE " "
@@ -102,6 +103,7 @@
 -- entities
 %token PARSE_ENTITY
 %token ENTITY_DONE
+%token UNRESOLVED_ENTITY
 
 -- att type
 %token CDATA "CDATA"
@@ -117,6 +119,33 @@
 %token XML "<?xml"
 %token VERSION "version"
 
+%nonassoc SHIFT_THERE
+%nonassoc AMPERSAND
+          BANG
+          COLON
+          COMMA
+          DASH
+          DBLQUOTE
+          DIGIT
+          DOT
+          ENTITY_DONE
+          EQ
+          HASH
+          LBRACK
+          LETTER
+          LPAREN
+          PERCENT
+          PIPE
+          PLUS
+          QUESTIONMARK
+          QUOTE
+          RANGLE
+          RBRACK
+          RPAREN
+          SEMICOLON
+          SLASH
+          SPACE
+          STAR
 
 %start document
 
@@ -275,6 +304,7 @@ public:
     QXmlStreamReader::TokenType type;
     QXmlStreamReader::Error error;
     QString errorString;
+    QString unresolvedEntity;
 
     qint64 lineNumber, lastLineStart, characterOffset;
 
@@ -530,7 +560,8 @@ bool QXmlStreamReaderPrivate::parse()
         // fall through
     case QXmlStreamReader::Comment:
     case QXmlStreamReader::Characters:
-        isCDATA = isWhitespace = false;
+        isCDATA = false;
+	isWhitespace = true;
         text.clear();
         clearTextBuffer();
         break;
@@ -1195,6 +1226,7 @@ cdata ::= langle_bang CDATA_START;
         case $rule_number: {
             setType(QXmlStreamReader::Characters);
             isCDATA = true;
+	    isWhitespace = false;
             int pos = sym(2).pos;
             if (scanUntil("]]>", -1)) {
                 text = QStringRef(&textBuffer, pos, textBuffer.size() - pos - 3);
@@ -1246,34 +1278,45 @@ notation_decl ::= notation_decl_start PUBLIC public_literal space literal space_
 
 
 
-content_char ::= RANGLE | HASH | LBRACK | RBRACK | LPAREN | RPAREN | PIPE | EQ | PERCENT | SLASH | COLON | SEMICOLON | COMMA | DASH | PLUS | STAR | DOT | QUESTIONMARK | BANG | QUOTE | DBLQUOTE;
+content_char ::= RANGLE | HASH | LBRACK | RBRACK | LPAREN | RPAREN | PIPE | EQ | PERCENT | SLASH | COLON | SEMICOLON | COMMA | DASH | PLUS | STAR | DOT | QUESTIONMARK | BANG | QUOTE | DBLQUOTE | LETTER | DIGIT;
 
-content_char_list ::= SPACE;
+scan_content_char ::= content_char;
 /.
         case $rule_number:
-            isWhitespace = true;
+            isWhitespace = false;
             // fall through
 ./
-content_char_list ::= LETTER;
-/.
-        case $rule_number:./
-content_char_list ::= DIGIT;
-/.
-        case $rule_number:./
-content_char_list ::= content_char;
+
+scan_content_char ::= SPACE;
 /.
         case $rule_number:
-            setType(QXmlStreamReader::Characters);
             sym(1).len += fastScanContentCharList();
             if (atEnd && !inParseEntity) {
                 resume($rule_number);
                 return false;
             }
-            text = &textBuffer;
-        break;
+	break;
 ./
 
+content_char_list ::= content_char_list char_ref;
+content_char_list ::= content_char_list entity_ref;
+content_char_list ::= content_char_list entity_done;
+content_char_list ::= content_char_list scan_content_char;
+content_char_list ::= char_ref;
+content_char_list ::= entity_ref;
+content_char_list ::= entity_done;
+content_char_list ::= scan_content_char;
 
+
+character_content ::= content_char_list %prec SHIFT_THERE;
+/.
+        case $rule_number:
+	    if (!textBuffer.isEmpty()) {
+                setType(QXmlStreamReader::Characters);
+                text = &textBuffer;
+	    }
+	break;
+./
 
 literal ::= QUOTE QUOTE;
 /.
@@ -1557,6 +1600,19 @@ etag ::= LANGLE SLASH qname space_opt RANGLE;
         } break;
 ./
 
+
+unresolved_entity ::= UNRESOLVED_ENTITY;
+/.
+        case $rule_number:
+            if (entitiesMustBeDeclared()) {
+                raiseWellFormedError(QXmlStream::tr("Entity '%1' not declared.").arg(unresolvedEntity));
+                break;
+            }
+            setType(QXmlStreamReader::EntityReference);
+            name = &unresolvedEntity;
+	break;
+./
+
 entity_ref ::= AMPERSAND name SEMICOLON;
 /.
         case $rule_number: {
@@ -1590,12 +1646,11 @@ entity_ref ::= AMPERSAND name SEMICOLON;
                     break;
                 }
             }
-            if (entitiesMustBeDeclared()) {
-                raiseWellFormedError(QXmlStream::tr("Entity '%1' not declared.").arg(reference));
-                break;
-            }
-            setType(QXmlStreamReader::EntityReference);
-            name = symString(2);
+
+	    injectToken(UNRESOLVED_ENTITY);
+	    unresolvedEntity = symString(2).toString();
+	    textBuffer.chop(2 + sym(2).len);
+	    clearSym();
 
         } break;
 ./
@@ -1700,7 +1755,7 @@ char_ref_value ::= char_ref_value DIGIT;
 ./
 
 
-content ::= content content_char_list;
+content ::= content character_content;
 content ::= content stag content etag;
 content ::= content empty_element_tag;
 content ::= content comment;
@@ -1708,9 +1763,7 @@ content ::= content cdata;
 content ::= content xml_decl;
 content ::= content processing_instruction;
 content ::= content doctype_decl;
-content ::= content char_ref;
-content ::= content entity_ref;
-content ::= content entity_done;
+content ::= content unresolved_entity;
 content ::=  ;
 
 
@@ -1729,11 +1782,6 @@ space ::=  SPACE;
 space_opt ::=;
 space_opt ::= space;
 
---qname ::= COLON;
---/.
---        case $rule_number:
---./
-
 qname ::= LETTER;
 /.
         case $rule_number: {
@@ -1744,11 +1792,6 @@ qname ::= LETTER;
             }
         } break;
 ./
-
---name ::= COLON;
---/.
---        case $rule_number:
---./
 
 name ::= LETTER;
 /.

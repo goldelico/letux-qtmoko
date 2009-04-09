@@ -40,7 +40,12 @@ public:
         , m_hasBadChildList(false)
 #endif
     {
-        m_hasTextChildren = false;
+        // Internet Explorer and Firefox always create a marker for list items, even when the list-style-type is none.  We do not make a marker
+        // in the list-style-type: none case, since it is wasteful to do so.  However, in order to match other browsers we have to pretend like
+        // an invisible marker exists.  The side effect of having an invisible marker is that the quirks mode behavior of shrinking lines with no
+        // text children must not apply.  This change also means that gaps will exist between image bullet list items.  Even when the list bullet
+        // is an image, the line is still considered to be immune from the quirk.
+        m_hasTextChildren = obj->style()->display() == LIST_ITEM;
     }
 
 #ifndef NDEBUG
@@ -78,10 +83,11 @@ public:
     virtual void clearTruncation();
 
     virtual void paintBoxDecorations(RenderObject::PaintInfo&, int tx, int ty);
-    void paintBackgrounds(GraphicsContext*, const Color&, const BackgroundLayer*,
-                          int my, int mh, int tx, int ty, int w, int h);
-    void paintBackground(GraphicsContext*, const Color&, const BackgroundLayer*,
-                         int my, int mh, int tx, int ty, int w, int h);
+    virtual void paintMask(RenderObject::PaintInfo&, int tx, int ty);
+    void paintFillLayers(const RenderObject::PaintInfo&, const Color&, const FillLayer*,
+                         int my, int mh, int tx, int ty, int w, int h, CompositeOperator = CompositeSourceOver);
+    void paintFillLayer(const RenderObject::PaintInfo&, const Color&, const FillLayer*,
+                         int my, int mh, int tx, int ty, int w, int h, CompositeOperator = CompositeSourceOver);
     void paintBoxShadow(GraphicsContext*, RenderStyle*, int tx, int ty, int w, int h);
     virtual void paintTextDecorations(RenderObject::PaintInfo&, int tx, int ty, bool paintedChildren = false);
     virtual void paint(RenderObject::PaintInfo&, int tx, int ty);
@@ -118,8 +124,8 @@ public:
                               int& topPosition, int& bottomPosition, int& selectionTop, int& selectionBottom);
     void shrinkBoxesWithNoTextChildren(int topPosition, int bottomPosition);
     
-    virtual void setVerticalOverflowPositions(int top, int bottom) { }
-    virtual void setVerticalSelectionPositions(int top, int bottom) { }
+    virtual void setVerticalOverflowPositions(int /*top*/, int /*bottom*/) { }
+    virtual void setVerticalSelectionPositions(int /*top*/, int /*bottom*/) { }
     int maxHorizontalVisualOverflow() const { return m_maxHorizontalVisualOverflow; }
 
     void removeChild(InlineBox* child);

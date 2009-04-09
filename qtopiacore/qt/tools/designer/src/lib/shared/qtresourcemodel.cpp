@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
 #include <QtCore/QBuffer>
+#include <QtCore/QFileSystemWatcher>
 
 QT_BEGIN_NAMESPACE
 
@@ -97,9 +102,17 @@ public:
     QMap<QString, QString>     m_fileToQrc; // this map contains the content of active resource set only.
                                             // Activating different resource set changes the contents.
 
+    QFileSystemWatcher *m_fileWatcher;
+    bool m_fileWatcherEnabled;
+    QMap<QString, bool> m_fileWatchedMap;
 private:
     void registerResourceSet(QtResourceSet *resourceSet);
     void unregisterResourceSet(QtResourceSet *resourceSet);
+    void setWatcherEnabled(const QString &path, bool enable);
+    void addWatcher(const QString &path);
+    void removeWatcher(const QString &path);
+
+    void slotFileChanged(const QString &);
 
     const QByteArray *createResource(const QString &path, QStringList *contents, int *errorCount, QIODevice &errorDevice) const;
     void deleteResource(const QByteArray *data) const;
@@ -107,7 +120,8 @@ private:
 
 QtResourceModelPrivate::QtResourceModelPrivate() :
     q_ptr(0),
-    m_currentResourceSet(0)
+    m_currentResourceSet(0),
+    m_fileWatcherEnabled(true)
 {
 }
 
@@ -159,12 +173,10 @@ const QByteArray *QtResourceModelPrivate::createResource(const QString &path, QS
     contents->clear();
     do {
         // run RCC
-        RCCBuilder builder;
-        builder.writeBinary = true;
-        builder.verbose = true;
         RCCResourceLibrary library;
-        builder.initializeLibrary(library);
+        library.setVerbose(true);
         library.setInputFiles(QStringList(path));
+        library.setFormat(RCCResourceLibrary::Binary);
 
         QBuffer buffer;
         buffer.open(QIODevice::WriteOnly);
@@ -284,6 +296,7 @@ void QtResourceModelPrivate::activate(QtResourceSet *resourceSet, const QStringL
                 newPathToData.insert(path, data);
                 if (qrcErrorCount) // Count single failed files as sort of 1/2 error
                     errorCount++;
+                addWatcher(path);
             } else {
                 newPathToData.remove(path);
                 errorCount++;
@@ -404,6 +417,7 @@ void QtResourceModelPrivate::removeOldPaths(QtResourceSet *resourceSet, const QS
                         m_pathToModified.remove(oldPath);
                         m_pathToContents.remove(oldPath);
                         m_pathToData.remove(oldPath);
+                        removeWatcher(oldPath);
                     }
                 }
             }
@@ -412,12 +426,58 @@ void QtResourceModelPrivate::removeOldPaths(QtResourceSet *resourceSet, const QS
     }
 }
 
+void QtResourceModelPrivate::setWatcherEnabled(const QString &path, bool enable)
+{
+    m_fileWatcher->removePath(path);
+
+    if (!enable)
+        return;
+
+    QFileInfo fi(path);
+    if (fi.exists())
+        m_fileWatcher->addPath(path);
+}
+
+void QtResourceModelPrivate::addWatcher(const QString &path)
+{
+    QMap<QString, bool>::ConstIterator it = m_fileWatchedMap.constFind(path);
+    if (it != m_fileWatchedMap.constEnd() && it.value() == false)
+        return;
+
+    m_fileWatchedMap.insert(path, true);
+    if (!m_fileWatcherEnabled)
+        return;
+    setWatcherEnabled(path, true);
+}
+
+void QtResourceModelPrivate::removeWatcher(const QString &path)
+{
+    if (!m_fileWatchedMap.contains(path))
+        return;
+
+    m_fileWatchedMap.remove(path);
+    if (!m_fileWatcherEnabled)
+        return;
+    setWatcherEnabled(path, false);
+}
+
+void QtResourceModelPrivate::slotFileChanged(const QString &path)
+{
+    setWatcherEnabled(path, false);
+    emit q_ptr->qrcFileModifiedExternally(path);
+    setWatcherEnabled(path, true); //readd
+}
+
 // ----------------------- QtResourceModel
 QtResourceModel::QtResourceModel(QObject *parent) :
     QObject(parent),
     d_ptr(new QtResourceModelPrivate)
 {
     d_ptr->q_ptr = this;
+
+    d_ptr->m_fileWatcher = new QFileSystemWatcher(this);
+    connect(d_ptr->m_fileWatcher, SIGNAL(fileChanged(const QString &)),
+            this, SLOT(slotFileChanged(const QString &)));
 }
 
 QtResourceModel::~QtResourceModel()
@@ -428,6 +488,7 @@ QtResourceModel::~QtResourceModel()
     while (it.hasNext())
         removeResourceSet(it.next());
     blockSignals(false);
+    delete d_ptr;
 }
 
 QStringList QtResourceModel::loadedQrcFiles() const
@@ -503,6 +564,14 @@ void QtResourceModel::removeResourceSet(QtResourceSet *resourceSet)
     d_ptr->m_resourceSetToPaths.remove(resourceSet);
     d_ptr->m_resourceSetToReload.remove(resourceSet);
     d_ptr->m_newlyCreated.remove(resourceSet);
+    delete resourceSet;
+}
+
+void QtResourceModel::reload(const QString &path, int *errorCount, QString *errorMessages)
+{
+    setModified(path);
+
+    d_ptr->activate(d_ptr->m_currentResourceSet, d_ptr->m_resourceSetToPaths.value(d_ptr->m_currentResourceSet), errorCount, errorMessages);
 }
 
 void QtResourceModel::reload(int *errorCount, QString *errorMessages)
@@ -534,4 +603,45 @@ QString QtResourceModel::qrcPath(const QString &file) const
     return d_ptr->m_fileToQrc.value(file);
 }
 
+void QtResourceModel::setWatcherEnabled(bool enable)
+{
+    if (d_ptr->m_fileWatcherEnabled == enable)
+        return;
+
+    d_ptr->m_fileWatcherEnabled = enable;
+
+    QMapIterator<QString, bool> it(d_ptr->m_fileWatchedMap);
+    if (it.hasNext())
+        d_ptr->setWatcherEnabled(it.next().key(), d_ptr->m_fileWatcherEnabled);
+}
+
+bool QtResourceModel::isWatcherEnabled() const
+{
+    return d_ptr->m_fileWatcherEnabled;
+}
+
+void QtResourceModel::setWatcherEnabled(const QString &path, bool enable)
+{
+    QMap<QString, bool>::Iterator it = d_ptr->m_fileWatchedMap.find(path);
+    if (it == d_ptr->m_fileWatchedMap.end())
+        return;
+
+    if (it.value() == enable)
+        return;
+
+    it.value() = enable;
+
+    if (!d_ptr->m_fileWatcherEnabled)
+        return;
+
+    d_ptr->setWatcherEnabled(it.key(), enable);
+}
+
+bool QtResourceModel::isWatcherEnabled(const QString &path)
+{
+    return d_ptr->m_fileWatchedMap.value(path, false);
+}
+
 QT_END_NAMESPACE
+
+#include "moc_qtresourcemodel_p.cpp"

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -104,6 +108,9 @@ static void construct(QVariant::Private *x, const void *copy)
         break;
     case QVariant::Map:
         v_construct<QVariantMap>(x, copy);
+        break;
+    case QVariant::Hash:
+        v_construct<QVariantHash>(x, copy);
         break;
     case QVariant::List:
         v_construct<QVariantList>(x, copy);
@@ -185,7 +192,7 @@ static void construct(QVariant::Private *x, const void *copy)
         x->is_shared = true;
         x->data.shared = new QVariant::PrivateShared(QMetaType::construct(x->type, copy));
         if (!x->data.shared->ptr)
-             Q_ASSERT_X(x->type > 62, "QVariant::construct()", "Unknown datatype");
+            x->type = QVariant::Invalid;
         break;
     }
     x->is_null = !copy;
@@ -205,6 +212,9 @@ static void clear(QVariant::Private *d)
         break;
     case QVariant::Map:
         v_clear<QVariantMap>(d);
+        break;
+    case QVariant::Hash:
+        v_clear<QVariantHash>(d);
         break;
     case QVariant::List:
         v_clear<QVariantList>(d);
@@ -322,6 +332,7 @@ static bool isNull(const QVariant::Private *d)
     case QVariant::RegExp:
     case QVariant::StringList:
     case QVariant::Map:
+    case QVariant::Hash:
     case QVariant::List:
     case QVariant::Invalid:
     case QVariant::UserType:
@@ -376,6 +387,8 @@ static bool compare(const QVariant::Private *a, const QVariant::Private *b)
         }
         return true;
     }
+    case QVariant::Hash:
+        return *v_cast<QVariantHash>(a) == *v_cast<QVariantHash>(b);
     case QVariant::String:
         return *v_cast<QString>(a) == *v_cast<QString>(b);
     case QVariant::Char:
@@ -570,6 +583,13 @@ static qulonglong qConvertToUnsignedNumber(const QVariant::Private *d, bool *ok)
     return Q_UINT64_C(0);
 }
 
+template<typename TInput, typename LiteralWrapper>
+inline bool qt_convertToBool(const QVariant::Private *const d)
+{
+    TInput str = v_cast<TInput>(d)->toLower();
+    return !(str == LiteralWrapper("0") || str == LiteralWrapper("false") || str.isEmpty());
+}
+
 /*!
  \internal
 
@@ -734,7 +754,7 @@ static bool convert(const QVariant::Private *d, QVariant::Type t, void *result, 
 #endif
         else
             return false;
-        
+
         return dt->isValid();
     }
     case QVariant::Time: {
@@ -797,6 +817,9 @@ static bool convert(const QVariant::Private *d, QVariant::Type t, void *result, 
         case QMetaType::ULong:
             *ba = QByteArray::number(qMetaTypeUNumber(d));
             break;
+        case QVariant::Bool:
+            *ba = QByteArray(d->data.b ? "true" : "false");
+            break;
         default:
             return false;
         }
@@ -834,12 +857,12 @@ static bool convert(const QVariant::Private *d, QVariant::Type t, void *result, 
     case QVariant::Bool: {
         bool *b = static_cast<bool *>(result);
         switch(d->type) {
-        case QVariant::String:
-        {
-            QString str = v_cast<QString>(d)->toLower();
-            *b = !(str == QLatin1String("0") || str == QLatin1String("false") || str.isEmpty());
+        case QVariant::ByteArray:
+            *b = qt_convertToBool<QByteArray, QByteArray>(d);
             break;
-        }
+        case QVariant::String:
+            *b = qt_convertToBool<QString, QLatin1String>(d);
+            break;
         case QVariant::Char:
             *b = !v_cast<QChar>(d)->isNull();
             break;
@@ -964,6 +987,14 @@ static bool convert(const QVariant::Private *d, QVariant::Type t, void *result, 
             return false;
         }
         break;
+    case QVariant::Hash:
+        if (qstrcmp(QMetaType::typeName(d->type), "QHash<QString, QVariant>") == 0) {
+            *static_cast<QVariantHash *>(result) =
+                *static_cast<QHash<QString, QVariant> *>(d->data.shared->ptr);
+        } else {
+            return false;
+        }
+        break;
 #ifndef QT_NO_GEOM_VARIANT
     case QVariant::Rect:
         if (d->type == QVariant::RectF)
@@ -1034,6 +1065,9 @@ static void streamDebug(QDebug dbg, const QVariant &v)
         break;
     case QVariant::Map:
         dbg.nospace() << v.toMap();
+        break;
+    case QVariant::Hash:
+        dbg.nospace() << v.toHash();
         break;
     case QVariant::List:
         dbg.nospace() << v.toList();
@@ -1216,6 +1250,7 @@ const QVariant::Handler *QVariant::handler = &qt_kernel_variant_handler;
     \value DateTime  a QDateTime
     \value Double  a double
     \value Font  a QFont
+    \value Hash a QVariantHash
     \value Icon  a QIcon
     \value Image  a QImage
     \value Int  an int
@@ -1400,6 +1435,12 @@ QVariant::QVariant(const char *val)
   \fn QVariant::QVariant(const QMap<QString, QVariant> &val)
 
     Constructs a new variant with a map of QVariants, \a val.
+*/
+
+/*!
+  \fn QVariant::QVariant(const QHash<QString, QVariant> &val)
+
+    Constructs a new variant with a hash of QVariants, \a val.
 */
 
 /*!
@@ -1600,6 +1641,8 @@ QVariant::QVariant(const QList<QVariant> &list)
 { create(List, &list); }
 QVariant::QVariant(const QMap<QString, QVariant> &map)
 { create(Map, &map); }
+QVariant::QVariant(const QHash<QString, QVariant> &hash)
+{ create(Hash, &hash); }
 #ifndef QT_NO_GEOM_VARIANT
 QVariant::QVariant(const QPoint &pt) { create(Point, &pt); }
 QVariant::QVariant(const QPointF &pt) { create (PointF, &pt); }
@@ -1643,7 +1686,7 @@ QVariant::QVariant(Qt::GlobalColor color) { create(62, &color); }
     not in QVariant::Type, and they can be returned by this function.
     However, they are considered to be user defined types when tested
     against QVariant::Type.
-    
+
     To test whether an instance of QVariant contains a data type that
     is compatible with the data type you are interested in, use
     canConvert().
@@ -1847,8 +1890,10 @@ void QVariant::load(QDataStream &s)
         QByteArray name;
         s >> name;
         u = QMetaType::type(name);
-        if (!u)
-            qFatal("QVariant::load(QDataStream &s): type %s unknown to QVariant.", name.data());
+        if (!u) {
+            s.setStatus(QDataStream::ReadCorruptData);
+            return;
+        }
     }
     create(static_cast<int>(u), 0);
     d.is_null = is_null;
@@ -1861,7 +1906,7 @@ void QVariant::load(QDataStream &s)
         return;
     }
 
-    // const cast is save since we operate on a newly constructed variant
+    // const cast is safe since we operate on a newly constructed variant
     if (!QMetaType::load(s, d.type, const_cast<void *>(constDataHelper(d)))) {
         s.setStatus(QDataStream::ReadCorruptData);
         qWarning("QVariant::load: unable to load type %d.", d.type);
@@ -2013,6 +2058,17 @@ QString QVariant::toString() const
 QVariantMap QVariant::toMap() const
 {
     return qVariantToHelper<QVariantMap>(d, Map, handler);
+}
+
+/*!
+    Returns the variant as a QHash<QString, QVariant> if the variant
+    has type() \l Hash; otherwise returns an empty map.
+
+    \sa canConvert(), convert()
+*/
+QVariantHash QVariant::toHash() const
+{
+    return qVariantToHelper<QVariantHash>(d, Hash, handler);
 }
 
 /*!
@@ -2274,6 +2330,11 @@ inline T qNumVariantToHelper(const QVariant::Private &d, QVariant::Type t,
     If \a ok is non-null: \c{*}\a{ok} is set to true if the value could be
     converted to an int; otherwise \c{*}\a{ok} is set to false.
 
+    \bold{Warning:} If the value is convertible to a \l LongLong but is too
+    large to be represented in an int, the resulting arithmetic overflow will
+    not be reflected in \a ok. A simple workaround is to use QString::toInt().
+    Fixing this bug has been postponed to Qt 5 in order to avoid breaking existing code.
+
     \sa canConvert(), convert()
 */
 int QVariant::toInt(bool *ok) const
@@ -2288,6 +2349,11 @@ int QVariant::toInt(bool *ok) const
 
     If \a ok is non-null: \c{*}\a{ok} is set to true if the value could be
     converted to an unsigned int; otherwise \c{*}\a{ok} is set to false.
+
+    \bold{Warning:} If the value is convertible to a \l ULongLong but is too
+    large to be represented in an unsigned int, the resulting arithmetic overflow will
+    not be reflected in \a ok. A simple workaround is to use QString::toUInt().
+    Fixing this bug has been postponed to Qt 5 in order to avoid breaking existing code.
 
     \sa canConvert(), convert()
 */
@@ -2332,8 +2398,9 @@ qulonglong QVariant::toULongLong(bool *ok) const
 
     Returns true if the variant has type() \l Bool, \l Char, \l Double,
     \l Int, \l LongLong, \l UInt, or \l ULongLong and the value is
-    non-zero, or if the variant has type \l String and its lower-case
-    content is not empty, "0" or "false"; otherwise returns false.
+    non-zero, or if the variant has type \l String or \l ByteArray and
+    its lower-case content is not empty, "0" or "false"; otherwise
+    returns false.
 
     \sa canConvert(), convert()
 */
@@ -2388,7 +2455,7 @@ static const quint32 qCanConvertMatrix[QVariant::LastCoreType + 1] =
 /*Invalid*/     0,
 
 /*Bool*/          1 << QVariant::Double     | 1 << QVariant::Int        | 1 << QVariant::UInt
-                | 1 << QVariant::LongLong   | 1 << QVariant::ULongLong
+                | 1 << QVariant::LongLong   | 1 << QVariant::ULongLong  | 1 << QVariant::ByteArray
                 | 1 << QVariant::String     | 1 << QVariant::Char,
 
 /*Int*/           1 << QVariant::UInt       | 1 << QVariant::String     | 1 << QVariant::Double
@@ -2425,7 +2492,7 @@ static const quint32 qCanConvertMatrix[QVariant::LastCoreType + 1] =
 
 /*QStringList*/   1 << QVariant::List       | 1 << QVariant::String,
 
-/*QByteArray*/    1 << QVariant::String     | 1 << QVariant::Int        | 1 << QVariant::UInt
+/*QByteArray*/    1 << QVariant::String     | 1 << QVariant::Int        | 1 << QVariant::UInt | 1 << QVariant::Bool
                 | 1 << QVariant::Double     | 1 << QVariant::LongLong   | 1 << QVariant::ULongLong,
 
 /*QBitArray*/     0,
@@ -2456,7 +2523,9 @@ static const quint32 qCanConvertMatrix[QVariant::LastCoreType + 1] =
 
 /*QPointF*/       1 << QVariant::Point,
 
-/*QRegExp*/       0
+/*QRegExp*/       0,
+
+/*QHash*/         0
 
 };
 
@@ -3006,6 +3075,14 @@ QDebug operator<<(QDebug dbg, const QVariant::Type p)
     \relates QVariant
 
     Synonym for QMap<QString, QVariant>.
+*/
+
+/*!
+    \typedef QVariantHash
+    \relates QVariant
+    \since 4.5
+
+    Synonym for QHash<QString, QVariant>.
 */
 
 /*!

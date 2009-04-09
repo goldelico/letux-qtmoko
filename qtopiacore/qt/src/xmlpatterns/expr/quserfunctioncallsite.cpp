@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,13 +50,11 @@ QT_BEGIN_NAMESPACE
 using namespace QPatternist;
 
 UserFunctionCallsite::UserFunctionCallsite(const QXmlName nameP,
-                                           const FunctionSignature::Arity ar) : m_name(nameP)
+                                           const FunctionSignature::Arity ar) : CallSite(nameP)
                                                                               , m_arity(ar)
                                                                               , m_expressionSlotOffset(-2)
-                                                                              , m_isRecursive(false)
 
 {
-    Q_ASSERT(!m_name.isNull());
 }
 
 Item::Iterator::Ptr UserFunctionCallsite::evaluateSequence(const DynamicContext::Ptr &context) const
@@ -122,12 +124,14 @@ Expression::Ptr UserFunctionCallsite::typeCheck(const StaticContext::Ptr &contex
      * resolved. Hence it's possible that we're called before before the usual
      * typeCheck() pass, and hence before we have been resolved/checked and
      * subsequently m_functionDeclaration set. Therefore, encounter for that below.
+     *
+     * UnresolvedVariableReference::typeCheck() has the same dilemma.
      */
 
     /* Ensure that the return value of the function is properly
      * converted/does match from where it is called(which is here). */
-    if(m_isRecursive || !m_functionDeclaration)
-        return UnlimitedContainer::typeCheck(context, reqType);
+    if(isRecursive() || !m_functionDeclaration)
+        return CallSite::typeCheck(context, reqType);
     else
     {
         /* Update, such that we use a recent version of the body that has typeCheck()
@@ -147,10 +151,10 @@ Expression::Ptr UserFunctionCallsite::typeCheck(const StaticContext::Ptr &contex
 
 Expression::Ptr UserFunctionCallsite::compress(const StaticContext::Ptr &context)
 {
-    if(!m_isRecursive)
+    if(!isRecursive())
         rewrite(m_body, m_body->compress(context), context);
 
-    return UnlimitedContainer::compress(context);
+    return CallSite::compress(context);
 }
 
 Expression::Properties UserFunctionCallsite::properties() const
@@ -169,7 +173,7 @@ SequenceType::Ptr UserFunctionCallsite::staticType() const
      *
      * m_body can be null here if we're called before setSource().
      */
-    if(m_isRecursive || !m_body)
+    if(isRecursive() || !m_body)
         return CommonSequenceTypes::ZeroOrMoreItems; // TODO use the declaration, it can have a type explicitly.
     else
         return m_body->staticType();
@@ -189,17 +193,17 @@ bool UserFunctionCallsite::isSignatureValid(const FunctionSignature::Ptr &sign) 
 {
     Q_ASSERT(sign);
 
-    return sign->name() == m_name
+    return sign->name() == name()
            &&
            sign->isArityValid(m_arity);
 }
 
-bool UserFunctionCallsite::configureRecursion(const FunctionSignature::Ptr &sign)
+bool UserFunctionCallsite::configureRecursion(const CallTargetDescription::Ptr &sign)
 {
     Q_ASSERT(sign);
 
-    m_isRecursive = isSignatureValid(sign);
-    return m_isRecursive;
+    setIsRecursive(isSignatureValid(sign));
+    return isRecursive();
 }
 
 void UserFunctionCallsite::setSource(const UserFunction::Ptr &userFunction,
@@ -233,12 +237,7 @@ FunctionSignature::Arity UserFunctionCallsite::arity() const
     return m_arity;
 }
 
-QXmlName UserFunctionCallsite::name() const
-{
-    return m_name;
-}
-
-FunctionSignature::Ptr UserFunctionCallsite::signature() const
+CallTargetDescription::Ptr UserFunctionCallsite::callTargetDescription() const
 {
     return m_functionDeclaration->signature();
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of the precompiled header for all of WebKit.
  *
- * Copyright (C) 2007 Trolltech
+ * Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,11 +23,23 @@
 /*
  * This is a precompiled header file for use in Xcode / Mac GCC /
  * GCC >= 3.4 / VC to greatly speed the building of QtWebKit.
+ *
+ * The order of the includes appears random and arbitrary. But unfortunately
+ * MSVC is very sensitive and behaves fairly strange when compiling with
+ * precompiled headers. Please be very careful when adding, removing or
+ * changing the order of included header files.
  */
 
 
 #if defined __cplusplus
-#include "../../JavaScriptCore/kjs/config.h"
+
+#if defined(_WIN32) && !defined(_WIN32_WCE)
+#define _CRT_RAND_S
+#define _WIN32_WINNT 0x0500
+#include <windows.h>
+#endif
+
+#include "../../JavaScriptCore/config.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -50,8 +62,6 @@
 #include <wtf/HashCountedSet.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/Platform.h>
-//#include <wtf/RetainPtr.h>
-//#include <wtf/TCSpinLock.h>
 #include <wtf/RefPtr.h>
 #include <wtf/VectorTraits.h>
 #include <wtf/MathExtras.h>
@@ -59,7 +69,6 @@
 #include <wtf/OwnPtr.h>
 #include <wtf/OwnArrayPtr.h>
 #include <wtf/ListRefPtr.h>
-//#include <wtf/MallocZoneSupport.h>
 #include <wtf/FastMalloc.h>
 #include <wtf/TCSystemAlloc.h>
 #include <wtf/StringExtras.h>
@@ -69,32 +78,6 @@
 #include <wtf/AlwaysInline.h>
 #include <wtf/GetPtr.h>
 
-#include "../../WebCore/bindings/js/kjs_binding.h"
-#include "../../JavaScriptCore/kjs/math_object.h"
+#include "../../WebCore/bindings/js/JSDOMBinding.h"
+#include "../../JavaScriptCore/runtime/MathObject.h"
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

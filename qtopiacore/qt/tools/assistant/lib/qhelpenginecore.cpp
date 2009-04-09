@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,7 @@ QT_BEGIN_NAMESPACE
 QHelpEngineCorePrivate::QHelpEngineCorePrivate()
 {
     QHelpGlobal::uniquifyConnectionName(QString(), this);
+    autoSaveFilter = true;
 }
 
 void QHelpEngineCorePrivate::init(const QString &collectionFile,
@@ -91,7 +96,7 @@ bool QHelpEngineCorePrivate::setup()
     if (!needsSetup)
         return true;
 
-    needsSetup = false;    
+    needsSetup = false;
     emit q->setupStarted();
     clearMaps();
 
@@ -207,7 +212,7 @@ QHelpEngineCore::QHelpEngineCore(const QString &collectionFile, QObject *parent)
     : QObject(parent)
 {
     d = new QHelpEngineCorePrivate();
-    d->init(collectionFile, this);    
+    d->init(collectionFile, this);
 }
 
 /*!
@@ -229,20 +234,19 @@ QHelpEngineCore::~QHelpEngineCore()
 }
 
 /*!
-    Returns the absolute file path of the collection file.
+    \property QHelpEngineCore::collectionFile
+    \brief the absolute file name of the collection file currently used.
+    \since 4.5
+
+    Setting this property leaves the help engine in an invalid state. It is
+    important to invoke setupData() or any getter function in order to setup
+    the help engine again.
 */
 QString QHelpEngineCore::collectionFile() const
 {
     return d->collectionHandler->collectionFile();
 }
 
-/*!
-    Sets the file \a fileName as the collection file for
-    the help engine. Calling this function will leave the
-    help engine in an invalid state, meaning setupData() or
-    any getter function has to be called in order to setup
-    the help engine again.
-*/
 void QHelpEngineCore::setCollectionFile(const QString &fileName)
 {
     if (fileName == collectionFile())
@@ -254,17 +258,19 @@ void QHelpEngineCore::setCollectionFile(const QString &fileName)
         d->clearMaps();
     }
     d->init(fileName, this);
-    d->needsSetup = true;    
+    d->needsSetup = true;
 }
 
 /*!
     Sets up the help engine by processing the information found
-    in the collection file. By calling the function, the help
+    in the collection file and returns true if successful; otherwise
+    returns false.
+
+    By calling the function, the help
     engine is forced to initialize itself immediately. Most of
     the times, this function does not have to be called
-    explicitely, since getter functions which depend on a set up
-    help engine do that themselves. If the set up was successful, 
-    true is returned otherwise false.
+    explicitly because getter functions which depend on a correctly
+    set up help engine do that themselves.
 
     \note \c{qsqlite4.dll} needs to be deployed with the application as the
     help system uses the sqlite driver when loading help collections.
@@ -272,7 +278,7 @@ void QHelpEngineCore::setCollectionFile(const QString &fileName)
 bool QHelpEngineCore::setupData()
 {
     d->needsSetup = true;
-    return d->setup();    
+    return d->setup();
 }
 
 /*!
@@ -300,7 +306,8 @@ bool QHelpEngineCore::copyCollectionFile(const QString &fileName)
 QString QHelpEngineCore::namespaceName(const QString &documentationFileName)
 {
     QHelpDBReader reader(documentationFileName,
-        QHelpGlobal::uniquifyConnectionName(QLatin1String("GetNamespaceName"), QThread::currentThread()), 0);
+        QHelpGlobal::uniquifyConnectionName(QLatin1String("GetNamespaceName"),
+        QThread::currentThread()), 0);
     if (reader.init())
         return reader.namespaceName();
     return QString();
@@ -323,8 +330,8 @@ bool QHelpEngineCore::registerDocumentation(const QString &documentationFileName
 }
 
 /*!
-    Unregisters the Qt compressed help file (.qch) identified by its 
-    \a namespaceName from the help collection. Returns true 
+    Unregisters the Qt compressed help file (.qch) identified by its
+    \a namespaceName from the help collection. Returns true
     on success, otherwise false.
 
     \sa registerDocumentation(), error()
@@ -355,7 +362,7 @@ QString QHelpEngineCore::documentationFileName(const QString &namespaceName)
             fi.setFile(fi.absolutePath() + QDir::separator() + info.fileName);
             res = QDir::cleanPath(fi.absoluteFilePath());
             break;
-        }        
+        }
     }
     return res;
 }
@@ -390,7 +397,7 @@ QStringList QHelpEngineCore::customFilters() const
 
 /*!
     Adds the new custom filter \a filterName. The filter attributes
-    are specified by \a attributes. The function returns false if 
+    are specified by \a attributes. The function returns false if
     the filter can not be added, e.g. when the filter already exists.
 
     \sa customFilters(), removeCustomFilter()
@@ -439,7 +446,15 @@ QStringList QHelpEngineCore::filterAttributes(const QString &filterName) const
 }
 
 /*!
-    Returns the name of the current custom filter.
+    \property QHelpEngineCore::currentFilter
+    \brief the name of the custom filter currently applied.
+    \since 4.5
+
+    Setting this property will save the new custom filter permanently in the
+    help collection file. To set a custom filter without saving it
+    permanently, disable the auto save filter mode.
+
+    \sa autoSaveFilter()
 */
 QString QHelpEngineCore::currentFilter() const
 {
@@ -447,7 +462,7 @@ QString QHelpEngineCore::currentFilter() const
         return QString();
 
     if (d->currentFilter.isEmpty()) {
-        QString filter = 
+        QString filter =
             d->collectionHandler->customValue(QLatin1String("CurrentFilter"),
                 QString()).toString();
         if (!filter.isEmpty()
@@ -457,17 +472,16 @@ QString QHelpEngineCore::currentFilter() const
     return d->currentFilter;
 }
 
-/*!
-    Sets the filter used by the help engine to \a filterName.
-*/
 void QHelpEngineCore::setCurrentFilter(const QString &filterName)
 {
     if (!d->setup() || filterName == d->currentFilter)
         return;
     d->currentFilter = filterName;
-    d->collectionHandler->setCustomValue(QLatin1String("CurrentFilter"),
-        d->currentFilter);
-    emit currentFilterChanged(d->currentFilter);    
+    if (d->autoSaveFilter) {
+        d->collectionHandler->setCustomValue(QLatin1String("CurrentFilter"),
+            d->currentFilter);
+    }
+    emit currentFilterChanged(d->currentFilter);
 }
 
 /*!
@@ -493,7 +507,7 @@ QList<QStringList> QHelpEngineCore::filterAttributeSets(const QString &namespace
 QList<QUrl> QHelpEngineCore::files(const QString namespaceName,
                                    const QStringList &filterAttributes,
                                    const QString &extensionFilter)
-{    
+{
     QList<QUrl> res;
     if (!d->setup())
         return res;
@@ -522,7 +536,7 @@ QList<QUrl> QHelpEngineCore::files(const QString namespaceName,
     which is merged via a common virtual folder.
 */
 QUrl QHelpEngineCore::findFile(const QUrl &url) const
-{    
+{
     QUrl res;
     if (!d->setup() || !url.isValid() || url.toString().count(QLatin1Char('/')) < 4
         || url.scheme() != QLatin1String("qthelp"))
@@ -534,12 +548,12 @@ QUrl QHelpEngineCore::findFile(const QUrl &url) const
         filePath = filePath.mid(1);
     QString virtualFolder = filePath.mid(0, filePath.indexOf(QLatin1Char('/'), 1));
     filePath = filePath.mid(virtualFolder.length()+1);
-    
+
     QHelpDBReader *defaultReader = 0;
     if (d->readerMap.contains(ns)) {
         defaultReader = d->readerMap.value(ns);
         if (defaultReader->fileExists(virtualFolder, filePath))
-            return url;        
+            return url;
     }
 
     QStringList filterAtts = filterAttributes(currentFilter());
@@ -600,7 +614,7 @@ QByteArray QHelpEngineCore::fileData(const QUrl &url) const
             if (!ba.isEmpty())
                 return ba;
         }
-    } 
+    }
     return ba;
 }
 
@@ -675,7 +689,7 @@ QVariant QHelpEngineCore::metaData(const QString &documentationFileName,
                                    const QString &name)
 {
     QHelpDBReader reader(documentationFileName, QLatin1String("GetMetaData"), 0);
-    
+
     if (reader.init())
         return reader.metaData(name);
     return QVariant();
@@ -687,6 +701,27 @@ QVariant QHelpEngineCore::metaData(const QString &documentationFileName,
 QString QHelpEngineCore::error() const
 {
     return d->error;
+}
+
+/*!
+    \property QHelpEngineCore::autoSaveFilter
+    \brief whether QHelpEngineCore is in auto save filter mode or not.
+    \since 4.5
+
+    If QHelpEngineCore is in auto save filter mode, the current filter is
+    automatically saved when it is changed by the setCurrentFilter()
+    function. The filter is saved persistently in the help collection file.
+
+    By default, this mode is on.
+*/
+void QHelpEngineCore::setAutoSaveFilter(bool save)
+{
+    d->autoSaveFilter = save;
+}
+
+bool QHelpEngineCore::autoSaveFilter() const
+{
+    return d->autoSaveFilter;
 }
 
 QT_END_NAMESPACE

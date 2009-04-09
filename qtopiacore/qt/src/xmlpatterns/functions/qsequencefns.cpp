@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #include "qcommonsequencetypes_p.h"
 #include "qcommonvalues_p.h"
 #include "qdistinctiterator_p.h"
+#include "qebvextractor_p.h"
 #include "qemptysequence_p.h"
 #include "qgenericsequencetype_p.h"
 #include "qindexofiterator_p.h"
@@ -62,10 +67,7 @@ bool BooleanFN::evaluateEBV(const DynamicContext::Ptr &context) const
 Expression::Ptr BooleanFN::typeCheck(const StaticContext::Ptr &context,
                                      const SequenceType::Ptr &reqType)
 {
-    if(*CommonSequenceTypes::EBV->itemType() == *reqType->itemType())
-        return m_operands.first()->typeCheck(context, reqType);
-    else
-        return FunctionCall::typeCheck(context, reqType);
+    return EBVExtractor::typeCheck<FunctionCall>(context, reqType, this);
 }
 
 Item::Iterator::Ptr IndexOfFN::evaluateSequence(const DynamicContext::Ptr &context) const
@@ -211,6 +213,17 @@ SequenceType::Ptr ReverseFN::staticType() const
     return m_operands.first()->staticType();
 }
 
+SubsequenceFN::SubsequenceFN() : m_hasTypeChecked(false)
+{
+}
+
+Expression::Ptr SubsequenceFN::typeCheck(const StaticContext::Ptr &context,
+                                         const SequenceType::Ptr &reqType)
+{
+    m_hasTypeChecked = true;
+    return FunctionCall::typeCheck(context, reqType);
+}
+
 Item::Iterator::Ptr SubsequenceFN::evaluateSequence(const DynamicContext::Ptr &context) const
 {
     Item::Iterator::Ptr it(m_operands.first()->evaluateSequence(context));
@@ -245,7 +258,7 @@ Item SubsequenceFN::evaluateSingleton(const DynamicContext::Ptr &context) const
 Expression::Ptr SubsequenceFN::compress(const StaticContext::Ptr &context)
 {
     const Expression::Ptr me(FunctionCall::compress(context));
-    if(me.data() != this)
+    if(me != this)
         return me;
 
     const Expression::Ptr lenArg(m_operands.value(2));
@@ -269,8 +282,15 @@ SequenceType::Ptr SubsequenceFN::staticType() const
      * constant, we can constrain the range at least upwards of the
      * cardinality, for instance. */
 
-    /* The subsequence(expr, 1, 1), add empty-sequence() to the static type. */
-    if(m_operands.at(1)->isEvaluated()                                                      &&
+    /* The subsequence(expr, 1, 1), add empty-sequence() to the static type.
+     *
+     * Note that we cannot do all these inferences before we've typechecked our
+     * operands. The only known case of where our staticType() is called before
+     * typeCheck() is through xmlpatternsview, although it wouldn't be
+     * surprising if the more exotic paths can achieve that too.
+     */
+    if(m_hasTypeChecked &&
+       m_operands.at(1)->isEvaluated()                                                      &&
        m_operands.count() == 3                                                              &&
        m_operands.at(2)->isEvaluated()                                                      &&
        m_operands.at(1)->as<Literal>()->item().as<Numeric>()->round()->toInteger() == 1     &&

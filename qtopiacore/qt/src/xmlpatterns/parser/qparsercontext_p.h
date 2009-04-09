@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,14 +57,15 @@
 #include <QStack>
 #include <QStringList>
 #include <QtGlobal>
+#include <QXmlQuery>
 
-#include "qexpressionfactory_p.h"
-#include "quserfunction_p.h"
-#include "quserfunctioncallsite_p.h"
-#include "qvariabledeclaration_p.h"
-#include "qfunctionsignature_p.h"
-#include "qtokenizer_p.h"
 #include "qbuiltintypes_p.h"
+#include "qfunctionsignature_p.h"
+#include "qorderby_p.h"
+#include "qtemplatemode_p.h"
+#include "quserfunctioncallsite_p.h"
+#include "quserfunction_p.h"
+#include "qvariabledeclaration_p.h"
 
 QT_BEGIN_HEADER
 
@@ -68,6 +73,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QPatternist
 {
+    class Tokenizer;
+
     /**
      * @short Contains data used when parsing and tokenizing.
      *
@@ -108,14 +115,18 @@ namespace QPatternist
          * @see ExpressionFactory::LanguageAccent
          */
         ParserContext(const StaticContext::Ptr &context,
-                      const ExpressionFactory::LanguageAccent lang,
-                      const Tokenizer::Ptr &tokenizer);
+                      const QXmlQuery::QueryLanguage lang,
+                      Tokenizer *const tokenizer);
 
-        inline VariableSlotID allocateRangeSlot()
-        {
-            ++m_rangeSlot;
-            return m_rangeSlot;
-        }
+        /**
+         * @short Removes the recently pushed variables from
+         * scope. The amount of removed variables is @p amount.
+         *
+         * finalizePushedVariable() can be seen as popping the variable.
+         *
+         */
+        void finalizePushedVariable(const int amount = 1,
+                                    const bool shouldPop = true);
 
         inline VariableSlotID allocatePositionalSlot()
         {
@@ -125,7 +136,6 @@ namespace QPatternist
 
         inline VariableSlotID allocateExpressionSlot()
         {
-            // TODO simplify this crap.
             const VariableSlotID retval = m_expressionSlot;
             ++m_expressionSlot;
             return retval;
@@ -139,7 +149,7 @@ namespace QPatternist
 
         inline bool hasDeclaration(const PrologDeclaration decl) const
         {
-            return (m_prologDeclarations & decl) == decl;
+            return m_prologDeclarations.testFlag(decl);
         }
 
         inline void registerDeclaration(const PrologDeclaration decl)
@@ -158,9 +168,26 @@ namespace QPatternist
          */
         VariableDeclaration::Stack variables;
 
+        inline bool isXSLT() const
+        {
+            return languageAccent == QXmlQuery::XSLT20;
+        }
+
         const StaticContext::Ptr staticContext;
-        const Tokenizer::Ptr tokenizer;
-        const ExpressionFactory::LanguageAccent languageAccent;
+        /**
+         * We don't store a Tokenizer::Ptr here, because then we would get a
+         * circular referencing between ParserContext and XSLTTokenizer, and
+         * hence they would never destruct.
+         */
+        Tokenizer *const tokenizer;
+        const QXmlQuery::QueryLanguage languageAccent;
+
+        /**
+         * Only used in the case of XSL-T. Is the name of the initial template
+         * to call. If null, no name was provided, and regular template
+         * matching should be done.
+         */
+        QXmlName initialTemplateName;
 
         /**
          * Used when parsing direct element constructors. It is used
@@ -188,11 +215,6 @@ namespace QPatternist
          * All variables declared with <tt>declare variable</tt>.
          */
         VariableDeclaration::List declaredVariables;
-
-        inline VariableSlotID currentRangeSlot() const
-        {
-            return m_rangeSlot;
-        }
 
         inline VariableSlotID currentPositionSlot() const
         {
@@ -262,13 +284,144 @@ namespace QPatternist
 
         bool preserveNamespacesMode;
         bool inheritNamespacesMode;
+
+        /**
+         * Contains all named templates. Since named templates
+         * can also have rules, each body may also be in templateRules.
+         */
+        QHash<QXmlName, Template::Ptr>  namedTemplates;
+
+        /**
+         * All the @c xsl:call-template instructions that we have encountered.
+         */
+        QVector<Expression::Ptr>         templateCalls;
+
+        /**
+         * If we're in XSL-T, and a variable reference is encountered
+         * which isn't in-scope, it's added to this hash since a global
+         * variable declaration may appear later on.
+         *
+         * We use a multi hash, since we can encounter several references to
+         * the same variable before it's declared.
+         */
+        QMultiHash<QXmlName, Expression::Ptr> unresolvedVariableReferences;
+
+        /**
+         *
+         * Contains the encountered template rules, as opposed
+         * to named templates.
+         *
+         * The key is the name of the template mode. If it's a default
+         * constructed value, it's the default mode.
+         *
+         * Since templates rules may also be named, each body may also be in
+         * namedTemplates.
+         *
+         * To be specific, the values are not the templates, the values are
+         * modes, and the TemplateMode contains the patterns and bodies.
+         */
+        QHash<QXmlName, TemplateMode::Ptr>  templateRules;
+
+        /**
+         * @short Returns the TemplateMode for @p modeName or @c null if the
+         * mode being asked for is @c #current.
+         */
+        TemplateMode::Ptr modeFor(const QXmlName &modeName)
+        {
+            /* #current is not a mode, so it cannot contain templates. #current
+             * specifies how to look up templates wrt. mode. This check helps
+             * code that calls us, asking for the mode it needs to lookup in.
+             */
+            if(modeName == QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::current))
+                return TemplateMode::Ptr();
+
+            TemplateMode::Ptr &mode = templateRules[modeName];
+
+            if(!mode)
+                mode = TemplateMode::Ptr(new TemplateMode(modeName));
+
+            Q_ASSERT(templateRules[modeName]);
+            return mode;
+        }
+
+        inline TemplatePattern::ID allocateTemplateID()
+        {
+            ++m_currentTemplateID;
+            return m_currentTemplateID;
+        }
+
+        /**
+         * The @c xsl:param appearing inside template.
+         */
+        VariableDeclaration::List templateParameters;
+
+        /**
+         * The @c xsl:with-param appearing in template calling instruction.
+         */
+        WithParam::Hash templateWithParams;
+
+        inline void templateParametersHandled()
+        {
+            finalizePushedVariable(templateParameters.count());
+            templateParameters.clear();
+        }
+
+        inline void templateWithParametersHandled()
+        {
+            templateWithParams.clear();
+        }
+
+        inline bool isParsingWithParam() const
+        {
+            return m_isParsingWithParam.top();
+        }
+
+        void startParsingWithParam()
+        {
+            m_isParsingWithParam.push(true);
+        }
+
+        void endParsingWithParam()
+        {
+            m_isParsingWithParam.pop();
+        }
+
+        /**
+         * This is used to deal with XSL-T's exception to the @c node() type,
+         * which doesn't match document nodes.
+         */
+        bool                                isParsingPattern;
+
+        ImportPrecedence                    currentImportPrecedence;
+
+        bool isFirstTemplate() const
+        {
+            return m_currentTemplateID == InitialTemplateID;
+        }
+
+        /**
+         * Whether we're processing XSL-T 1.0 code.
+         */
+        QStack<bool> isBackwardsCompat;
+
     private:
-        VariableSlotID      m_evaluationCacheSlot;
-        VariableSlotID      m_rangeSlot;
-        VariableSlotID      m_expressionSlot;
-        VariableSlotID      m_positionSlot;
-        PrologDeclarations  m_prologDeclarations;
-        VariableSlotID      m_globalVariableSlot;
+        enum
+        {
+            InitialTemplateID = -1
+        };
+
+        VariableSlotID                      m_evaluationCacheSlot;
+        VariableSlotID                      m_expressionSlot;
+        VariableSlotID                      m_positionSlot;
+        PrologDeclarations                  m_prologDeclarations;
+        VariableSlotID                      m_globalVariableSlot;
+        TemplatePattern::ID                 m_currentTemplateID;
+
+        /**
+         * The default is @c false. If we're not parsing @c xsl:with-param,
+         * hence parsing @c xsl:param, the value has changed.
+         */
+        QStack<bool>                        m_isParsingWithParam;
         Q_DISABLE_COPY(ParserContext)
     };
 }

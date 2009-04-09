@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -137,16 +141,17 @@ bool QTiffHandler::read(QImage *image)
                                 qtiffSizeProc,
                                 qtiffMapProc,
                                 qtiffUnmapProc);
-    QImage tiffImage;
+
     if (tiff) {
         uint32 width = 0;
         uint32 height = 0;
         TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
         TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
-        tiffImage = QImage(width, height, QImage::Format_ARGB32);
-        if (!tiffImage.isNull()) {
-            if (TIFFReadRGBAImageOriented(tiff, width, height, reinterpret_cast<uint32 *>(tiffImage.bits()), ORIENTATION_TOPLEFT, 0)) {
-                uint32 resUnit = RESUNIT_NONE;
+        if (image->size() != QSize(width, height) || image->format() != QImage::Format_ARGB32)
+            *image = QImage(width, height, QImage::Format_ARGB32);
+        if (!image->isNull()) {
+            if (TIFFReadRGBAImageOriented(tiff, width, height, reinterpret_cast<uint32 *>(image->bits()), ORIENTATION_TOPLEFT, 0)) {
+                uint16 resUnit = RESUNIT_NONE;
                 float resX = 0;
                 float resY = 0;
                 TIFFGetField(tiff, TIFFTAG_RESOLUTIONUNIT, &resUnit);
@@ -154,12 +159,12 @@ bool QTiffHandler::read(QImage *image)
                 TIFFGetField(tiff, TIFFTAG_YRESOLUTION, &resY);
                 switch(resUnit) {
                     case RESUNIT_CENTIMETER:
-                        tiffImage.setDotsPerMeterX(qRound(resX * 100));
-                        tiffImage.setDotsPerMeterY(qRound(resY * 100));
+                        image->setDotsPerMeterX(qRound(resX * 100));
+                        image->setDotsPerMeterY(qRound(resY * 100));
                         break;
                     case RESUNIT_INCH:
-                        tiffImage.setDotsPerMeterX(qRound(resX * (100 / 2.54)));
-                        tiffImage.setDotsPerMeterY(qRound(resY * (100 / 2.54)));		
+                        image->setDotsPerMeterX(qRound(resX * (100 / 2.54)));
+                        image->setDotsPerMeterY(qRound(resY * (100 / 2.54)));
                         break;
                     default:
                         // do nothing as defaults have already
@@ -167,18 +172,17 @@ bool QTiffHandler::read(QImage *image)
                         break;
                 }
                 for (uint32 y=0; y<height; ++y)
-                    convert32BitOrder(tiffImage.scanLine(y), width);
+                    convert32BitOrder(image->scanLine(y), width);
             } else {
-                tiffImage = QImage();
+                *image = QImage();
             }
         }
         TIFFClose(tiff);
     }
 
-    if (tiffImage.isNull())
+    if (image->isNull())
         return false;
 
-    *image = tiffImage;
     return true;
 }
 
@@ -277,6 +281,8 @@ QVariant QTiffHandler::option(ImageOption option) const
             return imageSize;
     } else if (option == CompressionRatio) {
         return compression;
+    } else if (option == ImageFormat) {
+        return QImage::Format_ARGB32;
     }
     return QVariant();
 }
@@ -289,7 +295,9 @@ void QTiffHandler::setOption(ImageOption option, const QVariant &value)
 
 bool QTiffHandler::supportsOption(ImageOption option) const
 {
-    return (option == Size) || (option == CompressionRatio);
+    return option == CompressionRatio
+            || option == Size
+            || option == ImageFormat;
 }
 
 void QTiffHandler::convert32BitOrder(void *buffer, int width)

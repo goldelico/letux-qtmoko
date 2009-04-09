@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,8 +56,8 @@
 #include <qwidget.h>
 
 #ifdef Q_WS_MAC
-#include <qmacstyle_mac.h>
 #include <private/qt_mac_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -299,20 +303,32 @@ void QAbstractScrollAreaPrivate::layoutChildren()
     QWidget * const window = q->window();
 
     // Use small scroll bars for tool windows, to match the native size grip.
-    const QMacStyle::WidgetSizePolicy hpolicy = QMacStyle::widgetSizePolicy(hbar);
-    const QMacStyle::WidgetSizePolicy vpolicy = QMacStyle::widgetSizePolicy(vbar);
+    bool hbarIsSmall = hbar->testAttribute(Qt::WA_MacSmallSize);
+    bool vbarIsSmall = vbar->testAttribute(Qt::WA_MacSmallSize);
     const Qt::WindowType windowType = window->windowType();
     if (windowType == Qt::Tool) {
-        if (hpolicy != QMacStyle::SizeSmall)
-            QMacStyle::setWidgetSizePolicy(hbar, QMacStyle::SizeSmall);
-        if (vpolicy != QMacStyle::SizeSmall)
-            QMacStyle::setWidgetSizePolicy(vbar, QMacStyle::SizeSmall);
+        if (!hbarIsSmall) {
+            hbar->setAttribute(Qt::WA_MacMiniSize, false);
+            hbar->setAttribute(Qt::WA_MacNormalSize, false);
+            hbar->setAttribute(Qt::WA_MacSmallSize, true);
+        }
+        if (!vbarIsSmall) {
+            vbar->setAttribute(Qt::WA_MacMiniSize, false);
+            vbar->setAttribute(Qt::WA_MacNormalSize, false);
+            vbar->setAttribute(Qt::WA_MacSmallSize, true);
+        }
     } else {
-        if (hpolicy != QMacStyle::SizeDefault)
-            QMacStyle::setWidgetSizePolicy(hbar, QMacStyle::SizeDefault);
-        if (vpolicy != QMacStyle::SizeDefault)
-            QMacStyle::setWidgetSizePolicy(vbar, QMacStyle::SizeDefault);
-    }
+        if (hbarIsSmall) {
+            hbar->setAttribute(Qt::WA_MacMiniSize, false);
+            hbar->setAttribute(Qt::WA_MacNormalSize, false);
+            hbar->setAttribute(Qt::WA_MacSmallSize, false);
+        }
+        if (vbarIsSmall) {
+            vbar->setAttribute(Qt::WA_MacMiniSize, false);
+            vbar->setAttribute(Qt::WA_MacNormalSize, false);
+            vbar->setAttribute(Qt::WA_MacSmallSize, false);
+        }
+     }
 #endif
 
     const int hsbExt = hbar->sizeHint().height();
@@ -332,11 +348,11 @@ void QAbstractScrollAreaPrivate::layoutChildren()
     // Check if a native sizegrip is present.
     bool hasMacReverseSizeGrip = false;
     bool hasMacSizeGrip = false;
-    HIViewRef nativeSizeGrip = 0;
-    if (q->testAttribute(Qt::WA_WState_Created)) {
-        HIViewFindByID(HIViewGetRoot(HIViewGetWindow(HIViewRef(q->winId()))), kHIViewWindowGrowBoxID, &nativeSizeGrip);
-    }
-    if (nativeSizeGrip) {
+    bool nativeGripPresent = false;
+    if (q->testAttribute(Qt::WA_WState_Created))
+        nativeGripPresent = qt_mac_checkForNativeSizeGrip(q);
+
+    if (nativeGripPresent) {
         // Look for a native size grip at the visual window bottom right and at the
         // absolute window bottom right. In reverse mode, the native size grip does not
         // swich side, so we need to check if it is on the "wrong side".
@@ -356,9 +372,10 @@ void QAbstractScrollAreaPrivate::layoutChildren()
 
     // In FrameOnlyAroundContents mode the frame is drawn between the controls and
     // the viewport, else the frame rect is equal to the widget rect.
-    if (q->style()->styleHint(QStyle::SH_ScrollView_FrameOnlyAroundContents, &opt, q)) {
+    if ((frameStyle != QFrame::NoFrame) &&
+        q->style()->styleHint(QStyle::SH_ScrollView_FrameOnlyAroundContents, &opt, q)) {
         controlsRect = widgetRect;
-        const int extra = q->style()->pixelMetric(QStyle::PM_DefaultFrameWidth) * 2;
+        const int extra = q->style()->pixelMetric(QStyle::PM_ScrollView_ScrollBarSpacing);
         const QPoint cornerExtra(needv ? extra : 0, needh ? extra : 0);
         QRect frameRect = widgetRect;
         frameRect.adjust(0, 0, -cornerOffset.x() - cornerExtra.x(), -cornerOffset.y() - cornerExtra.y());
@@ -391,10 +408,12 @@ void QAbstractScrollAreaPrivate::layoutChildren()
     // Some styles paints the corner if both scorllbars are showing and there is
     // no corner widget. Also, on the Mac we paint if there is a native
     // (transparent) sizegrip in the area where a corner widget would be.
-    if (needv && needh && hasCornerWidget == false
+    if ((needv && needh && hasCornerWidget == false)
+        || ((needv || needh) 
 #ifdef Q_WS_MAC
-        || ((needv || needh) && hasMacSizeGrip)
+        && hasMacSizeGrip
 #endif
+        )
     ) {
         cornerPaintingRect = QStyle::visualRect(opt.direction, opt.rect, QRect(cornerPoint, extSize));
     } else {
@@ -1098,7 +1117,9 @@ void QAbstractScrollArea::keyPressEvent(QKeyEvent * e)
             return;
         }
 #endif
-            d->hbar->triggerAction(QScrollBar::SliderSingleStepSub);
+            d->hbar->triggerAction(
+                layoutDirection() == Qt::LeftToRight
+                ? QScrollBar::SliderSingleStepSub : QScrollBar::SliderSingleStepAdd);
             break;
         case Qt::Key_Right:
 #ifdef QT_KEYPAD_NAVIGATION
@@ -1109,7 +1130,9 @@ void QAbstractScrollArea::keyPressEvent(QKeyEvent * e)
             return;
         }
 #endif
-            d->hbar->triggerAction(QScrollBar::SliderSingleStepAdd);
+            d->hbar->triggerAction(
+                layoutDirection() == Qt::LeftToRight
+                ? QScrollBar::SliderSingleStepAdd : QScrollBar::SliderSingleStepSub);
             break;
         default:
             e->ignore();

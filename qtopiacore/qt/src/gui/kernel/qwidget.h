@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -90,6 +94,7 @@ class QInputContext;
 class QIcon;
 class QWindowSurface;
 class QLocale;
+class QGraphicsProxyWidget;
 #if defined(Q_WS_X11)
 class QX11Info;
 #endif
@@ -442,6 +447,10 @@ public:
     void repaintUnclipped(const QRegion &, bool erase = true);
 #endif
 
+#ifndef QT_NO_GRAPHICSVIEW
+    QGraphicsProxyWidget *graphicsProxyWidget() const;
+#endif
+
 public Q_SLOTS:
     void update();
     void repaint();
@@ -685,11 +694,7 @@ private:
 
     bool testAttribute_helper(Qt::WidgetAttribute) const;
 
-    friend void qt_syncBackingStore(QWidget *);
-    friend void qt_syncBackingStore(QRegion, QWidget *);
-    friend void qt_syncBackingStore(QRegion, QWidget *, bool);
-    friend QRegion qt_dirtyRegion(QWidget *, bool);
-    friend QWindowSurface *qt_default_window_surface(QWidget*);
+    QLayout *takeLayout();
 
     friend class QBackingStoreDevice;
     friend class QWidgetBackingStore;
@@ -707,9 +712,12 @@ private:
     friend class QWidgetItemV2;
     friend class QGLContext;
     friend class QGLWidget;
+    friend class QGLWindowSurface;
+    friend class QVGWindowSurface;
     friend class QX11PaintEngine;
     friend class QWin32PaintEngine;
     friend class QShortcutPrivate;
+    friend class QShortcutMap;
     friend class QWindowSurface;
     friend class QD3DWindowSurface;
     friend class QGraphicsProxyWidget;
@@ -717,15 +725,13 @@ private:
     friend class QStyleSheetStyle;
 
 #ifdef Q_WS_MAC
-#ifdef Q_WS_MAC32
-    friend class QMacSavedPortInfo;
-#endif
     friend class QCoreGraphicsPaintEnginePrivate;
     friend QPoint qt_mac_posInWindow(const QWidget *w);
-    friend WindowPtr qt_mac_window_for(const QWidget *w);
+    friend OSWindowRef qt_mac_window_for(const QWidget *w);
     friend bool qt_mac_is_metal(const QWidget *w);
-    friend HIViewRef qt_mac_hiview_for(const QWidget *w);
+    friend OSViewRef qt_mac_nativeview_for(const QWidget *w);
     friend void qt_event_request_window_change(QWidget *widget);
+    friend bool qt_mac_sendMacEventToWidget(QWidget *widget, EventRef ref);
 #endif
 #ifdef Q_WS_QWS
     friend class QWSBackingStore;
@@ -737,6 +743,10 @@ private:
     friend class QVNCScreen;
     friend bool isWidgetOpaque(const QWidget *);
     friend class QGLWidgetPrivate;
+#endif
+#ifdef Q_WS_X11
+    friend void qt_net_update_user_time(QWidget *tlw, unsigned long timestamp);
+    friend void qt_net_remove_user_time(QWidget *tlw);
 #endif
 
     friend Q_GUI_EXPORT QWidgetData *qt_qwidget_data(QWidget *widget);

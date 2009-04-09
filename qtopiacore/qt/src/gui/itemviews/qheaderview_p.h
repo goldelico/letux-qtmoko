@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -101,6 +105,7 @@ public:
     int sectionHandleAt(int position);
     void setupSectionIndicator(int section, int position);
     void updateSectionIndicator(int section, int position);
+    void updateHiddenSections(int logicalFirst, int logicalLast);
     void resizeSections(QHeaderView::ResizeMode globalMode, bool useGlobalMode = false);
     void _q_sectionsRemoved(const QModelIndex &,int,int);
     void _q_layoutAboutToBeChanged();
@@ -237,7 +242,7 @@ public:
 
     enum State { NoState, ResizeSection, MoveSection, SelectSections, NoClear } state;
 
-    uint offset;
+    int offset;
     Qt::Orientation orientation;
     Qt::SortOrder sortIndicatorOrder;
     int sortIndicatorSection;
@@ -245,8 +250,8 @@ public:
 
     mutable QVector<int> visualIndices; // visualIndex = visualIndices.at(logicalIndex)
     mutable QVector<int> logicalIndices; // logicalIndex = row or column in the model
-    mutable QBitArray sectionSelected;
-    mutable QBitArray sectionHidden;
+    mutable QBitArray sectionSelected; // from logical index to bit
+    mutable QBitArray sectionHidden; // from visual index to bit
     mutable QHash<int, int> hiddenSectionSize; // from logical index to section size
     mutable QHash<int, int> cascadingSectionSize; // from visual index to section size
     mutable QSize cachedSizeHint;
@@ -263,7 +268,7 @@ public:
     int pressed;
     int hover;
 
-    uint length;
+    int length;
     int sectionCount;
     bool movableSections;
     bool clickableSections;
@@ -285,7 +290,7 @@ public:
     // header section spans
 
     struct SectionSpan {
-        uint size;
+        int size;
         int count;
         QHeaderView::ResizeMode resizeMode;
         inline SectionSpan() : size(0), count(0), resizeMode(QHeaderView::Interactive) {}
@@ -304,7 +309,7 @@ public:
 
     void createSectionSpan(int start, int end, int size, QHeaderView::ResizeMode mode);
     void removeSectionsFromSpans(int start, int end);
-    void resizeSectionSpan(int visualIndex, uint oldSize, uint newSize);
+    void resizeSectionSpan(int visualIndex, int oldSize, int newSize);
 
     inline int headerSectionCount() const { // for debugging
         int count = 0;
@@ -340,7 +345,7 @@ public:
 
     int headerSectionSize(int visual) const;
     int headerSectionPosition(int visual) const;
-    int headerVisualIndexAt(uint position) const;
+    int headerVisualIndexAt(int position) const;
 
     // resize mode
     void setHeaderSectionResizeMode(int visual, QHeaderView::ResizeMode mode);

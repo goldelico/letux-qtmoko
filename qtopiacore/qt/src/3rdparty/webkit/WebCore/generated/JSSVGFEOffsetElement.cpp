@@ -21,270 +21,182 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEOffsetElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEOffsetElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEOffsetElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEOffsetElementTableEntries[] =
+static const HashTableValue JSSVGFEOffsetElementTableValues[11] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "dy", JSSVGFEOffsetElement::DyAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEOffsetElementTableEntries[11] },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEOffsetElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "dx", JSSVGFEOffsetElement::DxAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEOffsetElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEOffsetElementTableEntries[10] },
-    { "height", JSSVGFEOffsetElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEOffsetElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFEOffsetElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEOffsetElementTableEntries[12] },
-    { "width", JSSVGFEOffsetElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "className", JSSVGFEOffsetElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEOffsetElementTableEntries[13] },
-    { "style", JSSVGFEOffsetElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementIn1, (intptr_t)0 },
+    { "dx", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementDx, (intptr_t)0 },
+    { "dy", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementDy, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEOffsetElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEOffsetElementTable = 
-{
-    2, 14, JSSVGFEOffsetElementTableEntries, 10
-};
+static const HashTable JSSVGFEOffsetElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEOffsetElementTableValues, 0 };
+#else
+    { 35, 31, JSSVGFEOffsetElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEOffsetElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEOffsetElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEOffsetElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEOffsetElementPrototypeTable = 
-{
-    2, 1, JSSVGFEOffsetElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEOffsetElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEOffsetElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEOffsetElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEOffsetElementPrototype::info = { "SVGFEOffsetElementPrototype", 0, &JSSVGFEOffsetElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEOffsetElementPrototype::s_info = { "SVGFEOffsetElementPrototype", 0, &JSSVGFEOffsetElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEOffsetElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEOffsetElementPrototype>(exec, "[[JSSVGFEOffsetElement.prototype]]");
+    return getDOMPrototype<JSSVGFEOffsetElement>(exec);
 }
 
-const ClassInfo JSSVGFEOffsetElement::info = { "SVGFEOffsetElement", &JSSVGElement::info, &JSSVGFEOffsetElementTable, 0 };
-
-JSSVGFEOffsetElement::JSSVGFEOffsetElement(ExecState* exec, SVGFEOffsetElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEOffsetElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEOffsetElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEOffsetElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEOffsetElement::s_info = { "SVGFEOffsetElement", &JSSVGElement::s_info, &JSSVGFEOffsetElementTable, 0 };
+
+JSSVGFEOffsetElement::JSSVGFEOffsetElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEOffsetElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEOffsetElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEOffsetElementPrototype(JSSVGFEOffsetElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEOffsetElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEOffsetElement, JSSVGElement>(exec, &JSSVGFEOffsetElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEOffsetElement, Base>(exec, &JSSVGFEOffsetElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEOffsetElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEOffsetElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEOffsetElementDx(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->dxAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEOffsetElementDy(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->dyAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case DxAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
+JSValuePtr jsSVGFEOffsetElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEOffsetElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->dxAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEOffsetElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case DyAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
+JSValuePtr jsSVGFEOffsetElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEOffsetElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->dyAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEOffsetElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
+JSValuePtr jsSVGFEOffsetElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(static_cast<JSSVGFEOffsetElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEOffsetElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEOffsetElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEOffsetElement* castedThisObj = static_cast<JSSVGFEOffsetElement*>(asObject(thisValue));
+    SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEOffsetElement* imp = static_cast<SVGFEOffsetElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

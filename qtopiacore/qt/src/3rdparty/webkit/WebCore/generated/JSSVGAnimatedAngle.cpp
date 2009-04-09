@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedAngle.h"
 
 #include <wtf/GetPtr.h>
@@ -35,85 +31,94 @@
 #include "JSSVGAngle.h"
 #include "SVGAngle.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedAngle)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedAngleTableEntries[] =
+static const HashTableValue JSSVGAnimatedAngleTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedAngle::BaseValAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "animVal", JSSVGAnimatedAngle::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedAngleBaseVal, (intptr_t)0 },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedAngleAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedAngleTable = 
-{
-    2, 2, JSSVGAnimatedAngleTableEntries, 2
-};
+static const HashTable JSSVGAnimatedAngleTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedAngleTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedAngleTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedAnglePrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedAnglePrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedAnglePrototypeTable = 
-{
-    2, 1, JSSVGAnimatedAnglePrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedAnglePrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedAnglePrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedAnglePrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedAnglePrototype::info = { "SVGAnimatedAnglePrototype", 0, &JSSVGAnimatedAnglePrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedAnglePrototype::s_info = { "SVGAnimatedAnglePrototype", 0, &JSSVGAnimatedAnglePrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedAnglePrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedAnglePrototype>(exec, "[[JSSVGAnimatedAngle.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedAngle>(exec);
 }
 
-const ClassInfo JSSVGAnimatedAngle::info = { "SVGAnimatedAngle", 0, &JSSVGAnimatedAngleTable, 0 };
+const ClassInfo JSSVGAnimatedAngle::s_info = { "SVGAnimatedAngle", 0, &JSSVGAnimatedAngleTable, 0 };
 
-JSSVGAnimatedAngle::JSSVGAnimatedAngle(ExecState* exec, SVGAnimatedAngle* impl)
-    : m_impl(impl)
+JSSVGAnimatedAngle::JSSVGAnimatedAngle(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedAngle> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedAnglePrototype::self(exec));
 }
 
 JSSVGAnimatedAngle::~JSSVGAnimatedAngle()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedAngle>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedAngle::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedAnglePrototype(JSSVGAnimatedAnglePrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedAngle::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedAngle, KJS::DOMObject>(exec, &JSSVGAnimatedAngleTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedAngle, Base>(exec, &JSSVGAnimatedAngleTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedAngle::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedAngleBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedAngle* imp = static_cast<SVGAnimatedAngle*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->baseVal()));
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedAngle* imp = static_cast<SVGAnimatedAngle*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->animVal()));
-    }
-    }
-    return 0;
+    SVGAnimatedAngle* imp = static_cast<SVGAnimatedAngle*>(static_cast<JSSVGAnimatedAngle*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->baseVal()), static_cast<JSSVGAnimatedAngle*>(asObject(slot.slotBase()))->context());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedAngle* obj)
+JSValuePtr jsSVGAnimatedAngleAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<SVGAnimatedAngle, JSSVGAnimatedAngle>(exec, obj);
+    SVGAnimatedAngle* imp = static_cast<SVGAnimatedAngle*>(static_cast<JSSVGAnimatedAngle*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->animVal()), static_cast<JSSVGAnimatedAngle*>(asObject(slot.slotBase()))->context());
 }
-SVGAnimatedAngle* toSVGAnimatedAngle(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedAngle* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedAngle::info) ? static_cast<JSSVGAnimatedAngle*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedAngle>(exec, object, context);
+}
+SVGAnimatedAngle* toSVGAnimatedAngle(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedAngle::s_info) ? static_cast<JSSVGAnimatedAngle*>(asObject(value))->impl() : 0;
 }
 
 }

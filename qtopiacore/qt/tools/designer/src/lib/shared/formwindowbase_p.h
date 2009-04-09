@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,8 +54,6 @@
 #define FORMWINDOWBASE_H
 
 #include "shared_global_p.h"
-#include "qdesigner_utils_p.h"
-#include "grid_p.h"
 
 #include <QtDesigner/QDesignerFormWindowInterface>
 
@@ -62,57 +64,37 @@ QT_BEGIN_NAMESPACE
 
 class QDesignerDnDItemInterface;
 class QMenu;
-class QListWidgetItem;
-class QTreeWidgetItem;
-class QTableWidgetItem;
-class QPoint;
 class QtResourceSet;
 class QDesignerPropertySheet;
 
 namespace qdesigner_internal {
 
 class QEditorFormBuilder;
+class DeviceProfile;
+class Grid;
 
-class QDESIGNER_SHARED_EXPORT DesignerPixmapCache : public QObject
-{
-    Q_OBJECT
-public:
-    DesignerPixmapCache(QObject *parent = 0);
-    QPixmap pixmap(const PropertySheetPixmapValue &value) const;
-    void clear();
-signals:
-    void reloaded();
-private:
-    mutable QMap<PropertySheetPixmapValue, QPixmap> m_cache;
-    friend class FormWindowBase;
-};
-
-class QDESIGNER_SHARED_EXPORT DesignerIconCache : public QObject
-{
-    Q_OBJECT
-public:
-    DesignerIconCache(DesignerPixmapCache *pixmapCache, QObject *parent = 0);
-    QIcon icon(const PropertySheetIconValue &value) const;
-    void clear();
-signals:
-    void reloaded();
-private:
-    mutable QMap<PropertySheetIconValue, QIcon> m_cache;
-    DesignerPixmapCache *m_pixmapCache;
-    friend class FormWindowBase;
-};
+class DesignerPixmapCache;
+class DesignerIconCache;
+class FormWindowBasePrivate;
 
 class QDESIGNER_SHARED_EXPORT FormWindowBase: public QDesignerFormWindowInterface
 {
     Q_OBJECT
-
 public:
     enum HighlightMode  { Restore, Highlight };
+    enum SaveResourcesBehaviour  { SaveAll, SaveOnlyUsedQrcFiles, DontSaveQrcFiles };
 
-    FormWindowBase(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit FormWindowBase(QDesignerFormEditorInterface *core, QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    virtual ~FormWindowBase();
 
     QVariantMap formData();
     void setFormData(const QVariantMap &vm);
+
+    // Return the widget containing the form. This is used to
+    // apply embedded design settings to that are inherited (for example font).
+    // These are meant to be applied to the form only and not to the other editors
+    // in the widget stack.
+    virtual QWidget *formContainer() const = 0;
 
     // Deprecated
     virtual QPoint grid() const;
@@ -124,19 +106,24 @@ public:
     virtual Feature features() const;
     virtual void setFeatures(Feature f);
 
-    const Grid &designerGrid() const { return m_grid; }
+    const Grid &designerGrid() const;
     void setDesignerGrid(const  Grid& grid);
 
-    bool hasFormGrid() const { return m_hasFormGrid; }
-    void setHasFormGrid(bool b) { m_hasFormGrid = b; }
+    bool hasFormGrid() const;
+    void setHasFormGrid(bool b);
 
     bool gridVisible() const;
 
-    static const Grid &defaultDesignerGrid() { return m_defaultGrid; }
-    static void setDefaultDesignerGrid(const  Grid& grid);
+    SaveResourcesBehaviour saveResourcesBehaviour() const;
+    void setSaveResourcesBehaviour(SaveResourcesBehaviour behaviour);
 
-    // Overwrite to initialize and return a popup menu for a managed widget
+    static const Grid &defaultDesignerGrid();
+    static void setDefaultDesignerGrid(const Grid& grid);
+
+    // Overwrite to initialize and return a full popup menu for a managed widget
     virtual QMenu *initializePopupMenu(QWidget *managedWidget);
+    // Helper to create a basic popup menu from task menu extensions (internal/public)
+    static QMenu *createExtensionTaskMenu(QDesignerFormWindowInterface *fw, QObject *o, bool trailingSeparator = true);
 
     virtual bool dropWidgets(const QList<QDesignerDnDItemInterface*> &item_list, QWidget *target,
                              const QPoint &global_mouse_pos) = 0;
@@ -171,22 +158,41 @@ public:
     void removeReloadablePropertySheet(QDesignerPropertySheet *sheet);
     void reloadProperties();
 
-public slots:
+    void emitWidgetRemoved(QWidget *w);
+    void emitObjectRemoved(QObject *o);
 
+    DeviceProfile deviceProfile() const;
+    QString styleName() const;
+    QString deviceProfileName() const;
+
+    enum LineTerminatorMode {
+        LFLineTerminator,
+        CRLFLineTerminator,
+        NativeLineTerminator =
+#if defined (Q_OS_WIN)
+            CRLFLineTerminator
+#else
+            LFLineTerminator
+#endif
+    };
+
+    void setLineTerminatorMode(LineTerminatorMode mode);
+    LineTerminatorMode lineTerminatorMode() const;
+
+    // Connect the 'activated' (doubleclicked) signal of the form window to a
+    // slot triggering the default action (of the task menu)
+    static void setupDefaultAction(QDesignerFormWindowInterface *fw);
+
+public slots:
     void resourceSetActivated(QtResourceSet *resourceSet, bool resourceSetChanged);
+
+private slots:
+    void triggerDefaultAction(QWidget *w);
 
 private:
     void syncGridFeature();
-    static Grid m_defaultGrid;
 
-    Feature m_feature;
-    Grid m_grid;
-    bool m_hasFormGrid;
-    DesignerPixmapCache *m_pixmapCache;
-    DesignerIconCache *m_iconCache;
-    QtResourceSet *m_resourceSet;
-    QMap<QDesignerPropertySheet *, QMap<int, bool> > m_reloadableResources; // bool is dummy, QMap used as QSet
-    QMap<QDesignerPropertySheet *, QObject *> m_reloadablePropertySheets;
+    FormWindowBasePrivate *m_d;    
 };
 
 }  // namespace qdesigner_internal

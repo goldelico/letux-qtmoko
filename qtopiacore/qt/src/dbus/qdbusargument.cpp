@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -227,6 +231,38 @@ bool QDBusArgumentPrivate::checkReadAndDetach(QDBusArgumentPrivate *&d)
 
     \sa QDBusAbstractInterface, {qdbustypesystem.html}{The QtDBus type
     system}, {usingadaptors.html}{Using Adaptors}, qdbus_cast()
+*/
+
+/*!
+    \enum QDBusArgument::ElementType
+    \since 4.5
+
+    This enum describes the type of element held by the argument.
+
+    \value BasicType A basic element, which is understood by
+        QVariant. The following types are considered basic: bool,
+        byte, short, ushort, int, uint, qint64, quint64, double,
+        QString, QByteArray, QDBusObjectPath, QDBusSignature
+
+    \value VariantType The variant element (QDBusVariant)
+
+    \value ArrayType An array element, usually represented by QList<T>
+    or QVector<T>. Note: QByteArray and associative maps are not
+    considered arrays, even if the D-Bus protocol transports them as such.
+
+    \value StructureType A custom type represented by a structure,
+    like QDateTime, QPoint, etc.
+
+    \value MapType An associative container, like QMap<Key, Value> or
+    QHash<Key, Value>
+
+    \value MapEntryType One entry in an associative container: both
+    the key and the value form one map-entry type.
+
+    \value UnknownType The type is unknown or we have reached the end
+    of the list.
+
+    \sa currentType()
 */
 
 /*!
@@ -500,6 +536,21 @@ QDBusArgument &QDBusArgument::operator<<(const QByteArray &arg)
 /*!
     \internal
     Returns the type signature of the D-Bus type this QDBusArgument
+    \since 4.5
+
+    Appends the variant \a v.
+
+    \sa asVariant()
+*/
+void QDBusArgument::appendVariant(const QVariant &v)
+{
+    if (QDBusArgumentPrivate::checkWrite(d))
+        d->marshaller()->appendVariantInternal(v);
+}
+
+/*!
+    \internal
+    Returns the type signature of the D-Bus type this QDBusArgument
     object is currently pointing to.
 */
 QString QDBusArgument::currentSignature() const
@@ -513,8 +564,26 @@ QString QDBusArgument::currentSignature() const
 }
 
 /*!
-    Extracts one D-Bus primitive argument of type \c{BYTE} from the
-    D-Bus stream and puts it into \a arg.
+    \since 4.5
+    Returns the classification of the current element type. If an
+    error decoding the type occurs or if we're at the end of the
+    argument, this function returns QDBusArgument::UnknownType.
+
+    This function only makes sense when demarshalling arguments. If it
+    is used while marshalling, it will always return UnknownType.
+*/
+QDBusArgument::ElementType QDBusArgument::currentType() const
+{
+    if (!d)
+        return UnknownType;
+    if (d->direction == QDBusArgumentPrivate::Demarshalling)
+        return d->demarshaller()->currentType();
+    return UnknownType;
+}
+
+/*!
+    Extracts one D-BUS primitive argument of type \c{BYTE} from the
+    D-BUS stream and puts it into \a arg.
 */
 const QDBusArgument &QDBusArgument::operator>>(uchar &arg) const
 {
@@ -978,6 +1047,34 @@ bool QDBusArgument::atEnd() const
         return d->demarshaller()->atEnd();
 
     return true;                // at least, stop reading
+}
+
+/*!
+    \since 4.5
+
+    Returns the current argument in the form of a QVariant. Basic
+    types will be decoded and returned in the QVariant, but for
+    complex types, this function will return a QDBusArgument object in
+    the QVariant. It is the caller's responsibility to decode the
+    argument (for example, by calling asVariant() in it).
+
+    For example, if the current argument is an INT32, this function
+    will return a QVariant with an argument of type QVariant::Int. For
+    an array of INT32, it will return a QVariant containing a
+    QDBusArgument.
+
+    If an error occurs or if there are no more arguments to decode
+    (i.e., we are at the end of the argument list), this function will
+    return an invalid QVariant.
+
+    \sa atEnd()
+*/
+QVariant QDBusArgument::asVariant() const
+{
+    if (QDBusArgumentPrivate::checkRead(d))
+        return d->demarshaller()->toVariantInternal();
+
+    return QVariant();
 }
 
 QT_END_NAMESPACE

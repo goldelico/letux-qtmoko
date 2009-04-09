@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,7 @@
 #include <private/qwidgetaction_p.h>
 #ifdef Q_WS_MAC
 #include <private/qt_mac_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 #endif
 
 #include <private/qmainwindowlayout_p.h>
@@ -66,6 +71,14 @@
 #include  "qdebug.h"
 
 QT_BEGIN_NAMESPACE
+
+#ifdef Q_WS_MAC
+static void qt_mac_updateToolBarButtonHint(QWidget *parentWidget)
+{
+    if (!(parentWidget->windowFlags() & Qt::CustomizeWindowHint))
+        parentWidget->setWindowFlags(parentWidget->windowFlags() | Qt::MacWindowToolBarButtonHint);
+}
+#endif
 
 /******************************************************************************
 ** QToolBarPrivate
@@ -97,10 +110,11 @@ void QToolBarPrivate::init()
 #ifdef Q_WS_MAC
     if (q->parentWidget() && q->parentWidget()->isWindow()) {
         // Make sure that the window has the "toolbar" button.
-        reinterpret_cast<QToolBar *>(q->parentWidget())->d_func()->createWinId(); // Please let me create your winId...
-        extern WindowPtr qt_mac_window_for(const QWidget *); // qwidget_mac.cpp
-        ChangeWindowAttributes(qt_mac_window_for(q->parentWidget()), kWindowToolbarButtonAttribute,
-                               kWindowNoAttributes);
+        QWidget *parentWidget = q->parentWidget();
+        qt_mac_updateToolBarButtonHint(parentWidget);
+        reinterpret_cast<QToolBar *>(parentWidget)->d_func()->createWinId(); // Please let me create your winId...
+        extern OSWindowRef qt_mac_window_for(const QWidget *); // qwidget_mac.cpp
+        macWindowToolbarShow(q->parentWidget(), true);
     }
 #endif
 
@@ -140,14 +154,9 @@ void QToolBarPrivate::_q_updateToolButtonStyle(Qt::ToolButtonStyle style)
     }
 }
 
-void QToolBarPrivate::setWindowState(bool floating, bool unplug, const QRect &rect)
+void QToolBarPrivate::updateWindowFlags(bool floating, bool unplug)
 {
     Q_Q(QToolBar);
-    bool visible = !q->isHidden();
-    bool wasFloating = q->isFloating(); // ...is also currently using popup menus
-
-    q->hide();
-
     Qt::WindowFlags flags = floating ? Qt::Tool : Qt::Widget;
 
     flags |= Qt::FramelessWindowHint;
@@ -160,6 +169,17 @@ void QToolBarPrivate::setWindowState(bool floating, bool unplug, const QRect &re
     }
 
     q->setWindowFlags(flags);
+}
+
+void QToolBarPrivate::setWindowState(bool floating, bool unplug, const QRect &rect)
+{
+    Q_Q(QToolBar);
+    bool visible = !q->isHidden();
+    bool wasFloating = q->isFloating(); // ...is also currently using popup menus
+
+    q->hide();
+
+    updateWindowFlags(floating, unplug);
 
     if (floating != wasFloating)
         layout->checkUsePopupMenu();
@@ -175,7 +195,6 @@ void QToolBarPrivate::initDrag(const QPoint &pos)
 {
     Q_Q(QToolBar);
 
-    
     if (state != 0)
         return;
 
@@ -212,7 +231,7 @@ void QToolBarPrivate::startDrag(bool moving)
 
     if (!moving) {
         state->widgetItem = layout->unplug(q);
-#ifdef Q_WS_MAC
+#if defined(Q_WS_MAC) && !defined(QT_MAC_USE_COCOA)
         if (q->isWindow()) {
            setWindowState(true, true); //set it to floating
         }
@@ -551,8 +570,7 @@ QToolBar::~QToolBar()
         QMainWindowLayout *mainwin_layout = qobject_cast<QMainWindowLayout *>(mainwindow->layout());
         if (mainwin_layout && mainwin_layout->layoutState.toolBarAreaLayout.isEmpty()
                 && mainwindow->testAttribute(Qt::WA_WState_Created))
-            ChangeWindowAttributes(qt_mac_window_for(mainwindow), kWindowNoAttributes,
-                                   kWindowToolbarButtonAttribute);
+            macWindowToolbarShow(mainwindow, false);
 #endif
     }
 }
@@ -1014,7 +1032,10 @@ void QToolBar::paintEvent(QPaintEvent *)
     initStyleOption(&opt);
 
     if (d->layout->expanded || d->layout->animating || isWindow()) {
+        //if the toolbar is expended, we need to fill the background with the window color
+        //because some styles may expects that.
         p.fillRect(opt.rect, palette().background());
+        style->drawControl(QStyle::CE_ToolBar, &opt, &p, this);
         style->drawPrimitive(QStyle::PE_FrameMenu, &opt, &p, this);
     } else {
         style->drawControl(QStyle::CE_ToolBar, &opt, &p, this);
@@ -1069,26 +1090,44 @@ bool QToolBar::event(QEvent *event)
         // fallthrough intended
     case QEvent::Show:
         d->toggleViewAction->setChecked(event->type() == QEvent::Show);
-#ifdef Q_WS_MAC
+#if defined(Q_WS_MAC) && !defined(QT_MAC_USE_COCOA)
         // Fall through
-    case QEvent::LayoutRequest:
+    case QEvent::LayoutRequest: {
         // There's currently no way to invalidate the size and let
         // HIToolbar know about it. This forces a re-check.
+        int earlyResult = -1;
         if (QMainWindow *mainWindow = qobject_cast<QMainWindow *>(parentWidget())) {
-            WindowRef windowRef = qt_mac_window_for(this);
-            if (mainWindow->unifiedTitleAndToolBarOnMac()
-                    && mainWindow->toolBarArea(this) == Qt::TopToolBarArea
-                    && IsWindowToolbarVisible(windowRef))   {
-                DisableScreenUpdates();
-                ShowHideWindowToolbar(windowRef, false, false);
-                ShowHideWindowToolbar(windowRef, true, false);
-                EnableScreenUpdates();
+            bool needUpdate = true;
+            if (event->type() == QEvent::LayoutRequest) {
+                QSize oldSizeHint = sizeHint();
+                earlyResult = QWidget::event(event) ? 1 : 0;
+                needUpdate = oldSizeHint != sizeHint();
             }
+
+            if (needUpdate) {
+                OSWindowRef windowRef = qt_mac_window_for(this);
+                if (mainWindow->unifiedTitleAndToolBarOnMac()
+                        && mainWindow->toolBarArea(this) == Qt::TopToolBarArea
+                        && macWindowToolbarVisible(windowRef))   {
+                    DisableScreenUpdates();
+                    macWindowToolbarShow(this, false);
+                    macWindowToolbarShow(this, true);
+                    EnableScreenUpdates();
+                }
+            }
+
+            if (earlyResult != -1)
+                return earlyResult;
         }
+    }
 #endif
         break;
     case QEvent::ParentChange:
         d->layout->checkUsePopupMenu();
+#if defined(Q_WS_MAC)
+        if (parentWidget() && parentWidget()->isWindow())
+            qt_mac_updateToolBarButtonHint(parentWidget());
+#endif
         break;
 
     case QEvent::MouseButtonPress: {
@@ -1097,7 +1136,7 @@ bool QToolBar::event(QEvent *event)
         break;
     }
     case QEvent::MouseButtonRelease:
-         if (d->mouseReleaseEvent(static_cast<QMouseEvent*>(event)))
+        if (d->mouseReleaseEvent(static_cast<QMouseEvent*>(event)))
             return true;
         break;
     case QEvent::HoverMove: {

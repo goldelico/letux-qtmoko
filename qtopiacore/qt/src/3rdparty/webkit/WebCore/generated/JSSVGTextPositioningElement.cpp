@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGTextPositioningElement.h"
 
 #include <wtf/GetPtr.h>
@@ -36,160 +32,103 @@
 #include "JSSVGAnimatedNumberList.h"
 #include "SVGTextPositioningElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGTextPositioningElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGTextPositioningElementTableEntries[] =
+static const HashTableValue JSSVGTextPositioningElementTableValues[6] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGTextPositioningElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGTextPositioningElementTableEntries[5] },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGTextPositioningElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "dx", JSSVGTextPositioningElement::DxAttrNum, DontDelete|ReadOnly, 0, &JSSVGTextPositioningElementTableEntries[6] },
-    { "dy", JSSVGTextPositioningElement::DyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "rotate", JSSVGTextPositioningElement::RotateAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGTextPositioningElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGTextPositioningElementY, (intptr_t)0 },
+    { "dx", DontDelete|ReadOnly, (intptr_t)jsSVGTextPositioningElementDx, (intptr_t)0 },
+    { "dy", DontDelete|ReadOnly, (intptr_t)jsSVGTextPositioningElementDy, (intptr_t)0 },
+    { "rotate", DontDelete|ReadOnly, (intptr_t)jsSVGTextPositioningElementRotate, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTextPositioningElementTable = 
-{
-    2, 7, JSSVGTextPositioningElementTableEntries, 5
-};
+static const HashTable JSSVGTextPositioningElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGTextPositioningElementTableValues, 0 };
+#else
+    { 16, 15, JSSVGTextPositioningElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGTextPositioningElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGTextPositioningElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTextPositioningElementPrototypeTable = 
-{
-    2, 1, JSSVGTextPositioningElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGTextPositioningElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGTextPositioningElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGTextPositioningElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGTextPositioningElementPrototype::info = { "SVGTextPositioningElementPrototype", 0, &JSSVGTextPositioningElementPrototypeTable, 0 };
+const ClassInfo JSSVGTextPositioningElementPrototype::s_info = { "SVGTextPositioningElementPrototype", 0, &JSSVGTextPositioningElementPrototypeTable, 0 };
 
 JSObject* JSSVGTextPositioningElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGTextPositioningElementPrototype>(exec, "[[JSSVGTextPositioningElement.prototype]]");
+    return getDOMPrototype<JSSVGTextPositioningElement>(exec);
 }
 
-const ClassInfo JSSVGTextPositioningElement::info = { "SVGTextPositioningElement", &JSSVGTextContentElement::info, &JSSVGTextPositioningElementTable, 0 };
+const ClassInfo JSSVGTextPositioningElement::s_info = { "SVGTextPositioningElement", &JSSVGTextContentElement::s_info, &JSSVGTextPositioningElementTable, 0 };
 
-JSSVGTextPositioningElement::JSSVGTextPositioningElement(ExecState* exec, SVGTextPositioningElement* impl)
-    : JSSVGTextContentElement(exec, impl)
+JSSVGTextPositioningElement::JSSVGTextPositioningElement(PassRefPtr<Structure> structure, PassRefPtr<SVGTextPositioningElement> impl)
+    : JSSVGTextContentElement(structure, impl)
 {
-    setPrototype(JSSVGTextPositioningElementPrototype::self(exec));
+}
+
+JSObject* JSSVGTextPositioningElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGTextPositioningElementPrototype(JSSVGTextPositioningElementPrototype::createStructure(JSSVGTextContentElementPrototype::self(exec)));
 }
 
 bool JSSVGTextPositioningElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGTextPositioningElement, JSSVGTextContentElement>(exec, &JSSVGTextPositioningElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGTextPositioningElement, Base>(exec, &JSSVGTextPositioningElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGTextPositioningElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGTextPositioningElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(impl());
+    SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(static_cast<JSSVGTextPositioningElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLengthList> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGTextPositioningElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(static_cast<JSSVGTextPositioningElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLengthList> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLengthList> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLengthList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLengthList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLengthList>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGTextPositioningElementDx(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(static_cast<JSSVGTextPositioningElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLengthList> obj = imp->dxAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(impl());
+JSValuePtr jsSVGTextPositioningElementDy(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(static_cast<JSSVGTextPositioningElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLengthList> obj = imp->dyAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLengthList> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLengthList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLengthList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLengthList>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case DxAttrNum: {
-        SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLengthList> obj = imp->dxAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLengthList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLengthList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLengthList>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case DyAttrNum: {
-        SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLengthList> obj = imp->dyAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLengthList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLengthList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLengthList>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case RotateAttrNum: {
-        SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumberList> obj = imp->rotateAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumberList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumberList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumberList>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+JSValuePtr jsSVGTextPositioningElementRotate(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextPositioningElement* imp = static_cast<SVGTextPositioningElement*>(static_cast<JSSVGTextPositioningElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumberList> obj = imp->rotateAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
 

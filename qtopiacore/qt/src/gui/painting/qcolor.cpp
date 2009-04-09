@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -326,7 +330,7 @@ QT_BEGIN_NAMESPACE
 QColor::QColor(Qt::GlobalColor color)
 {
 #define QRGB(r, g, b) \
-    QRgb(((0xff << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)))
+    QRgb(((0xffu << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff)))
 #define QRGBA(r, g, b, a) \
     QRgb(((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff))
 
@@ -566,12 +570,12 @@ QStringList QColor::colorNames()
 }
 
 /*!
-    Sets the contents pointed to by \a h, \a s, \a v, and \a a, to the
-    hue, saturation, value, and alpha-channel (transparency)
-    components of the color's HSV value.
+    Sets the contents pointed to by \a h, \a s, \a v, and \a a, to the hue,
+    saturation, value, and alpha-channel (transparency) components of the
+    color's HSV value.
 
-    Note that the components can be retrieved individually using the
-    hueF(), saturationF(), valueF() and alphaF() functions.
+    These components can be retrieved individually using the hueF(),
+    saturationF(), valueF() and alphaF() functions.
 
     \sa setHsv() {QColor#The HSV Color Model}{The HSV Color Model}
 */
@@ -594,12 +598,12 @@ void QColor::getHsvF(qreal *h, qreal *s, qreal *v, qreal *a) const
 }
 
 /*!
-    Sets the contents pointed to by \a h, \a s, \a v, and \a a, to the
-    hue, saturation, value, and alpha-channel (transparency)
-    components of the color's HSV value.
+    Sets the contents pointed to by \a h, \a s, \a v, and \a a, to the hue,
+    saturation, value, and alpha-channel (transparency) components of the
+    color's HSV value.
 
-    Note that the components can be retrieved individually using the
-    hue(), saturation(), value() and alpha() functions.
+    These components can be retrieved individually using the hue(),
+    saturation(), value() and alpha() functions.
 
     \sa setHsv(), {QColor#The HSV Color Model}{The HSV Color Model}
 */
@@ -622,9 +626,8 @@ void QColor::getHsv(int *h, int *s, int *v, int *a) const
 }
 
 /*!
-    Sets a HSV color value; \a h is the hue, \a s is the saturation,
-    \a v is the value and \a a is the alpha component of the HSV
-    color.
+    Sets a HSV color value; \a h is the hue, \a s is the saturation, \a v is
+    the value and \a a is the alpha component of the HSV color.
 
     All the values must be in the range 0.0-1.0.
 
@@ -650,12 +653,11 @@ void QColor::setHsvF(qreal h, qreal s, qreal v, qreal a)
 }
 
 /*!
-    Sets a HSV color value; \a h is the hue, \a s is the saturation,
-    \a v is the value and \a a is the alpha component of the HSV
-    color.
+    Sets a HSV color value; \a h is the hue, \a s is the saturation, \a v is
+    the value and \a a is the alpha component of the HSV color.
 
-    The saturation, value and alpha-channel values must be in the
-    range 0-255, and the hue value must be greater than -1.
+    The saturation, value and alpha-channel values must be in the range 0-255,
+    and the hue value must be greater than -1.
 
     \sa getHsv(), setHsvF(), {QColor#The HSV Color Model}{The HSV
     Color Model}
@@ -677,12 +679,12 @@ void QColor::setHsv(int h, int s, int v, int a)
 }
 
 /*!
-    Sets the contents pointed to by \a r, \a g, \a b, and \a a, to the
-    red, green, blue, and alpha-channel (transparency) components of
-    the color's RGB value.
+    Sets the contents pointed to by \a r, \a g, \a b, and \a a, to the red,
+    green, blue, and alpha-channel (transparency) components of the color's
+    RGB value.
 
-    Note that the components can be retrieved individually using the
-    redF(), greenF(), blueF() and alphaF() functions.
+    These components can be retrieved individually using the redF(), greenF(),
+    blueF() and alphaF() functions.
 
     \sa rgb(), setRgb()
 */
@@ -706,12 +708,12 @@ void QColor::getRgbF(qreal *r, qreal *g, qreal *b, qreal *a) const
 }
 
 /*!
-    Sets the contents pointed to by \a r, \a g, \a b, and \a a, to the
-    red, green, blue, and alpha-channel (transparency) components of
-    the color's RGB value.
+    Sets the contents pointed to by \a r, \a g, \a b, and \a a, to the red,
+    green, blue, and alpha-channel (transparency) components of the color's
+    RGB value.
 
-    Note that the components can be retrieved individually using the
-    red(), green(), blue() and alpha() functions.
+    These components can be retrieved individually using the red(), green(),
+    blue() and alpha() functions.
 
     \sa rgb(), setRgb()
 */
@@ -770,8 +772,7 @@ void QColor::setRgbF(qreal r, qreal g, qreal b, qreal a)
 }
 
 /*!
-    Sets the RGB value to \a r, \a g, \a b and the alpha value to \a
-    a.
+    Sets the RGB value to \a r, \a g, \a b and the alpha value to \a a.
 
     All the values must be in the range 0-255.
 
@@ -803,11 +804,10 @@ void QColor::setRgb(int r, int g, int b, int a)
 /*!
     \fn QRgb QColor::rgba() const
 
-    Returns the RGB value of the color. Note that unlike rgb(), the
-    alpha is not stripped.
+    Returns the RGB value of the color. Unlike rgb(), the alpha is not
+    stripped.
 
-    For an invalid color, the alpha value of the returned color is
-    unspecified.
+    For an invalid color, the alpha value of the returned color is unspecified.
 
     \sa setRgba(), rgb()
 */
@@ -820,8 +820,8 @@ QRgb QColor::rgba() const
 }
 
 /*!
-    Sets the RGBA value to \a rgba. Note that unlike setRgb(QRgb rgb),
-    this function does not ignore the alpha.
+    Sets the RGBA value to \a rgba. Unlike setRgb(QRgb rgb), this function does
+    not ignore the alpha.
 
     \sa rgba(), rgb()
 */
@@ -838,7 +838,8 @@ void QColor::setRgba(QRgb rgba)
 /*!
     \fn QRgb QColor::rgb() const
 
-    Returns the RGB value of the color. The alpha is stripped for compatibility.
+    Returns the RGB value of the color. The alpha is stripped for
+    compatibility.
 
     \sa getRgb(), rgba()
 */
@@ -875,8 +876,8 @@ int QColor::alpha() const
 
 
 /*!
-    Sets the alpha of this color to \a alpha. Integer alpha is
-    specified in the range 0-255.
+    Sets the alpha of this color to \a alpha. Integer alpha is specified in the
+    range 0-255.
 
     \sa alpha(), alphaF(), {QColor#Alpha-Blended
     Drawing}{Alpha-Blended Drawing}
@@ -898,8 +899,8 @@ qreal QColor::alphaF() const
 { return ct.argb.alpha / qreal(USHRT_MAX); }
 
 /*!
-    Sets the alpha of this color to \a alpha. qreal alpha is
-    specified in the range 0.0-1.0.
+    Sets the alpha of this color to \a alpha. qreal alpha is specified in the
+    range 0.0-1.0.
 
     \sa alphaF(), alpha(), {QColor#Alpha-Blended
     Drawing}{Alpha-Blended Drawing}
@@ -926,8 +927,8 @@ int QColor::red() const
 }
 
 /*!
-    Sets the red color component of this color to \a red. Int
-    components are specified in the range 0-255.
+    Sets the red color component of this color to \a red. Integer components
+    are specified in the range 0-255.
 
     \sa red(), redF(), setRgb()
 */
@@ -953,7 +954,7 @@ int QColor::green() const
 }
 
 /*!
-    Sets the green color component of this color to \a green. Int
+    Sets the green color component of this color to \a green. Integer
     components are specified in the range 0-255.
 
     \sa green(), greenF(),  setRgb()
@@ -982,8 +983,8 @@ int QColor::blue() const
 
 
 /*!
-    Sets the blue color component of this color to \a blue. Int
-    components are specified in the range 0-255.
+    Sets the blue color component of this color to \a blue. Integer components
+    are specified in the range 0-255.
 
     \sa blue(), blueF(), setRgb()
 */
@@ -1010,8 +1011,8 @@ qreal QColor::redF() const
 
 
 /*!
-    Sets the red color component of this color to \a red. Float
-    components are specified in the range 0.0-1.0.
+    Sets the red color component of this color to \a red. Float components
+    are specified in the range 0.0-1.0.
 
     \sa redF(), red(), setRgbF()
 */
@@ -1038,8 +1039,8 @@ qreal QColor::greenF() const
 
 
 /*!
-    Sets the green color component of this color to \a green. Float
-    components are specified in the range 0.0-1.0.
+    Sets the green color component of this color to \a green. Float components
+    are specified in the range 0.0-1.0.
 
     \sa greenF(), green(), setRgbF()
 */
@@ -1065,8 +1066,8 @@ qreal QColor::blueF() const
 }
 
 /*!
-    Sets the blue color component of this color to \a blue. Float
-    components are specified in the range 0.0-1.0.
+    Sets the blue color component of this color to \a blue. Float components
+    are specified in the range 0.0-1.0.
 
     \sa blueF(), blue(), setRgbF()
 */
@@ -1287,7 +1288,7 @@ QColor QColor::toRgb() const
             }
 
             // chromatic case
-            const qreal h = ct.ahsv.hue / 6000.;
+            const qreal h = ct.ahsv.hue == 36000 ? 0 : ct.ahsv.hue / 6000.;
             const qreal s = ct.ahsv.saturation / qreal(USHRT_MAX);
             const qreal v = ct.ahsv.value / qreal(USHRT_MAX);
             const int i = int(h);
@@ -1474,12 +1475,12 @@ QColor QColor::convertTo(QColor::Spec colorSpec) const
 
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the given QRgb value \a rgb.
+    Static convenience function that returns a QColor constructed from the
+    given QRgb value \a rgb.
 
-    Note that the alpha component of \a rgb is ignored (i.e. it is
-    automatically set to 255), use the fromRgba() function to include the
-    alpha-channel specified by the given QRgb value.
+    The alpha component of \a rgb is ignored (i.e. it is automatically set to
+    255), use the fromRgba() function to include the alpha-channel specified by
+    the given QRgb value.
 
     \sa fromRgba(), fromRgbF(), toRgb(), isValid()
 */
@@ -1491,11 +1492,11 @@ QColor QColor::fromRgb(QRgb rgb)
 
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the given QRgb value \a rgba.
+    Static convenience function that returns a QColor constructed from the
+    given QRgb value \a rgba.
 
-    Note that unlike the fromRgb() function, the alpha-channel
-    specified by the given QRgb value is included.
+    Unlike the fromRgb() function, the alpha-channel specified by the given
+    QRgb value is included.
 
     \sa fromRgb(), isValid()
 */
@@ -1506,9 +1507,9 @@ QColor QColor::fromRgba(QRgb rgba)
 }
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the RGB color values, \a r (red), \a g (green), \a b (blue),
-    and \a a (alpha-channel, i.e. transparency).
+    Static convenience function that returns a QColor constructed from the RGB
+    color values, \a r (red), \a g (green), \a b (blue), and \a a
+    (alpha-channel, i.e. transparency).
 
     All the values must be in the range 0-255.
 
@@ -1535,9 +1536,9 @@ QColor QColor::fromRgb(int r, int g, int b, int a)
 }
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the RGB color values, \a r (red), \a g (green), \a b (blue), and
-    \a a (alpha-channel, i.e. transparency).
+    Static convenience function that returns a QColor constructed from the RGB
+    color values, \a r (red), \a g (green), \a b (blue), and \a a
+    (alpha-channel, i.e. transparency).
 
     All the values must be in the range 0.0-1.0.
 
@@ -1564,12 +1565,12 @@ QColor QColor::fromRgbF(qreal r, qreal g, qreal b, qreal a)
 }
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the HSV color values, \a h (hue), \a s (saturation), \a v (value),
-    and \a a (alpha-channel, i.e. transparency).
+    Static convenience function that returns a QColor constructed from the HSV
+    color values, \a h (hue), \a s (saturation), \a v (value), and \a a
+    (alpha-channel, i.e. transparency).
 
-    The value of \a s, \a v, and \a a must all be in the range
-    0-255; the value of \a h must be in the range 0-359.
+    The value of \a s, \a v, and \a a must all be in the range 0-255; the value
+    of \a h must be in the range 0-359.
 
     \sa toHsv(), fromHsvF(), isValid(), {QColor#The HSV Color
     Model}{The HSV Color Model}
@@ -1597,9 +1598,9 @@ QColor QColor::fromHsv(int h, int s, int v, int a)
 /*!
     \overload
 
-    Static convenience function that returns a QColor constructed from
-    the HSV color values, \a h (hue), \a s (saturation), \a v (value),
-    and \a a (alpha-channel, i.e. transparency).
+    Static convenience function that returns a QColor constructed from the HSV
+    color values, \a h (hue), \a s (saturation), \a v (value), and \a a
+    (alpha-channel, i.e. transparency).
 
     All the values must be in the range 0.0-1.0.
 
@@ -1627,12 +1628,12 @@ QColor QColor::fromHsvF(qreal h, qreal s, qreal v, qreal a)
 }
 
 /*!
-    Sets the contents pointed to by \a c, \a m, \a y, \a k, and \a a,
-    to the cyan, magenta, yellow, black, and alpha-channel
-    (transparency) components of the color's CMYK value.
+    Sets the contents pointed to by \a c, \a m, \a y, \a k, and \a a, to the
+    cyan, magenta, yellow, black, and alpha-channel (transparency) components
+    of the color's CMYK value.
 
-    Note that the components can be retrieved individually using the
-    cyan(), magenta(), yellow(), black() and alpha() functions.
+    These components can be retrieved individually using the cyan(), magenta(),
+    yellow(), black() and alpha() functions.
 
     \sa setCmyk(), {QColor#The CMYK Color Model}{The CMYK Color Model}
 */
@@ -1656,12 +1657,12 @@ void QColor::getCmyk(int *c, int *m, int *y, int *k, int *a)
 }
 
 /*!
-    Sets the contents pointed to by \a c, \a m, \a y, \a k, and \a a,
-    to the cyan, magenta, yellow, black, and alpha-channel
-    (transparency) components of the color's CMYK value.
+    Sets the contents pointed to by \a c, \a m, \a y, \a k, and \a a, to the
+    cyan, magenta, yellow, black, and alpha-channel (transparency) components
+    of the color's CMYK value.
 
-    Note that the components can be retrieved individually using the
-    cyanF(), magentaF(), yellowF(), blackF() and alphaF() functions.
+    These components can be retrieved individually using the cyanF(),
+    magentaF(), yellowF(), blackF() and alphaF() functions.
 
     \sa setCmykF(), {QColor#The CMYK Color Model}{The CMYK Color Model}
 */
@@ -1743,10 +1744,9 @@ void QColor::setCmykF(qreal c, qreal m, qreal y, qreal k, qreal a)
 }
 
 /*!
-    Static convenience function that returns a QColor constructed from
-    the given CMYK color values: \a c (cyan), \a m (magenta), \a y
-    (yellow), \a k (black), and \a a (alpha-channel,
-    i.e. transparency).
+    Static convenience function that returns a QColor constructed from the
+    given CMYK color values: \a c (cyan), \a m (magenta), \a y (yellow), \a k
+    (black), and \a a (alpha-channel, i.e. transparency).
 
     All the values must be in the range 0-255.
 
@@ -1777,10 +1777,9 @@ QColor QColor::fromCmyk(int c, int m, int y, int k, int a)
 /*!
     \overload
 
-    Static convenience function that returns a QColor constructed from
-    the given CMYK color values: \a c (cyan), \a m (magenta), \a y
-    (yellow), \a k (black), and \a a (alpha-channel,
-    i.e. transparency).
+    Static convenience function that returns a QColor constructed from the
+    given CMYK color values: \a c (cyan), \a m (magenta), \a y (yellow), \a k
+    (black), and \a a (alpha-channel, i.e. transparency).
 
     All the values must be in the range 0.0-1.0.
 
@@ -1812,19 +1811,16 @@ QColor QColor::fromCmykF(qreal c, qreal m, qreal y, qreal k, qreal a)
     \fn QColor QColor::lighter(int factor) const
     \since 4.3
 
-    Returns a lighter (or darker) color, but does not change this
-    object.
+    Returns a lighter (or darker) color, but does not change this object.
 
-    If the \a factor is greater than 100, this functions returns a
-    lighter color. Setting \a factor to 150 returns a color that is
-    50% brighter. If the \a factor is less than 100, the return color
-    is darker, but we recommend using the darker() function for this
-    purpose. If the \a factor is 0 or negative, the return value is
-    unspecified.
+    If the \a factor is greater than 100, this functions returns a lighter
+    color. Setting \a factor to 150 returns a color that is 50% brighter. If
+    the \a factor is less than 100, the return color is darker, but we
+    recommend using the darker() function for this purpose. If the \a factor
+    is 0 or negative, the return value is unspecified.
 
-    The function converts the current RGB color to HSV, multiplies the
-    value (V) component by \a factor and converts the color back to
-    RGB.
+    The function converts the current RGB color to HSV, multiplies the value
+    (V) component by \a factor and converts the color back to RGB.
 
     \sa darker(), isValid()
 */
@@ -1865,19 +1861,16 @@ QColor QColor::light(int factor) const
     \fn QColor QColor::darker(int factor) const
     \since 4.3
 
-    Returns a darker (or lighter) color, but does not change this
-    object.
+    Returns a darker (or lighter) color, but does not change this object.
 
-    If the \a factor is greater than 100, this functions returns a
-    darker color. Setting \a factor to 300 returns a color that has
-    one-third the brightness. If the \a factor is less than 100, the
-    return color is lighter, but we recommend using the lighter()
-    function for this purpose. If the \a factor is 0 or negative, the
-    return value is unspecified.
+    If the \a factor is greater than 100, this functions returns a darker
+    color. Setting \a factor to 300 returns a color that has one-third the
+    brightness. If the \a factor is less than 100, the return color is lighter,
+    but we recommend using the lighter() function for this purpose. If the
+    \a factor is 0 or negative, the return value is unspecified.
 
-    The function converts the current RGB color to HSV, divides the
-    value (V) component by \a factor and converts the color back to
-    RGB.
+    The function converts the current RGB color to HSV, divides the value (V)
+    component by \a factor and converts the color back to RGB.
 
     \sa lighter(), isValid()
 */
@@ -1920,14 +1913,16 @@ QColor &QColor::operator=(Qt::GlobalColor color)
 }
 
 /*!
-    Returns true if this color has the same RGB and alpha values
-    as \a color; otherwise returns false.
+    Returns true if this color has the same RGB and alpha values as \a color;
+    otherwise returns false.
 */
 bool QColor::operator==(const QColor &color) const
 {
     return (cspec == color.cspec
             && ct.argb.alpha == color.ct.argb.alpha
-            && ct.argb.red   == color.ct.argb.red
+            && ((cspec == QColor::Hsv
+                 && ((ct.argb.red % 36000) == (color.ct.argb.red % 36000)))
+                || (ct.argb.red == color.ct.argb.red))
             && ct.argb.green == color.ct.argb.green
             && ct.argb.blue  == color.ct.argb.blue
             && ct.argb.pad   == color.ct.argb.pad);
@@ -1942,7 +1937,7 @@ bool QColor::operator!=(const QColor &color) const
 
 
 /*!
-   Returns the color as a QVariant
+    Returns the color as a QVariant
 */
 QColor::operator QVariant() const
 {
@@ -1951,10 +1946,11 @@ QColor::operator QVariant() const
 
 #ifdef Q_WS_X11
 /*!
-    Returns true if setNamedColor() is allowed to look up colors in
-    the X11 color database. By default, this function returns false.
+    Returns true if setNamedColor() is allowed to look up colors in the X11
+    color database. By default, this function returns false.
 
     \note This function is only available on the X11 platform.
+
     \sa setAllowX11ColorNames()
 */
 bool QColor::allowX11ColorNames()
@@ -1963,11 +1959,12 @@ bool QColor::allowX11ColorNames()
 }
 
 /*!
-    Allow setNamedColor() to look up colors in the X11 color database
-    if \a enabled. By default, setNamedColor() does \e not look up
-    colors in the X11 color database.
+    Allow setNamedColor() to look up colors in the X11 color database if
+    \a enabled. By default, setNamedColor() does \e not look up colors in the
+    X11 color database.
 
     \note This function is only available on the X11 platform.
+
     \sa setNamedColor(), allowX11ColorNames()
 */
 void QColor::setAllowX11ColorNames(bool enabled)
@@ -1978,8 +1975,8 @@ void QColor::setAllowX11ColorNames(bool enabled)
 
 /*! \internal
 
-    Marks the color as invalid and sets all components to zero (alpha
-    is set to fully opaque for compatibility with Qt 3).
+    Marks the color as invalid and sets all components to zero (alpha is set
+    to fully opaque for compatibility with Qt 3).
 */
 void QColor::invalidate()
 {
@@ -1994,8 +1991,8 @@ void QColor::invalidate()
 #ifdef QT3_SUPPORT
 
 /*!
-    Returns the pixel value used by the underlying window system to
-    refer to a color.
+    Returns the pixel value used by the underlying window system to refer to a
+    color.
 
     Use QColormap::pixel() instead.
 
@@ -2081,8 +2078,8 @@ QDataStream &operator<<(QDataStream &stream, const QColor &color)
 
 /*!
     \fn QDataStream &operator>>(QDataStream &stream, QColor &color)
-
     \relates QColor
+
     Reads the \a color from the \a stream.
 
     \sa { Format of the QDataStream Operators}
@@ -2190,8 +2187,8 @@ QDataStream &operator>>(QDataStream &stream, QColor &color)
     Returns a gray value (0 to 255) from the (\a r, \a g, \a b)
     triplet.
 
-    The gray value is calculated using the formula (\a r * 11 + \a g *
-    16 + \a b * 5)/32.
+    The gray value is calculated using the formula (\a r * 11 + \a g * 16 +
+    \a b * 5)/32.
 */
 
 /*!
@@ -2199,18 +2196,17 @@ QDataStream &operator>>(QDataStream &stream, QColor &color)
     \overload
     \relates QColor
 
-    Returns a gray value (0 to 255) from the given ARGB quadruplet \a
-    rgb.
+    Returns a gray value (0 to 255) from the given ARGB quadruplet \a rgb.
 
-    The gray value is calculated using the formula (R * 11 + G *
-    16 + B * 5)/32.  Note that the alpha-channel is ignored.
+    The gray value is calculated using the formula (R * 11 + G * 16 + B * 5)/32;
+    the alpha-channel is ignored.
 */
 
 /*!
     \fn QColor::QColor(int x, int y, int z, Spec colorSpec)
 
-    Use one of the other QColor constructors, or one of the static
-    convenience functions, instead.
+    Use one of the other QColor constructors, or one of the static convenience
+    functions, instead.
 */
 
 /*!
@@ -2228,8 +2224,7 @@ QDataStream &operator>>(QDataStream &stream, QColor &color)
 /*!
     \fn QColor QColor::convertTo(Spec colorSpec) const
 
-    Creates a copy of \e this color in the format specified by \a
-    colorSpec.
+    Creates a copy of \e this color in the format specified by \a colorSpec.
 
     \sa spec(), toCmyk(), toHsv(), toRgb(), isValid()
 */
@@ -2238,13 +2233,11 @@ QDataStream &operator>>(QDataStream &stream, QColor &color)
     \typedef QRgb
     \relates QColor
 
-    An ARGB quadruplet on the format #AARRGGBB, equivalent to an
-    unsigned int.
+    An ARGB quadruplet on the format #AARRGGBB, equivalent to an unsigned int.
 
-    Note that the type also holds a value for the alpha-channel. The
-    default alpha channel is \c ff, i.e opaque. For more information,
-    see the \l {QColor#Alpha-Blended Drawing}{Alpha-Blended Drawing}
-    section.
+    The type also holds a value for the alpha-channel. The default alpha
+    channel is \c ff, i.e opaque. For more information, see the
+    \l{QColor#Alpha-Blended Drawing}{Alpha-Blended Drawing} section.
 
     \sa QColor::rgb(), QColor::rgba()
 */

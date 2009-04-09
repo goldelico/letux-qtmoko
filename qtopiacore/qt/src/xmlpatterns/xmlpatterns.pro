@@ -4,6 +4,8 @@ QT         = core network
 DEFINES   += QT_BUILD_XMLPATTERNS_LIB QT_NO_USING_NAMESPACE
 win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x61000000
 
+unix:QMAKE_PKGCONFIG_REQUIRES = QtCore QtNetwork
+
 include(../qbase.pri)
 
 PRECOMPILED_HEADER = ../corelib/global/qt_pch.h

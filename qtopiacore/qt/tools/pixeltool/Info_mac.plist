@@ -10,7 +10,7 @@
 	<string>Created by Qt/QMake</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleIndentifier</key>
+	<key>CFBundleIdentifier</key>
 	<string>com.trolltech.pixeltool</string>
 	<key>CFBundleExecutable</key>
 	<string>@EXECUTABLE@</string>

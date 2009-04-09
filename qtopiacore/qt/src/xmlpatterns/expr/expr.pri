@@ -1,19 +1,25 @@
 HEADERS += $$PWD/qandexpression_p.h                     \
+           $$PWD/qapplytemplate_p.h                     \
            $$PWD/qargumentreference_p.h                 \
            $$PWD/qarithmeticexpression_p.h              \
            $$PWD/qattributeconstructor_p.h              \
            $$PWD/qattributenamevalidator_p.h            \
            $$PWD/qaxisstep_p.h                          \
            $$PWD/qcachecells_p.h                        \
+           $$PWD/qcallsite_p.h                          \
+           $$PWD/qcalltargetdescription_p.h             \
+           $$PWD/qcalltemplate_p.h                      \
            $$PWD/qcastableas_p.h                        \
            $$PWD/qcastas_p.h                            \
            $$PWD/qcastingplatform_p.h                   \
            $$PWD/qcollationchecker_p.h                  \
-           $$PWD/qcopyof_p.h                            \
            $$PWD/qcombinenodes_p.h                      \
            $$PWD/qcommentconstructor_p.h                \
            $$PWD/qcomparisonplatform_p.h                \
+           $$PWD/qcomputednamespaceconstructor_p.h      \
            $$PWD/qcontextitem_p.h                       \
+           $$PWD/qcopyof_p.h                            \
+           $$PWD/qcurrentitemstore_p.h                  \
            $$PWD/qdocumentconstructor_p.h               \
            $$PWD/qdocumentcontentvalidator_p.h          \
            $$PWD/qdynamiccontextstore_p.h               \
@@ -40,7 +46,7 @@ HEADERS += $$PWD/qandexpression_p.h                     \
            $$PWD/qnamespaceconstructor_p.h              \
            $$PWD/qncnameconstructor_p.h                 \
            $$PWD/qnodecomparison_p.h                    \
-           $$PWD/qnodesortexpression_p.h                \
+           $$PWD/qnodesort_p.h                          \
            $$PWD/qoperandsiterator_p.h                  \
            $$PWD/qoptimizationpasses_p.h                \
            $$PWD/qoptimizerblocks_p.h                   \
@@ -56,36 +62,52 @@ HEADERS += $$PWD/qandexpression_p.h                     \
            $$PWD/qquantifiedexpression_p.h              \
            $$PWD/qrangeexpression_p.h                   \
            $$PWD/qrangevariablereference_p.h            \
-           $$PWD/qreturnorderby.cpp                   \
+           $$PWD/qreturnorderby_p.h                     \
            $$PWD/qsimplecontentconstructor_p.h          \
            $$PWD/qsinglecontainer_p.h                   \
            $$PWD/qsourcelocationreflection_p.h          \
+           $$PWD/qstaticbaseuristore_p.h                \
+           $$PWD/qstaticcompatibilitystore_p.h          \
+           $$PWD/qtemplatemode_p.h                      \
+           $$PWD/qtemplateparameterreference_p.h        \
+           $$PWD/qtemplatepattern_p.h                   \
+           $$PWD/qtemplatepattern_p.h                   \
+           $$PWD/qtemplate_p.h                          \
            $$PWD/qtextnodeconstructor_p.h               \
            $$PWD/qtreatas_p.h                           \
            $$PWD/qtriplecontainer_p.h                   \
            $$PWD/qtruthpredicate_p.h                    \
            $$PWD/qunaryexpression_p.h                   \
            $$PWD/qunlimitedcontainer_p.h                \
+           $$PWD/qunresolvedvariablereference_p.h       \
            $$PWD/quserfunctioncallsite_p.h              \
            $$PWD/quserfunction_p.h                      \
            $$PWD/qvalidate_p.h                          \
            $$PWD/qvaluecomparison_p.h                   \
            $$PWD/qvariabledeclaration_p.h               \
-           $$PWD/qvariablereference_p.h
+           $$PWD/qvariablereference_p.h                 \
+           $$PWD/qwithparam_p.h                         \
+           $$PWD/qxsltsimplecontentconstructor_p.h
 
 SOURCES += $$PWD/qandexpression.cpp                       \
+           $$PWD/qapplytemplate.cpp                       \
            $$PWD/qargumentreference.cpp                   \
            $$PWD/qarithmeticexpression.cpp                \
            $$PWD/qattributeconstructor.cpp                \
            $$PWD/qattributenamevalidator.cpp              \
            $$PWD/qaxisstep.cpp                            \
+           $$PWD/qcallsite.cpp                            \
+           $$PWD/qcalltargetdescription.cpp               \
+           $$PWD/qcalltemplate.cpp                        \
            $$PWD/qcastableas.cpp                          \
            $$PWD/qcastas.cpp                              \
            $$PWD/qcollationchecker.cpp                    \
-           $$PWD/qcopyof.cpp                              \
            $$PWD/qcombinenodes.cpp                        \
            $$PWD/qcommentconstructor.cpp                  \
+           $$PWD/qcomputednamespaceconstructor.cpp        \
            $$PWD/qcontextitem.cpp                         \
+           $$PWD/qcopyof.cpp                              \
+           $$PWD/qcurrentitemstore.cpp                    \
            $$PWD/qdocumentconstructor.cpp                 \
            $$PWD/qdocumentcontentvalidator.cpp            \
            $$PWD/qdynamiccontextstore.cpp                 \
@@ -110,7 +132,7 @@ SOURCES += $$PWD/qandexpression.cpp                       \
            $$PWD/qnamespaceconstructor.cpp                \
            $$PWD/qncnameconstructor.cpp                   \
            $$PWD/qnodecomparison.cpp                      \
-           $$PWD/qnodesortexpression.cpp                  \
+           $$PWD/qnodesort.cpp                            \
            $$PWD/qoptimizationpasses.cpp                  \
            $$PWD/qoptimizerblocks.cpp                     \
            $$PWD/qoptimizerframework.cpp                  \
@@ -129,14 +151,23 @@ SOURCES += $$PWD/qandexpression.cpp                       \
            $$PWD/qsimplecontentconstructor.cpp            \
            $$PWD/qsinglecontainer.cpp                     \
            $$PWD/qsourcelocationreflection.cpp            \
+           $$PWD/qstaticbaseuristore.cpp                  \
+           $$PWD/qstaticcompatibilitystore.cpp            \
+           $$PWD/qtemplate.cpp                            \
+           $$PWD/qtemplateinvoker.cpp                     \
+           $$PWD/qtemplatemode.cpp                        \
+           $$PWD/qtemplateparameterreference.cpp          \
            $$PWD/qtextnodeconstructor.cpp                 \
            $$PWD/qtreatas.cpp                             \
            $$PWD/qtriplecontainer.cpp                     \
            $$PWD/qtruthpredicate.cpp                      \
            $$PWD/qunaryexpression.cpp                     \
            $$PWD/qunlimitedcontainer.cpp                  \
+           $$PWD/qunresolvedvariablereference.cpp         \
            $$PWD/quserfunctioncallsite.cpp                \
            $$PWD/quserfunction.cpp                        \
            $$PWD/qvalidate.cpp                            \
            $$PWD/qvaluecomparison.cpp                     \
-           $$PWD/qvariablereference.cpp
+           $$PWD/qvariabledeclaration.cpp                 \
+           $$PWD/qvariablereference.cpp                   \
+           $$PWD/qxsltsimplecontentconstructor.cpp

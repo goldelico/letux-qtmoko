@@ -6,8 +6,7 @@ TARGET = assistant
 
 DEFINES += QT_CLUCENE_SUPPORT
 
-contains(QT_CONFIG, assistant_webkit) {
-    DEFINES += USE_WEBKIT
+contains(QT_CONFIG, webkit) {
     QT += webkit
 }
 
@@ -40,7 +39,7 @@ HEADERS += helpviewer.h \
            cmdlineparser.h \
            aboutdialog.h \
            qtdocinstaller.h
-           
+
 win32 {
     HEADERS += remotecontrol_win.h
 }
@@ -68,7 +67,7 @@ FORMS += topicchooser.ui \
          installdialog.ui \
          bookmarkdialog.ui
 
-RESOURCES += assistant.qrc
+RESOURCES += assistant.qrc assistant_images.qrc
 
 win32 {
     !wince*:LIBS += -lshell32

@@ -1,10 +1,10 @@
 /*------------------------------------------------------------------------------
 * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
+*
+* Distributable under the terms of either the Apache License (Version 2.0) or
 * the GNU Lesser General Public License, as specified in the COPYING file.
 *
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #ifndef lucene_stdheader_h
 #define lucene_stdheader_h
@@ -158,7 +158,7 @@ extern int _lucene_counter_break; //can set a watch on this
  #else
 	//actually the repl_wchar.h replacements header will
 	//always be included. It replaces some functions
-	//that are missing in some wchar.h headers. 
+	//that are missing in some wchar.h headers.
  #endif
 #endif
 
@@ -212,7 +212,7 @@ extern int _lucene_counter_break; //can set a watch on this
 #if defined(LUCENE_USE_INTERNAL_CHAR_FUNCTIONS)
     #define stringCaseFold cl_tcscasefold
 	#define stringCaseFoldCmp cl_tcscasefoldcmp
-    
+
 	#undef _istspace
 	#undef _istdigit
 	#undef _istalnum
@@ -236,7 +236,7 @@ extern int _lucene_counter_break; //can set a watch on this
     #define _mbsstowcs lucene_mbstowcs
     #define _wctomb lucene_wcto_mb
     #define _wcstombs lucene_wcstombs*/
-#else 
+#else
     //we are using native functions
 	//here are some functions to help deal with utf8/ucs2 conversions
 	/*#define _mbtowc mbtowc
@@ -289,7 +289,7 @@ extern char* _LUCENE_BLANK_ASTRING;
 /* Converts a string into a form that is independent of case. The
  * result will not correspond to any particular case, but can be
  * compared for equality or ordered with the results of calling
- * stringCaseFold() on other strings. 
+ * stringCaseFold() on other strings.
  *
  * If we did not define this elsewhere, then just convert to lower case
  */
@@ -343,7 +343,7 @@ char* lucenestrdup(const char* v CL_FILELINEPARAM);
 
     #define STRDUP_WtoA(x) CL_NS(util)::Misc::_wideToChar(x CL_FILELINE)
 	#define STRDUP_TtoA STRDUP_WtoA
-    
+
     #define STRCPY_WtoW(target,src,len) _tcsncpy(target,src,len)
 	#define STRCPY_TtoW STRCPY_WtoW
 	#define STRCPY_WtoT STRCPY_WtoW
@@ -380,7 +380,7 @@ char* lucenestrdup(const char* v CL_FILELINEPARAM);
 //  W A R N I N G
 //  -------------
 //
-// adjustments here, need to be done in 
+// adjustments here, need to be done in
 // QTDIR/src/tools/assistant/lib/fulltextsearch/qclucene_global.h as well
 //
 #   ifdef QT_NAMESPACE
@@ -446,6 +446,10 @@ void CLDebugBreak(); //define a debugbreak function
 //this gives CompilerXXX.h a chance to fix any of the
 //default settings
 #include "CLucene/config/compiler.h"
+
+#if defined _MSC_VER && (_MSC_VER < 1300)
+# define LUCENE_NO_STDC_NAMESPACE
+#endif
 
 //use std namespace
 #ifndef LUCENE_NO_STDC_NAMESPACE

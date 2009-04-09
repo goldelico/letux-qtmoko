@@ -18,53 +18,87 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSeg_H
-#define JSSVGPathSeg_H
+#ifndef JSSVGPathSeg_h
+#define JSSVGPathSeg_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class SVGPathSeg;
 
-class JSSVGPathSeg : public KJS::DOMObject {
+class JSSVGPathSeg : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGPathSeg(KJS::ExecState*, SVGPathSeg*);
+    JSSVGPathSeg(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathSeg>, SVGElement* context);
     virtual ~JSSVGPathSeg();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        PathSegTypeAttrNum, PathSegTypeAsLetterAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     SVGPathSeg* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGPathSeg> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGPathSeg > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGPathSeg*);
-SVGPathSeg* toSVGPathSeg(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGPathSeg*, SVGElement* context);
+SVGPathSeg* toSVGPathSeg(JSC::JSValuePtr);
 
-class JSSVGPathSegPrototype : public KJS::JSObject {
+class JSSVGPathSegPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGPathSegPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGPathSegPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGPathSegPathSegType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPathSegTypeAsLetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGPathSegPATHSEG_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CLOSEPATH(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_MOVETO_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_MOVETO_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_ARC_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_ARC_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_VERTICAL_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_LINETO_VERTICAL_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_REL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

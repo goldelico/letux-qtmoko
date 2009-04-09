@@ -10,7 +10,6 @@ INCLUDEPATH += $$PWD/acceltree      \
                $$PWD/iterators      \
                $$PWD/janitors       \
                $$PWD/parser         \
-               $$PWD/qobjectmodel   \
                $$PWD/type           \
                $$PWD/utils
 

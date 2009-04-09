@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -40,14 +44,11 @@
 
 QT_BEGIN_NAMESPACE
 
-static void bm_init_skiptable(const ushort *uc, int l, uint *skiptable, Qt::CaseSensitivity cs)
+static void bm_init_skiptable(const ushort *uc, int len, uchar *skiptable, Qt::CaseSensitivity cs)
 {
-    int i = 0;
-    register uint *st = skiptable;
-    while (i++ < 256 / 8) {
-        *st++ = l; *st++ = l; *st++ = l; *st++ = l;
-        *st++ = l; *st++ = l; *st++ = l; *st++ = l;
-    }
+    int l = qMin(len, 255);
+    memset(skiptable, l, 256*sizeof(uchar));
+    uc += len - l;
     if (cs == Qt::CaseSensitive) {
         while (l--) {
             skiptable[*uc & 0xff] = l;
@@ -63,7 +64,7 @@ static void bm_init_skiptable(const ushort *uc, int l, uint *skiptable, Qt::Case
 }
 
 static inline int bm_find(const ushort *uc, uint l, int index, const ushort *puc, uint pl,
-                          const uint *skiptable, Qt::CaseSensitivity cs)
+                          const uchar *skiptable, Qt::CaseSensitivity cs)
 {
     if (pl == 0)
         return index > (int)l ? -1 : index;
@@ -122,7 +123,7 @@ static inline int bm_find(const ushort *uc, uint l, int index, const ushort *puc
     return -1; // not found
 }
 
-/*! 
+/*!
     \class QStringMatcher
     \brief The QStringMatcher class holds a sequence of characters that
     can be quickly matched in a Unicode string.
@@ -151,7 +152,7 @@ static inline int bm_find(const ushort *uc, uint l, int index, const ushort *puc
 QStringMatcher::QStringMatcher()
     : d_ptr(0), q_cs(Qt::CaseSensitive)
 {
-    qMemSet(q_skiptable, 0, sizeof(q_skiptable));
+    qMemSet(q_data, 0, sizeof(q_data));
 }
 
 /*!
@@ -163,7 +164,24 @@ QStringMatcher::QStringMatcher()
 QStringMatcher::QStringMatcher(const QString &pattern, Qt::CaseSensitivity cs)
     : d_ptr(0), q_pattern(pattern), q_cs(cs)
 {
-    bm_init_skiptable((const ushort *)pattern.unicode(), pattern.size(), q_skiptable, cs);
+    p.uc = pattern.unicode();
+    p.len = pattern.size();
+    bm_init_skiptable((const ushort *)p.uc, p.len, p.q_skiptable, cs);
+}
+
+/*!
+    \fn QStringMatcher::QStringMatcher(const QChar *uc, int length, Qt::CaseSensitivity cs)
+    \since 4.5
+
+    Constructs a string matcher that will search for the pattern referred to
+    by \a uc with the given \a length and case sensitivity specified by \a cs.
+*/
+QStringMatcher::QStringMatcher(const QChar *uc, int len, Qt::CaseSensitivity cs)
+    : d_ptr(0), q_cs(cs)
+{
+    p.uc = uc;
+    p.len = len;
+    bm_init_skiptable((const ushort *)p.uc, len, p.q_skiptable, cs);
 }
 
 /*!
@@ -187,9 +205,11 @@ QStringMatcher::~QStringMatcher()
 */
 QStringMatcher &QStringMatcher::operator=(const QStringMatcher &other)
 {
-    q_pattern = other.q_pattern;
-    q_cs = other.q_cs;
-    qMemCopy(q_skiptable, other.q_skiptable, sizeof(q_skiptable));
+    if (this != &other) {
+        q_pattern = other.q_pattern;
+        q_cs = other.q_cs;
+        qMemCopy(q_data, other.q_data, sizeof(q_data));
+    }
     return *this;
 }
 
@@ -201,8 +221,26 @@ QStringMatcher &QStringMatcher::operator=(const QStringMatcher &other)
 */
 void QStringMatcher::setPattern(const QString &pattern)
 {
-    bm_init_skiptable((const ushort *)pattern.unicode(), pattern.size(), q_skiptable, q_cs);
     q_pattern = pattern;
+    p.uc = pattern.unicode();
+    p.len = pattern.size();
+    bm_init_skiptable((const ushort *)pattern.unicode(), pattern.size(), p.q_skiptable, q_cs);
+}
+
+/*!
+    \fn QString QStringMatcher::pattern() const
+
+    Returns the string pattern that this string matcher will search
+    for.
+
+    \sa setPattern()
+*/
+
+QString QStringMatcher::pattern() const
+{
+    if (!q_pattern.isEmpty())
+        return q_pattern;
+    return QString(p.uc, p.len);
 }
 
 /*!
@@ -215,7 +253,7 @@ void QStringMatcher::setCaseSensitivity(Qt::CaseSensitivity cs)
 {
     if (cs == q_cs)
         return;
-    bm_init_skiptable((const ushort *)q_pattern.unicode(), q_pattern.size(), q_skiptable, cs);
+    bm_init_skiptable((const ushort *)q_pattern.unicode(), q_pattern.size(), p.q_skiptable, cs);
     q_cs = cs;
 }
 
@@ -233,18 +271,30 @@ int QStringMatcher::indexIn(const QString &str, int from) const
     if (from < 0)
         from = 0;
     return bm_find((const ushort *)str.unicode(), str.size(), from,
-                   (const ushort *)q_pattern.unicode(), q_pattern.size(),
-                   q_skiptable, q_cs);
+                   (const ushort *)p.uc, p.len,
+                   p.q_skiptable, q_cs);
 }
 
 /*!
-    \fn QString QStringMatcher::pattern() const
+    \since 4.5
 
-    Returns the string pattern that this string matcher will search
-    for.
+    Searches the string starting at \a str (of length \a length) from
+    character position \a from (default 0, i.e. from the first
+    character), for the string pattern() that was set in the
+    constructor or in the most recent call to setPattern(). Returns
+    the position where the pattern() matched in \a str, or -1 if no
+    match was found.
 
-    \sa setPattern()
+    \sa setPattern(), setCaseSensitivity()
 */
+int QStringMatcher::indexIn(const QChar *str, int length, int from) const
+{
+    if (from < 0)
+        from = 0;
+    return bm_find((const ushort *)str, length, from,
+                   (const ushort *)p.uc, p.len,
+                   p.q_skiptable, q_cs);
+}
 
 /*!
     \fn Qt::CaseSensitivity QStringMatcher::caseSensitivity() const
@@ -262,7 +312,7 @@ int qFindStringBoyerMoore(
     const QChar *haystack, int haystackLen, int haystackOffset,
     const QChar *needle, int needleLen, Qt::CaseSensitivity cs)
 {
-    uint skiptable[256];
+    uchar skiptable[256];
     bm_init_skiptable((const ushort *)needle, needleLen, skiptable, cs);
     if (haystackOffset < 0)
         haystackOffset = 0;

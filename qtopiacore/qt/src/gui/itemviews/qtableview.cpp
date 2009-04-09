@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -168,7 +172,7 @@ void QTableViewPrivate::setSpan(int row, int column, int rowSpan, int columnSpan
 QTableViewPrivate::Span QTableViewPrivate::span(int row, int column) const
 {
     QList<Span>::const_iterator it;
-    for (it = spans.begin(); it != spans.end(); ++it) {
+    for (it = spans.constBegin(); it != spans.constEnd(); ++it) {
         Span span = *it;
         if (isInSpan(row, column, span))
             return span;
@@ -187,8 +191,6 @@ int QTableViewPrivate::sectionSpanEndLogical(const QHeaderView *header, int logi
         if (++visual >= header->count())
             break;
         logical = header->logicalIndex(visual);
-        if (header->isSectionHidden(logical))
-            continue;
         ++i;
     }
     return logical;
@@ -222,8 +224,6 @@ bool QTableViewPrivate::spanContainsSection(const QHeaderView *header, int logic
         if (++visual >= header->count())
             break;
         spanLogical = header->logicalIndex(visual);
-        if (header->isSectionHidden(spanLogical))
-            continue;
         if (logical == spanLogical)
             return true;
         ++i;
@@ -238,7 +238,7 @@ bool QTableViewPrivate::spanContainsSection(const QHeaderView *header, int logic
 bool QTableViewPrivate::spansIntersectColumn(int column) const
 {
     QList<Span>::const_iterator it;
-    for (it = spans.begin(); it != spans.end(); ++it) {
+    for (it = spans.constBegin(); it != spans.constEnd(); ++it) {
         Span span = *it;
         if (spanContainsColumn(column, span.left(), span.width()))
             return true;
@@ -253,7 +253,7 @@ bool QTableViewPrivate::spansIntersectColumn(int column) const
 bool QTableViewPrivate::spansIntersectRow(int row) const
 {
     QList<Span>::const_iterator it;
-    for (it = spans.begin(); it != spans.end(); ++it) {
+    for (it = spans.constBegin(); it != spans.constEnd(); ++it) {
         Span span = *it;
         if (spanContainsRow(row, span.top(), span.height()))
             return true;
@@ -268,7 +268,7 @@ bool QTableViewPrivate::spansIntersectRow(int row) const
 bool QTableViewPrivate::spansIntersectColumns(const QList<int> &columns) const
 {
     QList<int>::const_iterator it;
-    for (it = columns.begin(); it != columns.end(); ++it) {
+    for (it = columns.constBegin(); it != columns.constEnd(); ++it) {
         if (spansIntersectColumn(*it))
             return true;
     }
@@ -282,7 +282,7 @@ bool QTableViewPrivate::spansIntersectColumns(const QList<int> &columns) const
 bool QTableViewPrivate::spansIntersectRows(const QList<int> &rows) const
 {
     QList<int>::const_iterator it;
-    for (it = rows.begin(); it != rows.end(); ++it) {
+    for (it = rows.constBegin(); it != rows.constEnd(); ++it) {
         if (spansIntersectRow(*it))
             return true;
     }
@@ -317,24 +317,28 @@ QRect QTableViewPrivate::visualSpanRect(const Span &span) const
   \internal
   Draws the spanning cells within rect \a area, and clips them off as
   preparation for the main drawing loop.
-  \a drawn is a QBitArray of visualRowCountxvisualCoulumnCount which say wether or not a particular cell has been drawn
+  \a drawn is a QBitArray of visualRowCountxvisualCoulumnCount which say if particular cell has been drawn
 */
 void QTableViewPrivate::drawAndClipSpans(const QRect &area, QPainter *painter,
                                               const QStyleOptionViewItemV4 &option,
                                               QBitArray *drawn)
 {
-    Q_Q(QTableView);
     bool alternateBase = false;
     QRegion region = viewport->rect();
 
     int firstVisualRow = qMax(verticalHeader->visualIndexAt(0),0);
-    int lastVisualRow = verticalHeader->visualIndexAt(q->height());
+    int lastVisualRow = verticalHeader->visualIndexAt(viewport->height());
     if (lastVisualRow == -1)
-        lastVisualRow = model->rowCount(root);
-    int firstVisualColumn = qMax(horizontalHeader->visualIndexAt(0),0);
-    int lastVisualColumn = horizontalHeader->visualIndexAt(q->width());
+        lastVisualRow = model->rowCount(root) - 1;
+
+    int firstVisualColumn = horizontalHeader->visualIndexAt(0);
+    int lastVisualColumn = horizontalHeader->visualIndexAt(viewport->width());
+    if (q_func()->isRightToLeft())
+        qSwap(firstVisualColumn, lastVisualColumn);
+    if (firstVisualColumn == -1)
+        firstVisualColumn = 0;
     if (lastVisualColumn == -1)
-        lastVisualColumn = model->columnCount(root);
+        lastVisualColumn = model->columnCount(root) - 1;
 
     QList<Span>::const_iterator it;
     for (it = spans.constBegin(); it != spans.constEnd(); ++it) {
@@ -410,7 +414,7 @@ void QTableViewPrivate::drawCell(QPainter *painter, const QStyleOptionViewItemV4
     if (opt.features & QStyleOptionViewItemV2::Alternate)
         painter->fillRect(opt.rect, opt.palette.brush(QPalette::AlternateBase));
 
-    if (const QWidget *widget = editorForIndex(index)) {
+    if (const QWidget *widget = editorForIndex(index).editor) {
         painter->save();
         painter->setClipRect(widget->geometry());
         q->itemDelegate(index)->paint(painter, opt, index);
@@ -710,7 +714,7 @@ void QTableView::scrollContentsBy(int dx, int dy)
         }
     }
     d->scrollContentsBy(dx, dy);
-    
+
     if (d->showGrid) {
         //we need to update the first line of the previous top item in the view
         //because it has the grid drawn if the header is invisible.
@@ -765,25 +769,29 @@ void QTableView::paintEvent(QPaintEvent *event)
 
     QVector<QRect> rects = event->region().rects();
     int firstVisualRow = qMax(verticalHeader->visualIndexAt(0),0);
-    int lastVisualRow = verticalHeader->visualIndexAt(height());
+    int lastVisualRow = verticalHeader->visualIndexAt(verticalHeader->viewport()->height());
     if (lastVisualRow == -1)
         lastVisualRow = d->model->rowCount(d->root);
 
-    int firstVisualColumn = qMax(horizontalHeader->visualIndexAt(0),0);
-    int lastVisualColumn = horizontalHeader->visualIndexAt(width());
+    int firstVisualColumn = horizontalHeader->visualIndexAt(0);
+    int lastVisualColumn = horizontalHeader->visualIndexAt(horizontalHeader->viewport()->width());
+    if (rightToLeft)
+        qSwap(firstVisualColumn, lastVisualColumn);
+    if (firstVisualColumn == -1)
+        firstVisualColumn = 0;
     if (lastVisualColumn == -1)
-        lastVisualColumn = d->model->columnCount(d->root);
+        lastVisualColumn = horizontalHeader->count() - 1;
 
     QBitArray drawn((lastVisualRow - firstVisualRow + 1) * (lastVisualColumn - firstVisualColumn + 1));
 
     for (int i = 0; i < rects.size(); ++i) {
         QRect dirtyArea = rects.at(i);
         dirtyArea.translate(offset);
-        dirtyArea.setBottom(qMin((uint)dirtyArea.bottom(), y));
+        dirtyArea.setBottom(qMin(dirtyArea.bottom(), int(y)));
         if (rightToLeft) {
-            dirtyArea.setLeft(qMax((uint)dirtyArea.left(), d->viewport->width() - x));
+            dirtyArea.setLeft(qMax(dirtyArea.left(), d->viewport->width() - int(x)));
         } else {
-            dirtyArea.setRight(qMin((uint)dirtyArea.right(), x));
+            dirtyArea.setRight(qMin(dirtyArea.right(), int(x)));
         }
 
         if (d->hasSpans())
@@ -967,7 +975,8 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
 
     int bottom = d->model->rowCount(d->root) - 1;
     // make sure that bottom is the bottommost *visible* row
-    while (bottom >= 0 && isRowHidden(d->logicalRow(bottom))) --bottom;
+    while (bottom >= 0 && isRowHidden(d->logicalRow(bottom)))
+        --bottom;
 
     int right = d->model->columnCount(d->root) - 1;
 
@@ -982,11 +991,11 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
     if (!current.isValid()) {
         int row = 0;
         int column = 0;
-        while (column < right && isColumnHidden(column))
+        while (column < right && isColumnHidden(d->logicalColumn(column)))
             ++column;
-        while (isRowHidden(row) && row < bottom)
+        while (isRowHidden(d->logicalRow(row)) && row < bottom)
             ++row;
-        return d->model->index(row, column, d->root);
+        return d->model->index(d->logicalRow(row), d->logicalColumn(column), d->root);
     }
 
     int visualRow = d->visualRow(current.row());
@@ -1008,7 +1017,7 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
             visualRow = d->visualRow(model()->rowCount() - 1) + 1;
 #endif
         --visualRow;
-        while (visualRow > 0 && isRowHidden(d->logicalRow(visualRow)))
+        while (visualRow > 0 && d->isVisualRowHiddenOrDisabled(visualRow, visualColumn))
             --visualRow;
         if (d->hasSpans()) {
             int row = d->logicalRow(visualRow);
@@ -1027,7 +1036,7 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
             visualRow = -1;
 #endif
         ++visualRow;
-        while (visualRow < bottom && isRowHidden(d->logicalRow(visualRow)))
+        while (visualRow < bottom && d->isVisualRowHiddenOrDisabled(visualRow, visualColumn))
             ++visualRow;
         if (d->hasSpans()) {
             int row = d->logicalRow(visualRow);
@@ -1037,25 +1046,25 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
         break;
     case MovePrevious: {
         int left = 0;
-        while (isColumnHidden(left) && left < right)
+        while (d->isVisualColumnHiddenOrDisabled(visualRow, left) && left < right)
             ++left;
         if (visualColumn == left) {
             visualColumn = right;
             int top = 0;
-            while (top < bottom && isRowHidden(d->logicalRow(top)))
+            while (top < bottom && d->isVisualRowHiddenOrDisabled(top, visualColumn))
                 ++top;
             if (visualRow == top)
                 visualRow = bottom;
             else
                 --visualRow;
-            while (visualRow > 0 && isRowHidden(d->logicalRow(visualRow)))
+            while (visualRow > 0 && d->isVisualRowHiddenOrDisabled(visualRow, visualColumn))
                 --visualRow;
             break;
         } // else MoveLeft
     }
     case MoveLeft:
         --visualColumn;
-        while (visualColumn > 0 && isColumnHidden(d->logicalColumn(visualColumn)))
+        while (visualColumn > 0 && d->isVisualColumnHiddenOrDisabled(visualRow, visualColumn))
             --visualColumn;
         if (d->hasSpans()) {
             int column = d->logicalColumn(visualColumn);
@@ -1067,14 +1076,13 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
     case MoveNext:
         if (visualColumn == right) {
             visualColumn = 0;
-            while (visualColumn < right
-                   && isColumnHidden(d->logicalColumn(visualColumn)))
+            while (visualColumn < right && d->isVisualColumnHiddenOrDisabled(visualRow, visualColumn))
                 ++visualColumn;
             if (visualRow == bottom)
                 visualRow = 0;
             else
                 ++visualRow;
-            while (visualRow < bottom && isRowHidden(d->logicalRow(visualRow)))
+            while (visualRow < bottom && d->isVisualRowHiddenOrDisabled(visualRow, visualColumn))
                 ++visualRow;
             break;
         } // else MoveRight
@@ -1084,8 +1092,7 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
             visualColumn = d->visualColumn(d->columnSpanEndLogical(span.left(), span.width()));
         }
         ++visualColumn;
-        while (visualColumn < right
-               && isColumnHidden(d->logicalColumn(visualColumn)))
+        while (visualColumn < right && d->isVisualColumnHiddenOrDisabled(visualRow, visualColumn))
             ++visualColumn;
         if (d->hasSpans()) {
             int column = d->logicalColumn(visualColumn);
@@ -1095,12 +1102,11 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
         break;
     case MoveHome:
         visualColumn = 0;
-        while (visualColumn < right
-               && isColumnHidden(d->logicalColumn(visualColumn)))
+        while (visualColumn < right && d->isVisualColumnHiddenOrDisabled(visualRow, visualColumn))
             ++visualColumn;
         if (modifiers & Qt::ControlModifier) {
             visualRow = 0;
-            while (visualRow < bottom && isRowHidden(d->logicalRow(visualRow)))
+            while (visualRow < bottom && d->isVisualRowHiddenOrDisabled(visualRow, visualColumn))
                 ++visualRow;
         }
         break;
@@ -1111,7 +1117,7 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
         break;
     case MovePageUp: {
         int top = 0;
-        while (top < bottom && isRowHidden(d->logicalRow(top)))
+        while (top < bottom && d->isVisualRowHiddenOrDisabled(top, visualColumn))
             ++top;
         int newRow = qMax(rowAt(visualRect(current).top() - d->viewport->height()), top);
         return d->model->index(qBound(0, newRow, bottom), current.column(), d->root);
@@ -1127,9 +1133,11 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
     int logicalColumn = d->logicalColumn(visualColumn);
     if (!d->model->hasIndex(logicalRow, logicalColumn, d->root))
         return QModelIndex();
+
     QModelIndex result = d->model->index(logicalRow, logicalColumn, d->root);
-    if (!isIndexHidden(result))
+    if (!isIndexHidden(result) && d->isIndexEnabled(result))
         return d->model->index(logicalRow, logicalColumn, d->root);
+
     return QModelIndex();
 }
 
@@ -1143,13 +1151,11 @@ QModelIndex QTableView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifi
 void QTableView::setSelection(const QRect &rect, QItemSelectionModel::SelectionFlags command)
 {
     Q_D(QTableView);
-    QModelIndex tl =
-        indexAt(QPoint(isRightToLeft() ? qMax(rect.left(), rect.right())
-                       : qMin(rect.left(), rect.right()), qMin(rect.top(), rect.bottom())));
-    QModelIndex br =
-        indexAt(QPoint(isRightToLeft() ? qMin(rect.left(), rect.right()) :
-                       qMax(rect.left(), rect.right()), qMax(rect.top(), rect.bottom())));
-    if (!d->selectionModel || !tl.isValid() || !br.isValid())
+    QModelIndex tl = indexAt(QPoint(isRightToLeft() ? qMax(rect.left(), rect.right())
+                                    : qMin(rect.left(), rect.right()), qMin(rect.top(), rect.bottom())));
+    QModelIndex br = indexAt(QPoint(isRightToLeft() ? qMin(rect.left(), rect.right()) :
+                                    qMax(rect.left(), rect.right()), qMax(rect.top(), rect.bottom())));
+    if (!d->selectionModel || !tl.isValid() || !br.isValid() || !d->isIndexEnabled(tl) || !d->isIndexEnabled(br))
         return;
 
     bool verticalMoved = verticalHeader()->sectionsMoved();
@@ -1159,14 +1165,10 @@ void QTableView::setSelection(const QRect &rect, QItemSelectionModel::SelectionF
 
     if (d->hasSpans()) {
         bool expanded;
-        int top = qMin(d->visualRow(tl.row()),
-                       d->visualRow(br.row()));
-        int left = qMin(d->visualColumn(tl.column()),
-                        d->visualColumn(br.column()));
-        int bottom = qMax(d->visualRow(tl.row()),
-                          d->visualRow(br.row()));
-        int right = qMax(d->visualColumn(tl.column()),
-                         d->visualColumn(br.column()));
+        int top = qMin(d->visualRow(tl.row()), d->visualRow(br.row()));
+        int left = qMin(d->visualColumn(tl.column()), d->visualColumn(br.column()));
+        int bottom = qMax(d->visualRow(tl.row()), d->visualRow(br.row()));
+        int right = qMax(d->visualColumn(tl.column()), d->visualColumn(br.column()));
         do {
             expanded = false;
             QList<QTableViewPrivate::Span>::const_iterator it;
@@ -1520,6 +1522,15 @@ int QTableView::sizeHintForRow(int row) const
             option.rect.setX(columnViewportPosition(index.column()));
             option.rect.setWidth(columnWidth(index.column()));
         }
+        
+        QWidget *editor = d->editorForIndex(index).editor;
+        if (editor && d->persistent.contains(editor)) {
+            hint = qMax(hint, editor->sizeHint().height());
+            int min = editor->minimumSize().height();
+            int max = editor->maximumSize().height();
+            hint = qBound(min, hint, max);
+        }
+        
         hint = qMax(hint, itemDelegate(index)->sizeHint(option, index).height());
     }
 
@@ -1562,6 +1573,15 @@ int QTableView::sizeHintForColumn(int column) const
         if (d->verticalHeader->isSectionHidden(logicalRow))
             continue;
         index = d->model->index(logicalRow, column, d->root);
+        
+        QWidget *editor = d->editorForIndex(index).editor;
+        if (editor && d->persistent.contains(editor)) {
+            hint = qMax(hint, editor->sizeHint().width());
+            int min = editor->minimumSize().width();
+            int max = editor->maximumSize().width();
+            hint = qBound(min, hint, max);
+        }
+        
         hint = qMax(hint, itemDelegate(index)->sizeHint(option, index).width());
     }
 
@@ -2239,6 +2259,9 @@ void QTableView::resizeRowsToContents()
 /*!
     Resizes the given \a column based on the size hints of the delegate
     used to render each item in the column.
+
+    \note Only visible columns will be resized. Reimplement sizeHintForColumn()
+    to resize hidden columns as well.
 */
 void QTableView::resizeColumnToContents(int column)
 {

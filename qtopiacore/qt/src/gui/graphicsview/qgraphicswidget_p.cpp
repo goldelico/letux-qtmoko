@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,8 +43,10 @@
 
 #ifndef QT_NO_GRAPHICSVIEW
 
+#include <QtCore/qdebug.h>
 #include "qgraphicswidget_p.h"
 #include "qgraphicslayout.h"
+#include "qgraphicsscene_p.h"
 #include <QtGui/qapplication.h>
 #include <QtGui/qgraphicsscene.h>
 #include <QtGui/qstyleoption.h>
@@ -62,6 +68,7 @@ void QGraphicsWidgetPrivate::init(QGraphicsItem *parentItem, Qt::WindowFlags wFl
     focusPolicy = Qt::NoFocus;
     q->setParentItem(parentItem);
     q->setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred, QSizePolicy::DefaultType));
+    q->setGraphicsItem(q);
 
     resolveLayoutDirection();
 
@@ -134,28 +141,47 @@ void QGraphicsWidgetPrivate::setLayoutItemMargins(QStyle::SubElement element, co
     }
 }
 
-static QPalette _q_resolvedPalette(const QPalette &palette, const QGraphicsWidget *widget)
+void QGraphicsWidgetPrivate::setPalette_helper(const QPalette &palette)
 {
-    if (QGraphicsWidget *parent = widget->parentWidget()) {
-        return palette.resolve(parent->palette());
-    } else if (QGraphicsScene *scene = widget->scene()) {
-        return palette.resolve(scene->palette());
-    }
-    return palette;
+    if (this->palette == palette && this->palette.resolve() == palette.resolve())
+        return;
+    updatePalette(palette);
 }
 
-void QGraphicsWidgetPrivate::resolvePalette()
+void QGraphicsWidgetPrivate::resolvePalette(uint inheritedMask)
+{
+    inheritedPaletteResolveMask = inheritedMask;
+    QPalette naturalPalette = naturalWidgetPalette();
+    QPalette resolvedPalette = palette.resolve(naturalPalette);
+    updatePalette(resolvedPalette);
+}
+
+void QGraphicsWidgetPrivate::updatePalette(const QPalette &palette)
 {
     Q_Q(QGraphicsWidget);
-    palette = _q_resolvedPalette(palette, q);
+    // Update local palette setting.
+    this->palette = palette;
 
-    QEvent event(QEvent::PaletteChange);
-    QApplication::sendEvent(q, &event);
+    // Calculate new mask.
+    if (q->isWindow() && !q->testAttribute(Qt::WA_WindowPropagation))
+        inheritedPaletteResolveMask = 0;
+    int mask = palette.resolve() | inheritedPaletteResolveMask;
+
+    // Propagate to children.
     for (int i = 0; i < children.size(); ++i) {
         QGraphicsItem *item = children.at(i);
-        if (item->isWidget())
-            ((QGraphicsWidget *)item)->d_func()->resolvePalette();
+        if (item->isWidget()) {
+            QGraphicsWidget *w = static_cast<QGraphicsWidget *>(item);
+            if (!w->isWindow() || w->testAttribute(Qt::WA_WindowPropagation))
+                w->d_func()->resolvePalette(mask);
+        } else {
+            item->d_ptr->resolvePalette(mask);
+        }
     }
+
+    // Notify change.
+    QEvent event(QEvent::PaletteChange);
+    QApplication::sendEvent(q, &event);
 }
 
 void QGraphicsWidgetPrivate::setLayoutDirection_helper(Qt::LayoutDirection direction)
@@ -197,36 +223,80 @@ void QGraphicsWidgetPrivate::resolveLayoutDirection()
     }
 }
 
-static QFont _q_resolvedFont(const QFont &font, const QGraphicsWidget *widget)
+QPalette QGraphicsWidgetPrivate::naturalWidgetPalette() const
 {
-    if (QGraphicsWidget *parent = widget->parentWidget()) {
-        return font.resolve(parent->font());
-    } else if (QGraphicsScene *scene = widget->scene()) {
-        return font.resolve(scene->font());
+    Q_Q(const QGraphicsWidget);
+    QPalette palette;
+    if (QGraphicsWidget *parent = q->parentWidget()) {
+        palette = parent->palette();
+    } else if (scene) {
+        palette = scene->palette();
     }
-    return font;
+    palette.resolve(0);
+    return palette;
 }
 
-void QGraphicsWidgetPrivate::resolveFont()
+void QGraphicsWidgetPrivate::setFont_helper(const QFont &font)
+{
+    if (this->font == font && this->font.resolve() == font.resolve())
+        return;
+    updateFont(font);
+}
+
+void QGraphicsWidgetPrivate::resolveFont(uint inheritedMask)
+{
+    inheritedFontResolveMask = inheritedMask;
+    QFont naturalFont = naturalWidgetFont();
+    QFont resolvedFont = font.resolve(naturalFont);
+    updateFont(resolvedFont);
+}
+
+void QGraphicsWidgetPrivate::updateFont(const QFont &font)
 {
     Q_Q(QGraphicsWidget);
-    font = _q_resolvedFont(font, q);
+    // Update the local font setting.
+    this->font = font;
 
-    QEvent event(QEvent::FontChange);
-    QApplication::sendEvent(q, &event);
+    // Calculate new mask.
+    if (q->isWindow() && !q->testAttribute(Qt::WA_WindowPropagation))
+        inheritedFontResolveMask = 0;
+    int mask = font.resolve() | inheritedFontResolveMask;
+
+    // Propagate to children.
     for (int i = 0; i < children.size(); ++i) {
         QGraphicsItem *item = children.at(i);
-        if (item->isWidget())
-            ((QGraphicsWidget *)item)->d_func()->resolveFont();
+        if (item->isWidget()) {
+            QGraphicsWidget *w = static_cast<QGraphicsWidget *>(item);
+            if (!w->isWindow() || w->testAttribute(Qt::WA_WindowPropagation))
+                w->d_func()->resolveFont(mask);
+        } else {
+            item->d_ptr->resolveFont(mask);
+        }
     }
+
+    // Notify change.
+    QEvent event(QEvent::FontChange);
+    QApplication::sendEvent(q, &event);
 }
 
+QFont QGraphicsWidgetPrivate::naturalWidgetFont() const
+{
+    Q_Q(const QGraphicsWidget);
+    QFont naturalFont; // ### no application font support
+    if (QGraphicsWidget *parent = q->parentWidget()) {
+        naturalFont = parent->font();
+    } else if (scene) {
+        naturalFont = scene->font();
+    }
+    naturalFont.resolve(0);
+    return naturalFont;
+}
 
 void QGraphicsWidgetPrivate::initStyleOptionTitleBar(QStyleOptionTitleBar *option)
 {
     Q_Q(QGraphicsWidget);
     q->initStyleOption(option);
-    option->text = windowTitle;
+    option->rect.setHeight(titleBarHeight(*option));
     option->titleBarFlags = windowFlags;
     option->subControls = QStyle::SC_TitleBarCloseButton | QStyle::SC_TitleBarLabel | QStyle::SC_TitleBarSysMenu;
     option->activeSubControls = hoveredSubControl;
@@ -238,7 +308,10 @@ void QGraphicsWidgetPrivate::initStyleOptionTitleBar(QStyleOptionTitleBar *optio
     } else {
         option->state &= ~QStyle::State_Active;
         option->titleBarState = Qt::WindowNoState;
-	}
+    }
+    QFont windowTitleFont = QApplication::font("QWorkspaceTitleBar");
+    QRect textRect = q->style()->subControlRect(QStyle::CC_TitleBar, option, QStyle::SC_TitleBarLabel, 0);
+    option->text = QFontMetrics(windowTitleFont).elidedText(windowTitle, Qt::ElideRight, textRect.width());
 }
 
 void QGraphicsWidgetPrivate::adjustWindowFlags(Qt::WindowFlags *flags)
@@ -445,12 +518,14 @@ void QGraphicsWidgetPrivate::windowFrameHoverMoveEvent(QGraphicsSceneHoverEvent 
         return;
 
     if (q->rect().contains(event->pos())) {
-        if (hoveredSubControl != QStyle::SC_None)
+        if (buttonMouseOver || hoveredSubControl != QStyle::SC_None)
             windowFrameHoverLeaveEvent(event);
         return;
     }
 
     bool wasMouseOver = buttonMouseOver;
+    QRect oldButtonRect = buttonRect;
+    buttonRect = QRect();
     buttonMouseOver = false;
     QPointF pos = event->pos();
     QStyleOptionTitleBar bar;
@@ -462,54 +537,54 @@ void QGraphicsWidgetPrivate::windowFrameHoverMoveEvent(QGraphicsSceneHoverEvent 
     bar.rect.moveTo(0,0);
     bar.rect.setHeight(int(titleBarHeight(bar)));
 
-#ifndef QT_NO_CURSOR
+    Qt::CursorShape cursorShape = Qt::ArrowCursor;
+    bool needsSetCursorCall = true;
     switch (q->windowFrameSectionAt(event->pos())) {
         case Qt::TopLeftSection:
         case Qt::BottomRightSection:
-            q->setCursor(Qt::SizeFDiagCursor);
+            cursorShape = Qt::SizeFDiagCursor;
             break;
         case Qt::TopRightSection:
         case Qt::BottomLeftSection:
-            q->setCursor(Qt::SizeBDiagCursor);
+            cursorShape = Qt::SizeBDiagCursor;
             break;
         case Qt::LeftSection:
         case Qt::RightSection:
-            q->setCursor(Qt::SizeHorCursor);
+            cursorShape = Qt::SizeHorCursor;
             break;
         case Qt::TopSection:
         case Qt::BottomSection:
-            q->setCursor(Qt::SizeVerCursor);
+            cursorShape = Qt::SizeVerCursor;
             break;
-        case Qt::TitleBarArea: {
-            QRect buttonRect = q->style()->subControlRect(QStyle::CC_TitleBar, &bar, QStyle::SC_TitleBarCloseButton, 0);
+        case Qt::TitleBarArea:
+            buttonRect = q->style()->subControlRect(QStyle::CC_TitleBar, &bar, QStyle::SC_TitleBarCloseButton, 0);
 #ifdef Q_WS_MAC
             // On mac we should hover if we are in the 'area' of the buttons
             buttonRect |= q->style()->subControlRect(QStyle::CC_TitleBar, &bar, QStyle::SC_TitleBarMinButton, 0);
             buttonRect |= q->style()->subControlRect(QStyle::CC_TitleBar, &bar, QStyle::SC_TitleBarMaxButton, 0);
 #endif
-            if (buttonRect.contains(pos.toPoint())) {
+            if (buttonRect.contains(pos.toPoint()))
                 buttonMouseOver = true;
-            }
-            q->setCursor(Qt::ArrowCursor);
-        }   // fall-through
+            event->ignore();
+            break;
         default:
+            needsSetCursorCall = false;
             event->ignore();
         }
-#else
-    event->ignore();
+#ifndef QT_NO_CURSOR
+    if (needsSetCursorCall)
+        q->setCursor(cursorShape);
 #endif
-
     // update buttons if we hover over them
-    QStyle::SubControl oldHoveredControl = hoveredSubControl;
     hoveredSubControl = q->style()->hitTestComplexControl(QStyle::CC_TitleBar, &bar, pos.toPoint(), 0);
     if (hoveredSubControl != QStyle::SC_TitleBarCloseButton)
         hoveredSubControl = QStyle::SC_TitleBarLabel;
 
-    if (oldHoveredControl != hoveredSubControl || buttonMouseOver != wasMouseOver) {
-        QRectF oldRect = q->style()->subControlRect(QStyle::CC_TitleBar, &bar, oldHoveredControl, 0);
-        QRectF newRect = q->style()->subControlRect(QStyle::CC_TitleBar, &bar, hoveredSubControl, 0);
-        q->update(oldRect.translated(0, q->windowFrameRect().top()));
-        q->update(newRect.translated(0, q->windowFrameRect().top()));
+    if (buttonMouseOver != wasMouseOver) {
+        if (!oldButtonRect.isNull())
+            q->update(QRectF(oldButtonRect).translated(q->windowFrameRect().topLeft()));
+        if (!buttonRect.isNull())
+            q->update(QRectF(buttonRect).translated(q->windowFrameRect().topLeft()));
     }
 }
 
@@ -523,10 +598,16 @@ void QGraphicsWidgetPrivate::windowFrameHoverLeaveEvent(QGraphicsSceneHoverEvent
         q->unsetCursor();
 #endif
 
+        bool needsUpdate = false;
+        if (hoveredSubControl == QStyle::SC_TitleBarCloseButton || buttonMouseOver)
+            needsUpdate = true;
+
         // update the hover state (of buttons etc...)
         hoveredSubControl = QStyle::SC_None;
         buttonMouseOver = false;
-        q->update();
+        buttonRect = QRect();
+        if (needsUpdate)
+            q->update(buttonRect);
     }
 }
 
@@ -566,7 +647,7 @@ void QGraphicsWidgetPrivate::clearFocusWidget()
 /**
  * is called after a reparent has taken place to fix up the focus chain(s)
  */
-void QGraphicsWidgetPrivate::fixFocusChainBeforeReparenting(QGraphicsWidget *newParent)
+void QGraphicsWidgetPrivate::fixFocusChainBeforeReparenting(QGraphicsWidget *newParent, QGraphicsScene *newScene)
 {
     Q_Q(QGraphicsWidget);
 
@@ -614,6 +695,13 @@ void QGraphicsWidgetPrivate::fixFocusChainBeforeReparenting(QGraphicsWidget *new
         o->d_func()->focusNext = firstOld;
         firstOld->d_func()->focusPrev = o;
     }
+
+    // update tabFocusFirst for oldScene if the item is going to be removed from oldScene
+    if (newParent)
+        newScene = newParent->scene();
+    QGraphicsScene *oldScene = q->scene();
+    if (oldScene && newScene != oldScene)
+        oldScene->d_func()->tabFocusFirst = firstOld;
 
     QGraphicsItem *topLevelItem = newParent ? newParent->topLevelItem() : 0;
     QGraphicsWidget *topLevel = 0;

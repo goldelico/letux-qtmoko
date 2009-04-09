@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007, 2008 Apple Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,7 +43,7 @@
 
 namespace WebCore {
 
-TypingCommand::TypingCommand(Document *document, ETypingCommand commandType, const String &textToInsert, bool selectInsertedText, TextGranularity granularity)
+TypingCommand::TypingCommand(Document *document, ETypingCommand commandType, const String &textToInsert, bool selectInsertedText, TextGranularity granularity, bool killRing)
     : CompositeEditCommand(document), 
       m_commandType(commandType), 
       m_textToInsert(textToInsert), 
@@ -52,11 +52,33 @@ TypingCommand::TypingCommand(Document *document, ETypingCommand commandType, con
       m_selectInsertedText(selectInsertedText),
       m_smartDelete(false),
       m_granularity(granularity),
+      m_killRing(killRing),
       m_openedByBackwardDelete(false)
 {
 }
 
-void TypingCommand::deleteKeyPressed(Document *document, bool smartDelete, TextGranularity granularity)
+void TypingCommand::deleteSelection(Document* document, bool smartDelete)
+{
+    ASSERT(document);
+    
+    Frame* frame = document->frame();
+    ASSERT(frame);
+    
+    if (!frame->selection()->isRange())
+        return;
+    
+    EditCommand* lastEditCommand = frame->editor()->lastEditCommand();
+    if (isOpenForMoreTypingCommand(lastEditCommand)) {
+        static_cast<TypingCommand*>(lastEditCommand)->deleteSelection(smartDelete);
+        return;
+    }
+    
+    RefPtr<TypingCommand> typingCommand = TypingCommand::create(document, DeleteSelection, "", false);
+    typingCommand->setSmartDelete(smartDelete);
+    typingCommand->apply();
+}
+
+void TypingCommand::deleteKeyPressed(Document *document, bool smartDelete, TextGranularity granularity, bool killRing)
 {
     ASSERT(document);
     
@@ -65,16 +87,16 @@ void TypingCommand::deleteKeyPressed(Document *document, bool smartDelete, TextG
     
     EditCommand* lastEditCommand = frame->editor()->lastEditCommand();
     if (isOpenForMoreTypingCommand(lastEditCommand)) {
-        static_cast<TypingCommand*>(lastEditCommand)->deleteKeyPressed(granularity);
+        static_cast<TypingCommand*>(lastEditCommand)->deleteKeyPressed(granularity, killRing);
         return;
     }
     
-    RefPtr<TypingCommand> typingCommand = new TypingCommand(document, DeleteKey, "", false, granularity);
+    RefPtr<TypingCommand> typingCommand = TypingCommand::create(document, DeleteKey, "", false, granularity, killRing);
     typingCommand->setSmartDelete(smartDelete);
     typingCommand->apply();
 }
 
-void TypingCommand::forwardDeleteKeyPressed(Document *document, bool smartDelete, TextGranularity granularity)
+void TypingCommand::forwardDeleteKeyPressed(Document *document, bool smartDelete, TextGranularity granularity, bool killRing)
 {
     // FIXME: Forward delete in TextEdit appears to open and close a new typing command.
     ASSERT(document);
@@ -84,11 +106,11 @@ void TypingCommand::forwardDeleteKeyPressed(Document *document, bool smartDelete
     
     EditCommand* lastEditCommand = frame->editor()->lastEditCommand();
     if (isOpenForMoreTypingCommand(lastEditCommand)) {
-        static_cast<TypingCommand*>(lastEditCommand)->forwardDeleteKeyPressed(granularity);
+        static_cast<TypingCommand*>(lastEditCommand)->forwardDeleteKeyPressed(granularity, killRing);
         return;
     }
 
-    RefPtr<TypingCommand> typingCommand = new TypingCommand(document, ForwardDeleteKey, "", false, granularity);
+    RefPtr<TypingCommand> typingCommand = TypingCommand::create(document, ForwardDeleteKey, "", false, granularity, killRing);
     typingCommand->setSmartDelete(smartDelete);
     typingCommand->apply();
 }
@@ -100,7 +122,7 @@ void TypingCommand::insertText(Document* document, const String& text, bool sele
     Frame* frame = document->frame();
     ASSERT(frame);
 
-    insertText(document, text, frame->selectionController()->selection(), selectInsertedText, insertedTextIsComposition);
+    insertText(document, text, frame->selection()->selection(), selectInsertedText, insertedTextIsComposition);
 }
 
 void TypingCommand::insertText(Document* document, const String& text, const Selection& selectionForInsertion, bool selectInsertedText, bool insertedTextIsComposition)
@@ -110,7 +132,7 @@ void TypingCommand::insertText(Document* document, const String& text, const Sel
     RefPtr<Frame> frame = document->frame();
     ASSERT(frame);
     
-    Selection currentSelection = frame->selectionController()->selection();
+    Selection currentSelection = frame->selection()->selection();
     bool changeSelection = currentSelection != selectionForInsertion;
     
     String newText = text;
@@ -119,8 +141,8 @@ void TypingCommand::insertText(Document* document, const String& text, const Sel
     if (startNode && startNode->rootEditableElement() && !insertedTextIsComposition) {        
         // Send BeforeTextInsertedEvent. The event handler will update text if necessary.
         ExceptionCode ec = 0;
-        RefPtr<BeforeTextInsertedEvent> evt = new BeforeTextInsertedEvent(text);
-        startNode->rootEditableElement()->dispatchEvent(evt, ec, true);
+        RefPtr<BeforeTextInsertedEvent> evt = BeforeTextInsertedEvent::create(text);
+        startNode->rootEditableElement()->dispatchEvent(evt, ec);
         newText = evt->text();
     }
     
@@ -140,12 +162,12 @@ void TypingCommand::insertText(Document* document, const String& text, const Sel
         lastTypingCommand->insertText(newText, selectInsertedText);
         if (changeSelection) {
             lastTypingCommand->setEndingSelection(currentSelection);
-            frame->selectionController()->setSelection(currentSelection);
+            frame->selection()->setSelection(currentSelection);
         }
         return;
     }
 
-    RefPtr<TypingCommand> cmd = new TypingCommand(document, InsertText, newText, selectInsertedText);
+    RefPtr<TypingCommand> cmd = TypingCommand::create(document, InsertText, newText, selectInsertedText);
     if (changeSelection)  {
         cmd->setStartingSelection(selectionForInsertion);
         cmd->setEndingSelection(selectionForInsertion);
@@ -153,7 +175,7 @@ void TypingCommand::insertText(Document* document, const String& text, const Sel
     applyCommand(cmd);
     if (changeSelection) {
         cmd->setEndingSelection(currentSelection);
-        frame->selectionController()->setSelection(currentSelection);
+        frame->selection()->setSelection(currentSelection);
     }
 }
 
@@ -170,7 +192,7 @@ void TypingCommand::insertLineBreak(Document *document)
         return;
     }
 
-    applyCommand(new TypingCommand(document, InsertLineBreak));
+    applyCommand(TypingCommand::create(document, InsertLineBreak));
 }
 
 void TypingCommand::insertParagraphSeparatorInQuotedContent(Document *document)
@@ -186,7 +208,7 @@ void TypingCommand::insertParagraphSeparatorInQuotedContent(Document *document)
         return;
     }
 
-    applyCommand(new TypingCommand(document, InsertParagraphSeparatorInQuotedContent));
+    applyCommand(TypingCommand::create(document, InsertParagraphSeparatorInQuotedContent));
 }
 
 void TypingCommand::insertParagraphSeparator(Document *document)
@@ -202,7 +224,7 @@ void TypingCommand::insertParagraphSeparator(Document *document)
         return;
     }
 
-    applyCommand(new TypingCommand(document, InsertParagraphSeparator));
+    applyCommand(TypingCommand::create(document, InsertParagraphSeparator));
 }
 
 bool TypingCommand::isOpenForMoreTypingCommand(const EditCommand* cmd)
@@ -226,11 +248,14 @@ void TypingCommand::doApply()
             m_openedByBackwardDelete = true;
 
     switch (m_commandType) {
+        case DeleteSelection:
+            deleteSelection(m_smartDelete);
+            return;
         case DeleteKey:
-            deleteKeyPressed(m_granularity);
+            deleteKeyPressed(m_granularity, m_killRing);
             return;
         case ForwardDeleteKey:
-            forwardDeleteKeyPressed(m_granularity);
+            forwardDeleteKeyPressed(m_granularity, m_killRing);
             return;
         case InsertLineBreak:
             insertLineBreak();
@@ -256,6 +281,8 @@ EditAction TypingCommand::editingAction() const
 
 void TypingCommand::markMisspellingsAfterTyping()
 {
+    if (!document()->frame()->editor()->isContinuousSpellCheckingEnabled())
+        return;
     // Take a look at the selection that results after typing and determine whether we need to spellcheck. 
     // Since the word containing the current selection is never marked, this does a check to
     // see if typing made a new word that is not in the current selection. Basically, you
@@ -316,7 +343,7 @@ void TypingCommand::insertTextRunWithoutNewlines(const String &text, bool select
             command = static_cast<InsertTextCommand*>(lastCommand);
     }
     if (!command) {
-        command = new InsertTextCommand(document());
+        command = InsertTextCommand::create(document());
         applyCommandToComposite(command);
     }
     command->input(text, selectInsertedText);
@@ -325,23 +352,23 @@ void TypingCommand::insertTextRunWithoutNewlines(const String &text, bool select
 
 void TypingCommand::insertLineBreak()
 {
-    applyCommandToComposite(new InsertLineBreakCommand(document()));
+    applyCommandToComposite(InsertLineBreakCommand::create(document()));
     typingAddedToOpenCommand();
 }
 
 void TypingCommand::insertParagraphSeparator()
 {
-    applyCommandToComposite(new InsertParagraphSeparatorCommand(document()));
+    applyCommandToComposite(InsertParagraphSeparatorCommand::create(document()));
     typingAddedToOpenCommand();
 }
 
 void TypingCommand::insertParagraphSeparatorInQuotedContent()
 {
-    applyCommandToComposite(new BreakBlockquoteCommand(document()));
+    applyCommandToComposite(BreakBlockquoteCommand::create(document()));
     typingAddedToOpenCommand();
 }
 
-void TypingCommand::deleteKeyPressed(TextGranularity granularity)
+void TypingCommand::deleteKeyPressed(TextGranularity granularity, bool killRing)
 {
     Selection selectionToDelete;
     Selection selectionAfterUndo;
@@ -352,11 +379,18 @@ void TypingCommand::deleteKeyPressed(TextGranularity granularity)
             selectionAfterUndo = selectionToDelete;
             break;
         case Selection::CARET: {
+            if (breakOutOfEmptyMailBlockquotedParagraph()) {
+                typingAddedToOpenCommand();
+                return;
+            }
+        
             m_smartDelete = false;
 
-            SelectionController selectionController;
-            selectionController.setSelection(endingSelection());
-            selectionController.modify(SelectionController::EXTEND, SelectionController::BACKWARD, granularity);
+            SelectionController selection;
+            selection.setSelection(endingSelection());
+            selection.modify(SelectionController::EXTEND, SelectionController::BACKWARD, granularity);
+            if (killRing && selection.isCaret() && granularity != CharacterGranularity) 
+                selection.modify(SelectionController::EXTEND, SelectionController::BACKWARD, CharacterGranularity); 
             
             // When the caret is at the start of the editable area in an empty list item, break out of the list item.
             if (endingSelection().visibleStart().previous(true).isNull()) {
@@ -373,7 +407,7 @@ void TypingCommand::deleteKeyPressed(TextGranularity granularity)
                 if (isLastPositionBeforeTable(visibleStart))
                     return;
                 // Extend the selection backward into the last cell, then deletion will handle the move.
-                selectionController.modify(SelectionController::EXTEND, SelectionController::BACKWARD, granularity);
+                selection.modify(SelectionController::EXTEND, SelectionController::BACKWARD, granularity);
             // If the caret is just after a table, select the table and don't delete anything.
             } else if (Node* table = isFirstPositionAfterTable(visibleStart)) {
                 setEndingSelection(Selection(Position(table, 0), endingSelection().start(), DOWNSTREAM));
@@ -381,7 +415,19 @@ void TypingCommand::deleteKeyPressed(TextGranularity granularity)
                 return;
             }
 
-            selectionToDelete = selectionController.selection();
+            selectionToDelete = selection.selection();
+
+            if (granularity == CharacterGranularity && selectionToDelete.end().offset() - selectionToDelete.start().offset() > 1) {
+                // When we delete a ligature consisting of multiple Unicode characters with a backspace key,
+                // we should not delete the ligature but delete only its last characeter. To check we are deleting
+                // a ligature, we retrieve the previous position of the caret and count the number of
+                // characters to be deleted.
+                // To prevent from calculating the previous position every time when pressing a backspace key,
+                // we retrieve the previous position only when the given selection consists of two or more characters.
+                if (selectionToDelete.end().offset() - selectionToDelete.end().previous(UsingComposedCharacters).offset() > 1)
+                    selectionToDelete.setWithoutValidation(selectionToDelete.end(), selectionToDelete.end().previous(NotUsingComposedCharacters));
+            }
+
             if (!startingSelection().isRange() || selectionToDelete.base() != startingSelection().start())
                 selectionAfterUndo = selectionToDelete;
             else
@@ -397,18 +443,20 @@ void TypingCommand::deleteKeyPressed(TextGranularity granularity)
     }
     
     if (selectionToDelete.isCaretOrRange() && document()->frame()->shouldDeleteSelection(selectionToDelete)) {
+        if (killRing)
+            document()->frame()->editor()->addToKillRing(selectionToDelete.toRange().get(), false);
         // Make undo select everything that has been deleted, unless an undo will undo more than just this deletion.
         // FIXME: This behaves like TextEdit except for the case where you open with text insertion and then delete
         // more text than you insert.  In that case all of the text that was around originally should be selected.
         if (m_openedByBackwardDelete)
             setStartingSelection(selectionAfterUndo);
-        deleteSelection(selectionToDelete, m_smartDelete);
+        CompositeEditCommand::deleteSelection(selectionToDelete, m_smartDelete);
         setSmartDelete(false);
         typingAddedToOpenCommand();
     }
 }
 
-void TypingCommand::forwardDeleteKeyPressed(TextGranularity granularity)
+void TypingCommand::forwardDeleteKeyPressed(TextGranularity granularity, bool killRing)
 {
     Selection selectionToDelete;
     Selection selectionAfterUndo;
@@ -424,9 +472,12 @@ void TypingCommand::forwardDeleteKeyPressed(TextGranularity granularity)
             // Handle delete at beginning-of-block case.
             // Do nothing in the case that the caret is at the start of a
             // root editable element or at the start of a document.
-            SelectionController selectionController;
-            selectionController.setSelection(endingSelection());
-            selectionController.modify(SelectionController::EXTEND, SelectionController::FORWARD, granularity);
+            SelectionController selection;
+            selection.setSelection(endingSelection());
+            selection.modify(SelectionController::EXTEND, SelectionController::FORWARD, granularity);
+            if (killRing && selection.isCaret() && granularity != CharacterGranularity) 
+                selection.modify(SelectionController::EXTEND, SelectionController::FORWARD, CharacterGranularity); 
+            
             Position downstreamEnd = endingSelection().end().downstream();
             VisiblePosition visibleEnd = endingSelection().visibleEnd();
             if (visibleEnd == endOfParagraph(visibleEnd))
@@ -439,10 +490,10 @@ void TypingCommand::forwardDeleteKeyPressed(TextGranularity granularity)
             }
 
             // deleting to end of paragraph when at end of paragraph needs to merge the next paragraph (if any)
-            if (granularity == ParagraphBoundary && selectionController.selection().isCaret() && isEndOfParagraph(selectionController.selection().visibleEnd()))
-                selectionController.modify(SelectionController::EXTEND, SelectionController::FORWARD, CharacterGranularity);
+            if (granularity == ParagraphBoundary && selection.selection().isCaret() && isEndOfParagraph(selection.selection().visibleEnd()))
+                selection.modify(SelectionController::EXTEND, SelectionController::FORWARD, CharacterGranularity);
 
-            selectionToDelete = selectionController.selection();
+            selectionToDelete = selection.selection();
             if (!startingSelection().isRange() || selectionToDelete.base() != startingSelection().start())
                 selectionAfterUndo = selectionToDelete;
             else {
@@ -470,17 +521,26 @@ void TypingCommand::forwardDeleteKeyPressed(TextGranularity granularity)
     }
     
     if (selectionToDelete.isCaretOrRange() && document()->frame()->shouldDeleteSelection(selectionToDelete)) {
+        if (killRing)
+            document()->frame()->editor()->addToKillRing(selectionToDelete.toRange().get(), false);
         // make undo select what was deleted
         setStartingSelection(selectionAfterUndo);
-        deleteSelection(selectionToDelete, m_smartDelete);
+        CompositeEditCommand::deleteSelection(selectionToDelete, m_smartDelete);
         setSmartDelete(false);
         typingAddedToOpenCommand();
     }
 }
 
+void TypingCommand::deleteSelection(bool smartDelete)
+{
+    CompositeEditCommand::deleteSelection(smartDelete);
+    typingAddedToOpenCommand();
+}
+
 bool TypingCommand::preservesTypingStyle() const
 {
     switch (m_commandType) {
+        case DeleteSelection:
         case DeleteKey:
         case ForwardDeleteKey:
         case InsertParagraphSeparator:

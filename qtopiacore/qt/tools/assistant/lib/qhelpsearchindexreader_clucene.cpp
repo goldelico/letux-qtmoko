@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -84,7 +88,7 @@ void QHelpSearchIndexReader::search(const QString &collectionFile,
                                     const QList<QHelpSearchQuery> &queryList)
 {
     QMutexLocker lock(&mutex);
-    
+
     this->hitList.clear();
     this->m_cancel = false;
     this->m_query = queryList;
@@ -107,7 +111,7 @@ QHelpSearchEngine::SearchHit QHelpSearchIndexReader::hit(int index) const
 void QHelpSearchIndexReader::run()
 {
     mutex.lock();
-    
+
     if (m_cancel) {
         mutex.unlock();
         return;
@@ -188,6 +192,9 @@ void QHelpSearchIndexReader::run()
             }
 
             indexSearcher.close();
+            int count = hitList.count();
+            if (count > 0)
+                boostSearchHits(engine, hitList, queryList);
             emit searchingFinished(hitList.count());
 
 #if !defined(QT_NO_EXCEPTIONS)
@@ -203,7 +210,7 @@ bool QHelpSearchIndexReader::defaultQuery(const QString &term,
                                           QCLuceneBooleanQuery &booleanQuery)
 {
     QCLuceneStandardAnalyzer analyzer;
-    
+
     const QLatin1String c("content");
     const QLatin1String t("titleTokenized");
 
@@ -218,7 +225,7 @@ bool QHelpSearchIndexReader::defaultQuery(const QString &term,
     return false;
 }
 
-bool QHelpSearchIndexReader::buildQuery(QCLuceneBooleanQuery &booleanQuery, 
+bool QHelpSearchIndexReader::buildQuery(QCLuceneBooleanQuery &booleanQuery,
                                         const QList<QHelpSearchQuery> &queryList)
 {
     foreach (const QHelpSearchQuery query, queryList) {
@@ -293,13 +300,13 @@ bool QHelpSearchIndexReader::buildQuery(QCLuceneBooleanQuery &booleanQuery,
                     }
                 }
             }   break;
-            
+
             case QHelpSearchQuery::DEFAULT: {
                 QCLuceneStandardAnalyzer analyzer;
                 foreach (const QString t, query.wordList) {
                     QCLuceneQuery *query = QCLuceneQueryParser::parse(t.toLower(),
                         QLatin1String("content"), analyzer);
-            
+
                     if (query)
                         booleanQuery.add(query, true, true, false);
                 }
@@ -315,6 +322,67 @@ bool QHelpSearchIndexReader::buildQuery(QCLuceneBooleanQuery &booleanQuery,
     }
 
     return true;
+}
+
+void QHelpSearchIndexReader::boostSearchHits(const QHelpEngineCore &engine,
+    QList<QHelpSearchEngine::SearchHit> &hitList,
+    const QList<QHelpSearchQuery> &queryList)
+{
+    foreach (const QHelpSearchQuery query, queryList) {
+        if (query.fieldName != QHelpSearchQuery::DEFAULT)
+            continue;
+
+        QString joinedQuery = query.wordList.join(QLatin1String(" "));
+        
+        QCLuceneStandardAnalyzer analyzer;
+        QCLuceneQuery *parsedQuery = QCLuceneQueryParser::parse(
+            joinedQuery, QLatin1String("content"), analyzer);
+
+        if (parsedQuery) {
+            joinedQuery = parsedQuery->toString();
+            delete parsedQuery;
+        }
+
+        int length = QString(QLatin1String("content:")).length();
+        int index = joinedQuery.indexOf(QLatin1String("content:"));
+
+        QString term;
+        int nextIndex = 0;
+        QStringList searchTerms;
+        while (index != -1) {
+            nextIndex = joinedQuery.indexOf(QLatin1String("content:"), index + 1);
+            term = joinedQuery.mid(index + length, nextIndex - (length + index))
+                .simplified();
+            if (term.startsWith(QLatin1String("\""))
+                && term.endsWith(QLatin1String("\""))) {
+                searchTerms.append(term.remove(QLatin1String("\"")));
+            } else {
+                searchTerms += term.split(QLatin1Char(' '));
+            }
+            index = nextIndex;
+        }
+        searchTerms.removeDuplicates();
+
+        int count = qMin(75, hitList.count());
+        QMap<int, QHelpSearchEngine::SearchHit> hitMap;
+        for (int i = 0; i < count; ++i) {
+            const QHelpSearchEngine::SearchHit &hit = hitList.at(i);
+            QString data = QString::fromUtf8(engine.fileData(hit.first));
+
+            int counter = 0;
+            foreach (const QString& term, searchTerms)
+                counter += data.count(term, Qt::CaseInsensitive);
+            hitMap.insertMulti(counter, hit);
+        }
+
+        QList<QHelpSearchEngine::SearchHit> boostedList;
+        QMap<int, QHelpSearchEngine::SearchHit>::const_iterator i;
+        for (i = hitMap.constEnd(), --i; i != hitMap.constBegin(); --i)
+            boostedList.append(i.value());
+        boostedList += hitList.mid(count - 1, hitList.count());
+        
+        hitList = boostedList;
+    }
 }
 
         }   // namespace clucene

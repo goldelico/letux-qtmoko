@@ -234,7 +234,7 @@ public:
    */
   bool getReverse() const { return reverse; }
 
-  SortComparatorSource* getFactory() { return factory; }
+  SortComparatorSource* getFactory() const { return factory; }
 
   TCHAR* toString() const;
 };

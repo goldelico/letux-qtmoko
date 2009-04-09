@@ -18,44 +18,57 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSMimeType_H
-#define JSMimeType_H
+#ifndef JSMimeType_h
+#define JSMimeType_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class MimeType;
 
-class JSMimeType : public KJS::DOMObject {
+class JSMimeType : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSMimeType(KJS::ExecState*, MimeType*);
+    JSMimeType(PassRefPtr<JSC::Structure>, PassRefPtr<MimeType>);
     virtual ~JSMimeType();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        TypeAttrNum, SuffixesAttrNum, DescriptionAttrNum, EnabledPluginAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     MimeType* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<MimeType> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, MimeType*);
-MimeType* toMimeType(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, MimeType*);
+MimeType* toMimeType(JSC::JSValuePtr);
 
-class JSMimeTypePrototype : public KJS::JSObject {
+class JSMimeTypePrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSMimeTypePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSMimeTypePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsMimeTypeType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsMimeTypeSuffixes(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsMimeTypeDescription(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsMimeTypeEnabledPlugin(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsMimeTypeConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

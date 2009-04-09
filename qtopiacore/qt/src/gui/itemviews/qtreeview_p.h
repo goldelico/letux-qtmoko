@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -102,7 +106,7 @@ public:
     void beginAnimatedOperation();
     void _q_endAnimatedOperation();
     void drawAnimatedOperation(QPainter *painter) const;
-    QPixmap renderTreeToPixmap(const QRect &rect) const;
+    QPixmap renderTreeToPixmapForAnimation(const QRect &rect) const;
 
     inline QRect animationRect() const
         { return QRect(0, animatedOperation.top, viewport->width(),
@@ -112,18 +116,14 @@ public:
     void _q_columnsAboutToBeRemoved(const QModelIndex &, int, int);
     void _q_columnsRemoved(const QModelIndex &, int, int);
     void _q_modelAboutToBeReset();
+    void _q_animate();
+    void _q_sortIndicatorChanged(int column, Qt::SortOrder order);
+    void _q_modelDestroyed();
 
     void layout(int item);
 
     int pageUp(int item) const;
     int pageDown(int item) const;
-
-    inline int above(int item) const
-        { return (--item < 0 ? 0 : item); }
-    inline int below(int item) const
-        { return (++item >= viewItems.count() ? viewItems.count() - 1 : item); }
-    inline void invalidateHeightCache(int item) const
-        { viewItems[item].height = 0; }
 
     int itemHeight(int item) const;
     int indentationForItem(int item) const;
@@ -138,11 +138,13 @@ public:
     bool hasVisibleChildren( const QModelIndex& parent) const;
 
     void relayout(const QModelIndex &parent);
-    void reexpandChildren(const QModelIndex &parent);
+    bool expandOrCollapseItemAtPos(const QPoint &pos);
 
     void updateScrollBars();
 
     int itemDecorationAt(const QPoint &pos) const;
+    QRect itemDecorationRect(const QModelIndex &index) const;
+
 
     QList<QPair<int, int> > columnRanges(const QModelIndex &topIndex, const QModelIndex &bottomIndex) const;
     void select(const QModelIndex &start, const QModelIndex &stop, QItemSelectionModel::SelectionFlags command);
@@ -174,35 +176,44 @@ public:
     mutable bool spanning;
 
     // used when expanding and collapsing items
-    QList<QPersistentModelIndex> expandedIndexes;
+    QSet<QPersistentModelIndex> expandedIndexes;
     QStack<bool> expandParent;
     AnimatedOperation animatedOperation;
     bool animationsEnabled;
 
     inline bool storeExpanded(const QPersistentModelIndex &idx) {
-        QList<QPersistentModelIndex>::iterator it;
-        it = qLowerBound(expandedIndexes.begin(), expandedIndexes.end(), idx);
-        if (it == expandedIndexes.end() || *it != idx) {
-            expandedIndexes.insert(it, idx);
-            return true;
-        }
-        return false;
+        if (expandedIndexes.contains(idx))
+            return false;
+        expandedIndexes.insert(idx);
+        return true;
     }
 
-    inline bool isIndexExpanded(const QPersistentModelIndex idx) const {
-        QList<QPersistentModelIndex>::const_iterator it;
-        it = qBinaryFind(expandedIndexes.constBegin(), expandedIndexes.constEnd(), idx);
-        return (it != expandedIndexes.constEnd());
+    inline bool isIndexExpanded(const QModelIndex &idx) const {
+        //We first check if the idx is a QPersistentModelIndex, because creating QPersistentModelIndex is slow
+        return isPersistent(idx) && expandedIndexes.contains(idx);
     }
 
     // used when hiding and showing items
-    QVector<QPersistentModelIndex> hiddenIndexes;
+    QSet<QPersistentModelIndex> hiddenIndexes;
 
-    inline bool isRowHidden(const QPersistentModelIndex idx) const {
-        QVector<QPersistentModelIndex>::const_iterator it;
-        it = qBinaryFind(hiddenIndexes.constBegin(), hiddenIndexes.constEnd(), idx);
-        return (it != hiddenIndexes.constEnd());
+    inline bool isRowHidden(const QModelIndex &idx) const {
+        //We first check if the idx is a QPersistentModelIndex, because creating QPersistentModelIndex is slow
+        return isPersistent(idx) && hiddenIndexes.contains(idx);
     }
+
+    inline bool isItemHiddenOrDisabled(int i) const {
+        if (i < 0 || i >= viewItems.count())
+            return false;
+        const QModelIndex index = viewItems.at(i).index;
+        return isRowHidden(index) || !isIndexEnabled(index);
+    }
+
+    inline int above(int item) const
+        { int i = item; while (isItemHiddenOrDisabled(--item)){} return item < 0 ? i : item; }
+    inline int below(int item) const
+        { int i = item; while (isItemHiddenOrDisabled(++item)){} return item >= viewItems.count() ? i : item; }
+    inline void invalidateHeightCache(int item) const
+        { viewItems[item].height = 0; }
 
     // used for spanning rows
     QVector<QPersistentModelIndex> spanningIndexes;

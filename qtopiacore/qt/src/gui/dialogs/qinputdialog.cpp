@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@
 #include "qlabel.h"
 #include "qlayout.h"
 #include "qlineedit.h"
+#include "qlistwidget.h"
 #include "qpushbutton.h"
 #include "qspinbox.h"
 #include "qstackedlayout.h"
@@ -52,34 +57,57 @@
 #include "qevent.h"
 #include "qdialog_p.h"
 
+QT_USE_NAMESPACE
+
+static const char *signalForMember(const char *member)
+{
+    static const int NumCandidates = 4;
+    static const char * const candidateSignals[NumCandidates] = {
+        SIGNAL(textValueSelected(QString)),
+        SIGNAL(intValueSelected(int)),
+        SIGNAL(doubleValueSelected(double)),
+        SIGNAL(accepted())
+    };
+
+    QByteArray normalizedMember(QMetaObject::normalizedSignature(member));
+
+    int i = 0;
+    while (i < NumCandidates - 1) { // sic
+        if (QMetaObject::checkConnectArgs(candidateSignals[i], normalizedMember))
+            break;
+        ++i;
+    }
+    return candidateSignals[i];
+}
+
 QT_BEGIN_NAMESPACE
 
-// This internal class adds extra validation to a QSpinBox by emitting textChanged(bool)
-// after events that may potentially change the visible text. Return or Enter key presses
-// are not propagated if the visible text is invalid. Instead, the visible text is modified
-// to the last valid value.
-class QInputDialogValidatedSpinBox : public QSpinBox
+/*
+    These internal classes add extra validation to QSpinBox and QDoubleSpinBox by emitting
+    textChanged(bool) after events that may potentially change the visible text. Return or
+    Enter key presses are not propagated if the visible text is invalid. Instead, the visible
+    text is modified to the last valid value.
+*/
+class QInputDialogSpinBox : public QSpinBox
 {
     Q_OBJECT
+
 public:
-    QInputDialogValidatedSpinBox(int minValue, int maxValue, int step, int value)
-        : QSpinBox(0)
-    {
-        setRange(minValue, maxValue);
-        setSingleStep(step);
-        setValue(value);
-        selectAll();
-        validator = new QIntValidator(minValue, maxValue, this);
-        QObject::connect(
-            lineEdit(), SIGNAL(textChanged(const QString &)), this, SLOT(notifyTextChanged()));
-        QObject::connect(this, SIGNAL(editingFinished()), this, SLOT(notifyTextChanged()));
+    QInputDialogSpinBox(QWidget *parent)
+        : QSpinBox(parent) {
+        connect(lineEdit(), SIGNAL(textChanged(const QString&)), this, SLOT(notifyTextChanged()));
+        connect(this, SIGNAL(editingFinished()), this, SLOT(notifyTextChanged()));
     }
 
+signals:
+    void textChanged(bool);
+
+private slots:
+    void notifyTextChanged() { emit textChanged(hasAcceptableInput()); }
+
 private:
-    QIntValidator *validator;
-    void keyPressEvent(QKeyEvent *event)
-    {
-        if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && !textValid()) {
+    void keyPressEvent(QKeyEvent *event) {
+        if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && !hasAcceptableInput()) {
 #ifndef QT_NO_PROPERTIES
             setProperty("value", property("value"));
 #endif
@@ -89,53 +117,32 @@ private:
         notifyTextChanged();
     }
 
-    void mousePressEvent(QMouseEvent *event)
-    {
+    void mousePressEvent(QMouseEvent *event) {
         QSpinBox::mousePressEvent(event);
         notifyTextChanged();
     }
+};
 
-    bool textValid() const
-    {
-        QString t = text();
-        int pos = 0;
-        return validate(t, pos) == QValidator::Acceptable;
+class QInputDialogDoubleSpinBox : public QDoubleSpinBox
+{
+    Q_OBJECT
+
+public:
+    QInputDialogDoubleSpinBox(QWidget *parent = 0)
+        : QDoubleSpinBox(parent) {
+        connect(lineEdit(), SIGNAL(textChanged(const QString&)), this, SLOT(notifyTextChanged()));
+        connect(this, SIGNAL(editingFinished()), this, SLOT(notifyTextChanged()));
     }
-
-private slots:
-    void notifyTextChanged() { emit textChanged(textValid()); }
 
 signals:
     void textChanged(bool);
-};
 
+private slots:
+    void notifyTextChanged() { emit textChanged(hasAcceptableInput()); }
 
-// This internal class adds extra validation to a QDoubleSpinBox by emitting textChanged(bool)
-// after events that may potentially change the visible text. Return or Enter key presses
-// are not propagated if the visible text is invalid. Instead, the visible text is modified
-// to the last valid value.
-class QInputDialogValidatedDoubleSpinBox : public QDoubleSpinBox
-{
-    Q_OBJECT
-public:
-    QInputDialogValidatedDoubleSpinBox(
-        double minValue, double maxValue, int decimals, double value)
-        : QDoubleSpinBox(0)
-    {
-        setDecimals(decimals);
-        setRange(minValue, maxValue);
-        setValue(value);
-        selectAll();
-        validator = new QDoubleValidator(minValue, maxValue, decimals, this);
-        QObject::connect(
-            lineEdit(), SIGNAL(textChanged(const QString &)), this, SLOT(notifyTextChanged()));
-        QObject::connect(this, SIGNAL(editingFinished()), this, SLOT(notifyTextChanged()));
-    }
 private:
-    QDoubleValidator *validator;
-    void keyPressEvent(QKeyEvent *event)
-    {
-        if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && !textValid()) {
+    void keyPressEvent(QKeyEvent *event) {
+        if ((event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) && !hasAcceptableInput()) {
 #ifndef QT_NO_PROPERTIES
             setProperty("value", property("value"));
 #endif
@@ -145,24 +152,10 @@ private:
         notifyTextChanged();
     }
 
-    void mousePressEvent(QMouseEvent *event)
-    {
+    void mousePressEvent(QMouseEvent *event) {
         QDoubleSpinBox::mousePressEvent(event);
         notifyTextChanged();
     }
-
-    bool textValid() const
-    {
-        QString t = text();
-        int pos = 0;
-        return validate(t, pos) == QValidator::Acceptable;
-    }
-
-private slots:
-    void notifyTextChanged() { emit textChanged(textValid()); }
-
-signals:
-    void textChanged(bool);
 };
 
 QT_BEGIN_INCLUDE_NAMESPACE
@@ -172,99 +165,261 @@ QT_END_INCLUDE_NAMESPACE
 class QInputDialogPrivate : public QDialogPrivate
 {
     Q_DECLARE_PUBLIC(QInputDialog)
+
 public:
     QInputDialogPrivate();
-    QLabel *label; // ### Qt 5: remove
-    QPushButton *okButton;
-    QWidget *input; // ### Qt 5: remove
-    void init(const QString &label, QInputDialog::Type); // ### Qt 5: remove
-    void init(const QString &title, const QString &label, QWidget *input);
-    void tryAccept();
+
+    void ensureLayout();
+    void ensureLineEdit();
+    void ensureComboBox();
+    void ensureListView();
+    void ensureIntSpinBox();
+    void ensureDoubleSpinBox();
+    void ensureEnabledConnection(QAbstractSpinBox *spinBox);
+    void setInputWidget(QWidget *widget);
+    void chooseRightTextInputWidget();
+    void setComboBoxText(const QString &text);
+    void setListViewText(const QString &text);
+    QString listViewText() const;
+    void ensureLayout() const { const_cast<QInputDialogPrivate *>(this)->ensureLayout(); }
+    bool useComboBoxOrListView() const { return comboBox && comboBox->count() > 0; }
+    void _q_textChanged(const QString &text);
+    void _q_currentRowChanged(const QModelIndex &newIndex, const QModelIndex &oldIndex);
+
+    mutable QLabel *label;
+    mutable QDialogButtonBox *buttonBox;
+    mutable QLineEdit *lineEdit;
+    mutable QSpinBox *intSpinBox;
+    mutable QDoubleSpinBox *doubleSpinBox;
+    mutable QComboBox *comboBox;
+    mutable QListView *listView;
+    mutable QWidget *inputWidget;
+    mutable QVBoxLayout *mainLayout;
+    QInputDialog::InputDialogOptions opts;
+    QString textValue;
+    QPointer<QObject> receiverToDisconnectOnClose;
+    QByteArray memberToDisconnectOnClose;
 };
 
 QInputDialogPrivate::QInputDialogPrivate()
-    : QDialogPrivate()
+    : label(0), buttonBox(0), lineEdit(0), intSpinBox(0), doubleSpinBox(0), comboBox(0), listView(0),
+      inputWidget(0), mainLayout(0)
 {
 }
 
-// ### Qt 5: remove
-void QInputDialogPrivate::init(const QString &lbl, QInputDialog::Type type)
+void QInputDialogPrivate::ensureLayout()
 {
     Q_Q(QInputDialog);
-    QVBoxLayout *vbox = new QVBoxLayout(q);
 
-    label = new QLabel(lbl, q);
-    vbox->addWidget(label);
-    vbox->addStretch(1);
+    if (mainLayout)
+        return;
 
-    switch (type) {
-    case QInputDialog::LineEdit:
-        input = new QLineEdit(q);
-        break;
-    case QInputDialog::SpinBox:
-        input = new QSpinBox(q);
-        break;
-    case QInputDialog::DoubleSpinBox:
-        input = new QDoubleSpinBox(q);
-        break;
-    case QInputDialog::ComboBox:
-    case QInputDialog::EditableComboBox: {
-        QComboBox *combo = new QComboBox(q);
-        if (type == QInputDialog::EditableComboBox)
-            combo->setEditable(true);
-        input = combo;
+    if (!inputWidget) {
+        ensureLineEdit();
+        inputWidget = lineEdit;
     }
-        break;
-    }
-    vbox->addWidget(input);
-    vbox->addStretch(1);
 
+    if (!label)
+        label = new QLabel(QInputDialog::tr("Enter a value:"), q);
 #ifndef QT_NO_SHORTCUT
-    label->setBuddy(input);
+    label->setBuddy(inputWidget);
 #endif
+    label->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel,
-                                                        Qt::Horizontal, q);
-    buttonBox->setObjectName(QLatin1String("qt_inputdlg_buttonbox"));
-    QPushButton *okButton =
-        static_cast<QPushButton *>(buttonBox->addButton(QDialogButtonBox::Ok));
-    okButton->setDefault(true);
-    vbox->addWidget(buttonBox);
-
+    buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, q);
     QObject::connect(buttonBox, SIGNAL(accepted()), q, SLOT(accept()));
     QObject::connect(buttonBox, SIGNAL(rejected()), q, SLOT(reject()));
 
+    mainLayout = new QVBoxLayout(q);
+    mainLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
+    mainLayout->addWidget(label);
+    mainLayout->addWidget(inputWidget);
+    mainLayout->addWidget(buttonBox);
+    ensureEnabledConnection(qobject_cast<QAbstractSpinBox *>(inputWidget));
+    inputWidget->show();
 }
 
-void QInputDialogPrivate::init(const QString &title, const QString &lbl, QWidget *input)
+void QInputDialogPrivate::ensureLineEdit()
 {
     Q_Q(QInputDialog);
-    q->setWindowTitle(title);
-    QVBoxLayout *vbox = new QVBoxLayout(q);
+    if (!lineEdit) {
+        lineEdit = new QLineEdit(q);
+        lineEdit->hide();
+        QObject::connect(lineEdit, SIGNAL(textChanged(const QString&)),
+                         q, SLOT(_q_textChanged(const QString&)));
+    }
+}
 
-    QLabel *label = new QLabel(lbl, q);
-    vbox->addWidget(label);
-    vbox->addStretch(1);
+void QInputDialogPrivate::ensureComboBox()
+{
+    Q_Q(QInputDialog);
+    if (!comboBox) {
+        comboBox = new QComboBox(q);
+        comboBox->hide();
+        QObject::connect(comboBox, SIGNAL(editTextChanged(const QString&)),
+                         q, SLOT(_q_textChanged(const QString&)));
+        QObject::connect(comboBox, SIGNAL(currentIndexChanged(const QString&)),
+                         q, SLOT(_q_textChanged(const QString&)));
+    }
+}
 
-    input->setParent(q);
-    vbox->addWidget(input);
-    vbox->addStretch(1);
+void QInputDialogPrivate::ensureListView()
+{
+    Q_Q(QInputDialog);
+    if (!listView) {
+        ensureComboBox();
 
-#ifndef QT_NO_SHORTCUT
-    label->setBuddy(input);
-#endif
+        listView = new QListView(q);
+        listView->hide();
+        listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        listView->setSelectionMode(QAbstractItemView::SingleSelection);
+        listView->setModel(comboBox->model());
+        listView->setCurrentIndex(QModelIndex()); // ###
+        QObject::connect(listView->selectionModel(),
+                         SIGNAL(currentRowChanged(const QModelIndex&, const QModelIndex&)),
+                         q, SLOT(_q_currentRowChanged(const QModelIndex&, const QModelIndex&)));
+    }
+}
 
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel,
-                                                       Qt::Horizontal, q);
-    buttonBox->setObjectName(QLatin1String("qt_inputdlg_buttonbox"));
-    okButton = static_cast<QPushButton *>(buttonBox->addButton(QDialogButtonBox::Ok));
-    okButton->setDefault(true);
-    vbox->addWidget(buttonBox);
+void QInputDialogPrivate::ensureIntSpinBox()
+{
+    Q_Q(QInputDialog);
+    if (!intSpinBox) {
+        intSpinBox = new QInputDialogSpinBox(q);
+        intSpinBox->hide();
+        QObject::connect(intSpinBox, SIGNAL(valueChanged(int)),
+                         q, SIGNAL(intValueChanged(int)));
+    }
+}
 
-    QObject::connect(buttonBox, SIGNAL(accepted()), q, SLOT(accept()));
-    QObject::connect(buttonBox, SIGNAL(rejected()), q, SLOT(reject()));
+void QInputDialogPrivate::ensureDoubleSpinBox()
+{
+    Q_Q(QInputDialog);
+    if (!doubleSpinBox) {
+        doubleSpinBox = new QInputDialogDoubleSpinBox(q);
+        doubleSpinBox->hide();
+        QObject::connect(doubleSpinBox, SIGNAL(valueChanged(double)),
+                         q, SIGNAL(doubleValueChanged(double)));
+    }
+}
 
-    q->setSizeGripEnabled(true);
+void QInputDialogPrivate::ensureEnabledConnection(QAbstractSpinBox *spinBox)
+{
+    if (spinBox) {
+        QAbstractButton *okButton = buttonBox->button(QDialogButtonBox::Ok);
+        QObject::disconnect(spinBox, SIGNAL(textChanged(bool)), okButton, SLOT(setEnabled(bool)));
+        QObject::connect(spinBox, SIGNAL(textChanged(bool)), okButton, SLOT(setEnabled(bool)));
+    }
+}
+
+void QInputDialogPrivate::setInputWidget(QWidget *widget)
+{
+    Q_ASSERT(widget);
+    if (inputWidget == widget)
+        return;
+
+    if (mainLayout) {
+        Q_ASSERT(inputWidget);
+        mainLayout->removeWidget(inputWidget);
+        inputWidget->hide();
+        mainLayout->insertWidget(1, widget);
+        widget->show();
+
+        // disconnect old input widget
+        QAbstractButton *okButton = buttonBox->button(QDialogButtonBox::Ok);
+        if (QAbstractSpinBox *spinBox = qobject_cast<QAbstractSpinBox *>(inputWidget))
+            QObject::disconnect(spinBox, SIGNAL(textChanged(bool)), okButton, SLOT(setEnabled(bool)));
+
+        // connect new input widget and update enabled state of OK button
+        QAbstractSpinBox *spinBox = qobject_cast<QAbstractSpinBox *>(widget);
+        ensureEnabledConnection(spinBox);
+        okButton->setEnabled(!spinBox || spinBox->hasAcceptableInput());
+    }
+
+    inputWidget = widget;
+
+    // synchronize the text shown in the new text editor with the current
+    // textValue
+    if (widget == lineEdit) {
+        lineEdit->setText(textValue);
+    } else if (widget == comboBox) {
+        setComboBoxText(textValue);
+    } else if (widget == listView) {
+        setListViewText(textValue);
+        ensureLayout();
+        buttonBox->button(QDialogButtonBox::Ok)->setEnabled(listView->selectionModel()->hasSelection());
+    }
+}
+
+void QInputDialogPrivate::chooseRightTextInputWidget()
+{
+    QWidget *widget;
+
+    if (useComboBoxOrListView()) {
+        if ((opts & QInputDialog::UseListViewForComboBoxItems) && !comboBox->isEditable()) {
+            ensureListView();
+            widget = listView;
+        } else {
+            widget = comboBox;
+        }
+    } else {
+        ensureLineEdit();
+        widget = lineEdit;
+    }
+
+    setInputWidget(widget);
+
+    if (inputWidget == comboBox) {
+        _q_textChanged(comboBox->currentText());
+    } else if (inputWidget == listView) {
+        _q_textChanged(listViewText());
+    }
+}
+
+void QInputDialogPrivate::setComboBoxText(const QString &text)
+{
+    int index = comboBox->findText(text);
+    if (index != -1) {
+        comboBox->setCurrentIndex(index);
+    } else if (comboBox->isEditable()) {
+        comboBox->setEditText(text);
+    }
+}
+
+void QInputDialogPrivate::setListViewText(const QString &text)
+{
+    int row = comboBox->findText(text);
+    if (row != -1) {
+        QModelIndex index(comboBox->model()->index(row, 0));
+        listView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::Clear
+                                                         | QItemSelectionModel::SelectCurrent);
+    }
+}
+
+QString QInputDialogPrivate::listViewText() const
+{
+    if (listView->selectionModel()->hasSelection()) {
+        int row = listView->selectionModel()->selectedRows().value(0).row();
+        return comboBox->itemText(row);
+    } else {
+        return QString();
+    }
+}
+
+void QInputDialogPrivate::_q_textChanged(const QString &text)
+{
+    Q_Q(QInputDialog);
+    if (textValue != text) {
+        textValue = text;
+        emit q->textValueChanged(text);
+    }
+}
+
+void QInputDialogPrivate::_q_currentRowChanged(const QModelIndex &newIndex,
+                                               const QModelIndex & /* oldIndex */)
+{
+    _q_textChanged(comboBox->model()->data(newIndex).toString());
+    buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
 
 /*!
@@ -277,7 +432,7 @@ void QInputDialogPrivate::init(const QString &title, const QString &lbl, QWidget
     label must be set to tell the user what they should enter.
 
     Four static convenience functions are provided:
-    getText(), getInteger(), getDouble() and getItem(). All the
+    getText(), getInt(), getDouble(), and getItem(). All the
     functions can be used in a similar way, for example:
 
     \snippet examples/dialogs/standarddialogs/dialog.cpp 3
@@ -294,66 +449,658 @@ void QInputDialogPrivate::init(const QString &title, const QString &lbl, QWidget
 */
 
 /*!
-  \enum QInputDialog::Type
+    \enum QInputDialog::InputMode
+    \since 4.5
 
-  This enum specifies the type of the dialog, i.e. what kind of data you
-  want the user to input:
+    This enum describes the different modes of input that can be selected for the dialog.
 
-  \value LineEdit  A QLineEdit is used for obtaining string or numeric
-  input. The QLineEdit can be accessed using lineEdit().
+    \value TextInput   Used to input text strings.
+    \value IntInput    Used to input integers.
+    \value DoubleInput Used to input floating point numbers with double precision accuracy.
 
-  \value SpinBox  A QSpinBox is used for obtaining integer input.
-  Use spinBox() to access the QSpinBox.
-
-  \value ComboBox  A read-only QComboBox is used to provide a fixed
-  list of choices from which the user can choose.
-  Use comboBox() to access the QComboBox.
-
-  \value EditableComboBox  An editable QComboBox is used to provide a fixed
-  list of choices from which the user can choose, but which also
-  allows the user to enter their own value instead.
-  Use editableComboBox() to access the QComboBox.
+    \sa inputMode
 */
 
 /*!
-  Constructs an input dialog of the specified \a type with the given \a parent
-  widget and window \a flags. The \a text is shown in the dialog with the input
-  field, and is typically used to tell the user what they are expected to enter.
+    \since 4.5
 
-  \sa getText(), getInteger(), getDouble(), getItem()
+    Constructs a new input dialog with the given \a parent and window \a flags.
 */
-// ### Qt 5: remove
-QInputDialog::QInputDialog(const QString &text, QWidget* parent, Type type, Qt::WindowFlags f)
-    : QDialog(*new QInputDialogPrivate, parent, f)
+QInputDialog::QInputDialog(QWidget *parent, Qt::WindowFlags flags)
+    : QDialog(*new QInputDialogPrivate, parent, flags)
 {
-    Q_D(QInputDialog);
-    d->init(text, type);
 }
 
 /*!
-  Constructs the dialog. The \a title is the text which is displayed in
-  the title bar of the dialog. The \a label is the text which is shown to
-  the user (it should tell the user what they are expected to enter).
-  The \a parent is the dialog's parent widget. The \a input parameter
-  is the dialog to be used. The \a f parameter is passed on to the
-  QDialog constructor.
+    \since 4.5
 
-  \sa getText(), getInteger(), getDouble(), getItem()
-*/
-QInputDialog::QInputDialog(
-    const QString &title, const QString &label, QWidget *parent, QWidget *input,
-    Qt::WindowFlags f)
-    : QDialog(*new QInputDialogPrivate, parent, f)
-{
-    Q_D(QInputDialog);
-    d->init(title, label, input);
-}
-
-/*!
     Destroys the input dialog.
 */
 QInputDialog::~QInputDialog()
 {
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::inputMode
+
+    \brief the mode used for input
+
+    This property help determines which widget is used for entering input into the dialog.
+*/
+void QInputDialog::setInputMode(InputMode mode)
+{
+    Q_D(QInputDialog);
+
+    QWidget *widget;
+
+    /*
+        Warning: Some functions in QInputDialog rely on implementation details
+        of the code below. Look for the comments that accompany the calls to
+        setInputMode() throughout this file before you change the code below.
+    */
+
+    switch (mode) {
+    case IntInput:
+        d->ensureIntSpinBox();
+        widget = d->intSpinBox;
+        break;
+    case DoubleInput:
+        d->ensureDoubleSpinBox();
+        widget = d->doubleSpinBox;
+        break;
+    default:
+        Q_ASSERT(mode == TextInput);
+        d->chooseRightTextInputWidget();
+        return;
+    }
+
+    d->setInputWidget(widget);
+}
+
+QInputDialog::InputMode QInputDialog::inputMode() const
+{
+    Q_D(const QInputDialog);
+
+    if (d->inputWidget) {
+        if (d->inputWidget == d->intSpinBox) {
+            return IntInput;
+        } else if (d->inputWidget == d->doubleSpinBox) {
+            return DoubleInput;
+        }
+    }
+
+    return TextInput;
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::labelText
+
+    \brief the text to for the label to describe what needs to be input
+*/
+void QInputDialog::setLabelText(const QString &text)
+{
+    Q_D(QInputDialog);
+    if (!d->label) {
+        d->label = new QLabel(text, this);
+    } else {
+        d->label->setText(text);
+    }
+}
+
+QString QInputDialog::labelText() const
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    return d->label->text();
+}
+
+/*!
+    \enum QInputDialog::InputDialogOption
+
+    \since 4.5
+
+    This enum specifies various options that affect the look and feel
+    of an input dialog.
+
+    \value NoButtons Don't display \gui{OK} and \gui{Cancel} buttons. (Useful for "live dialogs".)
+    \value UseListViewForComboBoxItems Use a QListView rather than a non-editable QComboBox for
+                                       displaying the items set with setComboBoxItems().
+
+    \sa options, setOption(), testOption()
+*/
+
+/*!
+    Sets the given \a option to be enabled if \a on is true;
+    otherwise, clears the given \a option.
+
+    \sa options, testOption()
+*/
+void QInputDialog::setOption(InputDialogOption option, bool on)
+{
+    Q_D(QInputDialog);
+    if (!(d->opts & option) != !on)
+        setOptions(d->opts ^ option);
+}
+
+/*!
+    Returns true if the given \a option is enabled; otherwise, returns
+    false.
+
+    \sa options, setOption()
+*/
+bool QInputDialog::testOption(InputDialogOption option) const
+{
+    Q_D(const QInputDialog);
+    return (d->opts & option) != 0;
+}
+
+/*!
+    \property QInputDialog::options
+    \brief the various options that affect the look and feel of the dialog
+    \since 4.5
+
+    By default, all options are disabled.
+
+    \sa setOption(), testOption()
+*/
+void QInputDialog::setOptions(InputDialogOptions options)
+{
+    Q_D(QInputDialog);
+
+    InputDialogOptions changed = (options ^ d->opts);
+    if (!changed)
+        return;
+
+    d->opts = options;
+    d->ensureLayout();
+
+    if (changed & NoButtons)
+        d->buttonBox->setVisible(!(options & NoButtons));
+    if ((changed & UseListViewForComboBoxItems) && inputMode() == TextInput)
+        d->chooseRightTextInputWidget();
+}
+
+QInputDialog::InputDialogOptions QInputDialog::options() const
+{
+    Q_D(const QInputDialog);
+    return d->opts;
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::textValue
+
+    \brief the text value for the input dialog
+
+    This property is only relevant when the input dialog is used in
+    TextInput mode.
+*/
+void QInputDialog::setTextValue(const QString &text)
+{
+    Q_D(QInputDialog);
+
+    setInputMode(TextInput);
+    if (d->inputWidget == d->lineEdit) {
+        d->lineEdit->setText(text);
+    } else if (d->inputWidget == d->comboBox) {
+        d->setComboBoxText(text);
+    } else {
+        d->setListViewText(text);
+    }
+}
+
+QString QInputDialog::textValue() const
+{
+    Q_D(const QInputDialog);
+    return d->textValue;
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::textEchoMode
+
+    \brief the echo mode for the text value
+
+    This property is only relevant when the input dialog is used in
+    TextInput mode.
+*/
+void QInputDialog::setTextEchoMode(QLineEdit::EchoMode mode)
+{
+    Q_D(QInputDialog);
+    d->ensureLineEdit();
+    d->lineEdit->setEchoMode(mode);
+}
+
+QLineEdit::EchoMode QInputDialog::textEchoMode() const
+{
+    Q_D(const QInputDialog);
+    if (d->lineEdit) {
+        return d->lineEdit->echoMode();
+    } else {
+        return QLineEdit::Normal;
+    }
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::comboBoxEditable
+
+    \brief whether or not the combo box is used in the input dialog is editable
+*/
+void QInputDialog::setComboBoxEditable(bool editable)
+{
+    Q_D(QInputDialog);
+    d->ensureComboBox();
+    d->comboBox->setEditable(editable);
+    if (inputMode() == TextInput)
+        d->chooseRightTextInputWidget();
+}
+
+bool QInputDialog::isComboBoxEditable() const
+{
+    Q_D(const QInputDialog);
+    if (d->comboBox) {
+        return d->comboBox->isEditable();
+    } else {
+        return false;
+    }
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::comboBoxItems
+
+    \brief the items used in the combobox for the input dialog
+*/
+void QInputDialog::setComboBoxItems(const QStringList &items)
+{
+    Q_D(QInputDialog);
+
+    d->ensureComboBox();
+    d->comboBox->blockSignals(true);
+    d->comboBox->clear();
+    d->comboBox->addItems(items);
+    d->comboBox->blockSignals(false);
+
+    if (inputMode() == TextInput)
+        d->chooseRightTextInputWidget();
+}
+
+QStringList QInputDialog::comboBoxItems() const
+{
+    Q_D(const QInputDialog);
+    QStringList result;
+    if (d->comboBox) {
+        const int count = d->comboBox->count();
+        for (int i = 0; i < count; ++i)
+            result.append(d->comboBox->itemText(i));
+    }
+    return result;
+}
+
+/*!
+    \property QInputDialog::intValue
+    \since 4.5
+    \brief the current integer value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+void QInputDialog::setIntValue(int value)
+{
+    Q_D(QInputDialog);
+    setInputMode(IntInput);
+    d->intSpinBox->setValue(value);
+}
+
+int QInputDialog::intValue() const
+{
+    Q_D(const QInputDialog);
+    if (d->intSpinBox) {
+        return d->intSpinBox->value();
+    } else {
+        return 0;
+    }
+}
+
+/*!
+    \property QInputDialog::intMinimum
+    \since 4.5
+    \brief the minimum integer value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+void QInputDialog::setIntMinimum(int min)
+{
+    Q_D(QInputDialog);
+    d->ensureIntSpinBox();
+    d->intSpinBox->setMinimum(min);
+}
+
+int QInputDialog::intMinimum() const
+{
+    Q_D(const QInputDialog);
+    if (d->intSpinBox) {
+        return d->intSpinBox->minimum();
+    } else {
+        return 0;
+    }
+}
+
+/*!
+    \property QInputDialog::intMaximum
+    \since 4.5
+    \brief the maximum integer value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+void QInputDialog::setIntMaximum(int max)
+{
+    Q_D(QInputDialog);
+    d->ensureIntSpinBox();
+    d->intSpinBox->setMaximum(max);
+}
+
+int QInputDialog::intMaximum() const
+{
+    Q_D(const QInputDialog);
+    if (d->intSpinBox) {
+        return d->intSpinBox->maximum();
+    } else {
+        return 99;
+    }
+}
+
+/*!
+    Sets the range of integer values accepted by the dialog when used in
+    IntInput mode, with minimum and maximum values specified by \a min and
+    \a max respectively.
+*/
+void QInputDialog::setIntRange(int min, int max)
+{
+    Q_D(QInputDialog);
+    d->ensureIntSpinBox();
+    d->intSpinBox->setRange(min, max);
+}
+
+/*!
+    \property QInputDialog::intStep
+    \since 4.5
+    \brief the step by which the integer value is increased and decreased
+
+    This property is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+void QInputDialog::setIntStep(int step)
+{
+    Q_D(QInputDialog);
+    d->ensureIntSpinBox();
+    d->intSpinBox->setSingleStep(step);
+}
+
+int QInputDialog::intStep() const
+{
+    Q_D(const QInputDialog);
+    if (d->intSpinBox) {
+        return d->intSpinBox->singleStep();
+    } else {
+        return 1;
+    }
+}
+
+/*!
+    \property QInputDialog::doubleValue
+    \since 4.5
+    \brief the current double precision floating point value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    DoubleInput mode.
+*/
+void QInputDialog::setDoubleValue(double value)
+{
+    Q_D(QInputDialog);
+    setInputMode(DoubleInput);
+    d->doubleSpinBox->setValue(value);
+}
+
+double QInputDialog::doubleValue() const
+{
+    Q_D(const QInputDialog);
+    if (d->doubleSpinBox) {
+        return d->doubleSpinBox->value();
+    } else {
+        return 0.0;
+    }
+}
+
+/*!
+    \property QInputDialog::doubleMinimum
+    \since 4.5
+    \brief the minimum double precision floating point value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    DoubleInput mode.
+*/
+void QInputDialog::setDoubleMinimum(double min)
+{
+    Q_D(QInputDialog);
+    d->ensureDoubleSpinBox();
+    d->doubleSpinBox->setMinimum(min);
+}
+
+double QInputDialog::doubleMinimum() const
+{
+    Q_D(const QInputDialog);
+    if (d->doubleSpinBox) {
+        return d->doubleSpinBox->minimum();
+    } else {
+        return 0.0;
+    }
+}
+
+/*!
+    \property QInputDialog::doubleMaximum
+    \since 4.5
+    \brief the maximum double precision floating point value accepted as input
+
+    This property is only relevant when the input dialog is used in
+    DoubleInput mode.
+*/
+void QInputDialog::setDoubleMaximum(double max)
+{
+    Q_D(QInputDialog);
+    d->ensureDoubleSpinBox();
+    d->doubleSpinBox->setMaximum(max);
+}
+
+double QInputDialog::doubleMaximum() const
+{
+    Q_D(const QInputDialog);
+    if (d->doubleSpinBox) {
+        return d->doubleSpinBox->maximum();
+    } else {
+        return 99.99;
+    }
+}
+
+/*!
+    Sets the range of double precision floating point values accepted by the
+    dialog when used in DoubleInput mode, with minimum and maximum values
+    specified by \a min and \a max respectively.
+*/
+void QInputDialog::setDoubleRange(double min, double max)
+{
+    Q_D(QInputDialog);
+    d->ensureDoubleSpinBox();
+    d->doubleSpinBox->setRange(min, max);
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::doubleDecimals
+
+    \brief sets the percision of the double spinbox in decimals
+
+    \sa QDoubleSpinBox::setDecimals()
+*/
+void QInputDialog::setDoubleDecimals(int decimals)
+{
+    Q_D(QInputDialog);
+    d->ensureDoubleSpinBox();
+    d->doubleSpinBox->setDecimals(decimals);
+}
+
+int QInputDialog::doubleDecimals() const
+{
+    Q_D(const QInputDialog);
+    if (d->doubleSpinBox) {
+        return d->doubleSpinBox->decimals();
+    } else {
+        return 2;
+    }
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::okButtonText
+
+    \brief the text for the button used to accept the entry in the dialog
+*/
+void QInputDialog::setOkButtonText(const QString &text)
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    d->buttonBox->button(QDialogButtonBox::Ok)->setText(text);
+}
+
+QString QInputDialog::okButtonText() const
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    return d->buttonBox->button(QDialogButtonBox::Ok)->text();
+}
+
+/*!
+    \since 4.5
+
+    \property QInputDialog::cancelButtonText
+    \brief the text for the button used to cancel the dialog
+*/
+void QInputDialog::setCancelButtonText(const QString &text)
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    d->buttonBox->button(QDialogButtonBox::Cancel)->setText(text);
+}
+
+QString QInputDialog::cancelButtonText() const
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    return d->buttonBox->button(QDialogButtonBox::Cancel)->text();
+}
+
+/*!
+    \since 4.5
+    \overload
+
+    Opens the dialog and connects its accepted() signal to the slot specified
+    by \a receiver and \a member.
+
+    The signal will be disconnected from the slot when the dialog is closed.
+*/
+void QInputDialog::open(QObject *receiver, const char *member)
+{
+    Q_D(QInputDialog);
+    connect(this, signalForMember(member), receiver, member);
+    d->receiverToDisconnectOnClose = receiver;
+    d->memberToDisconnectOnClose = member;
+    QDialog::open();
+}
+
+/*!
+    \reimp
+*/
+QSize QInputDialog::minimumSizeHint() const
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    return QDialog::minimumSizeHint();
+}
+
+/*!
+    \reimp
+*/
+QSize QInputDialog::sizeHint() const
+{
+    Q_D(const QInputDialog);
+    d->ensureLayout();
+    return QDialog::sizeHint();
+}
+
+/*!
+    \reimp
+*/
+void QInputDialog::setVisible(bool visible)
+{
+    Q_D(const QInputDialog);
+    if (visible) {
+        d->ensureLayout();
+        d->inputWidget->setFocus();
+        if (d->inputWidget == d->lineEdit) {
+            d->lineEdit->selectAll();
+        } else if (d->inputWidget == d->intSpinBox) {
+            d->intSpinBox->selectAll();
+        } else if (d->inputWidget == d->doubleSpinBox) {
+            d->doubleSpinBox->selectAll();
+        }
+    }
+    QDialog::setVisible(visible);
+}
+
+/*!
+  Closes the dialog and sets its result code to \a result. If this dialog
+  is shown with exec(), done() causes the local event loop to finish,
+  and exec() to return \a result.
+
+  \sa QDialog::done()
+*/
+void QInputDialog::done(int result)
+{
+    Q_D(QInputDialog);
+    QDialog::done(result);
+    if (result) {
+        InputMode mode = inputMode();
+        switch (mode) {
+        case DoubleInput:
+            emit doubleValueSelected(doubleValue());
+            break;
+        case IntInput:
+            emit intValueSelected(intValue());
+            break;
+        default:
+            Q_ASSERT(mode == TextInput);
+            emit textValueSelected(textValue());
+        }
+    }
+    if (d->receiverToDisconnectOnClose) {
+        disconnect(this, signalForMember(d->memberToDisconnectOnClose),
+                   d->receiverToDisconnectOnClose, d->memberToDisconnectOnClose);
+        d->receiverToDisconnectOnClose = 0;
+    }
+    d->memberToDisconnectOnClose.clear();
 }
 
 /*!
@@ -362,10 +1109,10 @@ QInputDialog::~QInputDialog()
     dialog. \a label is the text which is shown to the user (it should
     say what should be entered). \a text is the default text which is
     placed in the line edit. The \a mode is the echo mode the line
-    edit will use. If \a ok is non-null \e *\a ok will be set to true
+    edit will use. If \a ok is nonnull \e *\a ok will be set to true
     if the user pressed \gui OK and to false if the user pressed
     \gui Cancel. The dialog's parent is \a parent. The dialog will be
-    modal and uses the widget flags \a f.
+    modal and uses the specified widget \a flags.
 
     This function returns the text which has been entered in the line
     edit. It will not return an empty string.
@@ -374,29 +1121,31 @@ QInputDialog::~QInputDialog()
 
     \snippet examples/dialogs/standarddialogs/dialog.cpp 3
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QInputDialog constructors.
+
     \sa getInteger(), getDouble(), getItem()
 */
 
 QString QInputDialog::getText(QWidget *parent, const QString &title, const QString &label,
-                               QLineEdit::EchoMode mode, const QString &text,
-                               bool *ok, Qt::WindowFlags f)
+                              QLineEdit::EchoMode mode, const QString &text, bool *ok,
+                              Qt::WindowFlags flags)
 {
-    QLineEdit *le = new QLineEdit;
-    le->setText(text);
-    le->setEchoMode(mode);
-    le->setFocus();
-    le->selectAll();
+    QInputDialog dialog(parent, flags);
+    dialog.setWindowTitle(title);
+    dialog.setLabelText(label);
+    dialog.setTextValue(text);
+    dialog.setTextEchoMode(mode);
 
-    QInputDialog dlg(title, label, parent, le, f);
-
-    QString result;
-    bool accepted = (dlg.exec() == QDialog::Accepted);
+    int ret = dialog.exec();
     if (ok)
-        *ok = accepted;
-    if (accepted)
-        result = le->text();
-
-    return result;
+        *ok = !!ret;
+    if (ret) {
+        return dialog.textValue();
+    } else {
+        return text;
+    }
 }
 
 /*!
@@ -404,39 +1153,48 @@ QString QInputDialog::getText(QWidget *parent, const QString &title, const QStri
     user. \a title is the text which is displayed in the title bar
     of the dialog.  \a label is the text which is shown to the user
     (it should say what should be entered). \a value is the default
-    integer which the spinbox will be set to.  \a minValue and \a
-    maxValue are the minimum and maximum values the user may choose,
+    integer which the spinbox will be set to.  \a min and \a
+    max are the minimum and maximum values the user may choose,
     and \a step is the amount by which the values change as the user
     presses the arrow buttons to increment or decrement the value.
 
-    If \a ok is non-null *\a ok will be set to true if the user
+    If \a ok is nonnull *\a ok will be set to true if the user
     pressed \gui OK and to false if the user pressed \gui Cancel. The
     dialog's parent is \a parent. The dialog will be modal and uses
-    the widget flags \a f.
+    the widget \a flags.
 
-    This function returns the integer which has been entered by the user.
+    On success, this function returns the integer which has been
+    entered by the user; on failure, it returns the initial \a value.
 
     Use this static function like this:
 
     \snippet examples/dialogs/standarddialogs/dialog.cpp 0
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QInputDialog constructors.
+
     \sa getText(), getDouble(), getItem()
 */
 
-int QInputDialog::getInteger(QWidget *parent, const QString &title, const QString &label,
-                             int value, int minValue, int maxValue, int step, bool *ok,
-                             Qt::WindowFlags f)
+int QInputDialog::getInt(QWidget *parent, const QString &title, const QString &label, int value,
+                         int min, int max, int step, bool *ok, Qt::WindowFlags flags)
 {
-    QInputDialogValidatedSpinBox *sb =
-        new QInputDialogValidatedSpinBox(minValue, maxValue, step, value);
-    QInputDialog dlg(title, label, parent, sb, f);
-    QObject::connect(
-        sb, SIGNAL(textChanged(bool)), qobject_cast<QPushButton*>(dlg.d_func()->okButton),
-        SLOT(setEnabled(bool)));
-    bool accepted = (dlg.exec() == QDialog::Accepted);
+    QInputDialog dialog(parent, flags);
+    dialog.setWindowTitle(title);
+    dialog.setLabelText(label);
+    dialog.setIntRange(min, max);
+    dialog.setIntValue(value);
+    dialog.setIntStep(step);
+
+    int ret = dialog.exec();
     if (ok)
-        *ok = accepted;
-    return sb->value();
+        *ok = !!ret;
+    if (ret) {
+        return dialog.intValue();
+    } else {
+        return value;
+    }
 }
 
 /*!
@@ -445,14 +1203,14 @@ int QInputDialog::getInteger(QWidget *parent, const QString &title, const QStrin
     bar of the dialog. \a label is the text which is shown to the user
     (it should say what should be entered). \a value is the default
     floating point number that the line edit will be set to. \a
-    minValue and \a maxValue are the minimum and maximum values the
+    min and \a max are the minimum and maximum values the
     user may choose, and \a decimals is the maximum number of decimal
     places the number may have.
 
-    If \a ok is non-null, *\a ok will be set to true if the user
+    If \a ok is nonnull, *\a ok will be set to true if the user
     pressed \gui OK and to false if the user pressed \gui Cancel. The
     dialog's parent is \a parent. The dialog will be modal and uses
-    the widget flags \a f.
+    the widget \a flags.
 
     This function returns the floating point number which has been
     entered by the user.
@@ -461,39 +1219,48 @@ int QInputDialog::getInteger(QWidget *parent, const QString &title, const QStrin
 
     \snippet examples/dialogs/standarddialogs/dialog.cpp 1
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QInputDialog constructors.
+
     \sa getText(), getInteger(), getItem()
 */
 
-double QInputDialog::getDouble( QWidget *parent, const QString &title, const QString &label,
-                                double value, double minValue, double maxValue,
-                                int decimals, bool *ok, Qt::WindowFlags f)
+double QInputDialog::getDouble(QWidget *parent, const QString &title, const QString &label,
+                               double value, double min, double max, int decimals, bool *ok,
+                               Qt::WindowFlags flags)
 {
-    QInputDialogValidatedDoubleSpinBox *sb =
-        new QInputDialogValidatedDoubleSpinBox(minValue, maxValue, decimals, value);
-    QInputDialog dlg(title, label, parent, sb, f);
-    QObject::connect(
-        sb, SIGNAL(textChanged(bool)), qobject_cast<QPushButton*>(dlg.d_func()->okButton),
-        SLOT(setEnabled(bool)));
-    bool accepted = (dlg.exec() == QDialog::Accepted);
+    QInputDialog dialog(parent, flags);
+    dialog.setWindowTitle(title);
+    dialog.setLabelText(label);
+    dialog.setDoubleRange(min, max);
+    dialog.setDoubleValue(value);
+    dialog.setDoubleDecimals(decimals);
+
+    int ret = dialog.exec();
     if (ok)
-        *ok = accepted;
-    return sb->value();
+        *ok = !!ret;
+    if (ret) {
+        return dialog.doubleValue();
+    } else {
+        return value;
+    }
 }
 
 /*!
     Static convenience function to let the user select an item from a
     string list. \a title is the text which is displayed in the title
     bar of the dialog. \a label is the text which is shown to the user (it
-    should say what should be entered). \a list is the
+    should say what should be entered). \a items is the
     string list which is inserted into the combobox, and \a current is the number
     of the item which should be the current item. If \a editable is true
     the user can enter their own text; if \a editable is false the user
     may only select one of the existing items.
 
-    If \a ok is non-null \e *\a ok will be set to true if the user
+    If \a ok is nonnull \e *\a ok will be set to true if the user
     pressed \gui OK and to false if the user pressed \gui Cancel. The
     dialog's parent is \a parent. The dialog will be modal and uses
-    the widget flags \a f.
+    the widget \a flags.
 
     This function returns the text of the current item, or if \a
     editable is true, the current text of the combobox.
@@ -502,56 +1269,81 @@ double QInputDialog::getDouble( QWidget *parent, const QString &title, const QSt
 
     \snippet examples/dialogs/standarddialogs/dialog.cpp 2
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QInputDialog constructors.
+
     \sa getText(), getInteger(), getDouble()
 */
 
-QString QInputDialog::getItem(QWidget *parent, const QString &title, const QString &label, const QStringList &list,
-                              int current, bool editable, bool *ok, Qt::WindowFlags f)
+QString QInputDialog::getItem(QWidget *parent, const QString &title, const QString &label,
+                              const QStringList &items, int current, bool editable, bool *ok,
+                              Qt::WindowFlags flags)
 {
-    QComboBox *combo = new QComboBox;
-    combo->addItems(list);
-    combo->setCurrentIndex(current);
-    combo->setEditable(editable);
-    QInputDialog dlg(title, label, parent, combo, f);
-    bool accepted = (dlg.exec() == QDialog::Accepted);
+    QString text(items.value(current));
+
+    QInputDialog dialog(parent, flags);
+    dialog.setWindowTitle(title);
+    dialog.setLabelText(label);
+    dialog.setComboBoxItems(items);
+    dialog.setTextValue(text);
+    dialog.setComboBoxEditable(editable);
+
+    int ret = dialog.exec();
     if (ok)
-        *ok = accepted;
-    return combo->currentText();
+        *ok = !!ret;
+    if (ret) {
+        return dialog.textValue();
+    } else {
+        return text;
+    }
+}
+
+/*!
+    \obsolete
+
+    Use getInt() instead.
+*/
+int QInputDialog::getInteger(QWidget *parent, const QString &title, const QString &label,
+                             int value, int min, int max, int step, bool *ok,
+                             Qt::WindowFlags flags)
+{
+    return getInt(parent, title, label, value, min, max, step, ok, flags);
 }
 
 /*!
     \fn QString QInputDialog::getText(const QString &title, const QString &label,
                                       QLineEdit::EchoMode echo = QLineEdit::Normal,
                                       const QString &text = QString(), bool *ok = 0,
-                                      QWidget *parent = 0, const char *name = 0, Qt::WindowFlags f = 0)
+                                      QWidget *parent = 0, const char *name = 0, Qt::WindowFlags flags = 0)
 
     Call getText(\a parent, \a title, \a label, \a echo, \a text, \a
-    ok, \a f) instead.
+    ok, \a flags) instead.
 
     The \a name parameter is ignored.
 */
 
 /*!
     \fn int QInputDialog::getInteger(const QString &title, const QString &label, int value = 0,
-                                     int minValue = -2147483647, int maxValue = 2147483647,
+                                     int min = -2147483647, int max = 2147483647,
                                      int step = 1, bool *ok = 0,
-                                     QWidget *parent = 0, const char *name = 0, Qt::WindowFlags f = 0)
+                                     QWidget *parent = 0, const char *name = 0, Qt::WindowFlags flags = 0)
 
 
     Call getInteger(\a parent, \a title, \a label, \a value, \a
-    minValue, \a maxValue, \a step, \a ok, \a f) instead.
+    min, \a max, \a step, \a ok, \a flags) instead.
 
     The \a name parameter is ignored.
 */
 
 /*!
     \fn double QInputDialog::getDouble(const QString &title, const QString &label, double value = 0,
-                                       double minValue = -2147483647, double maxValue = 2147483647,
+                                       double min = -2147483647, double max = 2147483647,
                                        int decimals = 1, bool *ok = 0,
-                                       QWidget *parent = 0, const char *name = 0, Qt::WindowFlags f = 0)
+                                       QWidget *parent = 0, const char *name = 0, Qt::WindowFlags flags = 0)
 
     Call getDouble(\a parent, \a title, \a label, \a value, \a
-    minValue, \a maxValue, \a decimals, \a ok, \a f).
+    min, \a max, \a decimals, \a ok, \a flags).
 
     The \a name parameter is ignored.
 */
@@ -559,14 +1351,79 @@ QString QInputDialog::getItem(QWidget *parent, const QString &title, const QStri
 /*!
     \fn QString QInputDialog::getItem(const QString &title, const QString &label, const QStringList &list,
                                       int current = 0, bool editable = true, bool *ok = 0,
-                                      QWidget *parent = 0, const char *name = 0, Qt::WindowFlags f = 0)
+                                      QWidget *parent = 0, const char *name = 0, Qt::WindowFlags flags = 0)
 
     Call getItem(\a parent, \a title, \a label, \a list, \a current,
-    \a editable, \a ok, \a f) instead.
+    \a editable, \a ok, \a flags) instead.
 
     The \a name parameter is ignored.
 */
 
+/*!
+    \fn void QInputDialog::doubleValueChanged(double value)
+
+    This signal is emitted whenever the double value changes in the dialog.
+    The current value is specified by \a value.
+
+    This signal is only relevant when the input dialog is used in
+    DoubleInput mode.
+*/
+
+/*!
+    \fn void QInputDialog::doubleValueSelected(double value)
+
+    This signal is emitted whenever the user selects a double value by
+    accepting the dialog; for example, by clicking the \gui{OK} button.
+    The selected value is specified by \a value.
+
+    This signal is only relevant when the input dialog is used in
+    DoubleInput mode.
+*/
+
+/*!
+    \fn void QInputDialog::intValueChanged(int value)
+
+    This signal is emitted whenever the integer value changes in the dialog.
+    The current value is specified by \a value.
+
+    This signal is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+
+/*!
+    \fn void QInputDialog::intValueSelected(int value)
+
+    This signal is emitted whenever the user selects a integer value by
+    accepting the dialog; for example, by clicking the \gui{OK} button.
+    The selected value is specified by \a value.
+
+    This signal is only relevant when the input dialog is used in
+    IntInput mode.
+*/
+
+/*!
+    \fn void QInputDialog::textValueChanged(const QString &text)
+
+    This signal is emitted whenever the text string changes in the dialog.
+    The current string is specified by \a text.
+
+    This signal is only relevant when the input dialog is used in
+    TextInput mode.
+*/
+
+/*!
+    \fn void QInputDialog::textValueSelected(const QString &text)
+
+    This signal is emitted whenever the user selects a text string by
+    accepting the dialog; for example, by clicking the \gui{OK} button.
+    The selected string is specified by \a text.
+
+    This signal is only relevant when the input dialog is used in
+    TextInput mode.
+*/
+
 QT_END_NAMESPACE
+
+#include "moc_qinputdialog.cpp"
 
 #endif // QT_NO_INPUTDIALOG

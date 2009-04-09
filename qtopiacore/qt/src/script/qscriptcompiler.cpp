@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -299,8 +303,8 @@ private:
     QScriptEnginePrivate *eng;
 };
 
-Compiler::Compiler(QScriptEngine *eng):
-    m_eng(QScriptEnginePrivate::get(eng)),
+Compiler::Compiler(QScriptEnginePrivate *eng):
+    m_eng(eng),
     m_generateReferences(0), m_iterationStatement(0),
     m_switchStatement(0), m_withStatement(0),
     m_generateLeaveWithOnBreak(0), m_generateFastArgumentLookup(0),
@@ -441,6 +445,7 @@ bool Compiler::visit(AST::ObjectLiteral *node)
     FetchName fetchName(m_eng);
     bool was = generateReferences(false);
     for (AST::PropertyNameAndValueList *it = node->properties; it != 0; it = it->next) {
+        iLine(it->value);
         iDuplicate();
 
         QScriptNameIdImpl *name = fetchName(it->name);
@@ -472,7 +477,9 @@ bool Compiler::visit(AST::IdentifierExpression *node)
 
 bool Compiler::visit(AST::FunctionDeclaration *node)
 {
-    iResolve(node->name);
+    iLoadActivation();
+    iLoadString(node->name);
+    iMakeReference();
     iNewClosure(node);
     iPutField();
     return false;
@@ -683,6 +690,11 @@ bool Compiler::visit(AST::DeleteExpression *node)
 
 bool Compiler::visit(AST::ReturnStatement *node)
 {
+    if (topLevelCompiler()) {
+        m_compilationUnit.setError(QString::fromUtf8("return outside function body"),
+                                   node->startLine);
+        return false;
+    }
     iLine(node);
     return true;
 }
@@ -1410,9 +1422,16 @@ bool Compiler::visit(AST::LabelledStatement *node)
         return false;
     }
 
-    m_loops[node->statement].name = node->label;
+    loop = &m_loops[node->statement];
+    loop->name = node->label;
     node->statement->accept(this);
-    m_loops.remove(node->statement);
+    if (m_loops.contains(node->statement)) {
+        loop->breakLabel.offset = nextInstructionOffset();
+        foreach (int index, loop->breakLabel.uses) {
+            patchInstruction(index, loop->breakLabel.offset - index);
+        }
+        m_loops.remove(node->statement);
+    }
     return false;
 }
 
@@ -1484,6 +1503,18 @@ void Compiler::endVisit(AST::BreakStatement *node)
     loop->breakLabel.uses.append(offset);
 }
 
+void Compiler::endVisit(AST::EmptyStatement *node)
+{
+    iLine(node);
+}
+
+bool Compiler::visit(AST::DebuggerStatement *node)
+{
+    iLine(node);
+    iDebugger();
+    return false;
+}
+
 void Compiler::patchInstruction(int index, int offset)
 {
     QScriptInstruction &i = m_instructions[index];
@@ -1507,7 +1538,7 @@ bool Compiler::visit(AST::WithStatement *node)
     node->expression->accept(this);
     iEnterWith();
     bool was = withStatement(true);
-    bool was2 = generateLeaveOnBreak(m_iterationStatement);
+    bool was2 = generateLeaveOnBreak(true);
     node->statement->accept(this);
     generateLeaveOnBreak(was2);
     withStatement(was);
@@ -1578,8 +1609,7 @@ void Compiler::iLoadNull()
 
 void Compiler::iLoadNumber(double number)
 {
-    QScriptValueImpl arg0;
-    m_eng->newNumber(&arg0, number);
+    QScriptValueImpl arg0(number);
     pushInstruction(QScriptInstruction::OP_LoadNumber, arg0);
 }
 
@@ -1963,15 +1993,14 @@ void Compiler::iNewRegExp(QScriptNameIdImpl *pattern)
     pushInstruction(QScriptInstruction::OP_NewRegExp, arg0);
 }
 
-void Compiler::iNewRegExp(QScriptNameIdImpl *pattern, QScriptNameIdImpl *flags)
+void Compiler::iNewRegExp(QScriptNameIdImpl *pattern, int flags)
 {
     QScriptValueImpl arg0;
     pattern->persistent = true;
     m_eng->newNameId(&arg0, pattern);
 
     QScriptValueImpl arg1;
-    flags->persistent = true;
-    m_eng->newNameId(&arg1, flags);
+    m_eng->newInteger(&arg1, flags);
 
     pushInstruction(QScriptInstruction::OP_NewRegExp, arg0, arg1);
 }
@@ -2050,6 +2079,11 @@ void Compiler::iNewString(QScriptNameIdImpl *id)
     id->persistent = true;
     m_eng->newNameId(&arg0, id);
     pushInstruction(QScriptInstruction::OP_NewString, arg0);
+}
+
+void Compiler::iDebugger()
+{
+    pushInstruction(QScriptInstruction::OP_Debugger);
 }
 
 Compiler::Loop *Compiler::findLoop(QScriptNameIdImpl *name)

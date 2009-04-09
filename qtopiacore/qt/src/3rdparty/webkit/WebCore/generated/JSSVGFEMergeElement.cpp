@@ -21,208 +21,157 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEMergeElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEMergeElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEMergeElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEMergeElementTableEntries[] =
+static const HashTableValue JSSVGFEMergeElementTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "width", JSSVGFEMergeElement::WidthAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEMergeElementTableEntries[8] },
-    { "x", JSSVGFEMergeElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEMergeElementTableEntries[7] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFEMergeElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEMergeElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFEMergeElement::HeightAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEMergeElementTableEntries[9] },
-    { "className", JSSVGFEMergeElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFEMergeElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEMergeElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEMergeElementTable = 
-{
-    2, 10, JSSVGFEMergeElementTableEntries, 7
-};
+static const HashTable JSSVGFEMergeElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEMergeElementTableValues, 0 };
+#else
+    { 17, 15, JSSVGFEMergeElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEMergeElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEMergeElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEMergeElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEMergeElementPrototypeTable = 
-{
-    2, 1, JSSVGFEMergeElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEMergeElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEMergeElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEMergeElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEMergeElementPrototype::info = { "SVGFEMergeElementPrototype", 0, &JSSVGFEMergeElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEMergeElementPrototype::s_info = { "SVGFEMergeElementPrototype", 0, &JSSVGFEMergeElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEMergeElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEMergeElementPrototype>(exec, "[[JSSVGFEMergeElement.prototype]]");
+    return getDOMPrototype<JSSVGFEMergeElement>(exec);
 }
 
-const ClassInfo JSSVGFEMergeElement::info = { "SVGFEMergeElement", &JSSVGElement::info, &JSSVGFEMergeElementTable, 0 };
-
-JSSVGFEMergeElement::JSSVGFEMergeElement(ExecState* exec, SVGFEMergeElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEMergeElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEMergeElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEMergeElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEMergeElement::s_info = { "SVGFEMergeElement", &JSSVGElement::s_info, &JSSVGFEMergeElementTable, 0 };
+
+JSSVGFEMergeElement::JSSVGFEMergeElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEMergeElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEMergeElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEMergeElementPrototype(JSSVGFEMergeElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEMergeElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEMergeElement, JSSVGElement>(exec, &JSSVGFEMergeElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEMergeElement, Base>(exec, &JSSVGFEMergeElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEMergeElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEMergeElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEMergeElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEMergeElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
+JSValuePtr jsSVGFEMergeElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEMergeElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEMergeElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
+JSValuePtr jsSVGFEMergeElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(static_cast<JSSVGFEMergeElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEMergeElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEMergeElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEMergeElement* castedThisObj = static_cast<JSSVGFEMergeElement*>(asObject(thisValue));
+    SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
 
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEMergeElement* imp = static_cast<SVGFEMergeElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

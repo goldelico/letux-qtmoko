@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/mediasource_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/mediasource_p.h"

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -262,14 +266,16 @@ void QVFb::init( int display_id, int pw, int ph, int d, int r, const QString& sk
 	    const int sw = parameters.screenSize().width();
 	    const int sh = parameters.screenSize().height();
 	    const int sd = parameters.screenDepth;
-            if ( !pw ) pw = sw;
-            if ( !ph ) ph = sh;
-            if ( d < 0 )
-                if ( sd )
+            if (!pw) pw = sw;
+            if (!ph) ph = sh;
+            if (d < 0) {
+                if (sd)
                     d = sd;
                 else
                     d = -d;
-    	    if ( vis ) hide();
+            }
+            if (vis)
+                hide();
     	    menuBar()->hide();
 	    scroller = 0;
 #ifdef Q_WS_X11
@@ -309,7 +315,7 @@ void QVFb::init( int display_id, int pw, int ph, int d, int r, const QString& sk
 
 	    if ( vis ) show();
 	} else {
-	    qWarning(readError.toUtf8().constData());
+	    qWarning("%s", qPrintable(readError));
 	}
     }
 
@@ -527,13 +533,17 @@ void QVFb::saveImage()
 {
     QImage img = view->image();
     QString filename = QFileDialog::getSaveFileName(this, "Save Main Screen image", "snapshot.png", "Portable Network Graphics (*.png)");
-    if (!filename.isEmpty())
-        img.save(filename,"PNG");
+    if (!filename.isEmpty()){
+        if(!img.save(filename,"PNG"))
+                QMessageBox::critical(this, "Save Main Screen Image", "Save failed. Check that you have permission to write to the target directory.");
+    }
     if (secondaryView) {
         QImage img = view->image();
         QString filename = QFileDialog::getSaveFileName(this, "Save Second Screen image", "snapshot.png", "Portable Network Graphics (*.png)");
-        if (!filename.isEmpty())
-            img.save(filename,"PNG");
+        if (!filename.isEmpty()) {
+            if(!img.save(filename,"PNG"))
+                QMessageBox::critical(this, "Save Second Screen Image", "Save failed. Check that you have permission to write to the target directory.");
+        }
     }
 }
 
@@ -575,12 +585,12 @@ void QVFb::setRate(int i)
 void QVFb::about()
 {
     QMessageBox::about(this, "About QVFB",
-	"<h2>The Qtopia Core Virtual X11 Framebuffer</h2>"
+	"<h2>The Qt for Embedded Linux Virtual X11 Framebuffer</h2>"
 	"<p>This application runs under Qt for X11, emulating a simple framebuffer, "
-	"which the Qtopia Core server and clients can attach to just as if "
+	"which the Qt for Embedded Linux server and clients can attach to just as if "
 	"it was a hardware Linux framebuffer. "
-	"<p>With the aid of this development tool, you can develop Qtopia Core "
-	"applications under X11 without having to switch to a virtual console. "
+	"<p>With the aid of this development tool, you can develop Qt for Embedded  "
+	"Linux applications under X11 without having to switch to a virtual console. "
 	"This means you can comfortably use your other development tools such "
 	"as GUI profilers and debuggers."
     );
@@ -776,7 +786,7 @@ void QVFb::skinConfigChosen(int i)
                 chooseDepth(parameters.screenDepth,QVFbView::ARGBFormat);
             config->touchScreen->setChecked(!parameters.hasMouseHover);
 	} else {
-	    qWarning(readError.toUtf8().constData());
+	    qWarning("%s", qPrintable(readError));
 	}
     }
 }

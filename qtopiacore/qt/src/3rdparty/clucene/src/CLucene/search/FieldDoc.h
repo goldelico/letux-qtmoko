@@ -44,13 +44,13 @@ public:
 	CL_NS(util)::Comparable** fields;
 
 	/** Expert: Creates one of these objects with empty sort information. */
-	FieldDoc (int32_t doc, float_t score):
+	FieldDoc (int32_t doc, qreal score):
 	   ScoreDoc(doc,score) {
       fields=NULL;
 	}
 
 	/** Expert: Creates one of these objects with the given sort information. */
-	FieldDoc (int32_t doc, float_t score, CL_NS(util)::Comparable** fields):
+	FieldDoc (int32_t doc, qreal score, CL_NS(util)::Comparable** fields):
 	   ScoreDoc(doc,score)  
 	{
 		this->fields = fields;

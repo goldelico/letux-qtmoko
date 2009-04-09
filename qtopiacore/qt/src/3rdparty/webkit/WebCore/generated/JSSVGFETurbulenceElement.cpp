@@ -21,20 +21,18 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFETurbulenceElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedInteger.h"
 #include "JSSVGAnimatedLength.h"
@@ -42,330 +40,282 @@
 #include "JSSVGAnimatedString.h"
 #include "SVGFETurbulenceElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFETurbulenceElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFETurbulenceElementTableEntries[] =
+static const HashTableValue JSSVGFETurbulenceElementTableValues[15] =
 {
-    { "stitchTiles", JSSVGFETurbulenceElement::StitchTilesAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementTableEntries[14] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFETurbulenceElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementTableEntries[15] },
-    { "baseFrequencyX", JSSVGFETurbulenceElement::BaseFrequencyXAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementTableEntries[13] },
-    { "seed", JSSVGFETurbulenceElement::SeedAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFETurbulenceElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "type", JSSVGFETurbulenceElement::TypeAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementTableEntries[16] },
-    { "baseFrequencyY", JSSVGFETurbulenceElement::BaseFrequencyYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "className", JSSVGFETurbulenceElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "numOctaves", JSSVGFETurbulenceElement::NumOctavesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFETurbulenceElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFETurbulenceElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFETurbulenceElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFETurbulenceElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseFrequencyX", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementBaseFrequencyX, (intptr_t)0 },
+    { "baseFrequencyY", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementBaseFrequencyY, (intptr_t)0 },
+    { "numOctaves", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementNumOctaves, (intptr_t)0 },
+    { "seed", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSeed, (intptr_t)0 },
+    { "stitchTiles", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementStitchTiles, (intptr_t)0 },
+    { "type", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementType, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGFETurbulenceElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFETurbulenceElementTable = 
+static const HashTable JSSVGFETurbulenceElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFETurbulenceElementTableValues, 0 };
+#else
+    { 35, 31, JSSVGFETurbulenceElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGFETurbulenceElementConstructorTableValues[7] =
 {
-    2, 17, JSSVGFETurbulenceElementTableEntries, 13
+    { "SVG_TURBULENCE_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_TURBULENCE_TYPE_FRACTALNOISE", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_FRACTALNOISE, (intptr_t)0 },
+    { "SVG_TURBULENCE_TYPE_TURBULENCE", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_TURBULENCE, (intptr_t)0 },
+    { "SVG_STITCHTYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_STITCHTYPE_STITCH", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_STITCH, (intptr_t)0 },
+    { "SVG_STITCHTYPE_NOSTITCH", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_NOSTITCH, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGFETurbulenceElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGFETurbulenceElementConstructorTableValues, 0 };
+#else
+    { 18, 15, JSSVGFETurbulenceElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGFETurbulenceElementConstructor : public DOMObject {
+public:
+    JSSVGFETurbulenceElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGFETurbulenceElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGFETurbulenceElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGFETurbulenceElementConstructor::s_info = { "SVGFETurbulenceElementConstructor", 0, &JSSVGFETurbulenceElementConstructorTable, 0 };
+
+bool JSSVGFETurbulenceElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGFETurbulenceElementConstructor, DOMObject>(exec, &JSSVGFETurbulenceElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFETurbulenceElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFETurbulenceElementPrototypeTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "SVG_TURBULENCE_TYPE_UNKNOWN", WebCore::SVG_TURBULENCE_TYPE_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementPrototypeTableEntries[8] },
-    { "SVG_TURBULENCE_TYPE_FRACTALNOISE", WebCore::SVG_TURBULENCE_TYPE_FRACTALNOISE, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_TURBULENCE_TYPE_TURBULENCE", WebCore::SVG_TURBULENCE_TYPE_TURBULENCE, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementPrototypeTableEntries[6] },
-    { "SVG_STITCHTYPE_UNKNOWN", WebCore::SVG_STITCHTYPE_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGFETurbulenceElementPrototypeTableEntries[7] },
-    { "SVG_STITCHTYPE_STITCH", WebCore::SVG_STITCHTYPE_STITCH, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_STITCHTYPE_NOSTITCH", WebCore::SVG_STITCHTYPE_NOSTITCH, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_TURBULENCE_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_TURBULENCE_TYPE_FRACTALNOISE", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_FRACTALNOISE, (intptr_t)0 },
+    { "SVG_TURBULENCE_TYPE_TURBULENCE", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_TURBULENCE, (intptr_t)0 },
+    { "SVG_STITCHTYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_STITCHTYPE_STITCH", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_STITCH, (intptr_t)0 },
+    { "SVG_STITCHTYPE_NOSTITCH", DontDelete|ReadOnly, (intptr_t)jsSVGFETurbulenceElementSVG_STITCHTYPE_NOSTITCH, (intptr_t)0 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFETurbulenceElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFETurbulenceElementPrototypeTable = 
-{
-    2, 9, JSSVGFETurbulenceElementPrototypeTableEntries, 6
-};
+static const HashTable JSSVGFETurbulenceElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGFETurbulenceElementPrototypeTableValues, 0 };
+#else
+    { 18, 15, JSSVGFETurbulenceElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFETurbulenceElementPrototype::info = { "SVGFETurbulenceElementPrototype", 0, &JSSVGFETurbulenceElementPrototypeTable, 0 };
+const ClassInfo JSSVGFETurbulenceElementPrototype::s_info = { "SVGFETurbulenceElementPrototype", 0, &JSSVGFETurbulenceElementPrototypeTable, 0 };
 
 JSObject* JSSVGFETurbulenceElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFETurbulenceElementPrototype>(exec, "[[JSSVGFETurbulenceElement.prototype]]");
+    return getDOMPrototype<JSSVGFETurbulenceElement>(exec);
 }
 
 bool JSSVGFETurbulenceElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFETurbulenceElementPrototype, JSObject>(exec, &JSSVGFETurbulenceElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGFETurbulenceElementPrototype, JSObject>(exec, &JSSVGFETurbulenceElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFETurbulenceElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGFETurbulenceElement::s_info = { "SVGFETurbulenceElement", &JSSVGElement::s_info, &JSSVGFETurbulenceElementTable, 0 };
+
+JSSVGFETurbulenceElement::JSSVGFETurbulenceElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFETurbulenceElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGFETurbulenceElement::info = { "SVGFETurbulenceElement", &JSSVGElement::info, &JSSVGFETurbulenceElementTable, 0 };
-
-JSSVGFETurbulenceElement::JSSVGFETurbulenceElement(ExecState* exec, SVGFETurbulenceElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGFETurbulenceElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGFETurbulenceElementPrototype::self(exec));
+    return new (exec) JSSVGFETurbulenceElementPrototype(JSSVGFETurbulenceElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFETurbulenceElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFETurbulenceElement, JSSVGElement>(exec, &JSSVGFETurbulenceElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFETurbulenceElement, Base>(exec, &JSSVGFETurbulenceElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFETurbulenceElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFETurbulenceElementBaseFrequencyX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseFrequencyXAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->baseFrequencyXAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementBaseFrequencyY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->baseFrequencyYAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->baseFrequencyXAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementNumOctaves(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedInteger> obj = imp->numOctavesAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case BaseFrequencyYAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementSeed(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->seedAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementStitchTiles(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->stitchTilesAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->baseFrequencyYAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case NumOctavesAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedInteger> obj = imp->numOctavesAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedInteger>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedInteger>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedInteger>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SeedAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->seedAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case StitchTilesAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGFETurbulenceElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGFETurbulenceElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGFETurbulenceElementConstructor>(exec);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->stitchTilesAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFETurbulenceElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFETurbulenceElement* castedThisObj = static_cast<JSSVGFETurbulenceElement*>(asObject(thisValue));
+    SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case TypeAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+// Constant getters
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_FRACTALNOISE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETurbulenceElementSVG_TURBULENCE_TYPE_TURBULENCE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
+JSValuePtr jsSVGFETurbulenceElementSVG_STITCHTYPE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETurbulenceElementSVG_STITCHTYPE_STITCH(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFETurbulenceElement* imp = static_cast<SVGFETurbulenceElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFETurbulenceElementSVG_STITCHTYPE_NOSTITCH(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

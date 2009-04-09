@@ -26,6 +26,7 @@
 #include "config.h"
 #include "Selection.h"
 
+#include "CString.h"
 #include "Document.h"
 #include "Element.h"
 #include "htmlediting.h"
@@ -33,7 +34,6 @@
 #include "visible_units.h"
 #include "Range.h"
 #include <wtf/Assertions.h>
-
 #include <stdio.h>
 
 namespace WebCore {
@@ -131,6 +131,10 @@ PassRefPtr<Range> Selection::toRange() const
     // incorrect results.
     m_start.node()->document()->updateLayout();
 
+    // Check again, because updating layout can clear the selection.
+    if (isNone())
+        return 0;
+
     Position s, e;
     if (isCaret()) {
         // If the selection is a caret, move the range start upstream. This helps us match
@@ -165,7 +169,7 @@ PassRefPtr<Range> Selection::toRange() const
     }
 
     ExceptionCode ec = 0;
-    RefPtr<Range> result(new Range(s.node()->document()));
+    RefPtr<Range> result(Range::create(s.node()->document()));
     result->setStart(s.node(), s.offset(), ec);
     if (ec) {
         LOG_ERROR("Exception setting Range start from Selection: %d", ec);
@@ -187,6 +191,14 @@ bool Selection::expandUsingGranularity(TextGranularity granularity)
     m_granularity = granularity;
     validate();
     return true;
+}
+
+void Selection::appendTrailingWhitespace()
+{
+    VisiblePosition end = VisiblePosition(m_end, m_affinity);
+    while (end.isNotNull() && isSpaceOrNewline(end.characterAfter()))
+        end = end.next();
+    m_end = end.deepEquivalent();
 }
 
 void Selection::validate()
@@ -362,6 +374,8 @@ void Selection::validate()
         // purposes of comparing selections). This is an ideal point of the code
         // to do this operation, since all selection changes that result in a RANGE 
         // come through here before anyone uses it.
+        // FIXME: Canonicalizing is good, but haven't we already done it (when we
+        // set these two positions to VisiblePosition deepEquivalent()s above)?
         m_start = m_start.downstream();
         m_end = m_end.upstream();
     }
@@ -513,6 +527,11 @@ Element* Selection::rootEditableElement() const
     return editableRootForPosition(start());
 }
 
+Node* Selection::shadowTreeRootNode() const
+{
+    return start().node() ? start().node()->shadowTreeRootNode() : 0;
+}
+
 void Selection::debugPosition() const
 {
     if (!m_start.node())
@@ -522,13 +541,13 @@ void Selection::debugPosition() const
 
     if (m_start == m_end) {
         Position pos = m_start;
-        fprintf(stderr, "pos:        %s %p:%d\n", pos.node()->nodeName().deprecatedString().latin1(), pos.node(), pos.offset());
+        fprintf(stderr, "pos:        %s %p:%d\n", pos.node()->nodeName().utf8().data(), pos.node(), pos.offset());
     } else {
         Position pos = m_start;
-        fprintf(stderr, "start:      %s %p:%d\n", pos.node()->nodeName().deprecatedString().latin1(), pos.node(), pos.offset());
+        fprintf(stderr, "start:      %s %p:%d\n", pos.node()->nodeName().utf8().data(), pos.node(), pos.offset());
         fprintf(stderr, "-----------------------------------\n");
         pos = m_end;
-        fprintf(stderr, "end:        %s %p:%d\n", pos.node()->nodeName().deprecatedString().latin1(), pos.node(), pos.offset());
+        fprintf(stderr, "end:        %s %p:%d\n", pos.node()->nodeName().utf8().data(), pos.node(), pos.offset());
         fprintf(stderr, "-----------------------------------\n");
     }
 
@@ -555,7 +574,7 @@ void Selection::formatForDebugger(char* buffer, unsigned length) const
         result += s;
     }
 
-    strncpy(buffer, result.deprecatedString().latin1(), length - 1);
+    strncpy(buffer, result.utf8().data(), length - 1);
 }
 
 void Selection::showTreeForThis() const

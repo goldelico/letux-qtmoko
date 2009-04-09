@@ -23,119 +23,106 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegMovetoRel.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPathSegMoveto.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegMovetoRel)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegMovetoRelTableEntries[] =
+static const HashTableValue JSSVGPathSegMovetoRelTableValues[3] =
 {
-    { "y", JSSVGPathSegMovetoRel::YAttrNum, DontDelete, 0, 0 },
-    { "x", JSSVGPathSegMovetoRel::XAttrNum, DontDelete, 0, 0 }
+    { "x", DontDelete, (intptr_t)jsSVGPathSegMovetoRelX, (intptr_t)setJSSVGPathSegMovetoRelX },
+    { "y", DontDelete, (intptr_t)jsSVGPathSegMovetoRelY, (intptr_t)setJSSVGPathSegMovetoRelY },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegMovetoRelTable = 
-{
-    2, 2, JSSVGPathSegMovetoRelTableEntries, 2
-};
+static const HashTable JSSVGPathSegMovetoRelTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGPathSegMovetoRelTableValues, 0 };
+#else
+    { 4, 3, JSSVGPathSegMovetoRelTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegMovetoRelPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegMovetoRelPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegMovetoRelPrototypeTable = 
-{
-    2, 1, JSSVGPathSegMovetoRelPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPathSegMovetoRelPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegMovetoRelPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGPathSegMovetoRelPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegMovetoRelPrototype::info = { "SVGPathSegMovetoRelPrototype", 0, &JSSVGPathSegMovetoRelPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegMovetoRelPrototype::s_info = { "SVGPathSegMovetoRelPrototype", 0, &JSSVGPathSegMovetoRelPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegMovetoRelPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegMovetoRelPrototype>(exec, "[[JSSVGPathSegMovetoRel.prototype]]");
+    return getDOMPrototype<JSSVGPathSegMovetoRel>(exec);
 }
 
-const ClassInfo JSSVGPathSegMovetoRel::info = { "SVGPathSegMovetoRel", &JSSVGPathSeg::info, &JSSVGPathSegMovetoRelTable, 0 };
+const ClassInfo JSSVGPathSegMovetoRel::s_info = { "SVGPathSegMovetoRel", &JSSVGPathSeg::s_info, &JSSVGPathSegMovetoRelTable, 0 };
 
-JSSVGPathSegMovetoRel::JSSVGPathSegMovetoRel(ExecState* exec, SVGPathSegMovetoRel* impl)
-    : JSSVGPathSeg(exec, impl)
+JSSVGPathSegMovetoRel::JSSVGPathSegMovetoRel(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegMovetoRel> impl, SVGElement* context)
+    : JSSVGPathSeg(structure, impl, context)
 {
-    setPrototype(JSSVGPathSegMovetoRelPrototype::self(exec));
+}
+
+JSObject* JSSVGPathSegMovetoRel::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegMovetoRelPrototype(JSSVGPathSegMovetoRelPrototype::createStructure(JSSVGPathSegPrototype::self(exec)));
 }
 
 bool JSSVGPathSegMovetoRel::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSegMovetoRel, JSSVGPathSeg>(exec, &JSSVGPathSegMovetoRelTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSegMovetoRel, Base>(exec, &JSSVGPathSegMovetoRelTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegMovetoRel::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegMovetoRelX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(impl());
-
-        return jsNumber(imp->x());
-    }
-    case YAttrNum: {
-        SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(impl());
-
-        return jsNumber(imp->y());
-    }
-    }
-    return 0;
+    SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(static_cast<JSSVGPathSegMovetoRel*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->x());
 }
 
-void JSSVGPathSegMovetoRel::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPathSegMovetoRelY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPathSegMovetoRel, JSSVGPathSeg>(exec, propertyName, value, attr, &JSSVGPathSegMovetoRelTable, this);
+    SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(static_cast<JSSVGPathSegMovetoRel*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->y());
 }
 
-void JSSVGPathSegMovetoRel::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGPathSegMovetoRel::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(impl());
+    lookupPut<JSSVGPathSegMovetoRel, Base>(exec, propertyName, value, &JSSVGPathSegMovetoRelTable, this, slot);
+}
 
-        imp->setX(value->toFloat(exec));
-        break;
-    }
-    case YAttrNum: {
-        SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(impl());
+void setJSSVGPathSegMovetoRelX(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(static_cast<JSSVGPathSegMovetoRel*>(thisObject)->impl());
+    imp->setX(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegMovetoRel*>(thisObject)->context())
+        static_cast<JSSVGPathSegMovetoRel*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegMovetoRel*>(thisObject)->impl()->associatedAttributeName());
+}
 
-        imp->setY(value->toFloat(exec));
-        break;
-    }
-    }
-    SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGPathSeg>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGPathSeg>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+void setJSSVGPathSegMovetoRelY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegMovetoRel* imp = static_cast<SVGPathSegMovetoRel*>(static_cast<JSSVGPathSegMovetoRel*>(thisObject)->impl());
+    imp->setY(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegMovetoRel*>(thisObject)->context())
+        static_cast<JSSVGPathSegMovetoRel*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegMovetoRel*>(thisObject)->impl()->associatedAttributeName());
 }
 
 

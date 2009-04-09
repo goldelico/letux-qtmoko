@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2007 Apple Inc.  All rights reserved.
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+ * Copyright (C) 2008 Holger Hans Peter Freyther
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,6 +46,8 @@ namespace WebCore {
 
 class InspectorClientWebPage : public QWebPage
 {
+    Q_OBJECT
+    friend class InspectorClientQt;
 public:
     QWebPage* createWindow(QWebPage::WebWindowType)
     {
@@ -54,6 +57,10 @@ public:
         connect(page, SIGNAL(destroyed()), w, SLOT(deleteLater()));
         return page;
     }
+
+Q_SIGNALS:
+    void attachRequested();
+    void detachRequested();
 };
 
 
@@ -82,7 +89,6 @@ private:
 
 InspectorClientQt::InspectorClientQt(QWebPage* page)
     : m_inspectedWebPage(page)
-    , m_attached(false)
 {}
 
 void InspectorClientQt::inspectorDestroyed()
@@ -96,10 +102,16 @@ Page* InspectorClientQt::createPage()
         return m_webPage->d->page;
 
     InspectorClientView* view = new InspectorClientView(m_inspectedWebPage->d->page->inspectorController());
-    m_webPage.set(view->page());
+    m_webPage.set(qobject_cast<InspectorClientWebPage*>(view->page()));
     m_webPage->mainFrame()->load(QString::fromLatin1("qrc:/webkit/inspector/inspector.html"));
     m_webPage->view()->setMinimumSize(400,300);
     return m_webPage->d->page;
+}
+
+String InspectorClientQt::localizedStringsURL()
+{
+    notImplemented();
+    return String();
 }
 
 void InspectorClientQt::showWindow()
@@ -130,21 +142,22 @@ bool InspectorClientQt::windowVisible()
 
 void InspectorClientQt::attachWindow()
 {
-    ASSERT(m_inspectedWebPage);
-    ASSERT(m_webPage);
-    ASSERT(!m_attached);
+    if (!m_webPage)
+        return;
 
-    m_attached = true;
-    notImplemented();
+    emit m_webPage->attachRequested();
 }
 
 void InspectorClientQt::detachWindow()
 {
-    ASSERT(m_inspectedWebPage);
-    ASSERT(m_webPage);
-    ASSERT(m_attached);
+    if (!m_webPage)
+        return;
 
-    m_attached = false;
+    emit m_webPage->detachRequested();
+}
+
+void InspectorClientQt::setAttachedWindowHeight(unsigned height)
+{
     notImplemented();
 }
 
@@ -173,4 +186,21 @@ void InspectorClientQt::updateWindowTitle()
     m_webPage->view()->setWindowTitle(caption.arg(m_inspectedURL));
 }
 
+void InspectorClientQt::populateSetting(const String& key, InspectorController::Setting& setting)
+{
+    notImplemented();
 }
+
+void InspectorClientQt::storeSetting(const String& key, const InspectorController::Setting& setting)
+{
+    notImplemented();
+}
+
+void InspectorClientQt::removeSetting(const String& key)
+{
+    notImplemented();
+}
+
+}
+
+#include "InspectorClientQt.moc"

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,7 +68,7 @@ class QStyleOptionTitleBar;
 
 #if !defined(QT_NO_GRAPHICSVIEW) || (QT_EDITION & QT_MODULE_GRAPHICSVIEW) != QT_MODULE_GRAPHICSVIEW
 
-class Q_AUTOTEST_EXPORT QGraphicsWidgetPrivate : public QGraphicsItemPrivate
+class Q_GUI_EXPORT QGraphicsWidgetPrivate : public QGraphicsItemPrivate
 {
     Q_DECLARE_PUBLIC(QGraphicsWidget)
 public:
@@ -78,6 +82,9 @@ public:
           rightLayoutItemMargin(0),
           bottomLayoutItemMargin(0),
           layout(0),
+          inheritedPaletteResolveMask(0),
+          inheritedFontResolveMask(0),
+          inSetGeometry(0),
           focusPolicy(Qt::NoFocus),
           focusNext(0),
           focusPrev(0),
@@ -109,7 +116,7 @@ public:
     void setLayoutItemMargins(qreal left, qreal top, qreal right, qreal bottom);
     void setLayoutItemMargins(QStyle::SubElement element, const QStyleOption *opt = 0);
 
-    void fixFocusChainBeforeReparenting(QGraphicsWidget *newParent);
+    void fixFocusChainBeforeReparenting(QGraphicsWidget *newParent, QGraphicsScene *newScene = 0);
     void setLayout_helper(QGraphicsLayout *l);
 
     qreal leftLayoutItemMargin;
@@ -124,9 +131,17 @@ public:
 
     // Style
     QPalette palette;
-    void resolvePalette();
+    uint inheritedPaletteResolveMask;
+    void setPalette_helper(const QPalette &palette);
+    void resolvePalette(uint inheritedMask);
+    void updatePalette(const QPalette &palette);
+    QPalette naturalWidgetPalette() const;
     QFont font;
-    void resolveFont();
+    uint inheritedFontResolveMask;
+    void setFont_helper(const QFont &font);
+    void resolveFont(uint inheritedMask);
+    void updateFont(const QFont &font);
+    QFont naturalWidgetFont() const;
 
     // Window specific
     void initStyleOptionTitleBar(QStyleOptionTitleBar *option);
@@ -150,8 +165,9 @@ public:
         case Qt::WA_DeleteOnClose: bit = 4; break;
         case Qt::WA_NoSystemBackground: bit = 5; break;
         case Qt::WA_OpaquePaintEvent: bit = 6; break;
-        // ### Qt 4.5: Add this attribute
-        // case Qt::WA_SetPalette: bit = 7; break;
+        case Qt::WA_SetPalette: bit = 7; break;
+        case Qt::WA_SetFont: bit = 8; break;
+        case Qt::WA_WindowPropagation: bit = 9; break;
         default: break;
         }
         return bit;
@@ -175,9 +191,8 @@ public:
             return false;
         return (attributes & (1 << bit)) != 0;
     }
-    // ### Qt 4.5: Add one attribute
-    // quint32 attributes : 8;
-    quint32 attributes : 7;
+    quint32 attributes : 10;
+    quint32 inSetGeometry : 1;
 
     // Focus
     Qt::FocusPolicy focusPolicy;
@@ -196,12 +211,17 @@ public:
     uint buttonSunken : 1;
     QPointF mouseDelta; // to compensate for small error when interactively resizing
     QRectF startGeometry;
+    QRect buttonRect;
 
     bool setWindowFrameMargins;
     qreal leftWindowFrameMargin;
     qreal topWindowFrameMargin;
     qreal rightWindowFrameMargin;
     qreal bottomWindowFrameMargin;
+
+#ifndef QT_NO_ACTION
+    QList<QAction *> actions;
+#endif
 };
 
 #endif //!defined(QT_NO_GRAPHICSVIEW) || (QT_EDITION & QT_MODULE_GRAPHICSVIEW) != QT_MODULE_GRAPHICSVIEW

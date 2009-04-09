@@ -26,142 +26,166 @@
 
 #include "ExceptionCode.h"
 #include "JSText.h"
+#include "KURL.h"
 #include "Text.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSText)
+
 /* Hash table */
 
-static const HashEntry JSTextTableEntries[] =
+static const HashTableValue JSTextTableValues[3] =
 {
-    { "constructor", JSText::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "wholeText", DontDelete|ReadOnly, (intptr_t)jsTextWholeText, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsTextConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSTextTable = 
-{
-    2, 1, JSTextTableEntries, 1
-};
+static const HashTable JSTextTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSTextTableValues, 0 };
+#else
+    { 5, 3, JSTextTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSTextConstructorTableEntries[] =
+static const HashTableValue JSTextConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSTextConstructorTable = 
-{
-    2, 1, JSTextConstructorTableEntries, 1
-};
+static const HashTable JSTextConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSTextConstructorTableValues, 0 };
+#else
+    { 1, 0, JSTextConstructorTableValues, 0 };
+#endif
 
 class JSTextConstructor : public DOMObject {
 public:
     JSTextConstructor(ExecState* exec)
+        : DOMObject(JSTextConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSTextPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSTextConstructor::info = { "TextConstructor", 0, &JSTextConstructorTable, 0 };
+const ClassInfo JSTextConstructor::s_info = { "TextConstructor", 0, &JSTextConstructorTable, 0 };
 
 bool JSTextConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSTextConstructor, DOMObject>(exec, &JSTextConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSTextConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSTextPrototypeTableEntries[] =
+static const HashTableValue JSTextPrototypeTableValues[3] =
 {
-    { "splitText", JSText::SplitTextFuncNum, DontDelete|Function, 1, 0 }
+    { "splitText", DontDelete|Function, (intptr_t)jsTextPrototypeFunctionSplitText, (intptr_t)1 },
+    { "replaceWholeText", DontDelete|Function, (intptr_t)jsTextPrototypeFunctionReplaceWholeText, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSTextPrototypeTable = 
-{
-    2, 1, JSTextPrototypeTableEntries, 1
-};
+static const HashTable JSTextPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSTextPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSTextPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSTextPrototype::info = { "TextPrototype", 0, &JSTextPrototypeTable, 0 };
+const ClassInfo JSTextPrototype::s_info = { "TextPrototype", 0, &JSTextPrototypeTable, 0 };
 
 JSObject* JSTextPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSTextPrototype>(exec, "[[JSText.prototype]]");
+    return getDOMPrototype<JSText>(exec);
 }
 
 bool JSTextPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSTextPrototypeFunction, JSObject>(exec, &JSTextPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSTextPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSText::info = { "Text", &JSCharacterData::info, &JSTextTable, 0 };
+const ClassInfo JSText::s_info = { "Text", &JSCharacterData::s_info, &JSTextTable, 0 };
 
-JSText::JSText(ExecState* exec, Text* impl)
-    : JSCharacterData(exec, impl)
+JSText::JSText(PassRefPtr<Structure> structure, PassRefPtr<Text> impl)
+    : JSCharacterData(structure, impl)
 {
-    setPrototype(JSTextPrototype::self(exec));
+}
+
+JSObject* JSText::createPrototype(ExecState* exec)
+{
+    return new (exec) JSTextPrototype(JSTextPrototype::createStructure(JSCharacterDataPrototype::self(exec)));
 }
 
 bool JSText::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSText, JSCharacterData>(exec, &JSTextTable, this, propertyName, slot);
+    return getStaticValueSlot<JSText, Base>(exec, &JSTextTable, this, propertyName, slot);
 }
 
-JSValue* JSText::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsTextWholeText(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Text* imp = static_cast<Text*>(static_cast<JSText*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->wholeText());
 }
 
-JSValue* JSText::getConstructor(ExecState* exec)
+JSValuePtr jsTextConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSTextConstructor>(exec, "[[Text.constructor]]");
+    return static_cast<JSText*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-JSValue* JSTextPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr JSText::getConstructor(ExecState* exec)
 {
-    if (!thisObj->inherits(&JSText::info))
-      return throwError(exec, TypeError);
-
-    Text* imp = static_cast<Text*>(static_cast<JSText*>(thisObj)->impl());
-
-    switch (id) {
-    case JSText::SplitTextFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        int offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (offset < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->splitText(offset, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    return getDOMConstructor<JSTextConstructor>(exec);
 }
+
+JSValuePtr jsTextPrototypeFunctionSplitText(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSText::s_info))
+        return throwError(exec, TypeError);
+    JSText* castedThisObj = static_cast<JSText*>(asObject(thisValue));
+    Text* imp = static_cast<Text*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int offset = args.at(exec, 0)->toInt32(exec);
+    if (offset < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->splitText(offset, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsTextPrototypeFunctionReplaceWholeText(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSText::s_info))
+        return throwError(exec, TypeError);
+    JSText* castedThisObj = static_cast<JSText*>(asObject(thisValue));
+    Text* imp = static_cast<Text*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& content = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->replaceWholeText(content, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
 
 }

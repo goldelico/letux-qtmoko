@@ -25,6 +25,7 @@
 #define RenderView_h
 
 #include "FrameView.h"
+#include "Frame.h"
 #include "LayoutState.h"
 #include "RenderBlock.h"
 
@@ -43,10 +44,18 @@ public:
     virtual void calcWidth();
     virtual void calcHeight();
     virtual void calcPrefWidths();
-    virtual bool absolutePosition(int& xPos, int& yPos, bool fixed = false) const;
-
+    virtual FloatPoint localToAbsolute(FloatPoint localPoint = FloatPoint(), bool fixed = false, bool useTransforms = false) const;
+    virtual FloatPoint absoluteToLocal(FloatPoint containerPoint, bool fixed = false, bool useTransforms = false) const;
+    virtual FloatQuad localToAbsoluteQuad(const FloatQuad&, bool fixed = false) const;
+    
     int docHeight() const;
     int docWidth() const;
+
+    // The same as the FrameView's layoutHeight/layoutWidth but with null check guards.
+    int viewHeight() const;
+    int viewWidth() const;
+    
+    float zoomFactor() const { return m_frameView->frame() && m_frameView->frame()->shouldApplyPageZoom() ? m_frameView->frame()->zoomFactor() : 1.0f; }
 
     FrameView* frameView() const { return m_frameView; }
 
@@ -73,8 +82,9 @@ public:
     int truncatedAt() const { return m_truncatedAt; }
 
     virtual void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
+    virtual void absoluteQuads(Vector<FloatQuad>&, bool topLevel = true);
 
-    IntRect selectionRect(bool clipToVisibleContent = true) const;
+    IntRect selectionBounds(bool clipToVisibleContent = true) const;
 
     void setMaximalOutlineSize(int o) { m_maximalOutlineSize = o; }
     int maximalOutlineSize() const { return m_maximalOutlineSize; }
@@ -90,6 +100,8 @@ public:
     void addWidget(RenderObject*);
     void removeWidget(RenderObject*);
 
+    // layoutDelta is used transiently during layout to store how far an object has moved from its
+    // last layout location, in order to repaint correctly
     const IntSize& layoutDelta() const { return m_layoutDelta; }
     void addLayoutDelta(const IntSize& delta) { m_layoutDelta += delta; }
 
@@ -119,6 +131,10 @@ public:
     void disableLayoutState() { m_layoutStateDisableCount++; }
     void enableLayoutState() { ASSERT(m_layoutStateDisableCount > 0); m_layoutStateDisableCount--; }
 
+private:
+    // selectionRect should never be called on a RenderView
+    virtual IntRect selectionRect(bool);
+
 protected:
     FrameView* m_frameView;
 
@@ -145,6 +161,64 @@ private:
     IntSize m_layoutDelta;
     LayoutState* m_layoutState;
     unsigned m_layoutStateDisableCount;
+};
+
+// Stack-based class to assist with LayoutState push/pop
+class LayoutStateMaintainer : Noncopyable {
+public:
+    // ctor to push now
+    LayoutStateMaintainer(RenderView* view, RenderBox* root, IntSize offset, bool shouldPush = true)
+        : m_view(view)
+        , m_shouldPushPop(shouldPush)
+        , m_didStart(false)
+        , m_didEnd(false)
+    {
+        push(root, offset);
+    }
+    
+    // ctor to maybe push later
+    LayoutStateMaintainer(RenderView* view)
+        : m_view(view)
+        , m_shouldPushPop(true)
+        , m_didStart(false)
+        , m_didEnd(false)
+    {
+    }
+    
+    ~LayoutStateMaintainer()
+    {
+        ASSERT(m_didStart == m_didEnd);   // if this fires, it means that someone did a push(), but forgot to pop().
+    }
+
+    void pop()
+    {
+        if (m_didStart) {
+            ASSERT(!m_didEnd);
+            if (m_shouldPushPop)
+                m_view->popLayoutState();
+            else
+                m_view->enableLayoutState();
+            m_didEnd = true;
+        }
+    }
+
+    void push(RenderBox* root, IntSize offset)
+    {
+        ASSERT(!m_didStart);
+        if (m_shouldPushPop)
+            m_view->pushLayoutState(root, offset);
+        else
+            m_view->disableLayoutState();
+        m_didStart = true;
+    }
+    
+    bool didPush() const { return m_didStart; }
+
+private:
+    RenderView* m_view;
+    bool m_shouldPushPop : 1;   // true if we should push/pop, rather than disable/enable
+    bool m_didStart : 1;        // true if we did a push or disable
+    bool m_didEnd : 1;          // true if we popped or re-enabled
 };
 
 } // namespace WebCore

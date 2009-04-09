@@ -18,48 +18,58 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGNumber_H
-#define JSSVGNumber_H
+#ifndef JSSVGNumber_h
+#define JSSVGNumber_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 #include "JSSVGPODTypeWrapper.h"
 
 namespace WebCore {
 
-class JSSVGNumber : public KJS::DOMObject {
+class JSSVGNumber : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGNumber(KJS::ExecState*, JSSVGPODTypeWrapper<double>*);
+    JSSVGNumber(PassRefPtr<JSC::Structure>, PassRefPtr<JSSVGPODTypeWrapper<float> >, SVGElement* context);
     virtual ~JSSVGNumber();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        ValueAttrNum
-    };
-    JSSVGPODTypeWrapper<double>* impl() const { return m_impl.get(); }
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    JSSVGPODTypeWrapper<float>* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<JSSVGPODTypeWrapper<double> > m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<JSSVGPODTypeWrapper<float> > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, JSSVGPODTypeWrapper<double>*);
-double toSVGNumber(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, JSSVGPODTypeWrapper<float>*, SVGElement* context);
+float toSVGNumber(JSC::JSValuePtr);
 
-class JSSVGNumberPrototype : public KJS::JSObject {
+class JSSVGNumberPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGNumberPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGNumberPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGNumberValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGNumberValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

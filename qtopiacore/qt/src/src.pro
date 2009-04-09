@@ -6,7 +6,7 @@ win32:SRC_SUBDIRS += src_winmain
 wince*:{
   SRC_SUBDIRS += src_corelib src_xml src_gui src_sql src_network src_script src_testlib
 } else {
-    SRC_SUBDIRS += src_tools_moc src_tools_rcc src_tools_uic src_corelib src_xml src_network src_gui src_sql src_script src_testlib
+    SRC_SUBDIRS += src_tools_bootstrap src_tools_moc src_tools_rcc src_tools_uic src_corelib src_xml src_network src_gui src_sql src_script src_testlib
     contains(QT_CONFIG, qt3support): SRC_SUBDIRS += src_qt3support
     contains(QT_CONFIG, dbus):SRC_SUBDIRS += src_dbus
     !cross_compile {
@@ -18,15 +18,21 @@ win32:!contains(QT_EDITION, OpenSource|Console): {
     !wince*: SRC_SUBDIRS += src_tools_idc
 }
 
-contains(QT_CONFIG, opengl): SRC_SUBDIRS += src_opengl
+contains(QT_CONFIG, opengl)|contains(QT_CONFIG, opengles1)|contains(QT_CONFIG, opengles2): SRC_SUBDIRS += src_opengl
 contains(QT_CONFIG, xmlpatterns): SRC_SUBDIRS += src_xmlpatterns
 contains(QT_CONFIG, phonon): SRC_SUBDIRS += src_phonon
 contains(QT_CONFIG, svg): SRC_SUBDIRS += src_svg
-contains(QT_CONFIG, webkit): SRC_SUBDIRS += src_webkit
+contains(QT_CONFIG, webkit)  {
+    #exists($$QT_SOURCE_TREE/src/3rdparty/webkit/JavaScriptCore/JavaScriptCore.pro): SRC_SUBDIRS += src_javascriptcore
+    SRC_SUBDIRS += src_webkit
+}
+contains(QT_CONFIG, scripttools): SRC_SUBDIRS += src_scripttools
 SRC_SUBDIRS += src_plugins
 
 src_winmain.subdir = $$QT_SOURCE_TREE/src/winmain
 src_winmain.target = sub-winmain
+src_tools_bootstrap.subdir = $$QT_SOURCE_TREE/src/tools/bootstrap
+src_tools_bootstrap.target = sub-tools-bootstrap
 src_tools_moc.subdir = $$QT_SOURCE_TREE/src/tools/moc
 src_tools_moc.target = sub-moc
 src_tools_rcc.subdir = $$QT_SOURCE_TREE/src/tools/rcc
@@ -51,6 +57,8 @@ src_svg.subdir = $$QT_SOURCE_TREE/src/svg
 src_svg.target = sub-svg
 src_script.subdir = $$QT_SOURCE_TREE/src/script
 src_script.target = sub-script
+src_scripttools.subdir = $$QT_SOURCE_TREE/src/scripttools
+src_scripttools.target = sub-scripttools
 src_opengl.subdir = $$QT_SOURCE_TREE/src/opengl
 src_opengl.target = sub-opengl
 src_qt3support.subdir = $$QT_SOURCE_TREE/src/qt3support
@@ -67,11 +75,16 @@ src_plugins.subdir = $$QT_SOURCE_TREE/src/plugins
 src_plugins.target = sub-plugins
 src_testlib.subdir = $$QT_SOURCE_TREE/src/testlib
 src_testlib.target = sub-testlib
+src_javascriptcore.subdir = $$QT_SOURCE_TREE/src/3rdparty/webkit/JavaScriptCore
+src_javascriptcore.target = sub-javascriptcore
 src_webkit.subdir = $$QT_SOURCE_TREE/src/3rdparty/webkit/WebCore
 src_webkit.target = sub-webkit
 
 #CONFIG += ordered
 !wince*:!ordered {
+   src_tools_moc.depends = src_tools_bootstrap
+   src_tools_rcc.depends = src_tools_bootstrap
+   src_tools_uic.depends = src_tools_bootstrap
    src_corelib.depends = src_tools_moc src_tools_rcc
    src_gui.depends = src_corelib src_tools_uic
    embedded: src_gui.depends += src_network
@@ -80,6 +93,7 @@ src_webkit.target = sub-webkit
    src_dbus.depends = src_corelib src_xml
    src_svg.depends = src_xml src_gui
    src_script.depends = src_corelib
+   src_scripttools.depends = src_script src_gui src_network
    src_network.depends = src_corelib
    src_opengl.depends = src_gui
    src_sql.depends = src_corelib
@@ -90,7 +104,10 @@ src_webkit.target = sub-webkit
    src_tools_idc.depends = src_corelib
    src_tools_activeqt.depends = src_tools_idc src_gui
    src_plugins.depends = src_gui src_sql src_svg
-   src_webkit.depends = src_gui src_sql src_network src_xml
+   contains(QT_CONFIG, webkit)  {
+      src_webkit.depends = src_gui src_sql src_network src_xml
+      #exists($$QT_SOURCE_TREE/src/3rdparty/webkit/JavaScriptCore/JavaScriptCore.pro): src_webkit.depends += src_javascriptcore
+   }
    contains(QT_CONFIG, qt3support): src_plugins.depends += src_qt3support
    contains(QT_CONFIG, dbus):{
       src_plugins.depends += src_dbus
@@ -114,10 +131,12 @@ for(subname, SRC_SUBDIRS) {
    subpro = $$subdir/$${basename(subdir)}.pro
    !exists($$subpro):next()
    subtarget = $$replace(subdir, [^A-Za-z0-9], _)
+   reg_src = $$replace(QT_SOURCE_TREE, \\\\, \\\\)
+   subdir = $$replace(subdir, $$reg_src, $$QT_BUILD_TREE)
    subdir = $$replace(subdir, /, $$QMAKE_DIR_SEP)
    subdir = $$replace(subdir, \\\\, $$QMAKE_DIR_SEP)
    SUB_TEMPLATE = $$list($$fromfile($$subpro, TEMPLATE))
-   if(isEqual($$SUB_TEMPLATE, lib) | isEqual($$SUB_TEMPLATE, subdirs) | isEqual(subname, src_tools_idc) | isEqual(subname, src_tools_uic3)):!separate_debug_info {
+   !isEqual(subname, src_tools_bootstrap):if(isEqual($$SUB_TEMPLATE, lib) | isEqual($$SUB_TEMPLATE, subdirs) | isEqual(subname, src_tools_idc) | isEqual(subname, src_tools_uic3)):!separate_debug_info {
        #debug
        eval(debug-$${subtarget}.depends = $${subdir}\$${QMAKE_DIR_SEP}$(MAKEFILE) $$EXTRA_DEBUG_TARGETS)
        eval(debug-$${subtarget}.commands = (cd $$subdir && $(MAKE) -f $(MAKEFILE) debug))

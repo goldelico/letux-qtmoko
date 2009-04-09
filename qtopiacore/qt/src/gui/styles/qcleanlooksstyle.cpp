@@ -1,41 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qcleanlooksstyle.h"
+#include "qcleanlooksstyle_p.h"
 
 #if !defined(QT_NO_STYLE_CLEANLOOKS) || defined(QT_PLUGIN)
 
@@ -437,26 +442,22 @@ static const char * const qt_cleanlooks_menuitem_checkbox_checked[] = {
     "   .    "};
 
 static const char * const qt_cleanlooks_checkbox_checked[] = {
-    "13 13 8 1",
+    "13 13 3 1",
     " 	c None",
-    "%	c #ABB0B2",
-    ".	c #373E44",
-    "+	c #444B52",
-    "@	c #575E65",
-    "#	c #727981",
-    "$	c #999EA0",
-    "&	c #BCC1C3",
+    ".	c #272D33",
+    "%	c #666666",
+
     "             ",
-    "             ",
-    "         %%  ",
-    "        %#   ",
-    "       %+    ",
-    "  %.% &.%    ",
-    "  &..&@+     ",
-    "   %...$     ",
-    "    %..      ",
-    "     +%      ",
-    "     &       ",
+    "          %  ",
+    "         %.  ",
+    "        %.%  ",
+    "       %..   ",
+    "  %.% %..    ",
+    "  %..%..%    ",
+    "   %...%     ",
+    "    %..%     ",
+    "     %.%     ",
+    "      %      ",
     "             ",
     "             "};
 
@@ -479,20 +480,6 @@ static Ptr_g_object_unref p_g_object_unref = 0;
 static Ptr_g_error_free p_g_error_free = 0;
 static Ptr_g_free p_g_free = 0;
 #endif
-
-class QCleanlooksStylePrivate : public QWindowsStylePrivate
-{
-    Q_DECLARE_PUBLIC(QCleanlooksStyle)
-public:
-    QCleanlooksStylePrivate()
-        : QWindowsStylePrivate()
-    {
-        animationFps = 24;
-    }
-~QCleanlooksStylePrivate()
-    { }
-    void lookupIconTheme() const;
-};
 
 static void qt_cleanlooks_draw_gradient(QPainter *painter, const QRect &rect, const QColor &gradientStart,
                                         const QColor &gradientStop, Direction direction = TopDown, QBrush bgBrush = QBrush())
@@ -568,9 +555,9 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
 {
     QString tmp;
     const QStyleOptionComplex *complexOption = qstyleoption_cast<const QStyleOptionComplex *>(option);
-    tmp.sprintf("%s-%d-%d-%lld-%dx%d", key.toLatin1().constData(), uint(option->state),
+    tmp.sprintf("%s-%d-%d-%lld-%dx%d-%d", key.toLatin1().constData(), uint(option->state),
                 complexOption ? uint(complexOption->activeSubControls) : uint(0),
-                option->palette.cacheKey(), size.width(), size.height());
+                option->palette.cacheKey(), size.width(), size.height(), option->direction);
 #ifndef QT_NO_SPINBOX
     if (const QStyleOptionSpinBox *spinBox = qstyleoption_cast<const QStyleOptionSpinBox *>(option)) {
         tmp.append(QLatin1Char('-'));
@@ -594,18 +581,18 @@ static void qt_cleanlooks_draw_mdibutton(QPainter *painter, const QStyleOptionTi
     QColor highlight = option->palette.highlight().color();
 
     bool active = (option->titleBarState & QStyle::State_Active);
-    QColor titleBarHighlight(active ? highlight.lighter(106): option->palette.background().color().lighter(106));
+    QColor titleBarHighlight(255, 255, 255, 60);
 
-    if (hover)
+    if (sunken)
+        painter->fillRect(tmp.adjusted(1, 1, -1, -1), option->palette.highlight().color().darker(120));
+    else if (hover)
         painter->fillRect(tmp.adjusted(1, 1, -1, -1), QColor(255, 255, 255, 20));
-    else if (sunken)
-        painter->fillRect(tmp.adjusted(1, 1, -1, -1), option->palette.highlight().color().darker(130));
 
     QColor mdiButtonGradientStartColor;
     QColor mdiButtonGradientStopColor;
 
-    mdiButtonGradientStartColor = QColor(active ? highlight.lighter(115): option->palette.background().color().lighter(115));
-    mdiButtonGradientStopColor = QColor(active ? highlight.darker(110) : option->palette.background().color());
+    mdiButtonGradientStartColor = QColor(0, 0, 0, 40);
+    mdiButtonGradientStopColor = QColor(255, 255, 255, 60);
 
     if (sunken)
         titleBarHighlight = highlight.darker(130);
@@ -659,6 +646,15 @@ static void qt_cleanlooks_draw_mdibutton(QPainter *painter, const QStyleOptionTi
 QCleanlooksStyle::QCleanlooksStyle() : QWindowsStyle(*new QCleanlooksStylePrivate)
 {
     setObjectName(QLatin1String("CleanLooks"));
+}
+
+/*!
+    \internal
+
+    Constructs a QCleanlooksStyle object.
+*/
+QCleanlooksStyle::QCleanlooksStyle(QCleanlooksStylePrivate &dd) : QWindowsStyle(dd)
+{
 }
 
 /*!
@@ -744,29 +740,27 @@ void QCleanlooksStyle::drawPrimitive(PrimitiveElement elem,
     case PE_FrameTabBarBase:
         if (const QStyleOptionTabBarBase *tbb
                 = qstyleoption_cast<const QStyleOptionTabBarBase *>(option)) {
-            QRegion region(tbb->rect);
             painter->save();
             painter->setPen(QPen(darkOutline.lighter(110), 0));
             switch (tbb->shape) {
-            case QTabBar::RoundedNorth:
+            case QTabBar::RoundedNorth: {
+                QRegion region(tbb->rect);
                 region -= tbb->selectedTabRect;
-                painter->setClipRegion(region);
                 painter->drawLine(tbb->rect.topLeft(), tbb->rect.topRight());
+                painter->setClipRegion(region);
+                painter->setPen(option->palette.light().color());
+                painter->drawLine(tbb->rect.topLeft() + QPoint(0, 1),
+                                  tbb->rect.topRight()  + QPoint(0, 1));
+            }
                 break;
             case QTabBar::RoundedWest:
-                region -= tbb->selectedTabRect;
-                painter->setClipRegion(region);
                 painter->drawLine(tbb->rect.left(), tbb->rect.top(), tbb->rect.left(), tbb->rect.bottom());
                 break;
             case QTabBar::RoundedSouth:
-                region -= tbb->selectedTabRect;
-                painter->setClipRegion(region);
                 painter->drawLine(tbb->rect.left(), tbb->rect.bottom(),
                             tbb->rect.right(), tbb->rect.bottom());
                 break;
             case QTabBar::RoundedEast:
-                region -= tbb->selectedTabRect;
-                painter->setClipRegion(region);
                 painter->drawLine(tbb->rect.topRight(), tbb->rect.bottomRight());
                 break;
             case QTabBar::TriangularNorth:
@@ -885,7 +879,7 @@ void QCleanlooksStyle::drawPrimitive(PrimitiveElement elem,
         break;
     case PE_PanelButtonTool:
         painter->save();
-        if ((option->state & State_Enabled) || !(option->state & State_AutoRaise)) {
+        if ((option->state & State_Enabled || option->state & State_On) || !(option->state & State_AutoRaise)) {
             QRect rect = option->rect;
             QPen oldPen = painter->pen();
 
@@ -1011,6 +1005,10 @@ void QCleanlooksStyle::drawPrimitive(PrimitiveElement elem,
             painter->drawRect(checkRect);
             if (checkbox->state & (State_On | State_Sunken  | State_NoChange)) {
                 QImage image(qt_cleanlooks_checkbox_checked);
+                QColor fillColor = option->palette.text().color();
+                image.setColor(1, fillColor.rgba()); 
+                fillColor.setAlpha(100);
+                image.setColor(2, fillColor.rgba()); 
                 painter->drawImage(rect, image);
                 if (checkbox->state & State_NoChange) {
                     QColor bgc = option->palette.background().color();
@@ -1141,7 +1139,7 @@ void QCleanlooksStyle::drawPrimitive(PrimitiveElement elem,
             QColor gradientStopColor;
             gradientStopColor.setHsv(buttonColor.hue(),
                                      CL_MIN(255, (int)(buttonColor.saturation()*1.9)),
-                                     CL_MIN(255, (int)(buttonColor.value()*0.93)));
+                                     CL_MIN(255, (int)(buttonColor.value()*0.96)));
 
             QRect gradRect = rect.adjusted(1, 2, -1, -2);
             // gradient fill
@@ -1363,7 +1361,18 @@ void QCleanlooksStyle::drawPrimitive(PrimitiveElement elem,
     break ;
 
     case PE_FrameStatusBarItem:
-    break;
+        break;
+    case PE_IndicatorTabClose:
+        {
+            Q_D(const QCleanlooksStyle);
+            if (d->tabBarcloseButtonIcon.isNull())
+                d->tabBarcloseButtonIcon = standardIcon(SP_DialogCloseButton, option, widget);
+            if ((option->state & State_Enabled) && (option->state & State_MouseOver))
+                drawPrimitive(PE_PanelButtonCommand, option, painter, widget);
+            QPixmap pixmap = d->tabBarcloseButtonIcon.pixmap(QSize(16, 16), QIcon::Normal, QIcon::On);
+            drawItemPixmap(painter, option->rect, Qt::AlignCenter, pixmap);
+        }
+        break;
 
 #endif // QT_NO_TABBAR
     default:
@@ -2093,9 +2102,11 @@ void QCleanlooksStyle::drawControl(ControlElement element, const QStyleOption *o
     case CE_PushButtonLabel:
         if (const QStyleOptionButton *button = qstyleoption_cast<const QStyleOptionButton *>(option)) {
             QRect ir = button->rect;
-            uint tf = Qt::AlignVCenter | Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, button, widget))
-                tf |= Qt::TextHideMnemonic;
+            uint tf = Qt::AlignVCenter;
+            if (styleHint(SH_UnderlineShortcut, button, widget))
+                tf |= Qt::TextShowMnemonic;
+            else
+               tf |= Qt::TextHideMnemonic;
 
             if (!button->icon.isNull()) {
                 //Center both icon and text
@@ -2114,7 +2125,7 @@ void QCleanlooksStyle::drawControl(ControlElement element, const QStyleOption *o
                 int h = pixmap.height();
 
                 if (!button->text.isEmpty())
-                    w += button->fontMetrics.width(button->text) + 2;
+                    w += button->fontMetrics.boundingRect(option->rect, tf, button->text).width() + 2;
 
                 point = QPoint(ir.x() + ir.width() / 2 - w / 2,
                                ir.y() + ir.height() / 2 - h / 2);
@@ -2136,11 +2147,6 @@ void QCleanlooksStyle::drawControl(ControlElement element, const QStyleOption *o
             } else {
                 tf |= Qt::AlignHCenter;
             }
-
-            //this tweak ensures the font is perfectly centered on small sizes
-            //but slightly downward to make it more gnomeish if not
-            if (button->fontMetrics.height() > 14)
-                ir.translate(0, 1);
 
             if (button->features & QStyleOptionButton::HasMenu)
                 ir = ir.adjusted(0, 0, -pixelMetric(PM_MenuButtonIndicator, button, widget), 0);
@@ -2641,7 +2647,7 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
                     } else {
                         cachePainter.drawLine(centerX - 2, centerY, centerX + 2, centerY);
                     }
-                } else {
+                } else if (spinBox->buttonSymbols == QAbstractSpinBox::UpDownArrows){
                     // arrows
                     QImage upArrow(qt_spinbox_button_arrow_up);
                     upArrow.setColor(1, spinBox->palette.foreground().color().rgba());
@@ -2682,8 +2688,6 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
             QPalette palette = option->palette;
             QColor highlight = option->palette.highlight().color();
 
-            QColor titleBarGradientStart(active ? highlight: palette.background().color());
-            QColor titleBarGradientStop(active ? highlight.darker(150): palette.background().color().darker(120));
             QColor titleBarFrameBorder(active ? highlight.darker(180): dark.darker(110));
             QColor titleBarHighlight(active ? highlight.lighter(120): palette.background().color().lighter(120));
             QColor textColor(active ? 0xffffff : 0xff000000);
@@ -2698,9 +2702,16 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
 #endif // QT3_SUPPORT
             {
                 // Fill title bar gradient
-                qt_cleanlooks_draw_gradient(painter, option->rect.adjusted(1, 1, -1, 0),
-                                           titleBarGradientStart,
-                                           titleBarGradientStop, TopDown, active ? highlight : palette.background().color());
+                QColor titlebarColor = QColor(active ? highlight: palette.background().color());
+                QColor titleBarGradientStop(active ? highlight.darker(150): palette.background().color().darker(120));
+                QLinearGradient gradient(option->rect.center().x(), option->rect.top(),
+                                         option->rect.center().x(), option->rect.bottom());
+
+                gradient.setColorAt(0, titlebarColor.lighter(114));
+                gradient.setColorAt(0.5, titlebarColor.lighter(102));
+                gradient.setColorAt(0.51, titlebarColor.darker(104));
+                gradient.setColorAt(1, titlebarColor);
+                painter->fillRect(option->rect.adjusted(1, 1, -1, 0), gradient);
 
                 // Frame and rounded corners
                 painter->setPen(titleBarFrameBorder);
@@ -2735,10 +2746,12 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
             painter->setFont(font);
             painter->setPen(active? (titleBar->palette.text().color().lighter(120)) :
                                      titleBar->palette.text().color() );
-            painter->drawText(textRect.adjusted(1, 1, 1, 1), titleBar->text, QTextOption(Qt::AlignHCenter | Qt::AlignVCenter));
+            // Note workspace also does elliding but it does not use the correct font
+            QString title = QFontMetrics(font).elidedText(titleBar->text, Qt::ElideRight, textRect.width() - 14);
+            painter->drawText(textRect.adjusted(1, 1, 1, 1), title, QTextOption(Qt::AlignHCenter | Qt::AlignVCenter));
             painter->setPen(Qt::white);
             if (active)
-                painter->drawText(textRect, titleBar->text, QTextOption(Qt::AlignHCenter | Qt::AlignVCenter));
+                painter->drawText(textRect, title, QTextOption(Qt::AlignHCenter | Qt::AlignVCenter));
             // min button
             if ((titleBar->subControls & SC_TitleBarMinButton) && (titleBar->titleBarFlags & Qt::WindowMinimizeButtonHint) &&
                 !(titleBar->titleBarState& Qt::WindowMinimized)) {
@@ -3296,8 +3309,7 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
                         // Draw the down arrow
                         QImage downArrow(qt_cleanlooks_arrow_down_xpm);
                         downArrow.setColor(1, comboBox->palette.foreground().color().rgba());
-                        int offset = comboBox->direction == Qt::RightToLeft ? -2 : 2;
-                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2 + offset,
+                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2,
                                                downArrowRect.center().y() - downArrow.height() / 2 + 1, downArrow);
                     } else {
                         // Draw the up/down arrow
@@ -3305,13 +3317,10 @@ void QCleanlooksStyle::drawComplexControl(ComplexControl control, const QStyleOp
                         upArrow.setColor(1, comboBox->palette.foreground().color().rgba());
                         QImage downArrow(qt_scrollbar_button_arrow_down);
                         downArrow.setColor(1, comboBox->palette.foreground().color().rgba());
-
-                        int offset = comboBox->direction == Qt::RightToLeft ? -2 : 2;
-
-                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2 + offset,
-                                               downArrowRect.center().y() - upArrow.height() , upArrow);
-                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2 + offset,
-                                               downArrowRect.center().y()  + 3, downArrow);
+                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2,
+                                               downArrowRect.center().y() - upArrow.height() - 1 , upArrow);
+                        cachePainter.drawImage(downArrowRect.center().x() - downArrow.width() / 2,
+                                               downArrowRect.center().y()  + 2, downArrow);
                     }
                 }
                 // Draw the focus rect
@@ -3737,6 +3746,9 @@ int QCleanlooksStyle::pixelMetric(PixelMetric metric, const QStyleOption *option
         break;
     case PM_MaximumDragDistance:
         return -1;
+    case PM_TabCloseIndicatorWidth:
+    case PM_TabCloseIndicatorHeight:
+        return 20;
     default:
         break;
     }
@@ -3754,14 +3766,14 @@ QSize QCleanlooksStyle::sizeFromContents(ContentsType type, const QStyleOption *
     switch (type) {
     case CT_PushButton:
         if (const QStyleOptionButton *btn = qstyleoption_cast<const QStyleOptionButton *>(option)) {
-            if (!btn->text.isEmpty() && size.width() < 80)
+            if (!btn->text.isEmpty() && newSize.width() < 80)
                 newSize.setWidth(80);
             if (!btn->icon.isNull() && btn->iconSize.height() > 16)
                 newSize -= QSize(0, 2);
         }
         if (const QPushButton *button = qobject_cast<const QPushButton *>(widget)) {
             if (qobject_cast<const QDialogButtonBox *>(button->parentWidget())) {
-                if (size.height() < 32)
+                if (newSize.height() < 32)
                     newSize.setHeight(32);
             }
         }
@@ -3833,7 +3845,7 @@ QSize QCleanlooksStyle::sizeFromContents(ContentsType type, const QStyleOption *
 */
 void QCleanlooksStyle::polish(QApplication *app)
 {
-    Q_UNUSED(app);
+    QWindowsStyle::polish(app);
 #ifdef Q_WS_X11
     Q_D(QCleanlooksStyle);
 
@@ -3842,6 +3854,7 @@ void QCleanlooksStyle::polish(QApplication *app)
     if (dataDirs.isEmpty())
         dataDirs = QLatin1String("/usr/local/share/:/usr/share/");
 
+    dataDirs.prepend(QDir::homePath() + QLatin1String("/:"));
     d->iconDirs = dataDirs.split(QLatin1String(":"));
 #endif
 }
@@ -4249,6 +4262,9 @@ int QCleanlooksStyle::styleHint(StyleHint hint, const QStyleOption *option, cons
     case SH_EtchDisabledText:
         ret = 1;
         break;
+    case SH_Menu_AllowActiveAndDisabled:
+        ret = false;
+        break;
     case SH_MainWindow_SpaceBelowMenuBar:
         ret = 0;
         break;
@@ -4296,9 +4312,6 @@ int QCleanlooksStyle::styleHint(StyleHint hint, const QStyleOption *option, cons
             mask->region -= QRect(option->rect.right() , option->rect.top() + 3, 1, 2);
         }
         break;
-    case SH_DialogButtonLayout:
-        ret = QDialogButtonBox::GnomeLayout;
-        break;
     case SH_MessageBox_TextInteractionFlags:
         ret = Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse;
         break;
@@ -4315,6 +4328,9 @@ int QCleanlooksStyle::styleHint(StyleHint hint, const QStyleOption *option, cons
 #endif
     case SH_ItemView_ArrowKeysNavigateIntoChildren:
         ret = false;
+        break;
+    case SH_Menu_SubMenuPopupDelay:
+        ret = 225; // default from GtkMenu
         break;
     default:
         ret = QWindowsStyle::styleHint(hint, option, widget, returnData);
@@ -4400,16 +4416,17 @@ QIcon QCleanlooksStyle::standardIconImplementation(StandardPixmap standardIcon,
                                                   const QStyleOption *option,
                                                   const QWidget *widget) const
 {
-#ifndef Q_WS_QWS
+#ifdef Q_WS_X11
     Q_D(const QCleanlooksStyle);
     if (!qApp->desktopSettingsAware())
         return QWindowsStyle::standardIconImplementation(standardIcon, option, widget);
-    QIcon icon(standardPixmap(standardIcon, option, widget));
-
+    QIcon icon;
     QPixmap pixmap;
     QPixmap link;
+    d->lookupIconTheme();
     switch (standardIcon) {
-    case SP_DirIcon:
+    case SP_DirIcon: {
+        icon = QIcon(standardPixmap(standardIcon, option, widget));
         icon.addPixmap(standardPixmap(SP_DirClosedIcon, option, widget),
                        QIcon::Normal, QIcon::Off);
         pixmap = d->findIcon(16, QLatin1String("gnome-fs-directory.png"));
@@ -4424,9 +4441,11 @@ QIcon QCleanlooksStyle::standardIconImplementation(StandardPixmap standardIcon,
         pixmap = d->findIcon(16, QLatin1String("gnome-fs-directory-accept.png"));
         if (!pixmap.isNull())
             icon.addPixmap(pixmap, QIcon::Normal, QIcon::On);
-        break;
+    }
+    break;
     case SP_DirLinkIcon:
         {
+            icon = QIcon(standardPixmap(standardIcon, option, widget));
             QPixmap link = d->findIcon(12, QLatin1String("emblem-symbolic-link.png"));
             if (!link.isNull()) {
                 icon.addPixmap(standardPixmap(SP_DirLinkIcon, option, widget));
@@ -4442,111 +4461,91 @@ QIcon QCleanlooksStyle::standardIconImplementation(StandardPixmap standardIcon,
         }
     case SP_FileIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("unknown.png"));
-            if (pixmap.isNull())
-                pixmap = d->findIcon(16, QLatin1String("gnome-fs-regular.png"));
-            if (pixmap.isNull())
-                pixmap = d->findIcon(16, QLatin1String("stock_new.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("unknown.png"));
+            if (icon.isNull())
+                icon = d->createIcon(QLatin1String("gnome-fs-regular.png"));
+            if (icon.isNull())
+                icon = d->createIcon(QLatin1String("stock_new.png"));
+            break;
+        }
+    case SP_DialogCloseButton:
+        {
+            icon  = d->createIcon(QLatin1String("gtk-close.png"));
+            if (icon.isNull())
+                icon = d->createIcon(QLatin1String("stock-close.png"));
             break;
         }
     case SP_DirHomeIcon:
         {
-            pixmap = d->findIcon(24, QLatin1String("folder_home.png"));
-            if (pixmap.isNull())
-                pixmap = d->findIcon(24, QLatin1String("gnome_home.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("folder_home.png"));
+            if (icon.isNull())
+                icon = d->createIcon(QLatin1String("gnome_home.png"));
             break;
         }
     case SP_DriveFDIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-dev-floppy.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-dev-floppy.png"));
             break;
         }
     case SP_ComputerIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-fs-client.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-fs-client.png"));
             break;
         }
     case SP_DesktopIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-fs-desktop.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-fs-desktop.png"));
             break;
         }
     case SP_TrashIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-fs-trash-empty.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-fs-trash-empty.png"));
             break;
         }
     case SP_DriveCDIcon:
     case SP_DriveDVDIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-dev-cdrom.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-dev-cdrom.png"));
             break;
         }
     case SP_DriveHDIcon:
         {
-            pixmap = d->findIcon(16, QLatin1String("gnome-dev-harddisk.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("gnome-dev-harddisk.png"));
             break;
         }
     case SP_ArrowUp:
         {
-            pixmap = d->findIcon(24, QLatin1String("stock_up.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("stock_up.png"));
             break;
         }
     case SP_ArrowDown:
         {
-            pixmap = d->findIcon(24, QLatin1String("stock_down.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("stock_down.png"));
             break;
         }
     case SP_ArrowRight:
         {
-            pixmap = d->findIcon(24, QLatin1String("stock_right.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("stock_right.png"));
             break;
         }
     case SP_ArrowLeft:
         {
-            pixmap = d->findIcon(24, QLatin1String("stock_left.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("stock_left.png"));
             break;
         }
     case SP_BrowserReload:
         {
-            pixmap = d->findIcon(24, QLatin1String("view-refresh.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
+            icon = d->createIcon(QLatin1String("view-refresh.png"));
             break;
         }
     case SP_BrowserStop:
         {
             pixmap = d->findIcon(24, QLatin1String("stop.png"));
-            if (!pixmap.isNull())
-                icon.addPixmap(pixmap);
             break;
         }
     case SP_FileLinkIcon:
         {
+            icon = QIcon(standardPixmap(standardIcon, option, widget));
             QPixmap link = d->findIcon(12, QLatin1String("emblem-symbolic-link.png"));
             if (!link.isNull()) {
                 icon.addPixmap(standardPixmap(SP_FileLinkIcon,option, widget));
@@ -4571,12 +4570,12 @@ QIcon QCleanlooksStyle::standardIconImplementation(StandardPixmap standardIcon,
             return standardIconImplementation(SP_ArrowRight, option, widget);
         return standardIconImplementation(SP_ArrowLeft, option, widget);
     default:
-        break;
+        icon = QIcon(standardPixmap(standardIcon, option, widget));
     }
-    return icon;
-#else
+    if (!icon.isNull())
+        return icon;
+#endif // Q_WS_X11
     return QWindowsStyle::standardIconImplementation(standardIcon, option, widget);
-#endif
 }
 
 /*!
@@ -4585,13 +4584,12 @@ QIcon QCleanlooksStyle::standardIconImplementation(StandardPixmap standardIcon,
 QPixmap QCleanlooksStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOption *opt,
                                       const QWidget *widget) const
 {
+#ifdef Q_WS_X11
     Q_D(const QCleanlooksStyle);
     QPixmap pixmap;
     if (!qApp->desktopSettingsAware())
         return QWindowsStyle::standardPixmap(standardPixmap, opt, widget);
-
     d->lookupIconTheme();
-
 #ifndef QT_NO_IMAGEFORMAT_XPM
     switch (standardPixmap) {
     case SP_MessageBoxInformation:
@@ -4933,7 +4931,7 @@ QPixmap QCleanlooksStyle::standardPixmap(StandardPixmap standardPixmap, const QS
         break;
     }
 #endif //QT_NO_IMAGEFORMAT_XPM
-
+#endif //Q_WS_X11
     return QWindowsStyle::standardPixmap(standardPixmap, opt, widget);
 }
 

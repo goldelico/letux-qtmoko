@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,9 +61,9 @@
 #include <process.h>
 #endif
 
-#define PROGRAMNAME     "dbusxml2cpp"
-#define PROGRAMVERSION  "0.6"
-#define PROGRAMCOPYRIGHT "Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)."
+#define PROGRAMNAME     "qdbusxml2cpp"
+#define PROGRAMVERSION  "0.7"
+#define PROGRAMCOPYRIGHT "Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)."
 
 #define ANNOTATION_NO_WAIT      "org.freedesktop.DBus.Method.NoReply"
 
@@ -628,6 +632,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
         // methods:
         hs << "public Q_SLOTS: // METHODS" << endl;
         foreach (const QDBusIntrospection::Method &method, interface->methods) {
+            bool isDeprecated = method.annotations.value(QLatin1String("org.freedesktop.DBus.Deprecated")) == QLatin1String("true");
             bool isNoReply =
                 method.annotations.value(QLatin1String(ANNOTATION_NO_WAIT)) == QLatin1String("true");
             if (isNoReply && !method.outputArgs.isEmpty()) {
@@ -636,49 +641,72 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
                 continue;
             }
 
-            hs << "    inline ";
+            hs << "    inline "
+               << (isDeprecated ? "Q_DECL_DEPRECATED " : "");
 
-            if (method.annotations.value(QLatin1String("org.freedesktop.DBus.Deprecated")) == QLatin1String("true"))
-                hs << "Q_DECL_DEPRECATED ";
-
-            if (isNoReply)
+            if (isNoReply) {
                 hs << "Q_NOREPLY void ";
-            else if (method.outputArgs.isEmpty())
-                hs << "QDBusReply<void> ";
-            else {
-                hs << "QDBusReply<"
-                   << templateArg(qtTypeName(method.outputArgs.first().type, method.annotations, 0, "Out")) << "> ";
+            } else {
+                hs << "QDBusPendingReply<";
+                for (int i = 0; i < method.outputArgs.count(); ++i)
+                    hs << (i > 0 ? ", " : "")
+                       << templateArg(qtTypeName(method.outputArgs.at(i).type, method.annotations, i, "Out"));
+                hs << "> ";
             }
 
             hs << method.name << "(";
 
-            QStringList argNames = makeArgNames(method.inputArgs, method.outputArgs);
-            writeArgList(hs, argNames, method.annotations, method.inputArgs, method.outputArgs);
+            QStringList argNames = makeArgNames(method.inputArgs);
+            writeArgList(hs, argNames, method.annotations, method.inputArgs);
 
             hs << ")" << endl
                << "    {" << endl
                << "        QList<QVariant> argumentList;" << endl;
 
-            int argPos = 0;
             if (!method.inputArgs.isEmpty()) {
                 hs << "        argumentList";
-                for (argPos = 0; argPos < method.inputArgs.count(); ++argPos)
+                for (int argPos = 0; argPos < method.inputArgs.count(); ++argPos)
                     hs << " << qVariantFromValue(" << argNames.at(argPos) << ')';
                 hs << ";" << endl;
             }
 
-            if (method.outputArgs.count() > 1)
-                hs << "        QDBusMessage reply = callWithArgumentList(QDBus::Block, "
-                   <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
-            else if (!isNoReply)
-                hs << "        return callWithArgumentList(QDBus::Block, "
-                   <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
-            else
+            if (isNoReply)
                 hs << "        callWithArgumentList(QDBus::NoBlock, "
                    <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
+            else
+                hs << "        return asyncCallWithArgumentList(QLatin1String(\""
+                   << method.name << "\"), argumentList);" << endl;
 
-            argPos++;
+            // close the function:
+            hs << "    }" << endl;
+
             if (method.outputArgs.count() > 1) {
+                // generate the old-form QDBusReply methods with multiple incoming parameters
+                hs << "    inline "
+                   << (isDeprecated ? "Q_DECL_DEPRECATED " : "")
+                   << "QDBusReply<"
+                   << templateArg(qtTypeName(method.outputArgs.first().type, method.annotations, 0, "Out")) << "> ";
+                hs << method.name << "(";
+
+                QStringList argNames = makeArgNames(method.inputArgs, method.outputArgs);
+                writeArgList(hs, argNames, method.annotations, method.inputArgs, method.outputArgs);
+
+                hs << ")" << endl
+                   << "    {" << endl
+                   << "        QList<QVariant> argumentList;" << endl;
+
+                int argPos = 0;
+                if (!method.inputArgs.isEmpty()) {
+                    hs << "        argumentList";
+                    for (argPos = 0; argPos < method.inputArgs.count(); ++argPos)
+                        hs << " << qVariantFromValue(" << argNames.at(argPos) << ')';
+                    hs << ";" << endl;
+                }
+
+                hs << "        QDBusMessage reply = callWithArgumentList(QDBus::Block, "
+                   <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
+
+                argPos++;
                 hs << "        if (reply.type() == QDBusMessage::ReplyMessage && reply.arguments().count() == "
                    << method.outputArgs.count() << ") {" << endl;
 
@@ -688,12 +716,11 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
                        << templateArg(qtTypeName(method.outputArgs.at(i).type, method.annotations, i, "Out"))
                        << ">(reply.arguments().at(" << i << "));" << endl;
                 hs << "        }" << endl
-                   << "        return reply;" << endl;
+                   << "        return reply;" << endl
+                   << "    }" << endl;
             }
 
-            // close the function:
-            hs << "    }" << endl
-               << endl;
+            hs << endl;
         }
 
         hs << "Q_SIGNALS: // SIGNALS" << endl;

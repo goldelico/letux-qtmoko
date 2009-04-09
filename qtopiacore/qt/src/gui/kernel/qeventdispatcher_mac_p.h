@@ -1,37 +1,75 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/****************************************************************************
+**
+** Copyright (c) 2007-2008, Apple, Inc.
+**
+** All rights reserved.
+**
+** Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are met:
+**
+**   * Redistributions of source code must retain the above copyright notice,
+**     this list of conditions and the following disclaimer.
+**
+**   * Redistributions in binary form must reproduce the above copyright notice,
+**     this list of conditions and the following disclaimer in the documentation
+**     and/or other materials provided with the distribution.
+**
+**   * Neither the name of Apple, Inc. nor the names of its contributors
+**     may be used to endorse or promote products derived from this software
+**     without specific prior written permission.
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+** CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+** EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+** PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+** PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+** LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+** NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ****************************************************************************/
 
@@ -49,16 +87,25 @@
 // We mean it.
 //
 
-#include "QtGui/qwindowdefs.h"
-#include "qhash.h"
-#include "private/qeventdispatcher_unix_p.h"
+#include <QtGui/qwindowdefs.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qstack.h>
+#include "private/qabstracteventdispatcher_p.h"
 #include "private/qt_mac_p.h"
 
 QT_BEGIN_NAMESPACE
 
+#ifdef QT_MAC_USE_COCOA
+typedef struct _NSModalSession *NSModalSession;
+typedef struct _QCocoaModalSessionInfo {
+    QPointer<QWidget> widget;
+    NSModalSession session;
+} QCocoaModalSessionInfo;
+#endif
+
 class QEventDispatcherMacPrivate;
 
-class QEventDispatcherMac : public QEventDispatcherUNIX
+class QEventDispatcherMac : public QAbstractEventDispatcher
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QEventDispatcherMac)
@@ -80,9 +127,9 @@ public:
 
     void wakeUp();
     void flush();
+    void interrupt();
 
 private:
-    friend int qt_mac_send_zero_timers();
     friend void qt_mac_select_timer_callbk(__EventLoopTimer*, void*);
     friend class QApplicationPrivate;
 };
@@ -92,40 +139,51 @@ struct MacTimerInfo {
     int interval;
     QObject *obj;
     bool pending;
-    EventLoopTimerRef mac_timer;
+    CFRunLoopTimerRef runLoopTimer;
     bool operator==(const MacTimerInfo &other)
     {
         return (id == other.id);
     }
 };
-typedef QList<MacTimerInfo> MacTimerList;
+typedef QHash<int, MacTimerInfo *> MacTimerHash;
 
 struct MacSocketInfo {
-    MacSocketInfo() : socket(0), runloop(0), read(0), write(0) {}
+    MacSocketInfo() : socket(0), runloop(0), readNotifier(0), writeNotifier(0) {}
     CFSocketRef socket;
     CFRunLoopSourceRef runloop;
-    int read;
-    int write;
+    QObject *readNotifier;
+    QObject *writeNotifier;
 };
 typedef QHash<int, MacSocketInfo *> MacSocketHash;
 
-class QEventDispatcherMacPrivate : public QEventDispatcherUNIXPrivate
+class QEventDispatcherMacPrivate : public QAbstractEventDispatcherPrivate
 {
     Q_DECLARE_PUBLIC(QEventDispatcherMac)
 
 public:
     QEventDispatcherMacPrivate();
 
-    int zero_timer_count;
-    MacTimerList *macTimerList;
-    int activateTimers();
+    static MacTimerHash macTimerHash;
+#ifdef QT_MAC_USE_COCOA
+    static QStack<QCocoaModalSessionInfo> cocoaModalSessionStack;
+    static bool blockCocoaRequestModal;
+    static NSModalSession activeModalSession();
+    static void rebuildModalSessionStack(bool pop);
+#endif
 
     MacSocketHash macSockets;
-    QList<EventRef> queuedUserInputEvents;
+    QList<void *> queuedUserInputEvents; // List of EventRef in Carbon, and NSEvent * in Cocoa
     CFRunLoopSourceRef postedEventsSource;
+    CFRunLoopObserverRef waitingObserver;
+    QAtomicInt serialNumber;
+    int lastSerial;
+    bool interrupt;
 private:
     static Boolean postedEventSourceEqualCallback(const void *info1, const void *info2);
     static void postedEventsSourcePerformCallback(void *info);
+    static void activateTimer(CFRunLoopTimerRef, void *info);
+    static void waitingObserverCallback(CFRunLoopObserverRef observer,
+                                        CFRunLoopActivity activity, void *info);
 };
 
 QT_END_NAMESPACE

@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/script/qscriptvalue.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/script/qscriptvalue.cpp -->
 <head>
-  <title>Qt 4.4: QScriptValue Class Reference</title>
+  <title>Qt 4.5: QScriptValue Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QScriptValue Class Reference<br /><span class="small-subtitle">[<a href="qtscript.html">QtScript</a> module]</span>
 </h1>
@@ -18,86 +18,89 @@
 <pre> #include &lt;QScriptValue&gt;</pre><p>This class was introduced in Qt 4.3.</p>
 <ul>
 <li><a href="qscriptvalue-members.html">List of all members, including inherited members</a></li>
+<li><a href="qscriptvalue-obsolete.html">Obsolete members</a></li>
 </ul>
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qscriptvalue.html#PropertyFlag-enum">PropertyFlag</a></b> { ReadOnly, Undeletable, SkipInEnumeration, PropertyGetter, ..., UserRange }</li>
-<li><div class="fn"/>flags <b><a href="qscriptvalue.html#PropertyFlag-enum">PropertyFlags</a></b></li>
-<li><div class="fn"/>enum <b><a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlag</a></b> { ResolveLocal, ResolvePrototype, ResolveScope, ResolveFull }</li>
-<li><div class="fn"/>flags <b><a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlags</a></b></li>
-<li><div class="fn"/>enum <b><a href="qscriptvalue.html#SpecialValue-enum">SpecialValue</a></b> { UndefinedValue, NullValue }</li>
+<li><div class="fn"></div>enum <b><a href="qscriptvalue.html#PropertyFlag-enum">PropertyFlag</a></b> { ReadOnly, Undeletable, SkipInEnumeration, PropertyGetter, ..., UserRange }</li>
+<li><div class="fn"></div>flags <b><a href="qscriptvalue.html#PropertyFlag-enum">PropertyFlags</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlag</a></b> { ResolveLocal, ResolvePrototype, ResolveScope, ResolveFull }</li>
+<li><div class="fn"></div>flags <b><a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlags</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qscriptvalue.html#SpecialValue-enum">SpecialValue</a></b> { UndefinedValue, NullValue }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue">QScriptValue</a></b> ()</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-2">QScriptValue</a></b> ( const QScriptValue &amp; <i>other</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-3">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, SpecialValue <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-4">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, bool <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-5">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, int <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-6">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, uint <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-7">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, qsreal <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-8">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, const QString &amp; <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#QScriptValue-9">QScriptValue</a></b> ( QScriptEngine * <i>engine</i>, const char * <i>value</i> )</li>
-<li><div class="fn"/><b><a href="qscriptvalue.html#dtor.QScriptValue">~QScriptValue</a></b> ()</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#call">call</a></b> ( const QScriptValue &amp; <i>thisObject</i> = QScriptValue(), const QScriptValueList &amp; <i>args</i> = QScriptValueList() )</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#call-2">call</a></b> ( const QScriptValue &amp; <i>thisObject</i>, const QScriptValue &amp; <i>arguments</i> )</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#construct">construct</a></b> ( const QScriptValueList &amp; <i>args</i> = QScriptValueList() )</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#construct-2">construct</a></b> ( const QScriptValue &amp; <i>arguments</i> )</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#data">data</a></b> () const</li>
-<li><div class="fn"/>QScriptEngine * <b><a href="qscriptvalue.html#engine">engine</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#equals">equals</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#instanceOf">instanceOf</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isArray">isArray</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isBoolean">isBoolean</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isDate">isDate</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isError">isError</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isFunction">isFunction</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isNull">isNull</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isNumber">isNumber</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isObject">isObject</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isQMetaObject">isQMetaObject</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isQObject">isQObject</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isRegExp">isRegExp</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isString">isString</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isUndefined">isUndefined</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isValid">isValid</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#isVariant">isVariant</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#lessThan">lessThan</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#property">property</a></b> ( const QString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#property-2">property</a></b> ( const QScriptString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#property-3">property</a></b> ( quint32 <i>arrayIndex</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
-<li><div class="fn"/>QScriptValue::PropertyFlags <b><a href="qscriptvalue.html#propertyFlags">propertyFlags</a></b> ( const QString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
-<li><div class="fn"/>QScriptValue::PropertyFlags <b><a href="qscriptvalue.html#propertyFlags-2">propertyFlags</a></b> ( const QScriptString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#prototype">prototype</a></b> () const</li>
-<li><div class="fn"/>QScriptClass * <b><a href="qscriptvalue.html#scriptClass">scriptClass</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setData">setData</a></b> ( const QScriptValue &amp; <i>data</i> )</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setProperty">setProperty</a></b> ( const QString &amp; <i>name</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setProperty-2">setProperty</a></b> ( const QScriptString &amp; <i>name</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setProperty-3">setProperty</a></b> ( quint32 <i>arrayIndex</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setPrototype">setPrototype</a></b> ( const QScriptValue &amp; <i>prototype</i> )</li>
-<li><div class="fn"/>void <b><a href="qscriptvalue.html#setScriptClass">setScriptClass</a></b> ( QScriptClass * <i>scriptClass</i> )</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#strictlyEquals">strictlyEquals</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qscriptvalue.html#toBoolean">toBoolean</a></b> () const</li>
-<li><div class="fn"/>QDateTime <b><a href="qscriptvalue.html#toDateTime">toDateTime</a></b> () const</li>
-<li><div class="fn"/>qint32 <b><a href="qscriptvalue.html#toInt32">toInt32</a></b> () const</li>
-<li><div class="fn"/>qsreal <b><a href="qscriptvalue.html#toInteger">toInteger</a></b> () const</li>
-<li><div class="fn"/>qsreal <b><a href="qscriptvalue.html#toNumber">toNumber</a></b> () const</li>
-<li><div class="fn"/>QScriptValue <b><a href="qscriptvalue.html#toObject">toObject</a></b> () const</li>
-<li><div class="fn"/>const QMetaObject * <b><a href="qscriptvalue.html#toQMetaObject">toQMetaObject</a></b> () const</li>
-<li><div class="fn"/>QObject * <b><a href="qscriptvalue.html#toQObject">toQObject</a></b> () const</li>
-<li><div class="fn"/>QRegExp <b><a href="qscriptvalue.html#toRegExp">toRegExp</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qscriptvalue.html#toString">toString</a></b> () const</li>
-<li><div class="fn"/>quint16 <b><a href="qscriptvalue.html#toUInt16">toUInt16</a></b> () const</li>
-<li><div class="fn"/>quint32 <b><a href="qscriptvalue.html#toUInt32">toUInt32</a></b> () const</li>
-<li><div class="fn"/>QVariant <b><a href="qscriptvalue.html#toVariant">toVariant</a></b> () const</li>
-<li><div class="fn"/>QScriptValue &amp; <b><a href="qscriptvalue.html#operator-eq">operator=</a></b> ( const QScriptValue &amp; <i>other</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue">QScriptValue</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-2">QScriptValue</a></b> ( const QScriptValue &amp; <i>other</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-10">QScriptValue</a></b> ( SpecialValue <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-11">QScriptValue</a></b> ( bool <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-12">QScriptValue</a></b> ( int <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-13">QScriptValue</a></b> ( uint <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-14">QScriptValue</a></b> ( qsreal <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-15">QScriptValue</a></b> ( const QString &amp; <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-16">QScriptValue</a></b> ( const QLatin1String &amp; <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#QScriptValue-17">QScriptValue</a></b> ( const char * <i>value</i> )</li>
+<li><div class="fn"></div><b><a href="qscriptvalue.html#dtor.QScriptValue">~QScriptValue</a></b> ()</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#call">call</a></b> ( const QScriptValue &amp; <i>thisObject</i> = QScriptValue(), const QScriptValueList &amp; <i>args</i> = QScriptValueList() )</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#call-2">call</a></b> ( const QScriptValue &amp; <i>thisObject</i>, const QScriptValue &amp; <i>arguments</i> )</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#construct">construct</a></b> ( const QScriptValueList &amp; <i>args</i> = QScriptValueList() )</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#construct-2">construct</a></b> ( const QScriptValue &amp; <i>arguments</i> )</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#data">data</a></b> () const</li>
+<li><div class="fn"></div>QScriptEngine * <b><a href="qscriptvalue.html#engine">engine</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#equals">equals</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#instanceOf">instanceOf</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isArray">isArray</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isBool">isBool</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isDate">isDate</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isError">isError</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isFunction">isFunction</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isNull">isNull</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isNumber">isNumber</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isObject">isObject</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isQMetaObject">isQMetaObject</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isQObject">isQObject</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isRegExp">isRegExp</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isString">isString</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isUndefined">isUndefined</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isValid">isValid</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#isVariant">isVariant</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#lessThan">lessThan</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#property">property</a></b> ( const QString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#property-2">property</a></b> ( const QScriptString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#property-3">property</a></b> ( quint32 <i>arrayIndex</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
+<li><div class="fn"></div>QScriptValue::PropertyFlags <b><a href="qscriptvalue.html#propertyFlags">propertyFlags</a></b> ( const QString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
+<li><div class="fn"></div>QScriptValue::PropertyFlags <b><a href="qscriptvalue.html#propertyFlags-2">propertyFlags</a></b> ( const QScriptString &amp; <i>name</i>, const ResolveFlags &amp; <i>mode</i> = ResolvePrototype ) const</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#prototype">prototype</a></b> () const</li>
+<li><div class="fn"></div>QScriptValue <b><a href="qscriptvalue.html#scope">scope</a></b> () const</li>
+<li><div class="fn"></div>QScriptClass * <b><a href="qscriptvalue.html#scriptClass">scriptClass</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setData">setData</a></b> ( const QScriptValue &amp; <i>data</i> )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setProperty">setProperty</a></b> ( const QString &amp; <i>name</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setProperty-2">setProperty</a></b> ( const QScriptString &amp; <i>name</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setProperty-3">setProperty</a></b> ( quint32 <i>arrayIndex</i>, const QScriptValue &amp; <i>value</i>, const PropertyFlags &amp; <i>flags</i> = KeepExistingFlags )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setPrototype">setPrototype</a></b> ( const QScriptValue &amp; <i>prototype</i> )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setScope">setScope</a></b> ( const QScriptValue &amp; <i>scope</i> )</li>
+<li><div class="fn"></div>void <b><a href="qscriptvalue.html#setScriptClass">setScriptClass</a></b> ( QScriptClass * <i>scriptClass</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#strictlyEquals">strictlyEquals</a></b> ( const QScriptValue &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qscriptvalue.html#toBool">toBool</a></b> () const</li>
+<li><div class="fn"></div>QDateTime <b><a href="qscriptvalue.html#toDateTime">toDateTime</a></b> () const</li>
+<li><div class="fn"></div>qint32 <b><a href="qscriptvalue.html#toInt32">toInt32</a></b> () const</li>
+<li><div class="fn"></div>qsreal <b><a href="qscriptvalue.html#toInteger">toInteger</a></b> () const</li>
+<li><div class="fn"></div>qsreal <b><a href="qscriptvalue.html#toNumber">toNumber</a></b> () const</li>
+<li><div class="fn"></div>const QMetaObject * <b><a href="qscriptvalue.html#toQMetaObject">toQMetaObject</a></b> () const</li>
+<li><div class="fn"></div>QObject * <b><a href="qscriptvalue.html#toQObject">toQObject</a></b> () const</li>
+<li><div class="fn"></div>QRegExp <b><a href="qscriptvalue.html#toRegExp">toRegExp</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qscriptvalue.html#toString">toString</a></b> () const</li>
+<li><div class="fn"></div>quint16 <b><a href="qscriptvalue.html#toUInt16">toUInt16</a></b> () const</li>
+<li><div class="fn"></div>quint32 <b><a href="qscriptvalue.html#toUInt32">toUInt32</a></b> () const</li>
+<li><div class="fn"></div>QVariant <b><a href="qscriptvalue.html#toVariant">toVariant</a></b> () const</li>
+<li><div class="fn"></div>QScriptValue &amp; <b><a href="qscriptvalue.html#operator-eq">operator=</a></b> ( const QScriptValue &amp; <i>other</i> )</li>
 </ul>
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"/>T <b><a href="qscriptvalue.html#qscriptvalue_cast">qscriptvalue_cast</a></b> ( const QScriptValue &amp; <i>value</i> )</li>
+<li><div class="fn"></div>T <b><a href="qscriptvalue.html#qscriptvalue_cast">qscriptvalue_cast</a></b> ( const QScriptValue &amp; <i>value</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -105,13 +108,13 @@
 <p>The QScriptValue class acts as a container for the Qt Script data types.</p>
 <p>QScriptValue supports the types defined in the <a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a> standard: The primitive types, which are Undefined, Null, Boolean, Number, and String; and the Object type. Additionally, Qt Script has built-in support for <a href="qvariant.html">QVariant</a>, <a href="qobject.html">QObject</a> and <a href="qmetaobject.html">QMetaObject</a>.</p>
 <p>For the object-based types (including Date and RegExp), use the newT() functions in <a href="qscriptengine.html">QScriptEngine</a> (e.g&#x2e; <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>()) to create a QScriptValue of the desired type. For the primitive types, use one of the QScriptValue constructor overloads.</p>
-<p>The methods named isT() (e.g&#x2e; <a href="qscriptvalue.html#isBoolean">isBoolean</a>(), <a href="qscriptvalue.html#isUndefined">isUndefined</a>()) can be used to test if a value is of a certain type. The methods named toT() (e.g&#x2e; <a href="qscriptvalue.html#toBoolean">toBoolean</a>(), <a href="qscriptvalue.html#toString">toString</a>()) can be used to convert a QScriptValue to another type. You can also use the generic <a href="qscriptvalue.html#qscriptvalue_cast">qscriptvalue_cast</a>() function.</p>
+<p>The methods named isT() (e.g&#x2e; <a href="qscriptvalue.html#isBool">isBool</a>(), <a href="qscriptvalue.html#isUndefined">isUndefined</a>()) can be used to test if a value is of a certain type. The methods named toT() (e.g&#x2e; <a href="qscriptvalue.html#toBool">toBool</a>(), <a href="qscriptvalue.html#toString">toString</a>()) can be used to convert a QScriptValue to another type. You can also use the generic <a href="qscriptvalue.html#qscriptvalue_cast">qscriptvalue_cast</a>() function.</p>
 <p>Object values have zero or more properties which are themselves QScriptValues. Use <a href="qscriptvalue.html#setProperty">setProperty</a>() to set a property of an object, and call <a href="qscriptvalue.html#property">property</a>() to retrieve the value of a property.</p>
 <pre> QScriptEngine myEngine;
  QScriptValue myObject = myEngine.newObject();
  QScriptValue myOtherObject = myEngine.newObject();
  myObject.setProperty(&quot;myChild&quot;, myOtherObject);
- myObject.setProperty(&quot;name&quot;, QScriptValue(&amp;myEngine, &quot;John Doe&quot;));</pre>
+ myObject.setProperty(&quot;name&quot;, &quot;John Doe&quot;);</pre>
 <p>Each property can have a set of attributes; these are specified as the third (optional) argument to <a href="qscriptvalue.html#setProperty">setProperty</a>(). The attributes of a property can be queried by calling the <a href="qscriptvalue.html#propertyFlags">propertyFlags</a>() function. The following code snippet creates a property that cannot be modified by script code:</p>
 <pre> QScriptValue val(&amp;myEngine, 123);
  myObject.setProperty(&quot;myReadOnlyProperty&quot;, val, QScriptValue::ReadOnly);</pre>
@@ -162,20 +165,30 @@
 <h3 class="fn"><a name="QScriptValue-2"></a>QScriptValue::QScriptValue ( const QScriptValue &amp; <i>other</i> )</h3>
 <p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> that is a copy of <i>other</i>.</p>
 <p>Note that if <i>other</i> is an object (i.e&#x2e;, <a href="qscriptvalue.html#isObject">isObject</a>() would return true), then only a reference to the underlying object is copied into the new script value (i.e&#x2e;, the object itself is not copied).</p>
-<h3 class="fn"><a name="QScriptValue-3"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, <a href="qscriptvalue.html#SpecialValue-enum">SpecialValue</a> <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the special <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-4"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, bool <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the boolean <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-5"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, int <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the integer <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-6"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, <a href="qtglobal.html#uint-typedef">uint</a> <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the unsigned integer <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-7"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, qsreal <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the qsreal <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-8"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, const <a href="qstring.html">QString</a> &amp; <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the string <i>value</i> and registers it with the script <i>engine</i>.</p>
-<h3 class="fn"><a name="QScriptValue-9"></a>QScriptValue::QScriptValue ( <a href="qscriptengine.html">QScriptEngine</a> * <i>engine</i>, const char * <i>value</i> )</h3>
-<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with the string <i>value</i> and registers it with the script <i>engine</i>.</p>
+<h3 class="fn"><a name="QScriptValue-10"></a>QScriptValue::QScriptValue ( <a href="qscriptvalue.html#SpecialValue-enum">SpecialValue</a> <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a special <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-11"></a>QScriptValue::QScriptValue ( bool <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a boolean <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-12"></a>QScriptValue::QScriptValue ( int <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a number <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-13"></a>QScriptValue::QScriptValue ( <a href="qtglobal.html#uint-typedef">uint</a> <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a number <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-14"></a>QScriptValue::QScriptValue ( qsreal <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a number <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-15"></a>QScriptValue::QScriptValue ( const <a href="qstring.html">QString</a> &amp; <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a string <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-16"></a>QScriptValue::QScriptValue ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a string <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="QScriptValue-17"></a>QScriptValue::QScriptValue ( const char * <i>value</i> )</h3>
+<p>Constructs a new <a href="qscriptvalue.html">QScriptValue</a> with a string <i>value</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="dtor.QScriptValue"></a>QScriptValue::~QScriptValue ()</h3>
 <p>Destroys this <a href="qscriptvalue.html">QScriptValue</a>.</p>
 <h3 class="fn"><a name="call"></a>QScriptValue QScriptValue::call ( const QScriptValue &amp; <i>thisObject</i> = QScriptValue(), const QScriptValueList &amp; <i>args</i> = QScriptValueList() )</h3>
@@ -195,11 +208,10 @@
  engine.evaluate(&quot;function cube(x) { return x * x * x; }&quot;);
  QScriptValue cube = global.property(&quot;cube&quot;);
  QScriptValueList args;
- args &lt;&lt; QScriptValue(&amp;engine, 3);
+ args &lt;&lt; 3;
  qDebug() &lt;&lt; cube.call(QScriptValue(), args).toNumber(); <span class="comment">// 27</span></pre>
 <p>See also <a href="qscriptvalue.html#construct">construct</a>().</p>
 <h3 class="fn"><a name="call-2"></a>QScriptValue QScriptValue::call ( const QScriptValue &amp; <i>thisObject</i>, const QScriptValue &amp; <i>arguments</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Calls this <a href="qscriptvalue.html">QScriptValue</a> as a function, using <i>thisObject</i> as the `this' object in the function call, and passing <i>arguments</i> as arguments to the function. Returns the value returned from the function.</p>
 <p>If this <a href="qscriptvalue.html">QScriptValue</a> is not a function, <a href="qscriptvalue.html#call">call</a>() does nothing and returns an invalid <a href="qscriptvalue.html">QScriptValue</a>.</p>
 <p><i>arguments</i> can be an arguments object, an array, null or undefined; any other type will cause a TypeError to be thrown.</p>
@@ -217,7 +229,6 @@
 <p>Calling construct() can cause an exception to occur in the script engine; in that case, construct() returns the value that was thrown (typically an <tt>Error</tt> object). You can call <a href="qscriptengine.html#hasUncaughtException">QScriptEngine::hasUncaughtException</a>() to determine if an exception occurred.</p>
 <p>See also <a href="qscriptvalue.html#call">call</a>() and <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>().</p>
 <h3 class="fn"><a name="construct-2"></a>QScriptValue QScriptValue::construct ( const QScriptValue &amp; <i>arguments</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Creates a new <tt>Object</tt> and calls this <a href="qscriptvalue.html">QScriptValue</a> as a constructor, using the created object as the `this' object and passing <i>arguments</i> as arguments. If the return value from the constructor call is an object, then that object is returned; otherwise the default constructed object is returned.</p>
 <p>If this <a href="qscriptvalue.html">QScriptValue</a> is not a function, <a href="qscriptvalue.html#construct">construct</a>() does nothing and returns an invalid <a href="qscriptvalue.html">QScriptValue</a>.</p>
 <p><i>arguments</i> can be an arguments object, an array, null or undefined. Any other type will cause a TypeError to be thrown.</p>
@@ -227,7 +238,7 @@
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qscriptvalue.html#setData">setData</a>().</p>
 <h3 class="fn"><a name="engine"></a><a href="qscriptengine.html">QScriptEngine</a> * QScriptValue::engine () const</h3>
-<p>Returns the <a href="qscriptengine.html">QScriptEngine</a> that created this <a href="qscriptvalue.html">QScriptValue</a>, or 0 if this <a href="qscriptvalue.html">QScriptValue</a> is invalid.</p>
+<p>Returns the <a href="qscriptengine.html">QScriptEngine</a> that created this <a href="qscriptvalue.html">QScriptValue</a>, or 0 if this <a href="qscriptvalue.html">QScriptValue</a> is invalid or the value is not associated with a particular engine.</p>
 <h3 class="fn"><a name="equals"></a>bool QScriptValue::equals ( const QScriptValue &amp; <i>other</i> ) const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is equal to <i>other</i>, otherwise returns false. The comparison follows the behavior described in <a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a> section 11.9&#x2e;3, &quot;The Abstract Equality Comparison Algorithm&quot;.</p>
 <p>This function can return true even if the type of this <a href="qscriptvalue.html">QScriptValue</a> is different from the type of the <i>other</i> value; i.e&#x2e; the comparison is not strict. For example, comparing the number 9 to the string &quot;9&quot; returns true; comparing an undefined value to a null value returns true; comparing a <tt>Number</tt> object whose primitive value is 6 to a <tt>String</tt> object whose primitive value is &quot;6&quot; returns true; and comparing the number 1 to the boolean value <tt>true</tt> returns true. If you want to perform a comparison without such implicit value conversion, use <a href="qscriptvalue.html#strictlyEquals">strictlyEquals</a>().</p>
@@ -239,9 +250,10 @@
 <h3 class="fn"><a name="isArray"></a>bool QScriptValue::isArray () const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is an object of the Array class; otherwise returns false.</p>
 <p>See also <a href="qscriptengine.html#newArray">QScriptEngine::newArray</a>().</p>
-<h3 class="fn"><a name="isBoolean"></a>bool QScriptValue::isBoolean () const</h3>
+<h3 class="fn"><a name="isBool"></a>bool QScriptValue::isBool () const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is of the primitive type Boolean; otherwise returns false.</p>
-<p>See also <a href="qscriptvalue.html#toBoolean">toBoolean</a>().</p>
+<p>This function was introduced in Qt 4.5.</p>
+<p>See also <a href="qscriptvalue.html#toBool">toBool</a>().</p>
 <h3 class="fn"><a name="isDate"></a>bool QScriptValue::isDate () const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is an object of the Date class; otherwise returns false.</p>
 <p>See also <a href="qscriptengine.html#newDate">QScriptEngine::newDate</a>().</p>
@@ -260,7 +272,7 @@
 <h3 class="fn"><a name="isObject"></a>bool QScriptValue::isObject () const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is of the Object type; otherwise returns false.</p>
 <p>Note that function values, variant values, and <a href="qobject.html">QObject</a> values are objects, so this function returns true for such values.</p>
-<p>See also <a href="qscriptvalue.html#toObject">toObject</a>() and <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>().</p>
+<p>See also <a href="qscriptvalue-obsolete.html#toObject">toObject</a>() and <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>().</p>
 <h3 class="fn"><a name="isQMetaObject"></a>bool QScriptValue::isQMetaObject () const</h3>
 <p>Returns true if this <a href="qscriptvalue.html">QScriptValue</a> is a <a href="qmetaobject.html">QMetaObject</a>; otherwise returns false.</p>
 <p>See also <a href="qscriptvalue.html#toQMetaObject">toQMetaObject</a>() and <a href="qscriptengine.html#newQMetaObject">QScriptEngine::newQMetaObject</a>().</p>
@@ -292,7 +304,6 @@
 <p>If the property is implemented using a getter function (i.e&#x2e; has the <a href="qscriptvalue.html#PropertyFlag-enum">PropertyGetter</a> flag set), calling property() has side-effects on the script engine, since the getter function will be called (possibly resulting in an uncaught script exception). If an exception occurred, property() returns the value that was thrown (typically an <tt>Error</tt> object).</p>
 <p>See also <a href="qscriptvalue.html#setProperty">setProperty</a>(), <a href="qscriptvalue.html#propertyFlags">propertyFlags</a>(), and <a href="qscriptvalueiterator.html">QScriptValueIterator</a>.</p>
 <h3 class="fn"><a name="property-2"></a>QScriptValue QScriptValue::property ( const <a href="qscriptstring.html">QScriptString</a> &amp; <i>name</i>, const <a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlags</a> &amp; <i>mode</i> = ResolvePrototype ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the value of this <a href="qscriptvalue.html">QScriptValue</a>'s property with the given <i>name</i>, using the given <i>mode</i> to resolve the property.</p>
 <p>This overload of <a href="qscriptvalue.html#property">property</a>() is useful when you need to look up the same property repeatedly, since the lookup can be performed faster when the name is represented as an interned string.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -306,13 +317,15 @@
 <p>Returns the flags of the property with the given <i>name</i>, using the given <i>mode</i> to resolve the property.</p>
 <p>See also <a href="qscriptvalue.html#property">property</a>().</p>
 <h3 class="fn"><a name="propertyFlags-2"></a><a href="qscriptvalue.html#PropertyFlag-enum">QScriptValue::PropertyFlags</a> QScriptValue::propertyFlags ( const <a href="qscriptstring.html">QScriptString</a> &amp; <i>name</i>, const <a href="qscriptvalue.html#ResolveFlag-enum">ResolveFlags</a> &amp; <i>mode</i> = ResolvePrototype ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the flags of the property with the given <i>name</i>, using the given <i>mode</i> to resolve the property.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qscriptvalue.html#property">property</a>().</p>
 <h3 class="fn"><a name="prototype"></a>QScriptValue QScriptValue::prototype () const</h3>
 <p>If this <a href="qscriptvalue.html">QScriptValue</a> is an object, returns the internal prototype (<tt>__proto__</tt> property) of this object; otherwise returns an invalid <a href="qscriptvalue.html">QScriptValue</a>.</p>
 <p>See also <a href="qscriptvalue.html#setPrototype">setPrototype</a>() and <a href="qscriptvalue.html#isObject">isObject</a>().</p>
+<h3 class="fn"><a name="scope"></a>QScriptValue QScriptValue::scope () const</h3>
+<p>Returns the scope object of this <a href="qscriptvalue.html">QScriptValue</a>. This function is only relevant for function objects. The scope determines how variables are resolved when the function is invoked.</p>
+<p>See also <a href="qscriptvalue.html#setScope">setScope</a>().</p>
 <h3 class="fn"><a name="scriptClass"></a><a href="qscriptclass.html">QScriptClass</a> * QScriptValue::scriptClass () const</h3>
 <p>Returns the custom script class that this script object is an instance of, or 0 if the object is not of a custom class.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -330,7 +343,6 @@
 <p>Note that you cannot specify custom getter or setter functions for built-in properties, such as the <tt>length</tt> property of Array objects or meta properties of <a href="qobject.html">QObject</a> objects.</p>
 <p>See also <a href="qscriptvalue.html#property">property</a>().</p>
 <h3 class="fn"><a name="setProperty-2"></a>void QScriptValue::setProperty ( const <a href="qscriptstring.html">QScriptString</a> &amp; <i>name</i>, const QScriptValue &amp; <i>value</i>, const <a href="qscriptvalue.html#PropertyFlag-enum">PropertyFlags</a> &amp; <i>flags</i> = KeepExistingFlags )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Sets the value of this <a href="qscriptvalue.html">QScriptValue</a>'s property with the given <i>name</i> to the given <i>value</i>. The given <i>flags</i> specify how this property may be accessed by script code.</p>
 <p>This overload of <a href="qscriptvalue.html#setProperty">setProperty</a>() is useful when you need to set the same property repeatedly, since the operation can be performed faster when the name is represented as an interned string.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -344,8 +356,12 @@
 <p>If this <a href="qscriptvalue.html">QScriptValue</a> is an object, sets the internal prototype (<tt>__proto__</tt> property) of this object to be <i>prototype</i>; otherwise does nothing.</p>
 <p>The internal prototype should not be confused with the public property with name &quot;prototype&quot;; the public prototype is usually only set on functions that act as constructors.</p>
 <p>See also <a href="qscriptvalue.html#prototype">prototype</a>() and <a href="qscriptvalue.html#isObject">isObject</a>().</p>
+<h3 class="fn"><a name="setScope"></a>void QScriptValue::setScope ( const QScriptValue &amp; <i>scope</i> )</h3>
+<p>Sets the <i>scope</i> object of this <a href="qscriptvalue.html">QScriptValue</a>. This function is only relevant for function objects. Changing the scope is useful when creating closures; see <a href="qtscript.html#nested-functions-and-the-scope-chain">Nested Functions and the Scope Chain</a>.</p>
+<p>See also <a href="qscriptvalue.html#scope">scope</a>().</p>
 <h3 class="fn"><a name="setScriptClass"></a>void QScriptValue::setScriptClass ( <a href="qscriptclass.html">QScriptClass</a> * <i>scriptClass</i> )</h3>
 <p>Sets the custom script class of this script object to <i>scriptClass</i>. This can be used to &quot;promote&quot; a plain script object (e.g&#x2e; created by the &quot;new&quot; operator in a script, or by <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>() in C++) to an object of a custom type.</p>
+<p>If <i>scriptClass</i> is 0, the object will be demoted to a plain script object.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qscriptvalue.html#scriptClass">scriptClass</a>() and <a href="qscriptvalue.html#setData">setData</a>().</p>
 <h3 class="fn"><a name="strictlyEquals"></a>bool QScriptValue::strictlyEquals ( const QScriptValue &amp; <i>other</i> ) const</h3>
@@ -361,10 +377,11 @@
 <tr valign="top" class="even"><td>Object</td><td>true if both values refer to the same object, false otherwise</td></tr>
 </table></p>
 <p>See also <a href="qscriptvalue.html#equals">equals</a>().</p>
-<h3 class="fn"><a name="toBoolean"></a>bool QScriptValue::toBoolean () const</h3>
+<h3 class="fn"><a name="toBool"></a>bool QScriptValue::toBool () const</h3>
 <p>Returns the boolean value of this <a href="qscriptvalue.html">QScriptValue</a>, using the conversion rules described in <a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a> section 9.2, &quot;ToBoolean&quot;.</p>
 <p>Note that if this <a href="qscriptvalue.html">QScriptValue</a> is an object, calling this function has side effects on the script engine, since the engine will call the object's valueOf() function (and possibly <a href="qscriptvalue.html#toString">toString</a>()) in an attempt to convert the object to a primitive value (possibly resulting in an uncaught script exception).</p>
-<p>See also <a href="qscriptvalue.html#isBoolean">isBoolean</a>().</p>
+<p>This function was introduced in Qt 4.5.</p>
+<p>See also <a href="qscriptvalue.html#isBool">isBool</a>().</p>
 <h3 class="fn"><a name="toDateTime"></a><a href="qdatetime.html">QDateTime</a> QScriptValue::toDateTime () const</h3>
 <p>Returns a <a href="qdatetime.html">QDateTime</a> representation of this value, in local time. If this <a href="qscriptvalue.html">QScriptValue</a> is not a date, or the value of the date is NaN (Not-a-Number), an invalid <a href="qdatetime.html">QDateTime</a> is returned.</p>
 <p>See also <a href="qscriptvalue.html#isDate">isDate</a>().</p>
@@ -380,18 +397,6 @@
 <p>Returns the number value of this <a href="qscriptvalue.html">QScriptValue</a>, as defined in <a href="http://www.ecma-international.org/publications/standards/Ecma-262.htm">ECMA-262</a> section 9.3, &quot;ToNumber&quot;.</p>
 <p>Note that if this <a href="qscriptvalue.html">QScriptValue</a> is an object, calling this function has side effects on the script engine, since the engine will call the object's valueOf() function (and possibly <a href="qscriptvalue.html#toString">toString</a>()) in an attempt to convert the object to a primitive value (possibly resulting in an uncaught script exception).</p>
 <p>See also <a href="qscriptvalue.html#isNumber">isNumber</a>(), <a href="qscriptvalue.html#toInteger">toInteger</a>(), <a href="qscriptvalue.html#toInt32">toInt32</a>(), <a href="qscriptvalue.html#toUInt32">toUInt32</a>(), and <a href="qscriptvalue.html#toUInt16">toUInt16</a>().</p>
-<h3 class="fn"><a name="toObject"></a>QScriptValue QScriptValue::toObject () const</h3>
-<p>Returns the object value of this <a href="qscriptvalue.html">QScriptValue</a>, if it can be converted to an object; otherwise returns an invalid <a href="qscriptvalue.html">QScriptValue</a>. The conversion is performed according to the following table:</p>
-<p><table align="center" cellpadding="2" cellspacing="1" border="0">
-<thead><tr valign="top" class="qt-style"><th>Input Type</th><th>Result</th></tr></thead>
-<tr valign="top" class="odd"><td>Undefined</td><td>An invalid <a href="qscriptvalue.html">QScriptValue</a>.</td></tr>
-<tr valign="top" class="even"><td>Null</td><td>An invalid <a href="qscriptvalue.html">QScriptValue</a>.</td></tr>
-<tr valign="top" class="odd"><td>Boolean</td><td>A new Boolean object whose internal value is set to the value of the boolean.</td></tr>
-<tr valign="top" class="even"><td>Number</td><td>A new Number object whose internal value is set to the value of the number.</td></tr>
-<tr valign="top" class="odd"><td>String</td><td>A new String object whose internal value is set to the value of the string.</td></tr>
-<tr valign="top" class="even"><td>Object</td><td>The result is the object itself (no conversion).</td></tr>
-</table></p>
-<p>See also <a href="qscriptvalue.html#isObject">isObject</a>() and <a href="qscriptengine.html#newObject">QScriptEngine::newObject</a>().</p>
 <h3 class="fn"><a name="toQMetaObject"></a>const <a href="qmetaobject.html">QMetaObject</a> * QScriptValue::toQMetaObject () const</h3>
 <p>If this <a href="qscriptvalue.html">QScriptValue</a> is a <a href="qmetaobject.html">QMetaObject</a>, returns the <a href="qmetaobject.html">QMetaObject</a> pointer that the <a href="qscriptvalue.html">QScriptValue</a> represents; otherwise, returns 0.</p>
 <p>See also <a href="qscriptvalue.html#isQMetaObject">isQMetaObject</a>().</p>
@@ -441,8 +446,8 @@
 <p>See also <a href="qscriptengine.html#qScriptRegisterMetaType">qScriptRegisterMetaType</a>() and <a href="qscriptengine.html#toScriptValue">QScriptEngine::toScriptValue</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

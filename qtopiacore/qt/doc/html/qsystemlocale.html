@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/corelib/tools/qlocale.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/tools/qlocale.cpp -->
 <head>
-  <title>Qt 4.4: QSystemLocale Class Reference</title>
+  <title>Qt 4.5: QSystemLocale Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QSystemLocale Class Reference<br /><span class="small-subtitle">[<a href="qtcore.html">QtCore</a> module]</span>
 </h1>
@@ -22,13 +22,13 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qsystemlocale.html#QueryType-enum">QueryType</a></b> { LanguageId, CountryId, DecimalPoint, GroupSeparator, ..., MeasurementSystem }</li>
+<li><div class="fn"></div>enum <b><a href="qsystemlocale.html#QueryType-enum">QueryType</a></b> { LanguageId, CountryId, DecimalPoint, GroupSeparator, ..., PMText }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qsystemlocale.html#QSystemLocale">QSystemLocale</a></b> ()</li>
-<li><div class="fn"/>virtual <b><a href="qsystemlocale.html#dtor.QSystemLocale">~QSystemLocale</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qsystemlocale.html#QSystemLocale">QSystemLocale</a></b> ()</li>
+<li><div class="fn"></div>virtual <b><a href="qsystemlocale.html#dtor.QSystemLocale">~QSystemLocale</a></b> ()</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -49,12 +49,13 @@
 <tr><td valign="top"><tt>QSystemLocale::GroupSeparator</tt></td><td align="center" valign="top"><tt>3</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the group separator.</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::ZeroDigit</tt></td><td align="center" valign="top"><tt>4</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the zero digit.</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::NegativeSign</tt></td><td align="center" valign="top"><tt>5</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the minus sign.</td></tr>
+<tr><td valign="top"><tt>QSystemLocale::PositiveSign</tt></td><td align="center" valign="top"><tt>23</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the plus sign.</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::DateFormatLong</tt></td><td align="center" valign="top"><tt>6</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the long date format</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::DateFormatShort</tt></td><td align="center" valign="top"><tt>7</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the short date format</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::TimeFormatLong</tt></td><td align="center" valign="top"><tt>8</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the long time format</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::TimeFormatShort</tt></td><td align="center" valign="top"><tt>9</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the short time format</td></tr>
-<tr><td valign="top"><tt>QSystemLocale::DayNameLong</tt></td><td align="center" valign="top"><tt>10</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Friday)</td></tr>
-<tr><td valign="top"><tt>QSystemLocale::DayNameShort</tt></td><td align="center" valign="top"><tt>11</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the short name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Friday)</td></tr>
+<tr><td valign="top"><tt>QSystemLocale::DayNameLong</tt></td><td align="center" valign="top"><tt>10</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Sunday)</td></tr>
+<tr><td valign="top"><tt>QSystemLocale::DayNameShort</tt></td><td align="center" valign="top"><tt>11</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the short name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Sunday)</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::MonthNameLong</tt></td><td align="center" valign="top"><tt>12</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the name of a month. the in variant contains an integer between 1 and 12</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::MonthNameShort</tt></td><td align="center" valign="top"><tt>13</tt></td><td valign="top">a <a href="qstring.html">QString</a> specifying the short name of a month. the in variant contains an integer between 1 and 12</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::DateToStringLong</tt></td><td align="center" valign="top"><tt>14</tt></td><td valign="top">converts the <a href="qdate.html">QDate</a> stored in the in variant to a <a href="qstring.html">QString</a> using the long date format</td></tr>
@@ -66,6 +67,8 @@
 <tr><td valign="top"><tt>QSystemLocale::DateTimeToStringLong</tt></td><td align="center" valign="top"><tt>20</tt></td><td valign="top">converts the <a href="qdatetime.html">QDateTime</a> in the in variant to a <a href="qstring.html">QString</a> using the long datetime format</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::DateTimeToStringShort</tt></td><td align="center" valign="top"><tt>21</tt></td><td valign="top">converts the <a href="qdatetime.html">QDateTime</a> in the in variant to a <a href="qstring.html">QString</a> using the short datetime format</td></tr>
 <tr><td valign="top"><tt>QSystemLocale::MeasurementSystem</tt></td><td align="center" valign="top"><tt>22</tt></td><td valign="top">a <a href="qlocale.html#MeasurementSystem-enum">QLocale::MeasurementSystem</a> enum specifying the measurement system</td></tr>
+<tr><td valign="top"><tt>QSystemLocale::AMText</tt></td><td align="center" valign="top"><tt>24</tt></td><td valign="top">a string that represents the system AM designator associated with a 12-hour clock.</td></tr>
+<tr><td valign="top"><tt>QSystemLocale::PMText</tt></td><td align="center" valign="top"><tt>25</tt></td><td valign="top">a string that represents the system PM designator associated with a 12-hour clock.</td></tr>
 </table></p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -75,8 +78,8 @@
 <p>Deletes the object.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

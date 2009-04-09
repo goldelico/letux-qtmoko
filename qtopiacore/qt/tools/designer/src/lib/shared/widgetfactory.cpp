@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,7 +56,7 @@ TRANSLATOR qdesigner_internal::WidgetFactory
 #include "qdesigner_menu_p.h"
 #include "qdesigner_dockwidget_p.h"
 #include "qdesigner_utils_p.h"
-#include "abstractformwindow.h"
+#include "formwindowbase_p.h"
 
 // shared
 #include "layoutinfo_p.h"
@@ -67,16 +71,37 @@ TRANSLATOR qdesigner_internal::WidgetFactory
 #include <QtDesigner/QExtensionManager>
 #include <QtDesigner/QDesignerPropertySheetExtension>
 #include <QtDesigner/QDesignerLanguageExtension>
+#include <QtDesigner/QDesignerFormWindowManagerInterface>
+#include <QtDesigner/QDesignerFormWindowCursorInterface>
 
 #include <QtGui/QtGui>
 #include <QtGui/QScrollBar>
 #include <QtGui/QFontComboBox>
 #include <QtGui/QAbstractSpinBox>
 #include <QtGui/QLineEdit>
+#include <QtGui/QButtonGroup>
+#include <QtGui/QStyle>
+#include <QtGui/QStyleFactory>
+#include <QtGui/QWizard>
 #include <QtCore/qdebug.h>
 #include <QtCore/QMetaObject>
 
 QT_BEGIN_NAMESPACE
+
+#ifdef Q_OS_WIN
+static inline bool isAxWidget(const QObject *o)
+{
+    // Is it one of  QDesignerAxWidget/QDesignerAxPluginWidget?
+    static const char *axWidgetName = "QDesignerAx";
+    static const unsigned axWidgetNameLen = qstrlen(axWidgetName);
+    return qstrncmp(o->metaObject()->className(), axWidgetName, axWidgetNameLen) == 0;
+}
+#endif
+
+/* Dynamic boolean property indicating object was created by the factory
+ * for the form editor. */
+
+static const char *formEditorDynamicProperty = "_q_formEditorObject";
 
 namespace qdesigner_internal {
 
@@ -86,11 +111,10 @@ public:
     friend class WidgetFactory;
 };
 
-// An event filter for form-combo boxes that prevents
-// the embedded line edit from getting edit focus (and drawing blue artifacts/lines).
-// It catches the ChildPolished event when the "editable" property
-// flips to true and the QLineEdit is created and turns off
-// the LineEdit's focus policy.
+// An event filter for form-combo boxes that prevents the embedded line edit
+// from getting edit focus (and drawing blue artifacts/lines). It catches the
+// ChildPolished event when the "editable" property flips to true and the
+// QLineEdit is created and turns off the LineEdit's focus policy.
 
 class ComboEventFilter : public QObject {
 public:
@@ -108,6 +132,46 @@ bool ComboEventFilter::eventFilter(QObject *watched, QEvent *event)
     return QObject::eventFilter(watched, event);
 }
 
+/* Watch out for QWizards changing their pages and make sure that not some
+ * selected widget becomes invisible on a hidden page (causing the selection
+ * handles to shine through). Select the wizard in that case  in analogy to
+ * the QTabWidget event filters, etc. */
+
+class WizardPageChangeWatcher : public QObject {
+    Q_OBJECT
+public:
+    explicit WizardPageChangeWatcher(QWizard *parent);
+
+public slots:
+    void pageChanged();
+};
+
+WizardPageChangeWatcher::WizardPageChangeWatcher(QWizard *parent) :
+    QObject(parent)
+{
+    connect(parent, SIGNAL(currentIdChanged(int)), this, SLOT(pageChanged()));
+}
+
+void WizardPageChangeWatcher::pageChanged()
+{
+    /* Use a bit more conservative approach than that for the QTabWidget,
+     * change the selection only if a selected child becomes invisible by
+     * changing the page. */
+    QWizard *wizard = static_cast<QWizard *>(parent());
+    QDesignerFormWindowInterface *fw = QDesignerFormWindowInterface::findFormWindow(wizard);
+    if (!fw)
+        return;
+    QDesignerFormWindowCursorInterface *cursor = fw->cursor();
+    const int selCount = cursor->selectedWidgetCount();
+    for (int i = 0; i <  selCount; i++) {
+        if (!cursor->selectedWidget(i)->isVisible()) {
+            fw->clearSelection(false);
+            fw->selectWidget(wizard, true);
+            break;
+        }
+    }
+}
+
 // ---------------- WidgetFactory::Strings
 WidgetFactory::Strings::Strings() :
     m_alignment(QLatin1String("alignment")),
@@ -120,6 +184,7 @@ WidgetFactory::Strings::Strings() :
     m_orientation(QLatin1String("orientation")),
     m_q3WidgetStack(QLatin1String("Q3WidgetStack")),
     m_qAction(QLatin1String("QAction")),
+    m_qButtonGroup(QLatin1String("QButtonGroup")),
     m_qAxWidget(QLatin1String("QAxWidget")),
     m_qDialog(QLatin1String("QDialog")),
     m_qDockWidget(QLatin1String("QDockWidget")),
@@ -140,12 +205,13 @@ WidgetFactory::Strings::Strings() :
 // ---------------- WidgetFactory
 QPointer<QWidget> *WidgetFactory::m_lastPassiveInteractor = new QPointer<QWidget>();
 bool WidgetFactory::m_lastWasAPassiveInteractor = false;
-
+const char *WidgetFactory::disableStyleCustomPaintingPropertyC = "_q_custom_style_disabled";
 
 WidgetFactory::WidgetFactory(QDesignerFormEditorInterface *core, QObject *parent)
     : QDesignerWidgetFactoryInterface(parent),
       m_core(core),
-      m_formWindow(0)
+      m_formWindow(0),
+      m_currentStyle(0)
 {
 }
 
@@ -175,8 +241,14 @@ void WidgetFactory::loadPlugins()
 // Convencience to create non-widget objects. Returns 0 if unknown
 QObject* WidgetFactory::createObject(const QString &className, QObject* parent) const
 {
+    if (className.isEmpty()) {
+        qWarning("** WARNING %s called with an empty class name", Q_FUNC_INFO);
+        return 0;
+    }
     if (className == m_strings.m_qAction)
         return new QAction(parent);
+    if (className == m_strings.m_qButtonGroup)
+        return new QButtonGroup(parent);
     return 0;
 }
 
@@ -192,7 +264,7 @@ QWidget*  WidgetFactory::createCustomWidget(const QString &className, QWidget *p
     // shouldn't happen
     if (!rc) {
         *creationError = true;
-        designerWarning(QObject::tr("The custom widget factory registered for widgets of class %1 returned 0.").arg(className));
+        designerWarning(tr("The custom widget factory registered for widgets of class %1 returned 0.").arg(className));
         return 0;
     }
     // Figure out the base class unless it is known
@@ -221,6 +293,10 @@ QWidget*  WidgetFactory::createCustomWidget(const QString &className, QWidget *p
     if (lang)
         return rc;
 
+#ifdef Q_OS_WIN
+    if (isAxWidget(rc))
+       return rc;
+#endif
     // Check for mismatched class names which is hard to track.
     // Perform literal comparison first for QAxWidget, for which a meta object hack is in effect.
     const char *createdClassNameC = rc->metaObject()->className();
@@ -228,13 +304,18 @@ QWidget*  WidgetFactory::createCustomWidget(const QString &className, QWidget *p
     const char *classNameC = classNameB.constData();
 
     if (qstrcmp(createdClassNameC, classNameC) && !rc->inherits(classNameC))
-        designerWarning(QObject::tr("A class name mismatch occurred when creating a widget using the custom widget factory registered for widgets of class %1."
-                                  " It returned a widget of class %2.").arg(className).arg(QString::fromUtf8(createdClassNameC)));
+        designerWarning(tr("A class name mismatch occurred when creating a widget using the custom widget factory registered for widgets of class %1."
+                           " It returned a widget of class %2.").arg(className).arg(QString::fromUtf8(createdClassNameC)));
     return rc;
 }
 
+
 QWidget *WidgetFactory::createWidget(const QString &widgetName, QWidget *parentWidget) const
 {
+    if (widgetName.isEmpty()) {
+        qWarning("** WARNING %s called with an empty class name", Q_FUNC_INFO);
+        return 0;
+    }
     // Preview or for form window?
     QDesignerFormWindowInterface *fw = m_formWindow;
     if (! fw)
@@ -275,12 +356,20 @@ QWidget *WidgetFactory::createWidget(const QString &widgetName, QWidget *parentW
                 w = new QDialog(parentWidget);
             }
         } else if (widgetName == m_strings.m_qWidget) {
-            if (fw && parentWidget &&
-                (qobject_cast<QDesignerFormWindowInterface*>(parentWidget) || qt_extension<QDesignerContainerExtension*>(m_core->extensionManager(), parentWidget))) {
-                w = new QDesignerWidget(fw, parentWidget);
-            } else {
-                w = new QWidget(parentWidget);
+            /* We want a 'QDesignerWidget' that draws a grid only for widget
+             * forms and container extension pages (not for preview and not
+             * for normal QWidget children on forms (legacy) */
+            if (fw && parentWidget) {
+                if (qt_extension<QDesignerContainerExtension*>(m_core->extensionManager(), parentWidget)) {
+                    w = new QDesignerWidget(fw, parentWidget);
+                } else {
+                    if (const FormWindowBase *fwb = qobject_cast<FormWindowBase *>(fw))
+                        if (parentWidget == fwb->formContainer())
+                            w = new QDesignerWidget(fw, parentWidget);
+                }
             }
+            if (!w)
+                w = new QWidget(parentWidget);
         }
         if (w)
             break;
@@ -314,7 +403,7 @@ QWidget *WidgetFactory::createWidget(const QString &widgetName, QWidget *parentW
             // Emergency: Create, derived from QWidget
             QString includeFile = widgetName.toLower();
             includeFile +=  QLatin1String(".h");
-            item = appendDerived(db,widgetName,tr("%1 Widget").arg(widgetName),fallBackBaseClass,
+            item = appendDerived(db,widgetName, tr("%1 Widget").arg(widgetName),fallBackBaseClass,
                                  includeFile, true, true);
             Q_ASSERT(item);
         }
@@ -328,43 +417,48 @@ QWidget *WidgetFactory::createWidget(const QString &widgetName, QWidget *parentW
     } while (false);
 
     Q_ASSERT(w != 0);
-
+    if (m_currentStyle)
+        w->setStyle(m_currentStyle);
+     initializeCommon(w);
     if (fw) { // form editor  initialization
         initialize(w);
     } else { // preview-only initialization
-        if (QStackedWidget *stackedWidget = qobject_cast<QStackedWidget*>(w))
-            QStackedWidgetPreviewEventFilter::install(stackedWidget); // Add browse button only.
+        initializePreview(w);
     }
-
     return w;
 }
 
-QString WidgetFactory::classNameOf(QDesignerFormEditorInterface *c, QObject* o)
+QString WidgetFactory::classNameOf(QDesignerFormEditorInterface *c, const QObject* o)
 {
     if (o == 0)
         return QString();
 
+    const char *className = o->metaObject()->className();
+    if (!o->isWidgetType())
+        return QLatin1String(className);
+    const QWidget *w = static_cast<const QWidget*>(o);
     // check promoted before designer special
-    if (o->isWidgetType()) {
-        const QString customClassName = promotedCustomClassName(c,qobject_cast<QWidget*>(o));
-        if (!customClassName.isEmpty())
-            return customClassName;
-    }
-
-    if (qobject_cast<QDesignerMenuBar*>(o))
+    const QString customClassName = promotedCustomClassName(c, const_cast<QWidget*>(w));
+    if (!customClassName.isEmpty())
+        return customClassName;
+    if (qobject_cast<const QDesignerMenuBar*>(w))
         return QLatin1String("QMenuBar");
-    else if (qobject_cast<QDesignerDockWidget*>(o))
+    else if (qobject_cast<const QDesignerMenu*>(w))
+        return QLatin1String("QMenu");
+     else if (qobject_cast<const QDesignerDockWidget*>(w))
         return QLatin1String("QDockWidget");
-    else if (qobject_cast<QDesignerDialog*>(o))
+    else if (qobject_cast<const QDesignerDialog*>(w))
         return QLatin1String("QDialog");
-    else if (qobject_cast<QDesignerWidget*>(o))
+    else if (qobject_cast<const QDesignerWidget*>(w))
         return QLatin1String("QWidget");
-    else if (qstrcmp(o->metaObject()->className(), "QAxBase") == 0)
+#ifdef Q_OS_WIN
+    else if (isAxWidget(w))
         return QLatin1String("QAxWidget");
-    else if (qstrcmp(o->metaObject()->className(), "QDesignerQ3WidgetStack") == 0)
+#endif
+    else if (qstrcmp(className, "QDesignerQ3WidgetStack") == 0)
         return QLatin1String("Q3WidgetStack");
 
-    return QLatin1String(o->metaObject()->className());
+    return QLatin1String(className);
 }
 
 QLayout *WidgetFactory::createUnmanagedLayout(QWidget *parentWidget, int type)
@@ -399,7 +493,7 @@ QLayout *WidgetFactory::createLayout(QWidget *widget, QLayout *parentLayout, int
         if (page) {
             widget = page;
         } else {
-            const QString msg = QObject::tr("The current page of the container '%1' (%2) could not be determined while creating a layout."
+            const QString msg = tr("The current page of the container '%1' (%2) could not be determined while creating a layout."
 "This indicates an inconsistency in the ui-file, probably a layout being constructed on a container widget.").arg(widget->objectName()).arg(classNameOf(core(), widget));
             designerWarning(msg);
         }
@@ -452,7 +546,7 @@ QLayout *WidgetFactory::createLayout(QWidget *widget, QLayout *parentLayout, int
         Q_ASSERT(layout->parent() == 0);
         QBoxLayout *box = qobject_cast<QBoxLayout*>(widget->layout());
         if (!box) {  // we support only unmanaged box layouts
-            const QString msg = QObject::tr("Attempt to add a layout to a widget '%1' (%2) which already has an unmanaged layout of type %3.\n"
+            const QString msg = tr("Attempt to add a layout to a widget '%1' (%2) which already has an unmanaged layout of type %3.\n"
                                             "This indicates an inconsistency in the ui-file.").
                                  arg(widget->objectName()).arg(classNameOf(core(), widget)).arg(classNameOf(core(), widget->layout()));
             designerWarning(msg);
@@ -515,10 +609,39 @@ QDesignerFormEditorInterface *WidgetFactory::core() const
     return m_core;
 }
 
+// Necessary initializations for form editor/preview objects
+void WidgetFactory::initializeCommon(QWidget *widget) const
+{
+    // Apply style
+    if (m_currentStyle)
+        widget->setStyle(m_currentStyle);
+    // Prevent the wizard from emulating the Windows Vista Theme.
+    // This theme (in both Aero and Basic mode) is tricky to
+    // emulate properly in designer due to 1) the manipulation of the non-client area of
+    // the top-level window, and 2) the upper-right location of the Back button.
+    // The wizard falls back to QWizard::ModernStyle whenever the Vista theme
+    // would normally apply.
+    if (QWizard *wizard = qobject_cast<QWizard *>(widget)) {
+        wizard->setProperty("_q_wizard_vista_off", QVariant(true));
+        return;
+    }
+}
+
+// Necessary initializations for preview objects
+void WidgetFactory::initializePreview(QWidget *widget) const
+{
+
+    if (QStackedWidget *stackedWidget = qobject_cast<QStackedWidget*>(widget)) {
+        QStackedWidgetPreviewEventFilter::install(stackedWidget); // Add browse button only.
+        return;
+    }
+}
+
+// Necessary initializations for form editor objects
 void WidgetFactory::initialize(QObject *object) const
 {
     // Indicate that this is a form object (for QDesignerFormWindowInterface::findFormWindow)
-    object->setProperty("_q_formEditorObject", QVariant(true));
+    object->setProperty(formEditorDynamicProperty, QVariant(true));
     QDesignerPropertySheetExtension *sheet = qt_extension<QDesignerPropertySheetExtension*>(m_core->extensionManager(), object);
     if (!sheet)
         return;
@@ -594,6 +717,73 @@ void WidgetFactory::initialize(QObject *object) const
         cb->installEventFilter(new ComboEventFilter(cb));
         return;
     }
+    if (QWizard *wz = qobject_cast<QWizard *>(widget)) {
+        WizardPageChangeWatcher *pw = new WizardPageChangeWatcher(wz);
+        Q_UNUSED(pw);
+    }
+}
+
+static inline QString classNameOfStyle(const QStyle *s)
+{
+    return QLatin1String(s->metaObject()->className());
+}
+
+QString WidgetFactory::styleName() const
+{
+    return classNameOfStyle(style());
+}
+
+static inline bool isApplicationStyle(const QString &styleName)
+{
+    return styleName.isEmpty() || styleName == classNameOfStyle(qApp->style());
+}
+
+void WidgetFactory::setStyleName(const QString &styleName)
+{
+    m_currentStyle = isApplicationStyle(styleName) ? static_cast<QStyle*>(0) : getStyle(styleName);
+}
+
+QStyle *WidgetFactory::style() const
+{
+    return m_currentStyle ? m_currentStyle : qApp->style();
+}
+
+QStyle *WidgetFactory::getStyle(const QString &styleName)
+{
+    if (isApplicationStyle(styleName))
+        return qApp->style();
+
+    StyleCache::iterator it = m_styleCache.find(styleName);
+    if (it == m_styleCache.end()) {
+        QStyle *style = QStyleFactory::create(styleName);
+        if (!style) {
+            const QString msg = tr("Cannot create style '%1'.").arg(styleName);
+            designerWarning(msg);
+            return 0;
+        }
+        it = m_styleCache.insert(styleName, style);
+    }
+    return it.value();
+}
+
+void WidgetFactory::applyStyleTopLevel(const QString &styleName, QWidget *w)
+{
+    if (QStyle *style = getStyle(styleName))
+        applyStyleToTopLevel(style, w);
+}
+
+void WidgetFactory::applyStyleToTopLevel(QStyle *style, QWidget *widget)
+{
+    const QPalette standardPalette = style->standardPalette();
+    if (widget->style() == style && widget->palette() == standardPalette)
+        return;
+
+    widget->setStyle(style);
+    widget->setPalette(standardPalette);
+    const QWidgetList lst = qFindChildren<QWidget*>(widget);
+    const QWidgetList::const_iterator cend = lst.constEnd();
+    for (QWidgetList::const_iterator it = lst.constBegin(); it != cend; ++it)
+        (*it)->setStyle(style);
 }
 
 // Check for 'interactor' click on a tab bar,
@@ -659,6 +849,8 @@ bool WidgetFactory::isPassiveInteractor(QWidget *widget)
         if (const QWidget *parent = widget->parentWidget()) {
             const QString objectName = parent->objectName();
             static const QString scrollAreaVContainer = QLatin1String("qt_scrollarea_vcontainer");
+    void activeFormWindowChanged(QDesignerFormWindowInterface *formWindow);
+    void formWindowAdded(QDesignerFormWindowInterface *formWindow);
             static const QString scrollAreaHContainer = QLatin1String("qt_scrollarea_hcontainer");
             if (objectName == scrollAreaVContainer || objectName == scrollAreaHContainer) {
                 m_lastWasAPassiveInteractor = true;
@@ -674,6 +866,28 @@ bool WidgetFactory::isPassiveInteractor(QWidget *widget)
     return m_lastWasAPassiveInteractor;
 }
 
+void WidgetFactory::formWindowAdded(QDesignerFormWindowInterface *formWindow)
+{
+    setFormWindowStyle(formWindow);
+}
+
+void WidgetFactory::activeFormWindowChanged(QDesignerFormWindowInterface *formWindow)
+{
+    setFormWindowStyle(formWindow);
+}
+
+void WidgetFactory::setFormWindowStyle(QDesignerFormWindowInterface *formWindow)
+{
+    if (FormWindowBase *fwb = qobject_cast<FormWindowBase *>(formWindow))
+        setStyleName(fwb->styleName());
+}
+
+bool WidgetFactory::isFormEditorObject(const QObject *object)
+{
+    return object->property(formEditorDynamicProperty).isValid();
+}
 } // namespace qdesigner_internal
 
 QT_END_NAMESPACE
+
+#include "widgetfactory.moc"

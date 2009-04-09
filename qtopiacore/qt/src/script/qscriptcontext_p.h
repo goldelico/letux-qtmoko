@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -83,22 +87,17 @@ inline QScriptContext *QScriptContextPrivate::create()
     return new QScriptContext;
 }
 
-inline QScriptEngine *QScriptContextPrivate::engine() const
+inline QScriptEnginePrivate *QScriptContextPrivate::engine() const
 {
     return m_activation.engine();
 }
 
-inline QScriptEnginePrivate *QScriptContextPrivate::enginePrivate() const
-{
-    return QScriptEnginePrivate::get(engine());
-}
-
-inline QScriptContext *QScriptContextPrivate::parentContext() const
+inline QScriptContextPrivate *QScriptContextPrivate::parentContext() const
 {
     return previous;
 }
 
-inline void QScriptContextPrivate::init(QScriptContext *parent)
+inline void QScriptContextPrivate::init(QScriptContextPrivate *parent)
 {
     m_state = QScriptContext::NormalState;
     previous = parent;
@@ -106,7 +105,7 @@ inline void QScriptContextPrivate::init(QScriptContext *parent)
     argc = 0;
     m_code = 0;
     iPtr = firstInstruction = lastInstruction = 0;
-    stackPtr = tempStack = (parent != 0) ? parent->d_func()->stackPtr : 0;
+    stackPtr = tempStack = (parent != 0) ? parent->stackPtr : 0;
     m_activation.invalidate();
     m_thisObject.invalidate();
     m_result.invalidate();
@@ -122,7 +121,7 @@ inline void QScriptContextPrivate::init(QScriptContext *parent)
 inline QScriptValueImpl QScriptContextPrivate::argument(int index) const
 {
     if (index >= argc)
-        return QScriptEnginePrivate::get(engine())->undefinedValue();
+        return engine()->undefinedValue();
 
     Q_ASSERT(args != 0);
     return args[index];
@@ -131,6 +130,16 @@ inline QScriptValueImpl QScriptContextPrivate::argument(int index) const
 inline int QScriptContextPrivate::argumentCount() const
 {
     return argc;
+}
+
+inline QScriptValueImpl QScriptContextPrivate::argumentsObject() const
+{
+    if (!m_arguments.isValid() && m_activation.isValid()) {
+        QScriptContextPrivate *dd = const_cast<QScriptContextPrivate*>(this);
+        engine()->newArguments(&dd->m_arguments, m_activation,
+                               argc, m_callee);
+    }
+    return m_arguments;
 }
 
 inline void QScriptContextPrivate::throwException()
@@ -146,10 +155,10 @@ inline bool QScriptContextPrivate::hasUncaughtException() const
 inline void QScriptContextPrivate::recover()
 {
     m_state = QScriptContext::NormalState;
-    errorLineNumber = 0;
+    errorLineNumber = -1;
 }
 
-inline bool QScriptContextPrivate::isNumerical(const QScriptValueImpl &v) const
+inline bool QScriptContextPrivate::isNumerical(const QScriptValueImpl &v)
 {
     switch (v.type()) {
     case QScript::BooleanType:
@@ -166,6 +175,7 @@ inline bool QScriptContextPrivate::eq_cmp(const QScriptValueImpl &lhs, const QSc
 {
     if (lhs.type() == rhs.type()) {
         switch (lhs.type()) {
+        case QScript::InvalidType:
         case QScript::UndefinedType:
         case QScript::NullType:
             return true;
@@ -197,18 +207,22 @@ inline bool QScriptContextPrivate::eq_cmp(const QScriptValueImpl &lhs, const QSc
 #endif
             else
                 return lhs.m_object_value == rhs.m_object_value;
+
+        case QScript::LazyStringType:
+            return *lhs.m_lazy_string_value == *rhs.m_lazy_string_value;
         }
     }
 
     return eq_cmp_helper(lhs, rhs);
 }
 
-inline bool QScriptContextPrivate::strict_eq_cmp(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs)
+inline bool QScriptContextPrivate::strict_eq_cmp( const QScriptValueImpl &lhs, const QScriptValueImpl &rhs)
 {
     if (lhs.type() != rhs.type())
         return false;
 
     switch (lhs.type()) {
+    case QScript::InvalidType:
     case QScript::UndefinedType:
     case QScript::NullType:
         return true;
@@ -229,10 +243,17 @@ inline bool QScriptContextPrivate::strict_eq_cmp(const QScriptValueImpl &lhs, co
             return lhs.m_string_value == rhs.m_string_value;
         return lhs.m_string_value->s == rhs.m_string_value->s;
 
-    default:
-        if (lhs.isObject())
-            return lhs.m_object_value == rhs.m_object_value;
-        break;
+    case QScript::ObjectType:
+        return lhs.m_object_value == rhs.m_object_value;
+
+    case QScript::ReferenceType:
+        return lhs.m_int_value == rhs.m_int_value;
+
+    case QScript::PointerType:
+        return lhs.m_ptr_value == rhs.m_ptr_value;
+
+    case QScript::LazyStringType:
+        return *lhs.m_lazy_string_value == *rhs.m_lazy_string_value;
     }
 
     return false;
@@ -280,6 +301,10 @@ inline void QScriptContextPrivate::setReturnValue(const QScriptValueImpl &value)
 
 inline QScriptValueImpl QScriptContextPrivate::activationObject() const
 {
+    if (previous && !m_activation.property(QLatin1String("arguments")).isValid()) {
+        QScriptContextPrivate *dd = const_cast<QScriptContextPrivate*>(this);
+        dd->m_activation.setProperty(QLatin1String("arguments"), argumentsObject());
+    }
     return m_activation;
 }
 

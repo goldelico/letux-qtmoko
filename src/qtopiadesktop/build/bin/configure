@@ -134,26 +134,28 @@ my %licenseInfo = ();
 $licenseInfo{Product} = "Qt Extended Sync Agent";
 checkLicenseKey();
 
-# Remove any license files left over
-if ( !configopt("depot") ) {
-    for my $location ( $qt_depot_path ) {
-        for my $file ( glob("$location/LICENSE*"), glob("$location/.LICENSE*") ) {
-            unlink $file;
-        }
-        my $source = "$depotpath/".$licenseInfo{LicenseFile};
-        my $dest = "$location/".$licenseInfo{DestLicenseFile};
-        if ( -f $dest ) {
-            unlink $dest;
-        }
-        copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/".$licenseInfo{DestLicenseFile});
-        if ( $isWindows ) {
-            # configure.exe doesn't know about LICENSE.Qtopia, just put in all of the .LICENSE* files
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-US");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION-US");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP");
-            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP-US");
+if ( $qtVersionStr[1] == 4 || ($qtVersionStr[1] == 5 && $qtVersionStr[2] == 0) ) {
+    # Remove any license files left over
+    if ( !configopt("depot") ) {
+        for my $location ( $qt_depot_path ) {
+            for my $file ( glob("$location/LICENSE*"), glob("$location/.LICENSE*") ) {
+                unlink $file;
+            }
+            my $source = "$depotpath/".$licenseInfo{LicenseFile};
+            my $dest = "$location/".$licenseInfo{DestLicenseFile};
+            if ( -f $dest ) {
+                unlink $dest;
+            }
+            copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/".$licenseInfo{DestLicenseFile});
+            if ( $isWindows ) {
+                # configure.exe doesn't know about LICENSE.Qtopia, just put in all of the .LICENSE* files
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-US");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-EVALUATION-US");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP");
+                copy("$depotpath/".$licenseInfo{LicenseFile}, "$location/.LICENSE-DESKTOP-US");
+            }
         }
     }
 }
@@ -1411,12 +1413,14 @@ sub getQtVersion
 
     if ( open(IN, "$qt_depot_path/src/corelib/global/qglobal.h" ) ) {
         while ( defined($_ = <IN>) ) {
-            if ( /QT_VERSION_STR\s+"(\d+\.\d+\.\d+)"/ ) {
+            if ( /QT_VERSION_STR\s+"(\d+\.\d+\.\d+)(.*)"/ ) {
                 $qtVersionStr = $1;
+                my $extra = $2;
                 ( $qtMajorVersion, $qtMinorVersion, $qtRevVersion ) = ( $qtVersionStr =~ /(\d+)\.(\d+)\.(\d+)/ );
                 $qtVersionStr[0] = $qtMajorVersion;
                 $qtVersionStr[1] = $qtMinorVersion;
                 $qtVersionStr[2] = $qtRevVersion;
+                $qtVersionStr[3] = $extra;
                 last;
             }
         }
@@ -1610,7 +1614,11 @@ sub checkLicenseKey
     if ( -f "$depotpath/LICENSE.GPL" && configopt("free") ) {
         $licenseInfo{Product} .= " Open Source";
         $licenseInfo{LicenseFile} = "LICENSE.GPL";
-        $licenseInfo{DestLicenseFile} = "LICENSE.GPL2";
+        if ( $qtVersionStr[1] == 4 ) {
+            $licenseInfo{DestLicenseFile} = "LICENSE.GPL2";
+        } else {
+            $licenseInfo{DestLicenseFile} = "LICENSE.QtopiaGPL";
+        }
     } elsif ( -f "$depotpath/LICENSE.TROLL" && configopt("depot") ) {
         $licenseInfo{Product} .= " Qt Software Internal";
         $licenseInfo{LicenseFile} = "LICENSE.TROLL";
@@ -1978,6 +1986,9 @@ sub setup_dqt_config
     my $args = "-platform $qt_platform ".
                "-no-stl -no-exceptions -no-webkit -no-xmlpatterns -no-phonon -no-qt3support -fast ".
                "-confirm-license";
+    if ( $qtVersionStr[1] >= 5 ) {
+        $args .= " -no-gtkstyle";
+    }
     map { $args .= " -no-sql-".basename($_) if ( basename($_) ne "tmp" && -d $_ ); } glob("$qt_depot_path/src/plugins/sqldrivers/*");
     $args .= " -qt-sql-sqlite";
     if ( !$isWindows ) {

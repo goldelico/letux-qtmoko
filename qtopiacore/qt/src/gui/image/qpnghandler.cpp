@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -62,115 +66,6 @@ QT_BEGIN_NAMESPACE
 #else
 #  define Q_INTERNAL_WIN_NO_THROW
 #endif
-
-#ifdef QT_LSB
-
-// LSB doesn't standardize png_info_struct and png_struct_def
-// These structs are documented to not change, so fork as much as
-// we need. In the future, we should use the propper accessors, though.
-
-QT_BEGIN_INCLUDE_NAMESPACE
-#include <setjmp.h>
-QT_END_INCLUDE_NAMESPACE
-
-struct png_info_struct
-{
-   /* the following are necessary for every PNG file */
-   png_uint_32 width;       /* width of image in pixels (from IHDR) */
-   png_uint_32 height;      /* height of image in pixels (from IHDR) */
-   png_uint_32 valid;       /* valid chunk data (see PNG_INFO_ below) */
-   png_uint_32 rowbytes;    /* bytes needed to hold an untransformed row */
-   png_colorp palette;      /* array of color values (valid & PNG_INFO_PLTE) */
-   png_uint_16 num_palette; /* number of color entries in "palette" (PLTE) */
-   png_uint_16 num_trans;   /* number of transparent palette color (tRNS) */
-   png_byte bit_depth;      /* 1, 2, 4, 8, or 16 bits/channel (from IHDR) */
-   png_byte color_type;     /* see PNG_COLOR_TYPE_ below (from IHDR) */
-   /* The following three should have been named *_method not *_type */
-   png_byte compression_type; /* must be PNG_COMPRESSION_TYPE_BASE (IHDR) */
-   png_byte filter_type;    /* must be PNG_FILTER_TYPE_BASE (from IHDR) */
-   png_byte interlace_type; /* One of PNG_INTERLACE_NONE, PNG_INTERLACE_ADAM7 */
-
-   /* The following is informational only on read, and not used on writes. */
-   png_byte channels;       /* number of data channels per pixel (1, 2, 3, 4) */
-   png_byte pixel_depth;    /* number of bits per pixel */
-   png_byte spare_byte;     /* to align the data, and for future use */
-   png_byte signature[8];   /* magic bytes read by libpng from start of file */
-
-   /* The rest of the data is optional.  If you are reading, check the
-    * valid field to see if the information in these are valid.  If you
-    * are writing, set the valid field to those chunks you want written,
-    * and initialize the appropriate fields below.
-    */
-
-#if defined(PNG_gAMA_SUPPORTED) && defined(PNG_FLOATING_POINT_SUPPORTED)
-   /* The gAMA chunk describes the gamma characteristics of the system
-    * on which the image was created, normally in the range [1.0, 2.5].
-    * Data is valid if (valid & PNG_INFO_gAMA) is non-zero.
-    */
-   float gamma; /* gamma value of image, if (valid & PNG_INFO_gAMA) */
-#endif
-
-#if defined(PNG_sRGB_SUPPORTED)
-    /* GR-P, 0.96a */
-    /* Data valid if (valid & PNG_INFO_sRGB) non-zero. */
-   png_byte srgb_intent; /* sRGB rendering intent [0, 1, 2, or 3] */
-#endif
-
-#if defined(PNG_TEXT_SUPPORTED)
-   /* The tEXt, and zTXt chunks contain human-readable textual data in
-    * uncompressed, compressed, and optionally compressed forms, respectively.
-    * The data in "text" is an array of pointers to uncompressed,
-    * null-terminated C strings. Each chunk has a keyword that describes the
-    * textual data contained in that chunk.  Keywords are not required to be
-    * unique, and the text string may be empty.  Any number of text chunks may
-    * be in an image.
-    */
-   int num_text; /* number of comments read/to write */
-   int max_text; /* current size of text array */
-   png_textp text; /* array of comments read/to write */
-#endif /* PNG_TEXT_SUPPORTED */
-
-#if defined(PNG_tIME_SUPPORTED)
-   /* The tIME chunk holds the last time the displayed image data was
-    * modified.  See the png_time struct for the contents of this struct.
-    */
-   png_time mod_time;
-#endif
-
-#if defined(PNG_sBIT_SUPPORTED)
-   /* The sBIT chunk specifies the number of significant high-order bits
-    * in the pixel data.  Values are in the range [1, bit_depth], and are
-    * only specified for the channels in the pixel data.  The contents of
-    * the low-order bits is not specified.  Data is valid if
-    * (valid & PNG_INFO_sBIT) is non-zero.
-    */
-   png_color_8 sig_bit; /* significant bits in color channels */
-#endif
-
-#if defined(PNG_tRNS_SUPPORTED) || defined(PNG_READ_EXPAND_SUPPORTED) || \
-defined(PNG_READ_BACKGROUND_SUPPORTED)
-   /* The tRNS chunk supplies transparency data for paletted images and
-    * other image types that don't need a full alpha channel.  There are
-    * "num_trans" transparency values for a paletted image, stored in the
-    * same order as the palette colors, starting from index 0.  Values
-    * for the data are in the range [0, 255], ranging from fully transparent
-    * to fully opaque, respectively.  For non-paletted images, there is a
-    * single color specified that should be treated as fully transparent.
-    * Data is valid if (valid & PNG_INFO_tRNS) is non-zero.
-    */
-   png_bytep trans; /* transparent values for paletted image */
-   png_color_16 trans_values; /* transparent color for non-palette image */
-#endif
-};
-
-struct png_struct_def
-{
-#ifdef PNG_SETJMP_SUPPORTED
-       jmp_buf jmpbuf;            /* used in png_error */
-#endif
-};
-
-#endif // QT_LSB
 
 /*
   All PNG files load to the minimal QImage equivalent.
@@ -431,6 +326,8 @@ public:
     bool readPngHeader();
     bool readPngImage(QImage *image);
 
+    QImage::Format readImageFormat();
+
     State state;
 
     QPngHandler *q;
@@ -583,7 +480,7 @@ bool Q_INTERNAL_WIN_NO_THROW QPngHandlerPrivate::readPngImage(QImage *outImage)
         text_ptr++;
     }
 
-    foreach (QString pair, description.split(QLatin1String("\n\n"))) {
+    foreach (const QString &pair, description.split(QLatin1String("\n\n"))) {
         int index = pair.indexOf(QLatin1Char(':'));
         if (index >= 0 && pair.indexOf(QLatin1Char(' ')) < index) {
             outImage->setText(QLatin1String("Description"), pair.simplified());
@@ -616,6 +513,47 @@ bool Q_INTERNAL_WIN_NO_THROW QPngHandlerPrivate::readPngImage(QImage *outImage)
     }
 
     return true;
+}
+
+QImage::Format QPngHandlerPrivate::readImageFormat()
+{
+        QImage::Format format = QImage::Format_Invalid;
+        png_uint_32 width, height;
+        int bit_depth, color_type;
+        if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY) {
+            // Black & White or 8-bit grayscale
+            if (info_ptr->bit_depth == 1 && info_ptr->channels == 1) {
+                format = QImage::Format_Mono;
+            } else if (info_ptr->bit_depth == 16 && png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+                format = QImage::Format_ARGB32;
+            } else {
+                format = QImage::Format_Indexed8;
+            }
+        } else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE
+                && png_get_valid(png_ptr, info_ptr, PNG_INFO_PLTE)
+                   && info_ptr->num_palette <= 256)
+        {
+            // 1-bit and 8-bit color
+            if (info_ptr->bit_depth != 1)
+                png_set_packing(png_ptr);
+            png_read_update_info(png_ptr, info_ptr);
+            png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, 0, 0, 0);
+            format = bit_depth == 1 ? QImage::Format_Mono : QImage::Format_Indexed8;
+        } else {
+            // 32-bit
+            if (info_ptr->bit_depth == 16)
+                png_set_strip_16(png_ptr);
+
+            format = QImage::Format_ARGB32;
+            // Only add filler if no alpha, or we can get 5 channel data.
+            if (!(info_ptr->color_type & PNG_COLOR_MASK_ALPHA)
+                && !png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+                // We want 4 bytes, but it isn't an alpha channel
+                format = QImage::Format_RGB32;
+            }
+        }
+
+        return format;
 }
 
 QPNGImageWriter::QPNGImageWriter(QIODevice* iod) :
@@ -658,11 +596,11 @@ static void set_text(const QImage &image, png_structp png_ptr, png_infop info_pt
                      const QString &description)
 {
     QMap<QString, QString> text;
-    foreach (QString key, image.textKeys()) {
+    foreach (const QString &key, image.textKeys()) {
         if (!key.isEmpty())
             text.insert(key, image.text(key));
     }
-    foreach (QString pair, description.split(QLatin1String("\n\n"))) {
+    foreach (const QString &pair, description.split(QLatin1String("\n\n"))) {
         int index = pair.indexOf(QLatin1Char(':'));
         if (index >= 0 && pair.indexOf(QLatin1Char(' ')) < index) {
             QString s = pair.simplified();
@@ -990,6 +928,7 @@ bool QPngHandler::supportsOption(ImageOption option) const
 {
     return option == Gamma
         || option == Description
+        || option == ImageFormat
         || option == Quality
         || option == Size;
 }
@@ -1009,6 +948,8 @@ QVariant QPngHandler::option(ImageOption option) const
         return d->description;
     else if (option == Size)
         return QSize(d->info_ptr->width, d->info_ptr->height);
+    else if (option == ImageFormat)
+        return d->readImageFormat();
     return 0;
 }
 

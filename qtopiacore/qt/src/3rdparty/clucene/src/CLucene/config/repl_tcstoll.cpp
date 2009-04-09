@@ -38,7 +38,7 @@ int64_t lucene_tcstoi64(const TCHAR* str, TCHAR**end, int radix){
       if ( pos == 0 )
           ret=i;
       else
-          ret += (int64_t)pow((float_t)radix,(float_t)pos) * i; //todo: might be quicker with a different pow overload
+          ret += (int64_t)pow((qreal)radix,(qreal)pos) * i; //todo: might be quicker with a different pow overload
 
       pos++;
   }

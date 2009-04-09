@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,8 +28,9 @@
 
 #include "SharedTimer.h"
 #include "SystemTime.h"
-#include <math.h>
+#include <limits.h>
 #include <limits>
+#include <math.h>
 #include <wtf/HashSet.h>
 #include <wtf/Vector.h>
 
@@ -94,9 +95,17 @@ inline TimerHeapElement& TimerHeapElement::operator=(const TimerHeapElement& o)
 
 inline bool operator<(const TimerHeapElement& a, const TimerHeapElement& b)
 {
-    // Note, this is "backwards" because the heap puts the largest element first
-    // and we want the lowest time to be the first one in the heap.
-    return b.timer()->m_nextFireTime < a.timer()->m_nextFireTime;
+    // The comparisons below are "backwards" because the heap puts the largest 
+    // element first and we want the lowest time to be the first one in the heap.
+    double aFireTime = a.timer()->m_nextFireTime;
+    double bFireTime = b.timer()->m_nextFireTime;
+    if (bFireTime != aFireTime)
+        return bFireTime < aFireTime;
+    
+    // We need to look at the difference of the insertion orders instead of comparing the two 
+    // outright in case of overflow. 
+    unsigned difference = a.timer()->m_heapInsertionOrder - b.timer()->m_heapInsertionOrder;
+    return difference < UINT_MAX / 2;
 }
 
 // ----------------
@@ -284,6 +293,8 @@ void TimerBase::setNextFireTime(double newTime)
     double oldTime = m_nextFireTime;
     if (oldTime != newTime) {
         m_nextFireTime = newTime;
+        static unsigned currentHeapInsertionOrder;
+        m_heapInsertionOrder = currentHeapInsertionOrder++;
 
         bool wasFirstTimerInHeap = m_heapIndex == 0;
 

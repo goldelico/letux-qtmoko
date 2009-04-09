@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -684,7 +688,7 @@ void QHashData::checkSanity()
 
 /*! \fn int QHash::remove(const Key &key)
 
-    Removes all the items that have the key \a key from the hash.
+    Removes all the items that have the \a key from the hash.
     Returns the number of items removed which is usually 1 but will
     be 0 if the key isn't in the hash, or greater than 1 if
     insertMulti() has been used with the \a key.
@@ -694,7 +698,7 @@ void QHashData::checkSanity()
 
 /*! \fn T QHash::take(const Key &key)
 
-    Removes the item with the key \a key from the hash and returns
+    Removes the item with the \a key from the hash and returns
     the value associated with it.
 
     If the item does not exist in the hash, the function simply
@@ -709,7 +713,7 @@ void QHashData::checkSanity()
 
 /*! \fn bool QHash::contains(const Key &key) const
 
-    Returns true if the hash contains an item with key \a key;
+    Returns true if the hash contains an item with the \a key;
     otherwise returns false.
 
     \sa count(), QMultiHash::contains()
@@ -717,11 +721,11 @@ void QHashData::checkSanity()
 
 /*! \fn const T QHash::value(const Key &key) const
 
-    Returns the value associated with the key \a key.
+    Returns the value associated with the \a key.
 
-    If the hash contains no item with key \a key, the function
+    If the hash contains no item with the \a key, the function
     returns a \l{default-constructed value}. If there are multiple
-    items for \a key in the hash, the value of the most recently
+    items for the \a key in the hash, the value of the most recently
     inserted one is returned.
 
     \sa key(), values(), contains(), operator[]()
@@ -737,13 +741,13 @@ void QHashData::checkSanity()
 
 /*! \fn T &QHash::operator[](const Key &key)
 
-    Returns the value associated with the key \a key as a modifiable
+    Returns the value associated with the \a key as a modifiable
     reference.
 
-    If the hash contains no item with key \a key, the function inserts
-    a \l{default-constructed value} into the hash with key \a key, and
+    If the hash contains no item with the \a key, the function inserts
+    a \l{default-constructed value} into the hash with the \a key, and
     returns a reference to it. If the hash contains multiple items
-    with key \a key, this function returns a reference to the most
+    with the \a key, this function returns a reference to the most
     recently inserted value.
 
     \sa insert(), value()
@@ -809,7 +813,7 @@ void QHashData::checkSanity()
 
     \overload
 
-    Returns a list of all the values associated with key \a key,
+    Returns a list of all the values associated with the \a key,
     from the most recently inserted to the least recently inserted.
 
     \sa count(), insertMulti()
@@ -817,9 +821,9 @@ void QHashData::checkSanity()
 
 /*! \fn Key QHash::key(const T &value) const
 
-    Returns the first key with value \a value.
+    Returns the first key mapped to \a value.
 
-    If the hash contains no item with value \a value, the function
+    If the hash contains no item with the \a value, the function
     returns a \link {default-constructed value} default-constructed
     key \endlink.
 
@@ -835,8 +839,8 @@ void QHashData::checkSanity()
     \since 4.3
     \overload
 
-    Returns the first key with value \a value, or \a defaultKey if
-    the hash contains no item with value \a value.
+    Returns the first key mapped to \a value, or \a defaultKey if the
+    hash contains no item mapped to \a value.
 
     This function can be slow (\l{linear time}), because QHash's
     internal data structure is optimized for fast lookup by key, not
@@ -845,7 +849,7 @@ void QHashData::checkSanity()
 
 /*! \fn int QHash::count(const Key &key) const
 
-    Returns the number of items associated with key \a key.
+    Returns the number of items associated with the \a key.
 
     \sa contains(), insertMulti()
 */
@@ -917,13 +921,13 @@ void QHashData::checkSanity()
 
 /*! \fn QHash::iterator QHash::find(const Key &key)
 
-    Returns an iterator pointing to the item with key \a key in the
+    Returns an iterator pointing to the item with the \a key in the
     hash.
 
-    If the hash contains no item with key \a key, the function
+    If the hash contains no item with the \a key, the function
     returns end().
 
-    If the hash contains multiple items with key \a key, this
+    If the hash contains multiple items with the \a key, this
     function returns an iterator that points to the most recently
     inserted value. The other values are accessible by incrementing
     the iterator. For example, here's some code that iterates over all
@@ -942,10 +946,10 @@ void QHashData::checkSanity()
 /*! \fn QHash::iterator QHash::constFind(const Key &key) const
     \since 4.1
 
-    Returns an iterator pointing to the item with key \a key in the
+    Returns an iterator pointing to the item with the \a key in the
     hash.
 
-    If the hash contains no item with key \a key, the function
+    If the hash contains no item with the \a key, the function
     returns constEnd().
 
     \sa find(), QMultiHash::constFind()
@@ -953,12 +957,12 @@ void QHashData::checkSanity()
 
 /*! \fn QHash::iterator QHash::insert(const Key &key, const T &value)
 
-    Inserts a new item with the key \a key and a value of \a value.
+    Inserts a new item with the \a key and a value of \a value.
 
-    If there is already an item with the key \a key, that item's value
+    If there is already an item with the \a key, that item's value
     is replaced with \a value.
 
-    If there are multiple items with the key \a key, the most
+    If there are multiple items with the \a key, the most
     recently inserted item's value is replaced with \a value.
 
     \sa insertMulti()
@@ -966,7 +970,7 @@ void QHashData::checkSanity()
 
 /*! \fn QHash::iterator QHash::insertMulti(const Key &key, const T &value)
 
-    Inserts a new item with the key \a key and a value of \a value.
+    Inserts a new item with the \a key and a value of \a value.
 
     If there is already an item with the same key in the hash, this
     function will simply create a new one. (This behavior is
@@ -1489,84 +1493,84 @@ void QHashData::checkSanity()
 /*! \fn uint qHash(char key)
     \relates QHash
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(uchar key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(signed char key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(ushort key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(short key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(uint key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(int key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(ulong key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(long key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(quint64 key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(qint64 key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(QChar key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(const QByteArray &key)
@@ -1574,21 +1578,21 @@ void QHashData::checkSanity()
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(const QString &key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*! \fn uint qHash(const T *key)
     \relates QHash
     \overload
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 */
 
 /*!
@@ -1596,7 +1600,7 @@ void QHashData::checkSanity()
     \relates QHash
     \since 4.3
 
-    Returns the hash value for \a key.
+    Returns the hash value for the \a key.
 
     Types \c T1 and \c T2 must be supported by qHash().
 */
@@ -1693,12 +1697,12 @@ void QHashData::checkSanity()
 
 /*! \fn QMultiHash::iterator QMultiHash::replace(const Key &key, const T &value)
 
-    Inserts a new item with the key \a key and a value of \a value.
+    Inserts a new item with the \a key and a value of \a value.
 
-    If there is already an item with the key \a key, that item's value
+    If there is already an item with the \a key, that item's value
     is replaced with \a value.
 
-    If there are multiple items with the key \a key, the most
+    If there are multiple items with the \a key, the most
     recently inserted item's value is replaced with \a value.
 
     \sa insert()
@@ -1706,7 +1710,7 @@ void QHashData::checkSanity()
 
 /*! \fn QMultiHash::iterator QMultiHash::insert(const Key &key, const T &value)
 
-    Inserts a new item with the key \a key and a value of \a value.
+    Inserts a new item with the \a key and a value of \a value.
 
     If there is already an item with the same key in the hash, this
     function will simply create a new one. (This behavior is
@@ -1737,8 +1741,8 @@ void QHashData::checkSanity()
     \fn bool QMultiHash::contains(const Key &key, const T &value) const
     \since 4.3
 
-    Returns true if the hash contains an item with key \a key and
-    value \a value; otherwise returns false.
+    Returns true if the hash contains an item with the \a key and
+    \a value; otherwise returns false.
 
     \sa QHash::contains()
 */
@@ -1753,7 +1757,7 @@ void QHashData::checkSanity()
     \fn int QMultiHash::remove(const Key &key, const T &value)
     \since 4.3
 
-    Removes all the items that have the key \a key and the value \a
+    Removes all the items that have the \a key and the value \a
     value from the hash. Returns the number of items removed.
 
     \sa QHash::remove()
@@ -1769,7 +1773,7 @@ void QHashData::checkSanity()
     \fn int QMultiHash::count(const Key &key, const T &value) const
     \since 4.3
 
-    Returns the number of items with key \a key and value \a value.
+    Returns the number of items with the \a key and \a value.
 
     \sa QHash::count()
 */
@@ -1790,14 +1794,11 @@ void QHashData::checkSanity()
     \fn typename QHash<Key, T>::iterator QMultiHash::find(const Key &key, const T &value)
     \since 4.3
 
-    Returns an iterator pointing to the item with key \a key and
-    value \a value in the hash.
-
+    Returns an iterator pointing to the item with the \a key and \a value.
     If the hash contains no such item, the function returns end().
 
-    If the hash contains multiple items with key \a key, this
-    function returns an iterator that points to the most recently
-    inserted value.
+    If the hash contains multiple items with the \a key and \a value, the
+    iterator returned points to the most recently inserted item.
 
     \sa QHash::find()
 */
@@ -1824,8 +1825,8 @@ void QHashData::checkSanity()
     \fn typename QHash<Key, T>::const_iterator QMultiHash::constFind(const Key &key, const T &value) const
     \since 4.3
 
-    Returns an iterator pointing to the item with key \a key and the
-    value \a value in the hash.
+    Returns an iterator pointing to the item with the \a key and the
+    \a value in the hash.
 
     If the hash contains no such item, the function returns
     constEnd().

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,6 +62,10 @@
 #endif
 #include <private/qprintengine_ps_p.h>
 
+#if defined(Q_WS_X11)
+#include <private/qt_x11_p.h>
+#endif
+
 #ifndef QT_NO_PDF
 #include "qprintengine_pdf_p.h"
 #endif
@@ -71,10 +79,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_PRINTPREVIEWWIDGET
-Q_GLOBAL_STATIC(QPreviewPaintEngine, qt_preview_paintengine)
-#endif
-
 #define ABORT_IF_ACTIVE(location) \
     if (d->printEngine->printerState() == QPrinter::Active) { \
         qWarning("%s: Cannot be changed while printer is active", location); \
@@ -85,9 +89,9 @@ Q_GLOBAL_STATIC(QPreviewPaintEngine, qt_preview_paintengine)
 static const float qt_paperSizes[][2] = {
     {210, 297}, // A4
     {176, 250}, // B5
-    {216, 279}, // Letter
-    {216, 356}, // Legal
-    {216, 254}, // Executive
+    {215.9f, 279.4f}, // Letter
+    {215.9f, 355.6f}, // Legal
+    {190.5f, 254}, // Executive
     {841, 1189}, // A0
     {594, 841}, // A1
     {420, 594}, // A2
@@ -111,8 +115,8 @@ static const float qt_paperSizes[][2] = {
     {105, 241}, // US Common
     {110, 220}, // DLE
     {210, 330}, // Folio
-    {432, 279}, // Ledger
-    {279, 432} // Tabloid
+    {431.8f, 279.4f}, // Ledger
+    {279.4f, 431.8f} // Tabloid
 };
 
 /// return the multiplier of converting from the unit value to postscript-points.
@@ -152,6 +156,27 @@ QSizeF qt_printerPaperSize(QPrinter::Orientation orientation,
     const qreal multiplier = qt_multiplierForUnit(unit, resolution);
     return QSizeF((qt_paperSizes[paperSize][width_index] * 72 / 25.4) / multiplier,
                   (qt_paperSizes[paperSize][height_index] * 72 / 25.4) / multiplier);
+}
+
+
+// returns the actual num copies set on a printer, not
+// the number that is documented in QPrinter::numCopies()
+int qt_printerRealNumCopies(QPaintEngine *engine)
+{
+    int numCopies = 1;
+    if (engine->type() == QPaintEngine::PostScript
+        || engine->type() == QPaintEngine::Pdf)
+    {
+        QPdfBaseEngine *base = static_cast<QPdfBaseEngine *>(engine);
+        numCopies = base->d_func()->copies;
+    }
+#ifdef Q_WS_WIN
+    else if (engine->type() == QPaintEngine::Windows) {
+        QWin32PrintEngine *base = static_cast<QWin32PrintEngine *>(engine);
+        numCopies = base->d_func()->num_copies;
+    }
+#endif
+    return numCopies;
 }
 
 void QPrinterPrivate::createDefaultEngines()
@@ -214,7 +239,7 @@ void QPrinterPrivate::setPreviewMode(bool enable)
     Q_Q(QPrinter);
     if (enable) {
         if (!previewEngine)
-            previewEngine = qt_preview_paintengine();
+            previewEngine = new QPreviewPaintEngine;
         had_default_engines = use_default_engine;
         use_default_engine = false;
         realPrintEngine = printEngine;
@@ -593,6 +618,10 @@ QPrinter::QPrinter(PrinterMode mode)
     QPrinterInfo defPrn(QPrinterInfo::defaultPrinter());
     if (!defPrn.isNull()) {
         setPrinterName(defPrn.printerName());
+    } else if (QPrinterInfo::availablePrinters().isEmpty()
+               && d_ptr->paintEngine->type() != QPaintEngine::Windows
+               && d_ptr->paintEngine->type() != QPaintEngine::MacPrinter) {
+        setOutputFormat(QPrinter::PdfFormat);
     }
 }
 
@@ -611,7 +640,11 @@ QPrinter::QPrinter(const QPrinterInfo& printer, PrinterMode mode)
 
 void QPrinter::init(PrinterMode mode)
 {
+#if !defined(Q_WS_X11)
     if (!qApp) {
+#else
+    if (!qApp || !X11) {
+#endif
         qFatal("QPrinter: Must construct a QApplication before a QPaintDevice");
         return;
     }
@@ -672,6 +705,9 @@ QPrinter::~QPrinter()
     Q_D(QPrinter);
     if (d->use_default_engine)
         delete d->printEngine;
+#ifndef QT_NO_PRINTPREVIEWWIDGET
+    delete d->previewEngine;
+#endif
     delete d;
 }
 
@@ -709,6 +745,7 @@ void QPrinter::setOutputFormat(OutputFormat format)
     d->outputFormat = format;
 
     QPrintEngine *oldPrintEngine = d->printEngine;
+    QPaintEngine *oldPaintEngine = d->paintEngine; // same as the above - shouldn't be deleted
     const bool def_engine = d->use_default_engine;
     d->printEngine = 0;
 
@@ -717,7 +754,13 @@ void QPrinter::setOutputFormat(OutputFormat format)
     if (oldPrintEngine) {
         for (int i = 0; i < d->manualSetList.size(); ++i) {
             QPrintEngine::PrintEnginePropertyKey key = d->manualSetList[i];
-            QVariant prop = oldPrintEngine->property(key);
+            QVariant prop;
+            // PPK_NumberOfCopies need special treatmeant since it in most cases
+            // will return 1, disregarding the actual value that was set
+            if (key == QPrintEngine::PPK_NumberOfCopies)
+                prop = QVariant(qt_printerRealNumCopies(oldPaintEngine));
+            else
+                prop = oldPrintEngine->property(key);
             if (prop.isValid())
                 d->printEngine->setProperty(key, prop);
         }
@@ -815,6 +858,11 @@ void QPrinter::setPrinterName(const QString &name)
 bool QPrinter::isValid() const
 {
     Q_D(const QPrinter);
+#if defined(Q_WS_X11)
+    if (!qApp || !X11) {
+        return false;
+    }
+#endif
     return d->validPrinter;
 }
 
@@ -1065,12 +1113,13 @@ void QPrinter::setPaperSize(PaperSize newPaperSize)
     Q_D(QPrinter);
     if (d->paintEngine->type() != QPaintEngine::Pdf)
         ABORT_IF_ACTIVE("QPrinter::setPaperSize");
-    if (newPaperSize < 0 || newPaperSize > NPaperSize) {
-        qWarning("QPrinter::SetPaperSize: Illegal paper size %d", newPaperSize);
+    if (newPaperSize < 0 || newPaperSize >= NPaperSize) {
+        qWarning("QPrinter::setPaperSize: Illegal paper size %d", newPaperSize);
         return;
     }
     d->printEngine->setProperty(QPrintEngine::PPK_PaperSize, newPaperSize);
     d->addToManualSetList(QPrintEngine::PPK_PaperSize);
+    d->hasUserSetPageSize = true;
 }
 
 /*!
@@ -1116,6 +1165,7 @@ void QPrinter::setPaperSize(const QSizeF &paperSize, QPrinter::Unit unit)
     QSizeF size(paperSize.width() * multiplier, paperSize.height() * multiplier);
     d->printEngine->setProperty(QPrintEngine::PPK_CustomPaperSize, size);
     d->addToManualSetList(QPrintEngine::PPK_CustomPaperSize);
+    d->hasUserSetPageSize = true;
 }
 
 /*!
@@ -1150,6 +1200,8 @@ QSizeF QPrinter::paperSize(Unit unit) const
 
     This function is mostly useful for setting a default value that
     the user can override in the print dialog.
+
+    This function is only supported under X11.
 */
 
 void QPrinter::setPageOrder(PageOrder pageOrder)
@@ -1429,10 +1481,10 @@ bool QPrinter::fontEmbeddingEnabled() const
                             duplex printing is used.
     \value DuplexLongSide   Both sides of each sheet of paper are used for printing.
                             The paper is turned over its longest edge before the second
-                            side is printed 
+                            side is printed
     \value DuplexShortSide  Both sides of each sheet of paper are used for printing.
                             The paper is turned over its shortest edge before the second
-                            side is printed 
+                            side is printed
 */
 
 /*!
@@ -1694,10 +1746,15 @@ QList<int> QPrinter::supportedResolutions() const
     Tells the printer to eject the current page and to continue
     printing on a new page. Returns true if this was successful;
     otherwise returns false.
+
+    Calling newPage() on an inactive QPrinter object will always
+    fail.
 */
 bool QPrinter::newPage()
 {
     Q_D(QPrinter);
+    if (d->printEngine->printerState() != QPrinter::Active)
+        return false;
     return d->printEngine->newPage();
 }
 

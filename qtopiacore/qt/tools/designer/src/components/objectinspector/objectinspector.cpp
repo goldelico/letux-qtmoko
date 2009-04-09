@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,8 +60,11 @@ TRANSLATOR qdesigner_internal::ObjectInspector
 // shared
 #include <qdesigner_utils_p.h>
 #include <formwindowbase_p.h>
+#include <itemviewfindwidget.h>
 #include <qdesigner_dnditem_p.h>
 #include <textpropertyeditor_p.h>
+#include <qdesigner_command_p.h>
+#include <grid_p.h>
 
 // Qt
 #include <QtGui/QApplication>
@@ -198,8 +205,10 @@ void ObjectInspectorTreeView::keyPressEvent(QKeyEvent *event)
 class ObjectInspector::ObjectInspectorPrivate {
 public:
     ObjectInspectorPrivate(QDesignerFormEditorInterface *core);
+    ~ObjectInspectorPrivate();
 
     QTreeView *treeView() const { return m_treeView; }
+    ItemViewFindWidget *findWidget() const { return m_findWidget; }
     QDesignerFormEditorInterface *core() const { return m_core; }
     const QPointer<FormWindowBase> &formWindow() const { return m_formWindow; }
 
@@ -233,6 +242,7 @@ private:
     QDesignerFormEditorInterface *m_core;
     QTreeView *m_treeView;
     ObjectInspectorModel *m_model;
+    ItemViewFindWidget *m_findWidget;
     QPointer<FormWindowBase> m_formWindow;
     QPointer<QWidget> m_formFakeDropTarget;
     bool m_withinClearSelection;
@@ -242,6 +252,8 @@ ObjectInspector::ObjectInspectorPrivate::ObjectInspectorPrivate(QDesignerFormEdi
     m_core(core),
     m_treeView(new ObjectInspectorTreeView),
     m_model(new ObjectInspectorModel(m_treeView)),
+    m_findWidget(new ItemViewFindWidget(
+        ItemViewFindWidget::NarrowLayout | ItemViewFindWidget::NoWholeWords)),
     m_withinClearSelection(false)
 {
     m_treeView->setModel(m_model);
@@ -253,6 +265,11 @@ ObjectInspector::ObjectInspectorPrivate::ObjectInspectorPrivate(QDesignerFormEdi
     m_treeView->setTextElideMode (Qt::ElideMiddle);
 
     m_treeView->setContextMenuPolicy(Qt::CustomContextMenu);
+}
+    
+ObjectInspector::ObjectInspectorPrivate::~ObjectInspectorPrivate()
+{
+    delete m_treeView->itemDelegate();
 }
 
 void ObjectInspector::ObjectInspectorPrivate::clearSelection()
@@ -289,6 +306,7 @@ void ObjectInspector::ObjectInspectorPrivate::showContainersCurrentPage(QWidget 
         return;
 
     QWidget *w = widget->parentWidget();
+    bool macroStarted = false;
     // Find a multipage container (tab widgets, etc.) in the hierarchy and set the right page.
     while (w != 0) {
         if (fw->isManaged(w)) { // Rule out unmanaged internal scroll areas, for example, on QToolBoxes.
@@ -297,7 +315,13 @@ void ObjectInspector::ObjectInspectorPrivate::showContainersCurrentPage(QWidget 
                 if (count > 1 && !c->widget(c->currentIndex())->isAncestorOf(widget)) {
                     for (int i = 0; i < count; i++)
                         if (c->widget(i)->isAncestorOf(widget)) {
-                            c->setCurrentIndex(i);
+                            if (macroStarted == false) {
+                                macroStarted = true;
+                                fw->beginCommand(tr("Change Current Page"));
+                            }
+                            ChangeCurrentPageCommand *cmd = new ChangeCurrentPageCommand(fw);
+                            cmd->init(w, i);
+                            fw->commandHistory()->push(cmd);
                             break;
                         }
                 }
@@ -305,6 +329,8 @@ void ObjectInspector::ObjectInspectorPrivate::showContainersCurrentPage(QWidget 
         }
         w = w->parentWidget();
     }
+    if (macroStarted == true)
+        fw->endCommand();
 }
 
 void ObjectInspector::ObjectInspectorPrivate::restoreDropHighlighting()
@@ -660,49 +686,47 @@ void ObjectInspector::ObjectInspectorPrivate::getSelection(Selection &s) const
             case NoSelection:
                 break;
             case QObjectSelection:
+                // It is actually possible to select an action twice if it is in a menu bar
+                // and in a tool bar.
+                if (!s.objects.contains(object))
+                    s.objects.push_back(object);
+                break;
             case UnmanagedWidgetSelection:
-                // It is actually possible to select an action
-                // twice if it is in a menu bar and in a tool bar.
-                if (!s.m_selectedObjects.contains(object))
-                    s.m_selectedObjects.push_back(object);
+                s.unmanaged.push_back(qobject_cast<QWidget *>(object));
                 break;
             case ManagedWidgetSelection:
-                s.m_cursorSelection.push_back(qobject_cast<QWidget *>(object));
+                s.managed.push_back(qobject_cast<QWidget *>(object));
                 break;
             }
 }
 
-void ObjectInspector::ObjectInspectorPrivate::slotPopupContextMenu(QWidget *parent, const QPoint &pos)
+// Utility to create a task menu
+static inline QMenu *createTaskMenu(QObject *object, QDesignerFormWindowInterface *fw)
+{
+    // 1) Objects
+    if (!object->isWidgetType())
+        return FormWindowBase::createExtensionTaskMenu(fw, object, false);
+    // 2) Unmanaged widgets
+    QWidget *w = static_cast<QWidget *>(object);
+    if (!fw->isManaged(w))
+        return FormWindowBase::createExtensionTaskMenu(fw, w, false);
+    // 3) Mananaged widgets
+    if (qdesigner_internal::FormWindowBase *fwb = qobject_cast<qdesigner_internal::FormWindowBase*>(fw))
+        return fwb->initializePopupMenu(w);
+    return 0;
+}
+
+void ObjectInspector::ObjectInspectorPrivate::slotPopupContextMenu(QWidget * /*parent*/, const QPoint &pos)
 {
     if (m_formWindow == 0 || m_formWindow->currentTool() != 0)
         return;
 
     const QModelIndex index =  m_treeView->indexAt (pos);
-    QObject *object = m_model->objectAt(m_treeView->indexAt(pos));
-
-    if (!object)
-        return;
-
-    QMenu *menu = 0;
-    if (object->isWidgetType()) {
-        if (qdesigner_internal::FormWindowBase *fwb = qobject_cast<qdesigner_internal::FormWindowBase*>(m_formWindow))
-            menu = fwb->initializePopupMenu(qobject_cast<QWidget *>(object));
-    } else {
-        // Pull extension for non-widget
-        QDesignerTaskMenuExtension *taskMenu = qt_extension<QDesignerTaskMenuExtension*>(core()->extensionManager(), object);
-        if (taskMenu) {
-            QList<QAction*> actions = taskMenu->taskActions();
-            if (!actions.isEmpty()) {
-                menu = new QMenu(parent);
-                menu->addActions(actions);
-            }
+    if (QObject *object = m_model->objectAt(m_treeView->indexAt(pos)))
+        if (QMenu *menu = createTaskMenu(object, m_formWindow)) {
+            menu->exec(m_treeView->viewport()->mapToGlobal(pos));
+            delete menu;
         }
-    }
-
-    if (menu) {
-        menu->exec(m_treeView->viewport()->mapToGlobal(pos));
-        delete menu;
-    }
 }
 
 // ------------ ObjectInspector
@@ -724,6 +748,19 @@ ObjectInspector::ObjectInspector(QDesignerFormEditorInterface *core, QWidget *pa
 
     connect(treeView->header(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(slotHeaderDoubleClicked(int)));
     setAcceptDrops(true);
+
+    ItemViewFindWidget *findWidget = m_impl->findWidget();
+    vbox->addWidget(findWidget);
+
+    findWidget->setItemView(treeView);
+    QAction *findAction = new QAction(
+            ItemViewFindWidget::findIconSet(),
+            tr("&Find in Text..."),
+            this);
+    findAction->setShortcut(QKeySequence::Find);
+    findAction->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    addAction(findAction);
+    connect(findAction, SIGNAL(triggered(bool)), findWidget, SLOT(activate()));
 }
 
 ObjectInspector::~ObjectInspector()

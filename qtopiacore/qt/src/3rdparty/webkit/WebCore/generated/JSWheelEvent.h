@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSWheelEvent_H
-#define JSWheelEvent_H
+#ifndef JSWheelEvent_h
+#define JSWheelEvent_h
 
 #include "JSUIEvent.h"
 
@@ -28,31 +28,49 @@ namespace WebCore {
 class WheelEvent;
 
 class JSWheelEvent : public JSUIEvent {
+    typedef JSUIEvent Base;
 public:
-    JSWheelEvent(KJS::ExecState*, WheelEvent*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSWheelEvent(PassRefPtr<JSC::Structure>, PassRefPtr<WheelEvent>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        ScreenXAttrNum, ScreenYAttrNum, ClientXAttrNum, ClientYAttrNum, 
-        CtrlKeyAttrNum, ShiftKeyAttrNum, AltKeyAttrNum, MetaKeyAttrNum, 
-        WheelDeltaAttrNum, WheelDeltaXAttrNum, WheelDeltaYAttrNum, OffsetXAttrNum, 
-        OffsetYAttrNum, XAttrNum, YAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
 
 
-class JSWheelEventPrototype : public KJS::JSObject {
+class JSWheelEventPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSWheelEventPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSUIEventPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSWheelEventPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsWheelEventScreenX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventScreenY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventClientX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventClientY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventCtrlKey(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventShiftKey(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventAltKey(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventMetaKey(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventWheelDelta(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventWheelDeltaX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventWheelDeltaY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventOffsetX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventOffsetY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsWheelEventConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

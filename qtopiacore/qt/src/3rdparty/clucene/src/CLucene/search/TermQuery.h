@@ -33,10 +33,10 @@ CL_NS_DEF(search)
 		class TermWeight: public Weight {
 		private:
 			Searcher* searcher;
-			float_t value;
-			float_t idf;
-			float_t queryNorm;
-			float_t queryWeight;
+			qreal value;
+			qreal idf;
+			qreal queryNorm;
+			qreal queryWeight;
 			TermQuery* _this;
 			CL_NS(index)::Term* _term;
 
@@ -45,10 +45,10 @@ CL_NS_DEF(search)
 			~TermWeight();
 			TCHAR* toString();
 			Query* getQuery() { return (Query*)_this; }
-			float_t getValue() { return value; }
+			qreal getValue() { return value; }
 
-			float_t sumOfSquaredWeights();
-			void normalize(float_t queryNorm);
+			qreal sumOfSquaredWeights();
+			void normalize(qreal queryNorm);
 			Scorer* scorer(CL_NS(index)::IndexReader* reader);
 			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
 		};

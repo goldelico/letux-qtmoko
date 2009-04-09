@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -99,6 +103,16 @@ template <typename T>
 Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::isFetchAndAddWaitFree()
 { return false; }
 
+#ifndef QT_NO_ARM_EABI
+
+// kernel places a restartable cmpxchg implementation at a fixed address
+extern "C" typedef int (qt_atomic_eabi_cmpxchg_int_t)(int oldval, int newval, volatile int *ptr);
+extern "C" typedef int (qt_atomic_eabi_cmpxchg_ptr_t)(void *oldval, void *newval, volatile void *ptr);
+#define qt_atomic_eabi_cmpxchg_int (*(qt_atomic_eabi_cmpxchg_int_t *)0xffff0fc0)
+#define qt_atomic_eabi_cmpxchg_ptr (*(qt_atomic_eabi_cmpxchg_ptr_t *)0xffff0fc0)
+
+#else
+
 extern Q_CORE_EXPORT char q_atomic_lock;
 Q_CORE_EXPORT void qt_atomic_yield(int *);
 
@@ -112,32 +126,63 @@ inline char q_atomic_swp(volatile char *ptr, char newval)
     return ret;
 }
 
+#endif
+
 // Reference counting
 
 inline bool QBasicAtomicInt::ref()
 {
+#ifndef QT_NO_ARM_EABI
+    register int originalValue;
+    register int newValue;
+    do {
+        originalValue = _q_value;
+        newValue = originalValue + 1;
+    } while (qt_atomic_eabi_cmpxchg_int(originalValue, newValue, &_q_value) != 0);
+    return newValue != 0;
+#else
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
         qt_atomic_yield(&count);
     int originalValue = _q_value++;
     q_atomic_swp(&q_atomic_lock, 0);
     return originalValue != -1;
+#endif
 }
 
 inline bool QBasicAtomicInt::deref()
 {
+#ifndef QT_NO_ARM_EABI
+    register int originalValue;
+    register int newValue;
+    do {
+        originalValue = _q_value;
+        newValue = originalValue - 1;
+    } while (qt_atomic_eabi_cmpxchg_int(originalValue, newValue, &_q_value) != 0);
+    return newValue != 0;
+#else
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
         qt_atomic_yield(&count);
     int originalValue = _q_value--;
     q_atomic_swp(&q_atomic_lock, 0);
     return originalValue != 1;
+#endif
 }
 
 // Test and set for integers
 
 inline bool QBasicAtomicInt::testAndSetOrdered(int expectedValue, int newValue)
 {
+#ifndef QT_NO_ARM_EABI
+    register int originalValue;
+    do {
+        originalValue = _q_value;
+        if (originalValue != expectedValue)
+            return false;
+    } while (qt_atomic_eabi_cmpxchg_int(expectedValue, newValue, &_q_value) != 0);
+    return true;
+#else
     bool returnValue = false;
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
@@ -148,6 +193,7 @@ inline bool QBasicAtomicInt::testAndSetOrdered(int expectedValue, int newValue)
     }
     q_atomic_swp(&q_atomic_lock, 0);
     return returnValue;
+#endif
 }
 
 inline bool QBasicAtomicInt::testAndSetRelaxed(int expectedValue, int newValue)
@@ -196,6 +242,15 @@ inline int QBasicAtomicInt::fetchAndStoreRelease(int newValue)
 
 inline int QBasicAtomicInt::fetchAndAddOrdered(int valueToAdd)
 {
+#ifndef QT_NO_ARM_EABI
+    register int originalValue;
+    register int newValue;
+    do {
+        originalValue = _q_value;
+        newValue = originalValue + valueToAdd;
+    } while (qt_atomic_eabi_cmpxchg_int(originalValue, newValue, &_q_value) != 0);
+    return originalValue;
+#else
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
         qt_atomic_yield(&count);
@@ -203,6 +258,7 @@ inline int QBasicAtomicInt::fetchAndAddOrdered(int valueToAdd)
     _q_value += valueToAdd;
     q_atomic_swp(&q_atomic_lock, 0);
     return originalValue;
+#endif
 }
 
 inline int QBasicAtomicInt::fetchAndAddRelaxed(int valueToAdd)
@@ -225,6 +281,15 @@ inline int QBasicAtomicInt::fetchAndAddRelease(int valueToAdd)
 template <typename T>
 Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::testAndSetOrdered(T *expectedValue, T *newValue)
 {
+#ifndef QT_NO_ARM_EABI
+    register T *originalValue;
+    do {
+        originalValue = _q_value;
+        if (originalValue != expectedValue)
+            return false;
+    } while (qt_atomic_eabi_cmpxchg_ptr(expectedValue, newValue, &_q_value) != 0);
+    return true;
+#else
     bool returnValue = false;
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
@@ -235,6 +300,7 @@ Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::testAndSetOrdered(T *expectedValu
     }
     q_atomic_swp(&q_atomic_lock, 0);
     return returnValue;
+#endif
 }
 
 template <typename T>
@@ -291,6 +357,15 @@ Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndStoreRelease(T *newValue)
 template <typename T>
 Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndAddOrdered(qptrdiff valueToAdd)
 {
+#ifndef QT_NO_ARM_EABI
+    register T *originalValue;
+    register T *newValue;
+    do {
+        originalValue = _q_value;
+        newValue = originalValue + valueToAdd;
+    } while (qt_atomic_eabi_cmpxchg_ptr(originalValue, newValue, &_q_value) != 0);
+    return originalValue;
+#else
     int count = 0;
     while (q_atomic_swp(&q_atomic_lock, ~0) != 0)
         qt_atomic_yield(&count);
@@ -298,6 +373,7 @@ Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndAddOrdered(qptrdiff valueTo
     _q_value += valueToAdd;
     q_atomic_swp(&q_atomic_lock, 0);
     return originalValue;
+#endif
 }
 
 template <typename T>

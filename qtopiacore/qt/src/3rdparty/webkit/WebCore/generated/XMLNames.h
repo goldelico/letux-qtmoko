@@ -32,16 +32,18 @@
 
 #include "QualifiedName.h"
 
-namespace WebCore { namespace XMLNames {
+namespace WebCore {
+
+ namespace XMLNames {
 
 #ifndef DOM_XMLNAMES_HIDE_GLOBALS
 // Namespace
 extern const WebCore::AtomicString xmlNamespaceURI;
 
 // Attributes
-    extern const WebCore::QualifiedName baseAttr;
-    extern const WebCore::QualifiedName langAttr;
-    extern const WebCore::QualifiedName spaceAttr;
+extern const WebCore::QualifiedName baseAttr;
+extern const WebCore::QualifiedName langAttr;
+extern const WebCore::QualifiedName spaceAttr;
 
 
 WebCore::QualifiedName** getXMLAttr(size_t* size);

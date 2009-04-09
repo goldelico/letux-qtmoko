@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,7 @@
 #include <qwaitcondition.h>
 #include <qfilesystemwatcher.h>
 #include <qfileiconprovider.h>
+#include <qfsfileengine.h>
 #include <qpair.h>
 #include <qdatetime.h>
 #include <qstack.h>
@@ -65,44 +70,77 @@ class QExtendedInformation {
 public:
     enum Type { Dir, File, System };
 
-    QExtendedInformation() : size(0), fileType(System), isHidden(false),
-                             isSymLink(false), caseSensitive(true) {}
+    QExtendedInformation() {}
+    QExtendedInformation(const QFileInfo &info) : mFileInfo(info) {}
 
-    qint64 size;
-    QString displayType;
-    QIcon icon;
-    QDateTime lastModified;
-    QFile::Permissions permissions;
-    Type fileType;
-    bool isHidden : 1;
-    bool isSymLink : 1;
-    bool caseSensitive : 1;
-
-    inline bool isDir() { return fileType == Dir; }
-    inline bool isFile() { return fileType == File; }
-    inline bool isSystem() { return fileType == System; }
+    inline bool isDir() { return type() == Dir; }
+    inline bool isFile() { return type() == File; }
+    inline bool isSystem() { return type() == System; }
 
     bool operator ==(const QExtendedInformation &fileInfo) const {
-       return fileInfo.size == size
-       && fileInfo.displayType == displayType
-       && fileInfo.lastModified == lastModified
-       && fileInfo.permissions == permissions
-       && fileInfo.fileType == fileType
-       && fileInfo.isHidden == isHidden
-       && fileInfo.isSymLink == isSymLink
-       && fileInfo.caseSensitive == caseSensitive;
+       return mFileInfo == fileInfo.mFileInfo
+       && displayType == fileInfo.displayType
+       && permissions() == fileInfo.permissions();
     }
-    void operator =(const QExtendedInformation &fileInfo) {
-        size = fileInfo.size;
-        displayType = fileInfo.displayType;
-        icon = fileInfo.icon;
-        lastModified = fileInfo.lastModified;
-        permissions = fileInfo.permissions;
-        fileType = fileInfo.fileType;
-        isHidden = fileInfo.isHidden;
-        isSymLink = fileInfo.isSymLink;
-        caseSensitive = fileInfo.caseSensitive;
+
+    bool isCaseSensitive() const {
+        QFSFileEngine fe(mFileInfo.absoluteFilePath());
+        return fe.caseSensitive();
     }
+    QFile::Permissions permissions() const {
+        return mPermissions;
+    }
+
+    void setPermissions (QFile::Permissions permissions) {
+        mPermissions = permissions;
+    }
+
+    Type type() const {
+        if (mFileInfo.isDir()) {
+            return QExtendedInformation::Dir;
+        }
+        if (mFileInfo.isFile()) {
+            return QExtendedInformation::File;
+        }
+        if (!mFileInfo.exists() && mFileInfo.isSymLink()) {
+            return QExtendedInformation::System;
+        }
+        return QExtendedInformation::System;
+    }
+
+    bool isSymLink() const {
+        return mFileInfo.isSymLink();
+    }
+
+    bool isHidden() const {
+        return mFileInfo.isHidden();
+    }
+
+    QFileInfo fileInfo() const {
+        return mFileInfo;
+    }
+
+    QDateTime lastModified() const {
+        return mFileInfo.lastModified();
+    }
+
+    qint64 size() const {
+        qint64 size = -1;
+        if (type() == QExtendedInformation::Dir)
+            size = 0;
+        if (type() == QExtendedInformation::File)
+            size = mFileInfo.size();
+        if (!mFileInfo.exists() && !mFileInfo.isSymLink())
+            size = -1;
+        return size;
+    }
+
+    QString displayType;
+    QIcon icon;
+
+private :
+    QFileInfo mFileInfo;
+    QFile::Permissions mPermissions;
 };
 
 class QFileIconProvider;
@@ -160,6 +198,9 @@ private:
     uint userId;
     uint groupId;
 #endif
+public :
+    //for testing purpose
+    static bool fetchedRoot;
 };
 #endif // QT_NO_FILESYSTEMMODEL
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,17 +21,18 @@
 #ifndef EventListener_h
 #define EventListener_h
 
-#include "Shared.h"
+#include <wtf/RefCounted.h>
 
 namespace WebCore {
 
     class Event;
 
-    class EventListener : public Shared<EventListener> {
+    class EventListener : public RefCounted<EventListener> {
     public:
         virtual ~EventListener() { }
-        virtual void handleEvent(Event*, bool isWindowEvent) = 0;
-        virtual bool isHTMLEventListener() const { return false; }
+        virtual void handleEvent(Event*, bool isWindowEvent = false) = 0;
+        virtual bool isInline() const { return false; }
+        virtual bool wasCreatedFromMarkup() const { return false; }
     };
 
 }

@@ -56,6 +56,7 @@ SOURCES += \
         tools/qrect.cpp \
 	tools/qregexp.cpp \
 	tools/qshareddata.cpp \
+	tools/qsharedpointer.cpp \
         tools/qsize.cpp \
 	tools/qstring.cpp \
 	tools/qstringlist.cpp \
@@ -89,7 +90,13 @@ contains(QT_CONFIG, zlib) {
 DEFINES += HB_EXPORT=Q_CORE_EXPORT
 INCLUDEPATH += ../3rdparty/harfbuzz/src
 HEADERS += ../3rdparty/harfbuzz/src/harfbuzz.h
-SOURCES += ../3rdparty/harfbuzz/src/harfbuzz.c \
+SOURCES += ../3rdparty/harfbuzz/src/harfbuzz-buffer.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-gdef.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-gsub.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-gpos.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-impl.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-open.c \
+           ../3rdparty/harfbuzz/src/harfbuzz-stream.c \
            ../3rdparty/harfbuzz/src/harfbuzz-shaper-all.cpp \
            tools/qharfbuzz.cpp
 HEADERS += tools/qharfbuzz_p.h

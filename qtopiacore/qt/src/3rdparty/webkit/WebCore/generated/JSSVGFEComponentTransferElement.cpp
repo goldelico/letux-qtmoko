@@ -21,228 +21,165 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEComponentTransferElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEComponentTransferElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEComponentTransferElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEComponentTransferElementTableEntries[] =
+static const HashTableValue JSSVGFEComponentTransferElementTableValues[9] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEComponentTransferElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEComponentTransferElementTableEntries[8] },
-    { "className", JSSVGFEComponentTransferElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFEComponentTransferElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFEComponentTransferElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEComponentTransferElementTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEComponentTransferElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEComponentTransferElementTableEntries[9] },
-    { 0, 0, 0, 0, 0 },
-    { "height", JSSVGFEComponentTransferElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEComponentTransferElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFEComponentTransferElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementIn1, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEComponentTransferElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEComponentTransferElementTable = 
-{
-    2, 11, JSSVGFEComponentTransferElementTableEntries, 8
-};
+static const HashTable JSSVGFEComponentTransferElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEComponentTransferElementTableValues, 0 };
+#else
+    { 18, 15, JSSVGFEComponentTransferElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEComponentTransferElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEComponentTransferElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEComponentTransferElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEComponentTransferElementPrototypeTable = 
-{
-    2, 1, JSSVGFEComponentTransferElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEComponentTransferElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEComponentTransferElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEComponentTransferElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEComponentTransferElementPrototype::info = { "SVGFEComponentTransferElementPrototype", 0, &JSSVGFEComponentTransferElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEComponentTransferElementPrototype::s_info = { "SVGFEComponentTransferElementPrototype", 0, &JSSVGFEComponentTransferElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEComponentTransferElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEComponentTransferElementPrototype>(exec, "[[JSSVGFEComponentTransferElement.prototype]]");
+    return getDOMPrototype<JSSVGFEComponentTransferElement>(exec);
 }
 
-const ClassInfo JSSVGFEComponentTransferElement::info = { "SVGFEComponentTransferElement", &JSSVGElement::info, &JSSVGFEComponentTransferElementTable, 0 };
-
-JSSVGFEComponentTransferElement::JSSVGFEComponentTransferElement(ExecState* exec, SVGFEComponentTransferElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEComponentTransferElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEComponentTransferElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEComponentTransferElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEComponentTransferElement::s_info = { "SVGFEComponentTransferElement", &JSSVGElement::s_info, &JSSVGFEComponentTransferElementTable, 0 };
+
+JSSVGFEComponentTransferElement::JSSVGFEComponentTransferElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEComponentTransferElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEComponentTransferElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEComponentTransferElementPrototype(JSSVGFEComponentTransferElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEComponentTransferElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEComponentTransferElement, JSSVGElement>(exec, &JSSVGFEComponentTransferElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEComponentTransferElement, Base>(exec, &JSSVGFEComponentTransferElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEComponentTransferElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEComponentTransferElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEComponentTransferElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEComponentTransferElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
+JSValuePtr jsSVGFEComponentTransferElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEComponentTransferElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEComponentTransferElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
+JSValuePtr jsSVGFEComponentTransferElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEComponentTransferElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(static_cast<JSSVGFEComponentTransferElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEComponentTransferElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEComponentTransferElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEComponentTransferElement* castedThisObj = static_cast<JSSVGFEComponentTransferElement*>(asObject(thisValue));
+    SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEComponentTransferElement* imp = static_cast<SVGFEComponentTransferElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

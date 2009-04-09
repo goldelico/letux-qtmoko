@@ -3,50 +3,54 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>Qt 4.4: mainwindow.cpp Example File (xmlpatterns/qobjectxmlmodel/mainwindow.cpp)</title>
+  <title>Qt 4.5: mainwindow.cpp Example File (xmlpatterns/qobjectxmlmodel/mainwindow.cpp)</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">mainwindow.cpp Example File<br /><span class="small-subtitle">xmlpatterns/qobjectxmlmodel/mainwindow.cpp</span>
 </h1>
 <pre><span class="comment"> /****************************************************************************
  **
- ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+ ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
  ** This file is part of the example classes of the Qt Toolkit.
  **
+ ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
  ** Licensees holding valid Qt Commercial licenses may use this file in
  ** accordance with the Qt Commercial License Agreement provided with the
  ** Software or, alternatively, in accordance with the terms contained in
  ** a written agreement between you and Nokia.
  **
+ ** GNU Lesser General Public License Usage
+ ** Alternatively, this file may be used under the terms of the GNU Lesser
+ ** General Public License version 2.1 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.LGPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU Lesser General Public License version 2.1 requirements
+ ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+ **
+ ** In addition, as a special exception, Nokia gives you certain
+ ** additional rights. These rights are described in the Nokia Qt LGPL
+ ** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+ ** package.
  **
  ** GNU General Public License Usage
  ** Alternatively, this file may be used under the terms of the GNU
- ** General Public License versions 2.0 or 3.0 as published by the Free
- ** Software Foundation and appearing in the file LICENSE.GPL included in
- ** the packaging of this file.  Please review the following information
- ** to ensure GNU General Public Licensing requirements will be met:
- ** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
- ** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
- ** exception, Nokia gives you certain additional rights. These rights
- ** are described in the Nokia Qt GPL Exception version 1.3, included in
- ** the file GPL_EXCEPTION.txt in this package.
- **
- ** Qt for Windows(R) Licensees
- ** As a special exception, Nokia, as the sole copyright holder for Qt
- ** Designer, grants users of the Qt/Eclipse Integration plug-in the
- ** right for the Qt/Eclipse Integration to link to functionality
- ** provided by Qt Designer and its related libraries.
+ ** General Public License version 3.0 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.GPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU General Public License version 3.0 requirements will be
+ ** met: http://www.gnu.org/copyleft/gpl.html.
  **
  ** If you are unsure which license is appropriate for your use, please
  ** contact the sales department at qt-sales@nokia.com.
+ ** $QT_END_LICENSE$
  **
  ****************************************************************************/</span>
 
@@ -55,10 +59,13 @@
 
  #include &quot;mainwindow.h&quot;
  #include &quot;qobjectxmlmodel.h&quot;
+ #include &quot;xmlsyntaxhighlighter.h&quot;
 
  MainWindow::MainWindow()
  {
      setupUi(this);
+
+     new XmlSyntaxHighlighter(wholeTreeOutput-&gt;document());
 
      <span class="comment">/* Setup the font. */</span>
      {
@@ -70,15 +77,11 @@
          htmlQueryEdit-&gt;setFont(font);
      }
 
-     <span class="comment">/* We ensure the same name pool is used for our QXmlQuery
-      * and node model. */</span>
      QXmlNamePool namePool;
-
      QObjectXmlModel qObjectModel(this, namePool);
-
      QXmlQuery query(namePool);
 
-     <span class="comment">/* The basic XML view. */</span>
+     <span class="comment">/* The QObject tree as XML view. */</span>
      {
          query.bindVariable(&quot;root&quot;, qObjectModel.root());
          query.setQuery(QUrl(&quot;qrc:/queries/wholeTree.xq&quot;));
@@ -102,7 +105,7 @@
          }
      }
 
-     <span class="comment">/* The HTML view. */</span>
+     <span class="comment">/* The QObject occurrence statistics as HTML view. */</span>
      {
          query.setQuery(QUrl(&quot;qrc:/queries/statisticsInHTML.xq&quot;));
          Q_ASSERT(query.isValid());
@@ -128,20 +131,25 @@
 
  void MainWindow::on_actionAbout_triggered()
  {
-     QMessageBox::about(this, tr(&quot;About QObject XML Model&quot;),
-                               tr(&quot;&lt;p&gt;The &lt;b&gt;QObject XML Model&lt;/b&gt; example shows &quot;
-                                  &quot;how to use XQuery on top of data of your choice without &quot;
-                                  &quot;converting it to an XML document.&lt;/p&gt;&quot;
-                                  &quot;&lt;p&gt;In this example a QSimpleXmlNodeModel subclass makes it possible to &quot;
-                                  &quot;query a QObject tree using XQuery and retrieve the result as pointers to QObjects, or as XML.&lt;/p&gt;&quot;
-                                  &quot;&lt;p&gt;A possible use case of this could be to write an application that tests a graphical interface &quot;
-                                  &quot;against Human Interface Guidelines, or that queries an application's data which is modeled using &quot;
-                                  &quot;a QObject tree and dynamic properties.&quot;));
+     QMessageBox::about(this,
+                        tr(&quot;About QObject XML Model&quot;),
+                        tr(&quot;&lt;p&gt;The &lt;b&gt;QObject XML Model&lt;/b&gt; example shows &quot;
+                           &quot;how to use XQuery on top of data of your choice &quot;
+                           &quot;without converting it to an XML document.&lt;/p&gt;&quot;
+                           &quot;&lt;p&gt;In this example a QSimpleXmlNodeModel subclass &quot;
+                           &quot;makes it possible to query a QObject tree using &quot;
+                           &quot;XQuery and retrieve the result as pointers to &quot;
+                           &quot;QObjects, or as XML.&lt;/p&gt;&quot;
+                           &quot;&lt;p&gt;A possible use case of this could be to write &quot;
+                           &quot;an application that tests a graphical interface &quot;
+                           &quot;against Human Interface Guidelines, or that &quot;
+                           &quot;queries an application's data which is modeled &quot;
+                           &quot;using a QObject tree and dynamic properties.&quot;));
  }</pre>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

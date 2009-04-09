@@ -23,128 +23,116 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedString.h"
 
 #include <wtf/GetPtr.h>
 
+#include "KURL.h"
 #include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedString)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedStringTableEntries[] =
+static const HashTableValue JSSVGAnimatedStringTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedString::BaseValAttrNum, DontDelete, 0, 0 },
-    { "animVal", JSSVGAnimatedString::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete, (intptr_t)jsSVGAnimatedStringBaseVal, (intptr_t)setJSSVGAnimatedStringBaseVal },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedStringAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedStringTable = 
-{
-    2, 2, JSSVGAnimatedStringTableEntries, 2
-};
+static const HashTable JSSVGAnimatedStringTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedStringTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedStringTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedStringPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedStringPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedStringPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedStringPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedStringPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedStringPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedStringPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedStringPrototype::info = { "SVGAnimatedStringPrototype", 0, &JSSVGAnimatedStringPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedStringPrototype::s_info = { "SVGAnimatedStringPrototype", 0, &JSSVGAnimatedStringPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedStringPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedStringPrototype>(exec, "[[JSSVGAnimatedString.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedString>(exec);
 }
 
-const ClassInfo JSSVGAnimatedString::info = { "SVGAnimatedString", 0, &JSSVGAnimatedStringTable, 0 };
+const ClassInfo JSSVGAnimatedString::s_info = { "SVGAnimatedString", 0, &JSSVGAnimatedStringTable, 0 };
 
-JSSVGAnimatedString::JSSVGAnimatedString(ExecState* exec, SVGAnimatedString* impl)
-    : m_impl(impl)
+JSSVGAnimatedString::JSSVGAnimatedString(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedString> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedStringPrototype::self(exec));
 }
 
 JSSVGAnimatedString::~JSSVGAnimatedString()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedString>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedString::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedStringPrototype(JSSVGAnimatedStringPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedString::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedString, KJS::DOMObject>(exec, &JSSVGAnimatedStringTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedString, Base>(exec, &JSSVGAnimatedStringTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedString::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedStringBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(impl());
-
-        return jsString(imp->baseVal());
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(impl());
-
-        return jsString(imp->animVal());
-    }
-    }
-    return 0;
+    SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(static_cast<JSSVGAnimatedString*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->baseVal());
 }
 
-void JSSVGAnimatedString::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGAnimatedStringAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGAnimatedString, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGAnimatedStringTable, this);
+    SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(static_cast<JSSVGAnimatedString*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->animVal());
 }
 
-void JSSVGAnimatedString::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGAnimatedString::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(impl());
-
-        imp->setBaseVal(value->toString(exec));
-        break;
-    }
-    }
-    SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGAnimatedString>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGAnimatedString>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+    lookupPut<JSSVGAnimatedString, Base>(exec, propertyName, value, &JSSVGAnimatedStringTable, this, slot);
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedString* obj)
+void setJSSVGAnimatedStringBaseVal(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<SVGAnimatedString, JSSVGAnimatedString>(exec, obj);
+    SVGAnimatedString* imp = static_cast<SVGAnimatedString*>(static_cast<JSSVGAnimatedString*>(thisObject)->impl());
+    imp->setBaseVal(value->toString(exec));
+    if (static_cast<JSSVGAnimatedString*>(thisObject)->context())
+        static_cast<JSSVGAnimatedString*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGAnimatedString*>(thisObject)->impl()->associatedAttributeName());
 }
-SVGAnimatedString* toSVGAnimatedString(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedString* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedString::info) ? static_cast<JSSVGAnimatedString*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedString>(exec, object, context);
+}
+SVGAnimatedString* toSVGAnimatedString(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedString::s_info) ? static_cast<JSSVGAnimatedString*>(asObject(value))->impl() : 0;
 }
 
 }

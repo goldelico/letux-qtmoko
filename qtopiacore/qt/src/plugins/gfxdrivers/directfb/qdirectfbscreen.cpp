@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,20 +48,20 @@
 #include <QtGui/qcolor.h>
 #include <QtGui/qapplication.h>
 #include <QtGui/qwindowsystem_qws.h>
-#include <QtGui/private/qpixmapdatafactory_p.h>
+#include <QtGui/private/qgraphicssystem_qws_p.h>
 #include <QtGui/private/qwssignalhandler_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qrect.h>
 
-class QDirectFBScreenPrivate : public QObject, public QPixmapDataFactory
+class QDirectFBScreenPrivate : public QObject, public QWSGraphicsSystem
 {
 public:
-    QDirectFBScreenPrivate();
+    QDirectFBScreenPrivate(QDirectFBScreen*);
     ~QDirectFBScreenPrivate();
 
     void setFlipFlags(const QStringList &args);
-    QPixmapData* create(QPixmapData::PixelType type);
+    QPixmapData *createPixmapData(QPixmapData::PixelType type) const;
 
     IDirectFB *dfb;
     IDirectFBSurface *dfbSurface;
@@ -68,17 +72,18 @@ public:
     IDirectFBScreen *dfbScreen;
     QRegion prevExpose;
 
+    QSet<IDirectFBSurface*> allocatedSurfaces;
+
 #ifndef QT_NO_DIRECTFB_MOUSE
     QDirectFBMouseHandler *mouse;
 #endif
 #ifndef QT_NO_DIRECTFB_KEYBOARD
     QDirectFBKeyboardHandler *keyboard;
 #endif
-    QPixmapDataFactory *bitmapFactory;
 };
 
-QDirectFBScreenPrivate::QDirectFBScreenPrivate()
-    : dfb(0), dfbSurface(0), flipFlags(DSFLIP_BLIT)
+QDirectFBScreenPrivate::QDirectFBScreenPrivate(QDirectFBScreen* screen)
+    : QWSGraphicsSystem(screen), dfb(0), dfbSurface(0), flipFlags(DSFLIP_BLIT)
 #ifndef QT_NO_DIRECTFB_LAYER
     , dfbLayer(0)
 #endif
@@ -88,7 +93,6 @@ QDirectFBScreenPrivate::QDirectFBScreenPrivate()
 #ifndef QT_NO_DIRECTFB_KEYBOARD
     , keyboard(0)
 #endif
-    , bitmapFactory(0)
 {
 #ifndef QT_NO_QWS_SIGNALHANDLER
     QWSSignalHandler::instance()->addObject(this);
@@ -103,16 +107,58 @@ QDirectFBScreenPrivate::~QDirectFBScreenPrivate()
 #ifndef QT_NO_DIRECTFB_KEYBOARD
     delete keyboard;
 #endif
+
+    foreach (IDirectFBSurface* surf, allocatedSurfaces)
+        surf->Release(surf);
+    allocatedSurfaces.clear();
+
     if (dfbSurface)
         dfbSurface->Release(dfbSurface);
+
 #ifndef QT_NO_DIRECTFB_LAYER
     if (dfbLayer)
         dfbLayer->Release(dfbLayer);
 #endif
+
     if (dfbScreen)
         dfbScreen->Release(dfbScreen);
+
     if (dfb)
         dfb->Release(dfb);
+}
+
+IDirectFBSurface* QDirectFBScreen::createDFBSurface(const DFBSurfaceDescription* desc)
+{
+    DFBResult result;
+    IDirectFBSurface* newSurface = 0;
+
+    if (!d_ptr->dfb) {
+        qWarning("QDirectFBScreen::createDFBSurface() - not connected");
+        return 0;
+    }
+
+    result = d_ptr->dfb->CreateSurface(d_ptr->dfb, desc, &newSurface);
+    if (result != DFB_OK) {
+        DirectFBError("QDirectFBScreen::createDFBSurface", result);
+        return 0;
+    }
+
+    Q_ASSERT(newSurface);
+    d_ptr->allocatedSurfaces.insert(newSurface);
+
+    //qDebug("Created a new DirectFB surface at %p. New count = %d", newSurface, d_ptr->allocatedSurfaces.count());
+
+    return newSurface;
+}
+
+void QDirectFBScreen::releaseDFBSurface(IDirectFBSurface* surface)
+{
+    Q_ASSERT(surface);
+    surface->Release(surface);
+    if (!d_ptr->allocatedSurfaces.remove(surface))
+        qWarning("QDirectFBScreen::releaseDFBSurface() - %p not in list", surface);
+
+    //qDebug("Released surface at %p. New count = %d", surface, d_ptr->allocatedSurfaces.count());
 }
 
 IDirectFB* QDirectFBScreen::dfb()
@@ -158,7 +204,7 @@ DFBSurfacePixelFormat QDirectFBScreen::getSurfacePixelFormat(const QImage &image
     case QImage::Format_RGB32:
         return DSPF_RGB32;
     case QImage::Format_ARGB32_Premultiplied:
-//    case QImage::Format_ARGB32:
+    case QImage::Format_ARGB32:
         return DSPF_ARGB;
     default:
         return DSPF_UNKNOWN;
@@ -291,6 +337,7 @@ void QDirectFBScreen::setSurfaceColorTable(IDirectFBSurface *surface,
         DirectFBError("QDirectFBScreen::setSurfaceColorTable SetEntries",
                       result);
     }
+    palette->Release(palette);
 }
 #endif // QT_NO_DIRECTFB_PALETTE
 
@@ -400,23 +447,20 @@ void QDirectFBScreenCursor::set(const QImage &image, int hotx, int hoty)
     size = cursor.size();
     hotspot = QPoint(hotx, hoty);
 
-    IDirectFB *fb = QDirectFBScreen::instance()->dfb();
-
     DFBSurfaceDescription description;
     description = QDirectFBScreen::getSurfaceDescription(cursor);
 
     IDirectFBSurface *surface;
-    DFBResult result = fb->CreateSurface(fb, &description, &surface);
-    if (result != DFB_OK) {
-        DirectFBError("QDirectFBScreenCursor::set: Unable to create surface",
-                      result);
+    surface = QDirectFBScreen::instance()->createDFBSurface(&description);
+    if (!surface) {
+        qWarning("QDirectFBScreenCursor::set: Unable to create surface");
         return;
     }
 #ifndef QT_NO_DIRECTFB_PALETTE
     QDirectFBScreen::setSurfaceColorTable(surface, cursor);
 #endif
 
-    result = layer->SetCooperativeLevel(layer, DLSCL_ADMINISTRATIVE);
+    DFBResult result = layer->SetCooperativeLevel(layer, DLSCL_ADMINISTRATIVE);
     if (result != DFB_OK) {
         DirectFBError("QDirectFBScreenCursor::set: "
                       "Unable to set cooperative level", result);
@@ -434,12 +478,12 @@ void QDirectFBScreenCursor::set(const QImage &image, int hotx, int hoty)
     }
 
     if (surface)
-        surface->Release(surface);
+        QDirectFBScreen::instance()->releaseDFBSurface(surface);
 }
 #endif // QT_NO_DIRECTFB_LAYER
 
 QDirectFBScreen::QDirectFBScreen(int display_id)
-    : QScreen(display_id, DirectFBClass), d_ptr(new QDirectFBScreenPrivate)
+    : QScreen(display_id, DirectFBClass), d_ptr(new QDirectFBScreenPrivate(this))
 {
 }
 
@@ -515,10 +559,10 @@ void QDirectFBScreenPrivate::setFlipFlags(const QStringList &args)
     }
 }
 
-QPixmapData* QDirectFBScreenPrivate::create(QPixmapData::PixelType type)
+QPixmapData* QDirectFBScreenPrivate::createPixmapData(QPixmapData::PixelType type) const
 {
-    if (type == QPixmapData::BitmapType && bitmapFactory)
-        return bitmapFactory->create(type);
+    if (type == QPixmapData::BitmapType)
+        return QWSGraphicsSystem::createPixmapData(type);
 
     return new QDirectFBPixmapData(type);
 }
@@ -561,10 +605,10 @@ bool QDirectFBScreen::connect(const QString &displaySpec)
         delete[] argv;
     }
 
-    const QStringList args = displaySpec.split(QLatin1Char(':'),
+    const QStringList displayArgs = displaySpec.split(QLatin1Char(':'),
                                                QString::SkipEmptyParts);
 
-    d_ptr->setFlipFlags(args);
+    d_ptr->setFlipFlags(displayArgs);
 
     result = DirectFBCreate(&d_ptr->dfb);
     if (result != DFB_OK) {
@@ -573,11 +617,11 @@ bool QDirectFBScreen::connect(const QString &displaySpec)
         return false;
     }
 
-    if (args.contains(QLatin1String("debug"), Qt::CaseInsensitive))
+    if (displayArgs.contains(QLatin1String("debug"), Qt::CaseInsensitive))
         printDirectFBInfo(d_ptr->dfb);
 
 #ifndef QT_NO_DIRECTFB_WM
-    if (args.contains(QLatin1String("fullscreen")))
+    if (displayArgs.contains(QLatin1String("fullscreen")))
 #endif
         d_ptr->dfb->SetCooperativeLevel(d_ptr->dfb, DFSCL_FULLSCREEN);
 
@@ -588,8 +632,11 @@ bool QDirectFBScreen::connect(const QString &displaySpec)
                                               | DSCAPS_STATIC_ALLOC);
     if (d_ptr->flipFlags ^ DSFLIP_BLIT) {
         description.caps = DFBSurfaceCapabilities(description.caps
-                                                  | DSCAPS_FLIPPING);
+                                                  | DSCAPS_DOUBLE
+                                                  | DSCAPS_TRIPLE);
     }
+
+    // We don't use createDFBSurface to track the primary surface
     result = d_ptr->dfb->CreateSurface(d_ptr->dfb, &description,
                                        &d_ptr->dfbSurface);
     if (result != DFB_OK) {
@@ -614,9 +661,24 @@ bool QDirectFBScreen::connect(const QString &displaySpec)
 
     setPixelFormat(getImageFormat(format));
 
+    physWidth = physHeight = -1;
+    QRegExp mmWidthRx(QLatin1String("mmWidth=?(\\d+)"));
+    int dimIdxW = displayArgs.indexOf(mmWidthRx);
+    if (dimIdxW >= 0) {
+        mmWidthRx.exactMatch(displayArgs.at(dimIdxW));
+        physWidth = mmWidthRx.cap(1).toInt();
+    }
+    QRegExp mmHeightRx(QLatin1String("mmHeight=?(\\d+)"));
+    int dimIdxH = displayArgs.indexOf(mmHeightRx);
+    if (dimIdxH >= 0) {
+        mmHeightRx.exactMatch(displayArgs.at(dimIdxH));
+        physHeight = mmHeightRx.cap(1).toInt();
+    }
     const int dpi = 72;
-    physWidth = qRound(dw * 25.4 / dpi);
-    physHeight = qRound(dh * 25.4 / dpi);
+    if (physWidth < 0)
+        physWidth = qRound(dw * 25.4 / dpi);
+    if (physHeight < 0)
+        physHeight = qRound(dh * 25.4 / dpi);
 
 #ifndef QT_NO_DIRECTFB_LAYER
     result = d_ptr->dfb->GetDisplayLayer(d_ptr->dfb, DLID_PRIMARY,
@@ -636,8 +698,7 @@ bool QDirectFBScreen::connect(const QString &displaySpec)
         return false;
     }
 
-    d_ptr->bitmapFactory = QScreen::pixmapDataFactory();
-    setPixmapDataFactory(d_ptr);
+    setGraphicsSystem(d_ptr);
 
     return true;
 }
@@ -646,10 +707,19 @@ void QDirectFBScreen::disconnect()
 {
     d_ptr->dfbSurface->Release(d_ptr->dfbSurface);
     d_ptr->dfbSurface = 0;
+
+    foreach (IDirectFBSurface* surf, d_ptr->allocatedSurfaces)
+        surf->Release(surf);
+    d_ptr->allocatedSurfaces.clear();
+
 #ifndef QT_NO_DIRECTFB_LAYER
     d_ptr->dfbLayer->Release(d_ptr->dfbLayer);
     d_ptr->dfbLayer = 0;
 #endif
+
+    d_ptr->dfbScreen->Release(d_ptr->dfbScreen);
+    d_ptr->dfbScreen = 0;
+
     d_ptr->dfb->Release(d_ptr->dfb);
     d_ptr->dfb = 0;
 }
@@ -812,6 +882,10 @@ void QDirectFBScreen::compose(const QRegion &region)
     }
 }
 
+// Normally, when using DirectFB to compose the windows (I.e. when
+// QT_NO_DIRECTFB_WM isn't set), exposeRegion will simply return. If
+// QT_NO_DIRECTFB_WM is set, exposeRegion will compose only non-directFB
+// window surfaces. Normal, directFB surfaces are handled by DirectFB.
 void QDirectFBScreen::exposeRegion(QRegion r, int changing)
 {
     const QList<QWSWindow*> windows = QWSServer::instance()->clientWindows();
@@ -850,11 +924,9 @@ void QDirectFBScreen::blit(const QImage &img, const QPoint &topLeft,
     IDirectFBSurface *src = 0;
     DFBSurfaceDescription description = getSurfaceDescription(img);
 
-    DFBResult result = d_ptr->dfb->CreateSurface(d_ptr->dfb, &description,
-                                                 &src);
-    if (result != DFB_OK) {
-        DirectFBError("QDirectFBScreen::blit(): Error creating surface",
-                      result);
+    src = createDFBSurface(&description);
+    if (!src) {
+        qWarning("QDirectFBScreen::blit(): Error creating surface");
         return;
     }
 #ifndef QT_NO_DIRECTFB_PALETTE
@@ -863,7 +935,7 @@ void QDirectFBScreen::blit(const QImage &img, const QPoint &topLeft,
 
     blit(src, topLeft, reg);
 
-    src->Release(src);
+    releaseDFBSurface(src);
 }
 
 void QDirectFBScreen::blit(IDirectFBSurface *src, const QPoint &topLeft,

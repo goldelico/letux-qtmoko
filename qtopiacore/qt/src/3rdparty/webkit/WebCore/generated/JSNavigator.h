@@ -18,65 +18,78 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNavigator_H
-#define JSNavigator_H
+#ifndef JSNavigator_h
+#define JSNavigator_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class Navigator;
 
-class JSNavigator : public KJS::DOMObject {
+class JSNavigator : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSNavigator(KJS::ExecState*, Navigator*);
+    JSNavigator(PassRefPtr<JSC::Structure>, PassRefPtr<Navigator>);
     virtual ~JSNavigator();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        AppCodeNameAttrNum, AppNameAttrNum, AppVersionAttrNum, LanguageAttrNum, 
-        UserAgentAttrNum, PlatformAttrNum, PluginsAttrNum, MimeTypesAttrNum, 
-        ProductAttrNum, ProductSubAttrNum, VendorAttrNum, VendorSubAttrNum, 
-        CookieEnabledAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // Functions
-        JavaEnabledFuncNum
-    };
+    virtual void mark();
+
+
+    // Custom attributes
+    JSC::JSValuePtr appVersion(JSC::ExecState*) const;
     Navigator* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<Navigator> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, Navigator*);
-Navigator* toNavigator(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, Navigator*);
+Navigator* toNavigator(JSC::JSValuePtr);
 
-class JSNavigatorPrototype : public KJS::JSObject {
+class JSNavigatorPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSNavigatorPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSNavigatorPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSNavigatorPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSNavigatorPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsNavigatorPrototypeFunctionJavaEnabled(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsNavigatorAppCodeName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorAppName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorAppVersion(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorUserAgent(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorPlatform(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorPlugins(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorMimeTypes(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorProduct(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorProductSub(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorVendor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorVendorSub(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorCookieEnabled(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNavigatorOnLine(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

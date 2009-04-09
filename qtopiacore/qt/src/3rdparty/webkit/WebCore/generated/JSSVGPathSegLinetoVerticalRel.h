@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegLinetoVerticalRel_H
-#define JSSVGPathSegLinetoVerticalRel_H
+#ifndef JSSVGPathSegLinetoVerticalRel_h
+#define JSSVGPathSegLinetoVerticalRel_h
 
 
 #if ENABLE(SVG)
@@ -31,30 +31,35 @@ namespace WebCore {
 class SVGPathSegLinetoVerticalRel;
 
 class JSSVGPathSegLinetoVerticalRel : public JSSVGPathSeg {
+    typedef JSSVGPathSeg Base;
 public:
-    JSSVGPathSegLinetoVerticalRel(KJS::ExecState*, SVGPathSegLinetoVerticalRel*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPathSegLinetoVerticalRel(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathSegLinetoVerticalRel>, SVGElement* context);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        YAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGPathSegLinetoVerticalRelPrototype : public KJS::JSObject {
+class JSSVGPathSegLinetoVerticalRelPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGPathSegLinetoVerticalRelPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGPathSegPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGPathSegLinetoVerticalRelPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGPathSegLinetoVerticalRelY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegLinetoVerticalRelY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

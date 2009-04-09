@@ -41,10 +41,10 @@ CL_NS_DEF(search)
     	class PhraseWeight: public Weight {
     	private:
     		Searcher* searcher;
-    		float_t value;
-    		float_t idf;
-    		float_t queryNorm;
-    		float_t queryWeight;
+    		qreal value;
+    		qreal idf;
+    		qreal queryNorm;
+    		qreal queryWeight;
     		PhraseQuery* _this;
     	public:
     		PhraseWeight(Searcher* searcher, PhraseQuery* _this);
@@ -52,10 +52,10 @@ CL_NS_DEF(search)
     		TCHAR* toString();
     
     		Query* getQuery();
-    		float_t getValue();
+    		qreal getValue();
     
-    		float_t sumOfSquaredWeights();
-    		void normalize(float_t queryNorm);
+    		qreal sumOfSquaredWeights();
+    		void normalize(qreal queryNorm);
     		Scorer* scorer(CL_NS(index)::IndexReader* reader);
     		void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
     		TCHAR* toString(TCHAR* f);
@@ -102,10 +102,10 @@ CL_NS_DEF(search)
 
         
 		//Returns the sum of squared weights 
-        float_t sumOfSquaredWeights(Searcher* searcher);
+        qreal sumOfSquaredWeights(Searcher* searcher);
         
 		//Normalizes the Weight
-        void normalize(const float_t norm);
+        void normalize(const qreal norm);
         
         Scorer* scorer(CL_NS(index)::IndexReader* reader);
         

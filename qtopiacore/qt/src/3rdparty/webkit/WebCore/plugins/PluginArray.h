@@ -1,5 +1,6 @@
 /*
     Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+    Copyright (C) 2008 Apple Inc. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -25,23 +26,15 @@
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
 
-namespace KJS {
-    class JSValue;
-    class ExecState;
-};
-
 namespace WebCore {
 
     class AtomicString;
     class Frame;
     class PluginData;
 
-    // FIXME: Generated JSPluginArray.cpp doesn't include JSPlugin.h for toJS
-    KJS::JSValue* toJS(KJS::ExecState*, Plugin*);
-
     class PluginArray : public RefCounted<PluginArray> {
     public:
-        PluginArray(Frame*);
+        static PassRefPtr<PluginArray> create(Frame* frame) { return adoptRef(new PluginArray(frame)); }
         ~PluginArray();
 
         void disconnectFrame() { m_frame = 0; }
@@ -49,14 +42,17 @@ namespace WebCore {
         unsigned length() const;
         PassRefPtr<Plugin> item(unsigned index);
         bool canGetItemsForName(const AtomicString& propertyName);
-        PassRefPtr<Plugin> nameGetter(const AtomicString& propertyName);
+        PassRefPtr<Plugin> namedItem(const AtomicString& propertyName);
 
         void refresh(bool reload);
+
     private:
+        PluginArray(Frame*);
         PluginData* getPluginData() const;
 
         Frame* m_frame;
     };
-}
 
-#endif
+} // namespace WebCore
+
+#endif // PluginArray_h

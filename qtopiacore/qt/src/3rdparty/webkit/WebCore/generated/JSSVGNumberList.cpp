@@ -23,199 +23,214 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGNumberList.h"
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
 #include "JSSVGNumber.h"
 #include "SVGNumberList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGNumberList)
+
 /* Hash table */
 
-static const HashEntry JSSVGNumberListTableEntries[] =
+static const HashTableValue JSSVGNumberListTableValues[2] =
 {
-    { "numberOfItems", JSSVGNumberList::NumberOfItemsAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "numberOfItems", DontDelete|ReadOnly, (intptr_t)jsSVGNumberListNumberOfItems, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGNumberListTable = 
-{
-    2, 1, JSSVGNumberListTableEntries, 1
-};
+static const HashTable JSSVGNumberListTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGNumberListTableValues, 0 };
+#else
+    { 2, 1, JSSVGNumberListTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGNumberListPrototypeTableEntries[] =
+static const HashTableValue JSSVGNumberListPrototypeTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "clear", JSSVGNumberList::ClearFuncNum, DontDelete|Function, 0, &JSSVGNumberListPrototypeTableEntries[9] },
-    { "getItem", JSSVGNumberList::GetItemFuncNum, DontDelete|Function, 1, &JSSVGNumberListPrototypeTableEntries[7] },
-    { "insertItemBefore", JSSVGNumberList::InsertItemBeforeFuncNum, DontDelete|Function, 2, &JSSVGNumberListPrototypeTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "initialize", JSSVGNumberList::InitializeFuncNum, DontDelete|Function, 1, 0 },
-    { "replaceItem", JSSVGNumberList::ReplaceItemFuncNum, DontDelete|Function, 2, 0 },
-    { "removeItem", JSSVGNumberList::RemoveItemFuncNum, DontDelete|Function, 1, 0 },
-    { "appendItem", JSSVGNumberList::AppendItemFuncNum, DontDelete|Function, 1, 0 }
+    { "clear", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionClear, (intptr_t)0 },
+    { "initialize", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionInitialize, (intptr_t)1 },
+    { "getItem", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionGetItem, (intptr_t)1 },
+    { "insertItemBefore", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionInsertItemBefore, (intptr_t)2 },
+    { "replaceItem", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionReplaceItem, (intptr_t)2 },
+    { "removeItem", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionRemoveItem, (intptr_t)1 },
+    { "appendItem", DontDelete|Function, (intptr_t)jsSVGNumberListPrototypeFunctionAppendItem, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGNumberListPrototypeTable = 
-{
-    2, 10, JSSVGNumberListPrototypeTableEntries, 7
-};
+static const HashTable JSSVGNumberListPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGNumberListPrototypeTableValues, 0 };
+#else
+    { 18, 15, JSSVGNumberListPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGNumberListPrototype::info = { "SVGNumberListPrototype", 0, &JSSVGNumberListPrototypeTable, 0 };
+const ClassInfo JSSVGNumberListPrototype::s_info = { "SVGNumberListPrototype", 0, &JSSVGNumberListPrototypeTable, 0 };
 
 JSObject* JSSVGNumberListPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGNumberListPrototype>(exec, "[[JSSVGNumberList.prototype]]");
+    return getDOMPrototype<JSSVGNumberList>(exec);
 }
 
 bool JSSVGNumberListPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGNumberListPrototypeFunction, JSObject>(exec, &JSSVGNumberListPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGNumberListPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGNumberList::info = { "SVGNumberList", 0, &JSSVGNumberListTable, 0 };
+const ClassInfo JSSVGNumberList::s_info = { "SVGNumberList", 0, &JSSVGNumberListTable, 0 };
 
-JSSVGNumberList::JSSVGNumberList(ExecState* exec, SVGNumberList* impl)
-    : m_impl(impl)
+JSSVGNumberList::JSSVGNumberList(PassRefPtr<Structure> structure, PassRefPtr<SVGNumberList> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGNumberListPrototype::self(exec));
 }
 
 JSSVGNumberList::~JSSVGNumberList()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGNumberList::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGNumberListPrototype(JSSVGNumberListPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGNumberList::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGNumberList, KJS::DOMObject>(exec, &JSSVGNumberListTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGNumberList, Base>(exec, &JSSVGNumberListTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGNumberList::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGNumberListNumberOfItems(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NumberOfItemsAttrNum: {
-        SVGNumberList* imp = static_cast<SVGNumberList*>(impl());
-
-        return jsNumber(imp->numberOfItems());
-    }
-    }
-    return 0;
+    SVGNumberList* imp = static_cast<SVGNumberList*>(static_cast<JSSVGNumberList*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->numberOfItems());
 }
 
-JSValue* JSSVGNumberListPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGNumberListPrototypeFunctionClear(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    if (!thisObj->inherits(&JSSVGNumberList::info))
-      return throwError(exec, TypeError);
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
 
-    SVGNumberList* imp = static_cast<SVGNumberList*>(static_cast<JSSVGNumberList*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGNumberList::ClearFuncNum: {
-        ExceptionCode ec = 0;
-
-        imp->clear(ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSSVGNumberList::InitializeFuncNum: {
-        ExceptionCode ec = 0;
-        double item = args[0]->toNumber(exec);
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->initialize(item, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGNumberList::GetItemFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->getItem(index, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGNumberList::InsertItemBeforeFuncNum: {
-        ExceptionCode ec = 0;
-        double item = args[0]->toNumber(exec);
-        bool indexOk;
-        unsigned index = args[1]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->insertItemBefore(item, index, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGNumberList::ReplaceItemFuncNum: {
-        ExceptionCode ec = 0;
-        double item = args[0]->toNumber(exec);
-        bool indexOk;
-        unsigned index = args[1]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->replaceItem(item, index, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGNumberList::RemoveItemFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->removeItem(index, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGNumberList::AppendItemFuncNum: {
-        ExceptionCode ec = 0;
-        double item = args[0]->toNumber(exec);
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<double>(imp->appendItem(item, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    imp->clear(ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGNumberList* obj)
+
+JSValuePtr jsSVGNumberListPrototypeFunctionInitialize(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheDOMObject<SVGNumberList, JSSVGNumberList>(exec, obj);
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    float item = args.at(exec, 0)->toFloat(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->initialize(item, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
 }
-SVGNumberList* toSVGNumberList(KJS::JSValue* val)
+
+JSValuePtr jsSVGNumberListPrototypeFunctionGetItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return val->isObject(&JSSVGNumberList::info) ? static_cast<JSSVGNumberList*>(val)->impl() : 0;
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->getItem(index, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGNumberListPrototypeFunctionInsertItemBefore(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    float item = args.at(exec, 0)->toFloat(exec);
+    unsigned index = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->insertItemBefore(item, index, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGNumberListPrototypeFunctionReplaceItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    float item = args.at(exec, 0)->toFloat(exec);
+    unsigned index = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->replaceItem(item, index, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGNumberListPrototypeFunctionRemoveItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->removeItem(index, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGNumberListPrototypeFunctionAppendItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGNumberList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGNumberList* castedThisObj = static_cast<JSSVGNumberList*>(asObject(thisValue));
+    SVGNumberList* imp = static_cast<SVGNumberList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    float item = args.at(exec, 0)->toFloat(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<float>::create(imp->appendItem(item, ec)).get(), castedThisObj->context());
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGNumberList* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGNumberList>(exec, object, context);
+}
+SVGNumberList* toSVGNumberList(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGNumberList::s_info) ? static_cast<JSSVGNumberList*>(asObject(value))->impl() : 0;
 }
 
 }

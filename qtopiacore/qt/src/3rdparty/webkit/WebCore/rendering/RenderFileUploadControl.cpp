@@ -21,19 +21,19 @@
 #include "config.h"
 #include "RenderFileUploadControl.h"
 
+#include "FileList.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
 #include "Icon.h"
 #include "LocalizedStrings.h"
+#include "Page.h"
 #include "RenderButton.h"
 #include "RenderText.h"
 #include "RenderTheme.h"
 #include "RenderView.h"
-#include "TextStyle.h"
 #include <math.h>
-#include "wtf/MathExtras.h"
 
 using namespace std;
 
@@ -73,17 +73,11 @@ RenderFileUploadControl::~RenderFileUploadControl()
     m_fileChooser->disconnectClient();
 }
 
-void RenderFileUploadControl::setStyle(RenderStyle* newStyle)
+void RenderFileUploadControl::styleDidChange(RenderStyle::Diff diff, const RenderStyle* oldStyle)
 {
-    // Force text-align to match the direction
-    if (newStyle->direction() == LTR)
-        newStyle->setTextAlign(LEFT);
-    else
-        newStyle->setTextAlign(RIGHT);
-
-    RenderBlock::setStyle(newStyle);
+    RenderBlock::styleDidChange(diff, oldStyle);
     if (m_button)
-        m_button->renderer()->setStyle(createButtonStyle(newStyle));
+        m_button->renderer()->setStyle(createButtonStyle(style()));
 
     setReplaced(isInline());
 }
@@ -94,7 +88,7 @@ void RenderFileUploadControl::valueChanged()
     RefPtr<FileChooser> fileChooser = m_fileChooser;
 
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(node());
-    inputElement->setValueFromRenderer(fileChooser->filename());
+    inputElement->setFileListFromRenderer(fileChooser->filenames());
     inputElement->onChange();
  
     // only repaint if it doesn't seem we have been destroyed
@@ -102,23 +96,36 @@ void RenderFileUploadControl::valueChanged()
         repaint();
 }
 
+bool RenderFileUploadControl::allowsMultipleFiles()
+{
+    HTMLInputElement* input = static_cast<HTMLInputElement*>(node());
+    return !input->getAttribute(multipleAttr).isNull();
+}
+
 void RenderFileUploadControl::click()
 {
-     m_fileChooser->openFileChooser(node()->document());
+    Frame* frame = node()->document()->frame();
+    if (!frame)
+        return;
+    Page* page = frame->page();
+    if (!page)
+        return;
+    page->chrome()->runOpenPanel(frame, m_fileChooser);
 }
 
 void RenderFileUploadControl::updateFromElement()
 {
     HTMLInputElement* inputElement = static_cast<HTMLInputElement*>(node());
-
+    ASSERT(inputElement->inputType() == HTMLInputElement::FILE);
+    
     if (!m_button) {
         m_button = new HTMLFileUploadInnerButtonElement(document(), inputElement);
         m_button->setInputType("button");
         m_button->setValue(fileButtonChooseFileLabel());
-        RenderStyle* buttonStyle = createButtonStyle(style());
-        RenderObject* renderer = m_button->createRenderer(renderArena(), buttonStyle);
+        RefPtr<RenderStyle> buttonStyle = createButtonStyle(style());
+        RenderObject* renderer = m_button->createRenderer(renderArena(), buttonStyle.get());
         m_button->setRenderer(renderer);
-        renderer->setStyle(buttonStyle);
+        renderer->setStyle(buttonStyle.release());
         renderer->updateFromElement();
         m_button->setAttached();
         m_button->setInDocument(true);
@@ -128,9 +135,11 @@ void RenderFileUploadControl::updateFromElement()
 
     m_button->setDisabled(!theme()->isEnabled(this));
 
-    // This only supports clearing out the filename, but that's OK because for
+    // This only supports clearing out the files, but that's OK because for
     // security reasons that's the only change the DOM is allowed to make.
-    if (inputElement->value().isEmpty() && !m_fileChooser->filename().isEmpty()) {
+    FileList* files = inputElement->files();
+    ASSERT(files);
+    if (files && files->isEmpty() && !m_fileChooser->filenames().isEmpty()) {
         m_fileChooser->clear();
         repaint();
     }
@@ -142,11 +151,11 @@ int RenderFileUploadControl::maxFilenameWidth() const
         - (m_fileChooser->icon() ? iconWidth + iconFilenameSpacing : 0));
 }
 
-RenderStyle* RenderFileUploadControl::createButtonStyle(RenderStyle* parentStyle) const
+PassRefPtr<RenderStyle> RenderFileUploadControl::createButtonStyle(const RenderStyle* parentStyle) const
 {
-    RenderStyle* style = getPseudoStyle(RenderStyle::FILE_UPLOAD_BUTTON);
+    RefPtr<RenderStyle> style = getCachedPseudoStyle(RenderStyle::FILE_UPLOAD_BUTTON);
     if (!style) {
-        style = new (renderArena()) RenderStyle;
+        style = RenderStyle::create();
         if (parentStyle)
             style->inheritFrom(parentStyle);
     }
@@ -155,7 +164,7 @@ RenderStyle* RenderFileUploadControl::createButtonStyle(RenderStyle* parentStyle
     // without this setWhiteSpace.
     style->setWhiteSpace(NOWRAP);
 
-    return style;
+    return style.release();
 }
 
 void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
@@ -177,8 +186,7 @@ void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
         const String& displayedFilename = m_fileChooser->basenameForWidth(style()->font(), maxFilenameWidth());        
         unsigned length = displayedFilename.length();
         const UChar* string = displayedFilename.characters();
-        TextStyle textStyle(0, 0, 0, style()->direction() == RTL, style()->unicodeBidi() == Override);
-        TextRun textRun(string, length);
+        TextRun textRun(string, length, false, 0, 0, style()->direction() == RTL, style()->unicodeBidi() == Override);
         
         // Determine where the filename should be placed
         int contentLeft = tx + borderLeft() + paddingLeft();
@@ -199,7 +207,7 @@ void RenderFileUploadControl::paintObject(PaintInfo& paintInfo, int tx, int ty)
         paintInfo.context->setFillColor(style()->color());
         
         // Draw the filename
-        paintInfo.context->drawBidiText(textRun, IntPoint(textX, textY), textStyle);
+        paintInfo.context->drawBidiText(textRun, IntPoint(textX, textY));
         
         if (m_fileChooser->icon()) {
             // Determine where the icon should be placed
@@ -236,7 +244,7 @@ void RenderFileUploadControl::calcPrefWidths()
         // Figure out how big the filename space needs to be for a given number of characters
         // (using "0" as the nominal character).
         const UChar ch = '0';
-        float charWidth = style()->font().floatWidth(TextRun(&ch, 1), TextStyle(0, 0, 0, false, false, false));
+        float charWidth = style()->font().floatWidth(TextRun(&ch, 1, false, 0, 0, false, false, false));
         m_maxPrefWidth = (int)ceilf(charWidth * defaultWidthNumChars);
     }
 
@@ -260,13 +268,29 @@ void RenderFileUploadControl::calcPrefWidths()
     setPrefWidthsDirty(false);
 }
 
-void RenderFileUploadControl::receiveDroppedFile(const String& filename)
+void RenderFileUploadControl::receiveDroppedFiles(const Vector<String>& paths)
 {
-    m_fileChooser->chooseFile(filename);
+    if (allowsMultipleFiles())
+        m_fileChooser->chooseFiles(paths);
+    else
+        m_fileChooser->chooseFile(paths[0]);
 }
 
+String RenderFileUploadControl::buttonValue()
+{
+    if (!m_button)
+        return String();
+    
+    return m_button->value();
+}
+
+String RenderFileUploadControl::fileTextValue()
+{
+    return m_fileChooser->basenameForWidth(style()->font(), maxFilenameWidth());
+}
+    
 HTMLFileUploadInnerButtonElement::HTMLFileUploadInnerButtonElement(Document* doc, Node* shadowParent)
-    : HTMLInputElement(doc)
+    : HTMLInputElement(inputTag, doc)
     , m_shadowParent(shadowParent)
 {
 }

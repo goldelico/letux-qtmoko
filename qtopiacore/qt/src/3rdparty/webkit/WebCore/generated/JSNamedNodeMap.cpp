@@ -24,126 +24,136 @@
 
 #include <wtf/GetPtr.h>
 
+#include <runtime/PropertyNameArray.h>
 #include "AtomicString.h"
-#include "ExceptionCode.h"
 #include "JSNode.h"
 #include "NamedNodeMap.h"
 #include "Node.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSNamedNodeMap)
+
 /* Hash table */
 
-static const HashEntry JSNamedNodeMapTableEntries[] =
+static const HashTableValue JSNamedNodeMapTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "length", JSNamedNodeMap::LengthAttrNum, DontDelete|ReadOnly, 0, &JSNamedNodeMapTableEntries[2] },
-    { "constructor", JSNamedNodeMap::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "length", DontDelete|ReadOnly, (intptr_t)jsNamedNodeMapLength, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsNamedNodeMapConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNamedNodeMapTable = 
-{
-    2, 3, JSNamedNodeMapTableEntries, 2
-};
+static const HashTable JSNamedNodeMapTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSNamedNodeMapTableValues, 0 };
+#else
+    { 5, 3, JSNamedNodeMapTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSNamedNodeMapConstructorTableEntries[] =
+static const HashTableValue JSNamedNodeMapConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNamedNodeMapConstructorTable = 
-{
-    2, 1, JSNamedNodeMapConstructorTableEntries, 1
-};
+static const HashTable JSNamedNodeMapConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSNamedNodeMapConstructorTableValues, 0 };
+#else
+    { 1, 0, JSNamedNodeMapConstructorTableValues, 0 };
+#endif
 
 class JSNamedNodeMapConstructor : public DOMObject {
 public:
     JSNamedNodeMapConstructor(ExecState* exec)
+        : DOMObject(JSNamedNodeMapConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSNamedNodeMapPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSNamedNodeMapConstructor::info = { "NamedNodeMapConstructor", 0, &JSNamedNodeMapConstructorTable, 0 };
+const ClassInfo JSNamedNodeMapConstructor::s_info = { "NamedNodeMapConstructor", 0, &JSNamedNodeMapConstructorTable, 0 };
 
 bool JSNamedNodeMapConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSNamedNodeMapConstructor, DOMObject>(exec, &JSNamedNodeMapConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSNamedNodeMapConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSNamedNodeMapPrototypeTableEntries[] =
+static const HashTableValue JSNamedNodeMapPrototypeTableValues[8] =
 {
-    { "getNamedItem", JSNamedNodeMap::GetNamedItemFuncNum, DontDelete|Function, 1, &JSNamedNodeMapPrototypeTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { "setNamedItem", JSNamedNodeMap::SetNamedItemFuncNum, DontDelete|Function, 1, &JSNamedNodeMapPrototypeTableEntries[7] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getNamedItemNS", JSNamedNodeMap::GetNamedItemNSFuncNum, DontDelete|Function, 2, 0 },
-    { "removeNamedItem", JSNamedNodeMap::RemoveNamedItemFuncNum, DontDelete|Function, 1, 0 },
-    { "item", JSNamedNodeMap::ItemFuncNum, DontDelete|Function, 1, &JSNamedNodeMapPrototypeTableEntries[9] },
-    { "setNamedItemNS", JSNamedNodeMap::SetNamedItemNSFuncNum, DontDelete|Function, 1, &JSNamedNodeMapPrototypeTableEntries[10] },
-    { "removeNamedItemNS", JSNamedNodeMap::RemoveNamedItemNSFuncNum, DontDelete|Function, 2, 0 }
+    { "getNamedItem", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionGetNamedItem, (intptr_t)1 },
+    { "setNamedItem", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionSetNamedItem, (intptr_t)1 },
+    { "removeNamedItem", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionRemoveNamedItem, (intptr_t)1 },
+    { "item", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionItem, (intptr_t)1 },
+    { "getNamedItemNS", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionGetNamedItemNS, (intptr_t)2 },
+    { "setNamedItemNS", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionSetNamedItemNS, (intptr_t)1 },
+    { "removeNamedItemNS", DontDelete|Function, (intptr_t)jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS, (intptr_t)2 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNamedNodeMapPrototypeTable = 
-{
-    2, 11, JSNamedNodeMapPrototypeTableEntries, 7
-};
+static const HashTable JSNamedNodeMapPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSNamedNodeMapPrototypeTableValues, 0 };
+#else
+    { 16, 15, JSNamedNodeMapPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSNamedNodeMapPrototype::info = { "NamedNodeMapPrototype", 0, &JSNamedNodeMapPrototypeTable, 0 };
+const ClassInfo JSNamedNodeMapPrototype::s_info = { "NamedNodeMapPrototype", 0, &JSNamedNodeMapPrototypeTable, 0 };
 
 JSObject* JSNamedNodeMapPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSNamedNodeMapPrototype>(exec, "[[JSNamedNodeMap.prototype]]");
+    return getDOMPrototype<JSNamedNodeMap>(exec);
 }
 
 bool JSNamedNodeMapPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSNamedNodeMapPrototypeFunction, JSObject>(exec, &JSNamedNodeMapPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSNamedNodeMapPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSNamedNodeMap::info = { "NamedNodeMap", 0, &JSNamedNodeMapTable, 0 };
+const ClassInfo JSNamedNodeMap::s_info = { "NamedNodeMap", 0, &JSNamedNodeMapTable, 0 };
 
-JSNamedNodeMap::JSNamedNodeMap(ExecState* exec, NamedNodeMap* impl)
-    : m_impl(impl)
+JSNamedNodeMap::JSNamedNodeMap(PassRefPtr<Structure> structure, PassRefPtr<NamedNodeMap> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSNamedNodeMapPrototype::self(exec));
 }
 
 JSNamedNodeMap::~JSNamedNodeMap()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSNamedNodeMap::createPrototype(ExecState* exec)
+{
+    return new (exec) JSNamedNodeMapPrototype(JSNamedNodeMapPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSNamedNodeMap::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    JSValue* proto = prototype();
-    if (proto->isObject() && static_cast<JSObject*>(proto)->hasProperty(exec, propertyName))
+    JSValuePtr proto = prototype();
+    if (proto->isObject() && static_cast<JSObject*>(asObject(proto))->hasProperty(exec, propertyName))
         return false;
 
-    const HashEntry* entry = Lookup::findEntry(&JSNamedNodeMapTable, propertyName);
+    const HashEntry* entry = JSNamedNodeMapTable.entry(exec, propertyName);
     if (entry) {
-        slot.setStaticEntry(this, entry, staticValueGetter<JSNamedNodeMap>);
+        slot.setCustom(this, entry->propertyGetter());
         return true;
     }
     bool ok;
@@ -156,115 +166,154 @@ bool JSNamedNodeMap::getOwnPropertySlot(ExecState* exec, const Identifier& prope
         slot.setCustom(this, nameGetter);
         return true;
     }
-    return KJS::DOMObject::getOwnPropertySlot(exec, propertyName, slot);
+    return getStaticValueSlot<JSNamedNodeMap, Base>(exec, &JSNamedNodeMapTable, this, propertyName, slot);
 }
 
-JSValue* JSNamedNodeMap::getValueProperty(ExecState* exec, int token) const
+bool JSNamedNodeMap::getOwnPropertySlot(ExecState* exec, unsigned propertyName, PropertySlot& slot)
 {
-    switch (token) {
-    case LengthAttrNum: {
-        NamedNodeMap* imp = static_cast<NamedNodeMap*>(impl());
-
-        return jsNumber(imp->length());
+    if (propertyName < static_cast<NamedNodeMap*>(impl())->length()) {
+        slot.setCustomIndex(this, propertyName, indexGetter);
+        return true;
     }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return getOwnPropertySlot(exec, Identifier::from(exec, propertyName), slot);
 }
 
-JSValue* JSNamedNodeMap::getConstructor(ExecState* exec)
+JSValuePtr jsNamedNodeMapLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSNamedNodeMapConstructor>(exec, "[[NamedNodeMap.constructor]]");
-}
-JSValue* JSNamedNodeMapPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
-{
-    if (!thisObj->inherits(&JSNamedNodeMap::info))
-      return throwError(exec, TypeError);
-
-    NamedNodeMap* imp = static_cast<NamedNodeMap*>(static_cast<JSNamedNodeMap*>(thisObj)->impl());
-
-    switch (id) {
-    case JSNamedNodeMap::GetNamedItemFuncNum: {
-        String name = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getNamedItem(name)));
-        return result;
-    }
-    case JSNamedNodeMap::SetNamedItemFuncNum: {
-        ExceptionCode ec = 0;
-        Node* node = toNode(args[0]);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->setNamedItem(node, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSNamedNodeMap::RemoveNamedItemFuncNum: {
-        ExceptionCode ec = 0;
-        String name = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->removeNamedItem(name, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSNamedNodeMap::ItemFuncNum: {
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->item(index)));
-        return result;
-    }
-    case JSNamedNodeMap::GetNamedItemNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getNamedItemNS(namespaceURI, localName)));
-        return result;
-    }
-    case JSNamedNodeMap::SetNamedItemNSFuncNum: {
-        ExceptionCode ec = 0;
-        Node* node = toNode(args[0]);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->setNamedItemNS(node, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSNamedNodeMap::RemoveNamedItemNSFuncNum: {
-        ExceptionCode ec = 0;
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->removeNamedItemNS(namespaceURI, localName, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(static_cast<JSNamedNodeMap*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-JSValue* JSNamedNodeMap::indexGetter(ExecState* exec, JSObject* originalObject, const Identifier& propertyName, const PropertySlot& slot)
+JSValuePtr jsNamedNodeMapConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    JSNamedNodeMap* thisObj = static_cast<JSNamedNodeMap*>(slot.slotBase());
+    return static_cast<JSNamedNodeMap*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSNamedNodeMap::getPropertyNames(ExecState* exec, PropertyNameArray& propertyNames)
+{
+    for (unsigned i = 0; i < static_cast<NamedNodeMap*>(impl())->length(); ++i)
+        propertyNames.add(Identifier::from(exec, i));
+     Base::getPropertyNames(exec, propertyNames);
+}
+
+JSValuePtr JSNamedNodeMap::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSNamedNodeMapConstructor>(exec);
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionGetNamedItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getNamedItem(name)));
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionSetNamedItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* node = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->setNamedItem(node, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionRemoveNamedItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->removeNamedItem(name, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->item(index)));
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionGetNamedItemNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getNamedItemNS(namespaceURI, localName)));
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionSetNamedItemNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* node = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->setNamedItemNS(node, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsNamedNodeMapPrototypeFunctionRemoveNamedItemNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNamedNodeMap::s_info))
+        return throwError(exec, TypeError);
+    JSNamedNodeMap* castedThisObj = static_cast<JSNamedNodeMap*>(asObject(thisValue));
+    NamedNodeMap* imp = static_cast<NamedNodeMap*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->removeNamedItemNS(namespaceURI, localName, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+
+JSValuePtr JSNamedNodeMap::indexGetter(ExecState* exec, const Identifier& propertyName, const PropertySlot& slot)
+{
+    JSNamedNodeMap* thisObj = static_cast<JSNamedNodeMap*>(asObject(slot.slotBase()));
     return toJS(exec, static_cast<NamedNodeMap*>(thisObj->impl())->item(slot.index()));
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, NamedNodeMap* obj)
+JSC::JSValuePtr toJS(JSC::ExecState* exec, NamedNodeMap* object)
 {
-    return KJS::cacheDOMObject<NamedNodeMap, JSNamedNodeMap>(exec, obj);
+    return getDOMObjectWrapper<JSNamedNodeMap>(exec, object);
 }
-NamedNodeMap* toNamedNodeMap(KJS::JSValue* val)
+NamedNodeMap* toNamedNodeMap(JSC::JSValuePtr value)
 {
-    return val->isObject(&JSNamedNodeMap::info) ? static_cast<JSNamedNodeMap*>(val)->impl() : 0;
+    return value->isObject(&JSNamedNodeMap::s_info) ? static_cast<JSNamedNodeMap*>(asObject(value))->impl() : 0;
 }
 
 }

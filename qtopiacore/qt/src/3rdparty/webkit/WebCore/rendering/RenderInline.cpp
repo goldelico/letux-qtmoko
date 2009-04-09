@@ -41,10 +41,12 @@ RenderInline::~RenderInline()
 {
 }
 
-void RenderInline::setStyle(RenderStyle* newStyle)
+void RenderInline::styleDidChange(RenderStyle::Diff diff, const RenderStyle* oldStyle)
 {
-    RenderFlow::setStyle(newStyle);
+    RenderFlow::styleDidChange(diff, oldStyle);
+
     setInline(true);
+    setHasReflection(false);
 
     // Ensure that all of the split inlines pick up the new style. We
     // only do this if we're an inline, since we don't want to propagate
@@ -100,12 +102,12 @@ void RenderInline::addChildToFlow(RenderObject* newChild, RenderObject* beforeCh
         // inline into continuations.  This involves creating an anonymous block box to hold
         // |newChild|.  We then make that block box a continuation of this inline.  We take all of
         // the children after |beforeChild| and put them in a clone of this object.
-        RenderStyle* newStyle = new (renderArena()) RenderStyle();
+        RefPtr<RenderStyle> newStyle = RenderStyle::create();
         newStyle->inheritFrom(style());
         newStyle->setDisplay(BLOCK);
 
         RenderBlock* newBox = new (renderArena()) RenderBlock(document() /* anonymous box */);
-        newBox->setStyle(newStyle);
+        newBox->setStyle(newStyle.release());
         RenderFlow* oldContinuation = continuation();
         setContinuation(newBox);
 
@@ -299,9 +301,25 @@ void RenderInline::absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool to
                                       topLevel);
 }
 
+void RenderInline::absoluteQuads(Vector<FloatQuad>& quads, bool topLevel)
+{
+    for (InlineRunBox* curr = firstLineBox(); curr; curr = curr->nextLineBox()) {
+        FloatRect localRect(curr->xPos(), curr->yPos(), curr->width(), curr->height());
+        quads.append(localToAbsoluteQuad(localRect));
+    }
+    
+    for (RenderObject* curr = firstChild(); curr; curr = curr->nextSibling()) {
+        if (!curr->isText())
+            curr->absoluteQuads(quads, false);
+    }
+
+    if (continuation() && topLevel)
+        continuation()->absoluteQuads(quads, topLevel);
+}
+
 bool RenderInline::requiresLayer()
 {
-    return isRelPositioned() || style()->opacity() < 1.0f;
+    return isRelPositioned() || isTransparent() || hasMask();
 }
 
 int RenderInline::width() const

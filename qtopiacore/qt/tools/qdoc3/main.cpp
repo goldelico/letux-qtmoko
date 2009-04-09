@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -86,6 +90,7 @@ static const struct {
 static bool slow = false;
 static QStringList defines;
 static QHash<QString, Tree *> trees;
+static int doxygen = 0;
 
 /*!
   Find the Tree for language \a lang and return a pointer to it.
@@ -96,8 +101,8 @@ static Tree* treeForLanguage(const QString &lang)
 {
     Tree* tree = trees.value(lang);
     if (tree == 0) {
-	tree = new Tree;
-	trees.insert(lang, tree);
+        tree = new Tree;
+        trees.insert( lang, tree );
     }
     return tree;
 }
@@ -108,15 +113,15 @@ static Tree* treeForLanguage(const QString &lang)
 static void printHelp()
 {
     Location::information(tr("Usage: qdoc [options] file1.qdocconf ...\n"
-			      "Options:\n"
-			      "    -help     "
-			      "Display this information and exit\n"
-			      "    -version  "
-			      "Display version of qdoc and exit\n"
-			      "    -D<name>  "
-			      "Define <name> as a macro while parsing sources\n"
-			      "    -slow     "
-			      "Turn on features that slow down qdoc"));
+                              "Options:\n"
+                              "    -help     "
+                              "Display this information and exit\n"
+                              "    -version  "
+                              "Display version of qdoc and exit\n"
+                              "    -D<name>  "
+                              "Define <name> as a macro while parsing sources\n"
+                              "    -slow     "
+                              "Turn on features that slow down qdoc") );
 }
 
 /*!
@@ -186,11 +191,21 @@ static void processQdocconfFile(const QString &fileName)
     QString lang = config.getString(CONFIG_LANGUAGE);
     Location langLocation = config.lastLocation();
 
+    // qdoc -> doxygen
+    if (doxygen == 2) {
+        qDebug() << "READING anchors.txt";
+        DoxWriter::readAnchors();
+        qDebug() << "READING title maps";
+        DoxWriter::readTitles();
+        qDebug() << "READING member multimaps";
+        DoxWriter::readMembers();
+    }
+
     Tree *tree = new Tree;
     tree->setVersion(config.getString(CONFIG_VERSION));
     CodeParser *codeParser = CodeParser::parserForLanguage(lang);
     if (codeParser == 0)
-	config.lastLocation().fatal(tr("Cannot parse programming language '%1'").arg(lang));
+        config.lastLocation().fatal(tr("Cannot parse programming language '%1'").arg(lang));
 
     QSet<QString> outputFormats = config.getStringSet(CONFIG_OUTPUTFORMATS);
     Location outputFormatsLocation = config.lastLocation();
@@ -204,7 +219,7 @@ static void processQdocconfFile(const QString &fileName)
 
     QSet<QString> excludedDirs;
     QStringList excludedDirsList = config.getStringList(CONFIG_EXCLUDEDIRS);
-    foreach (QString excludeDir, excludedDirsList)
+    foreach (const QString &excludeDir, excludedDirsList)
         excludedDirs.insert(QDir::fromNativeSeparators(excludeDir));
 
     QSet<QString> headers = QSet<QString>::fromList(
@@ -230,23 +245,33 @@ static void processQdocconfFile(const QString &fileName)
     codeParser->doneParsingSourceFiles(tree);
     tree->resolveGroups();
     tree->resolveTargets();
-
-    QSet<QString>::ConstIterator of = outputFormats.begin();
-    while (of != outputFormats.end()) {
-	Generator *generator = Generator::generatorForFormat(*of);
-	if (generator == 0)
-	    outputFormatsLocation.fatal(tr("Unknown output format '%1'").arg(*of));
-	generator->generateTree(tree, marker);
-	++of;
+    
+    // qdoc -> doxygen
+    if (doxygen == 1) {
+        DoxWriter::writeAnchors();
+        DoxWriter::writeTitles();
+        DoxWriter::writeMembers();
     }
 
-    QString tagFile = config.getString(CONFIG_TAGFILE);
-    if (!tagFile.isEmpty())
-        tree->generateTagFile(tagFile);
+    if (doxygen == 0) {
+        QSet<QString>::ConstIterator of = outputFormats.begin();
+        while (of != outputFormats.end()) {
+            Generator *generator = Generator::generatorForFormat(*of);
+            if (generator == 0)
+                outputFormatsLocation.fatal(tr("Unknown output format '%1'").arg(*of));
+            generator->generateTree(tree, marker);
+            ++of;
+        }
 
-    tree->setVersion("");
+        QString tagFile = config.getString(CONFIG_TAGFILE);
+        if (!tagFile.isEmpty())
+            tree->generateTagFile(tagFile);
 
-    Generator::terminate();
+        tree->setVersion("");
+
+        Generator::terminate();
+    }
+
     CodeParser::terminate();
     CodeMarker::terminate();
     CppToQsConverter::terminate();
@@ -256,7 +281,7 @@ static void processQdocconfFile(const QString &fileName)
     QDir::setCurrent(prevCurrentDir);
 
     foreach (QTranslator *translator, translators)
-	delete translator;
+        delete translator;
 
     delete tree;
 }
@@ -315,7 +340,7 @@ int main(int argc, char **argv)
     int i = 1;
 
     while (i < argc) {
-	opt = argv[i++];
+        opt = argv[i++];
 
 	if (opt == "-help") {
 	    printHelp();
@@ -336,14 +361,28 @@ int main(int argc, char **argv)
         else if (opt == "-slow") {
             slow = true;
 	}
+        else if (opt == "-doxygen1") {
+            // qdoc -> doxygen
+            // Don't use this; it isn't ready yet.
+            qDebug() << "doxygen pass 1";
+            doxygen = 1;
+            DoxWriter::setDoxPass(1);
+        }
+        else if (opt == "-doxygen2") {
+            // qdoc -> doxygen
+            // Don't use this; it isn't ready yet.
+            qDebug() << "doxygen pass 2";
+            doxygen = 2;
+            DoxWriter::setDoxPass(2);
+        }
         else {
 	    qdocFiles.append(opt);
 	}
     }
 
     if (qdocFiles.isEmpty()) {
-	printHelp();
-	return EXIT_FAILURE;
+        printHelp();
+        return EXIT_FAILURE;
     }
 
     /*

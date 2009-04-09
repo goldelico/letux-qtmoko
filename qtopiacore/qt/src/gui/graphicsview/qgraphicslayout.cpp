@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,6 +45,7 @@
 #include "qgraphicslayout.h"
 #include "qgraphicslayout_p.h"
 #include "qgraphicslayoutitem.h"
+#include "qgraphicslayoutitem_p.h"
 #include "qgraphicswidget.h"
 #include "qgraphicswidget_p.h"
 #include "qgraphicsscene.h"
@@ -146,14 +151,21 @@ QT_BEGIN_NAMESPACE
     QGraphicsLayoutItem's isLayout argument is set to \e true.
 */
 QGraphicsLayout::QGraphicsLayout(QGraphicsLayoutItem *parent)
-    : QGraphicsLayoutItem(*(new QGraphicsLayoutPrivate()))
+    : QGraphicsLayoutItem(*new QGraphicsLayoutPrivate)
 {
     setParentLayoutItem(parent);
     if (parent && !parent->isLayout()) {
-        //### Ugly, but keeps old Qt-style
-        static_cast<QGraphicsWidget *>(parent)->d_func()->setLayout_helper(this);
+        // If a layout has a parent that is not a layout it must be a QGraphicsWidget.
+        QGraphicsItem *itemParent = parent->graphicsItem();
+        if (itemParent && itemParent->isWidget()) {
+            static_cast<QGraphicsWidget *>(itemParent)->d_func()->setLayout_helper(this);
+        } else {
+            qWarning("QGraphicsLayout::QGraphicsLayout: Attempt to create a layout with a parent that is"
+                    " neither a QGraphicsWidget nor QGraphicsLayout");
+        }
     }
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::DefaultType);
+    setOwnedByLayout(true);
 }
 
 /*!
@@ -163,9 +175,18 @@ QGraphicsLayout::QGraphicsLayout(QGraphicsLayoutPrivate &dd, QGraphicsLayoutItem
     : QGraphicsLayoutItem(dd)
 {
     setParentLayoutItem(parent);
-    if (parent && !parent->isLayout())
-        static_cast<QGraphicsWidget*>(parent)->d_func()->setLayout_helper(this);     //### Ugly, but keeps old Qt-style
+    if (parent && !parent->isLayout()) {
+        // If a layout has a parent that is not a layout it must be a QGraphicsWidget.
+        QGraphicsItem *itemParent = parent->graphicsItem();
+        if (itemParent && itemParent->isWidget()) {
+            static_cast<QGraphicsWidget *>(itemParent)->d_func()->setLayout_helper(this);
+        } else {
+            qWarning("QGraphicsLayout::QGraphicsLayout: Attempt to create a layout with a parent that is"
+                    " neither a QGraphicsWidget nor QGraphicsLayout");
+        }
+    }
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding, QSizePolicy::DefaultType);
+    setOwnedByLayout(true);
 }
 
 /*!
@@ -234,6 +255,8 @@ void QGraphicsLayout::activate()
     if (d->activated)
         return;
 
+    d->activateRecursive(this);
+    
     // we don't call activate on a sublayout, but somebody might.
     // Therefore, we walk to the parentitem of the toplevel layout.
     QGraphicsLayoutItem *parentItem = this;
@@ -243,9 +266,9 @@ void QGraphicsLayout::activate()
         return;
     Q_ASSERT(!parentItem->isLayout());
 
-    d->activated = true;                        // yes, we are now starting a relayout of our children
     setGeometry(parentItem->contentsRect());    // relayout children
-    d->activated = false;
+    
+    // ### bug, should be parentItem ?
     parentLayoutItem()->updateGeometry();            // bubble up; will set activated to false
     // ### too many resizes? maybe we should walk up the chain to the
     // ### top-level layouted layoutItem and call activate there.
@@ -274,13 +297,46 @@ bool QGraphicsLayout::isActivated() const
 */
 void QGraphicsLayout::invalidate()
 {
+    // only mark layouts as invalid (activated = false) if we can post a LayoutRequest event.
     QGraphicsLayoutItem *layoutItem = this;
     while (layoutItem && layoutItem->isLayout()) {
-        static_cast<QGraphicsLayout*>(layoutItem)->d_func()->activated = false;
-        layoutItem = layoutItem->parentLayoutItem();
+        // we could call updateGeometry(), but what if that method
+        // does not call the base implementation? In addition, updateGeometry()
+        // does more than we need.
+        layoutItem->d_func()->sizeHintCacheDirty = true;
+        layoutItem = layoutItem->parentLayoutItem();        
     }
-    if (layoutItem && !layoutItem->isLayout())
-        QApplication::postEvent(static_cast<QGraphicsWidget *>(layoutItem), new QEvent(QEvent::LayoutRequest));
+    if (layoutItem)
+        layoutItem->d_func()->sizeHintCacheDirty = true;
+
+    bool postIt = layoutItem ? !layoutItem->isLayout() : false;
+    if (postIt) {
+        layoutItem = this;
+        while (layoutItem && layoutItem->isLayout()
+                && static_cast<QGraphicsLayout*>(layoutItem)->d_func()->activated) {
+            static_cast<QGraphicsLayout*>(layoutItem)->d_func()->activated = false;
+            layoutItem = layoutItem->parentLayoutItem();
+        }
+        if (layoutItem && !layoutItem->isLayout()) {
+            // If a layout has a parent that is not a layout it must be a QGraphicsWidget.
+            QApplication::postEvent(static_cast<QGraphicsWidget *>(layoutItem), new QEvent(QEvent::LayoutRequest));
+        }
+    }
+}
+
+/*!
+    \reimp
+*/
+void QGraphicsLayout::updateGeometry()
+{
+    QGraphicsLayoutItem::updateGeometry();
+    if (QGraphicsLayoutItem *parentItem = parentLayoutItem()) {
+        if (parentItem->isLayout()) {
+            parentItem->updateGeometry();
+        } else {
+            invalidate();
+        }
+    }
 }
 
 /*!
@@ -345,9 +401,13 @@ void QGraphicsLayout::widgetEvent(QEvent *e)
     \fn virtual void QGraphicsLayout::removeAt(int index) = 0
 
     This pure virtual function must be reimplemented in a subclass of
-    QGraphicsLayout to remove the item at index, \a index, without destroying
-    it. The reimplementation can assume that \a index is valid (i.e., it respects
-    the value of count()).
+    QGraphicsLayout to remove the item at \a index. The
+    reimplementation can assume that \a index is valid (i.e., it
+    respects the value of count()).
+
+    If the layout is to be reused between applications, we recommend
+    that the layout deletes the item, but the graphics view framework
+    does not depend on this.
 
     The subclass is free to decide how to store the items.
 

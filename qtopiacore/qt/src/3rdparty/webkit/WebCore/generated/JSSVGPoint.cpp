@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPoint.h"
 
 #include <wtf/GetPtr.h>
@@ -35,134 +31,136 @@
 #include "JSSVGMatrix.h"
 #include "JSSVGPoint.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPoint)
+
 /* Hash table */
 
-static const HashEntry JSSVGPointTableEntries[] =
+static const HashTableValue JSSVGPointTableValues[3] =
 {
-    { "y", JSSVGPoint::YAttrNum, DontDelete, 0, 0 },
-    { "x", JSSVGPoint::XAttrNum, DontDelete, 0, 0 }
+    { "x", DontDelete, (intptr_t)jsSVGPointX, (intptr_t)setJSSVGPointX },
+    { "y", DontDelete, (intptr_t)jsSVGPointY, (intptr_t)setJSSVGPointY },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPointTable = 
-{
-    2, 2, JSSVGPointTableEntries, 2
-};
+static const HashTable JSSVGPointTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGPointTableValues, 0 };
+#else
+    { 4, 3, JSSVGPointTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPointPrototypeTableEntries[] =
+static const HashTableValue JSSVGPointPrototypeTableValues[2] =
 {
-    { "matrixTransform", JSSVGPoint::MatrixTransformFuncNum, DontDelete|Function, 1, 0 }
+    { "matrixTransform", DontDelete|Function, (intptr_t)jsSVGPointPrototypeFunctionMatrixTransform, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPointPrototypeTable = 
-{
-    2, 1, JSSVGPointPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPointPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPointPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGPointPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPointPrototype::info = { "SVGPointPrototype", 0, &JSSVGPointPrototypeTable, 0 };
+const ClassInfo JSSVGPointPrototype::s_info = { "SVGPointPrototype", 0, &JSSVGPointPrototypeTable, 0 };
 
 JSObject* JSSVGPointPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPointPrototype>(exec, "[[JSSVGPoint.prototype]]");
+    return getDOMPrototype<JSSVGPoint>(exec);
 }
 
 bool JSSVGPointPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGPointPrototypeFunction, JSObject>(exec, &JSSVGPointPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGPointPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGPoint::info = { "SVGPoint", 0, &JSSVGPointTable, 0 };
+const ClassInfo JSSVGPoint::s_info = { "SVGPoint", 0, &JSSVGPointTable, 0 };
 
-JSSVGPoint::JSSVGPoint(ExecState* exec, JSSVGPODTypeWrapper<FloatPoint>* impl)
-    : m_impl(impl)
+JSSVGPoint::JSSVGPoint(PassRefPtr<Structure> structure, PassRefPtr<JSSVGPODTypeWrapper<FloatPoint> > impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGPointPrototype::self(exec));
 }
 
 JSSVGPoint::~JSSVGPoint()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGPoint::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPointPrototype(JSSVGPointPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGPoint::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPoint, KJS::DOMObject>(exec, &JSSVGPointTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPoint, Base>(exec, &JSSVGPointTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPoint::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPointX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        FloatPoint& imp(*impl());
-
-        return jsNumber(imp.x());
-    }
-    case YAttrNum: {
-        FloatPoint& imp(*impl());
-
-        return jsNumber(imp.y());
-    }
-    }
-    return 0;
+    FloatPoint imp(*static_cast<JSSVGPoint*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.x());
 }
 
-void JSSVGPoint::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPointY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPoint, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGPointTable, this);
+    FloatPoint imp(*static_cast<JSSVGPoint*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.y());
 }
 
-void JSSVGPoint::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGPoint::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        FloatPoint& imp(*impl());
-
-        imp.setX(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    case YAttrNum: {
-        FloatPoint& imp(*impl());
-
-        imp.setY(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    }
+    lookupPut<JSSVGPoint, Base>(exec, propertyName, value, &JSSVGPointTable, this, slot);
 }
 
-JSValue* JSSVGPointPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+void setJSSVGPointX(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    if (!thisObj->inherits(&JSSVGPoint::info))
-      return throwError(exec, TypeError);
-
-    JSSVGPODTypeWrapper<FloatPoint>* wrapper = static_cast<JSSVGPoint*>(thisObj)->impl();
-    FloatPoint& imp(*wrapper);
-
-    switch (id) {
-    case JSSVGPoint::MatrixTransformFuncNum: {
-        AffineTransform matrix = toSVGMatrix(args[0]);
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<FloatPoint>(imp.matrixTransform(matrix)));
-        wrapper->commitChange(exec);
-        return result;
-    }
-    }
-    return 0;
+    FloatPoint imp(*static_cast<JSSVGPoint*>(thisObject)->impl());
+    imp.setX(value->toFloat(exec));
+        static_cast<JSSVGPoint*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGPoint*>(thisObject)->context());
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, JSSVGPODTypeWrapper<FloatPoint>* obj)
+
+void setJSSVGPointY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<JSSVGPODTypeWrapper<FloatPoint>, JSSVGPoint>(exec, obj);
+    FloatPoint imp(*static_cast<JSSVGPoint*>(thisObject)->impl());
+    imp.setY(value->toFloat(exec));
+        static_cast<JSSVGPoint*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGPoint*>(thisObject)->context());
 }
-FloatPoint toSVGPoint(KJS::JSValue* val)
+
+JSValuePtr jsSVGPointPrototypeFunctionMatrixTransform(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return val->isObject(&JSSVGPoint::info) ? (FloatPoint) *static_cast<JSSVGPoint*>(val)->impl() : FloatPoint();
+    if (!thisValue->isObject(&JSSVGPoint::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPoint* castedThisObj = static_cast<JSSVGPoint*>(asObject(thisValue));
+    JSSVGPODTypeWrapper<FloatPoint>* wrapper = castedThisObj->impl();
+    FloatPoint imp(*wrapper);
+    TransformationMatrix matrix = toSVGMatrix(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<FloatPoint>::create(imp.matrixTransform(matrix)).get(), castedThisObj->context());
+    wrapper->commitChange(imp, castedThisObj->context());
+    return result;
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, JSSVGPODTypeWrapper<FloatPoint>* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGPoint, JSSVGPODTypeWrapper<FloatPoint> >(exec, object, context);
+}
+FloatPoint toSVGPoint(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGPoint::s_info) ? (FloatPoint) *static_cast<JSSVGPoint*>(asObject(value))->impl() : FloatPoint();
 }
 
 }

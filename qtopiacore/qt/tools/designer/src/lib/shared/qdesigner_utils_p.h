@@ -1,38 +1,42 @@
 
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,12 +62,14 @@
 #include <QtCore/QMap>
 #include <QtGui/QMainWindow>
 #include <QtGui/QIcon>
+#include <QtGui/QPixmap>
 
 QT_BEGIN_NAMESPACE
 
 namespace qdesigner_internal {
 class QDesignerFormWindowCommand;
 class DesignerIconCache;
+class FormWindowBase;
 
 
 QDESIGNER_SHARED_EXPORT void designerWarning(const QString &message);
@@ -275,6 +281,106 @@ private:
     ModeStateToPixmapMap m_paths;
 };
 
+class QDESIGNER_SHARED_EXPORT DesignerPixmapCache : public QObject
+{
+    Q_OBJECT
+public:
+    DesignerPixmapCache(QObject *parent = 0);
+    QPixmap pixmap(const PropertySheetPixmapValue &value) const;
+    void clear();
+signals:
+    void reloaded();
+private:
+    mutable QMap<PropertySheetPixmapValue, QPixmap> m_cache;
+    friend class FormWindowBase;
+};
+
+class QDESIGNER_SHARED_EXPORT DesignerIconCache : public QObject
+{
+    Q_OBJECT
+public:
+    DesignerIconCache(DesignerPixmapCache *pixmapCache, QObject *parent = 0);
+    QIcon icon(const PropertySheetIconValue &value) const;
+    void clear();
+signals:
+    void reloaded();
+private:
+    mutable QMap<PropertySheetIconValue, QIcon> m_cache;
+    DesignerPixmapCache *m_pixmapCache;
+    friend class FormWindowBase;
+};
+
+// -------------- StringValue: Returned by the property sheet for strings
+class QDESIGNER_SHARED_EXPORT PropertySheetStringValue
+{
+public:
+    PropertySheetStringValue(const QString &value = QString(),
+                             bool translatable = true,
+                             const QString &disambiguation = QString(),
+                             const QString &comment = QString());
+
+    bool operator==(const PropertySheetStringValue &other) const { return equals(other); }
+    bool operator!=(const PropertySheetStringValue &other) const { return !equals(other); }
+
+    QString value() const;
+    void setValue(const QString &value);
+    bool translatable() const;
+    void setTranslatable(bool translatable);
+    QString disambiguation() const;
+    void setDisambiguation(const QString &disambiguation);
+    QString comment() const;
+    void setComment(const QString &comment);
+
+private:
+    bool equals(const PropertySheetStringValue &rhs) const;
+
+    QString m_value;
+    bool m_translatable;
+    QString m_disambiguation;
+    QString m_comment;
+};
+
+
+
+// -------------- StringValue: Returned by the property sheet for strings
+class QDESIGNER_SHARED_EXPORT PropertySheetKeySequenceValue
+{
+public:
+    PropertySheetKeySequenceValue(const QKeySequence &value = QKeySequence(),
+                                  bool translatable = true,
+                                  const QString &disambiguation = QString(),
+                                  const QString &comment = QString());
+    PropertySheetKeySequenceValue(const QKeySequence::StandardKey &standardKey,
+                                  bool translatable = true,
+                                  const QString &disambiguation = QString(),
+                                  const QString &comment = QString());
+
+    bool operator==(const PropertySheetKeySequenceValue &other) const { return equals(other); }
+    bool operator!=(const PropertySheetKeySequenceValue &other) const { return !equals(other); }
+
+    QKeySequence value() const;
+    void setValue(const QKeySequence &value);
+    QKeySequence::StandardKey standardKey() const;
+    void setStandardKey(const QKeySequence::StandardKey &standardKey);
+    bool isStandardKey() const;
+
+    bool translatable() const;
+    void setTranslatable(bool translatable);
+    QString disambiguation() const;
+    void setDisambiguation(const QString &disambiguation);
+    QString comment() const;
+    void setComment(const QString &comment);
+
+private:
+    bool equals(const PropertySheetKeySequenceValue &rhs) const;
+
+    QKeySequence m_value;
+    QKeySequence::StandardKey m_standardKey;
+    bool m_translatable;
+    QString m_disambiguation;
+    QString m_comment;
+};
+
 } // namespace qdesigner_internal
 
 QT_END_NAMESPACE
@@ -285,6 +391,8 @@ Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetEnumValue)
 Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetFlagValue)
 Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetPixmapValue)
 Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetIconValue)
+Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetStringValue)
+Q_DECLARE_METATYPE(qdesigner_internal::PropertySheetKeySequenceValue)
 
 
 QT_BEGIN_NAMESPACE
@@ -318,7 +426,7 @@ public:
 
 private:
     QWidget *m_widget;
-    const bool m_updatesEnabled;
+    const bool m_enabled;
 };
 
 namespace Utils {

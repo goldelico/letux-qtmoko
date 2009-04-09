@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLMarqueeElement_H
-#define JSHTMLMarqueeElement_H
+#ifndef JSHTMLMarqueeElement_h
+#define JSHTMLMarqueeElement_h
 
 #include "JSHTMLElement.h"
 
@@ -28,47 +28,43 @@ namespace WebCore {
 class HTMLMarqueeElement;
 
 class JSHTMLMarqueeElement : public JSHTMLElement {
+    typedef JSHTMLElement Base;
 public:
-    JSHTMLMarqueeElement(KJS::ExecState*, HTMLMarqueeElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSHTMLMarqueeElement(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLMarqueeElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        StartFuncNum, StopFuncNum
-    };
-};
-
-
-class JSHTMLMarqueeElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSHTMLMarqueeElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSHTMLElementPrototype::self(exec)) { }
-};
-
-class JSHTMLMarqueeElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSHTMLMarqueeElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
+
+
+class JSHTMLMarqueeElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSHTMLMarqueeElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsHTMLMarqueeElementPrototypeFunctionStart(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLMarqueeElementPrototypeFunctionStop(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsHTMLMarqueeElementConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

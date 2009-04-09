@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/styles/qstyle.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/styles/qstyle.cpp -->
 <head>
-  <title>Qt 4.4: QStyle Class Reference</title>
+  <title>Qt 4.5: QStyle Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QStyle Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -24,76 +24,76 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qstyle.html#ComplexControl-enum">ComplexControl</a></b> { CC_SpinBox, CC_ComboBox, CC_ScrollBar, CC_Slider, ..., CC_CustomBase }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#ContentsType-enum">ContentsType</a></b> { CT_CheckBox, CT_ComboBox, CT_Q3DockWindow, CT_HeaderSection, ..., CT_MdiControls }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#ControlElement-enum">ControlElement</a></b> { CE_PushButton, CE_PushButtonBevel, CE_PushButtonLabel, CE_DockWidgetTitle, ..., CE_HeaderEmptyArea }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#PixelMetric-enum">PixelMetric</a></b> { PM_ButtonMargin, PM_DockWidgetTitleBarButtonMargin, PM_ButtonDefaultIndicator, PM_MenuButtonIndicator, ..., PM_DefaultLayoutSpacing }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#PrimitiveElement-enum">PrimitiveElement</a></b> { PE_FrameStatusBar, PE_PanelButtonCommand, PE_FrameDefaultButton, PE_PanelButtonBevel, ..., PE_PanelStatusBar }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#StandardPixmap-enum">StandardPixmap</a></b> { SP_TitleBarMinButton, SP_TitleBarMenuButton, SP_TitleBarMaxButton, SP_TitleBarCloseButton, ..., SP_CustomBase }</li>
-<li><div class="fn"/>flags <b><a href="qstyle.html#StateFlag-enum">State</a></b></li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#StateFlag-enum">StateFlag</a></b> { State_None, State_Active, State_AutoRaise, State_Children, ..., State_Small }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#StyleHint-enum">StyleHint</a></b> { SH_EtchDisabledText, SH_DitherDisabledText, SH_GUIStyle, SH_ScrollBar_ContextMenu, ..., SH_Menu_Mask }</li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#SubControl-enum">SubControl</a></b> { SC_None, SC_ScrollBarAddLine, SC_ScrollBarSubLine, SC_ScrollBarAddPage, ..., SC_All }</li>
-<li><div class="fn"/>flags <b><a href="qstyle.html#SubControl-enum">SubControls</a></b></li>
-<li><div class="fn"/>enum <b><a href="qstyle.html#SubElement-enum">SubElement</a></b> { SE_PushButtonContents, SE_PushButtonFocusRect, SE_PushButtonLayoutItem, SE_CheckBoxIndicator, ..., SE_ItemViewItemFocusRect }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#ComplexControl-enum">ComplexControl</a></b> { CC_SpinBox, CC_ComboBox, CC_ScrollBar, CC_Slider, ..., CC_CustomBase }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#ContentsType-enum">ContentsType</a></b> { CT_CheckBox, CT_ComboBox, CT_Q3DockWindow, CT_HeaderSection, ..., CT_MdiControls }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#ControlElement-enum">ControlElement</a></b> { CE_PushButton, CE_PushButtonBevel, CE_PushButtonLabel, CE_DockWidgetTitle, ..., CE_ShapedFrame }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#PixelMetric-enum">PixelMetric</a></b> { PM_ButtonMargin, PM_DockWidgetTitleBarButtonMargin, PM_ButtonDefaultIndicator, PM_MenuButtonIndicator, ..., PM_SubMenuOverlap }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#PrimitiveElement-enum">PrimitiveElement</a></b> { PE_FrameStatusBar, PE_PanelButtonCommand, PE_FrameDefaultButton, PE_PanelButtonBevel, ..., PE_PanelMenu }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#StandardPixmap-enum">StandardPixmap</a></b> { SP_TitleBarMinButton, SP_TitleBarMenuButton, SP_TitleBarMaxButton, SP_TitleBarCloseButton, ..., SP_CustomBase }</li>
+<li><div class="fn"></div>flags <b><a href="qstyle.html#StateFlag-enum">State</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#StateFlag-enum">StateFlag</a></b> { State_None, State_Active, State_AutoRaise, State_Children, ..., State_Small }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#StyleHint-enum">StyleHint</a></b> { SH_EtchDisabledText, SH_DitherDisabledText, SH_GUIStyle, SH_ScrollBar_ContextMenu, ..., SH_DockWidget_ButtonsHaveFrame }</li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#SubControl-enum">SubControl</a></b> { SC_None, SC_ScrollBarAddLine, SC_ScrollBarSubLine, SC_ScrollBarAddPage, ..., SC_All }</li>
+<li><div class="fn"></div>flags <b><a href="qstyle.html#SubControl-enum">SubControls</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qstyle.html#SubElement-enum">SubElement</a></b> { SE_PushButtonContents, SE_PushButtonFocusRect, SE_PushButtonLayoutItem, SE_CheckBoxIndicator, ..., SE_TabBarTabText }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qstyle.html#QStyle">QStyle</a></b> ()</li>
-<li><div class="fn"/>virtual <b><a href="qstyle.html#dtor.QStyle">~QStyle</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qstyle.html#combinedLayoutSpacing">combinedLayoutSpacing</a></b> ( QSizePolicy::ControlTypes <i>controls1</i>, QSizePolicy::ControlTypes <i>controls2</i>, Qt::Orientation <i>orientation</i>, QStyleOption * <i>option</i> = 0, QWidget * <i>widget</i> = 0 ) const</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#drawComplexControl">drawComplexControl</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#drawControl">drawControl</a></b> ( ControlElement <i>element</i>, const QStyleOption * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#drawItemPixmap">drawItemPixmap</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPixmap &amp; <i>pixmap</i> ) const</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#drawItemText">drawItemText</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPalette &amp; <i>palette</i>, bool <i>enabled</i>, const QString &amp; <i>text</i>, QPalette::ColorRole <i>textRole</i> = QPalette::NoRole ) const</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#drawPrimitive">drawPrimitive</a></b> ( PrimitiveElement <i>element</i>, const QStyleOption * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual QPixmap <b><a href="qstyle.html#generatedIconPixmap">generatedIconPixmap</a></b> ( QIcon::Mode <i>iconMode</i>, const QPixmap &amp; <i>pixmap</i>, const QStyleOption * <i>option</i> ) const = 0</li>
-<li><div class="fn"/>virtual SubControl <b><a href="qstyle.html#hitTestComplexControl">hitTestComplexControl</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, const QPoint &amp; <i>position</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual QRect <b><a href="qstyle.html#itemPixmapRect">itemPixmapRect</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPixmap &amp; <i>pixmap</i> ) const</li>
-<li><div class="fn"/>virtual QRect <b><a href="qstyle.html#itemTextRect">itemTextRect</a></b> ( const QFontMetrics &amp; <i>metrics</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, bool <i>enabled</i>, const QString &amp; <i>text</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qstyle.html#layoutSpacing">layoutSpacing</a></b> ( QSizePolicy::ControlType <i>control1</i>, QSizePolicy::ControlType <i>control2</i>, Qt::Orientation <i>orientation</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
-<li><div class="fn"/>virtual int <b><a href="qstyle.html#pixelMetric">pixelMetric</a></b> ( PixelMetric <i>metric</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#polish">polish</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#polish-2">polish</a></b> ( QApplication * <i>application</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#polish-3">polish</a></b> ( QPalette &amp; <i>palette</i> )</li>
-<li><div class="fn"/>virtual QSize <b><a href="qstyle.html#sizeFromContents">sizeFromContents</a></b> ( ContentsType <i>type</i>, const QStyleOption * <i>option</i>, const QSize &amp; <i>contentsSize</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>QIcon <b><a href="qstyle.html#standardIcon">standardIcon</a></b> ( StandardPixmap <i>standardIcon</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
-<li><div class="fn"/>virtual QPalette <b><a href="qstyle.html#standardPalette">standardPalette</a></b> () const</li>
-<li><div class="fn"/>virtual int <b><a href="qstyle.html#styleHint">styleHint</a></b> ( StyleHint <i>hint</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0, QStyleHintReturn * <i>returnData</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual QRect <b><a href="qstyle.html#subControlRect">subControlRect</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, SubControl <i>subControl</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual QRect <b><a href="qstyle.html#subElementRect">subElementRect</a></b> ( SubElement <i>element</i>, const QStyleOption * <i>option</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#unpolish">unpolish</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qstyle.html#unpolish-2">unpolish</a></b> ( QApplication * <i>application</i> )</li>
+<li><div class="fn"></div><b><a href="qstyle.html#QStyle">QStyle</a></b> ()</li>
+<li><div class="fn"></div>virtual <b><a href="qstyle.html#dtor.QStyle">~QStyle</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qstyle.html#combinedLayoutSpacing">combinedLayoutSpacing</a></b> ( QSizePolicy::ControlTypes <i>controls1</i>, QSizePolicy::ControlTypes <i>controls2</i>, Qt::Orientation <i>orientation</i>, QStyleOption * <i>option</i> = 0, QWidget * <i>widget</i> = 0 ) const</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#drawComplexControl">drawComplexControl</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#drawControl">drawControl</a></b> ( ControlElement <i>element</i>, const QStyleOption * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#drawItemPixmap">drawItemPixmap</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPixmap &amp; <i>pixmap</i> ) const</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#drawItemText">drawItemText</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPalette &amp; <i>palette</i>, bool <i>enabled</i>, const QString &amp; <i>text</i>, QPalette::ColorRole <i>textRole</i> = QPalette::NoRole ) const</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#drawPrimitive">drawPrimitive</a></b> ( PrimitiveElement <i>element</i>, const QStyleOption * <i>option</i>, QPainter * <i>painter</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual QPixmap <b><a href="qstyle.html#generatedIconPixmap">generatedIconPixmap</a></b> ( QIcon::Mode <i>iconMode</i>, const QPixmap &amp; <i>pixmap</i>, const QStyleOption * <i>option</i> ) const = 0</li>
+<li><div class="fn"></div>virtual SubControl <b><a href="qstyle.html#hitTestComplexControl">hitTestComplexControl</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, const QPoint &amp; <i>position</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual QRect <b><a href="qstyle.html#itemPixmapRect">itemPixmapRect</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, const QPixmap &amp; <i>pixmap</i> ) const</li>
+<li><div class="fn"></div>virtual QRect <b><a href="qstyle.html#itemTextRect">itemTextRect</a></b> ( const QFontMetrics &amp; <i>metrics</i>, const QRect &amp; <i>rectangle</i>, int <i>alignment</i>, bool <i>enabled</i>, const QString &amp; <i>text</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qstyle.html#layoutSpacing">layoutSpacing</a></b> ( QSizePolicy::ControlType <i>control1</i>, QSizePolicy::ControlType <i>control2</i>, Qt::Orientation <i>orientation</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
+<li><div class="fn"></div>virtual int <b><a href="qstyle.html#pixelMetric">pixelMetric</a></b> ( PixelMetric <i>metric</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#polish">polish</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#polish-2">polish</a></b> ( QApplication * <i>application</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#polish-3">polish</a></b> ( QPalette &amp; <i>palette</i> )</li>
+<li><div class="fn"></div>virtual QSize <b><a href="qstyle.html#sizeFromContents">sizeFromContents</a></b> ( ContentsType <i>type</i>, const QStyleOption * <i>option</i>, const QSize &amp; <i>contentsSize</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>QIcon <b><a href="qstyle.html#standardIcon">standardIcon</a></b> ( StandardPixmap <i>standardIcon</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
+<li><div class="fn"></div>virtual QPalette <b><a href="qstyle.html#standardPalette">standardPalette</a></b> () const</li>
+<li><div class="fn"></div>virtual int <b><a href="qstyle.html#styleHint">styleHint</a></b> ( StyleHint <i>hint</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0, QStyleHintReturn * <i>returnData</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual QRect <b><a href="qstyle.html#subControlRect">subControlRect</a></b> ( ComplexControl <i>control</i>, const QStyleOptionComplex * <i>option</i>, SubControl <i>subControl</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual QRect <b><a href="qstyle.html#subElementRect">subElementRect</a></b> ( SubElement <i>element</i>, const QStyleOption * <i>option</i>, const QWidget * <i>widget</i> = 0 ) const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#unpolish">unpolish</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qstyle.html#unpolish-2">unpolish</a></b> ( QApplication * <i>application</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QRect <b><a href="qstyle.html#alignedRect">alignedRect</a></b> ( Qt::LayoutDirection <i>direction</i>, Qt::Alignment <i>alignment</i>, const QSize &amp; <i>size</i>, const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>int <b><a href="qstyle.html#sliderPositionFromValue">sliderPositionFromValue</a></b> ( int <i>min</i>, int <i>max</i>, int <i>logicalValue</i>, int <i>span</i>, bool <i>upsideDown</i> = false )</li>
-<li><div class="fn"/>int <b><a href="qstyle.html#sliderValueFromPosition">sliderValueFromPosition</a></b> ( int <i>min</i>, int <i>max</i>, int <i>position</i>, int <i>span</i>, bool <i>upsideDown</i> = false )</li>
-<li><div class="fn"/>Qt::Alignment <b><a href="qstyle.html#visualAlignment">visualAlignment</a></b> ( Qt::LayoutDirection <i>direction</i>, Qt::Alignment <i>alignment</i> )</li>
-<li><div class="fn"/>QPoint <b><a href="qstyle.html#visualPos">visualPos</a></b> ( Qt::LayoutDirection <i>direction</i>, const QRect &amp; <i>boundingRectangle</i>, const QPoint &amp; <i>logicalPosition</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qstyle.html#visualRect">visualRect</a></b> ( Qt::LayoutDirection <i>direction</i>, const QRect &amp; <i>boundingRectangle</i>, const QRect &amp; <i>logicalRectangle</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qstyle.html#alignedRect">alignedRect</a></b> ( Qt::LayoutDirection <i>direction</i>, Qt::Alignment <i>alignment</i>, const QSize &amp; <i>size</i>, const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>int <b><a href="qstyle.html#sliderPositionFromValue">sliderPositionFromValue</a></b> ( int <i>min</i>, int <i>max</i>, int <i>logicalValue</i>, int <i>span</i>, bool <i>upsideDown</i> = false )</li>
+<li><div class="fn"></div>int <b><a href="qstyle.html#sliderValueFromPosition">sliderValueFromPosition</a></b> ( int <i>min</i>, int <i>max</i>, int <i>position</i>, int <i>span</i>, bool <i>upsideDown</i> = false )</li>
+<li><div class="fn"></div>Qt::Alignment <b><a href="qstyle.html#visualAlignment">visualAlignment</a></b> ( Qt::LayoutDirection <i>direction</i>, Qt::Alignment <i>alignment</i> )</li>
+<li><div class="fn"></div>QPoint <b><a href="qstyle.html#visualPos">visualPos</a></b> ( Qt::LayoutDirection <i>direction</i>, const QRect &amp; <i>boundingRectangle</i>, const QPoint &amp; <i>logicalPosition</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qstyle.html#visualRect">visualRect</a></b> ( Qt::LayoutDirection <i>direction</i>, const QRect &amp; <i>boundingRectangle</i>, const QRect &amp; <i>logicalRectangle</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="protected-slots"></a>
 <h3>Protected Slots</h3>
 <ul>
-<li><div class="fn"/>int <b><a href="qstyle.html#layoutSpacingImplementation">layoutSpacingImplementation</a></b> ( QSizePolicy::ControlType <i>control1</i>, QSizePolicy::ControlType <i>control2</i>, Qt::Orientation <i>orientation</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
-<li><div class="fn"/>QIcon <b><a href="qstyle.html#standardIconImplementation">standardIconImplementation</a></b> ( StandardPixmap <i>standardIcon</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
+<li><div class="fn"></div>int <b><a href="qstyle.html#layoutSpacingImplementation">layoutSpacingImplementation</a></b> ( QSizePolicy::ControlType <i>control1</i>, QSizePolicy::ControlType <i>control2</i>, Qt::Orientation <i>orientation</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
+<li><div class="fn"></div>QIcon <b><a href="qstyle.html#standardIconImplementation">standardIconImplementation</a></b> ( StandardPixmap <i>standardIcon</i>, const QStyleOption * <i>option</i> = 0, const QWidget * <i>widget</i> = 0 ) const</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -365,6 +365,7 @@
 <tr><td valign="top"><tt>QStyle::CE_ToolBoxTabShape</tt></td><td align="center" valign="top"><tt>42</tt></td><td valign="top">The toolbox's tab shape.</td></tr>
 <tr><td valign="top"><tt>QStyle::CE_ToolBoxTabLabel</tt></td><td align="center" valign="top"><tt>43</tt></td><td valign="top">The toolbox's tab label.</td></tr>
 <tr><td valign="top"><tt>QStyle::CE_HeaderEmptyArea</tt></td><td align="center" valign="top"><tt>44</tt></td><td valign="top">The area of a header view where there are no header sections.</td></tr>
+<tr><td valign="top"><tt>QStyle::CE_ShapedFrame</tt></td><td align="center" valign="top"><tt>47</tt></td><td valign="top">The frame with the shape specified in the <a href="qstyleoptionframev3.html">QStyleOptionFrameV3</a>; see <a href="qframe.html">QFrame</a>.</td></tr>
 </table></p>
 <p>See also <a href="qstyle.html#drawControl">drawControl</a>().</p>
 <h3 class="fn"><a name="PixelMetric-enum"></a>enum QStyle::PixelMetric</h3>
@@ -435,9 +436,6 @@
 <tr><td valign="top"><tt>QStyle::PM_MenuDesktopFrameWidth</tt></td><td align="center" valign="top"><tt>32</tt></td><td valign="top">The frame width for the menu on the desktop.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_CheckListButtonSize</tt></td><td align="center" valign="top"><tt>41</tt></td><td valign="top">Area (width/height) of the checkbox/radio button in a <a href="q3checklistitem.html">Q3CheckListItem</a>.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_CheckListControllerSize</tt></td><td align="center" valign="top"><tt>42</tt></td><td valign="top">Area (width/height) of the controller in a <a href="q3checklistitem.html">Q3CheckListItem</a>.</td></tr>
-<tr><td valign="top"><tt>QStyle::PM_DialogButtonsSeparator</tt></td><td align="center" valign="top"><tt>43</tt></td><td valign="top">Distance between buttons in a dialog buttons widget.</td></tr>
-<tr><td valign="top"><tt>QStyle::PM_DialogButtonsButtonWidth</tt></td><td align="center" valign="top"><tt>44</tt></td><td valign="top">Minimum width of a button in a dialog buttons widget.</td></tr>
-<tr><td valign="top"><tt>QStyle::PM_DialogButtonsButtonHeight</tt></td><td align="center" valign="top"><tt>45</tt></td><td valign="top">Minimum height of a button in a dialog buttons widget.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_HeaderMarkSize</tt></td><td align="center" valign="top">?</td><td valign="top">The size of the sort indicator in a header.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_HeaderGripMargin</tt></td><td align="center" valign="top">?</td><td valign="top">The size of the resize grip in a header.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_HeaderMargin</tt></td><td align="center" valign="top">?</td><td valign="top">The size of the margin between the sort indicator and the text.</td></tr>
@@ -458,6 +456,8 @@
 <tr><td valign="top"><tt>QStyle::PM_ButtonIconSize</tt></td><td align="center" valign="top">?</td><td valign="top">The default size of button icons</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_TextCursorWidth</tt></td><td align="center" valign="top">?</td><td valign="top">The width of the cursor in a line edit or text edit</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_TabBar_ScrollButtonOverlap</tt></td><td align="center" valign="top">?</td><td valign="top">The distance between the left and right buttons in a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::PM_TabCloseIndicatorWidth</tt></td><td align="center" valign="top">?</td><td valign="top">The default width of a close button on a tab in a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::PM_TabCloseIndicatorHeight</tt></td><td align="center" valign="top">?</td><td valign="top">The default height of a close button on a tab in a tab bar.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_CustomBase</tt></td><td align="center" valign="top"><tt>0xf0000000</tt></td><td valign="top">Base value for custom pixel metrics. Custom values must be greater than this value.</td></tr>
 </table></p>
 <p>The following values are obsolete:</p>
@@ -466,6 +466,8 @@
 <tr><td valign="top"><tt>QStyle::PM_DefaultTopLevelMargin</tt></td><td align="center" valign="top">?</td><td valign="top">Use PM_LayoutLeftMargin, PM_LayoutTopMargin, PM_LayoutRightMargin, and PM_LayoutBottomMargin instead.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_DefaultChildMargin</tt></td><td align="center" valign="top">?</td><td valign="top">Use PM_LayoutLeftMargin, PM_LayoutTopMargin, PM_LayoutRightMargin, and PM_LayoutBottomMargin instead.</td></tr>
 <tr><td valign="top"><tt>QStyle::PM_DefaultLayoutSpacing</tt></td><td align="center" valign="top">?</td><td valign="top">Use PM_LayoutHorizontalSpacing and PM_LayoutVerticalSpacing instead.</td></tr>
+<tr><td valign="top"><tt>QStyle::PM_ScrollView_ScrollBarSpacing</tt></td><td align="center" valign="top">?</td><td valign="top">Distance between frame and scrollbar with <a href="qstyle.html#StyleHint-enum">SH_ScrollView_FrameOnlyAroundContents</a> set.</td></tr>
+<tr><td valign="top"><tt>QStyle::PM_SubMenuOverlap</tt></td><td align="center" valign="top">?</td><td valign="top">The horizontal overlap between a submenu and its parent.</td></tr>
 </table></p>
 <p>See also <a href="qstyle.html#pixelMetric">pixelMetric</a>().</p>
 <h3 class="fn"><a name="PrimitiveElement-enum"></a>enum QStyle::PrimitiveElement</h3>
@@ -493,7 +495,7 @@
 <tr><td valign="top"><tt>QStyle::PE_IndicatorRadioButton</tt></td><td align="center" valign="top">?</td><td valign="top">Exclusive on/off indicator, for example, a <a href="qradiobutton.html">QRadioButton</a>.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_Q3DockWindowSeparator</tt></td><td align="center" valign="top"><tt>3</tt></td><td valign="top">Item separator for Qt 3 compatible dock window and toolbar contents.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_IndicatorDockWidgetResizeHandle</tt></td><td align="center" valign="top">?</td><td valign="top">Resize handle for dock windows.</td></tr>
-<tr><td valign="top"><tt>QStyle::PE_Frame</tt></td><td align="center" valign="top"><tt>5</tt></td><td valign="top">Generic frame; see also <a href="qframe.html">QFrame</a>.</td></tr>
+<tr><td valign="top"><tt>QStyle::PE_Frame</tt></td><td align="center" valign="top"><tt>5</tt></td><td valign="top">Generic frame</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_FrameMenu</tt></td><td align="center" valign="top"><tt>11</tt></td><td valign="top">Frame for popup windows/menus; see also <a href="qmenu.html">QMenu</a>.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelMenuBar</tt></td><td align="center" valign="top">?</td><td valign="top">Panel for menu bars.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelScrollAreaCorner</tt></td><td align="center" valign="top">?</td><td valign="top">Panel at the bottom-right (or bottom-left) corner of a scroll area.</td></tr>
@@ -517,7 +519,7 @@
 <tr><td valign="top"><tt>QStyle::PE_IndicatorToolBarSeparator</tt></td><td align="center" valign="top">?</td><td valign="top">The separator in a toolbar.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelToolBar</tt></td><td align="center" valign="top">?</td><td valign="top">The panel for a toolbar.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelTipLabel</tt></td><td align="center" valign="top">?</td><td valign="top">The panel for a tip label.</td></tr>
-<tr><td valign="top"><tt>QStyle::PE_FrameTabBarBase</tt></td><td align="center" valign="top">?</td><td valign="top">The frame that is drawn for a tab bar, usually drawn for a tab bar that isn't part of a tab widget.</td></tr>
+<tr><td valign="top"><tt>QStyle::PE_FrameTabBarBase</tt></td><td align="center" valign="top">?</td><td valign="top">The frame that is drawn for a tab bar, ususally drawn for a tab bar that isn't part of a tab widget.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_IndicatorTabTear</tt></td><td align="center" valign="top">?</td><td valign="top">An indicator that a tab is partially scrolled out of the visible tab bar when there are many tabs.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_IndicatorColumnViewArrow</tt></td><td align="center" valign="top">?</td><td valign="top">An arrow in a <a href="qcolumnview.html">QColumnView</a>.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_Widget</tt></td><td align="center" valign="top">?</td><td valign="top">A plain <a href="qwidget.html">QWidget</a>.</td></tr>
@@ -526,6 +528,8 @@
 <tr><td valign="top"><tt>QStyle::PE_PanelItemViewItem</tt></td><td align="center" valign="top">?</td><td valign="top">The background for an item in an item view.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelItemViewRow</tt></td><td align="center" valign="top">?</td><td valign="top">The background of a row in an item view.</td></tr>
 <tr><td valign="top"><tt>QStyle::PE_PanelStatusBar</tt></td><td align="center" valign="top">?</td><td valign="top">The panel for a status bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::PE_IndicatorTabClose</tt></td><td align="center" valign="top">?</td><td valign="top">The close button on a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::PE_PanelMenu</tt></td><td align="center" valign="top">?</td><td valign="top">The panel for a menu.</td></tr>
 </table></p>
 <p>See also <a href="qstyle.html#drawPrimitive">drawPrimitive</a>().</p>
 <h3 class="fn"><a name="StandardPixmap-enum"></a>enum QStyle::StandardPixmap</h3>
@@ -738,6 +742,9 @@
 <tr><td valign="top"><tt>QStyle::SH_ToolBar_Movable</tt></td><td align="center" valign="top">?</td><td valign="top">Determines if the tool bar is movable by default.</td></tr>
 <tr><td valign="top"><tt>QStyle::SH_ItemView_PaintAlternatingRowColorsForEmptyArea</tt></td><td align="center" valign="top">?</td><td valign="top">Whether <a href="qtreeview.html">QTreeView</a> paints alternating row colors for the area that does not have any items.</td></tr>
 <tr><td valign="top"><tt>QStyle::SH_Menu_Mask</tt></td><td align="center" valign="top">?</td><td valign="top">The mask for a popup menu.</td></tr>
+<tr><td valign="top"><tt>QStyle::SH_ItemView_DrawDelegateFrame</tt></td><td align="center" valign="top">?</td><td valign="top">Determines if there should be a frame for a delegate widget.</td></tr>
+<tr><td valign="top"><tt>QStyle::SH_TabBar_CloseButtonPosition</tt></td><td align="center" valign="top">?</td><td valign="top">Determines the position of the close button on a tab in a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::SH_DockWidget_ButtonsHaveFrame</tt></td><td align="center" valign="top">?</td><td valign="top">Determines if dockwidget buttons should have frames. Default is true.</td></tr>
 </table></p>
 <p>See also <a href="qstyle.html#styleHint">styleHint</a>().</p>
 <h3 class="flags"><a name="SubControl-enum"></a>enum QStyle::SubControl<br />flags QStyle::SubControls</h3>
@@ -819,6 +826,7 @@
 <tr><td valign="top"><tt>QStyle::SE_ProgressBarLabel</tt></td><td align="center" valign="top"><tt>15</tt></td><td valign="top">Area for the text label.</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_ProgressBarLayoutItem</tt></td><td align="center" valign="top">?</td><td valign="top">Area that counts for the parent layout.</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_FrameContents</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a frame's contents.</td></tr>
+<tr><td valign="top"><tt>QStyle::SE_ShapedFrameContents</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a frame's contents using the shape in <a href="qstyleoptionframev3.html">QStyleOptionFrameV3</a>; see <a href="qframe.html">QFrame</a></td></tr>
 <tr><td valign="top"><tt>QStyle::SE_FrameLayoutItem</tt></td><td align="center" valign="top">?</td><td valign="top">Area that counts for the parent layout.</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_HeaderArrow</tt></td><td align="center" valign="top"><tt>27</tt></td><td valign="top">Area for the sort indicator for a header.</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_HeaderLabel</tt></td><td align="center" valign="top"><tt>26</tt></td><td valign="top">Area for the label in a header.</td></tr>
@@ -846,6 +854,9 @@
 <tr><td valign="top"><tt>QStyle::SE_ItemViewItemDecoration</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a view item's decoration (icon).</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_ItemViewItemText</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a view item's text.</td></tr>
 <tr><td valign="top"><tt>QStyle::SE_ItemViewItemFocusRect</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a view item's focus rect.</td></tr>
+<tr><td valign="top"><tt>QStyle::SE_TabBarTabLeftButton</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a widget on the left side of a tab in a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::SE_TabBarTabRightButton</tt></td><td align="center" valign="top">?</td><td valign="top">Area for a widget on the right side of a tab in a tab bar.</td></tr>
+<tr><td valign="top"><tt>QStyle::SE_TabBarTabText</tt></td><td align="center" valign="top">?</td><td valign="top">Area for the text on a tab in a tab bar.</td></tr>
 </table></p>
 <p>See also <a href="qstyle.html#subElementRect">subElementRect</a>().</p>
 <hr />
@@ -1115,8 +1126,8 @@
 <p>See also <a href="qwidget.html#layoutDirection-prop">QWidget::layoutDirection</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

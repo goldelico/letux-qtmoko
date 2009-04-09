@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,6 +54,7 @@
 #define QDESIGNER_FORMBUILDER_H
 
 #include "shared_global_p.h"
+#include "deviceprofile_p.h"
 
 #include <QtDesigner/private/formscriptrunner_p.h>
 #include <QtDesigner/formbuilder.h>
@@ -70,7 +75,9 @@ namespace qdesigner_internal {
 class DesignerPixmapCache;
 class DesignerIconCache;
 
-// Form builder used for previewing forms
+/* Form builder used for previewing forms, widget box and new form dialog.
+ * It applies the system settings to its toplevel window. */
+
 class QDESIGNER_SHARED_EXPORT QDesignerFormBuilder: public QFormBuilder
 {
 public:
@@ -79,7 +86,9 @@ public:
         EnableScripts
     };
 
-    QDesignerFormBuilder(QDesignerFormEditorInterface *core, Mode mode);
+    QDesignerFormBuilder(QDesignerFormEditorInterface *core,
+                         Mode mode,
+                         const DeviceProfile &deviceProfile = DeviceProfile());
 
     QWidget *createWidgetFromContents(const QString &contents, QWidget *parentWidget = 0);
 
@@ -89,16 +98,20 @@ public:
     inline QDesignerFormEditorInterface *core() const
     { return m_core; }
 
+    QString systemStyle() const;
+
     typedef QFormScriptRunner::Errors ScriptErrors;
     // Create a preview widget (for integrations) or return 0. The widget has to be embedded into a main window.
     // Experimental, depending on script support.
     static QWidget *createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName /* ="" */,
                                   const QString &appStyleSheet  /* ="" */,
+                                  const DeviceProfile &deviceProfile,
                                   ScriptErrors *scriptErrors, QString *errorMessage);
     // Convenience that pops up message boxes in case of failures.
     static QWidget *createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName = QString());
     //  Create a preview widget (for integrations) or return 0. The widget has to be embedded into a main window.
     static QWidget *createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName, const QString &appStyleSheet, QString *errorMessage);
+    static QWidget *createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName, const QString &appStyleSheet, const DeviceProfile &deviceProfile, QString *errorMessage);
     // Convenience that pops up message boxes in case of failures.
     static QWidget *createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName, const QString &appStyleSheet);
 
@@ -128,6 +141,8 @@ protected:
 
     QtResourceSet *internalResourceSet() const { return m_tempResourceSet; }
 
+    DeviceProfile deviceProfile() const { return m_deviceProfile; }
+
 private:
     QDesignerFormEditorInterface *m_core;
     const Mode m_mode;
@@ -135,10 +150,13 @@ private:
     typedef QSet<QWidget *> WidgetSet;
     WidgetSet m_customWidgetsWithScript;
 
+    const DeviceProfile m_deviceProfile;
+
     DesignerPixmapCache *m_pixmapCache;
     DesignerIconCache *m_iconCache;
     bool m_ignoreCreateResources;
     QtResourceSet *m_tempResourceSet;
+    bool m_mainWidget;
 };
 
 } // namespace qdesigner_internal

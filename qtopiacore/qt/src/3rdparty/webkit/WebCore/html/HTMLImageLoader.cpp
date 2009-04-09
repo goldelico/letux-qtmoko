@@ -24,160 +24,42 @@
 
 #include "CSSHelper.h"
 #include "CachedImage.h"
-#include "DocLoader.h"
-#include "Document.h"
 #include "Element.h"
 #include "EventNames.h"
-#include "kjs_binding.h"
-#include "JSNode.h"
 #include "HTMLNames.h"
-#include "RenderImage.h"
-
-using namespace std;
+#include "HTMLObjectElement.h"
 
 namespace WebCore {
 
-using namespace EventNames;
-using namespace HTMLNames;
-
-HTMLImageLoader::HTMLImageLoader(Element* elt)
-    : m_element(elt)
-    , m_image(0)
-    , m_firedLoad(true)
-    , m_imageComplete(true)
-    , m_loadManually(false)
-    , m_elementIsProtected(false)
+HTMLImageLoader::HTMLImageLoader(Element* node)
+    : ImageLoader(node)
 {
 }
 
 HTMLImageLoader::~HTMLImageLoader()
 {
-    ASSERT(!m_elementIsProtected);
-    if (m_image)
-        m_image->deref(this);
-    m_element->document()->removeImage(this);
-}
-
-void HTMLImageLoader::setImage(CachedImage *newImage)
-{
-    CachedImage *oldImage = m_image;
-    if (newImage != oldImage) {
-        setLoadingImage(newImage);
-        m_firedLoad = true;
-        m_imageComplete = true;
-        if (newImage)
-            newImage->ref(this);
-        if (oldImage)
-            oldImage->deref(this);
-    }
-
-    if (RenderObject* renderer = element()->renderer())
-        if (renderer->isImage())
-            static_cast<RenderImage*>(renderer)->resetAnimation();
-}
-
-void HTMLImageLoader::setLoadingImage(CachedImage *loadingImage)
-{
-    if (loadingImage)
-        protectElement();
-    else
-        unprotectElement();
-    
-    m_firedLoad = false;
-    m_imageComplete = false;
-    m_image = loadingImage;
-}
-
-void HTMLImageLoader::updateFromElement()
-{
-    // If we're not making renderers for the page, then don't load images.  We don't want to slow
-    // down the raw HTML parsing case by loading images we don't intend to display.
-    Element* elem = element();
-    Document* doc = elem->document();
-    if (!doc->renderer())
-        return;
-
-    AtomicString attr = elem->getAttribute(elem->hasLocalName(objectTag) ? dataAttr : srcAttr);
-    
-    // Treat a lack of src or empty string for src as no image at all.
-    CachedImage *newImage = 0;
-    if (!attr.isEmpty()) {
-        if (m_loadManually) {
-            doc->docLoader()->setAutoLoadImages(false);
-            newImage = new CachedImage(doc->docLoader(), parseURL(attr), false /* not for cache */);
-            newImage->setLoading(true);
-            newImage->setDocLoader(doc->docLoader());
-            doc->docLoader()->m_docResources.set(newImage->url(), newImage);
-        } else
-            newImage = doc->docLoader()->requestImage(parseURL(attr));
-    }
-    
-    CachedImage *oldImage = m_image;
-    if (newImage != oldImage) {
-#ifdef INSTRUMENT_LAYOUT_SCHEDULING
-        if (!doc->ownerElement() && newImage)
-            printf("Image requested at %d\n", doc->elapsedTime());
-#endif
-        setLoadingImage(newImage);
-        if (newImage)
-            newImage->ref(this);
-        if (oldImage)
-            oldImage->deref(this);
-    }
-
-    if (RenderObject* renderer = elem->renderer())
-        if (renderer->isImage())
-            static_cast<RenderImage*>(renderer)->resetAnimation();
 }
 
 void HTMLImageLoader::dispatchLoadEvent()
 {
     if (!haveFiredLoadEvent() && image()) {
         setHaveFiredLoadEvent(true);
-        element()->dispatchHTMLEvent(image()->errorOccurred() ? errorEvent : loadEvent, false, false);
+        element()->dispatchEventForType(image()->errorOccurred() ? eventNames().errorEvent : eventNames().loadEvent, false, false);
     }
-
-    unprotectElement();
 }
 
-void HTMLImageLoader::notifyFinished(CachedResource *image)
+String HTMLImageLoader::sourceURI(const AtomicString& attr) const
 {
-    m_imageComplete = true;
+    return parseURL(attr);
+}
+
+void HTMLImageLoader::notifyFinished(CachedResource* image)
+{
     Element* elem = element();
-    Document* doc = elem->document();
-    doc->dispatchImageLoadEventSoon(this);
-#ifdef INSTRUMENT_LAYOUT_SCHEDULING
-        if (!doc->ownerElement())
-            printf("Image loaded at %d\n", doc->elapsedTime());
-#endif
-    if (RenderObject* renderer = elem->renderer())
-        if (renderer->isImage())
-            static_cast<RenderImage*>(renderer)->setCachedImage(m_image);
-}
+    ImageLoader::notifyFinished(image);
 
-void HTMLImageLoader::protectElement()
-{
-    if (m_elementIsProtected)
-        return;
-    
-    KJS::JSLock lock;
-    if (JSNode* node = KJS::ScriptInterpreter::getDOMNodeForDocument(m_element->document(), m_element)) {
-        KJS::gcProtect(node);
-        m_elementIsProtected = true;
-    }    
+    if (image->errorOccurred() && elem->hasTagName(HTMLNames::objectTag))
+        static_cast<HTMLObjectElement*>(elem)->renderFallbackContent();
 }
-    
-void HTMLImageLoader::unprotectElement()
-{
-    if (!m_elementIsProtected)
-        return;
-    
-    KJS::JSLock lock;
-    JSNode* node = KJS::ScriptInterpreter::getDOMNodeForDocument(m_element->document(), m_element);
-    ASSERT(node);
-    KJS::gcUnprotect(node);
-    m_elementIsProtected = false;
-}
-    
 
 }

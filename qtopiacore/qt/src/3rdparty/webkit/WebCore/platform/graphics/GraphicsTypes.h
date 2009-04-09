@@ -31,8 +31,8 @@ namespace WebCore {
     class String;
 
     // Note: These constants exactly match the NSCompositeOperator constants of
-    // AppKit on Mac OS X. If that's ever changed, we'll need to change the Mac
-    // platform code to map one to the other.
+    // AppKit on Mac OS X Tiger. If these ever change, we'll need to change the
+    // Mac OS X Tiger platform code to map one to the other.
     enum CompositeOperator {
         CompositeClear,
         CompositeCopy,
@@ -56,6 +56,10 @@ namespace WebCore {
 
     enum HorizontalAlignment { AlignLeft, AlignRight, AlignHCenter };
 
+    enum TextBaseline { AlphabeticTextBaseline, TopTextBaseline, MiddleTextBaseline, BottomTextBaseline, IdeographicTextBaseline, HangingTextBaseline };
+    
+    enum TextAlign { StartTextAlign, EndTextAlign, LeftTextAlign, CenterTextAlign, RightTextAlign };
+
     String compositeOperatorName(CompositeOperator);
     bool parseCompositeOperator(const String&, CompositeOperator&);
 
@@ -65,6 +69,12 @@ namespace WebCore {
     String lineJoinName(LineJoin);
     bool parseLineJoin(const String&, LineJoin&);
 
-}
+    String textAlignName(TextAlign);
+    bool parseTextAlign(const String&, TextAlign&);
+    
+    String textBaselineName(TextBaseline);
+    bool parseTextBaseline(const String&, TextBaseline&);
+
+} // namespace WebCore
 
 #endif

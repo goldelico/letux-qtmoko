@@ -1,6 +1,4 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
@@ -29,14 +27,16 @@
 
 #include "HTMLNames.h"
 #include "RenderLegend.h"
+#include <wtf/StdLibExtras.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLLegendElement::HTMLLegendElement(Document *doc, HTMLFormElement *f)
-: HTMLGenericFormElement(legendTag, doc, f)
+HTMLLegendElement::HTMLLegendElement(const QualifiedName& tagName, Document *doc, HTMLFormElement *f)
+    : HTMLFormControlElement(tagName, doc, f)
 {
+    ASSERT(hasTagName(legendTag));
 }
 
 HTMLLegendElement::~HTMLLegendElement()
@@ -45,7 +45,7 @@ HTMLLegendElement::~HTMLLegendElement()
 
 bool HTMLLegendElement::isFocusable() const
 {
-    return false;
+    return HTMLElement::isFocusable();
 }
 
 RenderObject* HTMLLegendElement::createRenderer(RenderArena* arena, RenderStyle* style)
@@ -58,7 +58,7 @@ RenderObject* HTMLLegendElement::createRenderer(RenderArena* arena, RenderStyle*
 
 const AtomicString& HTMLLegendElement::type() const
 {
-    static const AtomicString legend("legend");
+    DEFINE_STATIC_LOCAL(const AtomicString, legend, ("legend"));
     return legend;
 }
 
@@ -107,6 +107,9 @@ Element *HTMLLegendElement::formElement()
 
 void HTMLLegendElement::focus(bool)
 {
+    if (isFocusable())
+        Element::focus();
+        
     // to match other browsers, never restore previous selection
     if (Element *element = formElement())
         element->focus(false);

@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSImportRule_H
-#define JSCSSImportRule_H
+#ifndef JSCSSImportRule_h
+#define JSCSSImportRule_h
 
 #include "JSCSSRule.h"
 
@@ -28,32 +28,37 @@ namespace WebCore {
 class CSSImportRule;
 
 class JSCSSImportRule : public JSCSSRule {
+    typedef JSCSSRule Base;
 public:
-    JSCSSImportRule(KJS::ExecState*, CSSImportRule*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSCSSImportRule(PassRefPtr<JSC::Structure>, PassRefPtr<CSSImportRule>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        HrefAttrNum, MediaAttrNum, StyleSheetAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
 
 
-class JSCSSImportRulePrototype : public KJS::JSObject {
+class JSCSSImportRulePrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSCSSImportRulePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSCSSRulePrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSCSSImportRulePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsCSSImportRuleHref(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSImportRuleMedia(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSImportRuleStyleSheet(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSImportRuleConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -21,7 +21,7 @@ SOURCES += conversionwizard.cpp \
            qhcpwriter.cpp \
            helpwindow.cpp \
            main.cpp
-           
+
 HEADERS += conversionwizard.h \
            inputpage.h \
            generalpage.h \
@@ -43,5 +43,5 @@ FORMS   += inputpage.ui \
            pathpage.ui \
            filespage.ui \
            outputpage.ui
-           
+
 RESOURCES += qhelpconverter.qrc

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include <private/qimagescale_p.h>
@@ -156,7 +160,7 @@ unsigned int** QImageScale::qimageCalcYPoints(unsigned int *src,
     }
     p = new unsigned int* [dh+1];
 
-    int up = abs(dh) >= sh;
+    int up = qAbs(dh) >= sh;
     val = up ? 0x8000 * sh / dh - 0x8000 : 0;
     inc = (sh << 16) / dh;
     for(i = 0; i < dh; i++){
@@ -184,7 +188,7 @@ int* QImageScale::qimageCalcXPoints(int sw, int dw)
     }
     p = new int[dw+1];
 
-    int up = abs(dw) >= sw;
+    int up = qAbs(dw) >= sw;
     val = up ? 0x8000 * sw / dw - 0x8000 : 0;
     inc = (sw << 16) / dw;
     for(i = 0; i < dw; i++){
@@ -262,7 +266,7 @@ QImageScaleInfo* QImageScale::qimageFreeScaleInfo(QImageScaleInfo *isi)
         delete[] isi->yapoints;
         delete isi;
     }
-    return(NULL);
+    return 0;
 }
 
 QImageScaleInfo* QImageScale::qimageCalcScaleInfo(const QImage &img,
@@ -277,19 +281,19 @@ QImageScaleInfo* QImageScale::qimageCalcScaleInfo(const QImage &img,
 
     isi = new QImageScaleInfo;
     if(!isi)
-        return(NULL);
+        return 0;
     memset(isi, 0, sizeof(QImageScaleInfo));
 
-    isi->xup_yup = (abs(dw) >= sw) + ((abs(dh) >= sh) << 1);
+    isi->xup_yup = (qAbs(dw) >= sw) + ((qAbs(dh) >= sh) << 1);
 
     isi->xpoints = qimageCalcXPoints(img.width(), scw);
     if(!isi->xpoints)
         return(qimageFreeScaleInfo(isi));
     isi->ypoints = qimageCalcYPoints((unsigned int *)img.scanLine(0),
-                                     img.width(), img.height(), sch);
+                                     img.bytesPerLine() / 4, img.height(), sch);
     if (!isi->ypoints)
         return(qimageFreeScaleInfo(isi));
-    if(aa){
+    if(aa) {
         isi->xapoints = qimageCalcApoints(img.width(), scw, isi->xup_yup & 1);
         if(!isi->xapoints)
             return(qimageFreeScaleInfo(isi));
@@ -1015,10 +1019,10 @@ QImage qSmoothScaleImage(const QImage &src, int dw, int dh)
 
     if (src.format() == QImage::Format_ARGB32_Premultiplied)
         qt_qimageScaleArgb(scaleinfo, (unsigned int *)buffer.scanLine(0),
-                           0, 0, 0, 0, dw, dh, dw, w);
+                           0, 0, 0, 0, dw, dh, dw, src.bytesPerLine() / 4);
     else
         qt_qimageScaleRgb(scaleinfo, (unsigned int *)buffer.scanLine(0),
-                          0, 0, 0, 0, dw, dh, dw, w);
+                          0, 0, 0, 0, dw, dh, dw, src.bytesPerLine() / 4);
 
     qimageFreeScaleInfo(scaleinfo);
     return buffer;

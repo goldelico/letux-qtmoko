@@ -18,44 +18,52 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSBarInfo_H
-#define JSBarInfo_H
+#ifndef JSBarInfo_h
+#define JSBarInfo_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class BarInfo;
 
-class JSBarInfo : public KJS::DOMObject {
+class JSBarInfo : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSBarInfo(KJS::ExecState*, BarInfo*);
+    JSBarInfo(PassRefPtr<JSC::Structure>, PassRefPtr<BarInfo>);
     virtual ~JSBarInfo();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        VisibleAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     BarInfo* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<BarInfo> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, BarInfo*);
-BarInfo* toBarInfo(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, BarInfo*);
+BarInfo* toBarInfo(JSC::JSValuePtr);
 
-class JSBarInfoPrototype : public KJS::JSObject {
+class JSBarInfoPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSBarInfoPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSBarInfoPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsBarInfoVisible(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

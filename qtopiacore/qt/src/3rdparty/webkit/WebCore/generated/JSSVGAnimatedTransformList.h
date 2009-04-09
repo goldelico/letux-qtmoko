@@ -18,45 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedTransformList_H
-#define JSSVGAnimatedTransformList_H
+#ifndef JSSVGAnimatedTransformList_h
+#define JSSVGAnimatedTransformList_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
-class JSSVGAnimatedTransformList : public KJS::DOMObject {
+class JSSVGAnimatedTransformList : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGAnimatedTransformList(KJS::ExecState*, SVGAnimatedTransformList*);
+    JSSVGAnimatedTransformList(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimatedTransformList>, SVGElement* context);
     virtual ~JSSVGAnimatedTransformList();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        BaseValAttrNum, AnimValAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     SVGAnimatedTransformList* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGAnimatedTransformList> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGAnimatedTransformList > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGAnimatedTransformList*);
-SVGAnimatedTransformList* toSVGAnimatedTransformList(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGAnimatedTransformList*, SVGElement* context);
+SVGAnimatedTransformList* toSVGAnimatedTransformList(JSC::JSValuePtr);
 
-class JSSVGAnimatedTransformListPrototype : public KJS::JSObject {
+class JSSVGAnimatedTransformListPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGAnimatedTransformListPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGAnimatedTransformListPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGAnimatedTransformListBaseVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimatedTransformListAnimVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

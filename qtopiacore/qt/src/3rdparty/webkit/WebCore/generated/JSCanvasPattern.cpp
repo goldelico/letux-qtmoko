@@ -26,49 +26,60 @@
 
 #include "CanvasPattern.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCanvasPattern)
+
 /* Hash table for prototype */
 
-static const HashEntry JSCanvasPatternPrototypeTableEntries[] =
+static const HashTableValue JSCanvasPatternPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCanvasPatternPrototypeTable = 
-{
-    2, 1, JSCanvasPatternPrototypeTableEntries, 1
-};
+static const HashTable JSCanvasPatternPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCanvasPatternPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSCanvasPatternPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCanvasPatternPrototype::info = { "CanvasPatternPrototype", 0, &JSCanvasPatternPrototypeTable, 0 };
+const ClassInfo JSCanvasPatternPrototype::s_info = { "CanvasPatternPrototype", 0, &JSCanvasPatternPrototypeTable, 0 };
 
 JSObject* JSCanvasPatternPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCanvasPatternPrototype>(exec, "[[JSCanvasPattern.prototype]]");
+    return getDOMPrototype<JSCanvasPattern>(exec);
 }
 
-const ClassInfo JSCanvasPattern::info = { "CanvasPattern", 0, 0, 0 };
+const ClassInfo JSCanvasPattern::s_info = { "CanvasPattern", 0, 0, 0 };
 
-JSCanvasPattern::JSCanvasPattern(ExecState* exec, CanvasPattern* impl)
-    : m_impl(impl)
+JSCanvasPattern::JSCanvasPattern(PassRefPtr<Structure> structure, PassRefPtr<CanvasPattern> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSCanvasPatternPrototype::self(exec));
 }
 
 JSCanvasPattern::~JSCanvasPattern()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, CanvasPattern* obj)
+JSObject* JSCanvasPattern::createPrototype(ExecState* exec)
 {
-    return KJS::cacheDOMObject<CanvasPattern, JSCanvasPattern>(exec, obj);
+    return new (exec) JSCanvasPatternPrototype(JSCanvasPatternPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
-CanvasPattern* toCanvasPattern(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, CanvasPattern* object)
 {
-    return val->isObject(&JSCanvasPattern::info) ? static_cast<JSCanvasPattern*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSCanvasPattern>(exec, object);
+}
+CanvasPattern* toCanvasPattern(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSCanvasPattern::s_info) ? static_cast<JSCanvasPattern*>(asObject(value))->impl() : 0;
 }
 
 }

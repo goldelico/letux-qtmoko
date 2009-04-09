@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,9 @@ TRANSLATOR qdesigner_internal::ConnectionModel
 #include "signalslot_utils_p.h"
 
 #include <iconloader_p.h>
+#include <spacer_widget_p.h>
+#include <qlayout_widget_p.h>
+
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerFormWindowManagerInterface>
@@ -58,6 +65,7 @@ TRANSLATOR qdesigner_internal::ConnectionModel
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QDebug>
 #include <QtGui/QAction>
+#include <QtGui/QButtonGroup>
 #include <QtGui/QMenu>
 #include <QtGui/QStandardItemModel>
 #include <QtGui/QComboBox>
@@ -68,63 +76,76 @@ TRANSLATOR qdesigner_internal::ConnectionModel
 #include <QtGui/QHeaderView>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QToolButton>
+#include <QtGui/QButtonGroup>
 
 QT_BEGIN_NAMESPACE
 
-template <typename T>
-static void merge(QDesignerFormWindowInterface *form, QStringList *lst, const QList<T> &elts)
+// Add suitable form widgets to a list of objects for the  signal slot
+// editor. Prevent special widgets from showing up there.
+static void addWidgetToObjectList(const QWidget *w, QStringList &r)
 {
-    QDesignerMetaDataBaseInterface *db = form->core()->metaDataBase();
-
-    foreach (T e, elts) {
-        QAction *action = qobject_cast<QAction*>(e);
-
-        if (action && db->item(action->menu())) {
-            // good
-        } else if (!db->item(e)) {
-            // hmm, nothing to do
-            continue;
-        }
-
-        QString name = e->objectName();
-
-        if (action && action->menu())
-            name = action->menu()->objectName();
-
-        if (name.isEmpty())
-            continue;
-
-        lst->append(name);
+    const QMetaObject *mo = w->metaObject();
+    if (mo != &QLayoutWidget::staticMetaObject && mo != &Spacer::staticMetaObject) {
+        const QString name = w->objectName().trimmed();
+        if (!name.isEmpty())
+            r.push_back(name);
     }
 }
 
 static QStringList objectNameList(QDesignerFormWindowInterface *form)
 {
+    typedef QList<QAction*> ActionList;
+    typedef QList<QButtonGroup *> ButtonGroupList;
+
     QStringList result;
-    if (form->mainContainer()) {
-        QDesignerContainerExtension *c = qt_extension<QDesignerContainerExtension *>(
-                    form->core()->extensionManager(), form->mainContainer());
-        if (c) {
-            const int count = c->count();
-            for (int i = 0 ; i < count; i++)
-                result.append(c->widget(i)->objectName().trimmed());
+
+    QWidget *mainContainer = form->mainContainer();
+    if (!mainContainer)
+        return result;
+
+    // Add main container container pages (QStatusBar, QWizardPages) etc.
+    // to the list. Pages of containers on the form are not added, however.
+    if (const QDesignerContainerExtension *c = qt_extension<QDesignerContainerExtension *>(form->core()->extensionManager(), mainContainer)) {
+        const int count = c->count();
+        for (int i = 0 ; i < count; i++)
+            addWidgetToObjectList(c->widget(i), result);
+    }
+
+    const QDesignerFormWindowCursorInterface *cursor = form->cursor();
+    const int widgetCount = cursor->widgetCount();
+    for (int i = 0; i < widgetCount; ++i)
+        addWidgetToObjectList(cursor->widget(i), result);
+
+    const QDesignerMetaDataBaseInterface *mdb = form->core()->metaDataBase();
+
+    // Add managed actions and actions with managed menus
+    const ActionList actions = qFindChildren<QAction*>(mainContainer);
+    if (!actions.empty()) {
+        const ActionList::const_iterator cend = actions.constEnd();
+        for (ActionList::const_iterator it = actions.constBegin(); it != cend; ++it) {
+            QAction *a = *it;
+            if (!a->isSeparator()) {
+                if (QMenu *menu = a->menu()) {
+                    if (mdb->item(menu))
+                        result.push_back(menu->objectName());
+                } else {
+                    if (mdb->item(a))
+                        result.push_back(a->objectName());
+                }
+            }
         }
     }
 
-    QDesignerFormWindowCursorInterface *cursor = form->cursor();
-    const int widgetCount = cursor->widgetCount();
-    for (int i = 0; i < widgetCount; ++i) {
-        const QString name = cursor->widget(i)->objectName().trimmed();
-        if (!name.isEmpty())
-            result.append(name);
-    }
-
-    if (form->mainContainer()) {
-        merge(form, &result, qFindChildren<QAction*>(form->mainContainer()));
+    // Add  managed buttons groups
+    const ButtonGroupList buttonGroups = qFindChildren<QButtonGroup *>(mainContainer);
+    if (!buttonGroups.empty()) {
+        const ButtonGroupList::const_iterator cend = buttonGroups.constEnd();
+        for (ButtonGroupList::const_iterator it = buttonGroups.constBegin(); it != cend; ++it)
+            if (mdb->item(*it))
+                result.append((*it)->objectName());
     }
 
     result.sort();
-
     return result;
 }
 
@@ -253,18 +274,11 @@ QVariant ConnectionModel::data(const QModelIndex &index, int role) const
     if (role == Qt::FontRole || role == Qt::ForegroundRole) {
         bool isQt3Member = false;
         if (index.column() == 1) {
-            QMap<QString, QString> memberToClassName = getSignals(m_editor->formWindow()->core(), con->object(CETypes::EndPoint::Source), true);
-            const QString sig = con->signal();
-            const QMap<QString, QString>::ConstIterator it = memberToClassName.constFind(sig);
-            if (it != memberToClassName.constEnd())
-                isQt3Member = isQt3Signal(it.value(), sig);
+            QDesignerFormEditorInterface *core = m_editor->formWindow()->core();
+            isQt3Member = isQt3Signal(core, con->object(CETypes::EndPoint::Source), con->signal());
         } else if (index.column() == 3) {
-            const QString sig = con->signal();
-            QMap<QString, QString> memberToClassName = getMatchingSlots(m_editor->formWindow()->core(), con->object(CETypes::EndPoint::Target), sig, true);
-            const QString sl = con->slot();
-            const QMap<QString, QString>::ConstIterator it = memberToClassName.constFind(sl);
-            if (it != memberToClassName.constEnd())
-                isQt3Member = isQt3Slot(it.value(), sl);
+            QDesignerFormEditorInterface *core = m_editor->formWindow()->core();
+            isQt3Member = isQt3Signal(core, con->object(CETypes::EndPoint::Target), con->slot());
         }
         if (isQt3Member) {
             if (role == Qt::ForegroundRole)
@@ -646,6 +660,8 @@ QWidget *ConnectionDelegate::createEditor(QWidget *parent,
 
         const qdesigner_internal::ClassesMemberFunctions class_list = qdesigner_internal::reverseClassesMemberFunctions(obj_name, type, peer, m_form);
 
+        QObject *object = qFindChild<QObject*>(m_form, obj_name);
+
         inline_editor->addText(type == qdesigner_internal::SignalMember ? tr("<signal>") : tr("<slot>"));
         foreach (const qdesigner_internal::ClassMemberFunctions &class_info, class_list) {
             if (class_info.m_className.isEmpty() || class_info.m_memberList.isEmpty())
@@ -655,10 +671,12 @@ QWidget *ConnectionDelegate::createEditor(QWidget *parent,
             foreach (const QString &member, memberList) {
                 bool mark = false;
                 if (type == qdesigner_internal::SignalMember)
-                    mark = qdesigner_internal::isQt3Signal(class_info.m_className, member);
+                    mark = qdesigner_internal::isQt3Signal(m_form->core(), object, member);
                 else
-                    mark = qdesigner_internal::isQt3Slot(class_info.m_className, member);
-                markedMemberList.insert(member, mark);
+                    mark = qdesigner_internal::isQt3Slot(m_form->core(), object, member);
+
+                if (!mark)
+                    markedMemberList.insert(member, mark);
             }
             inline_editor->addTitle(class_info.m_className);
             inline_editor->addTextList(markedMemberList);

@@ -2,7 +2,7 @@
  * The default style sheet used to render HTML.
  *
  * Copyright (C) 2000 Lars Knoll (knoll@kde.org)
- * Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -169,11 +169,6 @@ table {
     border-color: gray
 }
 
-table[align="center"] {
-    margin-left: auto;
-    margin-right: auto
-}
-
 thead {
     display: table-header-group;
     vertical-align: middle;
@@ -276,7 +271,7 @@ ol ul, ul ol, ul ul, ol ol {
 
 form {
     display: block;
-    margin: 0__qem 0 1em 0
+    margin-top: 0__qem
 }
 
 label {
@@ -337,18 +332,22 @@ input[type="search"] {
 
 input[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: searchfield-cancel-button;
+    display: inline-block;
 }
 
 input[type="search"]::-webkit-search-decoration {
     -webkit-appearance: searchfield-decoration;
+    display: inline-block;
 }
 
 input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: searchfield-results-decoration;
+    display: inline-block;
 }
 
 input[type="search"]::-webkit-search-results-button {
     -webkit-appearance: searchfield-results-button;
+    display: inline-block;
 }
 
 textarea {
@@ -360,6 +359,10 @@ textarea {
     -webkit-box-orient: vertical;
     resize: auto;
     cursor: auto;
+}
+
+input::-webkit-input-placeholder {
+    color: darkGray;
 }
 
 input[type="password"] {
@@ -375,6 +378,7 @@ input[type="hidden"], input[type="image"], input[type="file"] {
 
 input[type="file"] {
     -webkit-box-align: baseline;
+    text-align: start !important;
 }
 
 input:-webkit-autofill {
@@ -564,6 +568,7 @@ input[type="file"]:focus::-webkit-file-upload-button {
 a:-webkit-any-link {
     color: -webkit-link;
     text-decoration: underline;
+    cursor: auto;
 }
 
 a:-webkit-any-link:active {

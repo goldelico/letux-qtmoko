@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegClosePath_H
-#define JSSVGPathSegClosePath_H
+#ifndef JSSVGPathSegClosePath_h
+#define JSSVGPathSegClosePath_h
 
 
 #if ENABLE(SVG)
@@ -31,22 +31,24 @@ namespace WebCore {
 class SVGPathSegClosePath;
 
 class JSSVGPathSegClosePath : public JSSVGPathSeg {
+    typedef JSSVGPathSeg Base;
 public:
-    JSSVGPathSegClosePath(KJS::ExecState*, SVGPathSegClosePath*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPathSegClosePath(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathSegClosePath>, SVGElement* context);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGPathSegClosePathPrototype : public KJS::JSObject {
+class JSSVGPathSegClosePathPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGPathSegClosePathPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGPathSegPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGPathSegClosePathPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 

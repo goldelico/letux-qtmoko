@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -468,11 +472,11 @@ int QFontMetrics::leftBearing(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
     // ### can nglyphs != 1 happen at all? Not currently I think
-    glyph_metrics_t gi = engine->boundingBox(glyphs[0].glyph);
+    glyph_metrics_t gi = engine->boundingBox(glyphs.glyphs[0]);
     return qRound(gi.x);
 }
 
@@ -502,11 +506,11 @@ int QFontMetrics::rightBearing(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
     // ### can nglyphs != 1 happen at all? Not currently I think
-    glyph_metrics_t gi = engine->boundingBox(glyphs[0].glyph);
+    glyph_metrics_t gi = engine->boundingBox(glyphs.glyphs[0]);
     return qRound(gi.xoff - gi.x - gi.width);
 }
 
@@ -531,7 +535,6 @@ int QFontMetrics::width(const QString &text, int len) const
 
     QTextEngine layout(text, d);
     layout.ignoreBidi = true;
-    layout.itemize();
     return qRound(layout.width(0, len));
 }
 
@@ -575,10 +578,10 @@ int QFontMetrics::width(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[8];
+    QGlyphLayoutArray<8> glyphs;
     int nglyphs = 7;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
-    return qRound(glyphs[0].advance.x);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
+    return qRound(glyphs.advances_x[0]);
 }
 
 /*! \obsolete
@@ -623,10 +626,10 @@ int QFontMetrics::charWidth(const QString &text, int pos) const
 
         d->alterCharForCapitalization(ch);
 
-        QGlyphLayout glyphs[8];
+        QGlyphLayoutArray<8> glyphs;
         int nglyphs = 7;
-        engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
-        width = qRound(glyphs[0].advance.x);
+        engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
+        width = qRound(glyphs.advances_x[0]);
     }
     return width;
 }
@@ -692,10 +695,10 @@ QRect QFontMetrics::boundingRect(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
-    glyph_metrics_t gm = engine->boundingBox(glyphs[0].glyph);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
+    glyph_metrics_t gm = engine->boundingBox(glyphs.glyphs[0]);
     return QRect(qRound(gm.x), qRound(gm.y), qRound(gm.width), qRound(gm.height));
 }
 
@@ -849,6 +852,13 @@ QRect QFontMetrics::tightBoundingRect(const QString &text) const
 
     The \a flags argument is optional and currently only supports
     Qt::TextShowMnemonic as value.
+
+    The elide mark will follow the \l{Qt::LayoutDirection}{layout
+    direction}; it will be on the right side of the text for
+    right-to-left layouts, and on the left side for right-to-left
+    layouts. Note that this behavior is independent of the text
+    language.
+
 */
 QString QFontMetrics::elidedText(const QString &text, Qt::TextElideMode mode, int width, int flags) const
 {
@@ -1297,11 +1307,11 @@ qreal QFontMetricsF::leftBearing(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
     // ### can nglyphs != 1 happen at all? Not currently I think
-    glyph_metrics_t gi = engine->boundingBox(glyphs[0].glyph);
+    glyph_metrics_t gi = engine->boundingBox(glyphs.glyphs[0]);
     return gi.x.toReal();
 }
 
@@ -1331,11 +1341,11 @@ qreal QFontMetricsF::rightBearing(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
     // ### can nglyphs != 1 happen at all? Not currently I think
-    glyph_metrics_t gi = engine->boundingBox(glyphs[0].glyph);
+    glyph_metrics_t gi = engine->boundingBox(glyphs.glyphs[0]);
     return (gi.xoff - gi.x - gi.width).toReal();
 }
 
@@ -1397,10 +1407,10 @@ qreal QFontMetricsF::width(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[8];
+    QGlyphLayoutArray<8> glyphs;
     int nglyphs = 7;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
-    return glyphs[0].advance.x.toReal();
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
+    return glyphs.advances_x[0].toReal();
 }
 
 /*!
@@ -1462,10 +1472,10 @@ QRectF QFontMetricsF::boundingRect(QChar ch) const
 
     d->alterCharForCapitalization(ch);
 
-    QGlyphLayout glyphs[10];
+    QGlyphLayoutArray<10> glyphs;
     int nglyphs = 9;
-    engine->stringToCMap(&ch, 1, glyphs, &nglyphs, 0);
-    glyph_metrics_t gm = engine->boundingBox(glyphs[0].glyph);
+    engine->stringToCMap(&ch, 1, &glyphs, &nglyphs, 0);
+    glyph_metrics_t gm = engine->boundingBox(glyphs.glyphs[0]);
     return QRectF(gm.x.toReal(), gm.y.toReal(), gm.width.toReal(), gm.height.toReal());
 }
 
@@ -1718,7 +1728,7 @@ qreal QFontMetricsF::lineWidth() const
 
     Use the boundingRect() function in combination with
     QString::left() instead.
-
+     
     \oldcode
         QRect rect = boundingRect(text, len);
     \newcode

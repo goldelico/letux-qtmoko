@@ -1,3 +1,7 @@
+#ifdef Q_OS_SOLARIS
+#error "Not supported."
+#else
+
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput.h>
 
@@ -11,3 +15,4 @@ int main(int, char **)
     event = 0;
     return 0;
 }
+#endif

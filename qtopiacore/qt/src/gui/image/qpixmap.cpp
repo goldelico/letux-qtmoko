@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,15 +43,17 @@
 
 #include "qpixmap.h"
 #include "qpixmapdata_p.h"
-#include "qpixmapdatafactory_p.h"
 
 #include "qbitmap.h"
+#include "qcolormap.h"
 #include "qimage.h"
 #include "qwidget.h"
 #include "qpainter.h"
 #include "qdatastream.h"
 #include "qbuffer.h"
 #include "qapplication.h"
+#include <private/qapplication_p.h>
+#include <private/qgraphicssystem_p.h>
 #include <private/qwidget_p.h>
 #include "qevent.h"
 #include "qfile.h"
@@ -94,10 +100,12 @@ static bool qt_pixmap_thread_test()
         qFatal("QPixmap: Must construct a QApplication before a QPaintDevice");
         return false;
     }
+#ifndef Q_WS_WIN
     if (qApp->thread() != QThread::currentThread()) {
         qWarning("QPixmap: It is not safe to use pixmaps outside the GUI thread");
         return false;
     }
+#endif
     return true;
 }
 
@@ -108,8 +116,12 @@ void QPixmap::init(int w, int h, Type type)
 
 void QPixmap::init(int w, int h, int type)
 {
-    QPixmapDataFactory *f = QPixmapDataFactory::instance();
-    data = f->create(static_cast<QPixmapData::PixelType>(type));
+    QGraphicsSystem* gs = QApplicationPrivate::graphicsSystem();
+    if (gs)
+        data = gs->createPixmapData(static_cast<QPixmapData::PixelType>(type));
+    else
+        data = QGraphicsSystem::createDefaultPixmapData(static_cast<QPixmapData::PixelType>(type));
+
     data->resize(w, h);
     data->ref.ref();
 }
@@ -354,8 +366,14 @@ QPixmap QPixmap::copy(const QRect &rect) const
         return QPixmap();
 
     const QRect r = rect.isEmpty() ? QRect(0, 0, width(), height()) : rect;
-    QPixmapDataFactory *f = QPixmapDataFactory::instance();
-    QPixmapData *d = f->create(data->pixelType());
+
+    QPixmapData *d;
+    QGraphicsSystem* gs = QApplicationPrivate::graphicsSystem();
+    if (gs)
+        d = gs->createPixmapData(data->pixelType());
+    else
+        d = QGraphicsSystem::createDefaultPixmapData(data->pixelType());
+
     d->copy(data, r);
     return QPixmap(d);
 }
@@ -469,6 +487,11 @@ QMatrix QPixmap::trueMatrix(const QMatrix &m, int w, int h)
     Returns true if this is a QBitmap; otherwise returns false.
 */
 
+bool QPixmap::isQBitmap() const
+{
+    return data->type == QPixmapData::BitmapType;
+}
+
 /*!
     \fn bool QPixmap::isNull() const
 
@@ -552,12 +575,12 @@ int QPixmap::depth() const
     \overload
     \compat
 
-    Use the QPixmap constructor that takes a QSize (\a size) instead.
+    Use QPixmap::copy() instead to get the pixmap with the new size.
 
     \oldcode
         pixmap.resize(size);
     \newcode
-        pixmap = QPixmap(size);
+        pixmap = pixmap.copy(QRect(QPoint(0, 0), size));
     \endcode
 */
 #ifdef QT3_SUPPORT
@@ -577,26 +600,31 @@ void QPixmap::resize_helper(const QSize &s)
     QPixmap pm(QSize(w, h), data->type);
     bool uninit = false;
 #if defined(Q_WS_X11)
-    QX11PixmapData *x11Data = static_cast<QX11PixmapData*>(data);
-    pm.x11SetScreen(x11Data->xinfo.screen());
-    uninit = x11Data->uninit;
+    QX11PixmapData *x11Data = data->classId() == QPixmapData::X11Class ? static_cast<QX11PixmapData*>(data) : 0;
+    if (x11Data) {
+        pm.x11SetScreen(x11Data->xinfo.screen());
+        uninit = x11Data->uninit;
+    }
 #elif defined(Q_WS_MAC)
-    QMacPixmapData *macData = static_cast<QMacPixmapData*>(data);
-    uninit = macData->uninit;
+    QMacPixmapData *macData = data->classId() == QPixmapData::MacClass ? static_cast<QMacPixmapData*>(data) : 0;
+    if (macData)
+        uninit = macData->uninit;
 #endif
     if (!uninit && !isNull()) {
         // Copy old pixmap
+        if (hasAlphaChannel())
+            pm.fill(Qt::transparent);
         QPainter p(&pm);
         p.drawPixmap(0, 0, *this, 0, 0, qMin(width(), w), qMin(height(), h));
     }
 
 #if defined(Q_WS_MAC)
 #ifndef QT_MAC_NO_QUICKDRAW
-    if(macData->qd_alpha)
+    if(macData && macData->qd_alpha)
         macData->macQDUpdateAlpha();
 #endif
 #elif defined(Q_WS_X11)
-    if (x11Data->x11_mask) {
+    if (x11Data && x11Data->x11_mask) {
         QX11PixmapData *pmData = static_cast<QX11PixmapData*>(pm.data);
         pmData->x11_mask = (Qt::HANDLE)XCreatePixmap(X11->display,
                                                      RootWindow(x11Data->xinfo.display(),
@@ -615,13 +643,12 @@ void QPixmap::resize_helper(const QSize &s)
     \fn void QPixmap::resize(int width, int height)
     \compat
 
-    Use the QPixmap constructor that takes two \c{int}s (\a width and
-    \a height) instead.
+    Use QPixmap::copy() instead to get the pixmap with the new size.
 
     \oldcode
         pixmap.resize(10, 20);
     \newcode
-        pixmap = QPixmap(10, 20);
+        pixmap = pixmap.copy(0, 0, 10, 20);
     \endcode
 */
 
@@ -638,26 +665,19 @@ void QPixmap::resize_helper(const QSize &s)
 /*!
     Sets a mask bitmap.
 
-    The \a mask bitmap defines the clip mask for this pixmap. Every
-    pixel in \a mask corresponds to a pixel in this pixmap. Pixel
-    value 1 means opaque and pixel value 0 means transparent. The mask
-    must have the same size as this pixmap.
+    This function merges the \a mask with the pixmap's alpha channel. A pixel
+    value of 1 on the mask means the pixmap's pixel is unchanged; a value of 0
+    means the pixel is transparent. The mask must have the same size as this
+    pixmap.
 
-    \warning Setting the mask on a pixmap will cause any alpha channel
-    data to be cleared. For example:
-    \quotefromfile snippets/image/image.cpp
-    \skipto MASK
-    \skipto QPixmap
-    \printuntil setMask
-    Now, alpha and alphacopy are visually different.
+    Setting a null mask resets the mask, leaving the previously transparent
+    pixels black. The effect of this function is undefined when the pixmap is
+    being painted on.
 
-    Setting a null mask resets the mask.
+    This is potentially an expensive operation.
 
-    The effect of this function is undefined when the pixmap is being
-    painted on.
-
-    \sa mask(), {QPixmap#Pixmap Transformations}{Pixmap
-    Transformations}, QBitmap
+    \sa mask(), {QPixmap#Pixmap Transformations}{Pixmap Transformations},
+    QBitmap
 */
 void QPixmap::setMask(const QBitmap &mask)
 {
@@ -1039,7 +1059,49 @@ QPixmap QPixmap::grabWidget(QWidget * widget, const QRect &rect)
 */
 
 
+/*!
+    \since 4.5
+
+    \enum QPixmap::ShareMode
+
+    This enum type defines the share modes that are available when
+    creating a QPixmap object from a raw X11 Pixmap handle.
+
+    \value ImplicitlyShared  This mode will cause the QPixmap object to
+    create a copy of the internal data before it is modified, thus
+    keeping the original X11 pixmap intact.
+
+    \value ExplicitlyShared  In this mode, the pixmap data will \e not be
+    copied before it is modified, which in effect will change the
+    original X11 pixmap.
+
+    \warning This enum is only used for X11 specific functions; using
+    it is non-portable.
+
+    \sa QPixmap::fromX11Pixmap()
+*/
+
+/*!
+    \since 4.5
+
+    \fn QPixmap QPixmap::fromX11Pixmap(Qt::HANDLE pixmap, QPixmap::ShareMode mode)
+
+    Creates a QPixmap from the native X11 Pixmap handle \a pixmap,
+    using \a mode as the share mode. The default share mode is
+    QPixmap::ImplicitlyShared, which means that a copy of the pixmap is
+    made if someone tries to modify it by e.g. drawing onto it.
+
+    QPixmap does \e not take ownership of the \a pixmap handle, and
+    have to be deleted by the user.
+
+    \warning This function is X11 specific; using it is non-portable.
+
+    \sa QPixmap::ShareMode
+*/
+
+
 #if defined(Q_WS_X11) || defined(Q_WS_QWS)
+
 /*!
     Returns the pixmap's handle to the device context.
 
@@ -1248,12 +1310,14 @@ void QPixmap::deref()
 {
     if (data && !data->ref.deref()) { // Destroy image if last ref
 #if !defined(QT_NO_DIRECT3D) && defined(Q_WS_WIN)
-        QRasterPixmapData *rData = static_cast<QRasterPixmapData*>(data);
-        if (rData->texture)
-            rData->texture->Release();
-        rData->texture = 0;
+        if (data->classId() == QPixmapData::RasterClass) {
+            QRasterPixmapData *rData = static_cast<QRasterPixmapData*>(data);
+            if (rData->texture)
+                rData->texture->Release();
+            rData->texture = 0;
+        }
 #endif
-        if (qt_pixmap_cleanup_hook_64)
+        if (data->is_cached && qt_pixmap_cleanup_hook_64)
             qt_pixmap_cleanup_hook_64(cacheKey());
         delete data;
         data = 0;
@@ -1332,11 +1396,11 @@ QPixmap QPixmap::scaled(const QSize& s, Qt::AspectRatioMode aspectMode, Qt::Tran
     QSize newSize = size();
     newSize.scale(s, aspectMode);
     if (newSize == size())
-        return copy();
+        return *this;
 
     QPixmap pix;
     QTransform wm;
-    wm.scale((double)newSize.width() / width(), (double)newSize.height() / height());
+    wm.scale((qreal)newSize.width() / width(), (qreal)newSize.height() / height());
     pix = transformed(wm, mode);
     return pix;
 }
@@ -1365,7 +1429,7 @@ QPixmap QPixmap::scaledToWidth(int w, Qt::TransformationMode mode) const
         return QPixmap();
 
     QTransform wm;
-    double factor = (double) w / width();
+    qreal factor = (qreal) w / width();
     wm.scale(factor, factor);
     return transformed(wm, mode);
 }
@@ -1394,7 +1458,7 @@ QPixmap QPixmap::scaledToHeight(int h, Qt::TransformationMode mode) const
         return QPixmap();
 
     QTransform wm;
-    double factor = (double) h / height();
+    qreal factor = (qreal) h / height();
     wm.scale(factor, factor);
     return transformed(wm, mode);
 }
@@ -1540,10 +1604,6 @@ QPixmap QPixmap::transformed(const QMatrix &matrix, Qt::TransformationMode mode)
     \row    \o XBM    \o X11 Bitmap                       \o Read/write
     \row    \o XPM    \o X11 Pixmap                       \o Read/write
     \endtable
-
-    (To configure Qt with GIF support, pass \c -qt-gif to the \c
-    configure script or check the appropriate option in the graphical
-    installer.)
 
     \section1 Pixmap Information
 
@@ -1752,7 +1812,9 @@ QPaintEngine *QPixmap::paintEngine() const
 /*!
     \fn QBitmap QPixmap::mask() const
 
-    Returns the mask, or a null bitmap if no mask has been set.
+    Extracts a bitmap mask from the pixmap's alphachannel.
+
+    This is potentially an expensive operation.
 
     \sa setMask(), {QPixmap#Pixmap Information}{Pixmap Information}
 */
@@ -1777,6 +1839,8 @@ int QPixmap::defaultDepth()
     return QScreen::instance()->depth();
 #elif defined(Q_WS_X11)
     return QX11Info::appDepth();
+#elif defined(Q_OS_WINCE)
+    return QColormap::instance().depth();
 #elif defined(Q_WS_WIN)
     return 32; // XXX
 #elif defined(Q_WS_MAC)
@@ -1806,7 +1870,8 @@ extern _qt_pixmap_cleanup_hook_64 qt_pixmap_cleanup_hook_64;
 */
 void QPixmap::detach()
 {
-    if (data->classId() == QPixmapData::RasterClass) {
+    QPixmapData::ClassId id = data->classId();
+    if (id == QPixmapData::RasterClass) {
         QRasterPixmapData *rasterData = static_cast<QRasterPixmapData*>(data);
         rasterData->image.detach();
 #if defined(Q_WS_WIN) && !defined(QT_NO_DIRECT3D)
@@ -1817,37 +1882,45 @@ void QPixmap::detach()
 #endif
     }
 
-    if (qt_pixmap_cleanup_hook_64 && data->ref == 1)
+    if (data->is_cached && qt_pixmap_cleanup_hook_64 && data->ref == 1)
         qt_pixmap_cleanup_hook_64(cacheKey());
 
 #if defined(Q_WS_MAC)
-    QMacPixmapData *macData = static_cast<QMacPixmapData*>(data);
-    if (macData->cg_mask) {
-        CGImageRelease(macData->cg_mask);
-        macData->cg_mask = 0;
+    QMacPixmapData *macData = id == QPixmapData::MacClass ? static_cast<QMacPixmapData*>(data) : 0;
+    if (macData) {
+        if (macData->cg_mask) {
+            CGImageRelease(macData->cg_mask);
+            macData->cg_mask = 0;
+        }
     }
 #endif
 
     if (data->ref != 1) {
         *this = copy();
 #if defined(Q_WS_MAC) && !defined(QT_MAC_NO_QUICKDRAW)
-        macData->qd_alpha = 0;
+        if (id == QPixmapData::MacClass) {
+            macData->qd_alpha = 0;
+        }
 #endif
     }
     ++data->detach_no;
 
 #if defined(Q_WS_X11)
-    QX11PixmapData *d = static_cast<QX11PixmapData*>(data);
-    d->uninit = false;
+    if (data->classId() == QPixmapData::X11Class) {
+        QX11PixmapData *d = static_cast<QX11PixmapData*>(data);
+        d->uninit = false;
 
-    // reset the cache data
-    if (d->hd2) {
-        XFreePixmap(X11->display, d->hd2);
-        d->hd2 = 0;
+        // reset the cache data
+        if (d->hd2) {
+            XFreePixmap(X11->display, d->hd2);
+            d->hd2 = 0;
+        }
     }
 #elif defined(Q_WS_MAC)
-    macData->macReleaseCGImageRef();
-    macData->uninit = false;
+    if (macData) {
+        macData->macReleaseCGImageRef();
+        macData->uninit = false;
+    }
 #endif
 }
 
@@ -1871,8 +1944,13 @@ QPixmap QPixmap::fromImage(const QImage &image, Qt::ImageConversionFlags flags)
     if (image.isNull())
         return QPixmap();
 
-    QPixmapDataFactory *f = QPixmapDataFactory::instance();
-    QPixmapData *data = f->create(QPixmapData::PixmapType);
+    QPixmapData *data;
+    QGraphicsSystem* gs = QApplicationPrivate::graphicsSystem();
+    if (gs)
+        data = gs->createPixmapData(QPixmapData::PixmapType);
+    else
+        data = QGraphicsSystem::createDefaultPixmapData(QPixmapData::PixmapType);
+
     data->fromImage(image, flags);
     return QPixmap(data);
 }

@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGStyleElement_H
-#define JSSVGStyleElement_H
+#ifndef JSSVGStyleElement_h
+#define JSSVGStyleElement_h
 
 
 #if ENABLE(SVG)
@@ -31,30 +31,41 @@ namespace WebCore {
 class SVGStyleElement;
 
 class JSSVGStyleElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGStyleElement(KJS::ExecState*, SVGStyleElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGStyleElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGStyleElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        XmlspaceAttrNum, TypeAttrNum, MediaAttrNum, TitleAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGStyleElementPrototype : public KJS::JSObject {
+class JSSVGStyleElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGStyleElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGStyleElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGStyleElementXmlspace(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGStyleElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGStyleElementType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGStyleElementType(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGStyleElementMedia(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGStyleElementMedia(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGStyleElementTitle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGStyleElementTitle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

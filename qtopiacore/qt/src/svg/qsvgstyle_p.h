@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -134,6 +138,12 @@ private:
     int _ref;
 };
 
+struct QSvgExtraStates
+{
+    QSvgExtraStates();
+    qreal fillOpacity;
+};
+
 class QSvgStyleProperty : public QSvgRefCounted
 {
 public:
@@ -154,8 +164,8 @@ public:
     };
 public:
     virtual ~QSvgStyleProperty();
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node)  =0;
-    virtual void revert(QPainter *p) =0;
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states)  =0;
+    virtual void revert(QPainter *p, QSvgExtraStates &states) =0;
     virtual Type type() const=0;
 };
 
@@ -163,8 +173,8 @@ class QSvgQualityStyle : public QSvgStyleProperty
 {
 public:
     QSvgQualityStyle(int color);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 private:
     // color-render ing v 	v 	'auto' | 'optimizeSpeed' |
@@ -195,8 +205,8 @@ class QSvgOpacityStyle : public QSvgStyleProperty
 {
 public:
     QSvgOpacityStyle(qreal opacity);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 private:
     qreal m_opacity;
@@ -206,20 +216,14 @@ private:
 class QSvgFillStyle : public QSvgStyleProperty
 {
 public:
-    QSvgFillStyle(const QBrush &brush, bool fromColor=false);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    QSvgFillStyle(const QBrush &brush);
+    QSvgFillStyle(QSvgStyleProperty *style);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     void setFillRule(Qt::FillRule f);
-
-    //### hack that would be a lot better handled by
-    //having a default QSvgColorStyle element and handling it
-    //correctly in qsvghandler
-    bool fromColor() const
-    {
-        return m_fromColor;
-    }
+    void setFillOpacity(qreal opacity);
 
     const QBrush & qbrush() const
     {
@@ -229,21 +233,22 @@ private:
     // fill            v 	v 	'inherit' | <Paint.datatype>
     // fill-opacity    v 	v 	'inherit' | <OpacityValue.datatype>
     QBrush m_fill;
-
     QBrush m_oldFill;
-
-    bool m_fromColor;
+    QSvgStyleProperty *m_style;
 
     bool         m_fillRuleSet;
     Qt::FillRule m_fillRule;
+    bool m_fillOpacitySet;
+    qreal m_fillOpacity;
+    qreal m_oldOpacity;
 };
 
 class QSvgViewportFillStyle : public QSvgStyleProperty
 {
 public:
     QSvgViewportFillStyle(const QBrush &brush);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     const QBrush & qbrush() const
@@ -263,8 +268,8 @@ class QSvgFontStyle : public QSvgStyleProperty
 public:
     QSvgFontStyle(QSvgFont *font, QSvgTinyDocument *doc);
     QSvgFontStyle(const QFont &font, QSvgTinyDocument *doc);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     void setPointSize(qreal size);
@@ -302,8 +307,8 @@ class QSvgStrokeStyle : public QSvgStyleProperty
 {
 public:
     QSvgStrokeStyle(const QPen &pen);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     const QPen & qpen() const
@@ -329,8 +334,8 @@ class QSvgSolidColorStyle : public QSvgStyleProperty
 {
 public:
     QSvgSolidColorStyle(const QColor &color);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     const QColor & qcolor() const
@@ -351,8 +356,8 @@ class QSvgGradientStyle : public QSvgStyleProperty
 public:
     QSvgGradientStyle(QGradient *grad);
     ~QSvgGradientStyle() { delete m_gradient; }
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     void setStopLink(const QString &link, QSvgTinyDocument *doc);
@@ -386,20 +391,19 @@ private:
 class QSvgTransformStyle : public QSvgStyleProperty
 {
 public:
-    QSvgTransformStyle(const QMatrix &trans);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    QSvgTransformStyle(const QTransform &transform);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
-    const QMatrix & qmatrix() const
+    const QTransform & qtransform() const
     {
         return m_transform;
     }
 private:
     //7.6 The transform  attribute
-    QMatrix m_transform;
-
-    QMatrix m_oldWorldMatrix;
+    QTransform m_transform;
+    QTransform m_oldWorldTransform;
 };
 
 
@@ -420,8 +424,8 @@ public:
     void setArgs(TransformType type, const QVector<qreal> &args);
     void setFreeze(bool freeze);
     void setRepeatCount(qreal repeatCount);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 protected:
     void resolveMatrix(QSvgNode *node);
@@ -431,8 +435,8 @@ private:
     TransformType m_type;
     QVector<qreal> m_args;
     int m_count;
-    QMatrix m_transform;
-    QMatrix m_oldWorldMatrix;
+    QTransform m_transform;
+    QTransform m_oldWorldTransform;
     bool m_finished;
     bool m_freeze;
     qreal m_repeatCount;
@@ -446,8 +450,8 @@ public:
     void setArgs(bool fill, const QList<QColor> &colors);
     void setFreeze(bool freeze);
     void setRepeatCount(qreal repeatCount);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 private:
     qreal m_from, m_to, m_by;
@@ -466,8 +470,8 @@ class QSvgCompOpStyle : public QSvgStyleProperty
 {
 public:
     QSvgCompOpStyle(QPainter::CompositionMode mode);
-    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node);
-    virtual void revert(QPainter *p);
+    virtual void apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &states);
+    virtual void revert(QPainter *p, QSvgExtraStates &states);
     virtual Type type() const;
 
     const QPainter::CompositionMode & compOp() const
@@ -500,8 +504,8 @@ public:
     {}
     ~QSvgStyle();
 
-    void apply(QPainter *p, const QRectF &rect, QSvgNode *node);
-    void revert(QPainter *p);
+    void apply(QPainter *p, const QRectF &rect, QSvgNode *node, QSvgExtraStates &states);
+    void revert(QPainter *p, QSvgExtraStates &states);
     QSvgRefCounter<QSvgQualityStyle>      quality;
     QSvgRefCounter<QSvgFillStyle>         fill;
     QSvgRefCounter<QSvgViewportFillStyle> viewportFill;

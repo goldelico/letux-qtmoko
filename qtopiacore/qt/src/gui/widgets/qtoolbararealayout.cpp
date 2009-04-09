@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -67,6 +71,12 @@ QSize QToolBarAreaLayoutItem::sizeHint() const
     if (skip())
         return QSize(0, 0);
 
+    return realSizeHint();
+}
+
+//returns the real size hint not taking into account the visibility of the widget
+QSize QToolBarAreaLayoutItem::realSizeHint() const
+{
     QWidget *wid = widgetItem->widget();
     QSize s = wid->sizeHint().expandedTo(wid->minimumSizeHint());
     if (wid->sizePolicy().horizontalPolicy() == QSizePolicy::Ignored)
@@ -151,7 +161,10 @@ void QToolBarAreaLayoutLine::fitLayout()
             tblayout->checkUsePopupMenu();
 
         int itemMin = pick(o, item.minimumSize());
-        int itemHint = pick(o, item.sizeHint()) + item.extraSpace;
+        int itemHint = pick(o, item.sizeHint());
+        //we ensure the extraspace is not too low
+        item.extraSpace = qMax(itemMin - itemHint, item.extraSpace);
+        itemHint  += item.extraSpace;
         int itemExtra = qMin(itemHint - itemMin, extra);
 
         item.size = itemMin + itemExtra;
@@ -1230,9 +1243,18 @@ void QToolBarAreaLayout::saveState(QDataStream &stream) const
                                 widget, widget->windowTitle().toLocal8Bit().constData());
                 }
                 stream << objectName;
-                stream << (uchar) !widget->isHidden();
+                // we store information as:
+                // 1st bit: 1 if shown
+                // 2nd bit: 1 if orientation is vertical (default is horizontal)
+                uchar shownOrientation = (uchar)!widget->isHidden();
+                if (QToolBar * tb= qobject_cast<QToolBar*>(widget)) {
+                    if (tb->orientation() == Qt::Vertical)
+                        shownOrientation |= 2;
+                }
+                stream << shownOrientation;
                 stream << item.pos;
-                stream << item.size;
+                //if extraSpace is 0 the item has its "normal" size, so no need to store the size (we store -1)
+                stream << (item.extraSpace == 0 ? -1 : (pick(line.o, item.realSizeHint()) + item.extraSpace));
 
                 uint geom0, geom1;
                 packRect(&geom0, &geom1, widget->geometry(), widget->isWindow());
@@ -1313,12 +1335,12 @@ bool QToolBarAreaLayout::restoreState(QDataStream &stream, const QList<QToolBar*
 
             if (!testing) {
                 item.widgetItem = new QWidgetItemV2(toolBar);
-                toolBar->setOrientation(floating ? Qt::Horizontal : dock.o);
-                toolBar->setVisible(shown);
+                toolBar->setOrientation(floating ? ((shown & 2) ? Qt::Vertical : Qt::Horizontal) : dock.o);
+                toolBar->setVisible(shown & 1);
                 toolBar->d_func()->setWindowState(floating, true, rect);
 
                 //if it is -1, it means we should use the default size
-                item.extraSpace = (item.size == -1) ? 0 : item.size - pick(line.o, item.sizeHint());
+                item.extraSpace = (item.size == -1) ? 0 : item.size - pick(line.o, item.realSizeHint());
 
 
                 line.toolBarItems.append(item);

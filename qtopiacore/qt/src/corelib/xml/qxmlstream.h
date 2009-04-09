@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,11 +60,12 @@ QT_MODULE(Core)
 // keep binary compatibility
 //
 // The list of supported platforms is in:
-//   http://trolltech.com/developer/notes/supported_platforms
+//   http://qtsoftware.com/developer/notes/supported_platforms
 //
 // These platforms do not support symbol moving nor duplication
 // (because duplicate symbols cause warnings when linking):
 //   Apple MacOS X (Mach-O executable format)
+//       special case: 64-bit on Mac wasn't supported before 4.5.0
 //   IBM AIX (XCOFF executable format)
 //
 // These platforms do not support symbol moving but allow it to be duplicated:
@@ -79,7 +84,7 @@ QT_MODULE(Core)
 // We are taking the optimist scenario here to avoid creating more
 // symbols to be supported.
 
-#if defined(Q_OS_MAC) || defined(Q_OS_AIX)
+#if defined(Q_OS_MAC32) || defined(Q_OS_AIX)
 # if !defined QT_BUILD_XML_LIB
 #  define Q_XMLSTREAM_RENAME_SYMBOLS
 # endif
@@ -170,6 +175,22 @@ public:
     QStringRef value(const QLatin1String &qualifiedName) const;
     void append(const QString &namespaceUri, const QString &name, const QString &value);
     void append(const QString &qualifiedName, const QString &value);
+
+    inline bool hasAttribute(const QString &qualifiedName) const
+    {
+        return !value(qualifiedName).isNull();
+    }
+
+    inline bool hasAttribute(const QLatin1String &qualifiedName) const
+    {
+        return !value(qualifiedName).isNull();
+    }
+
+    inline bool hasAttribute(const QString &namespaceUri, const QString &name) const
+    {
+        return !value(namespaceUri, name).isNull();
+    }
+
 #if !defined(Q_NO_USING_KEYWORD)
     using QVector<QXmlStreamAttribute>::append;
 #else
@@ -403,7 +424,7 @@ public:
     void setAutoFormatting(bool);
     bool autoFormatting() const;
 
-    void setAutoFormattingIndent(int spaces);
+    void setAutoFormattingIndent(int spacesOrTabs);
     int autoFormattingIndent() const;
 
     void writeAttribute(const QString &qualifiedName, const QString &value);
@@ -433,6 +454,7 @@ public:
 
     void writeStartDocument();
     void writeStartDocument(const QString &version);
+    void writeStartDocument(const QString &version, bool standalone);
     void writeStartElement(const QString &qualifiedName);
     void writeStartElement(const QString &namespaceUri, const QString &name);
 

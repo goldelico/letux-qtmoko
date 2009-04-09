@@ -1,25 +1,21 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-*
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
+*/
 #ifndef _lucene_index_SegmentInfos_
 #define _lucene_index_SegmentInfos_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
 
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
-#   include <QtCore/QVector>
+#include <QtCore/QString>
+#include <QtCore/QVector>
 
-QT_USE_NAMESPACE
-#endif
-
-#include "CLucene/util/VoidList.h"
 #include "CLucene/store/Directory.h"
 
 CL_NS_DEF(index)
@@ -27,14 +23,15 @@ CL_NS_DEF(index)
 class SegmentInfo : LUCENE_BASE
 {
 public:
-    SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir);
+    SegmentInfo(const QString& Name, const int32_t DocCount,
+        CL_NS(store)::Directory* Dir);
     ~SegmentInfo();
 
     ///Gets the Directory where the segment resides
     CL_NS(store)::Directory* getDir() const { return dir; }
 
     //Unique name in directory dir
-    char name[CL_MAX_NAME];
+    QString name;
     
     //Number of docs in the segment
     const int32_t docCount;
@@ -44,11 +41,7 @@ private:
     CL_NS(store)::Directory* dir;		
 };
 
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
-    typedef QVector<SegmentInfo* > segmentInfosType;
-#else
-	typedef CL_NS(util)::CLVector<SegmentInfo*,CL_NS(util)::Deletor::Object<SegmentInfo> > segmentInfosType;
-#endif
+typedef QVector<SegmentInfo*> segmentInfosType;
 
 //SegmentInfos manages a list of SegmentInfo instances
 //Each SegmentInfo contains information about a segment in a directory.
@@ -115,7 +108,8 @@ private:
     LUCENE_STATIC_CONSTANT(int32_t, FORMAT = -1);
 
     // counts how often the index has been changed by adding or deleting docs.
-    // starting with the current time in milliseconds forces to create unique version numbers.
+    // starting with the current time in milliseconds forces to create unique
+    // version numbers.
     int64_t version;
 
     segmentInfosType infos;
@@ -126,9 +120,7 @@ private:
     // allow IndexWriter to use counter
     friend class IndexWriter; 
 
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
     bool deleteMembers;
-#endif
 };
 
 CL_NS_END

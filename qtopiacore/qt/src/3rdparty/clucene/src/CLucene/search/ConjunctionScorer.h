@@ -21,7 +21,7 @@ private:
   CL_NS(util)::CLLinkedList<Scorer*,CL_NS(util)::Deletor::Object<Scorer> > scorers;
   bool firstTime;
   bool more;
-  float_t coord;
+  qreal coord;
 
   Scorer* first() const;
   Scorer* last();
@@ -38,7 +38,7 @@ public:
   int32_t doc() const;
   bool next();
   bool skipTo(int32_t target);
-  float_t score();
+  qreal score();
   virtual void explain(int32_t doc, Explanation* ret) {
     _CLTHROWA(CL_ERR_UnsupportedOperation,"UnsupportedOperationException: ConjunctionScorer::explain");
   }

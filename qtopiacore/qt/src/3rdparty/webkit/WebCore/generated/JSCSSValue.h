@@ -18,52 +18,68 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSValue_H
-#define JSCSSValue_H
+#ifndef JSCSSValue_h
+#define JSCSSValue_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class CSSValue;
 
-class JSCSSValue : public KJS::DOMObject {
+class JSCSSValue : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSCSSValue(KJS::ExecState*, CSSValue*);
+    JSCSSValue(PassRefPtr<JSC::Structure>, PassRefPtr<CSSValue>);
     virtual ~JSCSSValue();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        CssTextAttrNum, CssValueTypeAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     CSSValue* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<CSSValue> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, CSSValue*);
-CSSValue* toCSSValue(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, CSSValue*);
+CSSValue* toCSSValue(JSC::JSValuePtr);
 
-class JSCSSValuePrototype : public KJS::JSObject {
+class JSCSSValuePrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSCSSValuePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSCSSValuePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsCSSValueCssText(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCSSValueCssText(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCSSValueCssValueType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSValueConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsCSSValueCSS_INHERIT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSValueCSS_PRIMITIVE_VALUE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSValueCSS_VALUE_LIST(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSValueCSS_CUSTOM(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

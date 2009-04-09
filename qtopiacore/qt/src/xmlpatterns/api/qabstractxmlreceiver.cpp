@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -209,14 +213,14 @@ QAbstractXmlReceiver::QAbstractXmlReceiver(QAbstractXmlReceiverPrivate *d)
 }
 
 /*!
-  The default constructor is sufficient.
+  Constructs an abstract xml receiver.
  */
 QAbstractXmlReceiver::QAbstractXmlReceiver() : d_ptr(0)
 {
 }
 
 /*!
-  The destructor is virtual.
+  Destroys the xml receiver.
  */
 QAbstractXmlReceiver::~QAbstractXmlReceiver()
 {
@@ -229,6 +233,13 @@ QAbstractXmlReceiver::~QAbstractXmlReceiver()
   This callback is called when a new element node appears
   in the \l {XQuery Sequence} {sequence}. \a name is the
   valid \l {QXmlName} {name} of the node element.
+ */
+
+/*
+### Qt 5:
+
+Consider how source locations should be communicated. Maybe every signature
+should be extended by adding "qint64 line = -1, qint64 column = -1".
  */
 
 /*!
@@ -273,6 +284,19 @@ QAbstractXmlReceiver::~QAbstractXmlReceiver()
   in the \l {XQuery Sequence} {sequence}.
  */
 
+/*
+### Qt 5:
+
+Change
+    virtual void startDocument() = 0;
+
+To:
+    virtual void startDocument(const QUrl &uri) = 0;
+
+Such that it allows the document URI to be communicated. The contract would
+allow null QUrls.
+*/
+
 /*!
   \fn void QAbstractXmlReceiver::endDocument()
 
@@ -312,10 +336,10 @@ QAbstractXmlReceiver::~QAbstractXmlReceiver()
 /*!
   \fn void QAbstractXmlReceiver::atomicValue(const QVariant &value)
 
-  This callback is called when an atomic value appears
-  in the \l {XQuery Sequence} {sequence}. The \a value is
-  a simple \l {QVariant} {value} {data value}. It is
-  guaranteed to be \l {QVariant::isValid()} {valid}.
+  This callback is called when an atomic value appears in the \l
+  {XQuery Sequence} {sequence}. The \a value is a simple \l {QVariant}
+  {data value}. It is guaranteed to be \l {QVariant::isValid()}
+  {valid}.
  */
 
 /*!
@@ -367,7 +391,7 @@ void QAbstractXmlReceiver::sendAsNode(const QPatternist::Item &outputItem)
         }
         case QXmlNodeModelIndex::Text:
         {
-            const QString &v = outputItem.stringValue();
+            const QString &v = asNode.stringValue();
             characters(QStringRef(&v));
             return;
         }

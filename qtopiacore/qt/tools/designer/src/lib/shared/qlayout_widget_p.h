@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -83,6 +87,8 @@ struct QDESIGNER_SHARED_EXPORT LayoutProperties
         SpacingProperty = 0x20, HorizSpacingProperty = 0x40, VertSpacingProperty = 0x80,
         SizeConstraintProperty = 0x100,
         FieldGrowthPolicyProperty = 0x200, RowWrapPolicyProperty = 0x400, LabelAlignmentProperty = 0x0800, FormAlignmentProperty = 0x1000,
+        BoxStretchProperty = 0x2000, GridRowStretchProperty = 0x4000, GridColumnStretchProperty = 0x8000,
+        GridRowMinimumHeightProperty = 0x10000, GridColumnMinimumWidthProperty = 0x20000,
         AllProperties = 0xFFFF};
 
     // return a PropertyMask of visible properties
@@ -98,7 +104,7 @@ struct QDESIGNER_SHARED_EXPORT LayoutProperties
     int m_spacings[SpacingsCount];
     bool m_spacingsChanged[SpacingsCount];
 
-    QString m_objectName;
+    QVariant m_objectName; // receives a PropertySheetStringValue
     bool m_objectNameChanged;
     QVariant m_sizeConstraint;
     bool m_sizeConstraintChanged;
@@ -111,6 +117,21 @@ struct QDESIGNER_SHARED_EXPORT LayoutProperties
     QVariant m_labelAlignment;
     bool m_formAlignmentChanged;
     QVariant m_formAlignment;
+
+    bool m_boxStretchChanged;
+    QVariant m_boxStretch;
+
+    bool m_gridRowStretchChanged;
+    QVariant m_gridRowStretch;
+
+    bool m_gridColumnStretchChanged;
+    QVariant m_gridColumnStretch;
+
+    bool m_gridRowMinimumHeightChanged;
+    QVariant m_gridRowMinimumHeight;
+
+    bool m_gridColumnMinimumWidthChanged;
+    QVariant  m_gridColumnMinimumWidth;
 };
 
 // -- LayoutHelper: For use with the 'insert widget'/'delete widget' command,
@@ -135,16 +156,18 @@ public:
     virtual QRect itemInfo(QLayout *lt, int index) const = 0;
     virtual void insertWidget(QLayout *lt, const QRect &info, QWidget *w) = 0;
     virtual void removeWidget(QLayout *lt, QWidget *widget) = 0;
+    // Since 4.5: The 'morphing' feature requires an API for replacing widgets on layouts.
+    virtual void replaceWidget(QLayout *lt, QWidget *before, QWidget *after) = 0;
 
     // Simplify a grid, remove empty columns, rows within the rectangle
     // The DeleteWidget command restricts the area to be simplified.
-    virtual bool canSimplify(const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const = 0;
+    virtual bool canSimplify(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const = 0;
     virtual void simplify(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout, const QRect &restrictionArea) = 0;
 
     // Push and pop a state. Can be used for implementing undo for
     // simplify/row, column insertion commands, provided that
     // the widgets remain the same.
-    virtual void pushState(const QWidget *widgetWithManagedLayout)  = 0;
+    virtual void pushState(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout)  = 0;
     virtual void popState(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout) = 0;
 };
 
@@ -207,7 +230,7 @@ protected:
     virtual bool supportsIndicatorOrientation(Qt::Orientation indicatorOrientation) const = 0;
 
     QRect itemInfo(int index) const;
-    inline QLayout *layout() const       { return m_widget->layout(); }
+    QLayout *layout() const;
     QGridLayout *gridLayout() const;
     QWidget *widget() const              { return m_widget; }
 

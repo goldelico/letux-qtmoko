@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedRect.h"
 
 #include <wtf/GetPtr.h>
@@ -35,85 +31,94 @@
 #include "FloatRect.h"
 #include "JSSVGRect.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedRect)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedRectTableEntries[] =
+static const HashTableValue JSSVGAnimatedRectTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedRect::BaseValAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "animVal", JSSVGAnimatedRect::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedRectBaseVal, (intptr_t)0 },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedRectAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedRectTable = 
-{
-    2, 2, JSSVGAnimatedRectTableEntries, 2
-};
+static const HashTable JSSVGAnimatedRectTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedRectTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedRectTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedRectPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedRectPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedRectPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedRectPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedRectPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedRectPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedRectPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedRectPrototype::info = { "SVGAnimatedRectPrototype", 0, &JSSVGAnimatedRectPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedRectPrototype::s_info = { "SVGAnimatedRectPrototype", 0, &JSSVGAnimatedRectPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedRectPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedRectPrototype>(exec, "[[JSSVGAnimatedRect.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedRect>(exec);
 }
 
-const ClassInfo JSSVGAnimatedRect::info = { "SVGAnimatedRect", 0, &JSSVGAnimatedRectTable, 0 };
+const ClassInfo JSSVGAnimatedRect::s_info = { "SVGAnimatedRect", 0, &JSSVGAnimatedRectTable, 0 };
 
-JSSVGAnimatedRect::JSSVGAnimatedRect(ExecState* exec, SVGAnimatedRect* impl)
-    : m_impl(impl)
+JSSVGAnimatedRect::JSSVGAnimatedRect(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedRect> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedRectPrototype::self(exec));
 }
 
 JSSVGAnimatedRect::~JSSVGAnimatedRect()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedRect>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedRect::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedRectPrototype(JSSVGAnimatedRectPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedRect::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedRect, KJS::DOMObject>(exec, &JSSVGAnimatedRectTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedRect, Base>(exec, &JSSVGAnimatedRectTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedRect::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedRectBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedRect* imp = static_cast<SVGAnimatedRect*>(impl());
-
-        return toJS(exec, new JSSVGPODTypeWrapperCreator<FloatRect, SVGAnimatedRect>(imp, &SVGAnimatedRect::baseVal, &SVGAnimatedRect::setBaseVal));
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedRect* imp = static_cast<SVGAnimatedRect*>(impl());
-
-        return toJS(exec, new JSSVGPODTypeWrapperCreator<FloatRect, SVGAnimatedRect>(imp, &SVGAnimatedRect::animVal, &SVGAnimatedRect::setAnimVal));
-    }
-    }
-    return 0;
+    SVGAnimatedRect* imp = static_cast<SVGAnimatedRect*>(static_cast<JSSVGAnimatedRect*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, JSSVGDynamicPODTypeWrapperCache<FloatRect, SVGAnimatedRect>::lookupOrCreateWrapper(imp, &SVGAnimatedRect::baseVal, &SVGAnimatedRect::setBaseVal).get(), static_cast<JSSVGAnimatedRect*>(asObject(slot.slotBase()))->context());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedRect* obj)
+JSValuePtr jsSVGAnimatedRectAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<SVGAnimatedRect, JSSVGAnimatedRect>(exec, obj);
+    SVGAnimatedRect* imp = static_cast<SVGAnimatedRect*>(static_cast<JSSVGAnimatedRect*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, JSSVGDynamicPODTypeWrapperCache<FloatRect, SVGAnimatedRect>::lookupOrCreateWrapper(imp, &SVGAnimatedRect::animVal, &SVGAnimatedRect::setAnimVal).get(), static_cast<JSSVGAnimatedRect*>(asObject(slot.slotBase()))->context());
 }
-SVGAnimatedRect* toSVGAnimatedRect(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedRect* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedRect::info) ? static_cast<JSSVGAnimatedRect*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedRect>(exec, object, context);
+}
+SVGAnimatedRect* toSVGAnimatedRect(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedRect::s_info) ? static_cast<JSSVGAnimatedRect*>(asObject(value))->impl() : 0;
 }
 
 }

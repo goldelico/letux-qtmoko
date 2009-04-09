@@ -5,18 +5,16 @@
  \* int foo(IN char\* name, OUT char\* path);\
  \*\
  \* Hence this un-break fix. Note that this file was auto generated. *\/\
-\#ifdef Q_OS_WINCE\
-\#    ifdef IN\
+\#ifdef IN\
 \#  undef IN\
-\#    endif\
-\#    ifdef INSTANCE\
-\#      undef INSTANCE\
-\#    endif\
-\#    ifdef STRICT\
-\#      undef STRICT\
-\#    endif\
-\#    ifdef SELF\
-\#      undef SELF\
-\#    endif\
+\#endif\
+\#ifdef INSTANCE\
+\#  undef INSTANCE\
+\#endif\
+\#ifdef STRICT\
+\#  undef STRICT\
+\#endif\
+\#ifdef SELF\
+\#  undef SELF\
 \#endif\
 

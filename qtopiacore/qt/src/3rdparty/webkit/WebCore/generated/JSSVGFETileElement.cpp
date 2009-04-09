@@ -21,228 +21,165 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFETileElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFETileElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFETileElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFETileElementTableEntries[] =
+static const HashTableValue JSSVGFETileElementTableValues[9] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFETileElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETileElementTableEntries[8] },
-    { "className", JSSVGFETileElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFETileElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFETileElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFETileElementTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFETileElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFETileElementTableEntries[9] },
-    { 0, 0, 0, 0, 0 },
-    { "height", JSSVGFETileElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFETileElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFETileElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementIn1, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFETileElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFETileElementTable = 
-{
-    2, 11, JSSVGFETileElementTableEntries, 8
-};
+static const HashTable JSSVGFETileElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFETileElementTableValues, 0 };
+#else
+    { 18, 15, JSSVGFETileElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFETileElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFETileElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFETileElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFETileElementPrototypeTable = 
-{
-    2, 1, JSSVGFETileElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFETileElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFETileElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFETileElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFETileElementPrototype::info = { "SVGFETileElementPrototype", 0, &JSSVGFETileElementPrototypeTable, 0 };
+const ClassInfo JSSVGFETileElementPrototype::s_info = { "SVGFETileElementPrototype", 0, &JSSVGFETileElementPrototypeTable, 0 };
 
 JSObject* JSSVGFETileElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFETileElementPrototype>(exec, "[[JSSVGFETileElement.prototype]]");
+    return getDOMPrototype<JSSVGFETileElement>(exec);
 }
 
-const ClassInfo JSSVGFETileElement::info = { "SVGFETileElement", &JSSVGElement::info, &JSSVGFETileElementTable, 0 };
-
-JSSVGFETileElement::JSSVGFETileElement(ExecState* exec, SVGFETileElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFETileElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFETileElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFETileElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFETileElement::s_info = { "SVGFETileElement", &JSSVGElement::s_info, &JSSVGFETileElementTable, 0 };
+
+JSSVGFETileElement::JSSVGFETileElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFETileElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFETileElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFETileElementPrototype(JSSVGFETileElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFETileElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFETileElement, JSSVGElement>(exec, &JSSVGFETileElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFETileElement, Base>(exec, &JSSVGFETileElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFETileElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFETileElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETileElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETileElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
+JSValuePtr jsSVGFETileElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETileElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETileElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
+JSValuePtr jsSVGFETileElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFETileElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(static_cast<JSSVGFETileElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFETileElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFETileElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFETileElement* castedThisObj = static_cast<JSSVGFETileElement*>(asObject(thisValue));
+    SVGFETileElement* imp = static_cast<SVGFETileElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFETileElement* imp = static_cast<SVGFETileElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

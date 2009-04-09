@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -103,6 +107,12 @@ void QActionPrivate::sendDataChanged()
         QWidget *w = widgets.at(i);
         QApplication::sendEvent(w, &e);
     }
+#ifndef QT_NO_GRAPHICSVIEW
+    for (int i = 0; i < graphicsWidgets.size(); ++i) {
+        QGraphicsWidget *w = graphicsWidgets.at(i);
+        QApplication::sendEvent(w, &e);
+    }
+#endif
     QApplication::sendEvent(q, &e);
 
     emit q->changed();
@@ -196,10 +206,10 @@ void QActionPrivate::setShortcutEnabled(bool enable, QShortcutMap &map)
     setStatusTip(), setWhatsThis(), and setToolTip(). For menu items,
     it is possible to set an individual font with setFont().
 
-    Actions are added to widgets using QWidget::addAction(). Note
-    that an action must be added to a widget before it can be used;
-    this is also true when the shortcut should be global (i.e.,
-    Qt::ApplicationShortcut as Qt::ShortcutContext).
+    Actions are added to widgets using QWidget::addAction() or
+    QGraphicsWidget::addAction(). Note that an action must be added to a
+    widget before it can be used; this is also true when the shortcut should
+    be global (i.e., Qt::ApplicationShortcut as Qt::ShortcutContext).
 
     Once a QAction has been created it should be added to the relevant
     menu and toolbar, then connected to the slot which will perform
@@ -331,13 +341,27 @@ QWidget *QAction::parentWidget() const
   \since 4.2
   Returns a list of widgets this action has been added to.
 
-  \sa QWidget::addAction()
+  \sa QWidget::addAction(), associatedGraphicsWidgets()
 */
 QList<QWidget *> QAction::associatedWidgets() const
 {
     Q_D(const QAction);
     return d->widgets;
 }
+
+#ifndef QT_NO_GRAPHICSVIEW
+/*!
+  \since 4.5
+  Returns a list of widgets this action has been added to.
+
+  \sa QWidget::addAction(), associatedWidgets()
+*/
+QList<QGraphicsWidget *> QAction::associatedGraphicsWidgets() const
+{
+    Q_D(const QAction);
+    return d->graphicsWidgets;
+}
+#endif
 
 #ifndef QT_NO_SHORTCUT
 /*!
@@ -580,6 +604,12 @@ QAction::~QAction()
         QWidget *w = d->widgets.at(i);
         w->removeAction(this);
     }
+#ifndef QT_NO_GRAPHICSVIEW
+    for (int i = d->graphicsWidgets.size()-1; i >= 0; --i) {
+        QGraphicsWidget *w = d->graphicsWidgets.at(i);
+        w->removeAction(this);
+    }
+#endif
     if (d->group)
         d->group->removeAction(this);
 #ifndef QT_NO_SHORTCUT
@@ -964,6 +994,11 @@ bool QAction::isChecked() const
 
     \gui{What's This?} help on disabled actions is still available, provided
     that the QAction::whatsThis property is set.
+
+    An action will be disabled when all widgets to which it is added
+    (with QWidget::addAction()) are disabled or not visible. When an
+    action is disabled, it is not possible to trigger it through its
+    shortcut.
 
     By default, this property is true (actions are enabled).
 

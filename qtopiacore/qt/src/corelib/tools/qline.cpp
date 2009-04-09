@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -642,38 +646,6 @@ QLineF QLineF::unitVector() const
     return f;
 }
 
-#define SAME_SIGNS(a, b) ((a) * (b) >= 0)
-
-// Line intersection algorithm, copied from Graphics Gems II
-static bool qt_linef_intersect(qreal x1, qreal y1, qreal x2, qreal y2,
-                               qreal x3, qreal y3, qreal x4, qreal y4)
-{
-    qreal a1, a2, b1, b2, c1, c2; /* Coefficients of line eqns. */
-    qreal r1, r2, r3, r4;         /* 'Sign' values */
-
-    a1 = y2 - y1;
-    b1 = x1 - x2;
-    c1 = x2 * y1 - x1 * y2;
-
-    r3 = a1 * x3 + b1 * y3 + c1;
-    r4 = a1 * x4 + b1 * y4 + c1;
-
-    if ( r3 != 0 && r4 != 0 && SAME_SIGNS( r3, r4 ))
-        return false;
-
-    a2 = y4 - y3;
-    b2 = x3 - x4;
-    c2 = x4 * y3 - x3 * y4;
-
-    r1 = a2 * x1 + b2 * y1 + c2;
-    r2 = a2 * x2 + b2 * y2 + c2;
-
-    if ( r1 != 0 && r2 != 0 && SAME_SIGNS( r1, r2 ))
-        return false;
-
-    return true;
-}
-
 /*!
     \fn QLineF::IntersectType QLineF::intersect(const QLineF &line, QPointF *intersectionPoint) const
 
@@ -687,40 +659,28 @@ static bool qt_linef_intersect(qreal x1, qreal y1, qreal x2, qreal y2,
 
 QLineF::IntersectType QLineF::intersect(const QLineF &l, QPointF *intersectionPoint) const
 {
-    if (isNull() || l.isNull()
-        || !qt_is_finite(pt1.x()) || !qt_is_finite(pt1.y()) || !qt_is_finite(pt2.x()) || !qt_is_finite(pt2.y())
-        || !qt_is_finite(l.pt1.x()) || !qt_is_finite(l.pt1.y()) || !qt_is_finite(l.pt2.x()) || !qt_is_finite(l.pt2.y()))
+    // ipmlementation is based on Graphics Gems III's "Faster Line Segment Intersection"
+    const QPointF a = pt2 - pt1;
+    const QPointF b = l.pt1 - l.pt2;
+    const QPointF c = pt1 - l.pt1;
+
+    const qreal denominator = a.y() * b.x() - a.x() * b.y();
+    if (denominator == 0 || !qt_is_finite(denominator))
         return NoIntersection;
 
-    QPointF isect;
-    IntersectType type = qt_linef_intersect(pt1.x(), pt1.y(), pt2.x(), pt2.y(),
-                                            l.x1(), l.y1(), l.x2(), l.y2())
-                         ? BoundedIntersection : UnboundedIntersection;
-
-    bool dx_zero = qFuzzyCompare(dx() + 1, 1);
-    bool ldx_zero = qFuzzyCompare(l.dx() + 1, 1);
-
-    // For special case where one of the lines are vertical
-    if (dx_zero && ldx_zero) {
-        type = NoIntersection;
-    } else if (dx_zero) {
-        qreal la = l.dy() / l.dx();
-        isect = QPointF(pt1.x(), la * pt1.x() + l.y1() - la*l.x1());
-    } else if (ldx_zero) {
-        qreal ta = dy() / dx();
-        isect = QPointF(l.x1(), ta * l.x1() + y1() - ta*x1());
-    } else {
-        qreal ta = dy()/dx();
-        qreal la = l.dy()/l.dx();
-        if (ta == la) // no intersection
-            return NoIntersection;
-
-        qreal x = ( - l.y1() + la * l.x1() + pt1.y() - ta * pt1.x() ) / (la - ta);
-        isect = QPointF(x, ta*(x - pt1.x()) + pt1.y());
-    }
+    const qreal reciprocal = 1 / denominator;
+    const qreal na = (b.y() * c.x() - b.x() * c.y()) * reciprocal;
     if (intersectionPoint)
-        *intersectionPoint = isect;
-    return type;
+        *intersectionPoint = pt1 + a * na;
+
+    if (na < 0 || na > 1)
+        return UnboundedIntersection;
+
+    const qreal nb = (a.x() * c.y() - a.y() * c.x()) * reciprocal;
+    if (nb < 0 || nb > 1)
+        return UnboundedIntersection;
+
+    return BoundedIntersection;
 }
 
 /*!

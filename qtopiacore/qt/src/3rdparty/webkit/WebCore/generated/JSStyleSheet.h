@@ -18,51 +18,64 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSStyleSheet_H
-#define JSStyleSheet_H
+#ifndef JSStyleSheet_h
+#define JSStyleSheet_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class StyleSheet;
 
-class JSStyleSheet : public KJS::DOMObject {
+class JSStyleSheet : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSStyleSheet(KJS::ExecState*, StyleSheet*);
+    JSStyleSheet(PassRefPtr<JSC::Structure>, PassRefPtr<StyleSheet>);
     virtual ~JSStyleSheet();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        TypeAttrNum, DisabledAttrNum, OwnerNodeAttrNum, ParentStyleSheetAttrNum, 
-        HrefAttrNum, TitleAttrNum, MediaAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    virtual void mark();
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     StyleSheet* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<StyleSheet> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, StyleSheet*);
-StyleSheet* toStyleSheet(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, StyleSheet*);
+StyleSheet* toStyleSheet(JSC::JSValuePtr);
 
-class JSStyleSheetPrototype : public KJS::JSObject {
+class JSStyleSheetPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSStyleSheetPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSStyleSheetPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsStyleSheetType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetDisabled(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSStyleSheetDisabled(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsStyleSheetOwnerNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetParentStyleSheet(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetHref(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetTitle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetMedia(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsStyleSheetConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/tools/designer/src/lib/sdk/abstractformwindow.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/tools/designer/src/lib/sdk/abstractformwindow.cpp -->
 <head>
-  <title>Qt 4.4: QDesignerFormWindowInterface Class Reference</title>
+  <title>Qt 4.5: QDesignerFormWindowInterface Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QDesignerFormWindowInterface Class Reference<br /><span class="small-subtitle">[<a href="qtdesigner.html">QtDesigner</a> module]</span>
 </h1>
@@ -22,106 +22,107 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>flags <b><a href="qdesignerformwindowinterface.html#FeatureFlag-enum">Feature</a></b></li>
-<li><div class="fn"/>enum <b><a href="qdesignerformwindowinterface.html#FeatureFlag-enum">FeatureFlag</a></b> { EditFeature, GridFeature, TabOrderFeature, DefaultFeature }</li>
+<li><div class="fn"></div>flags <b><a href="qdesignerformwindowinterface.html#FeatureFlag-enum">Feature</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qdesignerformwindowinterface.html#FeatureFlag-enum">FeatureFlag</a></b> { EditFeature, GridFeature, TabOrderFeature, DefaultFeature }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qdesignerformwindowinterface.html#QDesignerFormWindowInterface">QDesignerFormWindowInterface</a></b> ( QWidget * <i>parent</i> = 0, Qt::WindowFlags <i>flags</i> = 0 )</li>
-<li><div class="fn"/>virtual <b><a href="qdesignerformwindowinterface.html#dtor.QDesignerFormWindowInterface">~QDesignerFormWindowInterface</a></b> ()</li>
-<li><div class="fn"/>virtual QDir <b><a href="qdesignerformwindowinterface.html#absoluteDir">absoluteDir</a></b> () const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#addResourceFile">addResourceFile</a></b> ( const QString &amp; <i>path</i> ) = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#author">author</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#comment">comment</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#contents">contents</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QDesignerFormEditorInterface * <b><a href="qdesignerformwindowinterface.html#core">core</a></b> () const</li>
-<li><div class="fn"/>virtual QDesignerFormWindowCursorInterface * <b><a href="qdesignerformwindowinterface.html#cursor">cursor</a></b> () const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#emitSelectionChanged">emitSelectionChanged</a></b> () = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#exportMacro">exportMacro</a></b> () const = 0</li>
-<li><div class="fn"/>virtual Feature <b><a href="qdesignerformwindowinterface.html#features">features</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#fileName">fileName</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QPoint <b><a href="qdesignerformwindowinterface.html#grid">grid</a></b> () const = 0</li>
-<li><div class="fn"/>virtual bool <b><a href="qdesignerformwindowinterface.html#hasFeature">hasFeature</a></b> ( Feature <i>feature</i> ) const = 0</li>
-<li><div class="fn"/>virtual QStringList <b><a href="qdesignerformwindowinterface.html#includeHints">includeHints</a></b> () const = 0</li>
-<li><div class="fn"/>virtual bool <b><a href="qdesignerformwindowinterface.html#isDirty">isDirty</a></b> () const = 0</li>
-<li><div class="fn"/>virtual bool <b><a href="qdesignerformwindowinterface.html#isManaged">isManaged</a></b> ( QWidget * <i>widget</i> ) const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#layoutDefault">layoutDefault</a></b> ( int * <i>margin</i>, int * <i>spacing</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#layoutFunction">layoutFunction</a></b> ( QString * <i>margin</i>, QString * <i>spacing</i> ) = 0</li>
-<li><div class="fn"/>virtual QWidget * <b><a href="qdesignerformwindowinterface.html#mainContainer">mainContainer</a></b> () const = 0</li>
-<li><div class="fn"/>virtual QString <b><a href="qdesignerformwindowinterface.html#pixmapFunction">pixmapFunction</a></b> () const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#removeResourceFile">removeResourceFile</a></b> ( const QString &amp; <i>path</i> ) = 0</li>
-<li><div class="fn"/>virtual QStringList <b><a href="qdesignerformwindowinterface.html#resourceFiles">resourceFiles</a></b> () const = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setAuthor">setAuthor</a></b> ( const QString &amp; <i>author</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setComment">setComment</a></b> ( const QString &amp; <i>comment</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setContents">setContents</a></b> ( QIODevice * <i>device</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setExportMacro">setExportMacro</a></b> ( const QString &amp; <i>exportMacro</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setIncludeHints">setIncludeHints</a></b> ( const QStringList &amp; <i>includeHints</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setLayoutDefault">setLayoutDefault</a></b> ( int <i>margin</i>, int <i>spacing</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setLayoutFunction">setLayoutFunction</a></b> ( const QString &amp; <i>margin</i>, const QString &amp; <i>spacing</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setMainContainer">setMainContainer</a></b> ( QWidget * <i>mainContainer</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setPixmapFunction">setPixmapFunction</a></b> ( const QString &amp; <i>pixmapFunction</i> ) = 0</li>
+<li><div class="fn"></div><b><a href="qdesignerformwindowinterface.html#QDesignerFormWindowInterface">QDesignerFormWindowInterface</a></b> ( QWidget * <i>parent</i> = 0, Qt::WindowFlags <i>flags</i> = 0 )</li>
+<li><div class="fn"></div>virtual <b><a href="qdesignerformwindowinterface.html#dtor.QDesignerFormWindowInterface">~QDesignerFormWindowInterface</a></b> ()</li>
+<li><div class="fn"></div>virtual QDir <b><a href="qdesignerformwindowinterface.html#absoluteDir">absoluteDir</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#addResourceFile">addResourceFile</a></b> ( const QString &amp; <i>path</i> ) = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#author">author</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#comment">comment</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#contents">contents</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QDesignerFormEditorInterface * <b><a href="qdesignerformwindowinterface.html#core">core</a></b> () const</li>
+<li><div class="fn"></div>virtual QDesignerFormWindowCursorInterface * <b><a href="qdesignerformwindowinterface.html#cursor">cursor</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#emitSelectionChanged">emitSelectionChanged</a></b> () = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#exportMacro">exportMacro</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual Feature <b><a href="qdesignerformwindowinterface.html#features">features</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#fileName">fileName</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QPoint <b><a href="qdesignerformwindowinterface.html#grid">grid</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual bool <b><a href="qdesignerformwindowinterface.html#hasFeature">hasFeature</a></b> ( Feature <i>feature</i> ) const = 0</li>
+<li><div class="fn"></div>virtual QStringList <b><a href="qdesignerformwindowinterface.html#includeHints">includeHints</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual bool <b><a href="qdesignerformwindowinterface.html#isDirty">isDirty</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual bool <b><a href="qdesignerformwindowinterface.html#isManaged">isManaged</a></b> ( QWidget * <i>widget</i> ) const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#layoutDefault">layoutDefault</a></b> ( int * <i>margin</i>, int * <i>spacing</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#layoutFunction">layoutFunction</a></b> ( QString * <i>margin</i>, QString * <i>spacing</i> ) = 0</li>
+<li><div class="fn"></div>virtual QWidget * <b><a href="qdesignerformwindowinterface.html#mainContainer">mainContainer</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual QString <b><a href="qdesignerformwindowinterface.html#pixmapFunction">pixmapFunction</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#removeResourceFile">removeResourceFile</a></b> ( const QString &amp; <i>path</i> ) = 0</li>
+<li><div class="fn"></div>virtual QStringList <b><a href="qdesignerformwindowinterface.html#resourceFiles">resourceFiles</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setAuthor">setAuthor</a></b> ( const QString &amp; <i>author</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setComment">setComment</a></b> ( const QString &amp; <i>comment</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setContents">setContents</a></b> ( QIODevice * <i>device</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setExportMacro">setExportMacro</a></b> ( const QString &amp; <i>exportMacro</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setIncludeHints">setIncludeHints</a></b> ( const QStringList &amp; <i>includeHints</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setLayoutDefault">setLayoutDefault</a></b> ( int <i>margin</i>, int <i>spacing</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setLayoutFunction">setLayoutFunction</a></b> ( const QString &amp; <i>margin</i>, const QString &amp; <i>spacing</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setMainContainer">setMainContainer</a></b> ( QWidget * <i>mainContainer</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setPixmapFunction">setPixmapFunction</a></b> ( const QString &amp; <i>pixmapFunction</i> ) = 0</li>
 </ul>
 <ul>
-<li><div class="fn"/>206 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"/>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
 <ul>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#clearSelection">clearSelection</a></b> ( bool <i>update</i> = true ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#manageWidget">manageWidget</a></b> ( QWidget * <i>widget</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#selectWidget">selectWidget</a></b> ( QWidget * <i>widget</i>, bool <i>select</i> = true ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setContents-2">setContents</a></b> ( const QString &amp; <i>contents</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setDirty">setDirty</a></b> ( bool <i>dirty</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setFeatures">setFeatures</a></b> ( Feature <i>features</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setFileName">setFileName</a></b> ( const QString &amp; <i>fileName</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#setGrid">setGrid</a></b> ( const QPoint &amp; <i>grid</i> ) = 0</li>
-<li><div class="fn"/>virtual void <b><a href="qdesignerformwindowinterface.html#unmanageWidget">unmanageWidget</a></b> ( QWidget * <i>widget</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#clearSelection">clearSelection</a></b> ( bool <i>update</i> = true ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#manageWidget">manageWidget</a></b> ( QWidget * <i>widget</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#selectWidget">selectWidget</a></b> ( QWidget * <i>widget</i>, bool <i>select</i> = true ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setContents-2">setContents</a></b> ( const QString &amp; <i>contents</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setDirty">setDirty</a></b> ( bool <i>dirty</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setFeatures">setFeatures</a></b> ( Feature <i>features</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setFileName">setFileName</a></b> ( const QString &amp; <i>fileName</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#setGrid">setGrid</a></b> ( const QPoint &amp; <i>grid</i> ) = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qdesignerformwindowinterface.html#unmanageWidget">unmanageWidget</a></b> ( QWidget * <i>widget</i> ) = 0</li>
 </ul>
 <ul>
-<li><div class="fn"/>19 public slots inherited from <a href="qwidget.html#public-slots">QWidget</a></li>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>19 public slots inherited from <a href="qwidget.html#public-slots">QWidget</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#aboutToUnmanageWidget">aboutToUnmanageWidget</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#activated">activated</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#changed">changed</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#featureChanged">featureChanged</a></b> ( Feature <i>feature</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#fileNameChanged">fileNameChanged</a></b> ( const QString &amp; <i>fileName</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#geometryChanged">geometryChanged</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#mainContainerChanged">mainContainerChanged</a></b> ( QWidget * <i>mainContainer</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#resourceFilesChanged">resourceFilesChanged</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#selectionChanged">selectionChanged</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#widgetManaged">widgetManaged</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#widgetRemoved">widgetRemoved</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qdesignerformwindowinterface.html#widgetUnmanaged">widgetUnmanaged</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#aboutToUnmanageWidget">aboutToUnmanageWidget</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#activated">activated</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#changed">changed</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#featureChanged">featureChanged</a></b> ( Feature <i>feature</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#fileNameChanged">fileNameChanged</a></b> ( const QString &amp; <i>fileName</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#geometryChanged">geometryChanged</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#mainContainerChanged">mainContainerChanged</a></b> ( QWidget * <i>mainContainer</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#objectRemoved">objectRemoved</a></b> ( QObject * <i>object</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#resourceFilesChanged">resourceFilesChanged</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#selectionChanged">selectionChanged</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#widgetManaged">widgetManaged</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#widgetRemoved">widgetRemoved</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qdesignerformwindowinterface.html#widgetUnmanaged">widgetUnmanaged</a></b> ( QWidget * <i>widget</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 signal inherited from <a href="qwidget.html#signals">QWidget</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qwidget.html#signals">QWidget</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QDesignerFormWindowInterface * <b><a href="qdesignerformwindowinterface.html#findFormWindow">findFormWindow</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>QDesignerFormWindowInterface * <b><a href="qdesignerformwindowinterface.html#findFormWindow-2">findFormWindow</a></b> ( QObject * <i>object</i> )</li>
+<li><div class="fn"></div>QDesignerFormWindowInterface * <b><a href="qdesignerformwindowinterface.html#findFormWindow">findFormWindow</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>QDesignerFormWindowInterface * <b><a href="qdesignerformwindowinterface.html#findFormWindow-2">findFormWindow</a></b> ( QObject * <i>object</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>57 properties inherited from <a href="qwidget.html#properties">QWidget</a></li>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
-<li><div class="fn"/>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
-<li><div class="fn"/>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
-<li><div class="fn"/>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
+<li><div class="fn"></div>57 properties inherited from <a href="qwidget.html#properties">QWidget</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -218,7 +219,6 @@
 <h3 class="fn"><a name="findFormWindow"></a>QDesignerFormWindowInterface * QDesignerFormWindowInterface::findFormWindow ( <a href="qwidget.html">QWidget</a> * <i>widget</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns the form window interface for the given <i>widget</i>.</p>
 <h3 class="fn"><a name="findFormWindow-2"></a>QDesignerFormWindowInterface * QDesignerFormWindowInterface::findFormWindow ( <a href="qobject.html">QObject</a> * <i>object</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the form window interface for the given <i>object</i>.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="geometryChanged"></a>void QDesignerFormWindowInterface::geometryChanged ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -254,6 +254,9 @@
 <h3 class="fn"><a name="manageWidget"></a>void QDesignerFormWindowInterface::manageWidget ( <a href="qwidget.html">QWidget</a> * <i>widget</i> )&nbsp;&nbsp;<tt> [pure virtual slot]</tt></h3>
 <p>Instructs the form window to manage the specified <i>widget</i>.</p>
 <p>See also <a href="qdesignerformwindowinterface.html#isManaged">isManaged</a>(), <a href="qdesignerformwindowinterface.html#unmanageWidget">unmanageWidget</a>(), and <a href="qdesignerformwindowinterface.html#widgetManaged">widgetManaged</a>().</p>
+<h3 class="fn"><a name="objectRemoved"></a>void QDesignerFormWindowInterface::objectRemoved ( <a href="qobject.html">QObject</a> * <i>object</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted whenever an object (such as an action or a <a href="qbuttongroup.html">QButtonGroup</a>) is removed from the form. The object that was removed is specified by <i>object</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="pixmapFunction"></a><a href="qstring.html">QString</a> QDesignerFormWindowInterface::pixmapFunction () const&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
 <p>Returns the name of the function used to load pixmaps into the form window.</p>
 <p>See also <a href="qdesignerformwindowinterface.html#setPixmapFunction">setPixmapFunction</a>().</p>
@@ -283,7 +286,6 @@
 <p>Data can be read from <a href="qfile.html">QFile</a> objects or any other subclass of <a href="qiodevice.html">QIODevice</a>.</p>
 <p>See also <a href="qdesignerformwindowinterface.html#contents">contents</a>().</p>
 <h3 class="fn"><a name="setContents-2"></a>void QDesignerFormWindowInterface::setContents ( const <a href="qstring.html">QString</a> &amp; <i>contents</i> )&nbsp;&nbsp;<tt> [pure virtual slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Sets the contents of the form using data read from the specified <i>contents</i> string.</p>
 <p>See also <a href="qdesignerformwindowinterface.html#contents">contents</a>().</p>
 <h3 class="fn"><a name="setDirty"></a>void QDesignerFormWindowInterface::setDirty ( bool <i>dirty</i> )&nbsp;&nbsp;<tt> [pure virtual slot]</tt></h3>
@@ -331,8 +333,8 @@
 <p>See also <a href="qdesignerformwindowinterface.html#unmanageWidget">unmanageWidget</a>() and <a href="qdesignerformwindowinterface.html#aboutToUnmanageWidget">aboutToUnmanageWidget</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

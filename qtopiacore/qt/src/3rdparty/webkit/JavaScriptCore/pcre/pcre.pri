@@ -1,29 +1,16 @@
 # Perl Compatible Regular Expressions - Qt4 build info
 VPATH += $$PWD
-INCLUDEPATH += $$PWD $$OUTPUT_DIR/JavaScriptCore/kjs/tmp
+INCLUDEPATH += $$PWD $$OUTPUT_DIR/JavaScriptCore/tmp
+DEPENDPATH += $$PWD
 
 isEmpty(GENERATED_SOURCES_DIR):GENERATED_SOURCES_DIR = tmp
 
 SOURCES += \
-    pcre_get.c \
-    pcre_refcount.c \
-    pcre_ucp_findchar.c \
-    pcre_compile.c \
-    pcre_globals.c \
-    pcre_config.c \
-    pcre_version.c \
-    pcre_info.c \
-    pcre_study.c \
-    pcre_exec.c \
-    pcre_xclass.c \
-    pcre_tables.c \
-    pcre_maketables.c \
-    pcre_try_flipped.c \
-    pcre_ord2utf8.c \
-    pcre_fullinfo.c
-
-CTGENFILE += \
-    dftables.c
+    pcre_compile.cpp \
+    pcre_exec.cpp \
+    pcre_tables.cpp \
+    pcre_ucp_searchfuncs.cpp \
+    pcre_xclass.cpp
 
 !CONFIG(QTDIR_build) {
     defineTest(addExtraCompiler) {
@@ -36,9 +23,11 @@ CTGENFILE += \
 }
 
 # GENERATOR: "chartables.c": compile and execute the chartables generator (and add it to sources)
+win32-msvc*|wince*: PREPROCESSOR = "--preprocessor=\"$$QMAKE_CC /E\""
+DFTABLES = $$PWD/dftables
+ctgen.input = DFTABLES
 ctgen.output = $$GENERATED_SOURCES_DIR/chartables.c
-ctgen.commands = $$OUTPUT_DIR/JavaScriptCore/pcre/tmp/dftables ${QMAKE_FILE_OUT}
-ctgen.input = CTGENFILE
+ctgen.commands = perl $$DFTABLES ${QMAKE_FILE_OUT} $$PREPROCESSOR
 ctgen.CONFIG += target_predeps no_link
 ctgen.variable_out = GENERATED_SOURCES
 ctgen.dependency_type = TYPE_C

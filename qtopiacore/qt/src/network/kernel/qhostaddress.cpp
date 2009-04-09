@@ -1,44 +1,50 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#include "qdebug.h"
 #include "qhostaddress.h"
+#include "qhostaddress_p.h"
+#include "qdebug.h"
 #include "qplatformdefs.h"
 #include "qstringlist.h"
+#include "qendian.h"
 #ifndef QT_NO_DATASTREAM
 #include <qdatastream.h>
 #endif
@@ -46,7 +52,7 @@
 #include <winsock.h>
 #endif
 
-#ifdef QT_LSB
+#ifdef QT_LINUXBASE
 #  include <arpa/inet.h>
 #endif
 
@@ -108,7 +114,6 @@ public:
     bool parse();
     void clear();
 
-private:
     quint32 a;    // IPv4 address
     Q_IPV6ADDR a6; // IPv6 address
     QAbstractSocket::NetworkLayerProtocol protocol;
@@ -184,6 +189,19 @@ static bool parseIp6(const QString &address, quint8 *addr, QString *scopeId)
     QStringList ipv6 = tmp.split(QLatin1String(":"));
     int count = ipv6.count();
     if (count < 3 || count > 8)
+        return false;
+
+    int colonColon = tmp.count(QLatin1String("::"));
+    if(count == 8 && colonColon > 1)
+        return false;
+
+    // address can be compressed with a "::", but that
+    // may only appear once (see RFC 1884)
+    // the statement below means:
+    // if(shortened notation is not used AND
+    // ((pure IPv6 notation AND less than 8 parts) OR
+    // ((mixed IPv4/6 notation AND less than 7 parts)))
+    if(colonColon != 1 && count < (tmp.contains(QLatin1Char('.')) ? 7 : 8))
         return false;
 
     int mc = 16;
@@ -277,11 +295,132 @@ void QHostAddressPrivate::clear()
     memset(&a6, 0, sizeof(a6));
 }
 
+
+bool QNetmaskAddress::setAddress(const QString &address)
+{
+    length = -1;
+    QHostAddress other;
+    return other.setAddress(address) && setAddress(other);
+}
+
+bool QNetmaskAddress::setAddress(const QHostAddress &address)
+{
+    static const quint8 zeroes[16] = { 0 };
+    union {
+        quint32 v4;
+        quint8 v6[16];
+    } ip;
+
+    int netmask = 0;
+    quint8 *ptr = ip.v6;
+    quint8 *end;
+    length = -1;
+
+    QHostAddress::operator=(address);
+
+    if (d->protocol == QAbstractSocket::IPv4Protocol) {
+        ip.v4 = qToBigEndian(d->a);
+        end = ptr + 4;
+    } else if (d->protocol == QAbstractSocket::IPv6Protocol) {
+        memcpy(ip.v6, d->a6.c, 16);
+        end = ptr + 16;
+    } else {
+        d->clear();
+        return false;
+    }
+
+    while (ptr < end) {
+        switch (*ptr) {
+        case 255:
+            netmask += 8;
+            ++ptr;
+            continue;
+
+        default:
+            d->clear();
+            return false;       // invalid IP-style netmask
+
+            // the rest always falls through
+        case 254:
+            ++netmask;
+        case 252:
+            ++netmask;
+        case 248:
+            ++netmask;
+        case 240:
+            ++netmask;
+        case 224:
+            ++netmask;
+        case 192:
+            ++netmask;
+        case 128:
+            ++netmask;
+        case 0:
+            break;
+        }
+        break;
+    }
+
+    // confirm that the rest is only zeroes
+    if (ptr < end && memcmp(ptr + 1, zeroes, end - ptr - 1) != 0) {
+        d->clear();
+        return false;
+    }
+
+    length = netmask;
+    return true;
+}
+
+static void clearBits(quint8 *where, int start, int end)
+{
+    Q_ASSERT(end == 32 || end == 128);
+    if (start == end)
+        return;
+
+    // for the byte where 'start' is, clear the lower bits only
+    quint8 bytemask = 256 - (1 << (8 - (start & 7)));
+    where[start / 8] &= bytemask;
+
+    // for the tail part, clear everything
+    memset(where + (start + 7) / 8, 0, end / 8 - (start + 7) / 8);
+}
+
+int QNetmaskAddress::prefixLength() const
+{
+    return length;
+}
+
+void QNetmaskAddress::setPrefixLength(QAbstractSocket::NetworkLayerProtocol proto, int newLength)
+{
+    length = newLength;
+    if (length < 0 || length > (proto == QAbstractSocket::IPv4Protocol ? 32 :
+                                proto == QAbstractSocket::IPv6Protocol ? 128 : -1)) {
+        // invalid information, reject
+        d->protocol = QAbstractSocket::UnknownNetworkLayerProtocol;
+        length = -1;
+        return;
+    }
+
+    d->protocol = proto;
+    if (d->protocol == QAbstractSocket::IPv4Protocol) {
+        if (length == 0) {
+            d->a = 0;
+        } else if (length == 32) {
+            d->a = quint32(0xffffffff);
+        } else {
+            d->a = quint32(0xffffffff) >> (32 - length) << (32 - length);
+        }
+    } else {
+        memset(d->a6.c, 0xFF, sizeof(d->a6));
+        clearBits(d->a6.c, length, 128);
+    }
+}
+
 /*!
     \class QHostAddress
     \brief The QHostAddress class provides an IP address.
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     This class holds an IPv4 or IPv6 address in a platform- and
     protocol-independent manner.
@@ -739,6 +878,202 @@ bool QHostAddress::isNull() const
 
     Use protocol() instead.
 */
+
+/*!
+    \since 4.5
+
+    Returns true if this IP is in the subnet described by the network
+    prefix \a subnet and netmask \a netmask.
+
+    An IP is considered to belong to a subnet if it is contained
+    between the lowest and the highest address in that subnet. In the
+    case of IP version 4, the lowest address is the network address,
+    while the highest address is the broadcast address.
+
+    The \a subnet argument does not have to be the actual network
+    address (the lowest address in the subnet). It can be any valid IP
+    belonging to that subnet. In particular, if it is equal to the IP
+    address held by this object, this function will always return true
+    (provided the netmask is a valid value).
+
+    \sa parseSubnet()
+*/
+bool QHostAddress::isInSubnet(const QHostAddress &subnet, int netmask) const
+{
+    QT_ENSURE_PARSED(this);
+    if (subnet.protocol() != d->protocol || netmask < 0)
+        return false;
+
+    union {
+        quint32 ip;
+        quint8 data[4];
+    } ip4, net4;
+    const quint8 *ip;
+    const quint8 *net;
+    if (d->protocol == QAbstractSocket::IPv4Protocol) {
+        if (netmask > 32)
+            netmask = 32;
+        ip4.ip = qToBigEndian(d->a);
+        net4.ip = qToBigEndian(subnet.d->a);
+        ip = ip4.data;
+        net = net4.data;
+    } else if (d->protocol == QAbstractSocket::IPv6Protocol) {
+        if (netmask > 128)
+            netmask = 128;
+        ip = d->a6.c;
+        net = subnet.d->a6.c;
+    } else {
+        return false;
+    }
+
+    if (netmask >= 8 && memcmp(ip, net, netmask / 8) != 0)
+        return false;
+    if ((netmask & 7) == 0)
+        return true;
+
+    // compare the last octet now
+    quint8 bytemask = 256 - (1 << (8 - (netmask & 7)));
+    quint8 ipbyte = ip[netmask / 8];
+    quint8 netbyte = net[netmask / 8];
+    return (ipbyte & bytemask) == (netbyte & bytemask);
+}
+
+/*!
+    \since 4.5
+    \overload
+
+    Returns true if this IP is in the subnet described by \a
+    subnet. The QHostAddress member of \a subnet contains the network
+    prefix and the int (second) member contains the netmask (prefix
+    length).
+*/
+bool QHostAddress::isInSubnet(const QPair<QHostAddress, int> &subnet) const
+{
+    return isInSubnet(subnet.first, subnet.second);
+}
+
+
+/*!
+    \since 4.5
+
+    Parses the IP and subnet information contained in \a subnet and
+    returns the network prefix for that network and its prefix length.
+
+    The IP address and the netmask must be separated by a slash
+    (/).
+
+    This function supports arguments in the form:
+    \list
+      \o 123.123.123.123/n  where n is any value between 0 and 32
+      \o 123.123.123.123/255.255.255.255
+      \o <ipv6-address>/n  where n is any value between 0 and 128
+    \endlist
+
+    For IP version 4, this function accepts as well missing trailing
+    components (i.e., less than 4 octets, like "192.168.1"), followed
+    or not by a dot. If the netmask is also missing in that case, it
+    is set to the number of octets actually passed (in the example
+    above, it would be 24, for 3 octets).
+
+    \sa isInSubnet()
+*/
+QPair<QHostAddress, int> QHostAddress::parseSubnet(const QString &subnet)
+{
+    // We support subnets in the form:
+    //   ddd.ddd.ddd.ddd/nn
+    //   ddd.ddd.ddd/nn
+    //   ddd.ddd/nn
+    //   ddd/nn
+    //   ddd.ddd.ddd.
+    //   ddd.ddd.ddd
+    //   ddd.ddd.
+    //   ddd.ddd
+    //   ddd.
+    //   ddd
+    //   <ipv6-address>/nn
+    //
+    //  where nn can be an IPv4-style netmask for the IPv4 forms
+
+    const QPair<QHostAddress, int> invalid = qMakePair(QHostAddress(), -1);
+    if (subnet.isEmpty())
+        return invalid;
+
+    int slash = subnet.indexOf(QLatin1Char('/'));
+    QString netStr = subnet;
+    if (slash != -1)
+        netStr.truncate(slash);
+
+    int netmask = -1;
+    bool isIpv6 = netStr.contains(QLatin1Char(':'));
+
+    if (slash != -1) {
+        // is the netmask given in IP-form or in bit-count form?
+        if (!isIpv6 && subnet.indexOf(QLatin1Char('.'), slash + 1) != -1) {
+            // IP-style, convert it to bit-count form
+            QNetmaskAddress parser;
+            if (!parser.setAddress(subnet.mid(slash + 1)))
+                return invalid;
+            netmask = parser.prefixLength();
+        } else {
+            bool ok;
+            netmask = subnet.mid(slash + 1).toUInt(&ok);
+            if (!ok)
+                return invalid;     // failed to parse the subnet
+        }
+    }
+
+    if (isIpv6) {
+        // looks like it's an IPv6 address
+        if (netmask > 128)
+            return invalid;     // invalid netmask
+        if (netmask < 0)
+            netmask = 128;
+
+        QHostAddress net;
+        if (!net.setAddress(netStr))
+            return invalid;     // failed to parse the IP
+
+        clearBits(net.d->a6.c, netmask, 128);
+        return qMakePair(net, netmask);
+    }
+
+    if (netmask > 32)
+        return invalid;         // invalid netmask
+
+    // parse the address manually
+    QStringList parts = netStr.split(QLatin1Char('.'));
+    if (parts.isEmpty() || parts.count() > 4)
+        return invalid;         // invalid IPv4 address
+
+    if (parts.last().isEmpty())
+        parts.removeLast();
+
+    quint32 addr = 0;
+    for (int i = 0; i < parts.count(); ++i) {
+        bool ok;
+        uint byteValue = parts.at(i).toUInt(&ok);
+        if (!ok || byteValue > 255)
+            return invalid;     // invalid IPv4 address
+
+        addr <<= 8;
+        addr += byteValue;
+    }
+    addr <<= 8 * (4 - parts.count());
+    if (netmask == -1) {
+        netmask = 8 * parts.count();
+    } else if (netmask == 0) {
+        // special case here
+        // x86's instructions "shr" and "shl" do not operate when
+        // their argument is 32, so the code below doesn't work as expected
+        addr = 0;
+    } else if (netmask != 32) {
+        // clear remaining bits
+        quint32 mask = quint32(0xffffffff) >> (32 - netmask) << (32 - netmask);
+        addr &= mask;
+    }
+
+    return qMakePair(QHostAddress(addr), netmask);
+}
 
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug d, const QHostAddress &address)

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -465,10 +469,10 @@ bool QProcessPrivate::createChannel(Channel &channel)
         if (&channel == &stdinChannel) {
             // try to open in read-only mode
             channel.pipe[1] = -1;
-            if ( (channel.pipe[0] = open(fname, O_RDONLY)) != -1)
+            if ( (channel.pipe[0] = QT_OPEN(fname, O_RDONLY)) != -1)
                 return true;    // success
 
-            q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Could not open input redirection for reading")));
+            q->setErrorString(QProcess::tr("Could not open input redirection for reading"));
         } else {
             int mode = O_WRONLY | O_CREAT;
             if (channel.append)
@@ -477,10 +481,10 @@ bool QProcessPrivate::createChannel(Channel &channel)
                 mode |= O_TRUNC;
 
             channel.pipe[0] = -1;
-            if ( (channel.pipe[1] = open(fname, mode, 0666)) != -1)
+            if ( (channel.pipe[1] = QT_OPEN(fname, mode, 0666)) != -1)
                 return true; // success
 
-            q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Could not open output redirection for writing")));
+            q->setErrorString(QProcess::tr("Could not open output redirection for writing"));
         }
 
         // could not open file
@@ -693,6 +697,7 @@ void QProcessPrivate::startProcess()
     // Start the process manager, and fork off the child process.
     processManager()->lock();
     pid_t childPid = qt_fork();
+    int lastForkErrno = errno;
     if (childPid != 0) {
         // Clean up duplicated memory.
         free(dupProgramName);
@@ -708,10 +713,13 @@ void QProcessPrivate::startProcess()
     }
     if (childPid < 0) {
         // Cleanup, report error and return
+#if defined (QPROCESS_DEBUG)
+        qDebug("qt_fork failed: %s", qt_error_string(lastForkErrno));
+#endif
         processManager()->unlock();
         q->setProcessState(QProcess::NotRunning);
         processError = QProcess::FailedToStart;
-        q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Resource error (fork failure)")));
+        q->setErrorString(QProcess::tr("Resource error (fork failure): %1").arg(qt_error_string(lastForkErrno)));
         emit q->error(processError);
         cleanup();
         return;
@@ -970,7 +978,7 @@ bool QProcessPrivate::waitForStarted(int msecs)
     } while (ret < 0 && errno == EINTR);
     if (ret == 0) {
         processError = QProcess::Timedout;
-        q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Process operation timed out")));
+        q->setErrorString(QProcess::tr("Process operation timed out"));
 #if defined (QPROCESS_DEBUG)
         qDebug("QProcessPrivate::waitForStarted(%d) == false (timed out)", msecs);
 #endif
@@ -1023,7 +1031,7 @@ bool QProcessPrivate::waitForReadyRead(int msecs)
         }
         if (ret == 0) {
             processError = QProcess::Timedout;
-            q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Process operation timed out")));
+            q->setErrorString(QProcess::tr("Process operation timed out"));
 	    return false;
 	}
 
@@ -1097,7 +1105,7 @@ bool QProcessPrivate::waitForBytesWritten(int msecs)
 
         if (ret == 0) {
 	    processError = QProcess::Timedout;
-	    q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Process operation timed out")));
+	    q->setErrorString(QProcess::tr("Process operation timed out"));
 	    return false;
 	}
 
@@ -1164,7 +1172,7 @@ bool QProcessPrivate::waitForFinished(int msecs)
         }
 	if (ret == 0) {
 	    processError = QProcess::Timedout;
-	    q->setErrorString(QLatin1String(QT_TRANSLATE_NOOP(QProcess, "Process operation timed out")));
+	    q->setErrorString(QProcess::tr("Process operation timed out"));
 	    return false;
 	}
 

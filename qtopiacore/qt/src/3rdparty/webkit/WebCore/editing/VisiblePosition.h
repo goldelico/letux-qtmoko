@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2004, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,7 +26,9 @@
 #ifndef VisiblePosition_h
 #define VisiblePosition_h
 
+#include "Node.h"
 #include "Position.h"
+#include "TextDirection.h"
 
 namespace WebCore {
 
@@ -42,6 +44,8 @@ namespace WebCore {
 // constructors auto-correct UPSTREAM to DOWNSTREAM if the
 // position is not at a line break.
 #define VP_UPSTREAM_IF_POSSIBLE UPSTREAM
+
+class InlineBox;
 
 class VisiblePosition {
 public:
@@ -66,6 +70,9 @@ public:
     VisiblePosition honorEditableBoundaryAtOrBefore(const VisiblePosition&) const;
     VisiblePosition honorEditableBoundaryAtOrAfter(const VisiblePosition&) const;
 
+    VisiblePosition left(bool stayInEditableContent = false) const;
+    VisiblePosition right(bool stayInEditableContent = false) const;
+
     UChar characterAfter() const;
     UChar characterBefore() const { return previous().characterAfter(); }
     
@@ -73,8 +80,24 @@ public:
     
     Element* rootEditableElement() const { return m_deepPosition.isNotNull() ? m_deepPosition.node()->rootEditableElement() : 0; }
     
-    IntRect caretRect() const;
+    void getInlineBoxAndOffset(InlineBox*& inlineBox, int& caretOffset) const
+    {
+        m_deepPosition.getInlineBoxAndOffset(m_affinity, inlineBox, caretOffset);
+    }
 
+    void getInlineBoxAndOffset(TextDirection primaryDirection, InlineBox*& inlineBox, int& caretOffset) const
+    {
+        m_deepPosition.getInlineBoxAndOffset(m_affinity, primaryDirection, inlineBox, caretOffset);
+    }
+
+    // Rect is local to the returned renderer
+    IntRect localCaretRect(RenderObject*&) const;
+    // Bounds of (possibly transformed) caret in absolute coords
+    IntRect absoluteCaretBounds() const;
+    // Abs x position of the caret ignoring transforms.
+    // FIXME: navigation with transforms should be smarter.
+    int xOffsetForVerticalNavigation() const;
+    
 #ifndef NDEBUG
     void formatForDebugger(char* buffer, unsigned length) const;
     void showTreeForThis() const;
@@ -83,7 +106,10 @@ public:
 private:
     void init(const Position&, EAffinity);
     Position canonicalPosition(const Position&);
-        
+
+    Position leftVisuallyDistinctCandidate() const;
+    Position rightVisuallyDistinctCandidate() const;
+
     Position m_deepPosition;
     EAffinity m_affinity;
 };

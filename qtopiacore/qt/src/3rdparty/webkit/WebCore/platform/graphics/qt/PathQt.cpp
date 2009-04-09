@@ -29,15 +29,22 @@
 #include "config.h"
 #include "Path.h"
 
+#include "TransformationMatrix.h"
 #include "FloatRect.h"
+#include "GraphicsContext.h"
+#include "ImageBuffer.h"
 #include "PlatformString.h"
-#include "AffineTransform.h"
+#include "StrokeStyleApplier.h"
 #include <QPainterPath>
 #include <QMatrix>
 #include <QString>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#ifndef M_PI
+#   define M_PI 3.14159265358979323846
+#endif
 
 namespace WebCore {
 
@@ -87,6 +94,27 @@ void Path::translate(const FloatSize& size)
 FloatRect Path::boundingRect() const
 {
     return m_path->boundingRect();
+}
+
+FloatRect Path::strokeBoundingRect(StrokeStyleApplier* applier)
+{
+    // FIXME: We should try to use a 'shared Context' instead of creating a new ImageBuffer
+    // on each call.
+    std::auto_ptr<ImageBuffer> scratchImage = ImageBuffer::create(IntSize(1, 1), false);
+    GraphicsContext* gc = scratchImage->context();
+    QPainterPathStroker stroke;
+    if (applier) {
+        applier->strokeStyle(gc);
+
+        QPen pen = gc->pen();
+        stroke.setWidth(pen.widthF());
+        stroke.setCapStyle(pen.capStyle());
+        stroke.setJoinStyle(pen.joinStyle());
+        stroke.setMiterLimit(pen.miterLimit());
+        stroke.setDashPattern(pen.dashPattern());
+        stroke.setDashOffset(pen.dashOffset());
+    }
+    return (stroke.createStroke(*platformPath())).boundingRect();
 }
 
 void Path::moveTo(const FloatPoint& point)
@@ -263,7 +291,7 @@ void Path::apply(void* info, PathApplierFunction function) const
     }
 }
 
-void Path::transform(const AffineTransform& transform)
+void Path::transform(const TransformationMatrix& transform)
 {
     if (m_path) {
         QMatrix mat = transform;

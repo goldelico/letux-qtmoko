@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -69,7 +73,8 @@ public:
 
     virtual bool resolve(const QScriptValueImpl &object,
                          QScriptNameIdImpl *nameId,
-                         QScript::Member *member, QScriptValueImpl *base);
+                         QScript::Member *member, QScriptValueImpl *base,
+                         QScript::AccessMode access);
     virtual bool get(const QScriptValueImpl &object, const Member &member,
                      QScriptValueImpl *out_value);
     virtual bool put(QScriptValueImpl *object, const Member &member,
@@ -109,12 +114,13 @@ StringClassData::~StringClassData()
 bool StringClassData::resolve(const QScriptValueImpl &object,
                               QScriptNameIdImpl *nameId,
                               QScript::Member *member,
-                              QScriptValueImpl *base)
+                              QScriptValueImpl *base,
+                              QScript::AccessMode /*access*/)
 {
     if (object.classInfo() != classInfo())
         return false;
 
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object.engine());
+    QScriptEnginePrivate *eng = object.engine();
 
     if (nameId == eng->idTable()->id_length) {
         member->native(nameId, /*id=*/ 0,
@@ -147,7 +153,7 @@ bool StringClassData::get(const QScriptValueImpl &object,
     if (object.classInfo() != classInfo())
         return false;
 
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object.engine());
+    QScriptEnginePrivate *eng = object.engine();
     if (! member.isNativeProperty())
         return false;
 
@@ -155,13 +161,13 @@ bool StringClassData::get(const QScriptValueImpl &object,
     int len = ref->s.length();
 
     if (member.nameId() == eng->idTable()->id_length)
-        eng->newNumber(result, len);
+        *result = QScriptValueImpl(len);
 
     else if (member.id() >= 0 && member.id() < len)
         eng->newString(result, ref->s.at(member.id()));
 
     else
-        eng->newUndefined(result);
+        *result = eng->undefinedValue();
 
     return true;
 }
@@ -226,8 +232,7 @@ void StringClassDataIterator::toBack()
 String::String(QScriptEnginePrivate *eng):
     Core(eng, QLatin1String("String"), QScriptClassInfo::StringType)
 {
-    QExplicitlySharedDataPointer<QScriptClassData> data(new StringClassData(classInfo()));
-    classInfo()->setData(data);
+    classInfo()->setData(new StringClassData(classInfo()));
 
     newString(&publicPrototype, QString());
 
@@ -237,15 +242,16 @@ String::String(QScriptEnginePrivate *eng):
     addPrototypeFunction(QLatin1String("valueOf"), method_valueOf, 0);
     addPrototypeFunction(QLatin1String("charAt"), method_charAt, 1);
     addPrototypeFunction(QLatin1String("charCodeAt"), method_charCodeAt, 1);
-    addPrototypeFunction(QLatin1String("concat"), method_concat, 0);
+    addPrototypeFunction(QLatin1String("concat"), method_concat, 1);
     addPrototypeFunction(QLatin1String("indexOf"), method_indexOf, 1);
     addPrototypeFunction(QLatin1String("lastIndexOf"), method_lastIndexOf, 1);
     addPrototypeFunction(QLatin1String("localeCompare"), method_localeCompare, 1);
     addPrototypeFunction(QLatin1String("match"), method_match, 1);
     addPrototypeFunction(QLatin1String("replace"), method_replace, 2);
     addPrototypeFunction(QLatin1String("search"), method_search, 1);
-    addPrototypeFunction(QLatin1String("slice"), method_slice, 0);
+    addPrototypeFunction(QLatin1String("slice"), method_slice, 2);
     addPrototypeFunction(QLatin1String("split"), method_split, 2);
+    addPrototypeFunction(QLatin1String("substr"), method_substr, 2);
     addPrototypeFunction(QLatin1String("substring"), method_substring, 2);
     addPrototypeFunction(QLatin1String("toLowerCase"), method_toLowerCase, 0);
     addPrototypeFunction(QLatin1String("toLocaleLowerCase"), method_toLocaleLowerCase, 0);
@@ -293,18 +299,19 @@ void String::newString(QScriptValueImpl *result, const QString &value)
 QScriptValueImpl String::method_toString(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *classInfo)
 {
     QScriptValueImpl self = context->thisObject();
-    if (self.classInfo() != classInfo)
+    if (self.classInfo() != classInfo) {
         return context->throwError(QScriptContext::TypeError, QLatin1String("String.prototype.toString"));
-
+    }
     return (self.internalValue());
 }
 
 QScriptValueImpl String::method_valueOf(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *classInfo)
 {
     QScriptValueImpl self = context->thisObject();
-    if (self.classInfo() != classInfo)
-        return context->throwError(QScriptContext::TypeError, QLatin1String("String.prototype.valueOf"));
-
+    if (self.classInfo() != classInfo) {
+        return throwThisObjectTypeError(
+            context, QLatin1String("String.prototype.valueOf"));
+    }
     return (self.internalValue());
 }
 
@@ -323,7 +330,7 @@ QScriptValueImpl String::method_charAt(QScriptContextPrivate *context, QScriptEn
     return (QScriptValueImpl(eng, result));
 }
 
-QScriptValueImpl String::method_charCodeAt(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+QScriptValueImpl String::method_charCodeAt(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *)
 {
     QString str = context->thisObject().toString();
 
@@ -336,7 +343,7 @@ QScriptValueImpl String::method_charCodeAt(QScriptContextPrivate *context, QScri
     if (pos >= 0 && pos < str.length())
         result = str.at(pos).unicode();
 
-    return (QScriptValueImpl(eng, result));
+    return (QScriptValueImpl(result));
 }
 
 QScriptValueImpl String::method_concat(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
@@ -349,13 +356,11 @@ QScriptValueImpl String::method_concat(QScriptContextPrivate *context, QScriptEn
     return (QScriptValueImpl(eng, value));
 }
 
-QScriptValueImpl String::method_indexOf(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+QScriptValueImpl String::method_indexOf(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *)
 {
     QString value = context->thisObject().toString();
 
-    QString searchString;
-    if (context->argumentCount() > 0)
-        searchString = context->argument(0).toString();
+    QString searchString = context->argument(0).toString();
 
     int pos = 0;
     if (context->argumentCount() > 1)
@@ -363,18 +368,16 @@ QScriptValueImpl String::method_indexOf(QScriptContextPrivate *context, QScriptE
 
     int index = -1;
     if (! value.isEmpty())
-        index = value.indexOf(searchString, qMax(pos, 0));
+        index = value.indexOf(searchString, qMin(qMax(pos, 0), value.length()));
 
-    return (QScriptValueImpl(eng, index));
+    return (QScriptValueImpl(index));
 }
 
-QScriptValueImpl String::method_lastIndexOf(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+QScriptValueImpl String::method_lastIndexOf(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *)
 {
     QString value = context->thisObject().toString();
 
-    QString searchString;
-    if (context->argumentCount() > 0)
-        searchString = context->argument(0).toString();
+    QString searchString = context->argument(0).toString();
 
     qsreal position = context->argument(1).toNumber();
     if (qIsNaN(position))
@@ -386,14 +389,14 @@ QScriptValueImpl String::method_lastIndexOf(QScriptContextPrivate *context, QScr
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     int index = value.lastIndexOf(searchString, pos);
-    return (QScriptValueImpl(eng, index));
+    return (QScriptValueImpl(index));
 }
 
-QScriptValueImpl String::method_localeCompare(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+QScriptValueImpl String::method_localeCompare(QScriptContextPrivate *context, QScriptEnginePrivate *, QScriptClassInfo *)
 {
     QString value = context->thisObject().toString();
     QString that = context->argument(0).toString();
-    return QScriptValueImpl(eng, QString::localeAwareCompare(value, that));
+    return QScriptValueImpl(QString::localeAwareCompare(value, that));
 }
 
 QScriptValueImpl String::method_match(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
@@ -401,12 +404,13 @@ QScriptValueImpl String::method_match(QScriptContextPrivate *context, QScriptEng
     QScriptValueImpl pattern = context->argument(0);
 
     if (! eng->regexpConstructor->get(pattern))
-        eng->regexpConstructor->newRegExp(&pattern, context->argument(0).toString(), QString());
+        eng->regexpConstructor->newRegExp(&pattern, context->argument(0).toString(), /*flags=*/0);
 
     QScriptValueImpl rx_exec = pattern.property(QLatin1String("exec"), QScriptValue::ResolvePrototype);
-    if (! (rx_exec.isValid() && rx_exec.isFunction()))
+    if (! (rx_exec.isValid() && rx_exec.isFunction())) {
         return context->throwError(QScriptContext::TypeError,
                                    QLatin1String("String.prototype.match"));
+    }
 
     QScriptValueImplList args;
     args << context->thisObject();
@@ -415,12 +419,12 @@ QScriptValueImpl String::method_match(QScriptContextPrivate *context, QScriptEng
     if (! (global.isValid() && global.toBoolean()))
         return (rx_exec.call(pattern, args));
 
-    QScript::Array result;
+    QScript::Array result(eng);
 
     QScriptNameIdImpl *lastIndexId = eng->nameId(QLatin1String("lastIndex"));
     QScriptNameIdImpl *zeroId = eng->nameId(QLatin1String("0"));
 
-    pattern.setProperty(lastIndexId, QScriptValueImpl(eng, 0));
+    pattern.setProperty(lastIndexId, QScriptValueImpl(0));
     int n = 0;
     while (true) {
         qsreal lastIndex = pattern.property(lastIndexId).toNumber();
@@ -429,7 +433,7 @@ QScriptValueImpl String::method_match(QScriptContextPrivate *context, QScriptEng
             break;
         qsreal newLastIndex = pattern.property(lastIndexId).toNumber();
         if (newLastIndex == lastIndex)
-            pattern.setProperty(lastIndexId, QScriptValueImpl(eng, lastIndex + 1));
+            pattern.setProperty(lastIndexId, QScriptValueImpl(lastIndex + 1));
         result.assign(n++, r.property(zeroId));
     }
 
@@ -446,9 +450,10 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
     if (searchValue.classInfo() == eng->regexpConstructor->classInfo()) {
         // searchValue is a RegExp
         QScriptValueImpl rx_exec = searchValue.property(QLatin1String("exec"), QScriptValue::ResolvePrototype);
-        if (!rx_exec.isFunction())
+        if (!rx_exec.isFunction()) {
             return context->throwError(QScriptContext::TypeError,
                                        QLatin1String("String.prototype.replace"));
+        }
         QVector<QScriptValueImpl> occurrences;
         QScriptValueImpl global = searchValue.property(QLatin1String("global"));
         QScriptValueImplList args;
@@ -459,7 +464,7 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                 occurrences.append(r);
         } else {
             QScriptNameIdImpl *lastIndexId = eng->nameId(QLatin1String("lastIndex"));
-            searchValue.setProperty(lastIndexId, QScriptValueImpl(eng, 0));
+            searchValue.setProperty(lastIndexId, QScriptValueImpl(0));
             while (true) {
                 qsreal lastIndex = searchValue.property(lastIndexId).toNumber();
                 QScriptValueImpl r = rx_exec.call(searchValue, args);
@@ -467,7 +472,7 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                     break;
                 qsreal newLastIndex = searchValue.property(lastIndexId).toNumber();
                 if (newLastIndex == lastIndex)
-                    searchValue.setProperty(lastIndexId, QScriptValueImpl(eng, lastIndex + 1));
+                    searchValue.setProperty(lastIndexId, QScriptValueImpl(lastIndex + 1));
                 occurrences.append(r);
             }
         }
@@ -481,10 +486,10 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                 uint length = eng->toUint32(needle.property(lengthId).toNumber());
                 output += input.mid(pos, index - pos);
                 args.clear();
-                args << QScriptValueImpl(eng, index);
-                args << QScriptValueImpl(eng, input);
                 for (uint j = 0; j < length; ++j)
-                    args << needle.property(QScriptValueImpl(eng, j).toString());
+                    args << needle.property(j);
+                args << QScriptValueImpl(index);
+                args << QScriptValueImpl(eng, input);
                 QScriptValueImpl ret = replaceValue.call(eng->nullValue(), args);
                 output += ret.toString();
                 pos = index + args[0].toString().length();
@@ -521,7 +526,7 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                                 cap = cap * 10;
                                 cap = replaceString.at(j++).toLatin1() - '0';
                             }
-                            output += needle.property(QScriptValueImpl(eng, cap).toString()).toString();
+                            output += needle.property(QScriptValueImpl(cap).toString()).toString();
                             continue;
                         }
                     }
@@ -529,33 +534,30 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                 }
                 pos = index + needle.property(zeroId).toString().length();
             }
-            output += input.mid(pos);
         }
+        output += input.mid(pos);
     } else {
         // use string representation of searchValue
         const QString searchString = searchValue.toString();
         int pos = 0;
         if (replaceValue.isFunction()) {
-            QScriptValueImplList args;
-            args << QScriptValueImpl(eng, searchString);
-            args << eng->undefinedValue(); // dummy
-            args << QScriptValueImpl(eng, input);
             int index = input.indexOf(searchString, pos);
-            while (index != -1) {
+            if (index != -1) {
                 output += input.mid(pos, index - pos);
-                args[1] = QScriptValueImpl(eng, index);
+                QScriptValueImplList args;
+                args << QScriptValueImpl(eng, searchString);
+                args << QScriptValueImpl(index);
+                args << QScriptValueImpl(eng, input);
                 QScriptValueImpl ret = replaceValue.call(eng->nullValue(), args);
                 output += ret.toString();
                 pos = index + searchString.length();
-                index = input.indexOf(searchString, pos);
             }
-            output += input.mid(pos);
         } else {
             // use string representation of replaceValue
             const QString replaceString = replaceValue.toString();
             const QLatin1Char dollar = QLatin1Char('$');
             int index = input.indexOf(searchString, pos);
-            while (index != -1) {
+            if (index != -1) {
                 output += input.mid(pos, index - pos);
                 int j = 0;
                 while (j < replaceString.length()) {
@@ -577,10 +579,9 @@ QScriptValueImpl String::method_replace(QScriptContextPrivate *context, QScriptE
                     output += c;
                 }
                 pos = index + searchString.length();
-                index = input.indexOf(searchString, pos);
             }
-            output += input.mid(pos);
         }
+        output += input.mid(pos);
     }
     return QScriptValueImpl(eng, output);
 }
@@ -591,13 +592,13 @@ QScriptValueImpl String::method_search(QScriptContextPrivate *context, QScriptEn
 
     Ecma::RegExp::Instance *rx_data = 0;
     if (0 == (rx_data = eng->regexpConstructor->get(pattern))) {
-        eng->regexpConstructor->newRegExp(&pattern, context->argument(0).toString(), QString());
+        eng->regexpConstructor->newRegExp(&pattern, context->argument(0).toString(), /*flags=*/0);
         rx_data = eng->regexpConstructor->get(pattern);
     }
 
     QString value = context->thisObject().toString();
 #ifndef QT_NO_REGEXP
-    return (QScriptValueImpl(eng, value.indexOf(rx_data->value)));
+    return (QScriptValueImpl(value.indexOf(rx_data->value)));
 #else
     return eng->nullValue();
 #endif
@@ -637,7 +638,7 @@ QScriptValueImpl String::method_split(QScriptContextPrivate *context, QScriptEng
     QString S = context->thisObject().toString();
     QScriptValueImpl separator = context->argument(0);
 
-    QScript::Array A;
+    QScript::Array A(eng);
     // the argumentCount() check is for compatibility with spidermonkey;
     // it is not according to ECMA-262
     if (separator.isUndefined() && (context->argumentCount() == 0)) {
@@ -661,6 +662,29 @@ QScriptValueImpl String::method_split(QScriptContextPrivate *context, QScriptEng
     }
 
     return eng->newArray(A);
+}
+
+QScriptValueImpl String::method_substr(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+{
+    QString value = context->thisObject().toString();
+
+    qsreal start = 0;
+    if (context->argumentCount() > 0)
+        start = context->argument(0).toInteger();
+
+    qsreal length = +qInf();
+    if (context->argumentCount() > 1)
+        length = context->argument(1).toInteger();
+
+    qsreal count = value.length();
+    if (start < 0)
+        start = qMax(count + start, 0.0);
+
+    length = qMin(qMax(length, 0.0), count - start);
+
+    qint32 x = QScriptEnginePrivate::toInt32(start);
+    qint32 y = QScriptEnginePrivate::toInt32(length);
+    return QScriptValueImpl(eng, value.mid(x, y));
 }
 
 QScriptValueImpl String::method_substring(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
@@ -731,6 +755,20 @@ QScriptValueImpl String::method_fromCharCode(QScriptContextPrivate *context, QSc
         str += c;
     }
     return (QScriptValueImpl(eng, str));
+}
+
+// Qt extensions
+
+QScriptValueImpl String::method_ext_arg(QScriptContextPrivate *context, QScriptEnginePrivate *eng, QScriptClassInfo *)
+{
+    QString value = context->thisObject().toString();
+    QScriptValueImpl arg = context->argument(0);
+    QString result;
+    if (arg.isString())
+        result = value.arg(arg.toString());
+    else if (arg.isNumber())
+        result = value.arg(arg.toNumber());
+    return QScriptValueImpl(eng, result);
 }
 
 } } // namespace QScript::Ecma

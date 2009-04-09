@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,6 +45,7 @@
 #include <qdebug.h>
 #include "qtexttable_p.h"
 #include "qvarlengtharray.h"
+#include "private/qfunctions_p.h"
 
 #include <stdlib.h>
 
@@ -115,6 +120,7 @@ void QTextTableCell::setFormat(const QTextCharFormat &format)
 {
     QTextCharFormat fmt = format;
     fmt.clearProperty(QTextFormat::ObjectIndex);
+    fmt.setObjectType(QTextFormat::TableCellObject);
     QTextDocumentPrivate *p = table->docHandle();
     QTextDocumentPrivate::FragmentIterator frag(&p->fragmentMap(), fragment);
 
@@ -134,9 +140,22 @@ QTextCharFormat QTextTableCell::format() const
     QTextDocumentPrivate *p = table->docHandle();
     QTextFormatCollection *c = p->formatCollection();
 
-    QTextCharFormat fmt = c->charFormat(QTextDocumentPrivate::FragmentIterator(&p->fragmentMap(), fragment)->format);
+    QTextCharFormat fmt = c->charFormat(tableCellFormatIndex());
     fmt.setObjectType(QTextFormat::TableCellObject);
     return fmt;
+}
+
+/*!
+    \since 4.5
+
+    Returns the index of the tableCell's format in the document's internal list of formats.
+
+    \sa QTextDocument::allFormats()
+*/
+int QTextTableCell::tableCellFormatIndex() const
+{
+    QTextDocumentPrivate *p = table->docHandle();
+    return QTextDocumentPrivate::FragmentIterator(&p->fragmentMap(), fragment)->format;
 }
 
 /*!
@@ -319,6 +338,9 @@ QTextTable *QTextTablePrivate::createTable(QTextDocumentPrivate *pieceTable, int
     // add block after table
     QTextCharFormat charFmt;
     charFmt.setObjectIndex(table->objectIndex());
+    charFmt.setObjectType(QTextFormat::TableCellObject);
+
+
     int charIdx = pieceTable->formatCollection()->indexForFormat(charFmt);
     int cellIdx = pieceTable->formatCollection()->indexForFormat(QTextBlockFormat());
 
@@ -355,12 +377,12 @@ struct QFragmentFindHelper
     const QTextDocumentPrivate::FragmentMap &fragmentMap;
 };
 
-static inline bool operator<(int fragment, const QFragmentFindHelper &helper)
+Q_STATIC_GLOBAL_INLINE_OPERATOR bool operator<(int fragment, const QFragmentFindHelper &helper)
 {
     return helper.fragmentMap.position(fragment) < helper.pos;
 }
 
-static inline bool operator<(const QFragmentFindHelper &helper, int fragment)
+Q_STATIC_GLOBAL_INLINE_OPERATOR bool operator<(const QFragmentFindHelper &helper, int fragment)
 {
     return helper.pos < helper.fragmentMap.position(fragment);
 }
@@ -639,7 +661,7 @@ void QTextTable::resize(int rows, int cols)
 
     Inserts a number of \a rows before the row with the specified \a index.
 
-    \sa resize() insertColumns() removeRows() removeColumns()
+    \sa resize() insertColumns() removeRows() removeColumns() appendRows() appendColumns()
 */
 void QTextTable::insertRows(int pos, int num)
 {
@@ -701,7 +723,7 @@ void QTextTable::insertRows(int pos, int num)
 
     Inserts a number of \a columns before the column with the specified \a index.
 
-    \sa insertRows() resize() removeRows() removeColumns()
+    \sa insertRows() resize() removeRows() removeColumns() appendRows() appendColumns()
 */
 void QTextTable::insertColumns(int pos, int num)
 {
@@ -759,11 +781,33 @@ void QTextTable::insertColumns(int pos, int num)
 }
 
 /*!
+    \since 4.5
+    Appends \a count rows at the bottom of the table.
+
+    \sa insertColumns() insertRows() resize() removeRows() removeColumns() appendColumns()
+*/
+void QTextTable::appendRows(int count)
+{
+    insertRows(rows(), count);
+}
+
+/*!
+    \since 4.5
+    Appends \a count columns at the right side of the table.
+
+    \sa insertColumns() insertRows() resize() removeRows() removeColumns() appendRows()
+*/
+void QTextTable::appendColumns(int count)
+{
+    insertColumns(columns(), count);
+}
+
+/*!
     \fn void QTextTable::removeRows(int index, int rows)
 
     Removes a number of \a rows starting with the row at the specified \a index.
 
-    \sa insertRows(), insertColumns(), resize(), removeColumns()
+    \sa insertRows(), insertColumns(), resize(), removeColumns() appendRows() appendColumns()
 */
 void QTextTable::removeRows(int pos, int num)
 {
@@ -825,7 +869,7 @@ void QTextTable::removeRows(int pos, int num)
     Removes a number of \a columns starting with the column at the specified
     \a index.
 
-    \sa insertRows() insertColumns() removeRows() resize()
+    \sa insertRows() insertColumns() removeRows() resize() appendRows() appendColumns()
 */
 void QTextTable::removeColumns(int pos, int num)
 {

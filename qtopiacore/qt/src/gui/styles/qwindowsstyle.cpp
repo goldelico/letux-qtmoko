@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -294,6 +298,7 @@ static inline QRgb colorref2qrgb(COLORREF col)
 /*! \reimp */
 void QWindowsStyle::polish(QApplication *app)
 {
+    QCommonStyle::polish(app);
     QWindowsStylePrivate *d = const_cast<QWindowsStylePrivate*>(d_func());
     // We only need the overhead when shortcuts are sometimes hidden
     if (!styleHint(SH_UnderlineShortcut, 0) && app)
@@ -324,6 +329,7 @@ void QWindowsStyle::polish(QApplication *app)
 /*! \reimp */
 void QWindowsStyle::unpolish(QApplication *app)
 {
+    QCommonStyle::unpolish(app);
     app->removeEventFilter(this);
 }
 
@@ -350,7 +356,9 @@ void QWindowsStyle::unpolish(QWidget *widget)
 #endif
 }
 
-/*! \reimp */
+/*!
+  \reimp
+*/
 void QWindowsStyle::polish(QPalette &pal)
 {
     QCommonStyle::polish(pal);
@@ -1149,7 +1157,7 @@ int QWindowsStyle::styleHint(StyleHint hint, const QStyleOption *opt, const QWid
             Q_D(const QWindowsStyle);
             if (!ret && widget && d) {
 #ifndef QT_NO_MENUBAR
-                const QMenuBar *menuBar = qobject_cast<const QT_PREPEND_NAMESPACE(QMenuBar)*>(widget);
+                const QMenuBar *menuBar = qobject_cast<const QMenuBar *>(widget);
                 if (!menuBar && qobject_cast<const QMenu *>(widget)) {
                     QWidget *w = QApplication::activeWindow();
                     if (w && w != widget)
@@ -1412,8 +1420,8 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
                 int bsy = 0;
 
                 if (opt->state & State_Sunken) {
-                    bsx = pixelMetric(PM_ButtonShiftHorizontal);
-                    bsy = pixelMetric(PM_ButtonShiftVertical);
+                    bsx = pixelMetric(PM_ButtonShiftHorizontal, opt, w);
+                    bsy = pixelMetric(PM_ButtonShiftVertical, opt, w);
                 }
 
                 QRect bounds = a.boundingRect();
@@ -1837,7 +1845,7 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
             bool act = menuitem->state & State_Selected;
 
             // windows always has a check column, regardless whether we have an icon or not
-            int checkcol = qMax(menuitem->maxIconWidth, use2000style ? 20 : windowsCheckMarkWidth);
+            int checkcol = qMax(menuitem->maxIconWidth, windowsCheckMarkWidth);
 
             QBrush fill = menuitem->palette.brush(act ? QPalette::Highlight : QPalette::Button);
             p->fillRect(menuitem->rect.adjusted(0, 0, -1, 0), fill);
@@ -2038,8 +2046,8 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
             case QTabBar::RoundedNorth: {
                 if (!selected) {
                     y1 += 2;
-                    x1 += firstTab ? borderThinkness : 0;
-                    x2 -= lastTab ? borderThinkness : 0;
+                    x1 += onlyOne || firstTab ? borderThinkness : 0;
+                    x2 -= onlyOne || lastTab ? borderThinkness : 0;
                 }
 
                 p->fillRect(QRect(x1 + 1, y1 + 1, (x2 - x1) - 1, (y2 - y1) - 2), tab->palette.background());
@@ -3211,10 +3219,12 @@ QSize QWindowsStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                 w -= 6;
             }
 
-            if (mi->menuItemType != QStyleOptionMenuItem::Separator && !mi->icon.isNull())
-                 sz.setHeight(qMax(sz.height(),
-                              mi->icon.pixmap(pixelMetric(PM_SmallIconSize, opt, widget), QIcon::Normal).height()
-                              + 2 * windowsItemFrame));
+            if (mi->menuItemType != QStyleOptionMenuItem::Separator && !mi->icon.isNull()) {
+                int iconExtent = pixelMetric(PM_SmallIconSize, opt, widget);
+                sz.setHeight(qMax(sz.height(),
+                                  mi->icon.actualSize(QSize(iconExtent, iconExtent)).height()
+                                  + 2 * windowsItemFrame));
+            }
             int maxpmw = mi->maxIconWidth;
             int tabSpacing = use2000style ? 20 :windowsTabSpacing;
             if (mi->text.contains(QLatin1Char('\t')))
@@ -3231,7 +3241,7 @@ QSize QWindowsStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                 w += fmBold.width(mi->text) - fm.width(mi->text);
             }
 
-            int checkcol = qMax(maxpmw, use2000style ? 20 : windowsCheckMarkWidth); // Windows always shows a check column
+            int checkcol = qMax(maxpmw, windowsCheckMarkWidth); // Windows always shows a check column
             w += checkcol;
             w += windowsRightBorder + 10;
             sz.setWidth(w);
@@ -3392,130 +3402,6 @@ QIcon QWindowsStyle::standardIconImplementation(StandardPixmap standardIcon, con
 }
 
 
-#ifdef Q_WS_X11
-QIconTheme QWindowsStylePrivate::parseIndexFile(const QString &themeName) const
-{
-    Q_Q(const QWindowsStyle);
-    QIconTheme theme;
-    QFile themeIndex;
-    QStringList parents;
-    QHash <int, QString> dirList;
-
-    for ( int i = 0 ; i < iconDirs.size() && !themeIndex.exists() ; ++i) {
-          themeIndex.setFileName(iconDirs[i] + QLatin1String("/icons/") +
-                                 themeName + QLatin1String("/index.theme"));
-    }
-
-    if (themeIndex.open(QIODevice::ReadOnly | QIODevice::Text)) {
-
-        QTextStream in(&themeIndex);
-
-        while (!in.atEnd()) {
-
-            QString line = in.readLine();
-
-            if (line.startsWith(QLatin1String("Inherits="))) {
-                line = line.right(line.length() - 9);
-                parents = line.split(QLatin1Char(','));
-            }
-
-            if (line.startsWith(QLatin1String("["))) {
-                line = line.trimmed();
-                line.chop(1);
-                QString dirName = line.right(line.length() - 1);
-                if (!in.atEnd()) {
-                    line = in.readLine();
-                    int size;
-                    if (line.startsWith(QLatin1String("Size="))) {
-                        size = line.right(line.length() - 5).toInt();
-                        if (size)
-                            dirList.insertMulti(size, dirName);
-                    }
-                }
-            }
-        }
-    }
-
-    if (q->inherits("QPlastiqueStyle")) {
-        QFileInfo fileInfo(QLatin1String("/usr/share/icons/default.kde"));
-        QDir dir(fileInfo.canonicalFilePath());
-        QString defaultKDETheme = dir.exists() ? dir.dirName() : QString::fromLatin1("crystalsvg");
-        if (!parents.contains(defaultKDETheme) && themeName != defaultKDETheme)
-            parents.append(defaultKDETheme);
-    } else if (parents.isEmpty() && themeName != QLatin1String("hicolor")) {
-        parents.append(QLatin1String("hicolor"));
-    }
-    theme = QIconTheme(dirList, parents);
-    return theme;
-}
-
-QPixmap QWindowsStylePrivate::findIconHelper(int size,
-                                                   const QString &themeName,
-                                                   const QString &iconName,
-                                                   QStringList &visited) const
-{
-    QPixmap pixmap;
-
-    if (!themeName.isEmpty()) {
-
-        visited << themeName;
-        QIconTheme theme = themeList.value(themeName);
-
-        if (!theme.isValid()) {
-            theme = parseIndexFile(themeName);
-            themeList.insert(themeName, theme);
-        }
-
-        if (!theme.isValid())
-            return QPixmap();
-
-        QList <QString> subDirs = theme.dirList().values(size);
-
-        for ( int i = 0 ; i < iconDirs.size() ; ++i) {
-            for ( int j = 0 ; j < subDirs.size() ; ++j) {
-                QString fileName = iconDirs[i] + QLatin1String("/icons/") + themeName + QLatin1Char('/') + subDirs[j] + QLatin1Char('/') + iconName;
-                pixmap.load(fileName);
-                if (!pixmap.isNull())
-                    break;
-            }
-        }
-
-        if (pixmap.isNull()) {
-            QStringList parents = theme.parents();
-            //search recursively through inherited themes
-            for (int i = 0 ; pixmap.isNull() && i < parents.size() ; ++i) {
-               QString parentTheme = parents[i].trimmed();
-               if (!visited.contains(parentTheme)) //guard against endless recursion
-                  pixmap = findIconHelper(size, parentTheme, iconName, visited);
-            }
-        }
-    }
-    return pixmap;
-}
-#endif
-
-QPixmap QWindowsStylePrivate::findIcon(int size, const QString &name) const
-{
-#ifdef Q_WS_X11
-    QPixmap pixmap;
-    QString pixmapName = QLatin1String("$qt") + name + QString::number(size);
-
-    if (QPixmapCache::find(pixmapName, pixmap))
-        return pixmap;
-
-    if (!themeName.isEmpty()) {
-        QStringList visited;
-        pixmap = findIconHelper(size, themeName, name, visited);
-    }
-    QPixmapCache::insert(pixmapName, pixmap);
-
-    return pixmap;
-#else
-    Q_UNUSED(size);
-    Q_UNUSED(name);
-    return QPixmap();
-#endif
-}
 
 QT_END_NAMESPACE
 

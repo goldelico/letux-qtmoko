@@ -1,42 +1,45 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "indexwindow.h"
-#include "mainwindow.h"
 #include "centralwidget.h"
 #include "topicchooser.h"
 
@@ -55,34 +58,37 @@ QT_BEGIN_NAMESPACE
 
 IndexWindow::IndexWindow(QHelpEngine *helpEngine, QWidget *parent)
     : QWidget(parent)
+    , m_searchLineEdit(0)
+    , m_indexWidget(0)
+    , m_helpEngine(helpEngine)
 {
-    m_helpEngine = helpEngine;
-    
     QVBoxLayout *layout = new QVBoxLayout(this);
     QLabel *l = new QLabel(tr("&Look for:"));
     layout->addWidget(l);
 
     m_searchLineEdit = new QLineEdit();
     l->setBuddy(m_searchLineEdit);
-    connect(m_searchLineEdit, SIGNAL(textChanged(const QString&)),
-        this, SLOT(filterIndices(const QString&)));
+    connect(m_searchLineEdit, SIGNAL(textChanged(QString)), this,
+        SLOT(filterIndices(QString)));
     m_searchLineEdit->installEventFilter(this);
     layout->setMargin(4);
     layout->addWidget(m_searchLineEdit);
 
     m_indexWidget = m_helpEngine->indexWidget();
     m_indexWidget->installEventFilter(this);
-    connect(m_helpEngine->indexModel(), SIGNAL(indexCreationStarted()),
-        this, SLOT(disableSearchLineEdit()));
-    connect(m_helpEngine->indexModel(), SIGNAL(indexCreated()),
-        this, SLOT(enableSearchLineEdit()));
-    connect(m_indexWidget, SIGNAL(linkActivated(const QUrl&, const QString&)),
-        this, SIGNAL(linkActivated(const QUrl&)));
-    connect(m_indexWidget, SIGNAL(linksActivated(const QMap<QString, QUrl>&, const QString&)),
-        this, SIGNAL(linksActivated(const QMap<QString, QUrl>&, const QString&)));
-    connect(m_searchLineEdit, SIGNAL(returnPressed()),
-        m_indexWidget, SLOT(activateCurrentItem()));
+    connect(m_helpEngine->indexModel(), SIGNAL(indexCreationStarted()), this,
+        SLOT(disableSearchLineEdit()));
+    connect(m_helpEngine->indexModel(), SIGNAL(indexCreated()), this,
+        SLOT(enableSearchLineEdit()));
+    connect(m_indexWidget, SIGNAL(linkActivated(QUrl, QString)), this,
+        SIGNAL(linkActivated(QUrl)));
+    connect(m_indexWidget, SIGNAL(linksActivated(QMap<QString, QUrl>, QString)),
+        this, SIGNAL(linksActivated(QMap<QString, QUrl>, QString)));
+    connect(m_searchLineEdit, SIGNAL(returnPressed()), m_indexWidget,
+        SLOT(activateCurrentItem()));
     layout->addWidget(m_indexWidget);
+
+    m_indexWidget->viewport()->installEventFilter(this);
 }
 
 IndexWindow::~IndexWindow()
@@ -116,7 +122,7 @@ bool IndexWindow::eventFilter(QObject *obj, QEvent *e)
                 m_indexWidget->setCurrentIndex(idx);
             break;
         case Qt::Key_Escape:
-            MainWindow::activateCurrentCentralWidgetTab();
+            emit escapePressed();            
             break;
         default:
             ;
@@ -134,18 +140,41 @@ bool IndexWindow::eventFilter(QObject *obj, QEvent *e)
             if (curTab == action)
                 m_indexWidget->activateCurrentItem();
             else if (newTab == action) {
-                QHelpIndexModel *model = qobject_cast<QHelpIndexModel*>(m_indexWidget->model());
+                QHelpIndexModel *model =
+                    qobject_cast<QHelpIndexModel*>(m_indexWidget->model());
                 QString keyword = model->data(idx, Qt::DisplayRole).toString();
                 if (model) {
                     QMap<QString, QUrl> links = model->linksForKeyword(keyword);
                     if (links.count() == 1) {
-                        CentralWidget::instance()->setSourceInNewTab(links.constBegin().value());
+                        CentralWidget::instance()->
+                            setSourceInNewTab(links.constBegin().value());
                     } else {
                         TopicChooser tc(this, keyword, links);
                         if (tc.exec() == QDialog::Accepted) {
                             CentralWidget::instance()->setSourceInNewTab(tc.link());
                         }
                     }
+                }
+            }
+        }
+    } else if (m_indexWidget && obj == m_indexWidget->viewport()
+        && e->type() == QEvent::MouseButtonRelease) {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(e);
+        QModelIndex idx = m_indexWidget->indexAt(mouseEvent->pos());
+        if (idx.isValid() && mouseEvent->button()==Qt::MidButton) {
+            QHelpIndexModel *model =
+                qobject_cast<QHelpIndexModel*>(m_indexWidget->model());
+            QString keyword = model->data(idx, Qt::DisplayRole).toString();
+            if (model) {
+                QMap<QString, QUrl> links = model->linksForKeyword(keyword);
+                if (links.count() > 1) {
+                    TopicChooser tc(this, keyword, links);
+                    if (tc.exec() == QDialog::Accepted) {
+                        CentralWidget::instance()->setSourceInNewTab(tc.link());
+                    }
+                } else if (links.count() == 1) {
+                    CentralWidget::instance()->
+                        setSourceInNewTab(links.constBegin().value());
                 }
             }
         }

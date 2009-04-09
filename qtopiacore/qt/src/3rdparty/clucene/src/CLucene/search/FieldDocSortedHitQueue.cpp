@@ -12,14 +12,14 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-FieldDoc::FieldDoc (int32_t doc, float_t score)
+FieldDoc::FieldDoc (int32_t doc, qreal score)
 {
 	this->scoreDoc.doc = doc;
 	this->scoreDoc.score = score;
 	fields=NULL;
 }
 
-FieldDoc::FieldDoc (int32_t doc, float_t score, CL_NS(util)::Comparable** fields)
+FieldDoc::FieldDoc (int32_t doc, qreal score, CL_NS(util)::Comparable** fields)
 {
 	this->scoreDoc.doc = doc;
 	this->scoreDoc.score = score;
@@ -46,7 +46,7 @@ FieldDocSortedHitQueue::FieldDocSortedHitQueue (SortField** fields, int32_t size
 bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 	int32_t n = fieldsLen;
 	int32_t c = 0;
-	float_t f1,f2,r1,r2;
+	qreal f1,f2,r1,r2;
 	int32_t i1,i2;
 	const TCHAR *s1, *s2;
 
@@ -89,9 +89,9 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 					c = docB->fields[i]->compareTo (docA->fields[i]);
 					break;
 				case SortField::AUTO:
-					// we cannot handle this - even if we determine the type of object (float_t or
+					// we cannot handle this - even if we determine the type of object (qreal or
 					// Integer), we don't necessarily know how to compare them (both SCORE and
-					// float_t both contain floats, but are sorted opposite of each other). Before
+					// qreal both contain floats, but are sorted opposite of each other). Before
 					// we get here, each AUTO should have been replaced with its actual value.
 					_CLTHROWA (CL_ERR_Runtime,"FieldDocSortedHitQueue cannot use an AUTO SortField");
 				default:
@@ -136,9 +136,9 @@ bool FieldDocSortedHitQueue::lessThan (FieldDoc* docA, FieldDoc* docB) {
 					c = docA->fields[i]->compareTo (docB->fields[i]);
 					break;
 				case SortField::AUTO:
-					// we cannot handle this - even if we determine the type of object (float_t or
+					// we cannot handle this - even if we determine the type of object (qreal or
 					// Integer), we don't necessarily know how to compare them (both SCORE and
-					// float_t both contain floats, but are sorted opposite of each other). Before
+					// qreal both contain floats, but are sorted opposite of each other). Before
 					// we get here, each AUTO should have been replaced with its actual value.
 					_CLTHROWA (CL_ERR_Runtime,"FieldDocSortedHitQueue cannot use an AUTO SortField");
 				default:

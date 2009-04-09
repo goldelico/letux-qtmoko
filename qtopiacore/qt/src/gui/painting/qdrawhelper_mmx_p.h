@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,7 @@
 // We mean it.
 //
 
+#include <private/qdrawhelper_p.h>
 #include <private/qdrawhelper_x86_p.h>
 #include <private/qpaintengine_raster_p.h>
 
@@ -241,9 +246,13 @@ static void QT_FASTCALL comp_func_SourceOver(uint *dest, const uint *src, int le
     C_FF; C_80; C_00;
     if (const_alpha == 255) {
         for (int i = 0; i < length; ++i) {
-            m64 s = MM::load(src[i]);
-            m64 ia = MM::negate(MM::alpha(s));
-            dest[i] = MM::store(MM::add(s, MM::byte_mul(MM::load(dest[i]), ia)));
+            if ((0xff000000 & src[i]) == 0xff000000) {
+                dest[i] = src[i];
+            } else {
+                m64 s = MM::load(src[i]);
+                m64 ia = MM::negate(MM::alpha(s));
+                dest[i] = MM::store(MM::add(s, MM::byte_mul(MM::load(dest[i]), ia)));
+            }
         }
     } else {
         m64 ca = MM::load_alpha(const_alpha);
@@ -630,6 +639,209 @@ static void QT_FASTCALL comp_func_XOR(uint *dest, const uint *src, int length, u
 }
 
 template <class MM>
+static void QT_FASTCALL rasterop_solid_SourceOrDestination(uint *dest,
+                                                           int length,
+                                                           uint color,
+                                                           uint const_alpha)
+{
+    Q_UNUSED(const_alpha);
+
+    if ((quintptr)(dest) & 0x7) {
+        *dest++ |= color;
+        --length;
+    }
+
+    const int length64 = length / 2;
+    if (length64) {
+        __m64 *dst64 = reinterpret_cast<__m64*>(dest);
+        const __m64 color64 = _mm_set_pi32(color, color);
+
+        int n = (length64 + 3) / 4;
+        switch (length64 & 0x3) {
+        case 0: do { *dst64 = _mm_or_si64(*dst64, color64); ++dst64;
+        case 3:      *dst64 = _mm_or_si64(*dst64, color64); ++dst64;
+        case 2:      *dst64 = _mm_or_si64(*dst64, color64); ++dst64;
+        case 1:      *dst64 = _mm_or_si64(*dst64, color64); ++dst64;
+        } while (--n > 0);
+        }
+    }
+
+    if (length & 0x1) {
+        dest[length - 1] |= color;
+    }
+
+    MM::end();
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_SourceAndDestination(uint *dest,
+                                                            int length,
+                                                            uint color,
+                                                            uint const_alpha)
+{
+    Q_UNUSED(const_alpha);
+
+    color |= 0xff000000;
+
+    if ((quintptr)(dest) & 0x7) { // align
+        *dest++ &= color;
+        --length;
+    }
+
+    const int length64 = length / 2;
+    if (length64) {
+        __m64 *dst64 = reinterpret_cast<__m64*>(dest);
+        const __m64 color64 = _mm_set_pi32(color, color);
+
+        int n = (length64 + 3) / 4;
+        switch (length64 & 0x3) {
+        case 0: do { *dst64 = _mm_and_si64(*dst64, color64); ++dst64;
+        case 3:      *dst64 = _mm_and_si64(*dst64, color64); ++dst64;
+        case 2:      *dst64 = _mm_and_si64(*dst64, color64); ++dst64;
+        case 1:      *dst64 = _mm_and_si64(*dst64, color64); ++dst64;
+        } while (--n > 0);
+        }
+    }
+
+    if (length & 0x1) {
+        dest[length - 1] &= color;
+    }
+
+    MM::end();
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_SourceXorDestination(uint *dest,
+                                                            int length,
+                                                            uint color,
+                                                            uint const_alpha)
+{
+    Q_UNUSED(const_alpha);
+
+    color &= 0x00ffffff;
+
+    if ((quintptr)(dest) & 0x7) {
+        *dest++ ^= color;
+        --length;
+    }
+
+    const int length64 = length / 2;
+    if (length64) {
+        __m64 *dst64 = reinterpret_cast<__m64*>(dest);
+        const __m64 color64 = _mm_set_pi32(color, color);
+
+        int n = (length64 + 3) / 4;
+        switch (length64 & 0x3) {
+        case 0: do { *dst64 = _mm_xor_si64(*dst64, color64); ++dst64;
+        case 3:      *dst64 = _mm_xor_si64(*dst64, color64); ++dst64;
+        case 2:      *dst64 = _mm_xor_si64(*dst64, color64); ++dst64;
+        case 1:      *dst64 = _mm_xor_si64(*dst64, color64); ++dst64;
+        } while (--n > 0);
+        }
+    }
+
+    if (length & 0x1) {
+        dest[length - 1] ^= color;
+    }
+
+    MM::end();
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_SourceAndNotDestination(uint *dest,
+                                                               int length,
+                                                               uint color,
+                                                               uint const_alpha)
+{
+
+    Q_UNUSED(const_alpha);
+
+    if ((quintptr)(dest) & 0x7) {
+        *dest = (color & ~(*dest)) | 0xff000000;
+        ++dest;
+        --length;
+    }
+
+    const int length64 = length / 2;
+    if (length64) {
+        __m64 *dst64 = reinterpret_cast<__m64*>(dest);
+        const __m64 color64 = _mm_set_pi32(color, color);
+        const m64 mmx_0xff000000 = _mm_set1_pi32(0xff000000);
+        __m64 tmp1, tmp2, tmp3, tmp4;
+
+        int n = (length64 + 3) / 4;
+        switch (length64 & 0x3) {
+        case 0: do { tmp1 = _mm_andnot_si64(*dst64, color64);
+                     *dst64++ = _mm_or_si64(tmp1, mmx_0xff000000);
+        case 3:      tmp2 = _mm_andnot_si64(*dst64, color64);
+                     *dst64++ = _mm_or_si64(tmp2, mmx_0xff000000);
+        case 2:      tmp3 = _mm_andnot_si64(*dst64, color64);
+                     *dst64++ = _mm_or_si64(tmp3, mmx_0xff000000);
+        case 1:      tmp4 = _mm_andnot_si64(*dst64, color64);
+                     *dst64++ = _mm_or_si64(tmp4, mmx_0xff000000);
+        } while (--n > 0);
+        }
+    }
+
+    if (length & 0x1) {
+        dest[length - 1] = (color & ~(dest[length - 1])) | 0xff000000;
+    }
+
+    MM::end();
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_NotSourceAndNotDestination(uint *dest,
+                                                                  int length,
+                                                                  uint color,
+                                                                  uint const_alpha)
+{
+    rasterop_solid_SourceAndNotDestination<MM>(dest, length,
+                                               ~color, const_alpha);
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_NotSourceOrNotDestination(uint *dest,
+                                                                 int length,
+                                                                 uint color,
+                                                                 uint const_alpha)
+{
+    Q_UNUSED(const_alpha);
+    color = ~color | 0xff000000;
+    while (length--) {
+        *dest = color | ~(*dest);
+        ++dest;
+    }
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_NotSourceXorDestination(uint *dest,
+                                                               int length,
+                                                               uint color,
+                                                               uint const_alpha)
+{
+    rasterop_solid_SourceXorDestination<MM>(dest, length, ~color, const_alpha);
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_NotSource(uint *dest, int length,
+                                                 uint color, uint const_alpha)
+{
+    Q_UNUSED(const_alpha);
+    qt_memfill((quint32*)dest, ~color | 0xff000000, length);
+}
+
+template <class MM>
+static void QT_FASTCALL rasterop_solid_NotSourceAndDestination(uint *dest,
+                                                               int length,
+                                                               uint color,
+                                                               uint const_alpha)
+{
+    rasterop_solid_SourceAndDestination<MM>(dest, length,
+                                            ~color, const_alpha);
+}
+
+template <class MM>
 static inline void qt_blend_color_argb_x86(int count, const QSpan *spans,
                                            void *userData,
                                            CompositionFunctionSolid *solidFunc)
@@ -658,9 +870,6 @@ static inline void qt_blend_color_argb_x86(int count, const QSpan *spans,
         return;
     }
     CompositionFunctionSolid func = solidFunc[data->rasterBuffer->compositionMode];
-    if (!func)
-        return;
-
     while (count--) {
         uint *target = ((uint *)data->rasterBuffer->scanLine(spans->y)) + spans->x;
         func(target, spans->len, data->solid.color, spans->coverage);
@@ -672,7 +881,7 @@ static inline void qt_blend_color_argb_x86(int count, const QSpan *spans,
 struct QMMXIntrinsics : public QMMXCommonIntrinsics
 {
     static inline void end() {
-#if !defined(Q_OS_WINCE) 
+#if !defined(Q_OS_WINCE) || defined(_X86_)
        _mm_empty();
 #endif
     }

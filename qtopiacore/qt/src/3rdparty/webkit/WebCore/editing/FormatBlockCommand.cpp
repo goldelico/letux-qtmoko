@@ -36,7 +36,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-FormatBlockCommand::FormatBlockCommand(Document* document, const String& tagName) 
+FormatBlockCommand::FormatBlockCommand(Document* document, const AtomicString& tagName) 
     : CompositeEditCommand(document), m_tagName(tagName)
 {
 }
@@ -91,12 +91,13 @@ void FormatBlockCommand::doApply()
 
     if (endingSelection().isRange() && modifyRange())
         return;
-    
+
+    ExceptionCode ec;
     String localName, prefix;
-    if (!Document::parseQualifiedName(m_tagName, prefix, localName))
+    if (!Document::parseQualifiedName(m_tagName, prefix, localName, ec))
         return;
-    QualifiedName qTypeOfBlock = QualifiedName(AtomicString(prefix), AtomicString(localName), xhtmlNamespaceURI);
-    
+    QualifiedName qTypeOfBlock(prefix, localName, xhtmlNamespaceURI);
+
     Node* refNode = enclosingBlockFlowElement(endingSelection().visibleStart());
     if (refNode->hasTagName(qTypeOfBlock))
         // We're already in a block with the format we want, so we don't have to do anything
@@ -106,23 +107,28 @@ void FormatBlockCommand::doApply()
     VisiblePosition paragraphEnd = endOfParagraph(endingSelection().visibleStart());
     VisiblePosition blockStart = startOfBlock(endingSelection().visibleStart());
     VisiblePosition blockEnd = endOfBlock(endingSelection().visibleStart());
-    RefPtr<Node> blockNode = createElement(document(), m_tagName);
-    RefPtr<Node> placeholder = createBreakElement(document());
+    RefPtr<Element> blockNode = createHTMLElement(document(), m_tagName);
+    RefPtr<Element> placeholder = createBreakElement(document());
     
     Node* root = endingSelection().start().node()->rootEditableElement();
-    if (refNode == root || root->isDescendantOf(refNode))
-        refNode = paragraphStart.deepEquivalent().node();
-    
-    Position upstreamStart = paragraphStart.deepEquivalent().upstream();
-    if ((validBlockTag(refNode->nodeName().lower()) && paragraphStart == blockStart && paragraphEnd == blockEnd) ||
-        !upstreamStart.node()->isDescendantOf(root))
+    if (validBlockTag(refNode->nodeName().lower()) && 
+        paragraphStart == blockStart && paragraphEnd == blockEnd && 
+        refNode != root && !root->isDescendantOf(refNode))
         // Already in a valid block tag that only contains the current paragraph, so we can swap with the new tag
-        insertNodeBefore(blockNode.get(), refNode);
+        insertNodeBefore(blockNode, refNode);
     else {
-        insertNodeAt(blockNode.get(), upstreamStart);
+        // Avoid inserting inside inline elements that surround paragraphStart with upstream().
+        // This is only to avoid creating bloated markup.
+        insertNodeAt(blockNode, paragraphStart.deepEquivalent().upstream());
     }
-    appendNode(placeholder.get(), blockNode.get());
-    moveParagraph(paragraphStart, paragraphEnd, VisiblePosition(Position(placeholder.get(), 0)), true, false);
+    appendNode(placeholder, blockNode);
+    
+    VisiblePosition destination(Position(placeholder.get(), 0));
+    if (paragraphStart == paragraphEnd && !lineBreakExistsAtPosition(paragraphStart)) {
+        setEndingSelection(destination);
+        return;
+    }
+    moveParagraph(paragraphStart, paragraphEnd, destination, true, false);
 }
 
 }

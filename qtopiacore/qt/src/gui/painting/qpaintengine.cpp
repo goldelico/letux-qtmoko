@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include "qpaintengine.h"
@@ -215,6 +219,7 @@ QFont QTextItem::font() const
   \value PrimitiveTransform The engine has support for transforming
                             drawing primitives.
   \value RadialGradientFill The engine supports radial gradient fills.
+  \value RasterOpModes      The engine supports bitwise raster operations.
   \value AllFeatures        All of the above features. This enum value is usually
                             used as a bit mask.
 */
@@ -293,7 +298,11 @@ QFont QTextItem::font() const
     be used when drawing with native handles directly and immediate sync
     from QPainters state to the native state is required.
 */
-
+void QPaintEngine::syncState()
+{
+    Q_ASSERT(state);
+    updateState(*state);
+}
 
 static QPaintEngine *qt_polygon_recursion = 0;
 struct QT_Point {
@@ -369,6 +378,7 @@ void QPaintEngine::drawPolygon(const QPoint *points, int pointCount, PolygonDraw
     \value Raster
     \value Direct3D Windows only, Direct3D based engine
     \value Pdf Portable Document Format
+    \value OpenVG
     \value User First user type ID
     \value MaxUser Last user type ID
 */
@@ -416,10 +426,38 @@ void QPaintEngine::drawPolygon(const QPoint *points, int pointCount, PolygonDraw
 */
 void QPaintEngine::drawPoints(const QPointF *points, int pointCount)
 {
-    for (int i=0; i<pointCount; ++i) {
-        QLineF line(points[i].x(), points[i].y(), points[i].x(), points[i].y() + 0.001);
-        drawLines(&line, 1);
+    QPainter *p = painter();
+    if (!p)
+        return;
+
+    qreal penWidth = p->pen().widthF();
+    if (penWidth == 0)
+        penWidth = 1;
+
+    bool ellipses = p->pen().capStyle() == Qt::RoundCap;
+
+    p->save();
+
+    QTransform transform;
+    if (p->pen().isCosmetic()) {
+        transform = p->transform();
+        p->setTransform(QTransform());
     }
+
+    p->setBrush(p->pen().brush());
+    p->setPen(Qt::NoPen);
+
+    for (int i=0; i<pointCount; ++i) {
+        QPointF pos = transform.map(points[i]);
+        QRectF rect(pos.x() - penWidth / 2, pos.y() - penWidth / 2, penWidth, penWidth);
+
+        if (ellipses)
+            p->drawEllipse(rect);
+        else
+            p->drawRect(rect);
+    }
+
+    p->restore();
 }
 
 
@@ -446,8 +484,6 @@ void QPaintEngine::drawPoints(const QPoint *points, int pointCount)
         pointCount -= i;
     }
 }
-
-
 
 /*!
     \fn void QPaintEngine::drawEllipse(const QRectF &rect)
@@ -620,6 +656,14 @@ void QPaintEngine::drawImage(const QRectF &r, const QImage &image, const QRectF 
 */
 
 /*!
+    \fn bool QPaintEngine::isExtended() const
+
+    \internal
+
+    Returns true if the paint engine is a QPaintEngineEx derivative.
+*/
+
+/*!
     \fn void QPaintEngine::updateState(const QPaintEngineState &state)
 
     Reimplement this function to update the state of a paint engine.
@@ -643,6 +687,7 @@ QPaintEngine::QPaintEngine(PaintEngineFeatures caps)
       gccaps(caps),
       active(0),
       selfDestruct(false),
+      extended(false),
       d_ptr(new QPaintEnginePrivate)
 {
     d_ptr->q_ptr = this;
@@ -657,6 +702,7 @@ QPaintEngine::QPaintEngine(QPaintEnginePrivate &dptr, PaintEngineFeatures caps)
       gccaps(caps),
       active(0),
       selfDestruct(false),
+      extended(false),
       d_ptr(&dptr)
 {
     d_ptr->q_ptr = this;
@@ -703,17 +749,15 @@ void QPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
 #ifndef Q_WS_MAC
     path.setFillRule(Qt::WindingFill);
 #endif
-    if (ti.num_glyphs)
-        ti.fontEngine->addOutlineToPath(p.x(), p.y(), ti.glyphs, ti.num_glyphs, &path, ti.flags);
+    if (ti.glyphs.numGlyphs)
+        ti.fontEngine->addOutlineToPath(p.x(), p.y(), ti.glyphs, &path, ti.flags);
     if (!path.isEmpty()) {
-        painter()->save();
+        bool oldAA = painter()->renderHints() & QPainter::Antialiasing;
         painter()->setRenderHint(QPainter::Antialiasing,
                                  bool((painter()->renderHints() & QPainter::TextAntialiasing)
                                       && !(painter()->font().styleStrategy() & QFont::NoAntialias)));
-        painter()->setBrush(state->pen().brush());
-        painter()->setPen(Qt::NoPen);
-        painter()->drawPath(path);
-        painter()->restore();
+        painter()->fillPath(path, state->pen().brush());
+        painter()->setRenderHint(QPainter::Antialiasing, oldAA);
     }
 }
 
@@ -896,19 +940,21 @@ QPoint QPaintEngine::coordinateOffset() const
 
     Sets the system clip for this engine. The system clip defines the
     basis area that the engine has to draw in. All clips that are
-    set must be an intersection with the system clip.
+    set will be be an intersection with the system clip.
 
     Reset the systemclip to no clip by setting an empty region.
 */
 void QPaintEngine::setSystemClip(const QRegion &region)
 {
-    if (isActive()) {
-        qWarning("QPaintEngine::setSystemClip: Should not be changed while engine is active");
-        return;
+    Q_D(QPaintEngine);
+    d->systemClip = region;
+    // Be backward compatible and only call d->systemStateChanged()
+    // if we currently have a system transform set.
+    if (d->hasSystemTransform) {
+        d->transformSystemClip();
+        d->systemStateChanged();
     }
-    d_func()->systemClip = region;
 }
-
 
 /*!
     \internal
@@ -951,7 +997,7 @@ QRect QPaintEngine::systemRect() const
 
 void QPaintEnginePrivate::drawBoxTextItem(const QPointF &p, const QTextItemInt &ti)
 {
-    if (!ti.num_glyphs)
+    if (!ti.glyphs.numGlyphs)
         return;
 
     // any fixes here should probably also be done in QFontEngineBox::draw
@@ -960,7 +1006,7 @@ void QPaintEnginePrivate::drawBoxTextItem(const QPointF &p, const QTextItemInt &
     QVarLengthArray<glyph_t> glyphs;
     QTransform matrix;
     matrix.translate(p.x(), p.y() - size);
-    ti.fontEngine->getGlyphPositions(ti.glyphs, ti.num_glyphs, matrix, ti.flags, glyphs, positions);
+    ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
     if (glyphs.size() == 0)
         return;
 

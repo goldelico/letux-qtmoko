@@ -43,7 +43,6 @@
 #include "HitTestRequest.h"
 #include "HitTestResult.h"
 #include "InspectorController.h"
-#include "KURL.h"
 #include "MouseEvent.h"
 #include "Node.h"
 #include "Page.h"
@@ -54,11 +53,10 @@
 #include "SelectionController.h"
 #include "Settings.h"
 #include "TextIterator.h"
+#include "WindowFeatures.h"
 #include "markup.h"
 
 namespace WebCore {
-
-using namespace EventNames;
 
 ContextMenuController::ContextMenuController(Page* page, ContextMenuClient* client)
     : m_page(page)
@@ -81,16 +79,20 @@ void ContextMenuController::clearContextMenu()
 
 void ContextMenuController::handleContextMenuEvent(Event* event)
 {
-    ASSERT(event->type() == contextmenuEvent);
+    ASSERT(event->type() == eventNames().contextmenuEvent);
     if (!event->isMouseEvent())
         return;
     MouseEvent* mouseEvent = static_cast<MouseEvent*>(event);
     IntPoint point = IntPoint(mouseEvent->pageX(), mouseEvent->pageY());
     HitTestResult result(point);
 
-    if (Frame* frame = event->target()->toNode()->document()->frame())
+    if (Frame* frame = event->target()->toNode()->document()->frame()) {
+        float zoomFactor = frame->pageZoomFactor();
+        point.setX(static_cast<int>(point.x() * zoomFactor));
+        point.setY(static_cast<int>(point.y() * zoomFactor));
         result = frame->eventHandler()->hitTestResultAtPoint(point, false);
-    
+    }
+
     if (!result.innerNonSharedNode())
         return;
 
@@ -107,15 +109,17 @@ void ContextMenuController::handleContextMenuEvent(Event* event)
 
 static void openNewWindow(const KURL& urlToLoad, Frame* frame)
 {
-    if (Page* oldPage = frame->page())
+    if (Page* oldPage = frame->page()) {
+        WindowFeatures features;
         if (Page* newPage = oldPage->chrome()->createWindow(frame,
-                FrameLoadRequest(ResourceRequest(urlToLoad, frame->loader()->outgoingReferrer()))))
+                FrameLoadRequest(ResourceRequest(urlToLoad, frame->loader()->outgoingReferrer())), features))
             newPage->chrome()->show();
+    }
 }
 
 void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
 {
-    ASSERT(item->type() == ActionType);
+    ASSERT(item->type() == ActionType || item->type() == CheckableActionType);
 
     if (item->action() >= ContextMenuItemBaseApplicationTag) {
         m_client->contextMenuItemSelected(item, m_contextMenu.get());
@@ -151,10 +155,11 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             frame->editor()->copyImage(result);
             break;
         case ContextMenuItemTagOpenFrameInNewWindow: {
-            KURL url = frame->loader()->documentLoader()->unreachableURL();
-            if (frame && url.isEmpty())
-                url = frame->loader()->documentLoader()->URL();
-            openNewWindow(url, frame);
+            DocumentLoader* loader = frame->loader()->documentLoader();
+            if (!loader->unreachableURL().isEmpty())
+                openNewWindow(loader->unreachableURL(), frame);
+            else
+                openNewWindow(loader->url(), frame);
             break;
         }
         case ContextMenuItemTagCopy:
@@ -178,13 +183,21 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
         case ContextMenuItemTagPaste:
             frame->editor()->paste();
             break;
+#if PLATFORM(GTK)
+        case ContextMenuItemTagDelete:
+            frame->editor()->performDelete();
+            break;
+        case ContextMenuItemTagSelectAll:
+            frame->editor()->command("SelectAll").execute();
+            break;
+#endif
         case ContextMenuItemTagSpellingGuess:
             ASSERT(frame->selectedText().length());
-            if (frame->editor()->shouldInsertText(item->title(), frame->selectionController()->toRange().get(),
+            if (frame->editor()->shouldInsertText(item->title(), frame->selection()->toRange().get(),
                 EditorInsertActionPasted)) {
                 Document* document = frame->document();
                 RefPtr<ReplaceSelectionCommand> command =
-                    new ReplaceSelectionCommand(document, createFragmentFromMarkup(document, item->title(), ""),
+                    ReplaceSelectionCommand::create(document, createFragmentFromMarkup(document, item->title(), ""),
                                                                                    true, false, true);
                 applyCommand(command);
                 frame->revealSelection(RenderLayer::gAlignToEdgeIfNeeded);
@@ -205,16 +218,16 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             break;
         case ContextMenuItemTagOpenLink:
             if (Frame* targetFrame = result.targetFrame())
-                targetFrame->loader()->load(FrameLoadRequest(ResourceRequest(result.absoluteLinkURL(), 
-                    frame->loader()->outgoingReferrer())), false, true, 0, 0, HashMap<String, String>());
+                targetFrame->loader()->loadFrameRequestWithFormAndValues(FrameLoadRequest(ResourceRequest(result.absoluteLinkURL(), 
+                    frame->loader()->outgoingReferrer())), false, 0, 0, HashMap<String, String>());
             else
                 openNewWindow(result.absoluteLinkURL(), frame);
             break;
         case ContextMenuItemTagBold:
-            frame->editor()->execCommand("ToggleBold");
+            frame->editor()->command("ToggleBold").execute();
             break;
         case ContextMenuItemTagItalic:
-            frame->editor()->execCommand("ToggleItalic");
+            frame->editor()->command("ToggleItalic").execute();
             break;
         case ContextMenuItemTagUnderline:
             frame->editor()->toggleUnderline();
@@ -225,7 +238,7 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             break;
         case ContextMenuItemTagStartSpeaking: {
             ExceptionCode ec;
-            RefPtr<Range> selectedRange = frame->selectionController()->toRange();
+            RefPtr<Range> selectedRange = frame->selection()->toRange();
             if (!selectedRange || selectedRange->collapsed(ec)) {
                 Document* document = result.innerNonSharedNode()->document();
                 selectedRange = document->createRange();
@@ -238,13 +251,22 @@ void ContextMenuController::contextMenuItemSelected(ContextMenuItem* item)
             m_client->stopSpeaking();
             break;
         case ContextMenuItemTagDefaultDirection:
-            frame->editor()->setBaseWritingDirection("inherit");
+            frame->editor()->setBaseWritingDirection(NaturalWritingDirection);
             break;
         case ContextMenuItemTagLeftToRight:
-            frame->editor()->setBaseWritingDirection("ltr");
+            frame->editor()->setBaseWritingDirection(LeftToRightWritingDirection);
             break;
         case ContextMenuItemTagRightToLeft:
-            frame->editor()->setBaseWritingDirection("rtl");
+            frame->editor()->setBaseWritingDirection(RightToLeftWritingDirection);
+            break;
+        case ContextMenuItemTagTextDirectionDefault:
+            frame->editor()->command("MakeTextWritingDirectionNatural").execute();
+            break;
+        case ContextMenuItemTagTextDirectionLeftToRight:
+            frame->editor()->command("MakeTextWritingDirectionLeftToRight").execute();
+            break;
+        case ContextMenuItemTagTextDirectionRightToLeft:
+            frame->editor()->command("MakeTextWritingDirectionRightToLeft").execute();
             break;
 #if PLATFORM(MAC)
         case ContextMenuItemTagSearchInSpotlight:

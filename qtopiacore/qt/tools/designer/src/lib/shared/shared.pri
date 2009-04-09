@@ -2,6 +2,7 @@
 INCLUDEPATH += $$PWD
 QT += script
 
+include($$QT_SOURCE_TREE/tools/shared/qtpropertybrowser/qtpropertybrowser.pri)
 include($$QT_SOURCE_TREE/tools/shared/deviceskin/deviceskin.pri)
 include($$QT_SOURCE_TREE/src/tools/rcc/rcc.pri)
 include($$QT_SOURCE_TREE/tools/shared/findwidget/findwidget.pri)
@@ -14,7 +15,10 @@ FORMS += $$PWD/addlinkdialog.ui \
     $$PWD/gridpanel.ui \
     $$PWD/signalslotdialog.ui \
     $$PWD/previewconfigurationwidget.ui \
-    $$PWD/qtresourceeditordialog.ui 
+    $$PWD/qtresourceeditordialog.ui \
+    $$PWD/newformwidget.ui \
+    $$PWD/selectsignaldialog.ui \
+    $$PWD/formlayoutrowdialog.ui
 
 HEADERS += \
     $$PWD/shared_global_p.h \
@@ -27,10 +31,11 @@ HEADERS += \
     $$PWD/qdesigner_formeditorcommand_p.h \
     $$PWD/qdesigner_formwindowcommand_p.h \
     $$PWD/qdesigner_command_p.h \
-    $$PWD/qdesigner_propertycommand_p.h \
-    $$PWD/qdesigner_propertycommentcommand_p.h \
+    $$PWD/morphmenu_p.h \
+    $$PWD/qdesigner_command2_p.h \
     $$PWD/qdesigner_formbuilder_p.h \
     $$PWD/qdesigner_taskmenu_p.h \
+    $$PWD/formlayoutmenu_p.h \
     $$PWD/qdesigner_widget_p.h \
     $$PWD/qdesigner_propertysheet_p.h \
     $$PWD/qdesigner_membersheet_p.h \
@@ -81,6 +86,8 @@ HEADERS += \
     $$PWD/signalslotdialog_p.h \
     $$PWD/extensionfactory_p.h \
     $$PWD/dialoggui_p.h \
+    $$PWD/deviceprofile_p.h \
+    $$PWD/zoomwidget_p.h \
     $$PWD/previewmanager_p.h \
     $$PWD/previewconfigurationwidget_p.h \
     $$PWD/codedialog_p.h \
@@ -89,7 +96,12 @@ HEADERS += \
     $$PWD/qtresourceview_p.h \
     $$PWD/iconselector_p.h \
     $$PWD/htmlhighlighter_p.h \
-    $$PWD/qdesigner_widgetitem_p.h
+    $$PWD/qdesigner_widgetitem_p.h \
+    $$PWD/qdesigner_qsettings_p.h \
+    $$PWD/qdesigner_formwindowmanager_p.h \
+    $$PWD/shared_settings_p.h \
+    $$PWD/newformwidget_p.h \
+    $$PWD/filterwidget_p.h
 
 SOURCES += \
     $$PWD/spacer_widget.cpp \
@@ -100,10 +112,12 @@ SOURCES += \
     $$PWD/qdesigner_formwindowcommand.cpp \
     $$PWD/qdesigner_formeditorcommand.cpp \
     $$PWD/qdesigner_command.cpp \
+    $$PWD/morphmenu.cpp \
+    $$PWD/qdesigner_command2.cpp \
     $$PWD/qdesigner_propertycommand.cpp \
-    $$PWD/qdesigner_propertycommentcommand.cpp \
     $$PWD/qdesigner_formbuilder.cpp \
     $$PWD/qdesigner_taskmenu.cpp \
+    $$PWD/formlayoutmenu.cpp \
     $$PWD/qdesigner_widget.cpp \
     $$PWD/qdesigner_dockwidget.cpp \
     $$PWD/qdesigner_propertysheet.cpp \
@@ -152,6 +166,8 @@ SOURCES += \
     $$PWD/iconloader.cpp \
     $$PWD/signalslotdialog.cpp \
     $$PWD/dialoggui.cpp \
+    $$PWD/deviceprofile.cpp \
+    $$PWD/zoomwidget.cpp \
     $$PWD/previewmanager.cpp \
     $$PWD/previewconfigurationwidget.cpp \
     $$PWD/codedialog.cpp \
@@ -160,6 +176,11 @@ SOURCES += \
     $$PWD/qtresourceview.cpp \
     $$PWD/iconselector.cpp \
     $$PWD/htmlhighlighter.cpp \
-    $$PWD/qdesigner_widgetitem.cpp
+    $$PWD/qdesigner_widgetitem.cpp \
+    $$PWD/qdesigner_qsettings.cpp \
+    $$PWD/qdesigner_formwindowmanager.cpp \
+    $$PWD/shared_settings.cpp \
+    $$PWD/newformwidget.cpp \
+    $$PWD/filterwidget.cpp
 
 RESOURCES += $$PWD/shared.qrc

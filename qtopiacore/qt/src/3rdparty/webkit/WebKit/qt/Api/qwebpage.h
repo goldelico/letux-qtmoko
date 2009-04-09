@@ -31,6 +31,7 @@ QT_BEGIN_NAMESPACE
 class QNetworkProxy;
 class QUndoStack;
 class QUrl;
+class QMenu;
 class QNetworkRequest;
 class QNetworkReply;
 class QNetworkAccessManager;
@@ -43,8 +44,9 @@ class QWebHistory;
 class QWebPagePrivate;
 class QWebFrameData;
 class QWebNetworkInterface;
-class QWebHitTestResult;
 class QWebPluginFactory;
+class QWebHitTestResult;
+class QWebHistoryItem;
 
 namespace WebCore {
     class ChromeClientQt;
@@ -54,7 +56,6 @@ namespace WebCore {
     class InspectorClientQt;
     class ResourceHandle;
     class HitTestResult;
-    class FrameView;
 }
 
 class QWEBKIT_EXPORT QWebPage : public QObject
@@ -67,6 +68,7 @@ class QWEBKIT_EXPORT QWebPage : public QObject
     Q_PROPERTY(bool forwardUnsupportedContent READ forwardUnsupportedContent WRITE setForwardUnsupportedContent)
     Q_PROPERTY(LinkDelegationPolicy linkDelegationPolicy READ linkDelegationPolicy WRITE setLinkDelegationPolicy)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette)
+    Q_PROPERTY(bool contentEditable READ isContentEditable WRITE setContentEditable)
     Q_ENUMS(LinkDelegationPolicy NavigationType WebAction)
 public:
     enum NavigationType {
@@ -140,6 +142,11 @@ public:
         ToggleUnderline,
 
         InspectElement,
+
+        InsertParagraphSeparator,
+        InsertLineSeparator,
+
+        SelectAll,
 
         WebActionCount
     };
@@ -224,19 +231,39 @@ public:
     void setPalette(const QPalette &palette);
     QPalette palette() const;
 
+    void setContentEditable(bool editable);
+    bool isContentEditable() const;
+
 #ifndef QT_NO_CONTEXTMENU
     bool swallowContextMenuEvent(QContextMenuEvent *event);
 #endif
     void updatePositionDependentActions(const QPoint &pos);
 
+    QMenu *createStandardContextMenu();
+
     enum Extension {
+        ChooseMultipleFilesExtension
     };
     class ExtensionOption
     {};
     class ExtensionReturn
     {};
+
+    class ChooseMultipleFilesExtensionOption : public ExtensionOption {
+    public:
+        QWebFrame *parentFrame;
+        QStringList suggestedFileNames;
+    };
+
+    class ChooseMultipleFilesExtensionReturn : public ExtensionReturn {
+    public:
+        QStringList fileNames;
+    };
+
     virtual bool extension(Extension extension, const ExtensionOption *option = 0, ExtensionReturn *output = 0);
     virtual bool supportsExtension(Extension extension) const;
+
+    inline QWebPagePrivate* handle() const { return d; }
 
 Q_SIGNALS:
     void loadStarted();
@@ -264,6 +291,11 @@ Q_SIGNALS:
 #endif
 
     void microFocusChanged();
+    void contentsChanged();
+    void databaseQuotaExceeded(QWebFrame* frame, QString databaseName);
+
+    void saveFrameStateRequested(QWebFrame* frame, QWebHistoryItem* item);
+    void restoreFrameStateRequested(QWebFrame* frame);
 
 protected:
     virtual QWebPage *createWindow(WebWindowType type);
@@ -295,7 +327,6 @@ private:
     friend class WebCore::FrameLoaderClientQt;
     friend class WebCore::InspectorClientQt;
     friend class WebCore::ResourceHandle;
-    friend class WebCore::FrameView;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QWebPage::FindFlags)

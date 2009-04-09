@@ -66,8 +66,6 @@ public:
 
     virtual bool isTable() const { return true; }
 
-    virtual void setStyle(RenderStyle*);
-
     virtual bool avoidsFloats() const { return true; }
 
     int getColumnPos(int col) const { return m_columnPos[col]; }
@@ -85,9 +83,6 @@ public:
 
     const Color& bgColor() const { return style()->backgroundColor(); }
 
-    unsigned cellPadding() const { return m_padding; }
-    void setCellPadding(unsigned p) { m_padding = p; }
-
     int outerBorderTop() const;
     int outerBorderBottom() const;
     int outerBorderLeft() const;
@@ -101,8 +96,11 @@ public:
     virtual void addChild(RenderObject* child, RenderObject* beforeChild = 0);
     virtual void paint(PaintInfo&, int tx, int ty);
     virtual void paintBoxDecorations(PaintInfo&, int tx, int ty);
+    virtual void paintMask(PaintInfo& paintInfo, int tx, int ty);
     virtual void layout();
     virtual void calcPrefWidths();
+
+    virtual int getBaselineOfFirstLineBox() const;
 
     virtual RenderBlock* firstLineBlock() const;
     virtual void updateFirstLetter();
@@ -193,9 +191,8 @@ public:
             recalcSections();
     }
 
-#ifndef NDEBUG
-    virtual void dump(TextStream*, DeprecatedString ind = "") const;
-#endif
+protected:
+    virtual void styleDidChange(RenderStyle::Diff, const RenderStyle* oldStyle);
 
 private:
     void recalcSections() const;
@@ -216,7 +213,6 @@ private:
     unsigned m_rules : 4; // Rules
 
     mutable bool m_hasColElements : 1;
-    unsigned m_padding : 22;
     mutable bool m_needsSectionRecalc : 1;
     
     short m_hSpacing;

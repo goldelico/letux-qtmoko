@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/frontendinterface_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/frontendinterface_p.h"

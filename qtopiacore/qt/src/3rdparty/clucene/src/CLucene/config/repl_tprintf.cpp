@@ -71,7 +71,7 @@ void lucene_vfnwprintf(StringBuffer* buffer, size_t count, const wchar_t * forma
 							*iter == 'e' || *iter == 'E' ||
 							*iter == 'f' || *iter == 'F' || 
 							*iter == 'g' || *iter == 'G')
-							tmp->appendFloat((float_t)va_arg(valist, double),8);
+							tmp->appendFloat((qreal)va_arg(valist, double),8);
 						else if (*iter == 'd' || *iter == 'i' ){
 							tmp->appendInt((int32_t)va_arg(valist, int));
 						}else if (*iter == 'l' ){

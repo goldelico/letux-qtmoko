@@ -14,7 +14,7 @@
 
 CL_NS_DEF(util)
 
-   #if !defined(LUCENE_USE_WINDOWS_H) && !defined(_WINDOWS_)
+   #if !defined(LUCENE_USE_WINDOWS_H) && !defined(_WINDOWS_) && !defined(__MINGW32__)
       //we have not explicity included windows.h and windows.h has
       //not been included (check _WINDOWS_), then we must define
       //our own definitions to the thread locking functions:

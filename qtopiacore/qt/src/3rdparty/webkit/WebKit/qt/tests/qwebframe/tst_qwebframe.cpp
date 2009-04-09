@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+    Copyright (C) 2008,2009 Nokia Corporation and/or its subsidiary(-ies)
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -25,7 +25,11 @@
 #include <qwebview.h>
 #include <qwebframe.h>
 #include <qwebhistory.h>
+#include <QAbstractItemView>
+#include <QApplication>
+#include <QComboBox>
 #include <QRegExp>
+#include <QNetworkRequest>
 //TESTED_CLASS=
 //TESTED_FILES=
 
@@ -355,6 +359,10 @@ public:
         const_cast<MyQObject*>(this)->m_qtFunctionInvoked = 51;
         m_actuals << qVariantFromValue(arg);
     }
+    Q_INVOKABLE void myInvokableWithBoolArg(bool arg) {
+        m_qtFunctionInvoked = 52;
+        m_actuals << arg;
+    }
 
     void emitMySignal() {
         emit mySignal();
@@ -397,7 +405,7 @@ public Q_SLOTS:
     }
     void myOverloadedSlot(QObject* arg) {
         m_qtFunctionInvoked = 41;
-        m_actuals << arg;
+        m_actuals << qVariantFromValue(arg);
     }
     void myOverloadedSlot(bool arg) {
         m_qtFunctionInvoked = 25;
@@ -537,6 +545,7 @@ class tst_QWebFrame : public QObject
 public:
     tst_QWebFrame();
     virtual ~tst_QWebFrame();
+    bool eventFilter(QObject* watched, QEvent* event);
 
 public slots:
     void init();
@@ -563,6 +572,12 @@ private slots:
     void progressSignal();
     void domCycles();
     void setHtml();
+    void setHtmlWithResource();
+    void ipv6HostEncoding();
+    void metaData();
+    void popupFocus();
+    void jsByteArray();
+    void ownership();
 private:
     QString  evalJS(const QString&s) {
         // Convert an undefined return variant to the string "undefined"
@@ -608,6 +623,15 @@ private:
         evalJS("delete retvalue; delete typevalue");
         return ret;
     }
+    QObject* firstChildByClassName(QObject* parent, const char* className) {
+        const QObjectList & children = parent->children();
+        foreach (QObject* child, children) {
+            if (!strcmp(child->metaObject()->className(), className)) {
+                return child;
+            }
+        }
+        return 0;
+    }
 
     const QString sTrue;
     const QString sFalse;
@@ -623,16 +647,28 @@ private:
     QWebView* m_view;
     QWebPage* m_page;
     MyQObject* m_myObject;
+    QWebView* m_popupTestView;
+    int m_popupTestPaintCount;
 };
 
 tst_QWebFrame::tst_QWebFrame()
     : sTrue("true"), sFalse("false"), sUndefined("undefined"), sArray("array"), sFunction("function"), sError("error"),
-        sString("string"), sObject("object"), sNumber("number")
+        sString("string"), sObject("object"), sNumber("number"), m_popupTestView(0), m_popupTestPaintCount(0)
 {
 }
 
 tst_QWebFrame::~tst_QWebFrame()
 {
+}
+
+bool tst_QWebFrame::eventFilter(QObject* watched, QEvent* event)
+{
+    // used on the popupFocus test
+    if (watched == m_popupTestView) {
+        if (event->type() == QEvent::Paint)
+            m_popupTestPaintCount++;
+    }
+    return QObject::eventFilter(watched, event);
 }
 
 void tst_QWebFrame::init()
@@ -747,6 +783,27 @@ void tst_QWebFrame::getSetStaticProperty()
     QCOMPARE(evalJS("myObject.stringProperty = 123;"
                     "myObject.stringProperty"), QLatin1String("123"));
     QCOMPARE(m_myObject->stringProperty(), QLatin1String("123"));
+    QCOMPARE(evalJS("myObject.stringProperty = null"), QString());
+    QCOMPARE(evalJS("myObject.stringProperty"), QString());
+    QCOMPARE(m_myObject->stringProperty(), QString());
+    QCOMPARE(evalJS("myObject.stringProperty = undefined"), sUndefined);
+    QCOMPARE(evalJS("myObject.stringProperty"), QString());
+    QCOMPARE(m_myObject->stringProperty(), QString());
+
+    QCOMPARE(evalJS("myObject.variantProperty = new Number(1234);"
+                    "myObject.variantProperty").toDouble(), 1234.0);
+    QCOMPARE(m_myObject->variantProperty().toDouble(), 1234.0);
+
+    QCOMPARE(evalJS("myObject.variantProperty = new Boolean(1234);"
+                    "myObject.variantProperty"), sTrue);
+    QCOMPARE(m_myObject->variantProperty().toBool(), true);
+
+    QCOMPARE(evalJS("myObject.variantProperty = null;"
+                    "myObject.variantProperty.valueOf()"), sUndefined);
+    QCOMPARE(m_myObject->variantProperty(), QVariant());
+    QCOMPARE(evalJS("myObject.variantProperty = undefined;"
+                    "myObject.variantProperty.valueOf()"), sUndefined);
+    QCOMPARE(m_myObject->variantProperty(), QVariant());
 
     QCOMPARE(evalJS("myObject.variantProperty = 'foo';"
                     "myObject.variantProperty.valueOf()"), QLatin1String("foo"));
@@ -754,7 +811,6 @@ void tst_QWebFrame::getSetStaticProperty()
     QCOMPARE(evalJS("myObject.variantProperty = 42;"
                     "myObject.variantProperty").toDouble(), 42.0);
     QCOMPARE(m_myObject->variantProperty().toDouble(), 42.0);
-
 
     QCOMPARE(evalJS("myObject.variantListProperty = [1, 'two', true];"
                     "myObject.variantListProperty.length == 3"), sTrue);
@@ -778,10 +834,17 @@ void tst_QWebFrame::getSetStaticProperty()
     QCOMPARE(evalJS("delete myObject.variantProperty"), sFalse);
     QCOMPARE(evalJS("myObject.variantProperty").toDouble(), 42.0);
 
+    // custom property
+    QCOMPARE(evalJS("myObject.customProperty"), sUndefined);
+    QCOMPARE(evalJS("myObject.customProperty = 123;"
+                    "myObject.customProperty == 123"), sTrue);
+    QVariant v = m_page->mainFrame()->evaluateJavaScript("myObject.customProperty");
+    QCOMPARE(v.type(), QVariant::Double);
+    QCOMPARE(v.toInt(), 123);
+
     // non-scriptable property
     QCOMPARE(m_myObject->hiddenProperty(), 456.0);
     QCOMPARE(evalJS("myObject.hiddenProperty"), sUndefined);
-    QEXPECT_FAIL("", "undefined properties not supported", Continue);
     QCOMPARE(evalJS("myObject.hiddenProperty = 123;"
                     "myObject.hiddenProperty == 123"), sTrue);
     QCOMPARE(m_myObject->hiddenProperty(), 456.0);
@@ -912,6 +975,18 @@ void tst_QWebFrame::callQtInvokable()
     QCOMPARE(m_myObject->qtFunctionActuals().at(0).toDouble(), 123.5);
 
     m_myObject->resetQtFunctionInvoked();
+    QCOMPARE(evalJS("typeof myObject.myInvokableWithDoubleArg(new Number(1234.5))"), sUndefined);
+    QCOMPARE(m_myObject->qtFunctionInvoked(), 4);
+    QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+    QCOMPARE(m_myObject->qtFunctionActuals().at(0).toDouble(), 1234.5);
+
+    m_myObject->resetQtFunctionInvoked();
+    QCOMPARE(evalJS("typeof myObject.myInvokableWithBoolArg(new Boolean(true))"), sUndefined);
+    QCOMPARE(m_myObject->qtFunctionInvoked(), 52);
+    QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+    QCOMPARE(m_myObject->qtFunctionActuals().at(0).toBool(), true);
+
+    m_myObject->resetQtFunctionInvoked();
     QCOMPARE(evalJS("typeof myObject.myInvokableWithStringArg('ciao')"), sUndefined);
     QCOMPARE(m_myObject->qtFunctionInvoked(), 5);
     QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
@@ -922,6 +997,20 @@ void tst_QWebFrame::callQtInvokable()
     QCOMPARE(m_myObject->qtFunctionInvoked(), 5);
     QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
     QCOMPARE(m_myObject->qtFunctionActuals().at(0).toString(), QLatin1String("123"));
+
+    m_myObject->resetQtFunctionInvoked();
+    QCOMPARE(evalJS("typeof myObject.myInvokableWithStringArg(null)"), sUndefined);
+    QCOMPARE(m_myObject->qtFunctionInvoked(), 5);
+    QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+    QCOMPARE(m_myObject->qtFunctionActuals().at(0).toString(), QString());
+    QVERIFY(m_myObject->qtFunctionActuals().at(0).toString().isEmpty());
+
+    m_myObject->resetQtFunctionInvoked();
+    QCOMPARE(evalJS("typeof myObject.myInvokableWithStringArg(undefined)"), sUndefined);
+    QCOMPARE(m_myObject->qtFunctionInvoked(), 5);
+    QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+    QCOMPARE(m_myObject->qtFunctionActuals().at(0).toString(), QString());
+    QVERIFY(m_myObject->qtFunctionActuals().at(0).toString().isEmpty());
 
     m_myObject->resetQtFunctionInvoked();
     QCOMPARE(evalJS("typeof myObject.myInvokableWithIntArgs(123, 456)"), sUndefined);
@@ -1019,7 +1108,7 @@ void tst_QWebFrame::callQtInvokable()
         QVariant ret = evalJSV("myObject.myInvokableReturningQObjectStar()", type);
         QCOMPARE(m_myObject->qtFunctionInvoked(), 13);
         QCOMPARE(m_myObject->qtFunctionActuals().size(), 0);
-        QCOMPARE(type, sFunction);
+        QCOMPARE(type, sObject);
         QCOMPARE(ret.userType(), int(QMetaType::QObjectStar));
     }
 
@@ -1046,6 +1135,28 @@ void tst_QWebFrame::callQtInvokable()
         QCOMPARE(m_myObject->qtFunctionActuals().at(0), m_myObject->variantProperty());
         QCOMPARE(ret.userType(), int(QMetaType::Double)); // all JS numbers are doubles, even though this started as an int
         QCOMPARE(ret.toInt(),123);
+    }
+
+    m_myObject->resetQtFunctionInvoked();
+    {
+        QString type;
+        QVariant ret = evalJSV("myObject.myInvokableWithVariantArg(null)", type);
+        QCOMPARE(type, sObject);
+        QCOMPARE(m_myObject->qtFunctionInvoked(), 15);
+        QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+        QCOMPARE(m_myObject->qtFunctionActuals().at(0), QVariant());
+        QVERIFY(!m_myObject->qtFunctionActuals().at(0).isValid());
+    }
+
+    m_myObject->resetQtFunctionInvoked();
+    {
+        QString type;
+        QVariant ret = evalJSV("myObject.myInvokableWithVariantArg(undefined)", type);
+        QCOMPARE(type, sObject);
+        QCOMPARE(m_myObject->qtFunctionInvoked(), 15);
+        QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
+        QCOMPARE(m_myObject->qtFunctionActuals().at(0), QVariant());
+        QVERIFY(!m_myObject->qtFunctionActuals().at(0).isValid());
     }
 
     /* XFAIL - variant support
@@ -1135,7 +1246,7 @@ void tst_QWebFrame::callQtInvokable()
         QCOMPARE(ret.userType(), int(QMetaType::QObjectStar));
         QCOMPARE(qvariant_cast<QObject*>(ret), (QObject*)m_myObject);
 
-        QCOMPARE(type, sFunction); // implements call, so Function, not object
+        QCOMPARE(type, sObject);
     }
 
     m_myObject->resetQtFunctionInvoked();
@@ -1199,26 +1310,6 @@ void tst_QWebFrame::callQtInvokable()
         QCOMPARE(type, sError);
         QCOMPARE(ret, QLatin1String("TypeError: incompatible type of argument(s) in call to myInvokableWithQBrushArg(); candidates were\n    myInvokableWithQBrushArg(QBrush)"));
         QCOMPARE(m_myObject->qtFunctionInvoked(), -1);
-    }
-
-    // qscript_call()
-    {
-        m_myObject->resetQtFunctionInvoked();
-        QString type;
-        evalJS("new myObject(123)", type);
-        QCOMPARE(type, sObject);
-        QCOMPARE(m_myObject->qtFunctionInvoked(), 40);
-        QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
-        QCOMPARE(m_myObject->qtFunctionActuals().at(0).toInt(), 123);
-    }
-    {
-        m_myObject->resetQtFunctionInvoked();
-        QString type;
-        evalJS("myObject(123)", type);
-        QCOMPARE(type, sUndefined);
-        QCOMPARE(m_myObject->qtFunctionInvoked(), 40);
-        QCOMPARE(m_myObject->qtFunctionActuals().size(), 1);
-        QCOMPARE(m_myObject->qtFunctionActuals().at(0).toInt(), 123);
     }
 }
 
@@ -1394,26 +1485,26 @@ void tst_QWebFrame::connectAndDisconnect()
         QString type;
         QString ret = evalJS("(function() { }).connect()", type);
         QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("TypeError: Value undefined (result of expression (function ()\n{\n}).connect) is not object."));
+        QCOMPARE(ret, QLatin1String("TypeError: Result of expression '(function() { }).connect' [undefined] is not a function."));
     }
     {
         QString type;
         QString ret = evalJS("var o = { }; o.connect = Function.prototype.connect;  o.connect()", type);
         QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("TypeError: Value undefined (result of expression o.connect) is not object."));
+        QCOMPARE(ret, QLatin1String("TypeError: Result of expression 'o.connect' [undefined] is not a function."));
     }
 
     {
         QString type;
         QString ret = evalJS("(function() { }).connect(123)", type);
         QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("TypeError: Value undefined (result of expression (function ()\n{\n}).connect) is not object."));
+        QCOMPARE(ret, QLatin1String("TypeError: Result of expression '(function() { }).connect' [undefined] is not a function."));
     }
     {
         QString type;
         QString ret = evalJS("var o = { }; o.connect = Function.prototype.connect;  o.connect(123)", type);
         QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("TypeError: Value undefined (result of expression o.connect) is not object."));
+        QCOMPARE(ret, QLatin1String("TypeError: Result of expression 'o.connect' [undefined] is not a function."));
     }
 
     {
@@ -1877,7 +1968,7 @@ void tst_QWebFrame::objectDeleted()
     // now delete the object
     delete qobj;
 
-    QCOMPARE(evalJS("typeof bar"), sFunction);
+    QCOMPARE(evalJS("typeof bar"), sObject);
 
     // any attempt to access properties of the object should result in an exception
     {
@@ -1891,13 +1982,6 @@ void tst_QWebFrame::objectDeleted()
         QString ret = evalJS("bar.objectName = 'foo'", type);
         QCOMPARE(type, sError);
         QCOMPARE(ret, QLatin1String("Error: cannot access member `objectName' of deleted QObject"));
-    }
-
-    {
-        QString type;
-        QString ret = evalJS("bar()", type);
-        QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("Error: cannot call function of deleted QObject"));
     }
 
     // myInvokable is stored in member table (since we've accessed it before deletion)
@@ -1924,12 +2008,6 @@ void tst_QWebFrame::objectDeleted()
 
     // access from script
     evalJS("window.o = bar;");
-    {
-        QString type;
-        QString ret = evalJS("o()", type);
-        QCOMPARE(type, sError);
-        QCOMPARE(ret, QLatin1String("Error: cannot call function of deleted QObject"));
-    }
     {
         QString type;
         QString ret = evalJS("o.objectName", type);
@@ -2058,6 +2136,219 @@ void tst_QWebFrame::setHtml()
     QString html("<html><body><p>hello world</p></body></html>");
     m_view->page()->mainFrame()->setHtml(html);
     QCOMPARE(m_view->page()->mainFrame()->toHtml(), html);
+}
+
+void tst_QWebFrame::setHtmlWithResource()
+{
+    QString html("<html><body><p>hello world</p><img src='qrc:/image.png'/></body></html>");
+
+    QWebPage page;
+    QWebFrame* frame = page.mainFrame();
+
+    // in few seconds, the image should be completey loaded
+    QSignalSpy spy(&page, SIGNAL(loadFinished(bool)));
+    frame->setHtml(html);
+    QTest::qWait(200);
+    QCOMPARE(spy.count(), 1);
+
+    QCOMPARE(frame->evaluateJavaScript("document.images.length").toInt(), 1);
+    QCOMPARE(frame->evaluateJavaScript("document.images[0].width").toInt(), 128);
+    QCOMPARE(frame->evaluateJavaScript("document.images[0].height").toInt(), 128);
+}
+
+class TestNetworkManager : public QNetworkAccessManager
+{
+public:
+    TestNetworkManager(QObject* parent) : QNetworkAccessManager(parent) {}
+
+    QList<QUrl> requestedUrls;
+
+protected:
+    virtual QNetworkReply* createRequest(Operation op, const QNetworkRequest &request, QIODevice* outgoingData) {
+        requestedUrls.append(request.url());
+        QNetworkRequest redirectedRequest = request;
+        redirectedRequest.setUrl(QUrl("data:text/html,<p>hello"));
+        return QNetworkAccessManager::createRequest(op, redirectedRequest, outgoingData);
+    }
+};
+
+void tst_QWebFrame::ipv6HostEncoding()
+{
+    TestNetworkManager* networkManager = new TestNetworkManager(m_page);
+    m_page->setNetworkAccessManager(networkManager);
+    networkManager->requestedUrls.clear();
+
+    QUrl baseUrl = QUrl::fromEncoded("http://[::1]/index.html");
+    m_view->setHtml("<p>Hi", baseUrl);
+    m_view->page()->mainFrame()->evaluateJavaScript("var r = new XMLHttpRequest();"
+            "r.open('GET', 'http://[::1]/test.xml', false);"
+            "r.send(null);"
+            );
+    QCOMPARE(networkManager->requestedUrls.count(), 1);
+    QCOMPARE(networkManager->requestedUrls.at(0), QUrl::fromEncoded("http://[::1]/test.xml"));
+}
+
+void tst_QWebFrame::metaData()
+{
+    m_view->setHtml("<html>"
+                    "    <head>"
+                    "        <meta name=\"description\" content=\"Test description\">"
+                    "        <meta name=\"keywords\" content=\"HTML, JavaScript, Css\">"
+                    "    </head>"
+                    "</html>");
+
+    QMultiMap<QString, QString> metaData = m_view->page()->mainFrame()->metaData();
+
+    QCOMPARE(metaData.count(), 2);
+
+    QCOMPARE(metaData.value("description"), QString("Test description"));
+    QCOMPARE(metaData.value("keywords"), QString("HTML, JavaScript, Css"));
+    QCOMPARE(metaData.value("nonexistant"), QString());
+
+    m_view->setHtml("<html>"
+                    "    <head>"
+                    "        <meta name=\"samekey\" content=\"FirstValue\">"
+                    "        <meta name=\"samekey\" content=\"SecondValue\">"
+                    "    </head>"
+                    "</html>");
+
+    metaData = m_view->page()->mainFrame()->metaData();
+
+    QCOMPARE(metaData.count(), 2);
+
+    QStringList values = metaData.values("samekey");
+    QCOMPARE(values.count(), 2);
+
+    QVERIFY(values.contains("FirstValue"));
+    QVERIFY(values.contains("SecondValue"));
+
+    QCOMPARE(metaData.value("nonexistant"), QString());
+}
+
+void tst_QWebFrame::popupFocus()
+{
+    QWebView view;
+    view.setHtml("<html>"
+                 "    <body>"
+                 "        <select name=\"select\">"
+                 "            <option>1</option>"
+                 "            <option>2</option>"
+                 "        </select>"
+                 "        <input type=\"text\"> </input>"
+                 "        <textarea name=\"text_area\" rows=\"3\" cols=\"40\">"
+                 "This test checks whether showing and hiding a popup"
+                 "takes the focus away from the webpage."
+                 "        </textarea>"
+                 "    </body>"
+                 "</html>");
+    view.resize(400, 100);
+    view.show();
+    view.setFocus();
+    QTest::qWait(200);
+    QVERIFY2(view.hasFocus(),
+             "The WebView should be created");
+
+    // open the popup by clicking. check if focus is on the popup
+    QTest::mouseClick(&view, Qt::LeftButton, 0, QPoint(25, 25));
+    QObject* webpopup = firstChildByClassName(&view, "WebCore::QWebPopup");
+    QComboBox* combo = qobject_cast<QComboBox*>(webpopup);
+    QTest::qWait(500);
+    QVERIFY2(!view.hasFocus() && combo->view()->hasFocus(),
+             "Focus sould be on the Popup");
+
+    // hide the popup and check if focus is on the page
+    combo->hidePopup();
+    QTest::qWait(500);
+    QVERIFY2(view.hasFocus() && !combo->view()->hasFocus(),
+             "Focus sould be back on the WebView");
+
+    // triple the flashing time, should at least blink twice already
+    int delay = qApp->cursorFlashTime() * 3;
+
+    // focus the lineedit and check if it blinks
+    QTest::mouseClick(&view, Qt::LeftButton, 0, QPoint(200, 25));
+    m_popupTestView = &view;
+    view.installEventFilter( this );
+    QTest::qWait(delay);
+    QVERIFY2(m_popupTestPaintCount >= 4,
+             "The input field should have a blinking caret");
+}
+
+void tst_QWebFrame::jsByteArray()
+{
+    QByteArray ba("hello world");
+    m_myObject->setByteArrayProperty(ba);
+
+    // read-only property
+    QCOMPARE(m_myObject->byteArrayProperty(), ba);
+    QString type;
+    QVariant v = evalJSV("myObject.byteArrayProperty");
+    QCOMPARE(int(v.type()), int(QVariant::ByteArray));
+
+    QCOMPARE(v.toByteArray(), ba);
+}
+
+void tst_QWebFrame::ownership()
+{
+    // test ownership
+    {
+        QPointer<QObject> ptr = new QObject();
+        QVERIFY(ptr != 0);
+        {
+            QWebPage page;
+            QWebFrame* frame = page.mainFrame();
+            frame->addToJavaScriptWindowObject("test", ptr, QScriptEngine::ScriptOwnership);
+        }
+        QVERIFY(ptr == 0);
+    }
+    {
+        QPointer<QObject> ptr = new QObject();
+        QVERIFY(ptr != 0);
+        QObject* before = ptr;
+        {
+            QWebPage page;
+            QWebFrame* frame = page.mainFrame();
+            frame->addToJavaScriptWindowObject("test", ptr, QScriptEngine::QtOwnership);
+        }
+        QVERIFY(ptr == before);
+        delete ptr;
+    }
+    {
+        QObject* parent = new QObject();
+        QObject* child = new QObject(parent);
+        QWebPage page;
+        QWebFrame* frame = page.mainFrame();
+        frame->addToJavaScriptWindowObject("test", child, QScriptEngine::QtOwnership);
+        QVariant v = frame->evaluateJavaScript("test");
+        QCOMPARE(qvariant_cast<QObject*>(v), child);
+        delete parent;
+        v = frame->evaluateJavaScript("test");
+        QCOMPARE(qvariant_cast<QObject*>(v), (QObject *)0);
+    }
+    {
+        QPointer<QObject> ptr = new QObject();
+        QVERIFY(ptr != 0);
+        {
+            QWebPage page;
+            QWebFrame* frame = page.mainFrame();
+            frame->addToJavaScriptWindowObject("test", ptr, QScriptEngine::AutoOwnership);
+        }
+        // no parent, so it should be like ScriptOwnership
+        QVERIFY(ptr == 0);
+    }
+    {
+        QObject* parent = new QObject();
+        QPointer<QObject> child = new QObject(parent);
+        QVERIFY(child != 0);
+        {
+            QWebPage page;
+            QWebFrame* frame = page.mainFrame();
+            frame->addToJavaScriptWindowObject("test", child, QScriptEngine::AutoOwnership);
+        }
+        // has parent, so it should be like QtOwnership
+        QVERIFY(child != 0);
+        delete parent;
+    }
 }
 
 QTEST_MAIN(tst_QWebFrame)

@@ -26,4 +26,5 @@ qhp.Qt.excluded   = $QT_SOURCE_TREE/doc/src/assistant-manual.qdoc \
                     $QT_SOURCE_TREE/doc/src/qmake-manual.qdoc
 
 outputdir         = $QT_BUILD_TREE/doc-build/html-qt
+tagfile           = $QT_BUILD_TREE/doc-build/html-qt/qt.tags
 base              = file:$QT_BUILD_TREE/doc-build/html-qt

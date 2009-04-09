@@ -25,6 +25,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qvariant.h>
 #include <QtGui/qicon.h>
+#include <QtScript/qscriptengine.h>
 #if QT_VERSION >= 0x040400
 #include <QtNetwork/qnetworkaccessmanager.h>
 #endif
@@ -46,6 +47,8 @@ class QWebNetworkRequest;
 class QWebFramePrivate;
 class QWebPage;
 class QWebHitTestResult;
+class QWebHistoryItem;
+class QWebSecurityOrigin;
 
 namespace WebCore {
     class WidgetPrivate;
@@ -67,6 +70,7 @@ public:
     bool isNull() const;
 
     QPoint pos() const;
+    QRect boundingRect() const;
     QString title() const;
 
     QString linkText() const;
@@ -96,11 +100,13 @@ private:
 class QWEBKIT_EXPORT QWebFrame : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal textSizeMultiplier READ textSizeMultiplier WRITE setTextSizeMultiplier)
+    Q_PROPERTY(qreal textSizeMultiplier READ textSizeMultiplier WRITE setTextSizeMultiplier DESIGNABLE false)
+    Q_PROPERTY(qreal zoomFactor READ zoomFactor WRITE setZoomFactor)
     Q_PROPERTY(QString title READ title)
     Q_PROPERTY(QUrl url READ url WRITE setUrl)
     Q_PROPERTY(QIcon icon READ icon)
     Q_PROPERTY(QSize contentsSize READ contentsSize)
+    Q_PROPERTY(QPoint scrollPosition READ scrollPosition WRITE setScrollPosition)
 private:
     QWebFrame(QWebPage *parent, QWebFrameData *frameData);
     QWebFrame(QWebFrame *parent, QWebFrameData *frameData);
@@ -121,6 +127,7 @@ public:
     void setContent(const QByteArray &data, const QString &mimeType = QString(), const QUrl &baseUrl = QUrl());
 
     void addToJavaScriptWindowObject(const QString &name, QObject *object);
+    void addToJavaScriptWindowObject(const QString &name, QObject *object, QScriptEngine::ValueOwnership ownership);
     QString toHtml() const;
     QString toPlainText() const;
     QString renderTreeDump() const;
@@ -129,6 +136,7 @@ public:
     void setUrl(const QUrl &url);
     QUrl url() const;
     QIcon icon() const;
+    QMultiMap<QString, QString> metaData() const;
 
     QString frameName() const;
 
@@ -143,11 +151,18 @@ public:
     int scrollBarMinimum(Qt::Orientation orientation) const;
     int scrollBarMaximum(Qt::Orientation orientation) const;
 
+    void scroll(int, int);
+    QPoint scrollPosition() const;
+    void setScrollPosition(const QPoint &pos);
+
     void render(QPainter *painter, const QRegion &clip);
     void render(QPainter *painter);
 
     void setTextSizeMultiplier(qreal factor);
     qreal textSizeMultiplier() const;
+
+    qreal zoomFactor() const;
+    void setZoomFactor(qreal factor);
 
     QPoint pos() const;
     QRect geometry() const;
@@ -156,6 +171,8 @@ public:
     QWebHitTestResult hitTestContent(const QPoint &pos) const;
 
     virtual bool event(QEvent *);
+
+    QWebSecurityOrigin securityOrigin() const;
 
 public Q_SLOTS:
     QVariant evaluateJavaScript(const QString& scriptSource);

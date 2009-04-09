@@ -32,6 +32,7 @@ SOURCES += \
     $$PWD/qscriptclassdata.cpp \
     $$PWD/qscriptparser.cpp \
     $$PWD/qscriptprettypretty.cpp \
+    $$PWD/qscriptxmlgenerator.cpp \
     $$PWD/qscriptsyntaxchecker.cpp \
     $$PWD/qscriptstring.cpp \
     $$PWD/qscriptclass.cpp \
@@ -87,10 +88,11 @@ HEADERS += \
     $$PWD/qscriptmember_p.h \
     $$PWD/qscriptmemorypool_p.h \
     $$PWD/qscriptnodepool_p.h \
-    $$PWD/qscripttypeinfo_p.h \
     $$PWD/qscriptclassinfo_p.h \
     $$PWD/qscriptparser_p.h \
     $$PWD/qscriptprettypretty_p.h \
+    $$PWD/qscriptsyntaxcheckresult_p.h \
+    $$PWD/qscriptxmlgenerator_p.h \
     $$PWD/qscriptrepository_p.h \
     $$PWD/qscriptsyntaxchecker_p.h \
     $$PWD/qscriptstring.h \

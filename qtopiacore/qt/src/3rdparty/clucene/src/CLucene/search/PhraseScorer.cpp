@@ -106,9 +106,9 @@ CL_NS_DEF(search)
 		return false;                                 // no more matches
 	}
 
-	float_t PhraseScorer::score(){
+	qreal PhraseScorer::score(){
 		//System.out.println("scoring " + first.doc);
-		float_t raw = getSimilarity()->tf(freq) * value; // raw score
+		qreal raw = getSimilarity()->tf(freq) * value; // raw score
 		return raw * Similarity::decodeNorm(norms[first->doc]); // normalize
 	}
 
@@ -199,7 +199,7 @@ CL_NS_DEF(search)
 		while (next() && doc() < _doc){
 		}
 
-		float_t phraseFreq = (doc() == _doc) ? freq : 0.0f;
+		qreal phraseFreq = (doc() == _doc) ? freq : 0.0f;
 		tfExplanation->setValue(getSimilarity()->tf(phraseFreq));
 
 		StringBuffer buf;

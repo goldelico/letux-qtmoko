@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -48,8 +52,6 @@
 #ifndef Patternist_Expression_H
 #define Patternist_Expression_H
 
-template<typename T> class QList;
-template<typename T> class QVector;
 #include <QFlags>
 #include <QSharedData>
 
@@ -65,6 +67,9 @@ template<typename T> class QVector;
 QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
+
+template<typename T> class QList;
+template<typename T> class QVector;
 
 namespace QPatternist
 {
@@ -293,7 +298,7 @@ namespace QPatternist
 
             /**
              * When set, signals that this expression creates a focus for its last operand.
-             * When set, newFocusType() must be overriden to return the static type
+             * When set, newFocusType() must be overridden to return the static type
              * of the context item.
              *
              * @see announceFocusType()
@@ -332,7 +337,15 @@ namespace QPatternist
              * identities, node constructors are considered creative on
              * evaluation.
              */
-            IsNodeConstructor           = 1 << 13
+            IsNodeConstructor           = 1 << 13,
+
+            /**
+             * Whether this expression requires the current item, as returned
+             * from @c fn:current().
+             *
+             * CurrentFN uses this flag.
+             */
+            RequiresCurrentItem         = 1 << 14
         };
 
         /**
@@ -354,114 +367,124 @@ namespace QPatternist
             /**
              * Identifies Boolean.
              */
-            IDBooleanValue                  = 1,
+            IDBooleanValue = 1,
 
             /**
              * Identifies CountFN.
              */
-            IDCountFN                       = 1 << 1,
+            IDCountFN,
 
             /**
              * Identifies EmptyFN.
              */
-            IDEmptyFN                       = 1 << 2,
+            IDEmptyFN,
 
             /**
              * Identifies ExistsFN.
              */
-            IDExistsFN                      = 1 << 3,
+            IDExistsFN,
 
             /**
              * Identifies ExpressionSequence and LiteralSequence.
              */
-            IDExpressionSequence            =  1 << 4,
+            IDExpressionSequence,
 
             /**
              * Identifies GeneralComparison.
              */
-            IDGeneralComparison             = 1 << 5,
+            IDGeneralComparison,
 
             /**
              * Identifies IfThenClause.
              */
-            IDIfThenClause                  = 1 << 6,
+            IDIfThenClause,
 
             /**
              * Identifies nothing in particular. The default implementation
              * of id() returns this, which is suitable for Expression instances
              * which never needs to be identified in this aspect.
              */
-            IDIgnorableExpression           = 1 << 7,
+            IDIgnorableExpression,
 
             /**
              * Identifies Integer.
              */
-            IDIntegerValue                  = 1 << 8,
+            IDIntegerValue,
 
             /**
              * Identifies PositionFN.
              */
-            IDPositionFN                    = 1 << 9,
+            IDPositionFN,
 
             /**
              * Identifies AtomicString, AnyURI, and UntypedAtomic.
              */
-            IDStringValue                   = 1 << 10,
+            IDStringValue,
 
             /**
              * Identifies ValueComparison.
              */
-            IDValueComparison               = 1 << 11,
+            IDValueComparison,
 
             /**
              * Identifies VariableReference.
              */
-            IDRangeVariableReference        = 1 << 12,
+            IDRangeVariableReference,
 
             /**
              * Identifies ContextItem.
              */
-            IDContextItem                   = 1 << 13,
+            IDContextItem,
 
             /**
              * Identifies UserFunctionCallsite.
              */
-            IDUserFunctionCallsite          = 1 << 14,
+            IDUserFunctionCallsite,
 
             /**
              * Identifies ExpressionVariableReference.
              */
-            IDExpressionVariableReference   = 1 << 15,
+            IDExpressionVariableReference,
 
             /**
              * Identifies ExpressionVariableReference.
              */
-            IDAttributeConstructor          = 1 << 16,
+            IDAttributeConstructor,
 
             /**
              * Identifies UpperCaseFN.
              */
-            IDUpperCaseFN                   = 1 << 17,
+            IDUpperCaseFN,
 
             /**
              * Identifies LowerCaseFN.
              */
-            IDLowerCaseFN                   = 1 << 18,
+            IDLowerCaseFN,
 
             /**
              * Identifies FirstItemPredicate.
              */
-            IDFirstItemPredicate            = 1 << 19,
-            IDEmptySequence                 = 1 << 20,
-            IDReturnOrderBy                 = 1 << 21,
-            IDLetClause                     = 1 << 22,
-            IDForClause                     = 1 << 23,
-            IDPath                          = 1 << 24,
-            IDNamespaceConstructor          = 1 << 25,
-            IDArgumentReference             = 1 << 26
-        };
+            IDFirstItemPredicate,
+            IDEmptySequence,
+            IDReturnOrderBy,
+            IDLetClause,
+            IDForClause,
+            IDPath,
+            IDNamespaceConstructor,
+            IDArgumentReference,
+            IDGenericPredicate,
+            IDAxisStep,
 
-        typedef QFlags<ID> IDs;
+            /**
+             * A literal which is either @c xs:float or
+             * @c xs:double.
+             */
+            IDFloat,
+
+            IDCombineNodes,
+            IDUnresolvedVariableReference,
+            IDCardinalityVerifier
+        };
 
         inline Expression()
         {
@@ -497,11 +520,11 @@ namespace QPatternist
          * as converting the value to a new value of type xs:boolean.
          *
          * Note that this function cannot return the empty sequence,
-         * evaluateSingleton() must be overriden in order to be able to do
+         * evaluateSingleton() must be overridden in order to be able to do
          * that.
          *
          * The default implementation results in a type error. Hence, this function
-         * must be overriden if such behavior is not of interest.
+         * must be overridden if such behavior is not of interest.
          *
          * @see <a href="http://www.w3.org/TR/xpath20/#id-ebv">XML Path Language (XPath) 2.0,
          * 2.4.3 Effective Boolean Value</a>
@@ -536,7 +559,7 @@ namespace QPatternist
          *
          *     - The lengths of the lists returned by expectedOperandTypes()
          *     and operands() should always be equal in length, since one
-         *     cannot describe the type of an non-existant operand(and all
+         *     cannot describe the type of a non-existent operand(and all
          *     operands must have type information).
          *     - A significant difference between the two functions is that while
          *     the type of objects in the list returned by operands() may vary
@@ -641,6 +664,12 @@ namespace QPatternist
         virtual Properties properties() const;
 
         /**
+         * Recursively computes through all descendants until a Property
+         * is encount
+         */
+        virtual Properties dependencies() const;
+
+        /**
          * @short Computes the union of properties for this Expression and all
          * its descending children.
          *
@@ -672,7 +701,7 @@ namespace QPatternist
          * Determines whether this Expression has Property @p prop set.
          *
          * Calling <tt>expr->has(MyProperty)</tt> is semantically equivalent
-         * to <tt>(expr->properties() & MyProperty) == MyProperty</tt>. In
+         * to <tt>expr->properties().testFlag(MyProperty)</tt>. In
          * other words, has(), as well as is(), provides syntacti sugar
          * and makes code more readable.
          *
@@ -680,6 +709,8 @@ namespace QPatternist
          * the appropriate flag by re-implementing the properties() function.
          */
         inline bool has(const Property prop) const;
+
+        inline bool hasDependency(const Property prop) const;
 
         virtual ExpressionVisitorResult::Ptr accept(const ExpressionVisitor::Ptr &visitor) const = 0;
 
@@ -763,10 +794,11 @@ namespace QPatternist
          * the two pointers actually are different, switches the two. When compiling
          * in debug mode, informative debug messages are printed.
          *
-         * This function can be said to be similar to Qt's qSwap() function.
+         * This function is conceptually similar to Qt's qSwap(), but has
+         * debugging functionality and also handles source locations.
          */
-        static inline void rewrite(Expression::Ptr &a,
-                                   const Expression::Ptr &b,
+        static inline void rewrite(Expression::Ptr &old,
+                                   const Expression::Ptr &New,
                                    const StaticContext::Ptr &context);
 
         /**
@@ -776,6 +808,11 @@ namespace QPatternist
          */
         inline const Expression::Ptr &rewrite(const Expression::Ptr &to,
                                               const StaticContext::Ptr &context) const;
+
+        /**
+         * By default 0.5 is returned.
+         */
+        virtual PatternPriority patternPriority() const;
 
     protected:
 
@@ -797,13 +834,14 @@ namespace QPatternist
         inline StaticContext::Ptr finalizeStaticContext(const StaticContext::Ptr &context) const;
 
         /**
-         * @short Performs constant propagation, also called constant folding, on expression @p op.
+         * @short Performs constant propagation, also called constant folding, on this expression.
          *
-         * This means that it attempts to evaluate @p op at compile and returns the result value
+         * This means that it attempts to evaluate this expression at compile and returns the result value
          * appropriately as an Expression. For example, for the XPath expression
          * <tt>1 + 3</tt> would an Integer of value 4 would be returned.
          *
-         * It is not checked whether constant propagation is possible for @p op.
+         * It is not checked whether constant propagation is possible, the
+         * caller is responsible for this.
          *
          * @see <a href="http://en.wikipedia.org/wiki/Constant_propagation">Constant folding,
          * From Wikipedia, the free encyclopedia</a>
@@ -814,7 +852,6 @@ namespace QPatternist
     };
 
     Q_DECLARE_OPERATORS_FOR_FLAGS(Expression::Properties)
-    Q_DECLARE_OPERATORS_FOR_FLAGS(Expression::IDs)
 
     inline bool Expression::is(const Expression::ID i) const
     {
@@ -823,30 +860,35 @@ namespace QPatternist
 
     inline bool Expression::isEvaluated() const
     {
-        return (properties() & IsEvaluated) == IsEvaluated;
+        return has(IsEvaluated);
     }
 
     inline bool Expression::has(const Expression::Property prop) const
     {
-        return (properties() & prop) == prop;
+        return properties().testFlag(prop);
     }
 
-    inline void Expression::rewrite(Expression::Ptr &a,
-                                    const Expression::Ptr &b,
+    inline bool Expression::hasDependency(const Expression::Property prop) const
+    {
+        return dependencies().testFlag(prop);
+    }
+
+    inline void Expression::rewrite(Expression::Ptr &old,
+                                    const Expression::Ptr &New,
                                     const StaticContext::Ptr &context)
     {
-        Q_ASSERT(a);
-        Q_ASSERT(b);
+        Q_ASSERT(old);
+        Q_ASSERT(New);
 
-        if(a != b)
+        if(old != New)
         {
-            pDebug() << "AST REWRITE:" << a.data() << "to" << b.data()
-                     << '(' << a->actualReflection() << "to" << b->actualReflection() << ", "
-                     << a->description() << "to" << b->description() << ")";
+            pDebug() << "AST REWRITE:" << old.data() << "to" << New.data()
+                     << '(' << old->actualReflection() << "to" << New->actualReflection() << ", "
+                     << old->description() << "to" << New->description() << ")";
 
             /* The order of these two lines is significant.. */
-            context->addLocation(b.data(), context->locationFor(a.data()));
-            a = b;
+            context->addLocation(New.data(), context->locationFor(old->actualReflection()));
+            old = New;
         }
     }
 

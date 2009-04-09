@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXML module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -488,7 +492,7 @@ private:
     \brief The QXmlParseException class is used to report errors with
     the QXmlErrorHandler interface.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     The XML subsystem constructs an instance of this class when it
@@ -599,7 +603,7 @@ QString QXmlParseException::systemId() const
     \brief The QXmlLocator class provides the XML handler classes with
     information about the parsing position within a file.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     The reader reports a QXmlLocator to the content handler before it
@@ -694,7 +698,7 @@ public:
     \brief The QXmlNamespaceSupport class is a helper class for XML
     readers which want to include namespace support.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     You can set the prefix for the current namespace with setPrefix(),
@@ -939,7 +943,7 @@ void QXmlNamespaceSupport::reset()
     \reentrant
     \brief The QXmlAttributes class provides XML attributes.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If attributes are reported by QXmlContentHandler::startElement()
@@ -1208,7 +1212,7 @@ void QXmlAttributes::append(const QString &qName, const QString &uri, const QStr
     \brief The QXmlInputSource class provides the input data for the
     QXmlReader subclasses.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     All subclasses of QXmlReader read the input XML document from this
@@ -1652,7 +1656,7 @@ QString QXmlInputSource::fromRawData(const QByteArray &data, bool beginning)
     \brief The QXmlContentHandler class provides an interface to
     report the logical content of XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If the application needs to be informed of basic parsing events,
@@ -1894,7 +1898,7 @@ QString QXmlInputSource::fromRawData(const QByteArray &data, bool beginning)
     \brief The QXmlErrorHandler class provides an interface to report
     errors in XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If you want your application to report errors to the user or to
@@ -1969,7 +1973,7 @@ events are reported.
     \brief The QXmlDTDHandler class provides an interface to report
     DTD content of XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If an application needs information about notations and unparsed
@@ -2036,7 +2040,7 @@ events are reported.
     \brief The QXmlEntityResolver class provides an interface to
     resolve external entities contained in XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If an application needs to implement customized handling for
@@ -2092,7 +2096,7 @@ events are reported.
     \brief The QXmlLexicalHandler class provides an interface to
     report the lexical content of XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     The events in the lexical handler apply to the entire document,
@@ -2243,7 +2247,7 @@ events are reported.
     \brief The QXmlDeclHandler class provides an interface to report declaration
     content of XML data.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     You can set the declaration handler with
@@ -2330,7 +2334,7 @@ events are reported.
     \brief The QXmlDefaultHandler class provides a default implementation of all
     the XML handler classes.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     This class gathers together the features of
@@ -2737,7 +2741,7 @@ void QXmlSimpleReaderPrivate::initIncrementalParsing()
     \brief The QXmlReader class provides an interface for XML readers (i.e.
     parsers).
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     This abstract class provides an interface for all of Qt's XML
@@ -2962,7 +2966,7 @@ void QXmlSimpleReaderPrivate::initIncrementalParsing()
     \brief The QXmlSimpleReader class provides an implementation of a
     simple XML parser.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
     \mainclass
 
@@ -3133,15 +3137,16 @@ bool QXmlSimpleReader::feature(const QString& name, bool *ok) const
 {
     const QXmlSimpleReaderPrivate *d = d_func();
 
+    // Qt5 ###: Change these strings to qtsoftware.com
     if (ok != 0)
         *ok = true;
     if (name == QLatin1String("http://xml.org/sax/features/namespaces")) {
         return d->useNamespaces;
     } else if (name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")) {
         return d->useNamespacePrefixes;
-    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) {
+    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) { // Shouldn't change in Qt 4
         return d->reportWhitespaceCharData;
-    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) {
+    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
         return d->reportEntities;
     } else {
         qWarning("Unknown feature %s", name.toLatin1().data());
@@ -3187,13 +3192,14 @@ bool QXmlSimpleReader::feature(const QString& name, bool *ok) const
 void QXmlSimpleReader::setFeature(const QString& name, bool enable)
 {
     Q_D(QXmlSimpleReader);
+    // Qt5 ###: Change these strings to qtsoftware.com
     if (name == QLatin1String("http://xml.org/sax/features/namespaces")) {
         d->useNamespaces = enable;
     } else if (name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")) {
         d->useNamespacePrefixes = enable;
-    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) {
+    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")) { // Shouldn't change in Qt 4
         d->reportWhitespaceCharData = enable;
-    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) {
+    } else if (name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
         d->reportEntities = enable;
     } else {
         qWarning("Unknown feature %s", name.toLatin1().data());
@@ -3204,10 +3210,11 @@ void QXmlSimpleReader::setFeature(const QString& name, bool enable)
 */
 bool QXmlSimpleReader::hasFeature(const QString& name) const
 {
+    // Qt5 ###: Change these strings to qtsoftware.com
     if (name == QLatin1String("http://xml.org/sax/features/namespaces")
         || name == QLatin1String("http://xml.org/sax/features/namespace-prefixes")
-        || name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData")
-        || name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) {
+        || name == QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData") // Shouldn't change in Qt 4
+        || name == QLatin1String("http://trolltech.com/xml/features/report-start-end-entity")) { // Shouldn't change in Qt 4
         return true;
     } else {
         return false;

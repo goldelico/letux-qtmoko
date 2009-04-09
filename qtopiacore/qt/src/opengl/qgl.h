@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,10 +48,6 @@
 
 QT_BEGIN_HEADER
 
-#if defined(Q_WS_QWS) || defined(Q_OS_WINCE)
-#define QT_OPENGL_ES 1
-#endif
-
 #if defined(Q_WS_WIN)
 # include <QtCore/qt_windows.h>
 #endif
@@ -55,8 +55,16 @@ QT_BEGIN_HEADER
 #if defined(Q_WS_MAC)
 # include <OpenGL/gl.h>
 # include <OpenGL/glu.h>
-#elif defined(QT_OPENGL_ES)
+#elif defined(QT_OPENGL_ES_1) || defined(QT_OPENGL_ES_1_CL)
 # include <GLES/gl.h>
+#ifndef GL_DOUBLE
+# define GL_DOUBLE GL_FLOAT
+#endif
+#ifndef GLdouble
+typedef GLfloat GLdouble;
+#endif
+#elif defined(QT_OPENGL_ES_2)
+# include <GLES2/gl2.h>
 #ifndef GL_DOUBLE
 # define GL_DOUBLE GL_FLOAT
 #endif
@@ -65,7 +73,7 @@ typedef GLfloat GLdouble;
 #endif
 #else
 # include <GL/gl.h>
-# ifndef QT_LSB
+# ifndef QT_LINUXBASE
 #   include <GL/glu.h>
 # endif
 #endif
@@ -74,7 +82,7 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(OpenGL)
 
-#if defined(Q_WS_MAC) && defined (QT_BUILD_OPENGL_LIB) && !defined(Q_WS_MAC64) && !defined(QDOC)
+#if defined(Q_WS_MAC) && defined (QT_BUILD_OPENGL_LIB) && !defined(QT_MAC_USE_COCOA) && !defined(QDOC)
 #define Q_MAC_COMPAT_GL_FUNCTIONS
 
 template <typename T>
@@ -102,7 +110,7 @@ typedef QMacGLCompatTypes<GLint>::CompatGLenum QMacCompatGLenum;
 #ifdef QT3_SUPPORT
 #define QGL_VERSION        460
 #define QGL_VERSION_STR        "4.6"
-Q_OPENGL_EXPORT inline QT3_SUPPORT const char *qGLVersion() {
+inline QT3_SUPPORT const char *qGLVersion() {
     return QGL_VERSION_STR;
 }
 #endif
@@ -112,7 +120,7 @@ class QGLCmap;
 #endif
 
 class QPixmap;
-#if defined(Q_WS_X11)
+#if defined(Q_WS_X11) && !defined(QT_OPENGL_ES)
 class QGLOverlayWidget;
 #endif
 class QGLWidgetPrivate;
@@ -147,7 +155,6 @@ namespace QGL
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QGL::FormatOptions)
-
 
 class QGLFormatPrivate;
 
@@ -237,7 +244,8 @@ public:
         OpenGL_ES_CommonLite_Version_1_0  = 0x00000100,
         OpenGL_ES_Common_Version_1_1      = 0x00000200,
         OpenGL_ES_CommonLite_Version_1_1  = 0x00000400,
-        OpenGL_ES_Version_2_0             = 0x00000800
+        OpenGL_ES_Version_2_0             = 0x00000800,
+        OpenGL_Version_3_0                = 0x00001000
     };
     Q_DECLARE_FLAGS(OpenGLVersionFlags, OpenGLVersionFlag)
 
@@ -297,7 +305,7 @@ public:
                        QMacCompatGLint format = GL_RGBA);
 
     void deleteTexture(QMacCompatGLuint tx_id);
-    
+
     void drawTexture(const QRectF &target, QMacCompatGLuint textureId, QMacCompatGLenum textureTarget = GL_TEXTURE_2D);
     void drawTexture(const QPointF &point, QMacCompatGLuint textureId, QMacCompatGLenum textureTarget = GL_TEXTURE_2D);
 #endif
@@ -317,7 +325,7 @@ protected:
 #if defined(Q_WS_WIN)
     virtual int choosePixelFormat(void* pfd, HDC pdc);
 #endif
-#if defined(Q_WS_X11)
+#if defined(Q_WS_X11) && !defined(QT_OPENGL_ES)
     virtual void* tryVisual(const QGLFormat& f, int bufDepth = 1);
     virtual void* chooseVisual();
 #endif
@@ -350,9 +358,17 @@ private:
     friend class QGLGlyphCache;
     friend class QOpenGLPaintEngine;
     friend class QOpenGLPaintEnginePrivate;
+    friend class QGL2PaintEngineEx;
+    friend class QGL2PaintEngineExPrivate;
+    friend class QGLWindowSurface;
+    friend class QGLPixmapData;
+    friend class QGLPixmapFilterBase;
+    friend QGLFormat::OpenGLVersionFlags QGLFormat::openGLVersionFlags();
 #ifdef Q_WS_MAC
-    friend class QMacGLWindowChangeEvent;
+public:
     void updatePaintDevice();
+private:
+    friend class QMacGLWindowChangeEvent;
     friend QGLContextPrivate *qt_phonon_get_dptr(const QGLContext *);
 #endif
 #ifdef Q_WS_WIN

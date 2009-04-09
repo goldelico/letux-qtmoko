@@ -59,6 +59,10 @@ class QInputEvent;
 QT_END_NAMESPACE
 #endif
 
+#if PLATFORM(WX)
+class wxMouseEvent;
+#endif
+
 namespace WebCore {
     
     // These button numbers match the ones used in the DOM API, 0 through 2, except for NoButton which isn't specified.
@@ -128,7 +132,12 @@ namespace WebCore {
         PlatformMouseEvent(QInputEvent*, int clickCount);
 #endif
 
-    private:
+#if PLATFORM(WX)
+        PlatformMouseEvent(const wxMouseEvent&, const wxPoint& globalPoint);
+#endif
+
+
+    protected:
         IntPoint m_position;
         IntPoint m_globalPosition;
         MouseButton m_button;

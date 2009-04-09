@@ -25,94 +25,147 @@
 #include <wtf/GetPtr.h>
 
 #include "JSDOMWindow.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "TextEvent.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSTextEvent)
+
 /* Hash table */
 
-static const HashEntry JSTextEventTableEntries[] =
+static const HashTableValue JSTextEventTableValues[3] =
 {
-    { "data", JSTextEvent::DataAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "data", DontDelete|ReadOnly, (intptr_t)jsTextEventData, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsTextEventConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSTextEventTable = 
+static const HashTable JSTextEventTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSTextEventTableValues, 0 };
+#else
+    { 4, 3, JSTextEventTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSTextEventConstructorTableValues[1] =
 {
-    2, 1, JSTextEventTableEntries, 1
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSTextEventConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSTextEventConstructorTableValues, 0 };
+#else
+    { 1, 0, JSTextEventConstructorTableValues, 0 };
+#endif
+
+class JSTextEventConstructor : public DOMObject {
+public:
+    JSTextEventConstructor(ExecState* exec)
+        : DOMObject(JSTextEventConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSTextEventPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSTextEventConstructor::s_info = { "TextEventConstructor", 0, &JSTextEventConstructorTable, 0 };
+
+bool JSTextEventConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSTextEventConstructor, DOMObject>(exec, &JSTextEventConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSTextEventPrototypeTableEntries[] =
+static const HashTableValue JSTextEventPrototypeTableValues[2] =
 {
-    { "initTextEvent", JSTextEvent::InitTextEventFuncNum, DontDelete|Function, 5, 0 }
+    { "initTextEvent", DontDelete|Function, (intptr_t)jsTextEventPrototypeFunctionInitTextEvent, (intptr_t)5 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSTextEventPrototypeTable = 
-{
-    2, 1, JSTextEventPrototypeTableEntries, 1
-};
+static const HashTable JSTextEventPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSTextEventPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSTextEventPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSTextEventPrototype::info = { "TextEventPrototype", 0, &JSTextEventPrototypeTable, 0 };
+const ClassInfo JSTextEventPrototype::s_info = { "TextEventPrototype", 0, &JSTextEventPrototypeTable, 0 };
 
 JSObject* JSTextEventPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSTextEventPrototype>(exec, "[[JSTextEvent.prototype]]");
+    return getDOMPrototype<JSTextEvent>(exec);
 }
 
 bool JSTextEventPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSTextEventPrototypeFunction, JSObject>(exec, &JSTextEventPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSTextEventPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSTextEvent::info = { "TextEvent", &JSUIEvent::info, &JSTextEventTable, 0 };
+const ClassInfo JSTextEvent::s_info = { "TextEvent", &JSUIEvent::s_info, &JSTextEventTable, 0 };
 
-JSTextEvent::JSTextEvent(ExecState* exec, TextEvent* impl)
-    : JSUIEvent(exec, impl)
+JSTextEvent::JSTextEvent(PassRefPtr<Structure> structure, PassRefPtr<TextEvent> impl)
+    : JSUIEvent(structure, impl)
 {
-    setPrototype(JSTextEventPrototype::self(exec));
+}
+
+JSObject* JSTextEvent::createPrototype(ExecState* exec)
+{
+    return new (exec) JSTextEventPrototype(JSTextEventPrototype::createStructure(JSUIEventPrototype::self(exec)));
 }
 
 bool JSTextEvent::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSTextEvent, JSUIEvent>(exec, &JSTextEventTable, this, propertyName, slot);
+    return getStaticValueSlot<JSTextEvent, Base>(exec, &JSTextEventTable, this, propertyName, slot);
 }
 
-JSValue* JSTextEvent::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsTextEventData(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DataAttrNum: {
-        TextEvent* imp = static_cast<TextEvent*>(impl());
-
-        return jsString(imp->data());
-    }
-    }
-    return 0;
+    TextEvent* imp = static_cast<TextEvent*>(static_cast<JSTextEvent*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->data());
 }
 
-JSValue* JSTextEventPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsTextEventConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSTextEvent::info))
-      return throwError(exec, TypeError);
-
-    TextEvent* imp = static_cast<TextEvent*>(static_cast<JSTextEvent*>(thisObj)->impl());
-
-    switch (id) {
-    case JSTextEvent::InitTextEventFuncNum: {
-        String typeArg = args[0]->toString(exec);
-        bool canBubbleArg = args[1]->toBoolean(exec);
-        bool cancelableArg = args[2]->toBoolean(exec);
-        DOMWindow* viewArg = toDOMWindow(args[3]);
-        String dataArg = args[4]->toString(exec);
-
-        imp->initTextEvent(typeArg, canBubbleArg, cancelableArg, viewArg, dataArg);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    return static_cast<JSTextEvent*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
+JSValuePtr JSTextEvent::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSTextEventConstructor>(exec);
+}
+
+JSValuePtr jsTextEventPrototypeFunctionInitTextEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSTextEvent::s_info))
+        return throwError(exec, TypeError);
+    JSTextEvent* castedThisObj = static_cast<JSTextEvent*>(asObject(thisValue));
+    TextEvent* imp = static_cast<TextEvent*>(castedThisObj->impl());
+    const UString& typeArg = args.at(exec, 0)->toString(exec);
+    bool canBubbleArg = args.at(exec, 1)->toBoolean(exec);
+    bool cancelableArg = args.at(exec, 2)->toBoolean(exec);
+    DOMWindow* viewArg = toDOMWindow(args.at(exec, 3));
+    const UString& dataArg = args.at(exec, 4)->toString(exec);
+
+    imp->initTextEvent(typeArg, canBubbleArg, cancelableArg, viewArg, dataArg);
+    return jsUndefined();
+}
+
 
 }

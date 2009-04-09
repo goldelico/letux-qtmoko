@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,6 +60,7 @@ public:
     void stopCollecting();
     QStringList indices() const;
     QList<QHelpDBReader*> activeReaders() const;
+    QSet<int> indexIds(QHelpDBReader *reader) const;
 
 private:
     void run();
@@ -63,8 +68,9 @@ private:
     QHelpEnginePrivate *m_helpEngine;
     QStringList m_indices;
     QList<QHelpDBReader*> m_activeReaders;
+    QMap<QHelpDBReader*, QSet<int> > m_indexIds;
     QStringList m_filterAttributes;
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
     bool m_abort;
 };
 
@@ -94,7 +100,7 @@ static bool caseInsensitiveLessThan(const QString &as, const QString &bs)
 QHelpIndexProvider::QHelpIndexProvider(QHelpEnginePrivate *helpEngine)
     : QThread(helpEngine)
 {
-    m_helpEngine = helpEngine;    
+    m_helpEngine = helpEngine;
     m_abort = false;
 }
 
@@ -108,7 +114,7 @@ void QHelpIndexProvider::collectIndices(const QString &customFilterName)
     m_mutex.lock();
     m_filterAttributes = m_helpEngine->q->filterAttributes(customFilterName);
     m_mutex.unlock();
-    if (!isRunning()) {        
+    if (!isRunning()) {
         start(LowPriority);
     } else {
         stopCollecting();
@@ -123,17 +129,27 @@ void QHelpIndexProvider::stopCollecting()
     m_mutex.lock();
     m_abort = true;
     m_mutex.unlock();
-    wait();    
+    wait();
 }
 
 QStringList QHelpIndexProvider::indices() const
 {
+    QMutexLocker lck(&m_mutex);
     return m_indices;
 }
 
 QList<QHelpDBReader*> QHelpIndexProvider::activeReaders() const
 {
+    QMutexLocker lck(&m_mutex);
     return m_activeReaders;
+}
+
+QSet<int> QHelpIndexProvider::indexIds(QHelpDBReader *reader) const
+{
+    QMutexLocker lck(&m_mutex);
+    if (m_indexIds.contains(reader))
+        return m_indexIds.value(reader);
+    return QSet<int>();
 }
 
 void QHelpIndexProvider::run()
@@ -144,7 +160,7 @@ void QHelpIndexProvider::run()
     m_activeReaders.clear();
     QSet<QString> indicesSet;
     m_mutex.unlock();
-    
+
     foreach (QString dbFileName, m_helpEngine->fileNameReaderMap.keys()) {
         m_mutex.lock();
         if (m_abort) {
@@ -153,7 +169,10 @@ void QHelpIndexProvider::run()
             return;
         }
         m_mutex.unlock();
-        QHelpDBReader reader(dbFileName, dbFileName + QLatin1String("FromIndexProvider"), 0);
+        QHelpDBReader reader(dbFileName,
+            QHelpGlobal::uniquifyConnectionName(dbFileName +
+            QLatin1String("FromIndexProvider"),
+            QThread::currentThread()), 0);
         if (!reader.init())
             continue;
         QStringList lst = reader.indicesForFilter(atts);
@@ -166,9 +185,11 @@ void QHelpIndexProvider::run()
                 m_mutex.unlock();
                 return;
             }
-            m_activeReaders.append(m_helpEngine->fileNameReaderMap.value(dbFileName));
+            QHelpDBReader *orgReader = m_helpEngine->fileNameReaderMap.value(dbFileName);
+            m_indexIds.insert(orgReader, reader.indexIds(atts));
+            m_activeReaders.append(orgReader);
             m_mutex.unlock();
-        }        
+        }
     }
     m_mutex.lock();
     m_indices = indicesSet.values();
@@ -208,8 +229,8 @@ void QHelpIndexProvider::run()
 QHelpIndexModel::QHelpIndexModel(QHelpEnginePrivate *helpEngine)
     : QStringListModel(helpEngine)
 {
-    d = new QHelpIndexModelPrivate(helpEngine);    
-    
+    d = new QHelpIndexModelPrivate(helpEngine);
+
     connect(d->indexProvider, SIGNAL(finished()), this, SLOT(insertIndices()));
     connect(helpEngine->q, SIGNAL(setupStarted()), this, SLOT(invalidateIndex()));
 }
@@ -246,7 +267,7 @@ void QHelpIndexModel::insertIndices()
     QStringList attributes = d->helpEngine->q->filterAttributes(d->currentFilter);
     if (attributes.count() > 1) {
         foreach (QHelpDBReader *r, d->activeReaders)
-            r->createAttributesCache(attributes);
+            r->createAttributesCache(attributes, d->indexProvider->indexIds(r));
     }
     filter(QString());
     emit indexCreated();
@@ -294,7 +315,7 @@ QModelIndex QHelpIndexModel::filter(const QString &filter, const QString &wildca
     QStringList lst;
     int goodMatch = -1;
     int perfectMatch = -1;
-    
+
     if (!wildcard.isEmpty()) {
         QRegExp regExp(wildcard, Qt::CaseInsensitive);
         regExp.setPatternSyntax(QRegExp::Wildcard);
@@ -329,7 +350,7 @@ QModelIndex QHelpIndexModel::filter(const QString &filter, const QString &wildca
         }
 
     }
-    
+
     if (perfectMatch == -1)
         perfectMatch = qMax(0, goodMatch);
 
@@ -371,7 +392,7 @@ QHelpIndexWidget::QHelpIndexWidget()
     setEditTriggers(QAbstractItemView::NoEditTriggers);
     setUniformItemSizes(true);
     connect(this, SIGNAL(activated(const QModelIndex&)),
-        this, SLOT(showLink(const QModelIndex&)));   
+        this, SLOT(showLink(const QModelIndex&)));
 }
 
 void QHelpIndexWidget::showLink(const QModelIndex &index)
@@ -387,7 +408,7 @@ void QHelpIndexWidget::showLink(const QModelIndex &index)
     if (v.isValid())
         name = v.toString();
 
-    QMap<QString, QUrl> links = indexModel->linksForKeyword(name);            
+    QMap<QString, QUrl> links = indexModel->linksForKeyword(name);
     if (links.count() == 1) {
         emit linkActivated(links.constBegin().value(), name);
     } else if (links.count() > 1) {
@@ -415,7 +436,7 @@ void QHelpIndexWidget::filterIndices(const QString &filter, const QString &wildc
 {
     QHelpIndexModel *indexModel = qobject_cast<QHelpIndexModel*>(model());
     if (!indexModel)
-        return;    
+        return;
     QModelIndex idx = indexModel->filter(filter, wildcard);
     if (idx.isValid())
         setCurrentIndex(idx);

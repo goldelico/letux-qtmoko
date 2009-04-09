@@ -18,68 +18,85 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSTreeWalker_H
-#define JSTreeWalker_H
+#ifndef JSTreeWalker_h
+#define JSTreeWalker_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class TreeWalker;
 
-class JSTreeWalker : public KJS::DOMObject {
+class JSTreeWalker : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSTreeWalker(KJS::ExecState*, TreeWalker*);
+    JSTreeWalker(PassRefPtr<JSC::Structure>, PassRefPtr<TreeWalker>);
     virtual ~JSTreeWalker();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
     virtual void mark();
 
-    enum {
-        // Attributes
-        RootAttrNum, WhatToShowAttrNum, FilterAttrNum, ExpandEntityReferencesAttrNum, 
-        CurrentNodeAttrNum, 
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
-        // Functions
-        ParentNodeFuncNum, FirstChildFuncNum, LastChildFuncNum, PreviousSiblingFuncNum, 
-        NextSiblingFuncNum, PreviousNodeFuncNum, NextNodeFuncNum
-    };
+    // Custom functions
+    JSC::JSValuePtr parentNode(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr firstChild(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr lastChild(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr previousSibling(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr nextSibling(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr previousNode(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr nextNode(JSC::ExecState*, const JSC::ArgList&);
     TreeWalker* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<TreeWalker> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, TreeWalker*);
-TreeWalker* toTreeWalker(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, TreeWalker*);
+TreeWalker* toTreeWalker(JSC::JSValuePtr);
 
-class JSTreeWalkerPrototype : public KJS::JSObject {
+class JSTreeWalkerPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSTreeWalkerPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSTreeWalkerPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSTreeWalkerPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSTreeWalkerPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionParentNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionFirstChild(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionLastChild(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionPreviousSibling(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionNextSibling(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionPreviousNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsTreeWalkerPrototypeFunctionNextNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsTreeWalkerRoot(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsTreeWalkerWhatToShow(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsTreeWalkerFilter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsTreeWalkerExpandEntityReferences(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsTreeWalkerCurrentNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSTreeWalkerCurrentNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsTreeWalkerConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,7 +56,11 @@
 
 QT_BEGIN_NAMESPACE
 
-extern Q_CORE_EXPORT qlonglong qstrtoll(const char *nptr, const char **endptr, register int base, bool *ok);
+extern double qstrtod(const char *s00, char const **se, bool *ok);
+
+namespace QScript {
+
+extern qsreal integerFromString(const QString &str, int radix);
 
 static inline char toHex(char c)
 {
@@ -272,10 +280,6 @@ static QString decode(const QString &input, const QString &reservedSet, bool *ok
     return output;
 }
 
-
-
-namespace QScript {
-
 class PrintFunction : public QScriptFunction
 {
 public:
@@ -285,7 +289,7 @@ public:
 
     virtual void execute(QScriptContextPrivate *context)
     {
-        QScriptEnginePrivate *eng = context->enginePrivate();
+        QScriptEnginePrivate *eng = context->engine();
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
         eng->notifyFunctionEntry(context);
 #endif
@@ -349,8 +353,8 @@ void Global::initialize(QScriptValueImpl *object, QScriptEnginePrivate *eng)
     const QScriptValue::PropertyFlags flags = QScriptValue::Undeletable
                                               | QScriptValue::SkipInEnumeration;
 
-    object->setProperty(QLatin1String("NaN"), QScriptValueImpl(eng, qSNaN()), flags);
-    object->setProperty(QLatin1String("Infinity"), QScriptValueImpl(eng, qInf()), flags);
+    object->setProperty(QLatin1String("NaN"), QScriptValueImpl(qSNaN()), flags);
+    object->setProperty(QLatin1String("Infinity"), QScriptValueImpl(qInf()), flags);
     object->setProperty(QLatin1String("undefined"), eng->undefinedValue(), flags);
 
     object->setProperty(QLatin1String("print"),
@@ -370,108 +374,65 @@ void Global::initialize(QScriptValueImpl *object, QScriptEnginePrivate *eng)
 }
 
 QScriptValueImpl Global::method_parseInt(QScriptContextPrivate *context,
-                                         QScriptEnginePrivate *eng,
+                                         QScriptEnginePrivate *,
                                          QScriptClassInfo *)
 {
-    if (context->argumentCount() == 0) {
-        return QScriptValueImpl(eng, qSNaN());
-    }
+    if (context->argumentCount() == 0)
+        return qSNaN();
+
     qsreal radix = 0;
     if (context->argumentCount() > 1) {
         radix = context->argument(1).toInteger();
         if (qIsNaN(radix) || (radix && (radix < 2 || radix > 36))) {
-            return QScriptValueImpl(eng, qSNaN());
-        }
-    }
-    QString str = context->argument(0).toString().trimmed();
-    if (radix == 0) {
-        if ((str.length() >= 2) && (str.at(0) == QLatin1Char('0'))) {
-            if ((str.at(1) == QLatin1Char('x'))
-                || (str.at(1) == QLatin1Char('X'))) {
-                str.remove(0, 2);
-                radix = 16;
-            } else {
-                str.remove(0, 1);
-                radix = 8;
-            }
+            return qSNaN();
         }
     }
 
-    const QByteArray ba = str.toUtf8();
-    const char *startPtr = ba.constData();
-    qsreal result;
-//#if defined(Q_WS_WIN) && !defined(Q_CC_MINGW)
-// always use the Qt version for now
-#if 1
-    const char *endPtr = 0;
-    bool ok;
-    result = qstrtoll(startPtr, &endPtr, int (radix), &ok);
-#else
-    char *endPtr = 0;
-    result = strtoll(startPtr, &endPtr, int (radix));
-#endif
-    if (startPtr == endPtr) {
-        if (str.isEmpty())
-            result = qSNaN();
-        else if (str == QLatin1String("Infinity"))
-            result = +qInf();
-        else if (str == QLatin1String("+Infinity"))
-            result = +qInf();
-        else if (str == QLatin1String("-Infinity"))
-            result = -qInf();
-        else
-            result = qSNaN();
-    }
-
-    return QScriptValueImpl(eng, result);
+    return QScript::integerFromString(context->argument(0).toString(), static_cast<int>(radix));
 }
 
 QScriptValueImpl Global::method_parseFloat(QScriptContextPrivate *context,
-                                           QScriptEnginePrivate *eng,
+                                           QScriptEnginePrivate *,
                                            QScriptClassInfo *)
 {
     if (context->argumentCount() == 0)
-        return QScriptValueImpl(eng, qSNaN());
-
+        return QScriptValueImpl(qSNaN());
     QString str = context->argument(0).toString().trimmed();
-    bool ok = false;
-    qsreal result = str.toDouble(&ok);
-    if (!ok) {
+    QByteArray latin1 = str.toLatin1();
+    const char *data = latin1.constData();
+    const char *eptr = 0;
+    qsreal result = qstrtod(data, &eptr, 0);
+    if (eptr == data) {
         if (str == QLatin1String("Infinity"))
             result = +qInf();
         else if (str == QLatin1String("+Infinity"))
             result = +qInf();
         else if (str == QLatin1String("-Infinity"))
             result = -qInf();
-        else if (str.isEmpty())
-            result = qSNaN();
-        else if (str.at(0).isNumber())
-            result = 0;
         else
             result = qSNaN();
     }
-
-    return QScriptValueImpl(eng, result);
+    return result;
 }
 
 QScriptValueImpl Global::method_isNaN(QScriptContextPrivate *context,
-                                      QScriptEnginePrivate *eng,
+                                      QScriptEnginePrivate *,
                                       QScriptClassInfo *)
 {
     qsreal v = qSNaN();
     if (context->argumentCount() > 0)
         v = context->argument(0).toNumber();
-    return (QScriptValueImpl(eng, qIsNaN(v)));
+    return (QScriptValueImpl(qIsNaN(v)));
 }
 
 QScriptValueImpl Global::method_isFinite(QScriptContextPrivate *context,
-                                         QScriptEnginePrivate *eng,
+                                         QScriptEnginePrivate *,
                                          QScriptClassInfo *)
 {
     qsreal v = qInf();
     if (context->argumentCount() > 0)
         v = context->argument(0).toNumber();
-    return (QScriptValueImpl(eng, qIsFinite(v)));
+    return (QScriptValueImpl(qIsFinite(v)));
 }
 
 QScriptValueImpl Global::method_decodeURI(QScriptContextPrivate *context,
@@ -581,10 +542,10 @@ QScriptValueImpl Global::method_unescape(QScriptContextPrivate *context,
 }
 
 QScriptValueImpl Global::method_version(QScriptContextPrivate *,
-                                        QScriptEnginePrivate *eng,
+                                        QScriptEnginePrivate *,
                                         QScriptClassInfo *)
 {
-    return (QScriptValueImpl(eng, 1));
+    return (QScriptValueImpl(1));
 }
 
 QScriptValueImpl Global::method_gc(QScriptContextPrivate *,
@@ -592,14 +553,14 @@ QScriptValueImpl Global::method_gc(QScriptContextPrivate *,
                                    QScriptClassInfo *)
 {
     eng->gc();
-    return QScriptValueImpl(eng, eng->objectAllocator.freeBlocks());
+    return QScriptValueImpl(eng->objectAllocator.freeBlocks());
 }
 
 void Global::addFunction(QScriptValueImpl &object, const QString &name,
                          QScriptInternalFunctionSignature fun, int length,
                          const QScriptValue::PropertyFlags flags)
 {
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(object.engine());
+    QScriptEnginePrivate *eng_p = object.engine();
     QScriptValueImpl val = eng_p->createFunction(fun, length, object.classInfo(), name);
     object.setProperty(name, val, flags);
 }

@@ -6,6 +6,8 @@ win32-msvc*|win32-icc:QMAKE_LFLAGS += /BASE:0x65000000
 
 !win32:!embedded:!mac:CONFIG      += x11
 
+unix:QMAKE_PKGCONFIG_REQUIRES = QtCore
+
 include(../qbase.pri)
 
 contains(QT_CONFIG, x11sm):CONFIG += x11sm

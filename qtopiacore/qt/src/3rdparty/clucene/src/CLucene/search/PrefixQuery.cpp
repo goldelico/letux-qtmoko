@@ -84,6 +84,8 @@ CL_NS_DEF(search)
     try {
       const TCHAR* prefixText = prefix->text();
       const TCHAR* prefixField = prefix->field();
+      const TCHAR* tmp;
+      size_t i;
 	  int32_t prefixLen = prefix->textLength();
       do {
         lastTerm = enumerator->term();
@@ -94,9 +96,17 @@ CL_NS_DEF(search)
 		  if ( prefixLen>termLen )
 			  break; //the prefix is longer than the term, can't be matched
 
-		  //check for prefix match
-		  if ( _tcsncmp(lastTerm->text(),prefixText,prefixLen)!=0 )
-			  break;
+          tmp = lastTerm->text();
+
+          //check for prefix match in reverse, since most change will be at the end
+          for ( i=prefixLen-1;i!=-1;--i ){
+              if ( tmp[i] != prefixText[i] ){
+                  tmp=NULL;//signals inequality
+                  break;
+              }
+          }
+          if ( tmp == NULL )
+              break;
 
           TermQuery* tq = _CLNEW TermQuery(lastTerm);	  // found a match
           tq->setBoost(getBoost());                // set the boost
@@ -218,6 +228,8 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
 	TermDocs* docs = reader->termDocs();
     const TCHAR* prefixText = prefix->text();
     const TCHAR* prefixField = prefix->field();
+    const TCHAR* tmp;
+    size_t i;
     int32_t prefixLen = prefix->textLength();
 	Term* lastTerm = NULL;
     
@@ -230,8 +242,16 @@ BitSet* PrefixFilter::bits( IndexReader* reader )
                 if ( prefixLen>termLen )
                     break; //the prefix is longer than the term, can't be matched
 
-                //check for prefix match
-                if ( _tcsncmp(lastTerm->text(),prefixText,prefixLen)!=0 )
+                tmp = lastTerm->text();
+
+                //check for prefix match in reverse, since most change will be at the end
+                for ( i=prefixLen-1;i!=-1;--i ){
+                    if ( tmp[i] != prefixText[i] ){
+                        tmp=NULL;//signals inequality
+                        break;
+                    }
+                }
+                if ( tmp == NULL )
                     break;
 
     			docs->seek(enumerator);

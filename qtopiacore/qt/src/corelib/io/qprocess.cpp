@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -162,6 +166,8 @@ void QProcessPrivate::Channel::clear()
     can also call error() to find the type of error that occurred
     last, and state() to find the current process state.
 
+    \section1 Communicating via Channels
+
     Processes have two predefined output channels: The standard
     output channel (\c stdout) supplies regular console output, and
     the standard error channel (\c stderr) usually supplies the
@@ -197,6 +203,8 @@ void QProcessPrivate::Channel::clear()
     setWorkingDirectory(). By default, processes are run in the
     current working directory of the calling process.
 
+    \section1 Synchronous Process API
+
     QProcess provides a set of functions which allow it to be used
     without an event loop, by suspending the calling thread until
     certain signals are emitted:
@@ -221,6 +229,15 @@ void QProcessPrivate::Channel::clear()
     rocks!", without an event loop:
 
     \snippet doc/src/snippets/process/process.cpp 0
+
+    \section1 Notes for Windows Users 
+
+    Some Windows commands (for example, \c dir) are not provided by
+    separate applications, but by the command interpreter itself.
+    If you attempt to use QProcess to execute these commands directly,
+    it won't work. One possible solution is to execute the command
+    interpreter itself (\c{cmd.exe} on some Windows systems), and ask
+    the interpreter to execute the desired command.
 
     \sa QBuffer, QFile, QTcpSocket
 */
@@ -513,7 +530,7 @@ bool QProcessPrivate::_q_canReadStandardOutput()
     qint64 readBytes = readFromStdout(ptr, available);
     if (readBytes == -1) {
         processError = QProcess::ReadError;
-        q->setErrorString(QT_TRANSLATE_NOOP(QProcess, QLatin1String("Error reading from process")));
+        q->setErrorString(QProcess::tr("Error reading from process"));
         emit q->error(processError);
 #if defined QPROCESS_DEBUG
         qDebug("QProcessPrivate::canReadStandardOutput(), failed to read from the process");
@@ -565,7 +582,7 @@ bool QProcessPrivate::_q_canReadStandardError()
     qint64 readBytes = readFromStderr(ptr, available);
     if (readBytes == -1) {
         processError = QProcess::ReadError;
-        q->setErrorString(QT_TRANSLATE_NOOP(QProcess, QLatin1String("Error reading from process")));
+        q->setErrorString(QProcess::tr("Error reading from process"));
         emit q->error(processError);
         return false;
     }
@@ -612,7 +629,7 @@ bool QProcessPrivate::_q_canWrite()
     if (written < 0) {
         destroyPipe(stdinChannel.pipe);
         processError = QProcess::WriteError;
-        q->setErrorString(QT_TRANSLATE_NOOP(QProcess, QLatin1String("Error writing to process")));
+        q->setErrorString(QProcess::tr("Error writing to process"));
 #if defined(QPROCESS_DEBUG) && !defined(Q_OS_WINCE)
         qDebug("QProcessPrivate::canWrite(), failed to write (%s)", strerror(errno));
 #endif
@@ -682,7 +699,7 @@ bool QProcessPrivate::_q_processDied()
     if (crashed) {
         exitStatus = QProcess::CrashExit;
         processError = QProcess::Crashed;
-        q->setErrorString(QT_TRANSLATE_NOOP(QProcess, QLatin1String("Process crashed")));
+        q->setErrorString(QProcess::tr("Process crashed"));
         emit q->error(processError);
     }
 
@@ -1323,6 +1340,11 @@ void QProcess::setProcessState(ProcessState state)
 
     \snippet doc/src/snippets/code/src_corelib_io_qprocess.cpp 4
 
+    You cannot exit the process (by calling exit(), for instance) from
+    this function. If you need to stop the program before it starts
+    execution, your workaround is to emit finished() and then call
+    exit().
+
     \warning This function is called by QProcess on Unix and Mac OS X
     only. On Windows, it is not called.
 */
@@ -1386,7 +1408,7 @@ qint64 QProcess::writeData(const char *data, qint64 len)
     Q_UNUSED(data);
     Q_UNUSED(len);
     d->processError = QProcess::WriteError;
-    setErrorString(QT_TRANSLATE_NOOP(QProcess, QLatin1String("Error writing to process")));
+    setErrorString(tr("Error writing to process"));
     emit error(d->processError);
     return -1;
 #endif
@@ -1460,9 +1482,12 @@ QByteArray QProcess::readAllStandardError()
     process starts successfully, QProcess will emit started();
     otherwise, error() will be emitted.
 
-    On Windows, arguments that contain spaces are wrapped in quotes.
+    Note that arguments that contain spaces are not passed to the
+    process as separate arguments.
 
-    Note: processes are started asynchronously, which means the started()
+    \bold{Windows:} Arguments that contain spaces are wrapped in quotes.
+
+    \note Processes are started asynchronously, which means the started()
     and error() signals may be delayed. Call waitForStarted() to make
     sure the process has started (or has failed to start) and those signals
     have been emitted.
@@ -1685,11 +1710,14 @@ int QProcess::execute(const QString &program)
     otherwise returns false. If the calling process exits, the
     detached process will continue to live.
 
-    On Unix, the started process will run in its own session and act
-    like a daemon. On Windows, it will run as a regular standalone
-    process.
+    Note that arguments that contain spaces are not passed to the
+    process as separate arguments.
 
-    On Windows, arguments that contain spaces are wrapped in quotes.
+    \bold{Unix:} The started process will run in its own session and act
+    like a daemon.
+
+    \bold{Windows:} Arguments that contain spaces are wrapped in quotes.
+    The started process will run as a regular standalone process.
 
     The process will be started in the directory \a workingDirectory.
 
@@ -1708,16 +1736,19 @@ bool QProcess::startDetached(const QString &program,
 }
 
 /*!
-    Starts the program \a program with the arguments \a arguments in a
+    Starts the program \a program with the given \a arguments in a
     new process, and detaches from it. Returns true on success;
     otherwise returns false. If the calling process exits, the
     detached process will continue to live.
 
-    On Unix, the started process will run in its own session and act
-    like a daemon. On Windows, it will run as a regular standalone
-    process.
+    Note that arguments that contain spaces are not passed to the
+    process as separate arguments.
 
-    On Windows, arguments that contain spaces are wrapped in quotes.
+    \bold{Unix:} The started process will run in its own session and act
+    like a daemon.
+
+    \bold{Windows:} Arguments that contain spaces are wrapped in quotes.
+    The started process will run as a regular standalone process.
 */
 bool QProcess::startDetached(const QString &program,
 			     const QStringList &arguments)
@@ -1750,7 +1781,8 @@ QT_BEGIN_INCLUDE_NAMESPACE
 # include <crt_externs.h>
 # define environ (*_NSGetEnviron())
 #elif defined(Q_OS_WINCE)
-  static char *environ[] = { 0 };
+  static char *qt_wince_environ[] = { 0 };
+#define environ qt_wince_environ
 #elif !defined(Q_OS_WIN)
   extern char **environ;
 #endif

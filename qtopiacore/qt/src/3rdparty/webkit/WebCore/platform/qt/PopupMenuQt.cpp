@@ -28,6 +28,7 @@
 
 #include "Frame.h"
 #include "FrameView.h"
+#include "HostWindow.h"
 #include "PopupMenuClient.h"
 #include "NotImplemented.h"
 #include "QWebPopup.h"
@@ -70,7 +71,7 @@ void PopupMenu::populate(const IntRect& r)
             m_popup->insertItem(i, QString::fromLatin1("---"));
         }
         else {
-            //RenderStyle* style = client()->itemStyle(i);
+            //PopupMenuStyle style = client()->itemStyle(i);
             m_popup->insertItem(i, client()->itemText(i));
 #if 0
             item = new QListWidgetItem(client()->itemText(i));
@@ -89,7 +90,7 @@ void PopupMenu::populate(const IntRect& r)
 
 void PopupMenu::show(const IntRect& r, FrameView* v, int index)
 {
-    QWidget* window = v->containingWindow();
+    QWidget* window = v->hostWindow()->platformWindow();
     populate(r);
     QRect rect = r;
     rect.moveTopLeft(v->contentsToWindow(r.topLeft()));

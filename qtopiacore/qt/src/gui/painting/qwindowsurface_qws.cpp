@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -73,7 +80,7 @@ static void qt_insertWindowSurface(int winId, QWSWindowSurface *surface)
 
 inline bool isWidgetOpaque(const QWidget *w)
 {
-    return w->d_func()->isOpaque();
+    return w->d_func()->isOpaque;
 }
 
 static inline QScreen *getScreen(const QWidget *w)
@@ -139,22 +146,12 @@ static inline void setImageMetrics(QImage &img, QWidget *window) {
     }
 }
 
-// XXX: this should probably be handled in QWidgetPrivate
 void QWSWindowSurface::invalidateBuffer()
 {
-    d_ptr->dirty = QRegion();
-    d_ptr->clip = QRegion();
-    d_ptr->clippedDirty = QRegion();
 
     QWidget *win = window();
     if (win) {
-#ifdef Q_BACKINGSTORE_SUBSURFACES
-        const QPoint offset = -win->mapToGlobal(QPoint());
-#else
-        const QPoint offset = -win->geometry().topLeft();
-#endif
-        setDirty(geometry().translated(offset)); // XXX: clip with mask
-
+        win->d_func()->invalidateBuffer(win->rect());
 #ifndef QT_NO_QWS_MANAGER
         QTLWExtra *topextra = win->d_func()->extra->topextra;
         QWSManager *manager = topextra->qwsManager;
@@ -170,7 +167,7 @@ QWSWindowSurfacePrivate::QWSWindowSurfacePrivate()
 #ifdef QT_QWS_CLIENTBLIT
     directId(-1),
 #endif
-    winId(0), updateImmediately(0)
+    winId(0)
 {
 }
 
@@ -301,10 +298,7 @@ void QWSWindowSurface::setWinId(int id)
     set surface flags can be retrieved and altered using the
     surfaceFlags() and setSurfaceFlags() functions. In addition,
     QWSWindowSurface provides the isBuffered(), isOpaque() and
-    isRegionReserved() convenience functions.  Use the dirtyRegion()
-    function to retrieve the part of the widget that must be
-    repainted, and the setDirty() function to ensure that a region is
-    repainted.
+    isRegionReserved() convenience functions.
 
     \sa {Qt for Embedded Linux Architecture#Drawing on Screen}{Qt for
     Embedded Linux Architecture}
@@ -487,46 +481,6 @@ void QWSWindowSurface::unlock()
 {
 }
 
-/*!
-    Returns the region that must be repainted.
-
-    \sa setDirty()
-*/
-const QRegion QWSWindowSurface::dirtyRegion() const
-{
-    return d_ptr->dirty;
-}
-
-/*!
-    Marks the given \a region as dirty, i.e., altered.
-
-    \sa dirtyRegion()
-*/
-void QWSWindowSurface::setDirty(const QRegion &region) const
-{
-    if (region.isEmpty())
-        return;
-
-    const bool updatePosted = !d_ptr->dirty.isEmpty();
-    d_ptr->dirty += region & d_ptr->clip;
-    d_ptr->clippedDirty += (region - d_ptr->clip);
-
-    if (updatePosted)
-        return;
-
-    QWidget *win = window();
-    if (!win || d_ptr->dirty.isEmpty())
-        return;
-
-    if (d_ptr->updateImmediately) {
-        QEvent event(QEvent::UpdateRequest);
-        QApplication::sendEvent(win, &event);
-    } else {
-        QApplication::postEvent(win, new QEvent(QEvent::UpdateRequest),
-                                Qt::LowEventPriority);
-    }
-}
-
 #ifdef QT_QWS_CLIENTBLIT
 /*! \internal */
 const QRegion QWSWindowSurface::directRegion() const
@@ -572,40 +526,37 @@ void QWSWindowSurface::setClipRegion(const QRegion &clip)
     QRegion expose = (clip - d_ptr->clip);
     d_ptr->clip = clip;
 
+    if (expose.isEmpty() || clip.isEmpty())
+        return; // No repaint or flush required.
+
     QWidget *win = window();
+    if (!win)
+        return;
+
+    if (isBuffered()) {
+        // No repaint required. Flush exposed area via the backing store.
+        win->d_func()->syncBackingStore(expose);
+        return;
+    }
+
 #ifndef QT_NO_QWS_MANAGER
-    if (win && win->isWindow() && !expose.isEmpty()) {
+    // Invalidate exposed decoration area.
+    if (win && win->isWindow()) {
         QTLWExtra *topextra = win->d_func()->extra->topextra;
-        QWSManager *manager = topextra->qwsManager;
-        if (manager) {
-            const QRegion r = manager->region().translated(
-                -win->geometry().topLeft()) & expose;
-            if (!r.isEmpty())
-                 manager->d_func()->dirtyRegion(QDecoration::All,
-                                                QDecoration::Normal, r);
+        if (QWSManager *manager = topextra->qwsManager) {
+            QRegion decorationExpose(manager->region());
+            decorationExpose.translate(-win->geometry().topLeft());
+            decorationExpose &= expose;
+            if (!decorationExpose.isEmpty()) {
+                expose -= decorationExpose;
+                manager->d_func()->dirtyRegion(QDecoration::All, QDecoration::Normal, decorationExpose);
+            }
         }
     }
 #endif
 
-    QRegion dirtyExpose;
-    if (isBuffered()) {
-        dirtyExpose = expose & d_ptr->clippedDirty;
-        d_ptr->clippedDirty -= expose;
-        expose -= dirtyExpose;
-    } else {
-        dirtyExpose = expose;
-    }
-
-    if (!dirtyExpose.isEmpty()) {
-        setDirty(dirtyExpose);
-        d_ptr->dirty += expose;
-    } else if (!expose.isEmpty()) {
-        // XXX: prevent flush() from resetting dirty and from flushing too much
-        const QRegion oldDirty = d_ptr->dirty;
-        d_ptr->dirty = QRegion();
-        flush(win, expose, QPoint());
-        d_ptr->dirty = oldDirty;
-    }
+    // Invalidate exposed widget area.
+    win->d_func()->invalidateBuffer(expose);
 }
 
 /*!
@@ -667,11 +618,24 @@ void QWSWindowSurface::setGeometry(const QRect &rect, const QRegion &mask)
     QWindowSurface::setGeometry(rect);
 
     const QRegion region = mask & rect;
-    QWidget::qwsDisplay()->requestRegion(winId(), key(), permanentState(),
-                                         region);
+    QWidget *win = window();
+    // Only request regions for widgets visible on the screen.
+    // (Added the !win check for compatibility reasons, because
+    // there was no "if (win)" check before).
+    const bool requestQWSRegion = !win || !win->testAttribute(Qt::WA_DontShowOnScreen);
+    if (requestQWSRegion)
+        QWidget::qwsDisplay()->requestRegion(winId(), key(), permanentState(), region);
 
     if (needsRepaint)
         invalidateBuffer();
+
+    if (!requestQWSRegion) {
+        // We didn't request a region, hence we won't get a QWSRegionEvent::Allocation
+        // event back from the server so we set the clip directly. We have to
+        // do this after the invalidateBuffer() call above, as it might trigger a
+        // backing store sync, resulting in too many update requests.
+        setClipRegion(region);
+    }
 }
 
 static inline void flushUpdate(QWidget *widget, const QRegion &region,
@@ -703,8 +667,8 @@ void QWSWindowSurface::flush(QWidget *widget, const QRegion &region,
     if (!win)
         return;
 
-    QTLWExtra *topextra = win->d_func()->extra->topextra;
-    if (topextra && topextra->proxyWidget)
+    QWExtra *extra = win->d_func()->extra;
+    if (extra && extra->proxyWidget)
         return;
 
     Q_UNUSED(offset);
@@ -715,26 +679,11 @@ void QWSWindowSurface::flush(QWidget *widget, const QRegion &region,
 #else
     QRegion toFlush = region & d_ptr->clip;
 #endif
-    const QRegion stillDirty = (d_ptr->dirty - toFlush);
 
     if (!toFlush.isEmpty()) {
-#ifndef QT_NO_QWS_MANAGER
-        if (win->isWindow()) {
-            QWSManager *manager = topextra->qwsManager;
-            if (manager) {
-                QWSManagerPrivate *managerPrivate = manager->d_func();
-                if (!managerPrivate->dirtyRegions.isEmpty()) {
-                    beginPaint(toFlush);
-                    managerPrivate->paint(paintDevice(), toFlush);
-                    endPaint(toFlush);
-                }
-            }
-        }
-#endif
-
+        flushUpdate(widget, toFlush, QPoint(0, 0));
         QPoint globalZero = win->mapToGlobal(QPoint(0, 0));
         toFlush.translate(globalZero);
-        flushUpdate(widget, toFlush, QPoint(0, 0));
 
 #ifdef QT_QWS_CLIENTBLIT
         bool needRepaint = true;
@@ -758,11 +707,6 @@ void QWSWindowSurface::flush(QWidget *widget, const QRegion &region,
 #endif
             win->qwsDisplay()->repaintRegion(winId(), win->windowFlags(), opaque, toFlush);
     }
-
-    // XXX: hw: this is not correct when painting outside a paint event.
-    // The dirty region should be moved into QWidgetBackingstore.
-    d_ptr->dirty = QRegion();
-    setDirty(stillDirty);
 }
 
 /*!
@@ -807,36 +751,8 @@ QRegion QWSWindowSurface::move(const QPoint &offset, const QRegion &newClip)
     return oldGeometry + newClip;
 }
 
-static void scroll(const QImage &img, const QRect &rect, const QPoint &point)
+void QWSWindowSurface::releaseSurface()
 {
-    uchar *mem = const_cast<uchar*>(img.bits());
-
-    int lineskip = img.bytesPerLine();
-    int depth = img.depth() >> 3;
-
-    const QRect r = rect;
-    const QPoint p = rect.topLeft() + point;
-
-    const uchar *src;
-    uchar *dest;
-
-    if (r.top() < p.y()) {
-        src = mem + r.bottom() * lineskip + r.left() * depth;
-        dest = mem + (p.y() + r.height() - 1) * lineskip + p.x() * depth;
-        lineskip = -lineskip;
-    } else {
-        src = mem + r.top() * lineskip + r.left() * depth;
-        dest = mem + p.y() * lineskip + p.x() * depth;
-    }
-
-    const int w = r.width();
-    int h = r.height();
-    const int bytes = w * depth;
-    do {
-        ::memmove(dest, src, bytes);
-        dest += lineskip;
-        src += lineskip;
-    } while (--h);
 }
 
 bool QWSMemorySurface::lock(int timeout)
@@ -887,29 +803,6 @@ QWSMemorySurface::QWSMemorySurface(QWidget *w)
 
 QWSMemorySurface::~QWSMemorySurface()
 {
-}
-
-QPixmap QWSMemorySurface::grabWidget(const QWidget *widget, const QRect &rectangle) const
-{
-    QPixmap result;
-
-    if (widget->window() != window() || img.isNull())
-        return result;
-
-    QRect rect = rectangle.isEmpty() ? widget->rect() : (widget->rect() & rectangle);
-
-    rect.translate(offset(widget));
-    rect &= QRect(QPoint(), img.size());
-
-    if (rect.isEmpty())
-        return result;
-
-    QImage subimg(img.scanLine(rect.y()) + rect.x() * img.depth() / 8,
-                  rect.width(), rect.height(),
-                  img.bytesPerLine(), img.format());
-    subimg.detach(); //### expensive -- maybe we should have a real SubImage that shares reference count
-    result = QPixmap::fromImage(subimg);
-    return result;
 }
 
 
@@ -977,11 +870,14 @@ bool QWSMemorySurface::isValid() const
     return true;
 }
 
+// from qwindowsurface.cpp
+extern void qt_scrollRectInImage(QImage &img, const QRect &rect, const QPoint &offset);
+
 bool QWSMemorySurface::scroll(const QRegion &area, int dx, int dy)
 {
     const QVector<QRect> rects = area.rects();
     for (int i = 0; i < rects.size(); ++i)
-        ::scroll(img, rects.at(i), QPoint(dx, dy));
+        qt_scrollRectInImage(img, rects.at(i), QPoint(dx, dy));
 
     return true;
 }
@@ -1101,6 +997,12 @@ void QWSLocalMemSurface::setPermanentState(const QByteArray &data)
     const int bpl = nextMulOf4(bytesPerPixel(format) * width);
     QWSMemorySurface::img = QImage(mem, width, height, bpl, format);
     setSurfaceFlags(flags);
+}
+
+void QWSLocalMemSurface::releaseSurface()
+{
+    mem = 0;
+    img = QImage();
 }
 
 #ifndef QT_NO_QWS_MULTIPROCESS
@@ -1236,6 +1138,12 @@ QByteArray QWSSharedMemSurface::permanentState() const
     ptr[5] = int(surfaceFlags());
 
     return array;
+}
+
+void QWSSharedMemSurface::releaseSurface()
+{
+    mem.detach();
+    img = QImage();
 }
 
 #endif // QT_NO_QWS_MULTIPROCESS

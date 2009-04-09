@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -63,7 +67,7 @@ public:
         : QTreeWidget(parent)
     {
         header()->hide();
-        connect(this, SIGNAL(itemActivated(QTreeWidgetItem*, int)), 
+        connect(this, SIGNAL(itemActivated(QTreeWidgetItem*, int)),
             this, SLOT(itemActivated(QTreeWidgetItem*, int)));
     }
 
@@ -95,7 +99,7 @@ public:
     QCLuceneResultWidget(QWidget *parent = 0)
         : QTextBrowser(parent)
     {
-        connect(this, SIGNAL(anchorClicked(const QUrl&)), 
+        connect(this, SIGNAL(anchorClicked(const QUrl&)),
             this, SIGNAL(requestShowLink(const QUrl&)));
         setContextMenuPolicy(Qt::NoContextMenu);
     }
@@ -104,16 +108,16 @@ public:
     {
         QString htmlFile = QString(QLatin1String("<html><head><title>%1</title></head><body>"))
             .arg(tr("Search Results"));
-        
+
         int count = hits.count();
         if (count != 0) {
             if (isIndexing)
                 htmlFile += QString(QLatin1String("<div style=\"text-align:left; font-weight:bold; color:red\">"
-                    "%1&nbsp;<span style=\"font-weight:normal; color:black\">"                    
+                    "%1&nbsp;<span style=\"font-weight:normal; color:black\">"
                     "%2</span></div></div><br>")).arg(tr("Note:"))
                     .arg(tr("The search results may not be complete since the "
                             "documentation is still being indexed!"));
-            
+
             foreach (const QHelpSearchEngine::SearchHit hit, hits) {
                 htmlFile += QString(QLatin1String("<div style=\"text-align:left; font-weight:bold\""
                 "><a href=\"%1\">%2</a><div style=\"color:green; font-weight:normal;"
@@ -130,9 +134,9 @@ public:
                          "is still being indexed.)")
                     + QLatin1String("</h3><div>");
         }
-        
+
         htmlFile += QLatin1String("</body></html>");
-        
+
         setHtml(htmlFile);
     }
 
@@ -154,8 +158,7 @@ private slots:
         if (!searchEngine.isNull()) {
 #if defined(QT_CLUCENE_SUPPORT)
             showFirstResultPage();
-            if (hitsCount > 20)
-                updateNextButtonState();
+            updateNextButtonState(((hitsCount > 20) ? true : false));
 #else
             resultTreeWidget->clear();
             resultTreeWidget->showResultPage(searchEngine->hits(0, hitsCount));
@@ -165,12 +168,13 @@ private slots:
 
     void showNextResultPage()
     {
-        if (!searchEngine.isNull()) {
+        if (!searchEngine.isNull()
+            && resultLastToShow < searchEngine->hitsCount()) {
             resultLastToShow += 20;
             resultFirstToShow += 20;
-            
-            resultTextBrowser->showResultPage(
-                searchEngine->hits(resultFirstToShow, resultLastToShow), isIndexing);
+
+            resultTextBrowser->showResultPage(searchEngine->hits(resultFirstToShow,
+                resultLastToShow), isIndexing);
             if (resultLastToShow >= searchEngine->hitsCount())
                 updateNextButtonState(false);
         }
@@ -183,8 +187,11 @@ private slots:
             resultLastToShow = searchEngine->hitsCount();
             resultFirstToShow = resultLastToShow - (resultLastToShow % 20);
 
-            resultTextBrowser->showResultPage(
-                searchEngine->hits(resultFirstToShow, resultLastToShow), isIndexing);
+            if (resultFirstToShow == resultLastToShow)
+                resultFirstToShow -= 20;
+
+            resultTextBrowser->showResultPage(searchEngine->hits(resultFirstToShow,
+                resultLastToShow), isIndexing);
             updateNextButtonState(false);
         }
         updateHitRange();
@@ -196,8 +203,8 @@ private slots:
             resultLastToShow = 20;
             resultFirstToShow = 0;
 
-            resultTextBrowser->showResultPage(
-                searchEngine->hits(resultFirstToShow, resultLastToShow), isIndexing);
+            resultTextBrowser->showResultPage(searchEngine->hits(resultFirstToShow,
+                resultLastToShow), isIndexing);
             updatePrevButtonState(false);
         }
         updateHitRange();
@@ -206,15 +213,15 @@ private slots:
     void showPreviousResultPage()
     {
         if (!searchEngine.isNull()) {
-            if (resultLastToShow == searchEngine->hitsCount())
-                resultLastToShow -= resultLastToShow % 20;
-            else
-                resultLastToShow -= 20;
+            int count = resultLastToShow % 20;
+            if (count == 0 || resultLastToShow != searchEngine->hitsCount())
+                count = 20;
 
+            resultLastToShow -= count;
             resultFirstToShow = resultLastToShow -20;
 
-            resultTextBrowser->showResultPage(
-                searchEngine->hits(resultFirstToShow, resultLastToShow), isIndexing);
+            resultTextBrowser->showResultPage(searchEngine->hits(resultFirstToShow,
+                resultLastToShow), isIndexing);
             if (resultFirstToShow == 0)
                 updatePrevButtonState(false);
         }
@@ -245,7 +252,7 @@ private slots:
 
 private:
     QHelpSearchResultWidgetPrivate(QHelpSearchEngine *engine)
-        : QObject() 
+        : QObject()
         , searchEngine(engine)
         , isIndexing(false)
     {
@@ -266,7 +273,7 @@ private:
         connect(searchEngine, SIGNAL(indexingFinished()),
             this, SLOT(indexingFinished()));
     }
-    
+
     ~QHelpSearchResultWidgetPrivate()
     {
         delete searchEngine;
@@ -326,7 +333,7 @@ private:
     \class QHelpSearchResultWidget
     \since 4.4
     \inmodule QtHelp
-    \brief The QHelpSearchResultWidget class provides either a tree 
+    \brief The QHelpSearchResultWidget class provides either a tree
     widget or a text browser depending on the used search engine to display
     the hits found by the search.
 */
@@ -334,7 +341,7 @@ private:
 /*!
     \fn void QHelpSearchResultWidget::requestShowLink(const QUrl &link)
 
-    This signal is emitted when a item is activated and its associated 
+    This signal is emitted when a item is activated and its associated
     \a link should be shown.
 */
 
@@ -378,7 +385,7 @@ QHelpSearchResultWidget::QHelpSearchResultWidget(QHelpSearchEngine *engine)
     d->resultTextBrowser = new QCLuceneResultWidget(this);
     vLayout->addWidget(d->resultTextBrowser);
 
-    connect(d->resultTextBrowser, SIGNAL(requestShowLink(const QUrl&)), this, 
+    connect(d->resultTextBrowser, SIGNAL(requestShowLink(const QUrl&)), this,
         SIGNAL(requestShowLink(const QUrl&)));
 
     connect(d->nextResultPage, SIGNAL(clicked()), d, SLOT(showNextResultPage()));
@@ -394,7 +401,7 @@ QHelpSearchResultWidget::QHelpSearchResultWidget(QHelpSearchEngine *engine)
 #else
     d->resultTreeWidget = new QDefaultResultWidget(this);
     vLayout->addWidget(d->resultTreeWidget);
-    connect(d->resultTreeWidget, SIGNAL(requestShowLink(const QUrl&)), this, 
+    connect(d->resultTreeWidget, SIGNAL(requestShowLink(const QUrl&)), this,
         SIGNAL(requestShowLink(const QUrl&)));
 #endif
 
@@ -410,7 +417,7 @@ QHelpSearchResultWidget::~QHelpSearchResultWidget()
 }
 
 /*!
-    Returns a reference of the URL that the item at \a point owns, or an 
+    Returns a reference of the URL that the item at \a point owns, or an
     empty URL if no item exists at that point.
 */
 QUrl QHelpSearchResultWidget::linkAt(const QPoint &point)

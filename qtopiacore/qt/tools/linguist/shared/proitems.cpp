@@ -1,53 +1,58 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#include <QtCore/QFileInfo>
 
 #include "proitems.h"
 #include "abstractproitemvisitor.h"
 
+#include <QtCore/QFileInfo>
+
 QT_BEGIN_NAMESPACE
+
 // --------------- ProItem ------------
-void ProItem::setComment(const QByteArray &comment)
+void ProItem::setComment(const QString &comment)
 {
     m_comment = comment;
 }
 
-QByteArray ProItem::comment() const
+QString ProItem::comment() const
 {
     return m_comment;
 }
@@ -107,15 +112,15 @@ ProItem::ProItemKind ProBlock::kind() const
 bool ProBlock::Accept(AbstractProItemVisitor *visitor)
 {
     visitor->visitBeginProBlock(this);
-    for (QList<ProItem *>::iterator it = m_proitems.begin(); it != m_proitems.end(); ++it) {
-        if (!(*it)->Accept(visitor))
+    foreach (ProItem *item, m_proitems) {
+        if (!item->Accept(visitor))
             return false;
     }
     return visitor->visitEndProBlock(this);
 }
 
 // --------------- ProVariable ----------------
-ProVariable::ProVariable(const QByteArray &name, ProBlock *parent)
+ProVariable::ProVariable(const QString &name, ProBlock *parent)
     : ProBlock(parent)
 {
     setBlockKind(ProBlock::VariableKind);
@@ -123,7 +128,7 @@ ProVariable::ProVariable(const QByteArray &name, ProBlock *parent)
     m_variableKind = SetOperator;
 }
 
-void ProVariable::setVariableOperator(VariableOperator &variableKind)
+void ProVariable::setVariableOperator(VariableOperator variableKind)
 {
     m_variableKind = variableKind;
 }
@@ -133,12 +138,12 @@ ProVariable::VariableOperator ProVariable::variableOperator() const
     return m_variableKind;
 }
 
-void ProVariable::setVariable(const QByteArray &name)
+void ProVariable::setVariable(const QString &name)
 {
     m_variable = name;
 }
 
-QByteArray ProVariable::variable() const
+QString ProVariable::variable() const
 {
     return m_variable;
 }
@@ -146,26 +151,26 @@ QByteArray ProVariable::variable() const
 bool ProVariable::Accept(AbstractProItemVisitor *visitor)
 {
     visitor->visitBeginProVariable(this);
-    for (QList<ProItem *>::iterator it = m_proitems.begin(); it != m_proitems.end(); ++it) {
-        if (!(*it)->Accept(visitor))
+    foreach (ProItem *item, m_proitems) {
+        if (!item->Accept(visitor))
             return false;
     }
     return visitor->visitEndProVariable(this);
 }
 
 // --------------- ProValue ----------------
-ProValue::ProValue(const QByteArray &value, ProVariable *variable)
+ProValue::ProValue(const QString &value, ProVariable *variable)
 {
     m_variable = variable;
     m_value = value;
 }
 
-void ProValue::setValue(const QByteArray &value)
+void ProValue::setValue(const QString &value)
 {
     m_value = value;
 }
 
-QByteArray ProValue::value() const
+QString ProValue::value() const
 {
     return m_value;
 }
@@ -191,17 +196,17 @@ bool ProValue::Accept(AbstractProItemVisitor *visitor)
 }
 
 // --------------- ProFunction ----------------
-ProFunction::ProFunction(const QByteArray &text)
+ProFunction::ProFunction(const QString &text)
 {
     m_text = text;
 }
 
-void ProFunction::setText(const QByteArray &text)
+void ProFunction::setText(const QString &text)
 {
     m_text = text;
 }
 
-QByteArray ProFunction::text() const
+QString ProFunction::text() const
 {
     return m_text;
 }
@@ -217,17 +222,17 @@ bool ProFunction::Accept(AbstractProItemVisitor *visitor)
 }
 
 // --------------- ProCondition ----------------
-ProCondition::ProCondition(const QByteArray &text)
+ProCondition::ProCondition(const QString &text)
 {
     m_text = text;
 }
 
-void ProCondition::setText(const QByteArray &text)
+void ProCondition::setText(const QString &text)
 {
     m_text = text;
 }
 
-QByteArray ProCondition::text() const
+QString ProCondition::text() const
 {
     return m_text;
 }
@@ -270,7 +275,7 @@ bool ProOperator::Accept(AbstractProItemVisitor *visitor)
 
 // --------------- ProFile ----------------
 ProFile::ProFile(const QString &fileName)
-    : QObject(), ProBlock(0)
+    : ProBlock(0)
 {
     m_modified = false;
     setBlockKind(ProBlock::ProFileKind);
@@ -278,11 +283,11 @@ ProFile::ProFile(const QString &fileName)
 
     QFileInfo fi(fileName);
     m_displayFileName = fi.fileName();
+    m_directoryName = fi.absolutePath();
 }
 
 ProFile::~ProFile()
 {
-
 }
 
 QString ProFile::displayFileName() const
@@ -295,6 +300,11 @@ QString ProFile::fileName() const
     return m_fileName;
 }
 
+QString ProFile::directoryName() const
+{
+    return m_directoryName;
+}
+
 void ProFile::setModified(bool modified)
 {
     m_modified = modified;
@@ -305,12 +315,11 @@ bool ProFile::isModified() const
     return m_modified;
 }
 
-
 bool ProFile::Accept(AbstractProItemVisitor *visitor)
 {
     visitor->visitBeginProFile(this);
-    for (QList<ProItem *>::iterator it = m_proitems.begin(); it != m_proitems.end(); ++it) {
-        if (!(*it)->Accept(visitor))
+    foreach (ProItem *item, m_proitems) {
+        if (!item->Accept(visitor))
             return false;
     }
     return visitor->visitEndProFile(this);

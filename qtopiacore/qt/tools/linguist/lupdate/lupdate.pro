@@ -1,50 +1,25 @@
 TEMPLATE        = app
-QT += xml
+TARGET          = lupdate
+DESTDIR          = ../../../bin
+
+QT              -= gui
+
 CONFIG          += qt warn_on console
 CONFIG          -= app_bundle
+
 build_all:!build_pass {
     CONFIG -= build_all
     CONFIG += release
 }
 
+include(../shared/formats.pri)
+include(../shared/proparser.pri)
+include(../shared/translatortools.pri)
 
-HEADERS         = lupdate.h \
-                  ../shared/metatranslator.h \
-                  ../shared/translator.h \
-                  ../shared/proparser.h \
-                  ../shared/profileevaluator.h \
-                  ../shared/proparserutils.h \
-                  ../shared/simtexth.h \
-                  ../shared/xliff.h
+SOURCES += main.cpp
 
-                  
-SOURCES         = lupdate.cpp \
-                  fetchtr.cpp \
-                  fetchtrjava.cpp \
-                  main.cpp \
-                  merge.cpp \
-                  numberh.cpp \
-                  sametexth.cpp \
-                  ../shared/metatranslator.cpp \
-                  ../shared/translator.cpp \
-                  ../shared/proparser.cpp \
-                  ../shared/profileevaluator.cpp \
-                  ../shared/simtexth.cpp \
-                  ../shared/xliff.cpp
+DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-PROPARSERPATH = ../shared
-INCLUDEPATH += $$PROPARSERPATH
-# Input
-HEADERS += $$PROPARSERPATH/proitems.h \
-        $$PROPARSERPATH/abstractproitemvisitor.h \
-        $$PROPARSERPATH/proreader.h
-SOURCES += $$PROPARSERPATH/proitems.cpp \
-        $$PROPARSERPATH/proreader.cpp
-
-
-TARGET          = lupdate
-INCLUDEPATH     += ../shared
-DESTDIR          = ../../../bin
 
 win32:RC_FILE = winmanifest.rc
 
@@ -54,6 +29,6 @@ embed_manifest_exe:win32-msvc2005 {
     QMAKE_POST_LINK += $$quote(mt.exe -updateresource:$$DESTDIR/lupdate.exe -manifest \"$${PWD}\\lupdate.exe.manifest\")
 }
 
-
 target.path=$$[QT_INSTALL_BINS]
 INSTALLS        += target
+

@@ -94,6 +94,10 @@ public:
 	* @return Returns the field.
 	*/
 	const TCHAR* getField() { return field; }
+
+	//deprecated functions
+	_CL_DEPRECATED( setLowercaseExpandedTerms ) void  setLowercaseWildcardTerms(bool lowercaseWildcardTerms){ setLowercaseExpandedTerms(lowercaseWildcardTerms);  }
+	_CL_DEPRECATED( getLowercaseExpandedTerms ) bool  getLowercaseWildcardTerms() const { return getLowercaseExpandedTerms(); }
 protected:
 	//these functions may be defined under certain compilation conditions.
 	//note that this functionality is deprecated, you should create your own queryparser

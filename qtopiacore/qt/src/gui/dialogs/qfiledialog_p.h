@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -68,6 +72,7 @@
 #include <qdialogbuttonbox.h>
 #include <qabstractproxymodel.h>
 #include <qcompleter.h>
+#include <qpointer.h>
 #include <qtimeline.h>
 #include <qdebug.h>
 #include "qsidebar_p.h"
@@ -113,16 +118,24 @@ public:
     model(0),
     fileMode(QFileDialog::AnyFile),
     acceptMode(QFileDialog::AcceptOpen),
-    confirmOverwrite(true),
     currentHistoryLocation(-1),
     renameAction(0),
     deleteAction(0),
     showHiddenAction(0),
     useDefaultCaption(true),
     defaultFileTypes(true),
-    showNameFilterDetails(true),
+    fileNameLabelExplicitlySat(false),
+    nativeDialogInUse(false),
+#ifdef Q_WS_MAC
+    mDelegate(0),
+#ifndef QT_MAC_USE_COCOA
+    mDialog(0),
+    mDialogStarted(false),
+    mDialogClosed(true),
+#endif
+#endif
     qFileDialogUi(0)
-    {};
+    {}
 
     void createToolButtons();
     void createMenuActions();
@@ -135,7 +148,8 @@ public:
     static QString workingDirectory(const QString &path);
     static QString initialSelection(const QString &path);
     QStringList typedFiles() const;
-    static bool removeDirectory(const QString &path);
+    QStringList addDefaultSuffixToFiles(const QStringList filesToFix) const;
+    bool removeDirectory(const QString &path);
 
     inline QModelIndex mapToSource(const QModelIndex &index) const;
     inline QModelIndex mapFromSource(const QModelIndex &index) const;
@@ -204,8 +218,10 @@ public:
 #endif
     }
 
+    void setLastVisitedDirectory(const QString &dir);
     void retranslateWindowTitle();
     void retranslateStrings();
+    void emitFilesSelected(const QStringList &files);
 
     void _q_goHome();
     void _q_pathChanged(const QString &);
@@ -257,12 +273,78 @@ public:
 
     bool useDefaultCaption;
     bool defaultFileTypes;
+    bool fileNameLabelExplicitlySat;
     QStringList nameFilters;
-    bool showNameFilterDetails;
+    
+    // Members for using native dialogs:
+    bool nativeDialogInUse;
+    // setVisible_sys returns true if it ends up showing a native
+    // dialog. Returning false means that a non-native dialog must be
+    // used instead.
+    bool setVisible_sys(bool visible);
+    void deleteNativeDialog_sys();
+    QDialog::DialogCode dialogResultCode_sys();
+
+    void setDirectory_sys(const QString &directory);
+    QString directory_sys() const;
+    void selectFile_sys(const QString &filename);
+    QStringList selectedFiles_sys() const;
+    void setFilter_sys();
+    void setNameFilters_sys(const QStringList &filters);
+    void selectNameFilter_sys(const QString &filter);
+    QString selectedNameFilter_sys() const;
+    //////////////////////////////////////////////
+
+#if defined(Q_WS_MAC)
+    void *mDelegate;
+#ifndef QT_MAC_USE_COCOA
+    NavDialogRef mDialog;
+    bool mDialogStarted;
+    bool mDialogClosed;
+    QString mCurrentLocation;
+    QString mCurrentSelection;
+    QStringList mCurrentSelectionList;
+
+    struct QtMacFilterName {
+        QString description;
+        QString regexp;
+        QString filter;
+    };
+    struct QtMacNavFilterInfo {
+        QtMacNavFilterInfo() : currentSelection(-1) {}
+        int currentSelection;
+        QList<QtMacFilterName> filters;
+    } filterInfo;
+
+    static void qt_mac_filedialog_event_proc(const NavEventCallbackMessage msg, NavCBRecPtr p,
+                                             NavCallBackUserData data);
+    static Boolean qt_mac_filedialog_filter_proc(AEDesc *theItem, void *info, void *data,
+                                                 NavFilterModes);
+    bool showCarbonNavServicesDialog();
+    bool hideCarbonNavServicesDialog();
+    void createNavServicesDialog();
+#else
+    bool showCocoaFilePanel();
+    bool hideCocoaFilePanel();
+#endif
+    void createNSOpenSavePanelDelegate();
+    void QNSOpenSavePanelDelegate_selectionChanged(const QString &newPath);
+    void QNSOpenSavePanelDelegate_panelClosed(bool accepted);
+    void QNSOpenSavePanelDelegate_directoryEntered(const QString &newDir);
+    void QNSOpenSavePanelDelegate_filterSelected(int menuIndex);
+    void _q_macRunNativeAppModalPanel();
+    void mac_nativeDialogModalHelp();
+#endif
 
     Ui_QFileDialog *qFileDialogUi;
 
     QString acceptLabel;
+
+    QPointer<QObject> receiverToDisconnectOnClose;
+    QByteArray memberToDisconnectOnClose;
+    QByteArray signalToDisconnectOnClose;
+
+    QFileDialog::Options opts;
 };
 
 class QFileDialogLineEdit : public QLineEdit
@@ -336,13 +418,33 @@ inline QString QFileDialogPrivate::rootPath() const {
     return model->rootPath();
 }
 
+#ifndef Q_WS_MAC
+    // Dummies for platforms that don't use native dialogs:
+    inline void QFileDialogPrivate::deleteNativeDialog_sys() {}
+    inline bool QFileDialogPrivate::setVisible_sys(bool) { return false; }
+    inline QDialog::DialogCode QFileDialogPrivate::dialogResultCode_sys(){ return QDialog::Rejected; }
+    inline void QFileDialogPrivate::setDirectory_sys(const QString &) {}
+    inline QString QFileDialogPrivate::directory_sys() const { return QString(); }
+    inline void QFileDialogPrivate::selectFile_sys(const QString &) {}
+    inline QStringList QFileDialogPrivate::selectedFiles_sys() const { return QStringList(); }
+    inline void QFileDialogPrivate::setFilter_sys() {}
+    inline void QFileDialogPrivate::setNameFilters_sys(const QStringList &) {}
+    inline void QFileDialogPrivate::selectNameFilter_sys(const QString &) {}
+    inline QString QFileDialogPrivate::selectedNameFilter_sys() const { return QString(); }
+#endif
+
 #ifndef QT_NO_COMPLETER
 /*!
     QCompleter that can deal with QFileSystemModel
   */
 class QFSCompletor :  public QCompleter {
 public:
-    QFSCompletor(QAbstractItemModel *model, QObject *parent = 0) : QCompleter(model, parent){}
+    QFSCompletor(QAbstractItemModel *model, QObject *parent = 0) : QCompleter(model, parent)
+    {
+#ifdef Q_OS_WIN
+        setCaseSensitivity(Qt::CaseInsensitive);
+#endif
+    }
     QString pathFromIndex(const QModelIndex &index) const;
     QStringList splitPath(const QString& path) const;
 };

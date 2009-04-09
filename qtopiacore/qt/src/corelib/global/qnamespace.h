@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,23 +62,33 @@ Qt {
 #endif
 
 #if (defined(Q_MOC_RUN) || defined(QT_JAMBI_RUN))
-    Q_ENUMS(Orientation TextFormat BackgroundMode DateFormat ScrollBarPolicy FocusPolicy ContextMenuPolicy CaseSensitivity LayoutDirection ArrowType ShortcutContext TimeSpec)
-    Q_ENUMS(ToolButtonStyle)
-    Q_ENUMS(PenStyle PenCapStyle PenJoinStyle BrushStyle FillRule BGMode ClipOperation GlobalColor)
-    Q_FLAGS(Alignment)
-    Q_FLAGS(Orientations)
-    Q_FLAGS(DockWidgetAreas)
-    Q_ENUMS(DockWidgetArea)
+    // NOTE: Generally, do not add Q_ENUMS if a corresponding Q_FLAGS exists.
+    Q_ENUMS(ScrollBarPolicy FocusPolicy ContextMenuPolicy)
+    Q_ENUMS(ArrowType ToolButtonStyle PenStyle PenCapStyle PenJoinStyle BrushStyle)
+    Q_ENUMS(FillRule MaskMode BGMode ClipOperation SizeMode)
+    Q_ENUMS(BackgroundMode) // Qt3
+    Q_ENUMS(Axis Corner LayoutDirection SizeHint Orientation)
+    Q_FLAGS(Alignment Orientations)
+    Q_FLAGS(DockWidgetAreas ToolBarAreas)
+    Q_ENUMS(DockWidgetArea ToolBarArea)
+    Q_ENUMS(TextFormat)
     Q_ENUMS(TextElideMode)
+    Q_ENUMS(DateFormat TimeSpec DayOfWeek)
+    Q_ENUMS(CursorShape GlobalColor)
+    Q_ENUMS(AspectRatioMode TransformationMode)
+    Q_FLAGS(ImageConversionFlags)
+    Q_ENUMS(Key ShortcutContext)
     Q_ENUMS(TextInteractionFlag)
-    Q_ENUMS(WindowModality ToolBarArea DayOfWeek)
-    Q_FLAGS(ToolBarAreas)
-    Q_ENUMS(CursorShape)
     Q_FLAGS(TextInteractionFlags)
-    Q_ENUMS(AspectRatioMode)
-    Q_ENUMS(Key)
     Q_ENUMS(ItemSelectionMode)
+    Q_FLAGS(ItemFlags)
+    Q_ENUMS(CheckState)
+    Q_ENUMS(SortOrder CaseSensitivity)
+    Q_FLAGS(MatchFlags)
     Q_FLAGS(KeyboardModifiers MouseButtons)
+    Q_ENUMS(WindowType WindowState WindowModality WidgetAttribute ApplicationAttribute)
+    Q_FLAGS(WindowFlags WindowStates)
+    Q_ENUMS(ConnectionType)
 #endif // (defined(Q_MOC_RUN) || defined(QT_JAMBI_RUN))
 
 #if defined(Q_MOC_RUN)
@@ -174,9 +188,9 @@ public:
 #endif
     };
 
-    // Text formatting flags for QPainter::drawText and QLabel
-    // the following four enums can be combined to one integer which
-    // is passed as textflag to drawText and qt_format_text.
+    // Text formatting flags for QPainter::drawText and QLabel.
+    // The following two enums can be combined to one integer which
+    // is passed as 'flags' to drawText and qt_format_text.
 
     enum AlignmentFlag {
         AlignLeft = 0x0001,
@@ -264,9 +278,20 @@ public:
         WindowContextHelpButtonHint = 0x00010000,
         WindowShadeButtonHint = 0x00020000,
         WindowStaysOnTopHint = 0x00040000,
+        // reserved for Qt3Support:
+        // WMouseNoMask = 0x00080000,
         WindowOkButtonHint = 0x00080000,
-        WindowCancelButtonHint = 0x000100000,
-        CustomizeWindowHint = 0x02000000
+        // WDestructiveClose = 0x00100000,
+        WindowCancelButtonHint = 0x00100000,
+        // WStaticContents = 0x00200000,
+        // WGroupLeader = 0x00400000,
+        // WShowModal = 0x00800000,
+        // WNoMousePropagation = 0x01000000,
+        CustomizeWindowHint = 0x02000000,
+        WindowStaysOnBottomHint = 0x04000000,
+        WindowCloseButtonHint = 0x08000000,
+        MacWindowToolBarButtonHint = 0x10000000,
+        BypassGraphicsProxyWidget = 0x20000000
 
 #ifdef QT3_SUPPORT
         ,
@@ -454,6 +479,12 @@ public:
         WA_X11NetWmWindowTypeCombo = 115,
         WA_X11NetWmWindowTypeDND = 116,
 
+        WA_MacFrameworkScaled  = 117,
+
+        WA_SetWindowModality = 118,
+        WA_WState_WindowOpacitySet = 119, // internal
+        WA_TranslucentBackground = 120,
+
         // Add new attributes before this line
         WA_AttributeCount
     };
@@ -465,6 +496,7 @@ public:
         AA_DontShowIconsInMenus = 2,
         AA_NativeWindows = 3,
         AA_DontCreateNativeWidgetSiblings = 4,
+        AA_MacPluginApplication = 5,
 
         // Add new attributes before this line
         AA_AttributeCount
@@ -496,7 +528,9 @@ public:
         DitherMode_Mask         = 0x000000c0,
         AutoDither              = 0x00000000,
         PreferDither            = 0x00000040,
-        AvoidDither             = 0x00000080
+        AvoidDither             = 0x00000080,
+
+        NoOpaqueDetection       = 0x00000100
     };
     Q_DECLARE_FLAGS(ImageConversionFlags, ImageConversionFlag)
 
@@ -1142,6 +1176,7 @@ public:
     typedef AspectRatioMode ScaleMode;
 #endif
 
+    // This is for Q3TextEdit only, actually.
     enum AnchorAttribute {
         AnchorName,
         AnchorHref
@@ -1404,8 +1439,14 @@ public:
         // Accessibility
         AccessibleTextRole = 11,
         AccessibleDescriptionRole = 12,
-        // More Metadata
+        // More general purpose
         SizeHintRole = 13,
+        // Internal UiLib roles. Start worrying when public roles go that high.
+        DisplayPropertyRole = 27,
+        DecorationPropertyRole = 28,
+        ToolTipPropertyRole = 29,
+        StatusTipPropertyRole = 30,
+        WhatsThisPropertyRole = 31,
         // Reserved
         UserRole = 32
     };

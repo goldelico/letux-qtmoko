@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #define QDESIGNER_ACTIONS_H
 
 #include "assistantclient.h"
+#include "qdesigner_settings.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
@@ -54,11 +59,15 @@ class QAction;
 class QActionGroup;
 class QDesignerFormEditorInterface;
 class QDesignerFormWindowInterface;
+class AppFontDialog;
+
 class QRect;
 class QWidget;
 class QPixmap;
+class QMenu;
 
 namespace qdesigner_internal {
+    class PreviewConfiguration;
     class PreviewManager;
 }
 
@@ -80,11 +89,11 @@ public:
     QActionGroup *recentFilesActions() const;
     QActionGroup *editActions() const;
     QActionGroup *formActions() const;
+    QActionGroup *settingsActions() const;
     QActionGroup *windowActions() const;
     QActionGroup *toolActions() const;
     QActionGroup *helpActions() const;
     QActionGroup *uiMode() const;
-    QAction *preferencesAction() const;
     QActionGroup *styleActions() const;
     // file actions
     QAction *openFormAction() const;
@@ -102,6 +111,8 @@ public:
 
     bool openForm(QWidget *parent);
 
+    QString uiExtension() const;
+
 public slots:
     void activeFormWindowChanged(QDesignerFormWindowInterface *formWindow);
     void createForm();
@@ -116,8 +127,6 @@ private slots:
     void saveFormAs();
     void saveAllForms();
     void saveFormAsTemplate();
-    void previewForm(QAction *action = 0);
-    void previewFormLater(QAction *action = 0);
     void viewCode();
     void notImplementedYet();
     void shutdown();
@@ -130,15 +139,18 @@ private slots:
     void aboutPlugins();
     void aboutDesigner();
     void showWidgetSpecificHelp();
-    void showFormSettings();
     void backupForms();
     void showNewFormDialog(const QString &fileName);
     void showPreferencesDialog();
+    void showAppFontDialog();
     void savePreviewImage();
     void printPreviewImage();
     void updateCloseAction();
+    void formWindowCountChanged();
+    void formWindowSettingsChanged(QDesignerFormWindowInterface *fw);
 
 private:
+    QAction *createRecentFilesMenu();
     bool saveFormAs(QDesignerFormWindowInterface *fw);
     void fixActionContext();
     void updateRecentFileActions();
@@ -151,10 +163,12 @@ private:
     QActionGroup *createHelpActions();
     bool ensureBackupDirectories();
     QPixmap createPreviewPixmap(QDesignerFormWindowInterface *fw);
+    qdesigner_internal::PreviewConfiguration previewConfiguration();
 
     enum { MaxRecentFiles = 10 };
     QDesignerWorkbench *m_workbench;
     QDesignerFormEditorInterface *m_core;
+    QDesignerSettings m_settings;
     AssistantClient m_assistantClient;
     QString m_openDirectory;
     QString m_saveDirectory;
@@ -169,6 +183,7 @@ private:
     QActionGroup *m_recentFilesActions;
     QActionGroup *m_editActions;
     QActionGroup *m_formActions;
+    QActionGroup *m_settingsActions;
     QActionGroup *m_windowActions;
     QActionGroup *m_toolActions;
     QActionGroup *m_helpActions;
@@ -191,18 +206,20 @@ private:
     QAction *m_previewFormAction;
     QAction *m_viewCodeAction;
 
-    QAction *m_formSettings;
-
     QAction *m_minimizeAction;
     QAction *m_bringAllToFrontSeparator;
     QAction *m_bringAllToFrontAction;
     QAction *m_windowListSeparatorAction;
 
     QAction *m_preferencesAction;
+    QAction *m_appFontAction;
+
+    QPointer<AppFontDialog> m_appFontDialog;
 
 #ifndef QT_NO_PRINTER
-    QPrinter m_printer;
+    QPrinter *m_printer;
 #endif
+
     qdesigner_internal::PreviewManager *m_previewManager;
 };
 

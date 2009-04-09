@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -189,6 +193,7 @@ typedef char *XPointer;
 typedef Bool (*PtrXFixesQueryExtension)(Display *, int *, int *);
 typedef Status (*PtrXFixesQueryVersion)(Display *, int *, int *);
 typedef void (*PtrXFixesSetCursorName)(Display *dpy, Cursor cursor, const char *name);
+typedef void (*PtrXFixesSelectSelectionInput)(Display *dpy, Window win, Atom selection, unsigned long eventMask);
 #endif // QT_NO_XFIXES
 
 #ifndef QT_NO_XCURSOR
@@ -202,6 +207,20 @@ typedef Bool (*PtrXineramaIsActive)(Display *dpy);
 typedef XineramaScreenInfo *(*PtrXineramaQueryScreens)(Display *dpy, int *number);
 #endif // QT_NO_XINERAMA
 
+#ifndef QT_NO_XRANDR
+typedef void (*PtrXRRSelectInput)(Display *, Window, int);
+typedef int (*PtrXRRUpdateConfiguration)(XEvent *);
+typedef int (*PtrXRRRootToScreen)(Display *, Window);
+typedef Bool (*PtrXRRQueryExtension)(Display *, int *, int *);
+#endif // QT_NO_XRANDR
+
+#ifndef QT_NO_XINPUT
+typedef int (*PtrXCloseDevice)(Display *, XDevice *);
+typedef XDeviceInfo* (*PtrXListInputDevices)(Display *, int *);
+typedef XDevice* (*PtrXOpenDevice)(Display *, XID);
+typedef void (*PtrXFreeDeviceList)(XDeviceInfo *);
+typedef int (*PtrXSelectExtensionEvent)(Display *, Window, XEventClass *, int);
+#endif // QT_NO_XINPUT
 
 /*
  * Solaris patch 108652-47 and higher fixes crases in
@@ -262,9 +281,9 @@ extern "C" char *XSetIMValues(XIM /* im */, ...);
 #endif // X11R4
 
 
-#ifdef QT_MITSHM
+#ifndef QT_NO_MITSHM
 #  include <X11/extensions/XShm.h>
-#endif // QT_MITSHM
+#endif // QT_NO_MITSHM
 
 QT_BEGIN_NAMESPACE
 
@@ -383,7 +402,21 @@ struct QX11Data
     PtrXFixesQueryExtension ptrXFixesQueryExtension;
     PtrXFixesQueryVersion ptrXFixesQueryVersion;
     PtrXFixesSetCursorName ptrXFixesSetCursorName;
+    PtrXFixesSelectSelectionInput ptrXFixesSelectSelectionInput;
 #endif
+
+#ifndef QT_NO_XINPUT
+    PtrXCloseDevice ptrXCloseDevice;
+    PtrXListInputDevices ptrXListInputDevices;
+    PtrXOpenDevice ptrXOpenDevice;
+    PtrXFreeDeviceList ptrXFreeDeviceList;
+    PtrXSelectExtensionEvent ptrXSelectExtensionEvent;
+#endif // QT_NO_XINPUT
+
+
+    // true if Qt is compiled w/ MIT-SHM support and MIT-SHM is supported on the connected Display
+    bool use_mitshm;
+    int mitshm_major;
 
     // true if Qt is compiled w/ Tablet support and we have a tablet.
     bool use_xinput;
@@ -408,6 +441,8 @@ struct QX11Data
     Window wm_client_leader;
 
     QX11InfoData *screens;
+    Visual **argbVisuals;
+    Colormap *argbColormaps;
     int screenCount;
     int defaultScreen;
 
@@ -467,6 +502,7 @@ struct QX11Data
     int fc_hint_style;
 
     char *startupId;
+    char *originalStartupId;
 
     DesktopEnvironment desktopEnvironment;
 
@@ -534,6 +570,7 @@ struct QX11Data
 
         _NET_WM_STATE,
         _NET_WM_STATE_ABOVE,
+        _NET_WM_STATE_BELOW,
         _NET_WM_STATE_FULLSCREEN,
         _NET_WM_STATE_MAXIMIZED_HORZ,
         _NET_WM_STATE_MAXIMIZED_VERT,
@@ -542,6 +579,7 @@ struct QX11Data
         _NET_WM_STATE_DEMANDS_ATTENTION,
 
         _NET_WM_USER_TIME,
+        _NET_WM_USER_TIME_WINDOW,
         _NET_WM_FULL_PLACEMENT,
 
         _NET_WM_WINDOW_TYPE,
@@ -569,6 +607,8 @@ struct QX11Data
         _NET_SUPPORTING_WM_CHECK,
 
         _NET_WM_CM_S0,
+
+        _NET_SYSTEM_TRAY_VISUAL,
 
         // Property formats
         COMPOUND_TEXT,
@@ -633,6 +673,12 @@ struct QX11Data
     PtrXineramaQueryScreens ptrXineramaQueryScreens;
 #endif // QT_NO_XINERAMA
 
+#ifndef QT_NO_XRANDR
+    PtrXRRSelectInput ptrXRRSelectInput;
+    PtrXRRUpdateConfiguration ptrXRRUpdateConfiguration;
+    PtrXRRRootToScreen ptrXRRRootToScreen;
+    PtrXRRQueryExtension ptrXRRQueryExtension;
+#endif // QT_NO_XRANDR
 };
 
 extern QX11Data *qt_x11Data;

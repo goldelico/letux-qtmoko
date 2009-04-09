@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -168,8 +172,8 @@ private:
     \class QHelpSearchQueryWidget
     \since 4.4
     \inmodule QtHelp
-    \brief The QHelpSearchQueryWidget class provides a simple line edit or 
-    an advanced widget to enable the user to input a search term in a 
+    \brief The QHelpSearchQueryWidget class provides a simple line edit or
+    an advanced widget to enable the user to input a search term in a
     standardized input mask.
 */
 
@@ -177,7 +181,7 @@ private:
     \fn void QHelpSearchQueryWidget::search()
 
     This signal is emitted when a the user has the search button invoked.
-    After reciving the signal you can ask the QHelpSearchQueryWidget for the build list 
+    After reciving the signal you can ask the QHelpSearchQueryWidget for the build list
     of QHelpSearchQuery's that you may pass to the QHelpSearchEngine's search() function.
 */
 
@@ -199,7 +203,7 @@ QHelpSearchQueryWidget::QHelpSearchQueryWidget(QWidget *parent)
     hBoxLayout->addWidget(label);
     hBoxLayout->addWidget(d->defaultQuery);
     hBoxLayout->addWidget(d->searchButton);
-    
+
     vLayout->addLayout(hBoxLayout);
 
     connect(d->searchButton, SIGNAL(clicked()), this, SIGNAL(search()));
@@ -253,7 +257,7 @@ QHelpSearchQueryWidget::QHelpSearchQueryWidget(QWidget *parent)
     gLayout->addWidget(label, 4, 0);
     d->atLeastQuery = new QLineEdit(this);
     gLayout->addWidget(d->atLeastQuery, 4, 1);
-    
+
     vLayout->addWidget(d->advancedSearchWidget);
     d->advancedSearchWidget->hide();
 
@@ -262,7 +266,7 @@ QHelpSearchQueryWidget::QHelpSearchQueryWidget(QWidget *parent)
     connect(d->withoutQuery, SIGNAL(returnPressed()), this, SIGNAL(search()));
     connect(d->allQuery, SIGNAL(returnPressed()), this, SIGNAL(search()));
     connect(d->atLeastQuery, SIGNAL(returnPressed()), this, SIGNAL(search()));
-    connect(d->showHideAdvancedSearchButton, SIGNAL(clicked()), 
+    connect(d->showHideAdvancedSearchButton, SIGNAL(clicked()),
         d, SLOT(showHideAdvancedSearch()));
 #endif
 }
@@ -276,14 +280,14 @@ QHelpSearchQueryWidget::~QHelpSearchQueryWidget()
 }
 
 /*!
-    Returns a list of querys to use in combination with the search engines 
+    Returns a list of querys to use in combination with the search engines
     search(QList<QHelpSearchQuery> &query) function.
 */
 QList<QHelpSearchQuery> QHelpSearchQueryWidget::query() const
 {
 #if !defined(QT_CLUCENE_SUPPORT)
     QList<QHelpSearchQuery> queryList;
-    queryList.append(QHelpSearchQuery(QHelpSearchQuery::DEFAULT, 
+    queryList.append(QHelpSearchQuery(QHelpSearchQuery::DEFAULT,
         QStringList(d->defaultQuery->text())));
 
     return queryList;

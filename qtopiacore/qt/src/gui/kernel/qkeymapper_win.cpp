@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -631,9 +635,13 @@ void QKeyMapperPrivate::clearMappings()
 
     /* MAKELCID()'s first argument is a WORD, and GetKeyboardLayout()
      * returns a DWORD. */
-    LCID newLCID = MAKELCID(DWORD(GetKeyboardLayout(0)), SORT_DEFAULT);
-    keyboardInputLocale = qt_localeFromLCID(newLCID);
-
+//    LCID newLCID = MAKELCID(DWORD(GetKeyboardLayout(0)), SORT_DEFAULT);
+//    keyboardInputLocale = qt_localeFromLCID(newLCID);
+     LCID newLCID = MAKELCID(
+         reinterpret_cast<long>(GetKeyboardLayout(0)),
+         SORT_DEFAULT
+     );
+     keyboardInputLocale = qt_localeFromLCID(newLCID);
     bool bidi = false;
 #ifdef UNICODE
     if (QSysInfo::WindowsVersion >= QSysInfo::WV_2000) {
@@ -1053,6 +1061,24 @@ bool QKeyMapperPrivate::translateKeyEvent(QWidget *widget, const MSG &msg, bool 
                     code = asciiToKeycode(uch.cell(), state);
             }
 
+            // Special handling for the WM_IME_KEYDOWN message. Microsoft IME (Korean) will not 
+            // generate a WM_IME_CHAR message corresponding to this message. We might get wrong
+            // results, if we map this virtual key-code directly (for eg '?' US layouts). So try
+            // to find the correct key using the current message parameters & keyboard state.
+            if (uch.isNull() && msgType == WM_IME_KEYDOWN) {
+                BYTE keyState[256];
+                WCHAR newKey[3] = {0};
+                GetKeyboardState(keyState);
+                int val = ToUnicode(vk_key, scancode, keyState, newKey, 2,  0);
+                if (val == 1) {
+                    uch = QChar(newKey[0]);
+                } else {
+                    // If we are still not able to find a unicode key, pass the WM_IME_KEYDOWN 
+                    // message to DefWindowProc() for generating a proper WM_KEYDOWN.
+                    return false;
+                }
+            }
+
             // If no ?_CHAR was found in the queue; deduct character from the ?_KEYDOWN parameters
             if (uch.isNull()) {
                 if (msg.wParam == VK_DELETE) {
@@ -1193,7 +1219,8 @@ bool QKeyMapperPrivate::translateKeyEvent(QWidget *widget, const MSG &msg, bool 
 bool QKeyMapper::sendKeyEvent(QWidget *widget, bool grab,
                               QEvent::Type type, int code, Qt::KeyboardModifiers modifiers,
                               const QString &text, bool autorepeat, int count,
-                              quint32 nativeScanCode, quint32 nativeVirtualKey, quint32 nativeModifiers)
+                              quint32 nativeScanCode, quint32 nativeVirtualKey, quint32 nativeModifiers,
+                              bool *)
 {
 #if defined(Q_OS_WINCE)
     Q_UNUSED(grab);

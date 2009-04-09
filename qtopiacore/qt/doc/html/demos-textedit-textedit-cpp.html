@@ -3,50 +3,54 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>Qt 4.4: textedit.cpp Example File (demos/textedit/textedit.cpp)</title>
+  <title>Qt 4.5: textedit.cpp Example File (demos/textedit/textedit.cpp)</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">textedit.cpp Example File<br /><span class="small-subtitle">demos/textedit/textedit.cpp</span>
 </h1>
 <pre><span class="comment"> /****************************************************************************
  **
- ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+ ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
  ** This file is part of the demonstration applications of the Qt Toolkit.
  **
+ ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
  ** Licensees holding valid Qt Commercial licenses may use this file in
  ** accordance with the Qt Commercial License Agreement provided with the
  ** Software or, alternatively, in accordance with the terms contained in
  ** a written agreement between you and Nokia.
  **
+ ** GNU Lesser General Public License Usage
+ ** Alternatively, this file may be used under the terms of the GNU Lesser
+ ** General Public License version 2.1 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.LGPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU Lesser General Public License version 2.1 requirements
+ ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+ **
+ ** In addition, as a special exception, Nokia gives you certain
+ ** additional rights. These rights are described in the Nokia Qt LGPL
+ ** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+ ** package.
  **
  ** GNU General Public License Usage
  ** Alternatively, this file may be used under the terms of the GNU
- ** General Public License versions 2.0 or 3.0 as published by the Free
- ** Software Foundation and appearing in the file LICENSE.GPL included in
- ** the packaging of this file.  Please review the following information
- ** to ensure GNU General Public Licensing requirements will be met:
- ** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
- ** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
- ** exception, Nokia gives you certain additional rights. These rights
- ** are described in the Nokia Qt GPL Exception version 1.3, included in
- ** the file GPL_EXCEPTION.txt in this package.
- **
- ** Qt for Windows(R) Licensees
- ** As a special exception, Nokia, as the sole copyright holder for Qt
- ** Designer, grants users of the Qt/Eclipse Integration plug-in the
- ** right for the Qt/Eclipse Integration to link to functionality
- ** provided by Qt Designer and its related libraries.
+ ** General Public License version 3.0 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.GPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU General Public License version 3.0 requirements will be
+ ** met: http://www.gnu.org/copyleft/gpl.html.
  **
  ** If you are unsure which license is appropriate for your use, please
  ** contact the sales department at qt-sales@nokia.com.
+ ** $QT_END_LICENSE$
  **
  ****************************************************************************/</span>
 
@@ -70,6 +74,7 @@
  #include &lt;QTextEdit&gt;
  #include &lt;QToolBar&gt;
  #include &lt;QTextCursor&gt;
+ #include &lt;QTextDocumentWriter&gt;
  #include &lt;QTextList&gt;
  #include &lt;QtDebug&gt;
  #include &lt;QCloseEvent&gt;
@@ -193,6 +198,7 @@
      menu-&gt;addAction(a);
      menu-&gt;addSeparator();
 
+ #ifndef QT_NO_PRINTER
      a = new QAction(QIcon(rsrcPath + &quot;/fileprint.png&quot;), tr(&quot;&amp;Print...&quot;), this);
      a-&gt;setShortcut(QKeySequence::Print);
      connect(a, SIGNAL(triggered()), this, SLOT(filePrint()));
@@ -210,6 +216,7 @@
      menu-&gt;addAction(a);
 
      menu-&gt;addSeparator();
+ #endif
 
      a = new QAction(tr(&quot;&amp;Quit&quot;), this);
      a-&gt;setShortcut(Qt::CTRL + Qt::Key_Q);
@@ -295,16 +302,24 @@
      QActionGroup *grp = new QActionGroup(this);
      connect(grp, SIGNAL(triggered(QAction *)), this, SLOT(textAlign(QAction *)));
 
-     actionAlignLeft = new QAction(QIcon(rsrcPath + &quot;/textleft.png&quot;), tr(&quot;&amp;Left&quot;), grp);
+     <span class="comment">// Make sure the alignLeft  is always left of the alignRight</span>
+     if (QApplication::isLeftToRight()) {
+         actionAlignLeft = new QAction(QIcon(rsrcPath + &quot;/textleft.png&quot;), tr(&quot;&amp;Left&quot;), grp);
+         actionAlignCenter = new QAction(QIcon(rsrcPath + &quot;/textcenter.png&quot;), tr(&quot;C&amp;enter&quot;), grp);
+         actionAlignRight = new QAction(QIcon(rsrcPath + &quot;/textright.png&quot;), tr(&quot;&amp;Right&quot;), grp);
+     } else {
+         actionAlignRight = new QAction(QIcon(rsrcPath + &quot;/textright.png&quot;), tr(&quot;&amp;Right&quot;), grp);
+         actionAlignCenter = new QAction(QIcon(rsrcPath + &quot;/textcenter.png&quot;), tr(&quot;C&amp;enter&quot;), grp);
+         actionAlignLeft = new QAction(QIcon(rsrcPath + &quot;/textleft.png&quot;), tr(&quot;&amp;Left&quot;), grp);
+     }
+     actionAlignJustify = new QAction(QIcon(rsrcPath + &quot;/textjustify.png&quot;), tr(&quot;&amp;Justify&quot;), grp);
+
      actionAlignLeft-&gt;setShortcut(Qt::CTRL + Qt::Key_L);
      actionAlignLeft-&gt;setCheckable(true);
-     actionAlignCenter = new QAction(QIcon(rsrcPath + &quot;/textcenter.png&quot;), tr(&quot;C&amp;enter&quot;), grp);
      actionAlignCenter-&gt;setShortcut(Qt::CTRL + Qt::Key_E);
      actionAlignCenter-&gt;setCheckable(true);
-     actionAlignRight = new QAction(QIcon(rsrcPath + &quot;/textright.png&quot;), tr(&quot;&amp;Right&quot;), grp);
      actionAlignRight-&gt;setShortcut(Qt::CTRL + Qt::Key_R);
      actionAlignRight-&gt;setCheckable(true);
-     actionAlignJustify = new QAction(QIcon(rsrcPath + &quot;/textjustify.png&quot;), tr(&quot;&amp;Justify&quot;), grp);
      actionAlignJustify-&gt;setShortcut(Qt::CTRL + Qt::Key_J);
      actionAlignJustify-&gt;setCheckable(true);
 
@@ -435,22 +450,21 @@
      if (fileName.isEmpty())
          return fileSaveAs();
 
-     QFile file(fileName);
-     if (!file.open(QFile::WriteOnly))
-         return false;
-     QTextStream ts(&amp;file);
-     ts.setCodec(QTextCodec::codecForName(&quot;UTF-8&quot;));
-     ts &lt;&lt; textEdit-&gt;document()-&gt;toHtml(&quot;UTF-8&quot;);
-     textEdit-&gt;document()-&gt;setModified(false);
-     return true;
+     QTextDocumentWriter writer(fileName);
+     bool success = writer.write(textEdit-&gt;document());
+     if (success)
+         textEdit-&gt;document()-&gt;setModified(false);
+     return success;
  }
 
  bool TextEdit::fileSaveAs()
  {
      QString fn = QFileDialog::getSaveFileName(this, tr(&quot;Save as...&quot;),
-                                               QString(), tr(&quot;HTML-Files (*.htm *.html);;All Files (*)&quot;));
+                                               QString(), tr(&quot;ODF files (*.odt);;HTML-Files (*.htm *.html);;All Files (*)&quot;));
      if (fn.isEmpty())
          return false;
+     if (! (fn.endsWith(&quot;.odt&quot;, Qt::CaseInsensitive) || fn.endsWith(&quot;.htm&quot;, Qt::CaseInsensitive) || fn.endsWith(&quot;.html&quot;, Qt::CaseInsensitive)) )
+         fn += &quot;.odt&quot;; <span class="comment">// default</span>
      setCurrentFileName(fn);
      return fileSave();
  }
@@ -535,9 +549,12 @@
 
  void TextEdit::textSize(const QString &amp;p)
  {
-     QTextCharFormat fmt;
-     fmt.setFontPointSize(p.toFloat());
-     mergeFormatOnWordOrSelection(fmt);
+     qreal pointSize = p.toFloat();
+     if (p.toFloat() &gt; 0) {
+         QTextCharFormat fmt;
+         fmt.setFontPointSize(pointSize);
+         mergeFormatOnWordOrSelection(fmt);
+     }
  }
 
  void TextEdit::textStyle(int styleIndex)
@@ -610,11 +627,11 @@
  void TextEdit::textAlign(QAction *a)
  {
      if (a == actionAlignLeft)
-         textEdit-&gt;setAlignment(Qt::AlignLeft);
+         textEdit-&gt;setAlignment(Qt::AlignLeft | Qt::AlignAbsolute);
      else if (a == actionAlignCenter)
          textEdit-&gt;setAlignment(Qt::AlignHCenter);
      else if (a == actionAlignRight)
-         textEdit-&gt;setAlignment(Qt::AlignRight);
+         textEdit-&gt;setAlignment(Qt::AlignRight | Qt::AlignAbsolute);
      else if (a == actionAlignJustify)
          textEdit-&gt;setAlignment(Qt::AlignJustify);
  }
@@ -681,8 +698,8 @@
  }</pre>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

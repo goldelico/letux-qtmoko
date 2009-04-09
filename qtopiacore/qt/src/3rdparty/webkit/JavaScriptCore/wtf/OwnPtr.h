@@ -1,4 +1,3 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  *  Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  *
@@ -23,6 +22,7 @@
 #define WTF_OwnPtr_h
 
 #include <algorithm>
+#include <memory>
 #include <wtf/Assertions.h>
 #include <wtf/Noncopyable.h>
 
@@ -67,12 +67,17 @@ namespace WTF {
         typedef ValueType* PtrType;
 
         explicit OwnPtr(PtrType ptr = 0) : m_ptr(ptr) { }
+        OwnPtr(std::auto_ptr<ValueType> autoPtr) : m_ptr(autoPtr.release()) { }
         ~OwnPtr() { deleteOwnedPtr(m_ptr); }
 
         PtrType get() const { return m_ptr; }
         PtrType release() { PtrType ptr = m_ptr; m_ptr = 0; return ptr; }
 
+        // FIXME: This should be renamed to adopt. 
         void set(PtrType ptr) { ASSERT(!ptr || m_ptr != ptr); deleteOwnedPtr(m_ptr); m_ptr = ptr; }
+
+        void adopt(std::auto_ptr<ValueType> autoPtr) { ASSERT(!autoPtr.get() || m_ptr != autoPtr.get()); deleteOwnedPtr(m_ptr); m_ptr = autoPtr.release(); }
+
         void clear() { deleteOwnedPtr(m_ptr); m_ptr = 0; }
 
         ValueType& operator*() const { ASSERT(m_ptr); return *m_ptr; }
@@ -81,8 +86,8 @@ namespace WTF {
         bool operator!() const { return !m_ptr; }
 
         // This conversion operator allows implicit conversion to bool but not to other integer types.
-        typedef PtrType (OwnPtr::*UnspecifiedBoolType)() const;
-        operator UnspecifiedBoolType() const { return m_ptr ? &OwnPtr::get : 0; }
+        typedef PtrType OwnPtr::*UnspecifiedBoolType;
+        operator UnspecifiedBoolType() const { return m_ptr ? &OwnPtr::m_ptr : 0; }
 
         void swap(OwnPtr& o) { std::swap(m_ptr, o.m_ptr); }
 
@@ -92,6 +97,26 @@ namespace WTF {
     
     template <typename T> inline void swap(OwnPtr<T>& a, OwnPtr<T>& b) { a.swap(b); }
 
+    template <typename T, typename U> inline bool operator==(const OwnPtr<T>& a, U* b)
+    { 
+        return a.get() == b; 
+    }
+    
+    template <typename T, typename U> inline bool operator==(T* a, const OwnPtr<U>& b) 
+    {
+        return a == b.get(); 
+    }
+
+    template <typename T, typename U> inline bool operator!=(const OwnPtr<T>& a, U* b)
+    {
+        return a.get() != b; 
+    }
+
+    template <typename T, typename U> inline bool operator!=(T* a, const OwnPtr<U>& b)
+    { 
+        return a != b.get(); 
+    }
+    
     template <typename T> inline typename OwnPtr<T>::PtrType getPtr(const OwnPtr<T>& p)
     {
         return p.get();

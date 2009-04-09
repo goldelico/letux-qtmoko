@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -164,11 +168,14 @@ void Q_CORE_EXPORT qt_call_post_routines()
 bool QCoreApplicationPrivate::is_app_running = false;
  // app closing down if true
 bool QCoreApplicationPrivate::is_app_closing = false;
+// initialized in qcoreapplication and in qtextstream autotest when setlocale is called.
+Q_CORE_EXPORT bool qt_locale_initialized = false;
 
 
 Q_CORE_EXPORT uint qGlobalPostedEventsCount()
 {
-    return QThreadData::current()->postEventList.size();
+    QThreadData *currentThreadData = QThreadData::current();
+    return currentThreadData->postEventList.size() - currentThreadData->postEventList.startOffset;
 }
 
 
@@ -199,9 +206,11 @@ struct QCoreApplicationData {
 #endif
 
         // cleanup the QAdoptedThread created for the main() thread
-        QThreadData *data = QThreadData::get2(QCoreApplicationPrivate::theMainThread);
-        QCoreApplicationPrivate::theMainThread = 0;
-        data->deref(); // deletes the data and the adopted thread
+       if (QCoreApplicationPrivate::theMainThread) {
+           QThreadData *data = QThreadData::get2(QCoreApplicationPrivate::theMainThread);
+           QCoreApplicationPrivate::theMainThread = 0;
+           data->deref(); // deletes the data and the adopted thread
+       }
     }
     QString orgName, orgDomain, application;
     QString applicationVersion;
@@ -216,7 +225,7 @@ Q_GLOBAL_STATIC(QCoreApplicationData, coreappdata)
 
 QCoreApplicationPrivate::QCoreApplicationPrivate(int &aargc, char **aargv)
     : QObjectPrivate(), argc(aargc), argv(aargv), application_type(0), eventFilter(0),
-      in_exec(false)
+      in_exec(false), aboutToQuitEmitted(false)
 {
     static const char *const empty = "";
     if (argc == 0 || argv == 0) {
@@ -377,6 +386,8 @@ QString qAppName()
 
     Returns a pointer to the application's QCoreApplication (or
     QApplication) instance.
+
+    If no instance has been allocated, \c null is returned.
 */
 
 /*!\internal
@@ -415,8 +426,10 @@ void QCoreApplication::flush()
     and made available in a more convenient form by the arguments()
     function.
 
-    \warning The data pointed to by \a argc and \a argv must stay
-    valid for the entire lifetime of the QCoreApplication object.
+    \warning The data referred to by \a argc and \a argv must stay valid
+    for the entire lifetime of the QCoreApplication object. In addition,
+    \a argc must be greater than zero and \a argv must contain at least
+    one valid character string.
 */
 QCoreApplication::QCoreApplication(int &argc, char **argv)
     : QObject(*new QCoreApplicationPrivate(argc, argv))
@@ -434,7 +447,7 @@ void QCoreApplication::init()
 
 #ifdef Q_OS_UNIX
     setlocale(LC_ALL, "");                // use correct char set mapping
-    setlocale(LC_NUMERIC, "C");        // make sprintf()/scanf() work
+    qt_locale_initialized = true;
 #endif
 
 #ifdef Q_WS_WIN
@@ -573,11 +586,13 @@ bool QCoreApplication::notifyInternal(QObject *receiver, QEvent *event)
     QThreadData *threadData = d->threadData;
     ++threadData->loopLevel;
 
+#ifdef QT_JAMBI_BUILD
     int deleteWatch = 0;
     int *oldDeleteWatch = QObjectPrivate::setDeleteWatch(d, &deleteWatch);
 
     bool inEvent = d->inEventHandler;
     d->inEventHandler = true;
+#endif
 
 #if defined(QT_NO_EXCEPTIONS)
     bool returnValue = notify(receiver, event);
@@ -591,12 +606,13 @@ bool QCoreApplication::notifyInternal(QObject *receiver, QEvent *event)
     }
 #endif
 
+#ifdef QT_JAMBI_BUILD
     // Restore the previous state if the object was not deleted..
     if (!deleteWatch) {
         d->inEventHandler = inEvent;
     }
     QObjectPrivate::resetDeleteWatch(d, oldDeleteWatch, deleteWatch);
-
+#endif
     --threadData->loopLevel;
     return returnValue;
 }
@@ -604,7 +620,9 @@ bool QCoreApplication::notifyInternal(QObject *receiver, QEvent *event)
 
 /*!
   Sends \a event to \a receiver: \a {receiver}->event(\a event).
-  Returns the value that is returned from the receiver's event handler.
+  Returns the value that is returned from the receiver's event
+  handler. Note that this function is called for all events send to
+  any object is all threads.
 
   For certain types of events (e.g. mouse and key events),
   the event will be propagated to the receiver's parent and so on up to
@@ -626,14 +644,17 @@ bool QCoreApplication::notifyInternal(QObject *receiver, QEvent *event)
   it's just as powerful as reimplementing notify(); furthermore, it's
   possible to have more than one application-global event filter.
   Global event filters even see mouse events for
-  \l{QWidget::isEnabled()}{disabled widgets}.
+  \l{QWidget::isEnabled()}{disabled widgets}. Note that application
+  event filters are only called for objects that live in the main
+  thread.
 
   \i Reimplementing QObject::event() (as QWidget does). If you do
   this you get Tab key presses, and you get to see the events before
   any widget-specific event filters.
 
-  \i Installing an event filter on the object. Such an event filter
-  gets all the events except Tab and Shift-Tab key presses.
+  \i Installing an event filter on the object. Such an event filter gets all
+  the events, including Tab and Shift+Tab key press events, as long as they
+  do not change the focus widget.
   \endlist
 
   \sa QObject::event(), installEventFilter()
@@ -665,16 +686,19 @@ bool QCoreApplication::notify(QObject *receiver, QEvent *event)
 
 bool QCoreApplicationPrivate::sendThroughApplicationEventFilters(QObject *receiver, QEvent *event)
 {
-    for (int i = 0; i < eventFilters.size(); ++i) {
-        register QObject *obj = eventFilters.at(i);
-        if (!obj)
-            continue;
-        if (obj->d_func()->threadData != threadData) {
-            qWarning("QCoreApplication: Application event filter cannot be in a different thread.");
-            continue;
+    if (receiver->d_func()->threadData == this->threadData) {
+        // application event filters are only called for objects in the GUI thread
+        for (int i = 0; i < eventFilters.size(); ++i) {
+            register QObject *obj = eventFilters.at(i);
+            if (!obj)
+                continue;
+            if (obj->d_func()->threadData != threadData) {
+                qWarning("QCoreApplication: Application event filter cannot be in a different thread.");
+                continue;
+            }
+            if (obj->eventFilter(receiver, event))
+                return true;
         }
-        if (obj->eventFilter(receiver, event))
-            return true;
     }
     return false;
 }
@@ -682,7 +706,7 @@ bool QCoreApplicationPrivate::sendThroughApplicationEventFilters(QObject *receiv
 bool QCoreApplicationPrivate::sendThroughObjectEventFilters(QObject *receiver, QEvent *event)
 {
     Q_Q(QCoreApplication);
-   if (receiver != q) {
+    if (receiver != q) {
         for (int i = 0; i < receiver->d_func()->eventFilters.size(); ++i) {
             register QObject *obj = receiver->d_func()->eventFilters.at(i);
             if (!obj)
@@ -772,7 +796,7 @@ void QCoreApplication::processEvents(QEventLoop::ProcessEventsFlags flags)
 }
 
 /*!
-    \overload
+    \overload processEvents()
 
     Processes pending events for the calling thread for \a maxtime
     milliseconds or until there are no more events to process,
@@ -822,6 +846,16 @@ void QCoreApplication::processEvents(QEventLoop::ProcessEventsFlags flags, int m
     QTimer with 0 timeout. More advanced idle processing schemes can
     be achieved using processEvents().
 
+    We recommend that you connect clean-up code to the
+    \l{QCoreApplication::}{aboutToQuit()} signal, instead of putting it in
+    your application's \c{main()} function because on some platforms the
+    QCoreApplication::exec() call may not return. For example, on Windows
+    when the user logs off, the system terminates the process after Qt
+    closes all top-level windows. Hence, there is no guarantee that the
+    application will have time to exit its event loop and execute code at
+    the end of the \c{main()} function after the QCoreApplication::exec()
+    call.
+
     \sa quit(), exit(), processEvents(), QApplication::exec()
 */
 int QCoreApplication::exec()
@@ -842,13 +876,17 @@ int QCoreApplication::exec()
     threadData->quitNow = false;
     QEventLoop eventLoop;
     self->d_func()->in_exec = true;
+    self->d_func()->aboutToQuitEmitted = false;
     int returnCode = eventLoop.exec();
     threadData->quitNow = false;
     if (self) {
         self->d_func()->in_exec = false;
-        emit self->aboutToQuit();
+        if (!self->d_func()->aboutToQuitEmitted)
+            emit self->aboutToQuit();
+        self->d_func()->aboutToQuitEmitted = true;
         sendPostedEvents(0, QEvent::DeferredDelete);
     }
+
     return returnCode;
 }
 
@@ -901,19 +939,21 @@ void QCoreApplication::exit(int returnCode)
 */
 
 /*!
-    Adds the event \a event, with the object \a receiver as the receiver of the
-    event, to an event queue and returns immediately.
+    Adds the event \a event, with the object \a receiver as the
+    receiver of the event, to an event queue and returns immediately.
 
     The event must be allocated on the heap since the post event queue
-    will take ownership of the event and delete it once it has been posted.
-    It is \e {not safe} to modify or delete the event after it has been posted.
+    will take ownership of the event and delete it once it has been
+    posted.  It is \e {not safe} to modify or delete the event after
+    it has been posted.
 
     When control returns to the main event loop, all events that are
     stored in the queue will be sent using the notify() function.
 
-    Events are processed in the order posted. For more control over the processing order,
-    use the postEvent() overload below, which takes a priority argument. This function
-    posts all event with a Qt::NormalEventPriority.
+    Events are processed in the order posted. For more control over
+    the processing order, use the postEvent() overload below, which
+    takes a priority argument. This function posts all event with a
+    Qt::NormalEventPriority.
 
     \threadsafe
 
@@ -927,15 +967,16 @@ void QCoreApplication::postEvent(QObject *receiver, QEvent *event)
 
 
 /*!
-    \overload
+    \overload postEvent()
     \since 4.3
 
-    Adds the event \a event, with the object \a receiver as the receiver of the
-    event, to an event queue and returns immediately.
+    Adds the event \a event, with the object \a receiver as the
+    receiver of the event, to an event queue and returns immediately.
 
     The event must be allocated on the heap since the post event queue
-    will take ownership of the event and delete it once it has been posted.
-    It is \e {not safe} to modify or delete the event after it has been posted.
+    will take ownership of the event and delete it once it has been
+    posted.  It is \e {not safe} to modify or delete the event after
+    it has been posted.
 
     When control returns to the main event loop, all events that are
     stored in the queue will be sent using the notify() function.
@@ -1063,7 +1104,7 @@ bool QCoreApplication::compressEvent(QEvent *event, QObject *receiver, QPostEven
 
 /*!
   \fn void QCoreApplication::sendPostedEvents()
-  \overload
+  \overload sendPostedEvents()
 
     Dispatches all posted events, i.e. empties the event queue.
 */
@@ -1251,7 +1292,7 @@ void QCoreApplication::removePostedEvents(QObject *receiver)
 }
 
 /*!
-    \overload
+    \overload removePostedEvents()
     \since 4.3
 
     Removes all events of the given \a eventType that were posted
@@ -1440,20 +1481,22 @@ void QCoreApplication::quit()
     translation files to be used for translations.
 
     Multiple translation files can be installed. Translations are
-    searched for in the last installed translation file on, back to
-    the first installed translation file. The search stops as soon as
-    a matching translation is found.
+    searched for in the reverse order in which they were installed,
+    so the most recently installed translation file is searched first
+    and the first translation file installed is searched last.
+    The search stops as soon as a translation containing a matching
+    string is found.
 
     Installing or removing a QTranslator, or changing an installed QTranslator
-    generates a \l{QEvent::LanguageChange}{LanguageChange} event for the 
-    QCoreApplication instance. A QApplication instance will propagate the event 
-    to all toplevel windows, where a reimplementation of changeEvent can 
+    generates a \l{QEvent::LanguageChange}{LanguageChange} event for the
+    QCoreApplication instance. A QApplication instance will propagate the event
+    to all toplevel windows, where a reimplementation of changeEvent can
     re-translate the user interface by passing user-visible strings via the
     tr() function to the respective property setters. User-interface classes
     generated by \l{Qt Designer} provide a \c retranslateUi() function that can be
     called.
 
-  \sa removeTranslator() translate() QTranslator::load() {Dynamic Translation}
+    \sa removeTranslator() translate() QTranslator::load() {Dynamic Translation}
 */
 
 void QCoreApplication::installTranslator(QTranslator *translationFile)
@@ -1497,16 +1540,41 @@ void QCoreApplication::removeTranslator(QTranslator *translationFile)
 }
 
 /*!
-    \overload
+    \overload translate()
 */
 QString QCoreApplication::translate(const char *context, const char *sourceText,
-                                    const char *comment, Encoding encoding)
+                                    const char *disambiguation, Encoding encoding)
 {
-    return translate(context, sourceText, comment, encoding, -1);
+    return translate(context, sourceText, disambiguation, encoding, -1);
+}
+
+static void replacePercentN(QString *result, int n)
+{
+    if (n >= 0) {
+        int percentPos = 0;
+        int len = 0;
+        while ((percentPos = result->indexOf(QLatin1Char('%'), percentPos + len)) != -1) {
+            len = 1;
+            QString fmt;
+            if (result->at(percentPos + len) == QLatin1Char('L')) {
+                ++len;
+                fmt = QLatin1String("%L1");
+            } else {
+                fmt = QLatin1String("%1");
+            }
+            if (result->at(percentPos + len) == QLatin1Char('n')) {
+                fmt = fmt.arg(n);
+                ++len;
+                result->replace(percentPos, len, fmt);
+                len = fmt.length();
+            }
+        }
+    }
 }
 
 /*!
     \reentrant
+    \since 4.5
 
     Returns the translation text for \a sourceText, by querying the
     installed translation files. The translation files are searched
@@ -1519,11 +1587,14 @@ QString QCoreApplication::translate(const char *context, const char *sourceText,
     \a context is typically a class name (e.g., "MyDialog") and \a
     sourceText is either English text or a short identifying text.
 
-    \a comment is a disambiguating comment, for when the same \a
+    \a disambiguation is an identifying string, for when the same \a
     sourceText is used in different roles within the same context. By
-    default, it is null. \a encoding indicates the 8-bit encoding of
-    character stings See the \l QTranslator documentation for more
-    information about contexts and comments.
+    default, it is null.
+
+    See the \l QTranslator and \l QObject::tr() documentation for
+    more information about contexts, disambiguations and comments.
+
+    \a encoding indicates the 8-bit encoding of character strings.
 
     \a n is used in conjunction with \c %n to support plural forms.
     See QObject::tr() for details.
@@ -1547,7 +1618,7 @@ QString QCoreApplication::translate(const char *context, const char *sourceText,
 
 
 QString QCoreApplication::translate(const char *context, const char *sourceText,
-                                    const char *comment, Encoding encoding, int n)
+                                    const char *disambiguation, Encoding encoding, int n)
 {
     QString result;
 
@@ -1559,7 +1630,7 @@ QString QCoreApplication::translate(const char *context, const char *sourceText,
         QTranslator *translationFile;
         for (it = self->d_func()->translators.constBegin(); it != self->d_func()->translators.constEnd(); ++it) {
             translationFile = *it;
-            result = translationFile->translate(context, sourceText, comment, n);
+            result = translationFile->translate(context, sourceText, disambiguation, n);
             if (!result.isEmpty())
                 break;
         }
@@ -1578,21 +1649,7 @@ QString QCoreApplication::translate(const char *context, const char *sourceText,
             result = QString::fromLatin1(sourceText);
     }
 
-    if (n >= 0) {
-        int percentPos = -1;
-        while ((percentPos = result.indexOf(QLatin1Char('%'), percentPos + 1)) != -1) {
-            int len = 1;
-            QString fmt(QLatin1String("%1"));
-            if (result.mid(percentPos + len, 1).startsWith(QLatin1Char('L'))) {
-                ++len;
-                fmt = QLatin1String("%L1");
-            }
-            if (result.mid(percentPos + len, 1).startsWith(QLatin1Char('n'))) {
-                ++len;
-                result.replace(percentPos, len, fmt.arg(n));
-            }
-        }
-    }
+    replacePercentN(&result, n);
     return result;
 }
 
@@ -1615,9 +1672,11 @@ bool QCoreApplicationPrivate::isTranslatorInstalled(QTranslator *translator)
     executable, which may be inside of an application bundle (if the
     application is bundled).
 
-    \warning On Unix, this function assumes that argv[0] contains the file
-    name of the executable (which it normally does). It also assumes that
-    the current directory hasn't been changed by the application.
+    \warning On Linux, this function will try to get the path from the
+    \c {/proc} file system. If that fails, it assumes that \c
+    {argv[0]} contains the absolute file name of the executable. The
+    function also assumes that the current directory has not been
+    changed by the application.
 
     \sa applicationFilePath()
 */
@@ -1641,9 +1700,11 @@ QString QCoreApplication::applicationDirPath()
     directory, and you run the \c{regexp} example, this function will
     return "/usr/local/qt/examples/tools/regexp/regexp".
 
-    \warning On Unix, this function assumes that argv[0] contains the file
-    name of the executable (which it normally does). It also assumes that
-    the current directory hasn't been changed by the application.
+    \warning On Linux, this function will try to get the path from the
+    \c {/proc} file system. If that fails, it assumes that \c
+    {argv[0]} contains the absolute file name of the executable. The
+    function also assumes that the current directory has not been
+    changed by the application.
 
     \sa applicationDirPath()
 */
@@ -1661,12 +1722,14 @@ QString QCoreApplication::applicationFilePath()
 #if defined( Q_WS_WIN )
     QFileInfo filePath;
     QT_WA({
-        wchar_t module_name[256];
-        GetModuleFileNameW(0, module_name, sizeof(module_name) / sizeof(wchar_t));
+        wchar_t module_name[MAX_PATH+1];
+        GetModuleFileNameW(0, module_name, MAX_PATH);
+        module_name[MAX_PATH] = 0;
         filePath = QString::fromUtf16((ushort *)module_name);
     }, {
-        char module_name[256];
-        GetModuleFileNameA(0, module_name, sizeof(module_name));
+        char module_name[MAX_PATH+1];
+        GetModuleFileNameA(0, module_name, MAX_PATH);
+        module_name[MAX_PATH] = 0;
         filePath = QString::fromLocal8Bit(module_name);
     });
 
@@ -1783,8 +1846,9 @@ char **QCoreApplication::argv()
 
     Returns the list of command-line arguments.
 
-    arguments().at(0) is the program name, arguments().at(1) is the
-    first argument, and arguments().last() is the last argument.
+    Usually arguments().at(0) is the program name, arguments().at(1)
+    is the first argument, and arguments().last() is the last
+    argument. See the note below about Windows.
 
     Calling this function is slow - you should store the result in a variable
     when parsing the command line.
@@ -1801,6 +1865,10 @@ char **QCoreApplication::argv()
     the content does not support Unicode. Instead, the arguments() are constructed
     from the return value of
     \l{http://msdn2.microsoft.com/en-us/library/ms683156(VS.85).aspx}{GetCommandLine()}.
+    As a result of this, the string given by arguments().at(0) might not be
+    the program name on Windows, depending on how the application was started.
+
+    \sa applicationFilePath()
 */
 
 QStringList QCoreApplication::arguments()
@@ -1815,9 +1883,11 @@ QStringList QCoreApplication::arguments()
     QString cmdline = QT_WA_INLINE(QString::fromUtf16((unsigned short *)GetCommandLineW()), QString::fromLocal8Bit(GetCommandLineA()));
 
 #if defined(Q_OS_WINCE)
-    wchar_t tempFilename[512];
-    if (GetModuleFileNameW(0, tempFilename, 512))
+    wchar_t tempFilename[MAX_PATH+1];
+    if (GetModuleFileNameW(0, tempFilename, MAX_PATH)) {
+        tempFilename[MAX_PATH] = 0;
         cmdline.prepend(QString(QLatin1String("\"")) + QString::fromUtf16((unsigned short *)tempFilename) + QString(QLatin1String("\" ")));
+    }
 #endif // Q_OS_WINCE
 
     list = qWinCmdArgs(cmdline);
@@ -1829,13 +1899,15 @@ QStringList QCoreApplication::arguments()
             if (l1arg == "-qdevel" ||
                 l1arg == "-qdebug" ||
                 l1arg == "-reverse" ||
+                l1arg == "-stylesheet" ||
                 l1arg == "-widgetcount" ||
                 l1arg == "-direct3d")
                 ;
             else if (l1arg.startsWith("-style="))
                 ;
             else if (l1arg == "-style" ||
-                l1arg == "-session")
+                     l1arg == "-session" ||
+                     l1arg == "-graphicssystem")
                 ++a;
             else
                 stripped += arg;
@@ -2027,8 +2099,9 @@ void QCoreApplication::setLibraryPaths(const QStringList &paths)
 }
 
 /*!
-  Prepends \a path to the end of the library path list. If \a path is
-  empty or already in the path list, the path list is not changed.
+  Prepends \a path to the beginning of the library path list, ensuring that
+  it is searched for libraries first. If \a path is empty or already in the
+  path list, the path list is not changed.
 
   The default path list consists of a single entry, the installation
   directory for plugins.  The default installation directory for plugins

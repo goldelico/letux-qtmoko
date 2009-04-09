@@ -2,19 +2,19 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/emb-qvfb.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/emb-qvfb.qdoc -->
 <head>
-  <title>Qt 4.4: The Virtual Framebuffer</title>
+  <title>Qt 4.5: The Virtual Framebuffer</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">The Virtual Framebuffer<br /><span class="subtitle"></span>
 </h1>
-<p><a href="qt-embedded.html">Qt for Embedded Linux</a> applications write directly to the framebuffer, eliminating the need for the X Window System and saving memory. For development and debugging purposes, a virtual framebuffer can be used, allowing <a href="qt-embedded.html">Qt for Embedded Linux</a> programs to be developed on a desktop machine, without switching between consoles and X11.</p>
+<p><a href="qt-embedded-linux.html">Qt for Embedded Linux</a> applications write directly to the framebuffer, eliminating the need for the X Window System and saving memory. For development and debugging purposes, a virtual framebuffer can be used, allowing <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> programs to be developed on a desktop machine, without switching between consoles and X11.</p>
 <p>QVFb is an X11 application supplied with Qt for X11 that provides a virtual framebuffer for Qt for Embedded Linux to use. To use it, you need to <a href="install-x11.html">configure and install Qt on X11 platforms</a> appropriately. Further requirements can be found in the <a href="requirements-embedded-linux.html">Qt for Embedded Linux Requirements</a> document.</p>
 <p align="center"><img src="images/qt-embedded-virtualframebuffer.png" /></p><p>The virtual framebuffer emulates a framebuffer using a shared memory region and the <tt>qvfb</tt> tool to display the framebuffer in a window. The <tt>qvfb</tt> tool also supports a feature known as a skin which can be used to change the look and feel of the display. The tool is located in Qt's <tt>tools/qvfb</tt> directory, and provides several additional features accessible through its <b>File</b> and <b>View</b> menus.</p>
 <p>Please note that the virtual framebuffer is a development tool only. No security issues have been considered in the virtual framebuffer design. It should be avoided in a production environment; i.e&#x2e; do not configure production libraries with the <tt>-qvfb</tt> option.</p>
@@ -27,11 +27,11 @@
 </ul>
 <a name="displaying-the-virtual-framebuffer"></a>
 <h2>Displaying the Virtual Framebuffer</h2>
-<p>To run the <tt>qvfb</tt> tool displaying the virtual framebuffer, the <a href="qt-embedded.html">Qt for Embedded Linux</a> library must be configured and compiled with the <tt>-qvfb</tt> option:</p>
+<p>To run the <tt>qvfb</tt> tool displaying the virtual framebuffer, the <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> library must be configured and compiled with the <tt>-qvfb</tt> option:</p>
 <pre> cd path/to/QtEmbedded
  ./configure -qvfb
  make</pre>
-<p>Ensure that you have all the <a href="requirements-embedded-linux.html#additional-x11-libraries-for-qvfb">necessary libraries</a> needed to build the tool, then compile and run the <tt>qvfb</tt> tool as a normal Qt for X11 application (i.e&#x2e;, do <i>not</i> compile it as a <a href="qt-embedded.html">Qt for Embedded Linux</a> application):</p>
+<p>Ensure that you have all the <a href="requirements-embedded-linux.html#additional-x11-libraries-for-qvfb">necessary libraries</a> needed to build the tool, then compile and run the <tt>qvfb</tt> tool as a normal Qt for X11 application (i.e&#x2e;, do <i>not</i> compile it as a <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> application):</p>
 <pre> cd path/to/Qt/tools/qvfb
  make
  ./qvfb</pre>
@@ -42,7 +42,7 @@
 <tr valign="top" class="even"><td><tt>-height &lt;value&gt;</tt></td><td>The height of the virtual framebuffer (default: 320).</td></tr>
 <tr valign="top" class="odd"><td><tt>-depth &lt;value&gt;</tt></td><td>The depth of the virtual framebuffer (1, 8 or 32; default: 8).</td></tr>
 <tr valign="top" class="even"><td><tt>-nocursor</tt></td><td>Do not display the X11 cursor in the framebuffer window.</td></tr>
-<tr valign="top" class="odd"><td><tt>-qwsdisplay &lt;:id&gt;</tt></td><td>The <a href="qt-embedded.html">Qt for Embedded Linux</a> display ID (default: 0).</td></tr>
+<tr valign="top" class="odd"><td><tt>-qwsdisplay &lt;:id&gt;</tt></td><td>The <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> display ID (default: 0).</td></tr>
 <tr valign="top" class="even"><td><tt>-skin &lt;name&gt;.skin</tt></td><td>The preferred skin. Note that the skin must be located in Qt's <tt>/tools/qvfb/</tt> directory.</td></tr>
 <tr valign="top" class="odd"><td><tt>-zoom &lt;factor&gt;</tt></td><td>Scales the application view with the given factor.</td></tr>
 </table></p>
@@ -142,15 +142,15 @@
 <pre> cd path/to/QtEmbedded/examples/widgets/analogclock
  make
  ./analogclock -qws</pre>
-<p>Note that as long as the virtual framebuffer is running and the current <a href="qt-embedded.html">Qt for Embedded Linux</a> configuration supports <tt>qvfb</tt>, <a href="qt-embedded.html">Qt for Embedded Linux</a> will automatically detect it and use it by default. Alternatively, the <tt>-display</tt> option can be used to specify the virtual framebuffer driver. For example:</p>
+<p>Note that as long as the virtual framebuffer is running and the current <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> configuration supports <tt>qvfb</tt>, <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> will automatically detect it and use it by default. Alternatively, the <tt>-display</tt> option can be used to specify the virtual framebuffer driver. For example:</p>
 <pre> cd path/to/QtEmbedded/examples/widgets/analogclock
  make
  ./analogclock -qws -display QVFb:0</pre>
-<p><b>Warning:</b> If <tt>qvfb</tt> is not running (or the current <a href="qt-embedded.html">Qt for Embedded Linux</a> configuration doesn't support it) and the driver is not explicitly specified, <a href="qt-embedded.html">Qt for Embedded Linux</a> will write to the real framebuffer and the X11 display will be corrupted.</p>
+<p><b>Warning:</b> If <tt>qvfb</tt> is not running (or the current <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> configuration doesn't support it) and the driver is not explicitly specified, <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> will write to the real framebuffer and the X11 display will be corrupted.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

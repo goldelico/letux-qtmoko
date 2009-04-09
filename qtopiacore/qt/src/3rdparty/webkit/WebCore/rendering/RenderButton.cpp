@@ -27,7 +27,13 @@
 #include "GraphicsContext.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
-#include "RenderText.h"
+#include "RenderTextFragment.h"
+#include "RenderTheme.h"
+
+#if ENABLE(WML)
+#include "WMLDoElement.h"
+#include "WMLNames.h"
+#endif
 
 namespace WebCore {
 
@@ -37,6 +43,7 @@ RenderButton::RenderButton(Node* node)
     : RenderFlexibleBox(node)
     , m_buttonText(0)
     , m_inner(0)
+    , m_default(false)
 {
 }
 
@@ -46,7 +53,7 @@ void RenderButton::addChild(RenderObject* newChild, RenderObject* beforeChild)
         // Create an anonymous block.
         ASSERT(!firstChild());
         m_inner = createAnonymousBlock();
-        m_inner->style()->setBoxFlex(1.0f);
+        setupInnerStyle(m_inner->style());
         RenderFlexibleBox::addChild(m_inner);
     }
     
@@ -62,14 +69,47 @@ void RenderButton::removeChild(RenderObject* oldChild)
         m_inner->removeChild(oldChild);
 }
 
-void RenderButton::setStyle(RenderStyle* style)
+void RenderButton::styleWillChange(RenderStyle::Diff diff, const RenderStyle* newStyle)
 {
-    RenderBlock::setStyle(style);
+    if (m_inner) {
+        // RenderBlock::setStyle is going to apply a new style to the inner block, which
+        // will have the initial box flex value, 0. The current value is 1, because we set
+        // it right below. Here we change it back to 0 to avoid getting a spurious layout hint
+        // because of the difference.
+        m_inner->style()->setBoxFlex(0);
+    }
+    RenderBlock::styleWillChange(diff, newStyle);
+}
+
+void RenderButton::styleDidChange(RenderStyle::Diff diff, const RenderStyle* oldStyle)
+{
+    RenderBlock::styleDidChange(diff, oldStyle);
+
     if (m_buttonText)
-        m_buttonText->setStyle(style);
+        m_buttonText->setStyle(style());
     if (m_inner) // RenderBlock handled updating the anonymous block's style.
-        m_inner->style()->setBoxFlex(1.0f);
+        setupInnerStyle(m_inner->style());
     setReplaced(isInline());
+
+    if (!m_default && theme()->isDefault(this)) {
+        if (!m_timer)
+            m_timer.set(new Timer<RenderButton>(this, &RenderButton::timerFired));
+        m_timer->startRepeating(0.03);
+        m_default = true;
+    } else if (m_default && !theme()->isDefault(this)) {
+        m_default = false;
+        m_timer.clear();
+    }
+}
+
+void RenderButton::setupInnerStyle(RenderStyle* innerStyle) 
+{
+    ASSERT(innerStyle->refCount() == 1);
+    // RenderBlock::createAnonymousBlock creates a new RenderStyle, so this is
+    // safe to modify.
+    innerStyle->setBoxFlex(1.0f);
+    if (style()->hasAppearance())
+        theme()->adjustButtonInnerStyle(innerStyle);
 }
 
 void RenderButton::updateFromElement()
@@ -80,6 +120,19 @@ void RenderButton::updateFromElement()
         String value = input->valueWithDefault();
         setText(value);
     }
+
+
+#if ENABLE(WML)
+    else if (element()->hasTagName(WMLNames::doTag)) {
+        WMLDoElement* doElement = static_cast<WMLDoElement*>(element());
+
+        String value = doElement->label();
+        if (value.isEmpty())
+            value = doElement->name();
+
+        setText(value);
+    }
+#endif
 }
 
 bool RenderButton::canHaveChildren() const
@@ -101,7 +154,7 @@ void RenderButton::setText(const String& str)
         if (m_buttonText)
             m_buttonText->setText(str.impl());
         else {
-            m_buttonText = new (renderArena()) RenderText(document(), str.impl());
+            m_buttonText = new (renderArena()) RenderTextFragment(document(), str.impl());
             m_buttonText->setStyle(style());
             addChild(m_buttonText);
         }
@@ -122,5 +175,9 @@ IntRect RenderButton::controlClipRect(int tx, int ty) const
     return IntRect(tx + borderLeft(), ty + borderTop(), m_width - borderLeft() - borderRight(), m_height - borderTop() - borderBottom());
 }
 
+void RenderButton::timerFired(Timer<RenderButton>*)
+{
+    repaint();
+}
 
 } // namespace WebCore

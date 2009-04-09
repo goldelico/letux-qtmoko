@@ -25,240 +25,274 @@
 #include <wtf/GetPtr.h>
 
 #include "Clipboard.h"
-#include "EventTargetNode.h"
-#include "ExceptionCode.h"
+#include "EventTarget.h"
+#include "JSClipboard.h"
 #include "JSDOMWindow.h"
+#include "JSEventTarget.h"
 #include "JSEventTargetNode.h"
 #include "JSNode.h"
 #include "MouseEvent.h"
 #include "Node.h"
-#include "kjs_dom.h"
-#include "kjs_events.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSMouseEvent)
+
 /* Hash table */
 
-static const HashEntry JSMouseEventTableEntries[] =
+static const HashTableValue JSMouseEventTableValues[19] =
 {
-    { "metaKey", JSMouseEvent::MetaKeyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "toElement", JSMouseEvent::ToElementAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "relatedTarget", JSMouseEvent::RelatedTargetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSMouseEvent::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "clientY", JSMouseEvent::ClientYAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[19] },
-    { "screenX", JSMouseEvent::ScreenXAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[20] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "screenY", JSMouseEvent::ScreenYAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[17] },
-    { 0, 0, 0, 0, 0 },
-    { "dataTransfer", JSMouseEvent::DataTransferAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "offsetY", JSMouseEvent::OffsetYAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[24] },
-    { "clientX", JSMouseEvent::ClientXAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[18] },
-    { "ctrlKey", JSMouseEvent::CtrlKeyAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[21] },
-    { "shiftKey", JSMouseEvent::ShiftKeyAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[22] },
-    { "altKey", JSMouseEvent::AltKeyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "button", JSMouseEvent::ButtonAttrNum, DontDelete|ReadOnly, 0, &JSMouseEventTableEntries[23] },
-    { "offsetX", JSMouseEvent::OffsetXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSMouseEvent::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "fromElement", JSMouseEvent::FromElementAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "screenX", DontDelete|ReadOnly, (intptr_t)jsMouseEventScreenX, (intptr_t)0 },
+    { "screenY", DontDelete|ReadOnly, (intptr_t)jsMouseEventScreenY, (intptr_t)0 },
+    { "clientX", DontDelete|ReadOnly, (intptr_t)jsMouseEventClientX, (intptr_t)0 },
+    { "clientY", DontDelete|ReadOnly, (intptr_t)jsMouseEventClientY, (intptr_t)0 },
+    { "ctrlKey", DontDelete|ReadOnly, (intptr_t)jsMouseEventCtrlKey, (intptr_t)0 },
+    { "shiftKey", DontDelete|ReadOnly, (intptr_t)jsMouseEventShiftKey, (intptr_t)0 },
+    { "altKey", DontDelete|ReadOnly, (intptr_t)jsMouseEventAltKey, (intptr_t)0 },
+    { "metaKey", DontDelete|ReadOnly, (intptr_t)jsMouseEventMetaKey, (intptr_t)0 },
+    { "button", DontDelete|ReadOnly, (intptr_t)jsMouseEventButton, (intptr_t)0 },
+    { "relatedTarget", DontDelete|ReadOnly, (intptr_t)jsMouseEventRelatedTarget, (intptr_t)0 },
+    { "offsetX", DontDelete|ReadOnly, (intptr_t)jsMouseEventOffsetX, (intptr_t)0 },
+    { "offsetY", DontDelete|ReadOnly, (intptr_t)jsMouseEventOffsetY, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsMouseEventX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsMouseEventY, (intptr_t)0 },
+    { "fromElement", DontDelete|ReadOnly, (intptr_t)jsMouseEventFromElement, (intptr_t)0 },
+    { "toElement", DontDelete|ReadOnly, (intptr_t)jsMouseEventToElement, (intptr_t)0 },
+    { "dataTransfer", DontDelete|ReadOnly, (intptr_t)jsMouseEventDataTransfer, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsMouseEventConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSMouseEventTable = 
+static const HashTable JSMouseEventTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSMouseEventTableValues, 0 };
+#else
+    { 65, 63, JSMouseEventTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSMouseEventConstructorTableValues[1] =
 {
-    2, 25, JSMouseEventTableEntries, 17
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSMouseEventConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSMouseEventConstructorTableValues, 0 };
+#else
+    { 1, 0, JSMouseEventConstructorTableValues, 0 };
+#endif
+
+class JSMouseEventConstructor : public DOMObject {
+public:
+    JSMouseEventConstructor(ExecState* exec)
+        : DOMObject(JSMouseEventConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSMouseEventPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSMouseEventConstructor::s_info = { "MouseEventConstructor", 0, &JSMouseEventConstructorTable, 0 };
+
+bool JSMouseEventConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSMouseEventConstructor, DOMObject>(exec, &JSMouseEventConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSMouseEventPrototypeTableEntries[] =
+static const HashTableValue JSMouseEventPrototypeTableValues[2] =
 {
-    { "initMouseEvent", JSMouseEvent::InitMouseEventFuncNum, DontDelete|Function, 15, 0 }
+    { "initMouseEvent", DontDelete|Function, (intptr_t)jsMouseEventPrototypeFunctionInitMouseEvent, (intptr_t)15 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSMouseEventPrototypeTable = 
-{
-    2, 1, JSMouseEventPrototypeTableEntries, 1
-};
+static const HashTable JSMouseEventPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSMouseEventPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSMouseEventPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSMouseEventPrototype::info = { "MouseEventPrototype", 0, &JSMouseEventPrototypeTable, 0 };
+const ClassInfo JSMouseEventPrototype::s_info = { "MouseEventPrototype", 0, &JSMouseEventPrototypeTable, 0 };
 
 JSObject* JSMouseEventPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSMouseEventPrototype>(exec, "[[JSMouseEvent.prototype]]");
+    return getDOMPrototype<JSMouseEvent>(exec);
 }
 
 bool JSMouseEventPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSMouseEventPrototypeFunction, JSObject>(exec, &JSMouseEventPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSMouseEventPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSMouseEvent::info = { "MouseEvent", &JSUIEvent::info, &JSMouseEventTable, 0 };
+const ClassInfo JSMouseEvent::s_info = { "MouseEvent", &JSUIEvent::s_info, &JSMouseEventTable, 0 };
 
-JSMouseEvent::JSMouseEvent(ExecState* exec, MouseEvent* impl)
-    : JSUIEvent(exec, impl)
+JSMouseEvent::JSMouseEvent(PassRefPtr<Structure> structure, PassRefPtr<MouseEvent> impl)
+    : JSUIEvent(structure, impl)
 {
-    setPrototype(JSMouseEventPrototype::self(exec));
+}
+
+JSObject* JSMouseEvent::createPrototype(ExecState* exec)
+{
+    return new (exec) JSMouseEventPrototype(JSMouseEventPrototype::createStructure(JSUIEventPrototype::self(exec)));
 }
 
 bool JSMouseEvent::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSMouseEvent, JSUIEvent>(exec, &JSMouseEventTable, this, propertyName, slot);
+    return getStaticValueSlot<JSMouseEvent, Base>(exec, &JSMouseEventTable, this, propertyName, slot);
 }
 
-JSValue* JSMouseEvent::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsMouseEventScreenX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ScreenXAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->screenX());
-    }
-    case ScreenYAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->screenY());
-    }
-    case ClientXAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->clientX());
-    }
-    case ClientYAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->clientY());
-    }
-    case CtrlKeyAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsBoolean(imp->ctrlKey());
-    }
-    case ShiftKeyAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsBoolean(imp->shiftKey());
-    }
-    case AltKeyAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsBoolean(imp->altKey());
-    }
-    case MetaKeyAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsBoolean(imp->metaKey());
-    }
-    case ButtonAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->button());
-    }
-    case RelatedTargetAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->relatedTarget()));
-    }
-    case OffsetXAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->offsetX());
-    }
-    case OffsetYAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->offsetY());
-    }
-    case XAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->x());
-    }
-    case YAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return jsNumber(imp->y());
-    }
-    case FromElementAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->fromElement()));
-    }
-    case ToElementAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->toElement()));
-    }
-    case DataTransferAttrNum: {
-        MouseEvent* imp = static_cast<MouseEvent*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->dataTransfer()));
-    }
-    }
-    return 0;
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->screenX());
 }
 
-JSValue* JSMouseEventPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsMouseEventScreenY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSMouseEvent::info))
-      return throwError(exec, TypeError);
-
-    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(thisObj)->impl());
-
-    switch (id) {
-    case JSMouseEvent::InitMouseEventFuncNum: {
-        AtomicString type = args[0]->toString(exec);
-        bool canBubble = args[1]->toBoolean(exec);
-        bool cancelable = args[2]->toBoolean(exec);
-        DOMWindow* view = toDOMWindow(args[3]);
-        bool detailOk;
-        int detail = args[4]->toInt32(exec, detailOk);
-        if (!detailOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool screenXOk;
-        int screenX = args[5]->toInt32(exec, screenXOk);
-        if (!screenXOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool screenYOk;
-        int screenY = args[6]->toInt32(exec, screenYOk);
-        if (!screenYOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool clientXOk;
-        int clientX = args[7]->toInt32(exec, clientXOk);
-        if (!clientXOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool clientYOk;
-        int clientY = args[8]->toInt32(exec, clientYOk);
-        if (!clientYOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool ctrlKey = args[9]->toBoolean(exec);
-        bool altKey = args[10]->toBoolean(exec);
-        bool shiftKey = args[11]->toBoolean(exec);
-        bool metaKey = args[12]->toBoolean(exec);
-        unsigned short button = args[13]->toInt32(exec);
-        EventTargetNode* relatedTarget = toEventTargetNode(args[14]);
-
-        imp->initMouseEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->screenY());
 }
+
+JSValuePtr jsMouseEventClientX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientX());
+}
+
+JSValuePtr jsMouseEventClientY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientY());
+}
+
+JSValuePtr jsMouseEventCtrlKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->ctrlKey());
+}
+
+JSValuePtr jsMouseEventShiftKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->shiftKey());
+}
+
+JSValuePtr jsMouseEventAltKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->altKey());
+}
+
+JSValuePtr jsMouseEventMetaKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->metaKey());
+}
+
+JSValuePtr jsMouseEventButton(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->button());
+}
+
+JSValuePtr jsMouseEventRelatedTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->relatedTarget()));
+}
+
+JSValuePtr jsMouseEventOffsetX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetX());
+}
+
+JSValuePtr jsMouseEventOffsetY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetY());
+}
+
+JSValuePtr jsMouseEventX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->x());
+}
+
+JSValuePtr jsMouseEventY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->y());
+}
+
+JSValuePtr jsMouseEventFromElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->fromElement()));
+}
+
+JSValuePtr jsMouseEventToElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->toElement()));
+}
+
+JSValuePtr jsMouseEventDataTransfer(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    MouseEvent* imp = static_cast<MouseEvent*>(static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->dataTransfer()));
+}
+
+JSValuePtr jsMouseEventConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSMouseEvent*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSMouseEvent::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSMouseEventConstructor>(exec);
+}
+
+JSValuePtr jsMouseEventPrototypeFunctionInitMouseEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSMouseEvent::s_info))
+        return throwError(exec, TypeError);
+    JSMouseEvent* castedThisObj = static_cast<JSMouseEvent*>(asObject(thisValue));
+    MouseEvent* imp = static_cast<MouseEvent*>(castedThisObj->impl());
+    const UString& type = args.at(exec, 0)->toString(exec);
+    bool canBubble = args.at(exec, 1)->toBoolean(exec);
+    bool cancelable = args.at(exec, 2)->toBoolean(exec);
+    DOMWindow* view = toDOMWindow(args.at(exec, 3));
+    int detail = args.at(exec, 4)->toInt32(exec);
+    int screenX = args.at(exec, 5)->toInt32(exec);
+    int screenY = args.at(exec, 6)->toInt32(exec);
+    int clientX = args.at(exec, 7)->toInt32(exec);
+    int clientY = args.at(exec, 8)->toInt32(exec);
+    bool ctrlKey = args.at(exec, 9)->toBoolean(exec);
+    bool altKey = args.at(exec, 10)->toBoolean(exec);
+    bool shiftKey = args.at(exec, 11)->toBoolean(exec);
+    bool metaKey = args.at(exec, 12)->toBoolean(exec);
+    unsigned short button = args.at(exec, 13)->toInt32(exec);
+    EventTargetNode* relatedTarget = toEventTargetNode(args.at(exec, 14));
+
+    imp->initMouseEvent(type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey, button, relatedTarget);
+    return jsUndefined();
+}
+
 
 }

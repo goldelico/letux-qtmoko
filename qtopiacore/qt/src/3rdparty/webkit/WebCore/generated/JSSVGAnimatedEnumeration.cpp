@@ -23,127 +23,114 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedEnumeration.h"
 
 #include <wtf/GetPtr.h>
 
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedEnumeration)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedEnumerationTableEntries[] =
+static const HashTableValue JSSVGAnimatedEnumerationTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedEnumeration::BaseValAttrNum, DontDelete, 0, 0 },
-    { "animVal", JSSVGAnimatedEnumeration::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete, (intptr_t)jsSVGAnimatedEnumerationBaseVal, (intptr_t)setJSSVGAnimatedEnumerationBaseVal },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedEnumerationAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedEnumerationTable = 
-{
-    2, 2, JSSVGAnimatedEnumerationTableEntries, 2
-};
+static const HashTable JSSVGAnimatedEnumerationTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedEnumerationTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedEnumerationTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedEnumerationPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedEnumerationPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedEnumerationPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedEnumerationPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedEnumerationPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedEnumerationPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedEnumerationPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedEnumerationPrototype::info = { "SVGAnimatedEnumerationPrototype", 0, &JSSVGAnimatedEnumerationPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedEnumerationPrototype::s_info = { "SVGAnimatedEnumerationPrototype", 0, &JSSVGAnimatedEnumerationPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedEnumerationPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedEnumerationPrototype>(exec, "[[JSSVGAnimatedEnumeration.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedEnumeration>(exec);
 }
 
-const ClassInfo JSSVGAnimatedEnumeration::info = { "SVGAnimatedEnumeration", 0, &JSSVGAnimatedEnumerationTable, 0 };
+const ClassInfo JSSVGAnimatedEnumeration::s_info = { "SVGAnimatedEnumeration", 0, &JSSVGAnimatedEnumerationTable, 0 };
 
-JSSVGAnimatedEnumeration::JSSVGAnimatedEnumeration(ExecState* exec, SVGAnimatedEnumeration* impl)
-    : m_impl(impl)
+JSSVGAnimatedEnumeration::JSSVGAnimatedEnumeration(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedEnumeration> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedEnumerationPrototype::self(exec));
 }
 
 JSSVGAnimatedEnumeration::~JSSVGAnimatedEnumeration()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedEnumeration>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedEnumeration::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedEnumerationPrototype(JSSVGAnimatedEnumerationPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedEnumeration::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedEnumeration, KJS::DOMObject>(exec, &JSSVGAnimatedEnumerationTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedEnumeration, Base>(exec, &JSSVGAnimatedEnumerationTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedEnumeration::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedEnumerationBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(impl());
-
-        return jsNumber(imp->baseVal());
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(impl());
-
-        return jsNumber(imp->animVal());
-    }
-    }
-    return 0;
+    SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(static_cast<JSSVGAnimatedEnumeration*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->baseVal());
 }
 
-void JSSVGAnimatedEnumeration::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGAnimatedEnumerationAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGAnimatedEnumeration, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGAnimatedEnumerationTable, this);
+    SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(static_cast<JSSVGAnimatedEnumeration*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->animVal());
 }
 
-void JSSVGAnimatedEnumeration::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGAnimatedEnumeration::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(impl());
-
-        imp->setBaseVal(value->toInt32(exec));
-        break;
-    }
-    }
-    SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGAnimatedEnumeration>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGAnimatedEnumeration>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+    lookupPut<JSSVGAnimatedEnumeration, Base>(exec, propertyName, value, &JSSVGAnimatedEnumerationTable, this, slot);
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedEnumeration* obj)
+void setJSSVGAnimatedEnumerationBaseVal(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<SVGAnimatedEnumeration, JSSVGAnimatedEnumeration>(exec, obj);
+    SVGAnimatedEnumeration* imp = static_cast<SVGAnimatedEnumeration*>(static_cast<JSSVGAnimatedEnumeration*>(thisObject)->impl());
+    imp->setBaseVal(value->toInt32(exec));
+    if (static_cast<JSSVGAnimatedEnumeration*>(thisObject)->context())
+        static_cast<JSSVGAnimatedEnumeration*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGAnimatedEnumeration*>(thisObject)->impl()->associatedAttributeName());
 }
-SVGAnimatedEnumeration* toSVGAnimatedEnumeration(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedEnumeration* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedEnumeration::info) ? static_cast<JSSVGAnimatedEnumeration*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedEnumeration>(exec, object, context);
+}
+SVGAnimatedEnumeration* toSVGAnimatedEnumeration(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedEnumeration::s_info) ? static_cast<JSSVGAnimatedEnumeration*>(asObject(value))->impl() : 0;
 }
 
 }

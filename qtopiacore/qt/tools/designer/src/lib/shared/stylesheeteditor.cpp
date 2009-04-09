@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,8 @@ TRANSLATOR qdesigner_internal::StyleSheetEditorDialog
 #include "qtgradientviewdialog.h"
 #include "qtgradientutils.h"
 #include "qdesigner_integration_p.h"
+#include "qdesigner_utils_p.h"
+#include "abstractsettings_p.h"
 
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerFormWindowCursorInterface>
@@ -68,6 +74,8 @@ TRANSLATOR qdesigner_internal::StyleSheetEditorDialog
 QT_BEGIN_NAMESPACE
 
 static const char *styleSheetProperty = "styleSheet";
+static const char *StyleSheetDialogC = "StyleSheetDialog";
+static const char *Geometry = "Geometry";
 
 namespace qdesigner_internal {
 
@@ -183,6 +191,23 @@ StyleSheetEditorDialog::StyleSheetEditorDialog(QDesignerFormEditorInterface *cor
     toolBar->addAction(m_addFontAction);
 
     m_editor->setFocus();
+
+    QDesignerSettingsInterface *settings = core->settingsManager();
+    settings->beginGroup(QLatin1String(StyleSheetDialogC));
+
+    if (settings->contains(QLatin1String(Geometry)))
+        restoreGeometry(settings->value(QLatin1String(Geometry)).toByteArray());
+
+    settings->endGroup();
+}
+
+StyleSheetEditorDialog::~StyleSheetEditorDialog()
+{
+    QDesignerSettingsInterface *settings = m_core->settingsManager();
+    settings->beginGroup(QLatin1String(StyleSheetDialogC));
+
+    settings->setValue(QLatin1String(Geometry), saveGeometry());
+    settings->endGroup();
 }
 
 void StyleSheetEditorDialog::setOkButtonEnabled(bool v)
@@ -206,7 +231,7 @@ void StyleSheetEditorDialog::slotAddResource(const QString &property)
 {
     const QString path = IconSelector::choosePixmapResource(m_core, m_core->resourceModel(), QString(), this);
     if (!path.isEmpty())
-        insertCssProperty(property, QString("url(%1)").arg(path));
+        insertCssProperty(property, QString(QLatin1String("url(%1)")).arg(path));
 }
 
 void StyleSheetEditorDialog::slotAddGradient(const QString &property)
@@ -229,10 +254,10 @@ void StyleSheetEditorDialog::slotAddColor(const QString &property)
     QString colorStr;
 
     if (color.alpha() == 255) {
-        colorStr = QString("rgb(%1, %2, %3)").arg(
+        colorStr = QString(QLatin1String("rgb(%1, %2, %3)")).arg(
                 color.red()).arg(color.green()).arg(color.blue());
     } else {
-        colorStr = QString("rgba(%1, %2, %3, %4)").arg(
+        colorStr = QString(QLatin1String("rgba(%1, %2, %3, %4)")).arg(
                 color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha());
     }
 
@@ -374,12 +399,15 @@ StyleSheetPropertyEditorDialog::StyleSheetPropertyEditorDialog(QWidget *parent,
     QDesignerPropertySheetExtension *sheet =
             qt_extension<QDesignerPropertySheetExtension*>(m_fw->core()->extensionManager(), m_widget);
     Q_ASSERT(sheet != 0);
-    setText(sheet->property(sheet->indexOf(QLatin1String(styleSheetProperty))).toString());
+    const int index = sheet->indexOf(QLatin1String(styleSheetProperty));
+    const PropertySheetStringValue value = qVariantValue<PropertySheetStringValue>(sheet->property(index));
+    setText(value.value());
 }
 
 void StyleSheetPropertyEditorDialog::applyStyleSheet()
 {
-    m_fw->cursor()->setWidgetProperty(m_widget, QLatin1String(styleSheetProperty), QVariant(text()));
+    const PropertySheetStringValue value(text(), false);
+    m_fw->cursor()->setWidgetProperty(m_widget, QLatin1String(styleSheetProperty), qVariantFromValue(value));
 }
 
 } // namespace qdesigner_internal

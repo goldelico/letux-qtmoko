@@ -23,137 +23,144 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGDescElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedString.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGDescElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGDescElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGDescElementTableEntries[] =
+static const HashTableValue JSSVGDescElementTableValues[5] =
 {
-    { "xmllang", JSSVGDescElement::XmllangAttrNum, DontDelete, 0, &JSSVGDescElementTableEntries[4] },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSSVGDescElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "xmlspace", JSSVGDescElement::XmlspaceAttrNum, DontDelete, 0, &JSSVGDescElementTableEntries[5] },
-    { "style", JSSVGDescElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "xmllang", DontDelete, (intptr_t)jsSVGDescElementXmllang, (intptr_t)setJSSVGDescElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGDescElementXmlspace, (intptr_t)setJSSVGDescElementXmlspace },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGDescElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGDescElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGDescElementTable = 
-{
-    2, 6, JSSVGDescElementTableEntries, 4
-};
+static const HashTable JSSVGDescElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGDescElementTableValues, 0 };
+#else
+    { 9, 7, JSSVGDescElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGDescElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGDescElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGDescElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGDescElementPrototypeTable = 
-{
-    2, 1, JSSVGDescElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGDescElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGDescElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGDescElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGDescElementPrototype::info = { "SVGDescElementPrototype", 0, &JSSVGDescElementPrototypeTable, 0 };
+const ClassInfo JSSVGDescElementPrototype::s_info = { "SVGDescElementPrototype", 0, &JSSVGDescElementPrototypeTable, 0 };
 
 JSObject* JSSVGDescElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGDescElementPrototype>(exec, "[[JSSVGDescElement.prototype]]");
+    return getDOMPrototype<JSSVGDescElement>(exec);
 }
 
-const ClassInfo JSSVGDescElement::info = { "SVGDescElement", &JSSVGElement::info, &JSSVGDescElementTable, 0 };
-
-JSSVGDescElement::JSSVGDescElement(ExecState* exec, SVGDescElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGDescElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGDescElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGDescElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGDescElement::s_info = { "SVGDescElement", &JSSVGElement::s_info, &JSSVGDescElementTable, 0 };
+
+JSSVGDescElement::JSSVGDescElement(PassRefPtr<Structure> structure, PassRefPtr<SVGDescElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGDescElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGDescElementPrototype(JSSVGDescElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGDescElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGDescElement, JSSVGElement>(exec, &JSSVGDescElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGDescElement, Base>(exec, &JSSVGDescElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGDescElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGDescElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ClassNameAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
 }
 
-void JSSVGDescElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGDescElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGDescElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGDescElementTable, this);
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
 }
 
-void JSSVGDescElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGDescElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGDescElement* imp = static_cast<SVGDescElement*>(impl());
+JSValuePtr jsSVGDescElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+void JSSVGDescElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGDescElement, Base>(exec, propertyName, value, &JSSVGDescElementTable, this, slot);
+}
+
+void setJSSVGDescElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGDescElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGDescElement* imp = static_cast<SVGDescElement*>(static_cast<JSSVGDescElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr jsSVGDescElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGDescElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGDescElement* castedThisObj = static_cast<JSSVGDescElement*>(asObject(thisValue));
+    SVGDescElement* imp = static_cast<SVGDescElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 

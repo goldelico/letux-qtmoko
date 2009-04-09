@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/videoplayer.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/videoplayer.h"

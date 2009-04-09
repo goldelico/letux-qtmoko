@@ -24,8 +24,12 @@
 #define RenderButton_h
 
 #include "RenderFlexibleBox.h"
+#include "Timer.h"
+#include <wtf/OwnPtr.h>
 
 namespace WebCore {
+
+class RenderTextFragment;
 
 // RenderButtons are just like normal flexboxes except that they will generate an anonymous block child.
 // For inputs, they will also generate an anonymous RenderText and keep its style and content up
@@ -41,7 +45,7 @@ public:
     virtual void removeLeftoverAnonymousBlock(RenderBlock*) { }
     virtual bool createsAnonymousWrapper() const { return true; }
 
-    virtual void setStyle(RenderStyle*);
+    void setupInnerStyle(RenderStyle*);
     virtual void updateFromElement();
 
     virtual void updateBeforeAfterContent(RenderStyle::PseudoId);
@@ -54,10 +58,18 @@ public:
     virtual bool canHaveChildren() const;
 
 protected:
+    virtual void styleWillChange(RenderStyle::Diff, const RenderStyle* newStyle);
+    virtual void styleDidChange(RenderStyle::Diff, const RenderStyle* oldStyle);
+
     virtual bool hasLineIfEmpty() const { return true; }
 
-    RenderText* m_buttonText;
+    void timerFired(Timer<RenderButton>*);
+
+    RenderTextFragment* m_buttonText;
     RenderBlock* m_inner;
+
+    OwnPtr<Timer<RenderButton> > m_timer;
+    bool m_default;
 };
 
 } // namespace WebCore

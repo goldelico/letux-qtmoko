@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/medianode.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/medianode.h"

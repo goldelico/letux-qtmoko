@@ -78,7 +78,7 @@ public:
     It can be used in various applications to display web content live from the
     Internet.
 
-    The image below shows QWebView previewed in \QD with the Nokia website.
+    The image below shows QWebView previewed in \QD with the Trolltech website.
 
     \image qwebview-url.png
 
@@ -156,15 +156,10 @@ QWebView::QWebView(QWidget *parent)
 {
     d = new QWebViewPrivate(this);
 
-    QPalette pal = palette();
-    pal.setBrush(QPalette::Background, Qt::white);
-
-    setAttribute(Qt::WA_OpaquePaintEvent);
 #if !defined(Q_WS_QWS)
     setAttribute(Qt::WA_InputMethodEnabled);
 #endif
 
-    setPalette(pal);
     setAcceptDrops(true);
 
     setMouseTracking(true);
@@ -245,6 +240,7 @@ void QWebView::setPage(QWebPage *page)
         connect(d->page, SIGNAL(microFocusChanged()),
                 this, SLOT(updateMicroFocus()));
     }
+    setAttribute(Qt::WA_OpaquePaintEvent, d->page);
     update();
 }
 
@@ -290,8 +286,8 @@ void QWebView::load(const QNetworkRequest &request,
 /*!
     Sets the content of the web view to the specified \a html.
 
-    External objects referenced in the HTML document are located relative to
-    \a baseUrl.
+    External objects such as stylesheets or images referenced in the HTML
+    document are located relative to \a baseUrl.
 
     When using this method, WebKit assumes that external resources such as
     JavaScript programs or style sheets are encoded in UTF-8 unless otherwise
@@ -486,17 +482,47 @@ QSize QWebView::sizeHint() const
 }
 
 /*!
+    \property QWebView::zoomFactor
+    \since 4.5
+    \brief the zoom factor for the view
+*/
+
+void QWebView::setZoomFactor(qreal factor)
+{
+    page()->mainFrame()->setZoomFactor(factor);
+}
+
+qreal QWebView::zoomFactor() const
+{
+    return page()->mainFrame()->zoomFactor();
+}
+
+/*!
   \property QWebView::textSizeMultiplier
   \brief the scaling factor for all text in the frame
+  \obsolete
+
+  Use setZoomFactor instead, in combination with the
+  ZoomTextOnly attribute in QWebSettings.
+
+  \note Setting this property also enables the
+  ZoomTextOnly attribute in QWebSettings.
 
   By default, this property contains a value of 1.0.
 */
 
+/*!
+    Sets the value of the multiplier used to scale the text in a Web page to
+    the \a factor specified.
+*/
 void QWebView::setTextSizeMultiplier(qreal factor)
 {
     page()->mainFrame()->setTextSizeMultiplier(factor);
 }
 
+/*!
+    Returns the value of the multiplier used to scale the text in a Web page.
+*/
 qreal QWebView::textSizeMultiplier() const
 {
     return page()->mainFrame()->textSizeMultiplier();
@@ -523,6 +549,8 @@ bool QWebView::event(QEvent *e)
     if (d->page) {
 #ifndef QT_NO_CONTEXTMENU
         if (e->type() == QEvent::ContextMenu) {
+            if (!isEnabled())
+                return false;
             QContextMenuEvent *event = static_cast<QContextMenuEvent *>(e);
             if (d->page->swallowContextMenuEvent(event)) {
                 e->accept();
@@ -673,32 +701,44 @@ QWebView *QWebView::createWindow(QWebPage::WebWindowType type)
 */
 void QWebView::mouseMoveEvent(QMouseEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
+        ev->setAccepted(accepted);
+    }
 }
 
 /*! \reimp
 */
 void QWebView::mousePressEvent(QMouseEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
+        ev->setAccepted(accepted);
+    }
 }
 
 /*! \reimp
 */
 void QWebView::mouseDoubleClickEvent(QMouseEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
+        ev->setAccepted(accepted);
+    }
 }
 
 /*! \reimp
 */
 void QWebView::mouseReleaseEvent(QMouseEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
+        ev->setAccepted(accepted);
+    }
 }
 
 #ifndef QT_NO_CONTEXTMENU
@@ -706,8 +746,11 @@ void QWebView::mouseReleaseEvent(QMouseEvent* ev)
 */
 void QWebView::contextMenuEvent(QContextMenuEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
+        ev->setAccepted(accepted);
+    }
 }
 #endif // QT_NO_CONTEXTMENU
 
@@ -716,11 +759,11 @@ void QWebView::contextMenuEvent(QContextMenuEvent* ev)
 */
 void QWebView::wheelEvent(QWheelEvent* ev)
 {
-    if (d->page)
+    if (d->page) {
+        const bool accepted = ev->isAccepted();
         d->page->event(ev);
-
-    if (!ev->isAccepted())
-        return QWidget::wheelEvent(ev);
+        ev->setAccepted(accepted);
+    }
 }
 #endif // QT_NO_WHEELEVENT
 
@@ -750,16 +793,18 @@ void QWebView::focusInEvent(QFocusEvent* ev)
 {
     if (d->page)
         d->page->event(ev);
-    QWidget::focusInEvent(ev);
+    else
+        QWidget::focusInEvent(ev);
 }
 
 /*! \reimp
 */
 void QWebView::focusOutEvent(QFocusEvent* ev)
 {
-    QWidget::focusOutEvent(ev);
     if (d->page)
         d->page->event(ev);
+    else
+        QWidget::focusOutEvent(ev);
 }
 
 /*! \reimp

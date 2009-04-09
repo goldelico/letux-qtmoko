@@ -29,6 +29,7 @@ HEADERS += \
 	itemviews/qabstractproxymodel_p.h \
 	itemviews/qsortfilterproxymodel.h \
 	itemviews/qitemeditorfactory.h \
+	itemviews/qitemeditorfactory_p.h \
 	itemviews/qstandarditemmodel.h \
 	itemviews/qstandarditemmodel_p.h \
 	itemviews/qstringlistmodel.h \

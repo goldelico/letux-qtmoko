@@ -3,57 +3,60 @@
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <title>Qt 4.4: mediaplayer.cpp Example File (demos/mediaplayer/mediaplayer.cpp)</title>
+  <title>Qt 4.5: mediaplayer.cpp Example File (demos/mediaplayer/mediaplayer.cpp)</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">mediaplayer.cpp Example File<br /><span class="small-subtitle">demos/mediaplayer/mediaplayer.cpp</span>
 </h1>
 <pre><span class="comment"> /****************************************************************************
  **
- ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+ ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
  ** This file is part of the demonstration applications of the Qt Toolkit.
  **
+ ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
  ** Licensees holding valid Qt Commercial licenses may use this file in
  ** accordance with the Qt Commercial License Agreement provided with the
  ** Software or, alternatively, in accordance with the terms contained in
  ** a written agreement between you and Nokia.
  **
+ ** GNU Lesser General Public License Usage
+ ** Alternatively, this file may be used under the terms of the GNU Lesser
+ ** General Public License version 2.1 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.LGPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU Lesser General Public License version 2.1 requirements
+ ** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+ **
+ ** In addition, as a special exception, Nokia gives you certain
+ ** additional rights. These rights are described in the Nokia Qt LGPL
+ ** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+ ** package.
  **
  ** GNU General Public License Usage
  ** Alternatively, this file may be used under the terms of the GNU
- ** General Public License versions 2.0 or 3.0 as published by the Free
- ** Software Foundation and appearing in the file LICENSE.GPL included in
- ** the packaging of this file.  Please review the following information
- ** to ensure GNU General Public Licensing requirements will be met:
- ** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
- ** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
- ** exception, Nokia gives you certain additional rights. These rights
- ** are described in the Nokia Qt GPL Exception version 1.3, included in
- ** the file GPL_EXCEPTION.txt in this package.
- **
- ** Qt for Windows(R) Licensees
- ** As a special exception, Nokia, as the sole copyright holder for Qt
- ** Designer, grants users of the Qt/Eclipse Integration plug-in the
- ** right for the Qt/Eclipse Integration to link to functionality
- ** provided by Qt Designer and its related libraries.
+ ** General Public License version 3.0 as published by the Free Software
+ ** Foundation and appearing in the file LICENSE.GPL included in the
+ ** packaging of this file.  Please review the following information to
+ ** ensure the GNU General Public License version 3.0 requirements will be
+ ** met: http://www.gnu.org/copyleft/gpl.html.
  **
  ** If you are unsure which license is appropriate for your use, please
  ** contact the sales department at qt-sales@nokia.com.
+ ** $QT_END_LICENSE$
  **
  ***************************************************************************/</span>
 
  #include &lt;QtGui&gt;
 
  #define SLIDER_RANGE 8
- #define TICKINTERVAL 4
 
  #include &quot;mediaplayer.h&quot;
  #include &quot;ui_settings.h&quot;
@@ -104,7 +107,9 @@
              e-&gt;ignore();
              return true;
          case QEvent::MouseMove:
+ #ifndef QT_NO_CURSOR
              unsetCursor();
+ #endif
              <span class="comment">//fall through</span>
          case QEvent::WindowStateChange:
              {
@@ -115,7 +120,9 @@
                      m_timer.start(1000, this);
                  } else {
                      m_timer.stop();
+ #ifndef QT_NO_CURSOR
                      unsetCursor();
+ #endif
                  }
              }
              break;
@@ -130,7 +137,9 @@
      {
          if (e-&gt;timerId() == m_timer.timerId()) {
              <span class="comment">//let's store the cursor shape</span>
+ #ifndef QT_NO_CURSOR
              setCursor(Qt::BlankCursor);
+ #endif
          }
          Phonon::VideoWidget::timerEvent(e);
      }
@@ -152,11 +161,11 @@
  };
 
  MediaPlayer::MediaPlayer(const QString &amp;filePath) :
-         playButton(0), volumeLabel(0), nextEffect(0), settingsDialog(0), ui(0),
+         playButton(0), nextEffect(0), settingsDialog(0), ui(0),
              m_AudioOutput(Phonon::VideoCategory),
              m_videoWidget(new MediaVideoWidget(this))
  {
-     setWindowTitle(&quot;Media Player&quot;);
+     setWindowTitle(tr(&quot;Media Player&quot;));
      setContextMenuPolicy(Qt::CustomContextMenu);
      m_videoWidget-&gt;setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -186,7 +195,7 @@
 
      slider = new Phonon::SeekSlider(this);
      slider-&gt;setMediaObject(&amp;m_MediaObject);
-     volume = new QSlider(Qt::Horizontal, this);
+     volume = new Phonon::VolumeSlider(&amp;m_AudioOutput);
 
      QVBoxLayout *vLayout = new QVBoxLayout(this);
      vLayout-&gt;setContentsMargins(8, 8, 8, 8);
@@ -211,24 +220,16 @@
  #endif
      info-&gt;setStyleSheet(&quot;border-image:url(:/images/screen.png) ; border-width:3px&quot;);
      info-&gt;setPalette(palette);
-     info-&gt;setText(&quot;&lt;center&gt;No media&lt;/center&gt;&quot;);
+     info-&gt;setText(tr(&quot;&lt;center&gt;No media&lt;/center&gt;&quot;));
 
-     volume-&gt;setRange(0, 100);
-     volume-&gt;setValue(100);
-     volume-&gt;setMinimumWidth(40);
+     volume-&gt;setFixedWidth(120);
 
      layout-&gt;addWidget(openButton);
      layout-&gt;addWidget(rewindButton);
      layout-&gt;addWidget(playButton);
      layout-&gt;addWidget(forwardButton);
 
-     volumeLabel = new QLabel(this);
-     volumeIcon = style()-&gt;standardPixmap(QStyle::SP_MediaVolume);
-     mutedIcon = style()-&gt;standardPixmap(QStyle::SP_MediaVolumeMuted);
-     volumeLabel-&gt;setPixmap(volumeIcon);
-     volume-&gt;setFixedWidth(100);
      layout-&gt;addStretch();
-     layout-&gt;addWidget(volumeLabel);
      layout-&gt;addWidget(volume);
 
      vLayout-&gt;addWidget(info);
@@ -282,17 +283,17 @@
      QActionGroup *aspectGroup = new QActionGroup(aspectMenu);
      connect(aspectGroup, SIGNAL(triggered(QAction *)), this, SLOT(aspectChanged(QAction *)));
      aspectGroup-&gt;setExclusive(true);
-     QAction *aspectActionAuto = aspectMenu-&gt;addAction(&quot;Auto&quot;);
+     QAction *aspectActionAuto = aspectMenu-&gt;addAction(tr(&quot;Auto&quot;));
      aspectActionAuto-&gt;setCheckable(true);
      aspectActionAuto-&gt;setChecked(true);
      aspectGroup-&gt;addAction(aspectActionAuto);
-     QAction *aspectActionScale = aspectMenu-&gt;addAction(&quot;Scale&quot;);
+     QAction *aspectActionScale = aspectMenu-&gt;addAction(tr(&quot;Scale&quot;));
      aspectActionScale-&gt;setCheckable(true);
      aspectGroup-&gt;addAction(aspectActionScale);
-     QAction *aspectAction16_9 = aspectMenu-&gt;addAction(&quot;16/9&quot;);
+     QAction *aspectAction16_9 = aspectMenu-&gt;addAction(tr(&quot;16/9&quot;));
      aspectAction16_9-&gt;setCheckable(true);
      aspectGroup-&gt;addAction(aspectAction16_9);
-     QAction *aspectAction4_3 = aspectMenu-&gt;addAction(&quot;4/3&quot;);
+     QAction *aspectAction4_3 = aspectMenu-&gt;addAction(tr(&quot;4/3&quot;));
      aspectAction4_3-&gt;setCheckable(true);
      aspectGroup-&gt;addAction(aspectAction4_3);
 
@@ -300,11 +301,11 @@
      QActionGroup *scaleGroup = new QActionGroup(scaleMenu);
      connect(scaleGroup, SIGNAL(triggered(QAction *)), this, SLOT(scaleChanged(QAction *)));
      scaleGroup-&gt;setExclusive(true);
-     QAction *scaleActionFit = scaleMenu-&gt;addAction(&quot;Fit in view&quot;);
+     QAction *scaleActionFit = scaleMenu-&gt;addAction(tr(&quot;Fit in view&quot;));
      scaleActionFit-&gt;setCheckable(true);
      scaleActionFit-&gt;setChecked(true);
      scaleGroup-&gt;addAction(scaleActionFit);
-     QAction *scaleActionCrop = scaleMenu-&gt;addAction(&quot;Scale and crop&quot;);
+     QAction *scaleActionCrop = scaleMenu-&gt;addAction(tr(&quot;Scale and crop&quot;));
      scaleActionCrop-&gt;setCheckable(true);
      scaleGroup-&gt;addAction(scaleActionCrop);
 
@@ -318,7 +319,6 @@
 
      connect(playButton, SIGNAL(clicked()), this, SLOT(playPause()));
      connect(forwardButton, SIGNAL(clicked()), this, SLOT(forward()));
-     connect(volume, SIGNAL(valueChanged(int)), this, SLOT(setVolume(int)));
      <span class="comment">//connect(openButton, SIGNAL(clicked()), this, SLOT(openFile()));</span>
      connect(settingsAction, SIGNAL(triggered(bool)), this, SLOT(showSettingsDialog()));
      connect(openUrlAction, SIGNAL(triggered(bool)), this, SLOT(openUrl()));
@@ -336,8 +336,6 @@
      rewindButton-&gt;setEnabled(false);
      playButton-&gt;setEnabled(false);
      setAcceptDrops(true);
-
-     m_MediaObject.setTickInterval(250);
 
      m_audioOutputPath = Phonon::createPath(&amp;m_MediaObject, &amp;m_AudioOutput);
      Phonon::createPath(&amp;m_MediaObject, m_videoWidget);
@@ -446,7 +444,7 @@
      }
 
      <span class="comment">// Insert audio effects:</span>
-     ui-&gt;audioEffectsCombo-&gt;addItem(&quot;&lt;no effect&gt;&quot;);
+     ui-&gt;audioEffectsCombo-&gt;addItem(tr(&quot;&lt;no effect&gt;&quot;));
      QList&lt;Phonon::Effect *&gt; currEffects = m_audioOutputPath.effects();
      Phonon::Effect *currEffect = currEffects.size() ? currEffects[0] : 0;
      QList&lt;Phonon::EffectDescription&gt; availableEffects = Phonon::BackendCapabilities::availableAudioEffects();
@@ -462,9 +460,9 @@
  void MediaPlayer::effectChanged()
  {
      int currentIndex = ui-&gt;audioEffectsCombo-&gt;currentIndex();
-     if (ui-&gt;audioEffectsCombo-&gt;currentIndex()) {
+     if (currentIndex) {
          QList&lt;Phonon::EffectDescription&gt; availableEffects = Phonon::BackendCapabilities::availableAudioEffects();
-         Phonon::EffectDescription chosenEffect = availableEffects[ui-&gt;audioEffectsCombo-&gt;currentIndex() - 1];
+         Phonon::EffectDescription chosenEffect = availableEffects[currentIndex - 1];
 
          QList&lt;Phonon::Effect *&gt; currEffects = m_audioOutputPath.effects();
          Phonon::Effect *currentEffect = currEffects.size() ? currEffects[0] : 0;
@@ -536,50 +534,14 @@
      m_videoWindow.setMinimumSize(100, 100);
  }
 
- void MediaPlayer::updateEffect()
- {
-     for (int k=0 ; k&lt; nextEffect-&gt;parameters().size() ; ++k) {
-         Phonon::EffectParameter param = nextEffect-&gt;parameters()[k];
-         switch(param.type()) {
-         case QVariant::Int:
-             {
-                 QSpinBox *spin = (QSpinBox*)propertyControllers.value(param.name());
-                 nextEffect-&gt;setParameterValue(param, spin-&gt;value());
-             }
-             break;
-         case QVariant::Double:
-             if (param.minimumValue() == -1.0 &amp;&amp; param.maximumValue() == 1.0) {
-                 QSlider *slider = (QSlider*)propertyControllers.value(param.name());
-                 nextEffect-&gt;setParameterValue(param, (double)(slider-&gt;value() / (double)SLIDER_RANGE));
-             } else {
-                 QDoubleSpinBox *spin = (QDoubleSpinBox*)propertyControllers.value(param.name());
-                 nextEffect-&gt;setParameterValue(param, spin-&gt;value());
-             }
-             break;
-         case QVariant::Bool:
-             {
-                 QCheckBox *cb = (QCheckBox*)propertyControllers.value(param.name());
-                 nextEffect-&gt;setParameterValue(param, cb-&gt;isChecked());
-             }
-             break;
-         case QVariant::String:
-             {
-                 QLineEdit *edit = (QLineEdit*)propertyControllers.value(param.name());
-                 nextEffect-&gt;setParameterValue(param, edit-&gt;text());
-             }
-             break;
-         default:
-             break;
-         }
-     }
- }
-
  void MediaPlayer::configureEffect()
  {
+     if (!nextEffect)
+         return;
+
      QList&lt;Phonon::Effect *&gt; currEffects = m_audioOutputPath.effects();
-     QList&lt;Phonon::EffectDescription&gt; availableEffects = Phonon::BackendCapabilities::availableAudioEffects();
-     if (ui-&gt;audioEffectsCombo-&gt;currentIndex() &gt; 0){
-         QList&lt;Phonon::EffectDescription&gt; availableEffects = Phonon::BackendCapabilities::availableAudioEffects();
+     const QList&lt;Phonon::EffectDescription&gt; availableEffects = Phonon::BackendCapabilities::availableAudioEffects();
+     if (ui-&gt;audioEffectsCombo-&gt;currentIndex() &gt; 0) {
          Phonon::EffectDescription chosenEffect = availableEffects[ui-&gt;audioEffectsCombo-&gt;currentIndex() - 1];
 
          QDialog effectDialog;
@@ -593,138 +555,43 @@
          QScrollArea *scrollArea = new QScrollArea(&amp;effectDialog);
          topLayout-&gt;addWidget(scrollArea);
 
-         QWidget *scrollWidget = new QWidget(&amp;effectDialog);
-         QVBoxLayout *scrollLayout = new QVBoxLayout(scrollWidget);
+         QVariantList savedParamValues;
+         foreach(Phonon::EffectParameter param, nextEffect-&gt;parameters()) {
+             savedParamValues &lt;&lt; nextEffect-&gt;parameterValue(param);
+         }
+
+         QWidget *scrollWidget = new Phonon::EffectWidget(nextEffect);
          scrollWidget-&gt;setMinimumWidth(320);
+         scrollWidget-&gt;setContentsMargins(10, 10, 10,10);
          scrollArea-&gt;setWidget(scrollWidget);
 
-         if (nextEffect) {
-             for (int k=0 ; k&lt; nextEffect-&gt;parameters().size() ; ++k) {
-                 Phonon::EffectParameter param = nextEffect-&gt;parameters()[k];
-                 QHBoxLayout *hlayout = new QHBoxLayout();
-                 QString labelName = param.name();
-                 labelName[0] = labelName[0].toUpper();
-                 hlayout-&gt;addWidget(new QLabel(&quot;&lt;b&gt;&quot; + labelName + &quot;:&lt;/b&gt; &quot;));
-                 if (param.type() == QVariant::Int) {
-                     QSpinBox *spin = new QSpinBox(&amp;effectDialog);
-                     spin-&gt;setMinimum(param.minimumValue().toInt());
-                     spin-&gt;setMaximum(param.maximumValue().toInt());
-                     QVariant currentValue = nextEffect-&gt;parameterValue(param);
-                     spin-&gt;setProperty(&quot;oldValue&quot;, currentValue.toInt());
-                     spin-&gt;setValue(currentValue.toInt());
-                     connect(spin, SIGNAL(valueChanged(int)), this, SLOT(updateEffect()));
-                     hlayout-&gt;addWidget(spin);
-                     propertyControllers.insert(param.name(), spin);
-                } else if (param.type() == QVariant::Double) {
-                     if (param.minimumValue() == -1.0 &amp;&amp; param.maximumValue() == 1.0) {
-                         <span class="comment">//Special case values between -1 and 1.0 to use a slider for improved usability</span>
-                         QSlider *slider = new QSlider(Qt::Horizontal, &amp;effectDialog);
-                         slider-&gt;setMinimum(-SLIDER_RANGE);
-                         slider-&gt;setMaximum(SLIDER_RANGE);
-                         QVariant currentValue = nextEffect-&gt;parameterValue(param);
-                         slider-&gt;setProperty(&quot;oldValue&quot;, currentValue.toDouble());
-                         slider-&gt;setValue((int)(SLIDER_RANGE * currentValue.toDouble()));
-                         slider-&gt;setTickPosition(QSlider::TicksBelow);
-                         slider-&gt;setTickInterval(4);
-                         hlayout-&gt;addWidget(slider);
-                         connect(slider, SIGNAL(valueChanged(int)), this, SLOT(updateEffect()));
-                         propertyControllers.insert(param.name(), slider);
-                     } else {
-                         QDoubleSpinBox *spin = new QDoubleSpinBox(&amp;effectDialog);
-                         spin-&gt;setSingleStep(0.1);
-                         spin-&gt;setMinimum(param.minimumValue().toDouble());
-                         spin-&gt;setMaximum(param.maximumValue().toDouble());
-                         QVariant currentValue = nextEffect-&gt;parameterValue(param);
-                         spin-&gt;setProperty(&quot;oldValue&quot;, currentValue);
-                         spin-&gt;setValue(currentValue.toDouble());
-                         connect(spin, SIGNAL(valueChanged(double)), this, SLOT(updateEffect()));
-                         hlayout-&gt;addWidget(spin);
-                         propertyControllers.insert(param.name(), spin);
-                     }
-                 } else if (param.type() == QVariant::Bool) {
-                     QCheckBox *cb = new QCheckBox(&amp;effectDialog);
-                     QVariant currentValue = nextEffect-&gt;parameterValue(param);
-                     cb-&gt;setProperty(&quot;oldValue&quot;, currentValue);
-                     cb-&gt;setChecked(currentValue.toBool());
-                     connect(cb, SIGNAL(stateChanged(int)), this, SLOT(updateEffect()));
-                     hlayout-&gt;addWidget(cb);
-                     propertyControllers.insert(param.name(), cb);
-                 } else if (param.type() == QVariant::String) {
-                     QLineEdit *edit = new QLineEdit(&amp;effectDialog);
-                     QVariant currentValue = nextEffect-&gt;parameterValue(param);
-                     edit-&gt;setProperty(&quot;oldValue&quot;, currentValue.toString());
-                     edit-&gt;setText(currentValue.toString());
-                     connect(edit, SIGNAL(returnPressed()), this, SLOT(updateEffect()));
-                     hlayout-&gt;addWidget(edit);
-                     propertyControllers.insert(param.name(), edit);
-                 }
-                 scrollLayout-&gt;addLayout(hlayout);
-             }
-             QDialogButtonBox *bbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &amp;effectDialog);
-             connect(bbox-&gt;button(QDialogButtonBox::Ok), SIGNAL(clicked()), &amp;effectDialog, SLOT(accept()));
-             connect(bbox-&gt;button(QDialogButtonBox::Cancel), SIGNAL(clicked()), &amp;effectDialog, SLOT(reject()));
-             topLayout-&gt;addWidget(bbox);
+         QDialogButtonBox *bbox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &amp;effectDialog);
+         connect(bbox-&gt;button(QDialogButtonBox::Ok), SIGNAL(clicked()), &amp;effectDialog, SLOT(accept()));
+         connect(bbox-&gt;button(QDialogButtonBox::Cancel), SIGNAL(clicked()), &amp;effectDialog, SLOT(reject()));
+         topLayout-&gt;addWidget(bbox);
 
-             scrollWidget-&gt;adjustSize();
-             effectDialog.adjustSize();
+         effectDialog.exec();
 
-             effectDialog.exec();
-             if (effectDialog.result() != QDialog::Accepted){
-                 <span class="comment">// Revert any changes</span>
-                 for (int k=0 ; k&lt; nextEffect-&gt;parameters().size() ; ++k) {
-                     Phonon::EffectParameter param = nextEffect-&gt;parameters()[k];
-                     switch(param.type()) {
-                     case QVariant::Int:
-                         {
-                             QSpinBox *spin = (QSpinBox*)propertyControllers.value(param.name());
-                             nextEffect-&gt;setParameterValue(param, spin-&gt;property(&quot;oldValue&quot;).toInt());
-                         }
-                         break;
-                     case QVariant::Double:
-                         if (param.minimumValue() == -1.0 &amp;&amp; param.maximumValue() == 1.0) {
-                             QSlider *slider = (QSlider*)propertyControllers.value(param.name());
-                             nextEffect-&gt;setParameterValue(param, slider-&gt;property(&quot;oldValue&quot;).toDouble());
-                         } else {
-                             QDoubleSpinBox *spin = (QDoubleSpinBox*)propertyControllers.value(param.name());
-                             nextEffect-&gt;setParameterValue(param, spin-&gt;property(&quot;oldValue&quot;).toDouble());
-                         }
-                         break;
-                     case QVariant::Bool:
-                         {
-                             QCheckBox *cb = (QCheckBox*)propertyControllers.value(param.name());
-                             nextEffect-&gt;setParameterValue(param, cb-&gt;property(&quot;oldValue&quot;).toBool());
-                         }
-                         break;
-                     case QVariant::String:
-                         {
-                             QLineEdit *edit = (QLineEdit*)propertyControllers.value(param.name());
-                             nextEffect-&gt;setParameterValue(param, edit-&gt;property(&quot;oldValue&quot;).toString());
-                         }
-                         break;
-                     default:
-                         break;
-                     }
-                 }
+         if (effectDialog.result() != QDialog::Accepted) {
+             <span class="comment">//we need to restore the paramaters values</span>
+             int currentIndex = 0;
+             foreach(Phonon::EffectParameter param, nextEffect-&gt;parameters()) {
+                 nextEffect-&gt;setParameterValue(param, savedParamValues.at(currentIndex++));
              }
-             propertyControllers.clear();
+
          }
      }
- }
-
- void MediaPlayer::pause()
- {
-     m_MediaObject.pause();
  }
 
  void MediaPlayer::handleDrop(QDropEvent *e)
  {
      QList&lt;QUrl&gt; urls = e-&gt;mimeData()-&gt;urls();
      if (e-&gt;proposedAction() == Qt::MoveAction){
-         <span class="comment">// Just add to the que:</span>
+         <span class="comment">// Just add to the queue:</span>
          for (int i=0; i&lt;urls.size(); i++)
              m_MediaObject.enqueue(Phonon::MediaSource(urls[i].toLocalFile()));
      } else {
-         <span class="comment">// Create new que:</span>
+         <span class="comment">// Create new queue:</span>
          m_MediaObject.clearQueue();
          if (urls.size() &gt; 0) {
              QString fileName = urls[0].toLocalFile();
@@ -745,7 +612,7 @@
          }
      }
      forwardButton-&gt;setEnabled(m_MediaObject.queue().size() &gt; 0);
-     play();
+     m_MediaObject.play();
  }
 
  void MediaPlayer::dropEvent(QDropEvent *e)
@@ -783,23 +650,6 @@
      }
  }
 
- void MediaPlayer::play()
- {
-     m_MediaObject.play();
- }
-
- void MediaPlayer::setVolume(int volume)
- {
-     Q_UNUSED(volume);
-     m_AudioOutput.setVolume(volume/100.0f);
-     if (volumeLabel) {
-         if (volume == 0)
-             volumeLabel-&gt;setPixmap(mutedIcon);
-         else
-             volumeLabel-&gt;setPixmap(volumeIcon);
-     }
- }
-
  void MediaPlayer::setFile(const QString &amp;fileName)
  {
      setWindowTitle(fileName.right(fileName.length() - fileName.lastIndexOf('/') - 1));
@@ -823,11 +673,9 @@
  void MediaPlayer::bufferStatus(int percent)
  {
      if (percent == 0 || percent == 100)
-         progressLabel-&gt;setText(&quot;&quot;);
+         progressLabel-&gt;setText(QString());
      else {
-         QString str(&quot;(&quot;);
-         str += QString::number(percent);
-         str += &quot;%)&quot;;
+         QString str = QString::fromLatin1(&quot;(%1%)&quot;).arg(percent);
          progressLabel-&gt;setText(str);
      }
  }
@@ -944,7 +792,6 @@
 
  void MediaPlayer::rewind()
  {
-     m_MediaObject.setTickInterval(50);
      m_MediaObject.seek(0);
  }
 
@@ -983,7 +830,7 @@
 
  void MediaPlayer::scaleChanged(QAction *act)
  {
-     if (act-&gt;text() == &quot;Scale and crop&quot;)
+     if (act-&gt;text() == tr(&quot;Scale and crop&quot;))
          m_videoWidget-&gt;setScaleMode(Phonon::VideoWidget::ScaleAndCrop);
      else
          m_videoWidget-&gt;setScaleMode(Phonon::VideoWidget::FitInView);
@@ -991,19 +838,19 @@
 
  void MediaPlayer::aspectChanged(QAction *act)
  {
-     if (act-&gt;text() == &quot;16/9&quot;)
+     if (act-&gt;text() == tr(&quot;16/9&quot;))
          m_videoWidget-&gt;setAspectRatio(Phonon::VideoWidget::AspectRatio16_9);
-     else if (act-&gt;text() == &quot;Scale&quot;)
+     else if (act-&gt;text() == tr(&quot;Scale&quot;))
          m_videoWidget-&gt;setAspectRatio(Phonon::VideoWidget::AspectRatioWidget);
-     else if (act-&gt;text() == &quot;4/3&quot;)
+     else if (act-&gt;text() == tr(&quot;4/3&quot;))
          m_videoWidget-&gt;setAspectRatio(Phonon::VideoWidget::AspectRatio4_3);
      else
          m_videoWidget-&gt;setAspectRatio(Phonon::VideoWidget::AspectRatioAuto);
  }</pre>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

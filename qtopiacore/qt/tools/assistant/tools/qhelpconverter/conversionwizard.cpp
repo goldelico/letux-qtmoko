@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -68,17 +72,17 @@ ConversionWizard::ConversionWizard()
 
     m_inputPage = new InputPage(&m_adpReader);
     setPage(Input_Page, m_inputPage);
-    
+
     m_generalPage = new GeneralPage();
     setPage(General_Page, m_generalPage);
-    
+
     m_filterPage = new FilterPage();
     setPage(Filter_Page, m_filterPage);
     m_filterPage->setMaximumHeight(240);
-    
+
     m_identifierPage = new IdentifierPage();
     setPage(Identifier_Page, m_identifierPage);
-    
+
     m_pathPage = new PathPage();
     setPage(Path_Page, m_pathPage);
     m_pathPage->setMaximumHeight(240);
@@ -86,18 +90,18 @@ ConversionWizard::ConversionWizard()
     m_filesPage = new FilesPage();
     setPage(Files_Page, m_filesPage);
     m_filesPage->setMaximumHeight(240);
-    
+
     m_outputPage = new OutputPage();
     setPage(Output_Page, m_outputPage);
     m_outputPage->setMaximumHeight(240);
-    
+
     m_finishPage = new FinishPage();
     setPage(Finish_Page, m_finishPage);
     m_finishPage->setMaximumHeight(240);
 
     connect(this, SIGNAL(currentIdChanged(int)),
         this, SLOT(pageChanged(int)));
-    
+
     m_helpWindow = 0;
     qApp->installEventFilter(this);
 
@@ -115,7 +119,7 @@ void ConversionWizard::initializePage(int id)
 {
     switch (id) {
     case Path_Page: {
-        QFileInfo fi(field(QLatin1String("adpFileName")).toString());    
+        QFileInfo fi(field(QLatin1String("adpFileName")).toString());
         m_pathPage->setPath(fi.absolutePath());
         break;
         }
@@ -138,12 +142,12 @@ void ConversionWizard::pageChanged(int id)
         m_files.clear();
         QFileInfo fi(field(QLatin1String("adpFileName")).toString());
         QDir rootDir = fi.absolutePath();
-        foreach (QString p, m_pathPage->paths()) {
+        foreach (const QString &p, m_pathPage->paths()) {
             QDir dir(p);
             QString rel = rootDir.relativeFilePath(dir.absolutePath());
             if (!rel.isEmpty())
                 rel.append(QLatin1Char('/'));
-            foreach (QString f, dir.entryList(m_pathPage->filters()))
+            foreach (const QString &f, dir.entryList(m_pathPage->filters()))
                 m_files.append(rel + f);
         }
         m_filesPage->setFilesToRemove(getUnreferencedFiles(m_files));
@@ -166,8 +170,8 @@ void ConversionWizard::showHelp(bool toggle)
         m_helpWindow->setMaximumHeight(h);
         m_helpWindow->setMinimumHeight(h);
     }
-    
-    if (toggle) {        
+
+    if (toggle) {
         m_helpWindow->setHelp(currentPage()->objectName());
         QAbstractButton *btn = button(QWizard::HelpButton);
         QPoint p = btn->pos();
@@ -175,7 +179,7 @@ void ConversionWizard::showHelp(bool toggle)
         if (btn->pos().x() > w)
             x = p.x() + btn->width() - w;
         m_helpWindow->move(x, p.y()-h);
-        m_helpWindow->show();        
+        m_helpWindow->show();
     } else {
         m_helpWindow->hide();
     }
@@ -186,7 +190,7 @@ bool ConversionWizard::eventFilter(QObject *obj, QEvent *e)
     if (m_helpWindow && m_helpWindow->isVisible()) {
         if (obj != button(QWizard::HelpButton)
             && e->type() == QEvent::MouseButtonRelease) {
-            QMouseEvent *me = static_cast<QMouseEvent*>(e);            
+            QMouseEvent *me = static_cast<QMouseEvent*>(e);
             if (!m_helpWindow->geometry().contains(mapFromParent(me->globalPos()))) {
                 m_helpWindow->hide();
                 button(QWizard::HelpButton)->setChecked(false);
@@ -203,7 +207,7 @@ QStringList ConversionWizard::getUnreferencedFiles(const QStringList &files)
 {
     QStringList lst;
     QSet<QString> adpFiles = m_adpReader.files();
-    foreach (QString s, files) {
+    foreach (const QString &s, files) {
         if (!adpFiles.contains(s))
             lst.append(s);
     }
@@ -222,8 +226,8 @@ void ConversionWizard::convert()
     qhpWriter.setAdpReader(&m_adpReader);
     qhpWriter.setFilterAttributes(m_filterPage->filterAttributes());
     qhpWriter.setCustomFilters(m_filterPage->customFilters());
-    
-    foreach (QString f, m_filesPage->filesToRemove())
+
+    foreach (const QString &f, m_filesPage->filesToRemove())
         m_files.removeAll(f);
     qhpWriter.setFiles(m_files);
 
@@ -236,8 +240,8 @@ void ConversionWizard::convert()
     } else {
         qhpWriter.generateIdentifiers(QhpWriter::SkipAll);
     }
-    
-    qhpWriter.writeFile(fi.absolutePath() + QDir::separator() 
+
+    qhpWriter.writeFile(fi.absolutePath() + QDir::separator()
         + qhpFileName);
 
     m_finishPage->appendMessage(tr("Writing help collection file..."));

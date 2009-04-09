@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,14 +43,20 @@
 
 // sdk
 #include <QtDesigner/QExtensionManager>
+#include <QtDesigner/QDesignerFormEditorInterface>
 
 // shared
+#include <ui4_p.h>
 #include <qlayout_widget_p.h>
+#include <formbuilderextra_p.h>
 
 #include <QtGui/QFormLayout>
 
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
+#include <QtCore/QTextStream>
+#include <QtCore/QByteArray>
+#include <QtCore/QRegExp> // Remove once there is an editor for lists
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +71,11 @@ static const char *verticalSpacing = "verticalSpacing";
 static const char *spacing = "spacing";
 static const char *margin = "margin";
 static const char *sizeConstraint = "sizeConstraint";
+static const char *boxStretchPropertyC = "stretch";
+static const char *gridRowStretchPropertyC = "rowStretch";
+static const char *gridColumnStretchPropertyC = "columnStretch";
+static const char *gridRowMinimumHeightPropertyC = "rowMinimumHeight";
+static const char *gridColumnMinimumWidthPropertyC = "columnMinimumWidth";
 
 namespace {
     enum LayoutPropertyType {
@@ -73,8 +88,27 @@ namespace {
         LayoutPropertySpacing,
         LayoutPropertyHorizontalSpacing,
         LayoutPropertyVerticalSpacing,
-        LayoutPropertySizeConstraint
+        LayoutPropertySizeConstraint,
+        LayoutPropertyBoxStretch,
+        LayoutPropertyGridRowStretch,
+        LayoutPropertyGridColumnStretch,
+        LayoutPropertyGridRowMinimumHeight,
+        LayoutPropertyGridColumnMinimumWidth
     };
+}
+
+// Check for a  comma-separated list of integers. Used for
+// per-cell stretch properties and grid per row/column properties.
+// As it works now, they are passed as QByteArray strings. The
+// property sheet refuses all invalid values. This could be
+// replaced by lists once the property editor can handle them.
+
+static bool isIntegerList(const QString &s)
+{
+    // Check for empty string or comma-separated list of integers
+    static const QRegExp re(QLatin1String("[0-9]+(,[0-9]+)+"));
+    Q_ASSERT(re.isValid());
+    return s.isEmpty() || re.exactMatch(s);
 }
 
 // Quick lookup by name
@@ -91,6 +125,11 @@ static LayoutPropertyType  layoutPropertyType(const QString &name)
         namePropertyMap.insert(QLatin1String(spacing), LayoutPropertySpacing);
         namePropertyMap.insert(QLatin1String(margin), LayoutPropertyMargin);
         namePropertyMap.insert(QLatin1String(sizeConstraint), LayoutPropertySizeConstraint);
+        namePropertyMap.insert(QLatin1String(boxStretchPropertyC ), LayoutPropertyBoxStretch);
+        namePropertyMap.insert(QLatin1String(gridRowStretchPropertyC), LayoutPropertyGridRowStretch);
+        namePropertyMap.insert(QLatin1String(gridColumnStretchPropertyC), LayoutPropertyGridColumnStretch);
+        namePropertyMap.insert(QLatin1String(gridRowMinimumHeightPropertyC), LayoutPropertyGridRowMinimumHeight);
+        namePropertyMap.insert(QLatin1String(gridColumnMinimumWidthPropertyC), LayoutPropertyGridColumnMinimumWidth);
     }
     return namePropertyMap.value(name, LayoutPropertyNone);
 }
@@ -177,7 +216,29 @@ LayoutPropertySheet::LayoutPropertySheet(QLayout *l, QObject *parent)
     }
 
     setAttribute(indexOf(QLatin1String(margin)), true);
-
+    // Stretch
+    if (visibleMask & LayoutProperties::BoxStretchProperty) {
+        pindex = createFakeProperty(QLatin1String(boxStretchPropertyC), QByteArray());
+        setPropertyGroup(pindex, layoutGroup);
+        setAttribute(pindex, true);
+    } else {
+        // Add the grid per-row/column stretch and size limits
+        if (visibleMask & LayoutProperties::GridColumnStretchProperty) {
+            const QByteArray empty;
+            pindex = createFakeProperty(QLatin1String(gridRowStretchPropertyC), empty);
+            setPropertyGroup(pindex, layoutGroup);
+            setAttribute(pindex, true);
+            pindex = createFakeProperty(QLatin1String(gridColumnStretchPropertyC), empty);
+            setPropertyGroup(pindex, layoutGroup);
+            setAttribute(pindex, true);
+            pindex = createFakeProperty(QLatin1String(gridRowMinimumHeightPropertyC), empty);
+            setPropertyGroup(pindex, layoutGroup);
+            setAttribute(pindex, true);
+            pindex = createFakeProperty(QLatin1String(gridColumnMinimumWidthPropertyC), empty);
+            setPropertyGroup(pindex, layoutGroup);
+            setAttribute(pindex, true);
+        }
+    }
 #ifdef USE_LAYOUT_SIZE_CONSTRAINT
     // SizeConstraint cannot possibly be handled as a real property
     // as it affects the layout parent widget and thus
@@ -248,6 +309,43 @@ void LayoutPropertySheet::setProperty(int index, const QVariant &value)
             return;
         }
         break;
+    case LayoutPropertyBoxStretch:
+        // TODO: Remove the regexp check once a proper editor for integer
+        // lists is in place?
+        if (QBoxLayout *box = qobject_cast<QBoxLayout *>(m_layout)) {
+            const QString stretch = value.toString();
+            if (isIntegerList(stretch))
+                QFormBuilderExtra::setBoxLayoutStretch(value.toString(), box);
+        }
+        break;
+    case LayoutPropertyGridRowStretch:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout)) {
+            const QString stretch = value.toString();
+            if (isIntegerList(stretch))
+                QFormBuilderExtra::setGridLayoutRowStretch(stretch, grid);
+        }
+        break;
+    case LayoutPropertyGridColumnStretch:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout)) {
+            const QString stretch = value.toString();
+            if (isIntegerList(stretch))
+                QFormBuilderExtra::setGridLayoutColumnStretch(value.toString(), grid);
+        }
+        break;
+    case LayoutPropertyGridRowMinimumHeight:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout)) {
+            const QString minSize = value.toString();
+            if (isIntegerList(minSize))
+                QFormBuilderExtra::setGridLayoutRowMinimumHeight(minSize, grid);
+        }
+        break;
+    case LayoutPropertyGridColumnMinimumWidth:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout)) {
+            const QString minSize = value.toString();
+            if (isIntegerList(minSize))
+                QFormBuilderExtra::setGridLayoutColumnMinimumWidth(minSize, grid);
+        }
+        break;
     default:
         break;
     }
@@ -288,6 +386,26 @@ QVariant LayoutPropertySheet::property(int index) const
             return grid->verticalSpacing();
         if (const QFormLayout *form = qobject_cast<QFormLayout *>(m_layout))
             return form->verticalSpacing();
+    case LayoutPropertyBoxStretch:
+        if (const QBoxLayout *box = qobject_cast<QBoxLayout *>(m_layout))
+            return QVariant(QByteArray(QFormBuilderExtra::boxLayoutStretch(box).toUtf8()));
+        break;
+    case LayoutPropertyGridRowStretch:
+        if (const QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            return QVariant(QByteArray(QFormBuilderExtra::gridLayoutRowStretch(grid).toUtf8()));
+        break;
+    case LayoutPropertyGridColumnStretch:
+        if (const QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            return QVariant(QByteArray(QFormBuilderExtra::gridLayoutColumnStretch(grid).toUtf8()));
+        break;
+    case LayoutPropertyGridRowMinimumHeight:
+        if (const QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            return QVariant(QByteArray(QFormBuilderExtra::gridLayoutRowMinimumHeight(grid).toUtf8()));
+        break;
+    case LayoutPropertyGridColumnMinimumWidth:
+        if (const QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            return QVariant(QByteArray(QFormBuilderExtra::gridLayoutColumnMinimumWidth(grid).toUtf8()));
+        break;
     default:
         break;
     }
@@ -312,6 +430,26 @@ bool LayoutPropertySheet::reset(int index)
         break;
     case LayoutPropertyBottomMargin:
         m_layout->setContentsMargins(left, top, right, -1);
+        break;
+    case LayoutPropertyBoxStretch:
+        if (QBoxLayout *box = qobject_cast<QBoxLayout *>(m_layout))
+            QFormBuilderExtra::clearBoxLayoutStretch(box);
+        break;
+    case LayoutPropertyGridRowStretch:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            QFormBuilderExtra::clearGridLayoutRowStretch(grid);
+        break;
+    case LayoutPropertyGridColumnStretch:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            QFormBuilderExtra::clearGridLayoutColumnStretch(grid);
+        break;
+    case LayoutPropertyGridRowMinimumHeight:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            QFormBuilderExtra::clearGridLayoutRowMinimumHeight(grid);
+        break;
+    case LayoutPropertyGridColumnMinimumWidth:
+        if (QGridLayout *grid = qobject_cast<QGridLayout *>(m_layout))
+            QFormBuilderExtra::clearGridLayoutColumnMinimumWidth(grid);
         break;
     default:
         rc = QDesignerPropertySheet::reset(index);
@@ -341,6 +479,68 @@ void LayoutPropertySheet::setChanged(int index, bool changed)
     }
     QDesignerPropertySheet::setChanged(index, changed);
 }
+
+void LayoutPropertySheet::stretchAttributesToDom(QDesignerFormEditorInterface *core, QLayout *lt, DomLayout *domLayout)
+{
+    // Check if the respective stretch properties of the layout are changed.
+    // If so, set them to the DOM
+    const int visibleMask = LayoutProperties::visibleProperties(lt);
+    if (!(visibleMask & (LayoutProperties::BoxStretchProperty|LayoutProperties::GridColumnStretchProperty|LayoutProperties::GridRowStretchProperty)))
+        return;
+    const QDesignerPropertySheetExtension *sheet = qt_extension<QDesignerPropertySheetExtension*>(core->extensionManager(), lt);
+    Q_ASSERT(sheet);
+
+    // Stretch
+    if (visibleMask & LayoutProperties::BoxStretchProperty) {
+        const int index = sheet->indexOf(QLatin1String(boxStretchPropertyC));
+        Q_ASSERT(index != -1);
+        if (sheet->isChanged(index))
+            domLayout->setAttributeStretch(sheet->property(index).toString());
+    }
+    if (visibleMask & LayoutProperties::GridColumnStretchProperty) {
+        const int index = sheet->indexOf(QLatin1String(gridColumnStretchPropertyC));
+        Q_ASSERT(index != -1);
+        if (sheet->isChanged(index))
+            domLayout->setAttributeColumnStretch(sheet->property(index).toString());
+    }
+    if (visibleMask & LayoutProperties::GridRowStretchProperty) {
+        const int index = sheet->indexOf(QLatin1String(gridRowStretchPropertyC));
+        Q_ASSERT(index != -1);
+        if (sheet->isChanged(index))
+            domLayout->setAttributeRowStretch(sheet->property(index).toString());
+    }
+    if (visibleMask & LayoutProperties::GridRowMinimumHeightProperty) {
+        const int index = sheet->indexOf(QLatin1String(gridRowMinimumHeightPropertyC));
+        Q_ASSERT(index != -1);
+        if (sheet->isChanged(index))
+            domLayout->setAttributeRowMinimumHeight(sheet->property(index).toString());
+    }
+    if (visibleMask & LayoutProperties::GridColumnMinimumWidthProperty) {
+        const int index = sheet->indexOf(QLatin1String(gridColumnMinimumWidthPropertyC));
+        Q_ASSERT(index != -1);
+        if (sheet->isChanged(index))
+            domLayout->setAttributeColumnMinimumWidth(sheet->property(index).toString());
+    }
+}
+
+void LayoutPropertySheet::markChangedStretchProperties(QDesignerFormEditorInterface *core, QLayout *lt, const DomLayout *domLayout)
+{
+    // While the actual values are applied by the form builder, we still need
+    // to mark them as 'changed'.
+    QDesignerPropertySheetExtension *sheet = qt_extension<QDesignerPropertySheetExtension*>(core->extensionManager(), lt);
+    Q_ASSERT(sheet);
+    if (!domLayout->attributeStretch().isEmpty())
+        sheet->setChanged(sheet->indexOf(QLatin1String(boxStretchPropertyC)), true);
+    if (!domLayout->attributeRowStretch().isEmpty())
+        sheet->setChanged(sheet->indexOf(QLatin1String(gridRowStretchPropertyC)), true);
+    if (!domLayout->attributeColumnStretch().isEmpty())
+        sheet->setChanged(sheet->indexOf(QLatin1String(gridColumnStretchPropertyC)), true);
+   if (!domLayout->attributeColumnMinimumWidth().isEmpty())
+        sheet->setChanged(sheet->indexOf(QLatin1String(gridColumnMinimumWidthPropertyC)), true);
+   if (!domLayout->attributeRowMinimumHeight().isEmpty())
+        sheet->setChanged(sheet->indexOf(QLatin1String(gridRowMinimumHeightPropertyC)), true);
+}
+
 }
 
 QT_END_NAMESPACE

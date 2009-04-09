@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/image/qimagereader.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/image/qimagereader.cpp -->
 <head>
-  <title>Qt 4.4: QImageReader Class Reference</title>
+  <title>Qt 4.5: QImageReader Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QImageReader Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -22,55 +22,58 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qimagereader.html#ImageReaderError-enum">ImageReaderError</a></b> { FileNotFoundError, DeviceError, UnsupportedFormatError, InvalidDataError, UnknownError }</li>
+<li><div class="fn"></div>enum <b><a href="qimagereader.html#ImageReaderError-enum">ImageReaderError</a></b> { FileNotFoundError, DeviceError, UnsupportedFormatError, InvalidDataError, UnknownError }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qimagereader.html#QImageReader">QImageReader</a></b> ()</li>
-<li><div class="fn"/><b><a href="qimagereader.html#QImageReader-2">QImageReader</a></b> ( QIODevice * <i>device</i>, const QByteArray &amp; <i>format</i> = QByteArray() )</li>
-<li><div class="fn"/><b><a href="qimagereader.html#QImageReader-3">QImageReader</a></b> ( const QString &amp; <i>fileName</i>, const QByteArray &amp; <i>format</i> = QByteArray() )</li>
-<li><div class="fn"/><b><a href="qimagereader.html#dtor.QImageReader">~QImageReader</a></b> ()</li>
-<li><div class="fn"/>QColor <b><a href="qimagereader.html#backgroundColor">backgroundColor</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#canRead">canRead</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qimagereader.html#clipRect">clipRect</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimagereader.html#currentImageNumber">currentImageNumber</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qimagereader.html#currentImageRect">currentImageRect</a></b> () const</li>
-<li><div class="fn"/>QIODevice * <b><a href="qimagereader.html#device">device</a></b> () const</li>
-<li><div class="fn"/>ImageReaderError <b><a href="qimagereader.html#error">error</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qimagereader.html#errorString">errorString</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qimagereader.html#fileName">fileName</a></b> () const</li>
-<li><div class="fn"/>QByteArray <b><a href="qimagereader.html#format">format</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimagereader.html#imageCount">imageCount</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#jumpToImage">jumpToImage</a></b> ( int <i>imageNumber</i> )</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#jumpToNextImage">jumpToNextImage</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qimagereader.html#loopCount">loopCount</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimagereader.html#nextImageDelay">nextImageDelay</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimagereader.html#quality">quality</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qimagereader.html#read">read</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#read-2">read</a></b> ( QImage * <i>image</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qimagereader.html#scaledClipRect">scaledClipRect</a></b> () const</li>
-<li><div class="fn"/>QSize <b><a href="qimagereader.html#scaledSize">scaledSize</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setBackgroundColor">setBackgroundColor</a></b> ( const QColor &amp; <i>color</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setClipRect">setClipRect</a></b> ( const QRect &amp; <i>rect</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setDevice">setDevice</a></b> ( QIODevice * <i>device</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setFileName">setFileName</a></b> ( const QString &amp; <i>fileName</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setFormat">setFormat</a></b> ( const QByteArray &amp; <i>format</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setQuality">setQuality</a></b> ( int <i>quality</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setScaledClipRect">setScaledClipRect</a></b> ( const QRect &amp; <i>rect</i> )</li>
-<li><div class="fn"/>void <b><a href="qimagereader.html#setScaledSize">setScaledSize</a></b> ( const QSize &amp; <i>size</i> )</li>
-<li><div class="fn"/>QSize <b><a href="qimagereader.html#size">size</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#supportsAnimation">supportsAnimation</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimagereader.html#supportsOption">supportsOption</a></b> ( QImageIOHandler::ImageOption <i>option</i> ) const</li>
-<li><div class="fn"/>QString <b><a href="qimagereader.html#text">text</a></b> ( const QString &amp; <i>key</i> ) const</li>
-<li><div class="fn"/>QStringList <b><a href="qimagereader.html#textKeys">textKeys</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qimagereader.html#QImageReader">QImageReader</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qimagereader.html#QImageReader-2">QImageReader</a></b> ( QIODevice * <i>device</i>, const QByteArray &amp; <i>format</i> = QByteArray() )</li>
+<li><div class="fn"></div><b><a href="qimagereader.html#QImageReader-3">QImageReader</a></b> ( const QString &amp; <i>fileName</i>, const QByteArray &amp; <i>format</i> = QByteArray() )</li>
+<li><div class="fn"></div><b><a href="qimagereader.html#dtor.QImageReader">~QImageReader</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#autoDetectImageFormat">autoDetectImageFormat</a></b> () const</li>
+<li><div class="fn"></div>QColor <b><a href="qimagereader.html#backgroundColor">backgroundColor</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#canRead">canRead</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qimagereader.html#clipRect">clipRect</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimagereader.html#currentImageNumber">currentImageNumber</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qimagereader.html#currentImageRect">currentImageRect</a></b> () const</li>
+<li><div class="fn"></div>QIODevice * <b><a href="qimagereader.html#device">device</a></b> () const</li>
+<li><div class="fn"></div>ImageReaderError <b><a href="qimagereader.html#error">error</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qimagereader.html#errorString">errorString</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qimagereader.html#fileName">fileName</a></b> () const</li>
+<li><div class="fn"></div>QByteArray <b><a href="qimagereader.html#format">format</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimagereader.html#imageCount">imageCount</a></b> () const</li>
+<li><div class="fn"></div>QImage::Format <b><a href="qimagereader.html#imageFormat">imageFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#jumpToImage">jumpToImage</a></b> ( int <i>imageNumber</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#jumpToNextImage">jumpToNextImage</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qimagereader.html#loopCount">loopCount</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimagereader.html#nextImageDelay">nextImageDelay</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimagereader.html#quality">quality</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qimagereader.html#read">read</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#read-2">read</a></b> ( QImage * <i>image</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qimagereader.html#scaledClipRect">scaledClipRect</a></b> () const</li>
+<li><div class="fn"></div>QSize <b><a href="qimagereader.html#scaledSize">scaledSize</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setAutoDetectImageFormat">setAutoDetectImageFormat</a></b> ( bool <i>enabled</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setBackgroundColor">setBackgroundColor</a></b> ( const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setClipRect">setClipRect</a></b> ( const QRect &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setDevice">setDevice</a></b> ( QIODevice * <i>device</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setFileName">setFileName</a></b> ( const QString &amp; <i>fileName</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setFormat">setFormat</a></b> ( const QByteArray &amp; <i>format</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setQuality">setQuality</a></b> ( int <i>quality</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setScaledClipRect">setScaledClipRect</a></b> ( const QRect &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimagereader.html#setScaledSize">setScaledSize</a></b> ( const QSize &amp; <i>size</i> )</li>
+<li><div class="fn"></div>QSize <b><a href="qimagereader.html#size">size</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#supportsAnimation">supportsAnimation</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimagereader.html#supportsOption">supportsOption</a></b> ( QImageIOHandler::ImageOption <i>option</i> ) const</li>
+<li><div class="fn"></div>QString <b><a href="qimagereader.html#text">text</a></b> ( const QString &amp; <i>key</i> ) const</li>
+<li><div class="fn"></div>QStringList <b><a href="qimagereader.html#textKeys">textKeys</a></b> () const</li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QByteArray <b><a href="qimagereader.html#imageFormat">imageFormat</a></b> ( const QString &amp; <i>fileName</i> )</li>
-<li><div class="fn"/>QByteArray <b><a href="qimagereader.html#imageFormat-2">imageFormat</a></b> ( QIODevice * <i>device</i> )</li>
-<li><div class="fn"/>QList&lt;QByteArray&gt; <b><a href="qimagereader.html#supportedImageFormats">supportedImageFormats</a></b> ()</li>
+<li><div class="fn"></div>QByteArray <b><a href="qimagereader.html#imageFormat-2">imageFormat</a></b> ( const QString &amp; <i>fileName</i> )</li>
+<li><div class="fn"></div>QByteArray <b><a href="qimagereader.html#imageFormat-3">imageFormat</a></b> ( QIODevice * <i>device</i> )</li>
+<li><div class="fn"></div>QList&lt;QByteArray&gt; <b><a href="qimagereader.html#supportedImageFormats">supportedImageFormats</a></b> ()</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -80,6 +83,7 @@
 <p>To read an image, you start by constructing a QImageReader object. Pass either a file name or a device pointer, and the image format to QImageReader's constructor. You can then set several options, such as the clip rect (by calling <a href="qimagereader.html#setClipRect">setClipRect</a>()) and scaled size (by calling <a href="qimagereader.html#setScaledSize">setScaledSize</a>()). <a href="qimagereader.html#canRead">canRead</a>() returns the image if the QImageReader can read the image (i.e&#x2e;, the image format is supported and the device is open for reading). Call <a href="qimagereader.html#read">read</a>() to read the image.</p>
 <p>If any error occurs when reading the image, <a href="qimagereader.html#read">read</a>() will return a null <a href="qimage.html">QImage</a>. You can then call <a href="qimagereader.html#error">error</a>() to find the type of error that occurred, or <a href="qimagereader.html#errorString">errorString</a>() to get a human readable description of what went wrong.</p>
 <p>Call <a href="qimagereader.html#supportedImageFormats">supportedImageFormats</a>() for a list of formats that QImageReader can read. QImageReader supports all built-in image formats, in addition to any image format plugins that support reading.</p>
+<p>QImageReader autodetects the image format by default, by looking at the provided (optional) format string, the file name suffix, and the data stream contents. You can enable or disable this feature, by calling <a href="qimagereader.html#setAutoDetectImageFormat">setAutoDetectImageFormat</a>().</p>
 <p>See also <a href="qimagewriter.html">QImageWriter</a>, <a href="qimageiohandler.html">QImageIOHandler</a>, and <a href="qimageioplugin.html">QImageIOPlugin</a>.</p>
 <hr />
 <h2>Member Type Documentation</h2>
@@ -104,6 +108,9 @@
 <p>See also <a href="qimagereader.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="dtor.QImageReader"></a>QImageReader::~QImageReader ()</h3>
 <p>Destructs the <a href="qimagereader.html">QImageReader</a> object.</p>
+<h3 class="fn"><a name="autoDetectImageFormat"></a>bool QImageReader::autoDetectImageFormat () const</h3>
+<p>Returns true if image format autodetection is enabled on this image reader; otherwise returns false. By default, autodetection is enabled.</p>
+<p>See also <a href="qimagereader.html#setAutoDetectImageFormat">setAutoDetectImageFormat</a>().</p>
 <h3 class="fn"><a name="backgroundColor"></a><a href="qcolor.html">QColor</a> QImageReader::backgroundColor () const</h3>
 <p>Returns the background color that's used when reading an image. If the image format does not support setting the background color an invalid color is returned.</p>
 <p>This function was introduced in Qt 4.1.</p>
@@ -145,11 +152,16 @@
 <p>For image formats that support animation, this function returns the total number of images in the animation.</p>
 <p>Certain animation formats do not support this feature, in which case 0 is returned.</p>
 <p>See also <a href="qimagereader.html#supportsAnimation">supportsAnimation</a>() and <a href="qimageiohandler.html#imageCount">QImageIOHandler::imageCount</a>().</p>
-<h3 class="fn"><a name="imageFormat"></a><a href="qbytearray.html">QByteArray</a> QImageReader::imageFormat ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
+<h3 class="fn"><a name="imageFormat"></a><a href="qimage.html#Format-enum">QImage::Format</a> QImageReader::imageFormat () const</h3>
+<p>Returns the format of the image, without actually reading the image contents. The format describes the image format <a href="qimagereader.html#read">QImageReader::read</a>() returns, not the format of the actual image.</p>
+<p>If the image format does not support this feature, this function returns an invalid format.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<p>See also <a href="qimageiohandler.html#ImageOption-enum">QImageIOHandler::ImageOption</a>, <a href="qimageiohandler.html#option">QImageIOHandler::option</a>(), and <a href="qimageiohandler.html#supportsOption">QImageIOHandler::supportsOption</a>().</p>
+<h3 class="fn"><a name="imageFormat-2"></a><a href="qbytearray.html">QByteArray</a> QImageReader::imageFormat ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>If supported, this function returns the image format of the file <i>fileName</i>. Otherwise, an empty string is returned.</p>
-<h3 class="fn"><a name="imageFormat-2"></a><a href="qbytearray.html">QByteArray</a> QImageReader::imageFormat ( <a href="qiodevice.html">QIODevice</a> * <i>device</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<h3 class="fn"><a name="imageFormat-3"></a><a href="qbytearray.html">QByteArray</a> QImageReader::imageFormat ( <a href="qiodevice.html">QIODevice</a> * <i>device</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>If supported, this function returns the image format of the device <i>device</i>. Otherwise, an empty string is returned.</p>
+<p>See also <a href="qimagereader.html#autoDetectImageFormat">QImageReader::autoDetectImageFormat</a>().</p>
 <h3 class="fn"><a name="jumpToImage"></a>bool QImageReader::jumpToImage ( int <i>imageNumber</i> )</h3>
 <p>For image formats that support animation, this function skips to the image whose sequence number is <i>imageNumber</i>, returning true if successful or false if the corresponding image cannot be found.</p>
 <p>The next call to <a href="qimagereader.html#read">read</a>() will attempt to read this image.</p>
@@ -189,6 +201,18 @@
 <h3 class="fn"><a name="scaledSize"></a><a href="qsize.html">QSize</a> QImageReader::scaledSize () const</h3>
 <p>Returns the scaled size of the image.</p>
 <p>See also <a href="qimagereader.html#setScaledSize">setScaledSize</a>().</p>
+<h3 class="fn"><a name="setAutoDetectImageFormat"></a>void QImageReader::setAutoDetectImageFormat ( bool <i>enabled</i> )</h3>
+<p>If <i>enabled</i> is true, image format autodetection is enabled; otherwise, it is disabled. By default, autodetection is enabled.</p>
+<p><a href="qimagereader.html">QImageReader</a> uses an extensive approach to detecting the image format; firstly, if you pass a file name to <a href="qimagereader.html">QImageReader</a>, it will attempt to detect the file extension if the given file name does not point to an existing file, by appending supported default extensions to the given file name, one at a time. It then uses the following approach to detect the image format:</p>
+<ul>
+<li>Image plugins are queried first, based on either the optional format string, or the file name suffix (if the source device is a file). No content detection is done at this stage. <a href="qimagereader.html">QImageReader</a> will choose the first plugin that supports reading for this format.</li>
+<li>If no plugin supports the image format, Qt's built-in handlers are checked based on either the optional format string, or the file name suffix.</li>
+<li>If no capable plugins or built-in handlers are found, each plugin is tested by inspecting the content of the data stream.</li>
+<li>If no plugins could detect the image format based on data contents, each built-in image handler is tested by inspecting the contents.</li>
+<li>Finally, if all above approaches fail, <a href="qimagereader.html">QImageReader</a> will report failure when trying to read the image.</li>
+</ul>
+<p>By disabling image format autodetection, <a href="qimagereader.html">QImageReader</a> will only query the plugins and built-in handlers based on the format string (i.e&#x2e;, no file name extensions are tested).</p>
+<p>See also <a href="qimagereader.html#autoDetectImageFormat">autoDetectImageFormat</a>(), <a href="qimageiohandler.html#canRead">QImageIOHandler::canRead</a>(), and <a href="qimageioplugin.html#capabilities">QImageIOPlugin::capabilities</a>().</p>
 <h3 class="fn"><a name="setBackgroundColor"></a>void QImageReader::setBackgroundColor ( const <a href="qcolor.html">QColor</a> &amp; <i>color</i> )</h3>
 <p>Sets the background color to <i>color</i>. Image formats that support this operation are expected to initialize the background to <i>color</i> before reading an image.</p>
 <p>This function was introduced in Qt 4.1.</p>
@@ -270,8 +294,8 @@
 <p>See also <a href="qimagereader.html#text">text</a>(), <a href="qimagewriter.html#setText">QImageWriter::setText</a>(), and <a href="qimage.html#textKeys">QImage::textKeys</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

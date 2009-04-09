@@ -2,9 +2,9 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/richtext.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/richtext.qdoc -->
 <head>
-  <title>Qt 4.4: Supported HTML Subset</title>
+  <title>Qt 4.5: Supported HTML Subset</title>
   <link rel="prev" href="richtext-common-tasks.html" />
   <link rel="contents" href="richtext.html" />
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -12,7 +12,7 @@
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [Previous: <a href="richtext-common-tasks.html">Common Rich Text Editing Tasks</a>]
@@ -20,6 +20,21 @@
 </p>
 <h1 class="title">Supported HTML Subset<br /><span class="subtitle"></span>
 </h1>
+<p>Qt's text widgets are able to display rich text, specified using a subset of <a href="http://www.w3.org/TR/html401/">HTML 4</a> markup. Widgets that use <a href="qtextdocument.html">QTextDocument</a>, such as <a href="qlabel.html">QLabel</a>, <a href="qtextedit.html">QTextEdit</a>, <a href="qtreewidgetitem.html">QTreeWidgetItem</a> and the other item widgets, are able to display rich text specified in this way.</p>
+<ul><li><a href="#using-html-markup-in-text-widgets">Using HTML Markup in Text Widgets</a></li>
+<li><a href="#supported-tags">Supported Tags</a></li>
+<li><a href="#block-attributes">Block Attributes</a></li>
+<li><a href="#list-attributes">List Attributes</a></li>
+<li><a href="#table-cell-attributes">Table Cell Attributes</a></li>
+<li><a href="#css-properties">CSS Properties</a></li>
+<li><a href="#supported-css-selectors">Supported CSS Selectors</a></li>
+</ul>
+<a name="using-html-markup-in-text-widgets"></a>
+<h3>Using HTML Markup in Text Widgets</h3>
+<p>Widgets automatically detect HTML markup and display rich text accordingly. For example, setting a label's <a href="qlabel.html#text-prop">text</a> property with the string <tt>&quot;&lt;b&gt;Hello&lt;/b&gt; &lt;i&gt;Qt!&lt;/i&gt;&quot;</tt> will result in the label displaying text like this: <b>Hello</b> <i>Qt!</i></p>
+<p>When HTML markup is used for text, Qt follows the rules defined by the <a href="http://www.w3.org/TR/html401/">HTML 4</a> specification. This includes default properties for text layout, such as the direction of the text flow (left-to-right) which can be changed by applying the <a href="#block-attributes"><tt>dir</tt></a> attribute to blocks of text.</p>
+<a name="supported-tags"></a>
+<h3>Supported Tags</h3>
 <p>The following table lists the HTML tags supported by Qt's <a href="richtext.html">rich text</a> engine:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Tag</th><th>Description</th><th>Comment</th></tr></thead>
@@ -81,20 +96,20 @@
 <tr valign="top" class="odd"><td><tt>var</tt></td><td>Variable</td><td>Same as <tt>i</tt>.</td></tr>
 </table></p>
 <a name="block-attributes"></a>
-<h2>Block Attributes</h2>
+<h3>Block Attributes</h3>
 <p>The following attributes are supported by the <tt>div</tt>, <tt>dl</tt>, <tt>dt</tt>, <tt>h1</tt>, <tt>h2</tt>, <tt>h3</tt>, <tt>h4</tt>, <tt>h5</tt>, <tt>h6</tt>, <tt>p</tt> tags:</p>
 <ul>
 <li><tt>align</tt> (<tt>left</tt>, <tt>right</tt>, <tt>center</tt>, <tt>justify</tt>)</li>
 <li><tt>dir</tt> (<tt>ltr</tt>, <tt>rtl</tt>)</li>
 </ul>
 <a name="list-attributes"></a>
-<h2>List Attributes</h2>
+<h3>List Attributes</h3>
 <p>The following attribute is supported by the <tt>ol</tt> and <tt>ul</tt> tags:</p>
 <ul>
 <li><tt>type</tt> (<tt>1</tt>, <tt>a</tt>, <tt>A</tt>, <tt>square</tt>, <tt>disc</tt>, <tt>circle</tt>)</li>
 </ul>
 <a name="table-cell-attributes"></a>
-<h2>Table Cell Attributes</h2>
+<h3>Table Cell Attributes</h3>
 <p>The following attributes are supported by the <tt>td</tt> and <tt>th</tt> tags:</p>
 <ul>
 <li><tt>width</tt> (absolute, relative, or no-value)</li>
@@ -105,7 +120,7 @@
 <li><tt>valign</tt> (<tt>top</tt>, <tt>middle</tt>, <tt>bottom</tt>)</li>
 </ul>
 <a name="css-properties"></a>
-<h2>CSS Properties</h2>
+<h3>CSS Properties</h3>
 <p>The following table lists the CSS properties supported by Qt's <a href="richtext.html">rich text</a> engine:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Property</th><th>Values</th><th>Description</th></tr></thead>
@@ -135,12 +150,12 @@
 <tr valign="top" class="even"><td><tt>background</tt></td><td>[ &lt;'background-color'&gt; || &lt;'background-image'&gt; ]</td><td>Background shorthand property</td></tr>
 <tr valign="top" class="odd"><td><tt>page-break-before</tt></td><td>[ auto | always ]</td><td>Make it possible to enforce a page break before the paragraph/table</td></tr>
 <tr valign="top" class="even"><td><tt>page-break-after</tt></td><td>[ auto | always ]</td><td>Make it possible to enforce a page break after the paragraph/table</td></tr>
-<tr valign="top" class="odd"><td>float</td><td>[ left | right | none ]</td><td>Specifies where an image or a text will be placed in another element.</td></tr>
+<tr valign="top" class="odd"><td>float</td><td>[ left | right | none ]</td><td>Specifies where an image or a text will be placed in another element. Note that the <tt>float</tt> property is only supported for tables and images.</td></tr>
 <tr valign="top" class="even"><td><tt>text-transform</tt></td><td>[ uppercase | lowercase | smallcaps ]</td><td>Select the transformation that will be performed on the text prior to displaying it.</td></tr>
 <tr valign="top" class="odd"><td><tt>word-spacing</tt></td><td>&lt;width&gt;px</td><td>Specifies an alternate spacing between each word.</td></tr>
 </table></p>
 <a name="supported-css-selectors"></a>
-<h2>Supported CSS Selectors</h2>
+<h3>Supported CSS Selectors</h3>
 <p>All CSS 2.1 selector classes are supported except pseudo-class selectors such as <tt>:first-child</tt>, <tt>:visited</tt> and <tt>:hover</tt>.</p>
 <p>
 [Previous: <a href="richtext-common-tasks.html">Common Rich Text Editing Tasks</a>]
@@ -148,8 +163,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

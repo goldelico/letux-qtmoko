@@ -18,90 +18,154 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCanvasRenderingContext2D_H
-#define JSCanvasRenderingContext2D_H
+#ifndef JSCanvasRenderingContext2D_h
+#define JSCanvasRenderingContext2D_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class CanvasRenderingContext2D;
 
-class JSCanvasRenderingContext2D : public KJS::DOMObject {
+class JSCanvasRenderingContext2D : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSCanvasRenderingContext2D(KJS::ExecState*, CanvasRenderingContext2D*);
+    JSCanvasRenderingContext2D(PassRefPtr<JSC::Structure>, PassRefPtr<CanvasRenderingContext2D>);
     virtual ~JSCanvasRenderingContext2D();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        CanvasAttrNum, GlobalAlphaAttrNum, GlobalCompositeOperationAttrNum, LineWidthAttrNum, 
-        LineCapAttrNum, LineJoinAttrNum, MiterLimitAttrNum, ShadowOffsetXAttrNum, 
-        ShadowOffsetYAttrNum, ShadowBlurAttrNum, ShadowColorAttrNum, StrokeStyleAttrNum, 
-        FillStyleAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // Functions
-        SaveFuncNum, RestoreFuncNum, ScaleFuncNum, RotateFuncNum, 
-        TranslateFuncNum, CreateLinearGradientFuncNum, CreateRadialGradientFuncNum, ClearRectFuncNum, 
-        FillRectFuncNum, BeginPathFuncNum, ClosePathFuncNum, MoveToFuncNum, 
-        LineToFuncNum, QuadraticCurveToFuncNum, BezierCurveToFuncNum, ArcToFuncNum, 
-        RectFuncNum, ArcFuncNum, FillFuncNum, StrokeFuncNum, 
-        ClipFuncNum, SetAlphaFuncNum, SetCompositeOperationFuncNum, SetLineWidthFuncNum, 
-        SetLineCapFuncNum, SetLineJoinFuncNum, SetMiterLimitFuncNum, ClearShadowFuncNum, 
-        SetStrokeColorFuncNum, SetFillColorFuncNum, StrokeRectFuncNum, DrawImageFuncNum, 
-        DrawImageFromRectFuncNum, SetShadowFuncNum, CreatePatternFuncNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
     // Custom attributes
-    KJS::JSValue* strokeStyle(KJS::ExecState*) const;
-    void setStrokeStyle(KJS::ExecState*, KJS::JSValue*);
-    KJS::JSValue* fillStyle(KJS::ExecState*) const;
-    void setFillStyle(KJS::ExecState*, KJS::JSValue*);
+    JSC::JSValuePtr strokeStyle(JSC::ExecState*) const;
+    void setStrokeStyle(JSC::ExecState*, JSC::JSValuePtr);
+    JSC::JSValuePtr fillStyle(JSC::ExecState*) const;
+    void setFillStyle(JSC::ExecState*, JSC::JSValuePtr);
 
     // Custom functions
-    KJS::JSValue* setStrokeColor(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* setFillColor(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* strokeRect(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* drawImage(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* drawImageFromRect(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* setShadow(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* createPattern(KJS::ExecState*, const KJS::List&);
+    JSC::JSValuePtr fillText(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr strokeText(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr setStrokeColor(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr setFillColor(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr strokeRect(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr drawImage(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr drawImageFromRect(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr setShadow(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr createPattern(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr putImageData(JSC::ExecState*, const JSC::ArgList&);
     CanvasRenderingContext2D* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<CanvasRenderingContext2D> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, CanvasRenderingContext2D*);
-CanvasRenderingContext2D* toCanvasRenderingContext2D(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, CanvasRenderingContext2D*);
+CanvasRenderingContext2D* toCanvasRenderingContext2D(JSC::JSValuePtr);
 
-class JSCanvasRenderingContext2DPrototype : public KJS::JSObject {
+class JSCanvasRenderingContext2DPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSCanvasRenderingContext2DPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSCanvasRenderingContext2DPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSCanvasRenderingContext2DPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSCanvasRenderingContext2DPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSave(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionRestore(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionScale(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionRotate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionTranslate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionTransform(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetTransform(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionCreateLinearGradient(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionCreateRadialGradient(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionClearRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionFillRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionBeginPath(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionClosePath(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionMoveTo(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionLineTo(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionQuadraticCurveTo(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionBezierCurveTo(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionArcTo(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionArc(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionFill(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionStroke(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionClip(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionIsPointInPath(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionFillText(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionStrokeText(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionMeasureText(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetAlpha(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetCompositeOperation(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetLineWidth(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetLineCap(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetLineJoin(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetMiterLimit(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionClearShadow(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetStrokeColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetFillColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionStrokeRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionDrawImage(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionDrawImageFromRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionSetShadow(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionCreatePattern(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionCreateImageData(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionGetImageData(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCanvasRenderingContext2DPrototypeFunctionPutImageData(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsCanvasRenderingContext2DCanvas(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCanvasRenderingContext2DGlobalAlpha(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DGlobalAlpha(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DGlobalCompositeOperation(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DGlobalCompositeOperation(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DLineWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DLineWidth(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DLineCap(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DLineCap(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DLineJoin(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DLineJoin(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DMiterLimit(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DMiterLimit(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DShadowOffsetX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DShadowOffsetX(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DShadowOffsetY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DShadowOffsetY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DShadowBlur(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DShadowBlur(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DShadowColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DShadowColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DFont(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DFont(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DTextAlign(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DTextAlign(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DTextBaseline(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DTextBaseline(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DStrokeStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DStrokeStyle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DFillStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCanvasRenderingContext2DFillStyle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCanvasRenderingContext2DConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

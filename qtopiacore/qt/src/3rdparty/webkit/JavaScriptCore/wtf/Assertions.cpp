@@ -1,4 +1,3 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2003, 2006, 2007 Apple Inc.  All rights reserved.
  *
@@ -21,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "config.h"
@@ -35,7 +34,7 @@
 #include <CoreFoundation/CFString.h>
 #endif
 
-#if PLATFORM(WIN)
+#if COMPILER(MSVC) && !PLATFORM(WIN_CE)
 #ifndef WINVER
 #define WINVER 0x0500
 #endif
@@ -67,7 +66,7 @@ static void vprintf_stderr_common(const char* format, va_list args)
         CFRelease(str);
         CFRelease(cfFormat);
     } else
-#elif PLATFORM(WIN)
+#elif COMPILER(MSVC) && !PLATFORM(WIN_CE)
     if (IsDebuggerPresent()) {
         size_t size = 1024;
 

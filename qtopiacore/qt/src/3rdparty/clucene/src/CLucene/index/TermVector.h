@@ -1,84 +1,79 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_index_termvector_h
 #define _lucene_index_termvector_h
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
 
+#include <QtCore/QString>
+
+#include "CLucene/store/Directory.h"
+#include "CLucene/store/IndexOutput.h"
 #include "FieldInfos.h"
 
 CL_NS_DEF(index)
 
-//predefine classes
 struct TermVectorOffsetInfo;
 class TermPositionVector; 
 
-/** Provides access to stored term vector of 
- *  a document field.
- */
-class TermFreqVector:LUCENE_BASE {
+// Provides access to stored term vector of a document field.
+class TermFreqVector : LUCENE_BASE
+{
 public:
-	virtual ~TermFreqVector(){
-	}
+	virtual ~TermFreqVector() {}
 
-	/**
-	* 
-	* @return The field this vector is associated with.
-	* 
-	*/ 
+	// @return The field this vector is associated with.
 	virtual const TCHAR* getField() = 0;
 
-	/** 
-	* @return The number of terms in the term vector.
-	*/
+	// @return The number of terms in the term vector.
 	virtual int32_t size() = 0;
 
-	/** 
-	* @return An Array of term texts in ascending order.
-	*/
+	// @return An Array of term texts in ascending order.
 	virtual const TCHAR** getTerms() = 0;
 
 
-	/** Array of term frequencies. Locations of the array correspond one to one
-	*  to the terms in the array obtained from <code>getTerms</code>
-	*  method. Each location in the array contains the number of times this
-	*  term occurs in the document or the document field.
-	*
-	*  The size of the returned array is size()
-	*  @memory Returning a pointer to internal data. Do not delete.
+	/* Array of term frequencies. Locations of the array correspond one to one
+	 * to the terms in the array obtained from <code>getTerms</code>
+	 * method. Each location in the array contains the number of times this
+	 * term occurs in the document or the document field.
+	 *
+	 * The size of the returned array is size()
+	 * @memory Returning a pointer to internal data. Do not delete.
 	*/
 	virtual const Array<int32_t>* getTermFrequencies() = 0;
 
 
-	/** Return an index in the term numbers array returned from
-	*  <code>getTerms</code> at which the term with the specified
-	*  <code>term</code> appears. If this term does not appear in the array,
-	*  return -1.
+	/* Return an index in the term numbers array returned from
+	 * <code>getTerms</code> at which the term with the specified
+	 * <code>term</code> appears. If this term does not appear in the array,
+	 * return -1.
 	*/
 	virtual int32_t indexOf(const TCHAR* term) = 0;
 
 
-	/** Just like <code>indexOf(int32_t)</code> but searches for a number of terms
-	*  at the same time. Returns an array that has the same size as the number
-	*  of terms searched for, each slot containing the result of searching for
-	*  that term number.
-	*
-	*  @param terms array containing terms to look for
-	*  @param start index in the array where the list of terms starts
-	*  @param len the number of terms in the list
+	/* Just like <code>indexOf(int32_t)</code> but searches for a number of terms
+	 * at the same time. Returns an array that has the same size as the number
+	 * of terms searched for, each slot containing the result of searching for
+	 * that term number.
+	 *
+	 * @param terms array containing terms to look for
+	 * @param start index in the array where the list of terms starts
+	 * @param len the number of terms in the list
 	*/
-	virtual void indexesOf(const TCHAR** terms, const int32_t start, const int32_t len, Array<int32_t>& ret) = 0;
+	virtual void indexesOf(const TCHAR** terms, const int32_t start,
+        const int32_t len, Array<int32_t>& ret) = 0;
 
-	/** Solve the diamond inheritence problem by providing a reinterpret function.
-    *	No dynamic casting is required and no RTTI data is needed to do this
-    */
-	virtual TermPositionVector* __asTermPositionVector()=0;
+	// Solve the diamond inheritence problem by providing a reinterpret function.
+    // No dynamic casting is required and no RTTI data is needed to do this
+	virtual TermPositionVector* __asTermPositionVector() = 0;
 };
 
 
@@ -105,9 +100,11 @@ writer.closeDocument()
 }
 </CODE>
 */
-class TermVectorsWriter:LUCENE_BASE {
+class TermVectorsWriter : LUCENE_BASE
+{
 private:
-	class TVField:LUCENE_BASE {
+	class TVField : LUCENE_BASE
+    {
 	public:
 		int32_t number;
 		int64_t tvfPointer;
@@ -115,16 +112,19 @@ private:
 		bool storePositions;
 		bool storeOffsets;
 	 
-		TVField(int32_t number, bool storePos, bool storeOff): 
-				tvfPointer(0),length(0){
+		TVField(int32_t number, bool storePos, bool storeOff)
+            : tvfPointer(0)
+            , length(0)
+        {
 			this->number = number;
 			this->storePositions = storePos;
 			this->storeOffsets = storeOff;
 		}
-        ~TVField(){}
+        ~TVField() {}
 	};
 
-	class TVTerm:LUCENE_BASE {
+	class TVTerm : LUCENE_BASE
+    {
 		const TCHAR* termText;
 		int32_t termTextLen; //textlen cache
 		
@@ -141,7 +141,6 @@ private:
 		void setTermText(const TCHAR* val);
 	};
 
-
 	CL_NS(store)::IndexOutput* tvx, *tvd, *tvf;
 	CL_NS(util)::CLVector<TVField*,CL_NS(util)::Deletor::Object<TVField> > fields;
 	CL_NS(util)::CLVector<TVTerm*,CL_NS(util)::Deletor::Object<TVTerm> > terms;
@@ -157,21 +156,23 @@ private:
 	void writeDoc();
   
 	void openField(int32_t fieldNumber, bool storePositionWithTermVector, 
-      bool storeOffsetWithTermVector);
+        bool storeOffsetWithTermVector);
+
 public:
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_VERSION = 2);
 
-	//The size in bytes that the FORMAT_VERSION will take up at the beginning of each file 
+	// The size in bytes that the FORMAT_VERSION will take up at the beginning
+    // of each file 
 	LUCENE_STATIC_CONSTANT(int32_t, FORMAT_SIZE = 4);
 
 	LUCENE_STATIC_CONSTANT(uint8_t, STORE_POSITIONS_WITH_TERMVECTOR = 0x1);
 	LUCENE_STATIC_CONSTANT(uint8_t, STORE_OFFSET_WITH_TERMVECTOR = 0x2);
 	
-	static const char* LUCENE_TVX_EXTENSION;
-	static const char* LUCENE_TVD_EXTENSION;
-	static const char* LUCENE_TVF_EXTENSION;
+	static const QLatin1String LUCENE_TVX_EXTENSION;
+	static const QLatin1String LUCENE_TVD_EXTENSION;
+	static const QLatin1String LUCENE_TVF_EXTENSION;
 
-	TermVectorsWriter(CL_NS(store)::Directory* directory, const char* segment,
+	TermVectorsWriter(CL_NS(store)::Directory* directory, const QString& segment,
 						   FieldInfos* fieldInfos);
 
 	~TermVectorsWriter();
@@ -213,13 +214,12 @@ public:
 	*  times this term appears in this field, in this document.
 	* @throws IllegalStateException if document or field is not open
 	*/
-	void addTerm(const TCHAR* termText, int32_t freq, 
+	void addTerm(const TCHAR* termText, int32_t freq,
 		Array<int32_t>* positions = NULL, Array<TermVectorOffsetInfo>* offsets = NULL);
 };
 
-/**
- */
-class SegmentTermVector: public virtual TermFreqVector {
+class SegmentTermVector : public virtual TermFreqVector
+{
 private:
 	const TCHAR* field;
 	TCHAR** terms;
@@ -247,12 +247,8 @@ public:
 	virtual TermPositionVector* __asTermPositionVector();
 };
 
-
-
-/**
-* @version $Id:
-*/
-class TermVectorsReader:LUCENE_BASE {
+class TermVectorsReader : LUCENE_BASE
+{
 private:
     FieldInfos* fieldInfos;
     
@@ -267,7 +263,8 @@ private:
     
     int32_t checkValidFormat(CL_NS(store)::IndexInput* in);
     
-	void readTermVectors(const TCHAR** fields, const int64_t* tvfPointers, const int32_t len, Array<TermFreqVector*>& _return);
+	void readTermVectors(const TCHAR** fields, const int64_t* tvfPointers,
+        const int32_t len, Array<TermFreqVector*>& _return);
 
     /**
     * 
@@ -284,7 +281,8 @@ private:
 	DEFINE_MUTEX(THIS_LOCK)
 	TermVectorsReader(const TermVectorsReader& copy);
 public:
-	TermVectorsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fieldInfos);
+	TermVectorsReader(CL_NS(store)::Directory* d, const QString& segment,
+        FieldInfos* fieldInfos);
 	~TermVectorsReader();
 
 	void close();
@@ -311,9 +309,11 @@ public:
 };
 
 
-struct TermVectorOffsetInfo {
+struct TermVectorOffsetInfo
+{
     int startOffset;
     int endOffset;
+
 public:
 	static Array<TermVectorOffsetInfo> EMPTY_OFFSET_INFO;
     TermVectorOffsetInfo();
@@ -328,11 +328,13 @@ public:
 };
 
 
-/** Extends <code>TermFreqVector</code> to provide additional information about
- *  positions in which each of the terms is found. A TermPositionVector not necessarily
- * contains both positions and offsets, but at least one of these arrays exists.
- */
-class TermPositionVector: public virtual TermFreqVector {
+/* Extends <code>TermFreqVector</code> to provide additional information about
+ * positions in which each of the terms is found. A TermPositionVector not
+ * necessarily contains both positions and offsets, but at least one of these
+ * arrays exists.
+*/
+class TermPositionVector : public virtual TermFreqVector
+{
 public:
 
     /** Returns an array of positions in which the term is found.
@@ -358,13 +360,16 @@ public:
 };
 
 
-class SegmentTermPositionVector: public SegmentTermVector, public TermPositionVector {
+class SegmentTermPositionVector: public SegmentTermVector, public TermPositionVector
+{
 protected:
 	Array< Array<int32_t> >* positions;
 	Array< Array<TermVectorOffsetInfo> >* offsets;
 	static Array<int32_t> EMPTY_TERM_POS;
 public:
-	SegmentTermPositionVector(const TCHAR* field, TCHAR** terms, Array<int32_t>* termFreqs, Array< Array<int32_t> >* positions, Array< Array<TermVectorOffsetInfo> >* offsets);
+	SegmentTermPositionVector(const TCHAR* field, TCHAR** terms,
+        Array<int32_t>* termFreqs, Array< Array<int32_t> >* positions,
+        Array< Array<TermVectorOffsetInfo> >* offsets);
 	~SegmentTermPositionVector();
 
 	/**
@@ -383,17 +388,31 @@ public:
 	*/
 	Array<int32_t>* getTermPositions(int32_t index);
 
-	const TCHAR* getField(){ return SegmentTermVector::getField(); }
-	TCHAR* toString() const{ return SegmentTermVector::toString(); }
-	int32_t size(){ return SegmentTermVector::size(); }
-	const TCHAR** getTerms(){ return SegmentTermVector::getTerms(); }
-	const Array<int32_t>* getTermFrequencies(){ return SegmentTermVector::getTermFrequencies(); }
-	int32_t indexOf(const TCHAR* termText){ return SegmentTermVector::indexOf(termText); }
-	void indexesOf(const TCHAR** termNumbers, const int32_t start, const int32_t len, Array<int32_t>& ret)
-		{ SegmentTermVector::indexesOf(termNumbers, start, len, ret); }
+	const TCHAR* getField() {
+        return SegmentTermVector::getField(); }
+	
+    TCHAR* toString() const {
+        return SegmentTermVector::toString(); }
+	
+    int32_t size() {
+        return SegmentTermVector::size(); }
+	
+    const TCHAR** getTerms() {
+        return SegmentTermVector::getTerms(); }
+	
+    const Array<int32_t>* getTermFrequencies() {
+        return SegmentTermVector::getTermFrequencies(); }
+	
+    int32_t indexOf(const TCHAR* termText) {
+        return SegmentTermVector::indexOf(termText); }
+	
+    void indexesOf(const TCHAR** termNumbers, const int32_t start,
+        const int32_t len, Array<int32_t>& ret) {
+        SegmentTermVector::indexesOf(termNumbers, start, len, ret); }
 
 	virtual TermPositionVector* __asTermPositionVector();
 };
 
 CL_NS_END
+
 #endif

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -66,6 +70,18 @@
 
 #include <QtCore/qglobal.h>
 
+#ifndef GL_ARB_vertex_buffer_object
+typedef ptrdiff_t GLsizeiptrARB;
+#endif
+
+// ARB_pixel_buffer_object
+typedef void (APIENTRY *_glBindBufferARB) (GLenum, GLuint);
+typedef void (APIENTRY *_glDeleteBuffersARB) (GLsizei, const GLuint *);
+typedef void (APIENTRY *_glGenBuffersARB) (GLsizei, GLuint *);
+typedef void (APIENTRY *_glBufferDataARB) (GLenum, GLsizeiptrARB, const GLvoid *, GLenum);
+typedef GLvoid* (APIENTRY *_glMapBufferARB) (GLenum, GLenum);
+typedef GLboolean (APIENTRY *_glUnmapBufferARB) (GLenum);
+
 // ARB_fragment_program
 typedef void (APIENTRY *_glProgramStringARB) (GLenum, GLenum, GLsizei, const GLvoid *);
 typedef void (APIENTRY *_glBindProgramARB) (GLenum, GLuint);
@@ -87,6 +103,7 @@ typedef void (APIENTRY *_glUseProgram) (GLuint);
 typedef void (APIENTRY *_glDeleteProgram) (GLuint);
 
 typedef void (APIENTRY *_glGetShaderInfoLog) (GLuint, GLsizei, GLsizei *, char *);
+typedef void (APIENTRY *_glGetShaderiv) (GLuint, GLenum, GLint *);
 typedef void (APIENTRY *_glGetProgramiv) (GLuint, GLenum, GLint *);
 
 typedef GLuint (APIENTRY *_glGetUniformLocation) (GLuint, const char*);
@@ -149,6 +166,7 @@ struct QGLExtensionFuncs
         qt_glDeleteProgram = 0;
 
         qt_glGetShaderInfoLog = 0;
+        qt_glGetShaderiv = 0;
         qt_glGetProgramiv = 0;
 
         qt_glGetUniformLocation = 0;
@@ -180,6 +198,13 @@ struct QGLExtensionFuncs
         qt_glFramebufferRenderbufferEXT = 0;
         qt_glGetFramebufferAttachmentParameterivEXT = 0;
         qt_glGenerateMipmapEXT = 0;
+
+        qt_glBindBufferARB = 0;
+        qt_glDeleteBuffersARB = 0;
+        qt_glGenBuffersARB = 0;
+        qt_glBufferDataARB = 0;
+        qt_glMapBufferARB = 0;
+        qt_glUnmapBufferARB = 0;
     }
 
     _glProgramStringARB qt_glProgramStringARB;
@@ -202,6 +227,7 @@ struct QGLExtensionFuncs
     _glDeleteProgram qt_glDeleteProgram;
 
     _glGetShaderInfoLog qt_glGetShaderInfoLog;
+    _glGetShaderiv qt_glGetShaderiv;
     _glGetProgramiv qt_glGetProgramiv;
 
     _glGetUniformLocation qt_glGetUniformLocation;
@@ -233,6 +259,13 @@ struct QGLExtensionFuncs
     _glFramebufferRenderbufferEXT qt_glFramebufferRenderbufferEXT;
     _glGetFramebufferAttachmentParameterivEXT qt_glGetFramebufferAttachmentParameterivEXT;
     _glGenerateMipmapEXT qt_glGenerateMipmapEXT;
+
+    _glBindBufferARB qt_glBindBufferARB;
+    _glDeleteBuffersARB qt_glDeleteBuffersARB;
+    _glGenBuffersARB qt_glGenBuffersARB;
+    _glBufferDataARB qt_glBufferDataARB;
+    _glMapBufferARB qt_glMapBufferARB;
+    _glUnmapBufferARB qt_glUnmapBufferARB;
 };
 
 
@@ -271,6 +304,18 @@ struct QGLExtensionFuncs
 #ifndef GL_FRAGMENT_PROGRAM_ARB
 #define GL_FRAGMENT_PROGRAM_ARB           0x8804
 #define GL_PROGRAM_FORMAT_ASCII_ARB       0x8875
+#endif
+
+#ifndef GL_PIXEL_UNPACK_BUFFER_ARB
+#define GL_PIXEL_UNPACK_BUFFER_ARB 0x88EC
+#endif
+
+#ifndef GL_WRITE_ONLY_ARB
+#define GL_WRITE_ONLY_ARB 0x88B9
+#endif
+
+#ifndef GL_STREAM_DRAW_ARB
+#define GL_STREAM_DRAW_ARB 0x88E0
 #endif
 
 // Stencil wrap and two-side defines
@@ -376,7 +421,10 @@ struct QGLExtensionFuncs
 #define glActiveStencilFaceEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glActiveStencilFaceEXT
 
 #define glMultiTexCoord4f QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glMultiTexCoord4f
+
+#if !defined(QT_OPENGL_ES_2)
 #define glActiveTexture QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glActiveTexture
+#endif
 
 #define glIsRenderbufferEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glIsRenderbufferEXT
 #define glBindRenderbufferEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glBindRenderbufferEXT
@@ -396,11 +444,44 @@ struct QGLExtensionFuncs
 #define glGetFramebufferAttachmentParameterivEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetFramebufferAttachmentParameterivEXT
 #define glGenerateMipmapEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGenerateMipmapEXT
 
+#define glBindBufferARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glBindBufferARB
+#define glDeleteBuffersARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDeleteBuffersARB
+#define glGenBuffersARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGenBuffersARB
+#define glBufferDataARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glBufferDataARB
+#define glMapBufferARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glMapBufferARB
+#define glUnmapBufferARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUnmapBufferARB
+
+#define glCreateShader QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glCreateShader
+#define glShaderSource QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glShaderSource
+#define glCompileShader QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glCompileShader
+#define glDeleteShader QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDeleteShader
+
+#define glCreateProgram QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glCreateProgram
+#define glAttachShader QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glAttachShader
+#define glDetachShader QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDetachShader
+#define glLinkProgram QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glLinkProgram
+#define glUseProgram QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUseProgram
+#define glDeleteProgram QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDeleteProgram
+
+#define glGetShaderInfoLog QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetShaderInfoLog
+#define glGetShaderiv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetShaderiv
+#define glGetProgramiv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetProgramiv
+
+#define glGetUniformLocation QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetUniformLocation
+#define glUniform4fv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUniform4fv
+#define glUniform3fv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUniform3fv
+#define glUniform2fv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUniform2fv
+#define glUniform1fv QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUniform1fv
+#define glUniform1i QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glUniform1i
+
 extern bool qt_resolve_framebufferobject_extensions(QGLContext *ctx);
+bool qt_resolve_buffer_extensions(QGLContext *ctx);
 
 bool qt_resolve_version_1_3_functions(QGLContext *ctx);
 bool qt_resolve_stencil_face_extension(QGLContext *ctx);
 bool qt_resolve_frag_program_extensions(QGLContext *ctx);
+
+bool qt_resolve_glsl_extensions(QGLContext *ctx);
 
 QT_END_NAMESPACE
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,12 @@
 #include "qscriptobject_p.h"
 
 QT_BEGIN_NAMESPACE
+
+namespace QScript {
+
+extern QString numberToString(qsreal value);
+
+} // namespace
 
 QScriptValueIteratorImpl::QScriptValueIteratorImpl(const QScriptValueImpl &obj)
 {
@@ -97,7 +107,7 @@ bool QScriptValueIteratorImpl::acceptsMember(const QScriptValueImpl &o,
         return false;
     }
 
-    if (!m_enumerateProto || o.strictlyEquals(m_frontObject))
+    if (!m_enumerateProto || QScriptEnginePrivate::strictlyEquals(o, m_frontObject))
         return true;
 
     // make sure it's not a shadowed property
@@ -107,11 +117,11 @@ bool QScriptValueIteratorImpl::acceptsMember(const QScriptValueImpl &o,
     if (m.nameId()) {
         id = m.nameId();
     } else {
-        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(m_frontObject.engine());
-        id = eng_p->nameId(QScriptEnginePrivate::toString(m.id()));
+        QScriptEnginePrivate *eng_p = m_frontObject.engine();
+        id = eng_p->nameId(QScript::numberToString(m.id()));
     }
-    m_frontObject.resolve(id, &dummy, &base, QScriptValue::ResolvePrototype);
-    return base.strictlyEquals(o);
+    m_frontObject.resolve(id, &dummy, &base, QScriptValue::ResolvePrototype, QScript::Read);
+    return QScriptEnginePrivate::strictlyEquals(base, o);
 }
 
 bool QScriptValueIteratorImpl::hasNext()
@@ -157,7 +167,7 @@ bool QScriptValueIteratorImpl::hasNext()
     }
 
     if (!m_classDataIterator) {
-        QScriptClassData *data = obj.classInfo()->data().data();
+        QScriptClassData *data = obj.classInfo()->data();
         if (!data)
             goto LNext;
         m_classDataIterator = data->newIterator(obj);
@@ -283,7 +293,7 @@ QString QScriptValueIteratorImpl::name() const
     if (m_member.nameId())
         return m_member.nameId()->s;
     else
-        return QScriptEnginePrivate::toString(m_member.id());
+        return QScript::numberToString(m_member.id());
 }
 
 QScriptValueImpl QScriptValueIteratorImpl::value() const
@@ -363,7 +373,7 @@ void QScriptValueIteratorImpl::remove()
 void QScriptValueIteratorImpl::toFront()
 {
     if (m_classDataIterator) {
-        if (!m_enumerateProto || m_object.strictlyEquals(m_frontObject)) {
+        if (!m_enumerateProto || QScriptEnginePrivate::strictlyEquals(m_object, m_frontObject)) {
             m_classDataIterator->toFront();
         } else {
             delete m_classDataIterator;
@@ -388,7 +398,7 @@ void QScriptValueIteratorImpl::toBack()
     m_foundMember.invalidate();
 
     if (!m_classDataIterator) {
-        QScriptClassData *data = m_object.classInfo()->data().data();
+        QScriptClassData *data = m_object.classInfo()->data();
         if (data)
             m_classDataIterator = data->newIterator(m_object);
     }

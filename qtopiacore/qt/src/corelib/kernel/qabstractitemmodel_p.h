@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,6 +56,8 @@
 
 #include "private/qobject_p.h"
 #include "QtCore/qstack.h"
+#include "QtCore/qset.h"
+#include "QtCore/qhash.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -74,7 +80,6 @@ class Q_CORE_EXPORT QAbstractItemModelPrivate : public QObjectPrivate
 public:
     QAbstractItemModelPrivate() : QObjectPrivate(), supportedDragActions(-1) {}
     void removePersistentIndexData(QPersistentModelIndexData *data);
-    void addPersistentIndexData(QPersistentModelIndexData *data);
     void rowsAboutToBeInserted(const QModelIndex &parent, int first, int last);
     void rowsInserted(const QModelIndex &parent, int first, int last);
     void rowsAboutToBeRemoved(const QModelIndex &parent, int first, int last);
@@ -83,7 +88,6 @@ public:
     void columnsInserted(const QModelIndex &parent, int first, int last);
     void columnsAboutToBeRemoved(const QModelIndex &parent, int first, int last);
     void columnsRemoved(const QModelIndex &parent, int first, int last);
-    void reset();
     static QAbstractItemModel *staticEmptyModel();
 
     inline QModelIndex createIndex(int row, int column, void *data = 0) const {
@@ -99,11 +103,25 @@ public:
     }
 
     inline void invalidatePersistentIndexes() {
-        QVector<QPersistentModelIndexData*>::iterator it = persistent.indexes.begin();
-        for (; it != persistent.indexes.end(); ++it) {
-            Q_ASSERT((*it));
-            (*it)->index = QModelIndex();
-            (*it)->model = 0;
+        foreach (QPersistentModelIndexData *data, persistent.indexes) {
+            data->index = QModelIndex();
+            data->model = 0;
+        }
+        persistent.indexes.clear();
+    }
+
+    /*!
+      \internal
+      clean the QPersistentModelIndex relative to the index if there is one.
+      To be used before an index is invalided
+      */
+    inline void invalidatePersistentIndex(const QModelIndex &index) {
+        QHash<QModelIndex, QPersistentModelIndexData *>::iterator it = persistent.indexes.find(index);
+        if(it != persistent.indexes.end()) {
+            QPersistentModelIndexData *data = *it;
+            persistent.indexes.erase(it);
+            data->index = QModelIndex();
+            data->model = 0;
         }
     }
 
@@ -117,11 +135,11 @@ public:
     QStack<Change> changes;
 
     struct Persistent {
-        Persistent() : previous(0) {}
-        QVector<QPersistentModelIndexData*> indexes;
-        QStack<QList<int> > moved;
-        QStack<QList<int> > invalidated;
-        QPersistentModelIndexData *previous; // optimization
+        Persistent() {}
+        QHash<QModelIndex, QPersistentModelIndexData *> indexes;
+        QStack<QVector<QPersistentModelIndexData *> > moved;
+        QStack<QVector<QPersistentModelIndexData *> > invalidated;
+        void insertMultiAtEnd(const QModelIndex& key, QPersistentModelIndexData *data);
     } persistent;
 
     Qt::DropActions supportedDragActions;

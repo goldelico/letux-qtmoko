@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -1393,7 +1400,7 @@ void QWSServerPrivate::initServer(int flags)
 #ifndef QT_NO_QWS_MULTIPROCESS
 
     if (!geteuid()) {
-#if !defined(Q_OS_FREEBSD) && !defined(Q_OS_SOLARIS) && !defined(Q_OS_DARWIN) && !defined(QT_LSB)
+#if !defined(Q_OS_FREEBSD) && !defined(Q_OS_SOLARIS) && !defined(Q_OS_DARWIN) && !defined(QT_LINUXBASE)
         if(mount(0,"/var/shm", "shm", 0, 0)) {
             /* This just confuses people with 2.2 kernels
             if (errno != EBUSY)
@@ -1764,7 +1771,7 @@ void QWSServerPrivate::cleanupFonts(bool force)
         return;
 
     QList<QByteArray> removedFonts;
-#ifndef QT_NO_QWS_QPF
+#if !defined(QT_NO_QWS_QPF2) && !defined(QT_FONTS_ARE_RESOURCES)
     removedFonts = QFontEngineQPF::cleanUpAfterClientCrash(crashedClientIds);
 #endif
     crashedClientIds.clear();
@@ -2366,6 +2373,21 @@ QWSMouseHandler *QWSServer::mouseHandler()
     return qwsServerPrivate->mousehandlers.first();
 }
 
+/*!
+    \since 4.5
+
+    Returns list of all mouse handlers
+
+    Note that this function can only be used in the server process.
+
+    \sa mouseHandler(), setMouseHandler(), openMouse(), closeMouse()
+*/
+const QList<QWSMouseHandler*>& QWSServer::mouseHandlers()
+{
+    return qwsServerPrivate->mousehandlers;
+}
+
+
 // called by QWSMouseHandler constructor, not user code.
 /*!
     \fn void QWSServer::setMouseHandler(QWSMouseHandler* driver)
@@ -2442,14 +2464,6 @@ void QWSServerPrivate::sendQCopEvent(QWSClient *c, const QString &ch,
     c->sendEvent(&event);
 }
 #endif
-
-void QWSServerPrivate::sendRegionEvent(QWSWindow *window,
-                                       const QRegion &region) const
-{
-    QWSRegionEvent event;
-    event.setData(window->winId(), region, QWSRegionEvent::Request);
-    window->client()->sendEvent(&event);
-}
 
 /*!
     \fn QWSWindow *QWSServer::windowAt(const QPoint& position)
@@ -3844,7 +3858,6 @@ QRegion QWSServerPrivate::reserve_region(QWSWindow *win, const QRegion &region)
     }
     windows.move(oldPos, newPos);
     nReserved = newPos + 1;
-    win->client()->sendRegionEvent(win->winId(), r, 0);
 
     return r;
 }
@@ -3858,7 +3871,7 @@ void QWSServerPrivate::request_region(int wid, const QString &surfaceKey,
         return;
 
     Q_Q(QWSServer);
-    QWSWindow::State windowState;
+    QWSWindow::State windowState = QWSWindow::NoState;
 
     if (region.isEmpty()) {
         windowState = QWSWindow::Hiding;

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,33 +58,34 @@ CmdLineParser::CmdLineParser()
     m_register(None),
     m_copy(false),
     m_quiet(false)
-{    
+{
     m_helpMessage = QLatin1String(
         "Usage: assistant [Options]\n\n"
-        "-collectionFile file   Uses the specified collection\n"
-        "                       file instead of the default one\n"
-        "-showUrl url           Shows the document with the\n"
-        "                       url.\n"
-        "-enableRemoteControl   Enables Assistant to be\n"
-        "                       remotely controlled.\n"
-        "-show widget           Shows the specified dockwidget\n"
-        "                       which can be \"contents\", \"index\",\n"
-        "                       \"bookmarks\" or \"search\".\n"
-        "-activate widget       Activates the specified dockwidget\n"
-        "                       which can be \"contents\", \"index\",\n"
-        "                       \"bookmarks\" or \"search\".\n"
-        "-hide widget           Hides the specified dockwidget\n"
-        "                       which can be \"contents\", \"index\"\n"
-        "                       \"bookmarks\" or \"search\".\n"
-        "-register helpFile     Registers the specified help file\n"
-        "                       (.qch) in the given collection\n"
-        "                       file.\n"
-        "-unregister helpFile   Unregisters the specified help file\n"
-        "                       (.qch) from the give collection\n"
-        "                       file.\n"
-        "-quiet                 Does not display any error or\n"
-        "                       status message.\n"
-        "-help                  Displays this help.\n"
+        "-collectionFile file       Uses the specified collection\n"
+        "                           file instead of the default one\n"
+        "-showUrl url               Shows the document with the\n"
+        "                           url.\n"
+        "-enableRemoteControl       Enables Assistant to be\n"
+        "                           remotely controlled.\n"
+        "-show widget               Shows the specified dockwidget\n"
+        "                           which can be \"contents\", \"index\",\n"
+        "                           \"bookmarks\" or \"search\".\n"
+        "-activate widget           Activates the specified dockwidget\n"
+        "                           which can be \"contents\", \"index\",\n"
+        "                           \"bookmarks\" or \"search\".\n"
+        "-hide widget               Hides the specified dockwidget\n"
+        "                           which can be \"contents\", \"index\"\n"
+        "                           \"bookmarks\" or \"search\".\n"
+        "-register helpFile         Registers the specified help file\n"
+        "                           (.qch) in the given collection\n"
+        "                           file.\n"
+        "-unregister helpFile       Unregisters the specified help file\n"
+        "                           (.qch) from the give collection\n"
+        "                           file.\n"
+        "-setCurrentFilter filter   Set the filter as the active filter.\n"
+        "-quiet                     Does not display any error or\n"
+        "                           status message.\n"
+        "-help                      Displays this help.\n"
         );
 }
 
@@ -95,7 +100,7 @@ CmdLineParser::Result CmdLineParser::parse(const QStringList &arguments)
             break;
         }
     }
-    
+
     for (int i=1; i<arguments.count(); ++i) {
         QString arg = arguments.at(i).toLower();
         if (arg == QLatin1String("-collectionfile")) {
@@ -205,6 +210,13 @@ CmdLineParser::Result CmdLineParser::parse(const QStringList &arguments)
                 error = QObject::tr("Missing help file!");
                 break;
             }
+        } else if (arg == QLatin1String("-setcurrentfilter")) {
+            if (CHECK_NEXT_ARG) {
+                m_currentFilter = arguments.at(i);
+            } else {
+                error = QObject::tr("Missing filter argument!");
+                break;
+            }
         } else if (arg == QLatin1String("-quiet")) {
             continue;
         } else if (arg == QLatin1String("-help")) {
@@ -246,7 +258,7 @@ void CmdLineParser::showMessage(const QString &msg, bool error)
     else
         QMessageBox::information(0, QObject::tr("Qt Assistant"), s);
 #else
-    fprintf(error ? stderr : stdout, "%s\n", qPrintable(msg));    
+    fprintf(error ? stderr : stdout, "%s\n", qPrintable(msg));
 #endif
 }
 
@@ -288,6 +300,11 @@ CmdLineParser::ShowState CmdLineParser::bookmarks() const
 CmdLineParser::ShowState CmdLineParser::search() const
 {
     return m_search;
+}
+
+QString CmdLineParser::currentFilter() const
+{
+    return m_currentFilter;
 }
 
 CmdLineParser::RegisterState CmdLineParser::registerRequest() const

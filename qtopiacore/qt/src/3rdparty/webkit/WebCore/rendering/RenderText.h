@@ -37,13 +37,12 @@ public:
     virtual ~RenderText();
 #endif
 
-    virtual const char* renderName() const { return "RenderText"; }
+    virtual const char* renderName() const;
 
-    virtual bool isTextFragment() const { return false; }
+    virtual bool isTextFragment() const;
+    virtual bool isWordBreak() const;
 
     virtual PassRefPtr<StringImpl> originalText() const;
-
-    virtual void setStyle(RenderStyle*);
 
     void extractTextBox(InlineTextBox*);
     void attachTextBox(InlineTextBox*);
@@ -57,13 +56,11 @@ public:
     virtual InlineTextBox* createInlineTextBox();
     virtual void dirtyLineBoxes(bool fullLayout, bool isRootInlineBox = false);
 
-    virtual void paint(PaintInfo&, int tx, int ty) { ASSERT_NOT_REACHED(); }
-    virtual void layout() { ASSERT_NOT_REACHED(); }
-
-    virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int, int, int, int, HitTestAction) { ASSERT_NOT_REACHED(); return false; }
-
     virtual void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
     virtual void addLineBoxRects(Vector<IntRect>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false);
+
+    virtual void absoluteQuads(Vector<FloatQuad>&, bool topLevel = true);
+    virtual void collectAbsoluteLineBoxQuads(Vector<FloatQuad>&, unsigned startOffset = 0, unsigned endOffset = UINT_MAX, bool useSelectionHeight = false);
 
     virtual VisiblePosition positionForCoordinates(int x, int y);
 
@@ -76,7 +73,7 @@ public:
     virtual int width() const;
     virtual int height() const;
 
-    virtual short lineHeight(bool firstLine, bool isRootLineBox = false) const;
+    virtual int lineHeight(bool firstLine, bool isRootLineBox = false) const;
 
     virtual int minPrefWidth() const;
     virtual int maxPrefWidth() const;
@@ -95,7 +92,7 @@ public:
     virtual int xPos() const;
     virtual int yPos() const;
 
-    virtual short verticalPositionHint(bool firstLine) const;
+    virtual int verticalPositionHint(bool firstLine) const;
 
     void setText(PassRefPtr<StringImpl>, bool force = false);
     void setTextWithOffset(PassRefPtr<StringImpl>, unsigned offset, unsigned len, bool force = false);
@@ -104,7 +101,7 @@ public:
     virtual SelectionState selectionState() const { return static_cast<SelectionState>(m_selectionState); }
     virtual void setSelectionState(SelectionState s);
     virtual IntRect selectionRect(bool clipToVisibleContent = true);
-    virtual IntRect caretRect(int offset, EAffinity, int* extraWidthToEndOfLine = 0);
+    virtual IntRect localCaretRect(InlineBox*, int caretOffset, int* extraWidthToEndOfLine = 0);
 
     virtual int marginLeft() const { return style()->marginLeft().calcMinValue(0); }
     virtual int marginRight() const { return style()->marginRight().calcMinValue(0); }
@@ -113,8 +110,6 @@ public:
 
     InlineTextBox* firstTextBox() const { return m_firstTextBox; }
     InlineTextBox* lastTextBox() const { return m_lastTextBox; }
-
-    virtual InlineBox* inlineBox(int offset, EAffinity = UPSTREAM);
 
     virtual int caretMinOffset() const;
     virtual int caretMaxOffset() const;
@@ -127,11 +122,13 @@ public:
 
     InlineTextBox* findNextInlineTextBox(int offset, int& pos) const;
 
-    int allowTabs() const { return !style()->collapseWhiteSpace(); }
+    bool allowTabs() const { return !style()->collapseWhiteSpace(); }
 
     void checkConsistency() const;
 
 protected:
+    virtual void styleDidChange(RenderStyle::Diff, const RenderStyle* oldStyle);
+
     virtual void setTextInternal(PassRefPtr<StringImpl>);
     virtual void calcPrefWidths(int leadWidth);
     virtual UChar previousCharacter();
@@ -141,6 +138,10 @@ private:
     // will use the more efficient textLength() instead, while
     // callers with a RenderObject* can continue to use length().
     virtual unsigned length() const { return textLength(); }
+
+    virtual void paint(PaintInfo&, int, int) { ASSERT_NOT_REACHED(); }
+    virtual void layout() { ASSERT_NOT_REACHED(); }
+    virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int, int, int, int, HitTestAction) { ASSERT_NOT_REACHED(); return false; }
 
     void deleteTextBoxes();
     bool containsOnlyWhitespace(unsigned from, unsigned len) const;

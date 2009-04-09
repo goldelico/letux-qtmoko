@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,8 +54,6 @@
 #  include <errno.h>
 #  include <sys/stat.h>
 #  include <sys/types.h>
-#else
-#  include <types.h>
 #endif
 
 #include <stdlib.h>
@@ -64,6 +66,12 @@
 #  include <share.h>
 # endif
 #endif
+
+#if defined(Q_OS_WINCE)
+#  include <types.h>
+#  include "qfunctions_wince.h"
+#endif
+
 
 QT_BEGIN_NAMESPACE
 
@@ -198,7 +206,7 @@ static int _gettemp(char *path, int *doopen, int domkdir, int slen)
                 targetPath = QDir::currentPath().append(QLatin1String("/")) + QLatin1String(path);
 
             if ((*doopen =
-                open(targetPath.toLocal8Bit(), O_CREAT|O_EXCL|O_RDWR
+                QT_OPEN(targetPath.toLocal8Bit(), O_CREAT|O_EXCL|O_RDWR
 #else
                         if ((*doopen =
                             open(path, QT_OPEN_CREAT|O_EXCL|QT_OPEN_RDWR
@@ -207,60 +215,63 @@ static int _gettemp(char *path, int *doopen, int domkdir, int slen)
                                  |QT_OPEN_LARGEFILE
 #endif
 #  if defined(Q_OS_WINCE)
-							     |_O_BINARY
+                                                             |_O_BINARY
 #  elif defined(Q_OS_WIN)
                                  |O_BINARY
 #  endif
                                  , 0600)) >= 0)
 #endif
 
-				return(1);
-			if (errno != EEXIST)
-				return(0);
-		} else if (domkdir) {
+                                return(1);
+                        if (errno != EEXIST)
+                                return(0);
+                } else if (domkdir) {
 #ifdef Q_OS_WIN
                     if (QT_MKDIR(path) == 0)
 #else
                     if (mkdir(path, 0700) == 0)
 #endif
-				return(1);
-			if (errno != EEXIST)
-				return(0);
+                                return(1);
+                        if (errno != EEXIST)
+                                return(0);
             }
 #ifndef Q_OS_WIN
             else if (QT_LSTAT(path, &sbuf))
 			return(errno == ENOENT ? 1 : 0);
+#else
+            if (!QFileInfo(QLatin1String(path)).exists())
+                return 1;
 #endif
 
-		/* tricky little algorwwithm for backward compatibility */
-		for (trv = start;;) {
-			if (!*trv)
-				return (0);
-			if (*trv == 'Z') {
-				if (trv == suffp)
-					return (0);
-				*trv++ = 'a';
-			} else {
-				if (isdigit(*trv))
-					*trv = 'a';
-				else if (*trv == 'z')	/* inc from z to A */
-					*trv = 'A';
-				else {
-					if (trv == suffp)
-						return (0);
-					++*trv;
-				}
-				break;
-			}
-		}
-	}
-	/*NOTREACHED*/
+                /* tricky little algorwwithm for backward compatibility */
+                for (trv = start;;) {
+                        if (!*trv)
+                                return (0);
+                        if (*trv == 'Z') {
+                                if (trv == suffp)
+                                        return (0);
+                                *trv++ = 'a';
+                        } else {
+                                if (isdigit(*trv))
+                                        *trv = 'a';
+                                else if (*trv == 'z')	/* inc from z to A */
+                                        *trv = 'A';
+                                else {
+                                        if (trv == suffp)
+                                                return (0);
+                                        ++*trv;
+                                }
+                                break;
+                        }
+                }
+        }
+        /*NOTREACHED*/
 }
 
 static int qt_mkstemps(char *path, int slen)
 {
-	int fd = 0;
-	return (_gettemp(path, &fd, 0, slen) ? fd : -1);
+        int fd = 0;
+        return (_gettemp(path, &fd, 0, slen) ? fd : -1);
 }
 
 //************* QTemporaryFileEngine
@@ -278,6 +289,7 @@ public:
 
 QTemporaryFileEngine::~QTemporaryFileEngine()
 {
+    QFSFileEngine::close();
 }
 
 bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
@@ -292,6 +304,7 @@ bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
     d->closeFileHandle = true;
     char *filename = qstrdup(qfilename.toLocal8Bit());
 
+#ifndef Q_WS_WIN
     int fd = qt_mkstemps(filename, suffixLength);
     if (fd != -1) {
         // First open the fd as an external file descriptor to
@@ -310,6 +323,18 @@ bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
     delete [] filename;
     setError(errno == EMFILE ? QFile::ResourceError : QFile::OpenError, qt_error_string(errno));
     return false;
+#else
+    if (!_gettemp(filename, 0, 0, suffixLength)) {
+        delete [] filename;
+        return false;
+    }
+
+    d->filePath = QString::fromLocal8Bit(filename);
+    d->nativeInitFileName();
+    d->closeFileHandle = true;
+    delete [] filename;
+    return QFSFileEngine::open(openMode);
+#endif
 }
 
 bool QTemporaryFileEngine::remove()
@@ -394,11 +419,11 @@ QTemporaryFilePrivate::~QTemporaryFilePrivate()
     file path will not be placed in the temporary directory by
     default, but be relative to the current working directory.
 
-    Specified filenames can contain the following template \c XXXXXX,
-    which will be replaced by the auto-generated portion of the
-    filename. Note that the template is case sensitive. If the
-    template is not present in the filename, QTemporaryFile appends
-    the generated part to the filename given.
+    Specified filenames can contain the following template \c XXXXXX
+    (six upper case "X" characters), which will be replaced by the
+    auto-generated portion of the filename. Note that the template is
+    case sensitive. If the template is not present in the filename,
+    QTemporaryFile appends the generated part to the filename given.
 
     \sa QDir::tempPath(), QFile
 */
@@ -435,8 +460,10 @@ QTemporaryFile::QTemporaryFile()
 /*!
     Constructs a QTemporaryFile with a template filename of \a
     templateName. Upon opening the temporary file this will be used to create
-    a unique filename. If the \a templateName does not contain XXXXXX it will
-    automatically be appended and used as the dynamic portion of the filename.
+    a unique filename.
+
+    If the \a templateName does not contain XXXXXX it will automatically be
+    appended and used as the dynamic portion of the filename.
 
     If \a templateName is a relative path, the path will be relative to the
     current working directory. You can use QDir::tempPath() to construct \a
@@ -467,9 +494,10 @@ QTemporaryFile::QTemporaryFile(QObject *parent)
     Constructs a QTemporaryFile with a template filename of \a
     templateName and the specified \a parent.
     Upon opening the temporary file this will be used to
-    create a unique filename. If the \a templateName does end in
-    XXXXXX it will automatically be appended and used as the dynamic
-    portion of the filename.
+    create a unique filename.
+
+    If the \a templateName does not contain XXXXXX it will automatically be
+    appended and used as the dynamic portion of the filename.
 
     If \a templateName is a relative path, the path will be relative to the
     current working directory. You can use QDir::tempPath() to construct \a

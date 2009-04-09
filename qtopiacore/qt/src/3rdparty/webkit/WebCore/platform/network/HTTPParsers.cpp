@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 Alexey Proskuryakov (ap@webkit.org)
- * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,6 @@
 #include "config.h"
 #include "HTTPParsers.h"
 
-#include "DeprecatedString.h"
 #include "PlatformString.h"
 
 namespace WebCore {
@@ -104,7 +103,8 @@ bool parseHTTPRefresh(const String& refresh, bool fromHttpEquivMeta, double& del
 
 String filenameFromHTTPContentDisposition(const String& value)
 {
-    Vector<String> keyValuePairs = value.split(';');
+    Vector<String> keyValuePairs;
+    value.split(';', keyValuePairs);
 
     unsigned length = keyValuePairs.size();
     for (unsigned i = 0; i < length; i++) {
@@ -137,7 +137,7 @@ String extractMIMETypeFromMediaType(const String& mediaType)
         UChar c = mediaType[offset];
         if (c == ';')
             break;
-        else if (DeprecatedChar(c).isSpace()) // FIXME: This seems wrong, " " is an invalid MIME type character according to RFC 2045.  bug 8644
+        else if (isSpaceOrNewline(c)) // FIXME: This seems wrong, " " is an invalid MIME type character according to RFC 2045.  bug 8644
             continue;
         // FIXME: This is a very slow way to build a string, given WebCore::String's implementation.
         mimeType += String(&c, 1);

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,6 +54,7 @@
 #include "qtextcursor.h"
 #include "qfont_p.h"
 #include "private/qunicodetables_p.h"
+#include "private/qfunctions_p.h"
 
 #ifndef QT_NO_TEXTHTMLPARSER
 
@@ -318,12 +323,12 @@ static const struct QTextHtmlEntity { const char *name; quint16 code; } entities
     { "zwnj", 0x200c }
 };
 
-static bool operator<(const QString &entityStr, const QTextHtmlEntity &entity)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QString &entityStr, const QTextHtmlEntity &entity)
 {
     return entityStr < QLatin1String(entity.name);
 }
 
-static bool operator<(const QTextHtmlEntity &entity, const QString &entityStr)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QTextHtmlEntity &entity, const QString &entityStr)
 {
     return QLatin1String(entity.name) < entityStr;
 }
@@ -438,12 +443,12 @@ static const QTextHtmlElement elements[Html_NumElements]= {
 };
 
 
-static bool operator<(const QString &str, const QTextHtmlElement &e)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QString &str, const QTextHtmlElement &e)
 {
     return str < QLatin1String(e.name);
 }
 
-static bool operator<(const QTextHtmlElement &e, const QString &str)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QTextHtmlElement &e, const QString &str)
 {
     return QLatin1String(e.name) < str;
 }
@@ -651,7 +656,8 @@ void QTextHtmlParser::parseTag()
 #ifndef QT_NO_CSSPARSER
             QCss::Parser parser(nodes.last().text);
             QCss::StyleSheet sheet;
-            parser.parse(&sheet);
+            sheet.origin = QCss::StyleSheetOrigin_Author;
+            parser.parse(&sheet, Qt::CaseInsensitive);
             inlineStyleSheets.append(sheet);
             resolveStyleSheetImports(sheet);
 #endif
@@ -1050,7 +1056,7 @@ void QTextHtmlParserNode::initializeProperties(const QTextHtmlParserNode *parent
                     && !attributes.at(i + 1).isEmpty()) {
                     hasHref = true;
                     charFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
-                    charFormat.setForeground(Qt::blue);
+                    charFormat.setForeground(QApplication::palette().link());
                 }
             }
 
@@ -1216,13 +1222,13 @@ void QTextHtmlParserNode::applyCssDeclarations(const QVector<QCss::Declaration> 
 
     for (int i = 0; i < declarations.count(); ++i) {
         const QCss::Declaration &decl = declarations.at(i);
-        if (decl.values.isEmpty()) continue;
+        if (decl.d->values.isEmpty()) continue;
 
         QCss::KnownValue identifier = QCss::UnknownValue;
-        if (decl.values.first().type == QCss::Value::KnownIdentifier)
-            identifier = static_cast<QCss::KnownValue>(decl.values.first().variant.toInt());
+        if (decl.d->values.first().type == QCss::Value::KnownIdentifier)
+            identifier = static_cast<QCss::KnownValue>(decl.d->values.first().variant.toInt());
 
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case QCss::BorderColor: borderBrush = QBrush(decl.colorValue()); break;
         case QCss::BorderStyles:
             if (decl.styleValue() != QCss::BorderStyle_Unknown && decl.styleValue() != QCss::BorderStyle_Native)
@@ -1241,7 +1247,7 @@ void QTextHtmlParserNode::applyCssDeclarations(const QVector<QCss::Declaration> 
             }
             break;
         case QCss::QtBlockIndent:
-            blockFormat.setIndent(decl.values.first().variant.toInt());
+            blockFormat.setIndent(decl.d->values.first().variant.toInt());
             break;
         case QCss::TextIndent: {
             qreal indent = 0;
@@ -1253,19 +1259,19 @@ void QTextHtmlParserNode::applyCssDeclarations(const QVector<QCss::Declaration> 
                 hasCssListIndent = true;
             break;
         case QCss::QtParagraphType:
-            if (decl.values.first().variant.toString().compare(QLatin1String("empty"), Qt::CaseInsensitive) == 0)
+            if (decl.d->values.first().variant.toString().compare(QLatin1String("empty"), Qt::CaseInsensitive) == 0)
                 isEmptyParagraph = true;
             break;
         case QCss::QtTableType:
-            if (decl.values.first().variant.toString().compare(QLatin1String("frame"), Qt::CaseInsensitive) == 0)
+            if (decl.d->values.first().variant.toString().compare(QLatin1String("frame"), Qt::CaseInsensitive) == 0)
                 isTextFrame = true;
-            else if (decl.values.first().variant.toString().compare(QLatin1String("root"), Qt::CaseInsensitive) == 0) {
+            else if (decl.d->values.first().variant.toString().compare(QLatin1String("root"), Qt::CaseInsensitive) == 0) {
                 isTextFrame = true;
                 isRootFrame = true;
             }
             break;
         case QCss::QtUserState:
-            userState = decl.values.first().variant.toInt();
+            userState = decl.d->values.first().variant.toInt();
             break;
         case QCss::Whitespace:
             switch (identifier) {
@@ -1314,7 +1320,7 @@ void QTextHtmlParserNode::applyCssDeclarations(const QVector<QCss::Declaration> 
             break;
         case QCss::ListStyleType:
         case QCss::ListStyle:
-            setListStyle(decl.values);
+            setListStyle(decl.d->values);
             break;
         default: break;
         }
@@ -1455,11 +1461,11 @@ static void setWidthAttribute(QTextLength *width, QString value)
 void QTextHtmlParserNode::parseStyleAttribute(const QString &value, const QTextDocument *resourceProvider)
 {
     QString css = value;
-    css.prepend(QLatin1String("dummy {"));
+    css.prepend(QLatin1String("* {"));
     css.append(QLatin1Char('}'));
     QCss::Parser parser(css);
     QCss::StyleSheet sheet;
-    parser.parse(&sheet);
+    parser.parse(&sheet, Qt::CaseInsensitive);
     if (sheet.styleRules.count() != 1) return;
     applyCssDeclarations(sheet.styleRules.at(0).declarations, resourceProvider);
 }
@@ -1553,8 +1559,10 @@ void QTextHtmlParser::applyAttributes(const QStringList &attributes)
                 if (key == QLatin1String("src") || key == QLatin1String("source")) {
                     node->imageName = value;
                 } else if (key == QLatin1String("width")) {
+                    node->imageWidth = -2; // register that there is a value for it.
                     setFloatAttribute(&node->imageWidth, value);
                 } else if (key == QLatin1String("height")) {
+                    node->imageHeight = -2; // register that there is a value for it.
                     setFloatAttribute(&node->imageHeight, value);
                 }
                 break;
@@ -1694,11 +1702,10 @@ class QTextHtmlStyleSelector : public QCss::StyleSelector
 {
 public:
     inline QTextHtmlStyleSelector(const QTextHtmlParser *parser)
-        : parser(parser) {}
+        : parser(parser) { nameCaseSensitivity = Qt::CaseInsensitive; }
 
-    virtual bool nodeNameEquals(NodePtr node, const QString& name) const;
+    virtual QStringList nodeNames(NodePtr node) const;
     virtual QString attribute(NodePtr node, const QString &name) const;
-    virtual bool hasAttribute(NodePtr node, const QString &name) const;
     virtual bool hasAttributes(NodePtr node) const;
     virtual bool isNullNode(NodePtr node) const;
     virtual NodePtr parentNode(NodePtr node) const;
@@ -1710,9 +1717,9 @@ private:
     const QTextHtmlParser *parser;
 };
 
-bool QTextHtmlStyleSelector::nodeNameEquals(NodePtr node, const QString& name) const
+QStringList QTextHtmlStyleSelector::nodeNames(NodePtr node) const
 {
-    return QString::compare(parser->at(node.id).tag, name, Qt::CaseInsensitive) == 0;
+    return QStringList(parser->at(node.id).tag.toLower());
 }
 
 #endif // QT_NO_CSSPARSER
@@ -1735,12 +1742,6 @@ QString QTextHtmlStyleSelector::attribute(NodePtr node, const QString &name) con
     if (idx == -1)
         return QString();
     return attributes.at(idx + 1);
-}
-
-bool QTextHtmlStyleSelector::hasAttribute(NodePtr node, const QString &name) const
-{
-   const QStringList &attributes = parser->at(node.id).attributes;
-   return findAttribute(attributes, name) != -1;
 }
 
 bool QTextHtmlStyleSelector::hasAttributes(NodePtr node) const
@@ -1818,7 +1819,7 @@ void QTextHtmlParser::importStyleSheet(const QString &href)
     if (!css.isEmpty()) {
         QCss::Parser parser(css);
         QCss::StyleSheet sheet;
-        parser.parse(&sheet);
+        parser.parse(&sheet, Qt::CaseInsensitive);
         externalStyleSheets.append(ExternalStyleSheet(href, sheet));
         resolveStyleSheetImports(sheet);
     }

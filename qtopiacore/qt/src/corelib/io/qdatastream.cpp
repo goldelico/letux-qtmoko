@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -151,6 +155,31 @@ QT_BEGIN_NAMESPACE
     data, followed by the data. Note that any encoding/decoding of
     the data (apart from the length quint32) must be done by you.
 
+    \target Serializing Qt Classes
+    \section1 Reading and writing other Qt classes.
+
+    In addition to the overloaded stream operators documented here,
+    any Qt classes that you might want to serialize to a QDataStream
+    will have appropriate stream operators declared as non-member of
+    the class:
+
+    \code
+    QDataStream &operator<<(QDataStream &, const QXxx &);
+    QDataStream &operator>>(QDataStream &, QXxx &);
+    \endcode
+
+    For example, here are the stream operators declared as non-members
+    of the QImage class:
+
+    \code
+    QDataStream & operator<< (QDataStream& stream, const QImage& image);
+    QDataStream & operator>> (QDataStream& stream, QImage& image);
+    \endcode
+
+    To see if your favorite Qt class has similar stream operators
+    defined, check the \bold {Related Non-Members} section of the
+    class's documentation page.
+
     \sa QTextStream QVariant
 */
 
@@ -193,10 +222,10 @@ QT_BEGIN_NAMESPACE
 #endif
 
 enum {
-    DefaultStreamVersion = QDataStream::Qt_4_4
+    DefaultStreamVersion = QDataStream::Qt_4_5
 };
 
-// ### 4.0: when streaming invalid QVariants, just the type should
+// ### 5.0: when streaming invalid QVariants, just the type should
 // be written, no "data" after it
 
 /*!
@@ -249,6 +278,9 @@ QDataStream::QDataStream(QIODevice *d)
 QDataStream::QDataStream(QByteArray *a, int mode)
 {
     QBuffer *buf = new QBuffer(a);
+#ifndef QT_NO_QOBJECT
+    buf->blockSignals(true);
+#endif
     buf->open(QIODevice::OpenMode(mode));
     dev = buf;
     owndev = true;
@@ -275,6 +307,9 @@ QDataStream::QDataStream(QByteArray *a, int mode)
 QDataStream::QDataStream(QByteArray *a, QIODevice::OpenMode flags)
 {
     QBuffer *buf = new QBuffer(a);
+#ifndef QT_NO_QOBJECT
+    buf->blockSignals(true);
+#endif
     buf->open(flags);
     dev = buf;
     owndev = true;
@@ -295,6 +330,9 @@ QDataStream::QDataStream(QByteArray *a, QIODevice::OpenMode flags)
 QDataStream::QDataStream(const QByteArray &a)
 {
     QBuffer *buf = new QBuffer;
+#ifndef QT_NO_QOBJECT
+    buf->blockSignals(true);
+#endif
     buf->setData(a);
     buf->open(QIODevice::ReadOnly);
     dev = buf;
@@ -476,6 +514,8 @@ void QDataStream::setByteOrder(ByteOrder bo)
     \value Qt_4_2 Version 8 (Qt 4.2)
     \value Qt_4_3 Version 9 (Qt 4.3)
     \value Qt_4_4 Version 10 (Qt 4.4)
+    \value Qt_4_5 Version 10 (Qt 4.5)
+    \omitvalue Qt_4_6
 
     \sa setVersion(), version()
 */
@@ -1191,8 +1231,10 @@ int QDataStream::skipRawData(int len)
         }
         return sumRead;
     } else {
-        quint64 pos = dev->pos();
-        len = qMin(int(dev->size() - pos), len);
+        qint64 pos = dev->pos();
+        qint64 size = dev->size();
+        if (pos + len > size)
+            len = size - pos;
         if (!dev->seek(pos + len))
             return -1;
         return len;

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -102,7 +106,7 @@ void qt_format_text(const QFont &fnt, const QRectF &_r,
 */
 
 const char  *qt_mfhdr_tag = "QPIC"; // header tag
-static const quint16 mfhdr_maj = 9; // major version #
+static const quint16 mfhdr_maj = 11; // major version #
 static const quint16 mfhdr_min = 0; // minor version #
 extern int qt_defaultDpiX();
 extern int qt_defaultDpiY();
@@ -696,21 +700,18 @@ bool QPicture::exec(QPainter *painter, QDataStream &s, int nrecords)
                 qreal justificationWidth;
                 s >> justificationWidth;
 
-                int flags = Qt::TextSingleLine | Qt::TextDontClip;
-
-                QTextOption opt;
-                opt.setTextDirection(Qt::LeftToRight);
+                int flags = Qt::TextSingleLine | Qt::TextDontClip | Qt::TextForceLeftToRight;
 
                 QSizeF size(1, 1);
                 if (justificationWidth > 0) {
                     size.setWidth(justificationWidth);
                     flags |= Qt::TextJustificationForced;
-                    opt.setAlignment(Qt::AlignJustify);
+                    flags |= Qt::AlignJustify;
                 }
 
                 QFontMetrics fm(fnt);
                 QPointF pt(p.x(), p.y() - fm.ascent());
-                qt_format_text(fnt, QRectF(pt, size), flags, &opt,
+                qt_format_text(fnt, QRectF(pt, size), flags, /*opt*/0,
                                str, /*brect=*/0, /*tabstops=*/0, /*...*/0, /*tabarraylen=*/0, painter);
             } else {
                 qt_format_text(font, QRectF(p, QSizeF(1, 1)), Qt::TextSingleLine | Qt::TextDontClip, /*opt*/0,
@@ -854,12 +855,22 @@ bool QPicture::exec(QPainter *painter, QDataStream &s, int nrecords)
             painter->setViewTransformEnabled(i_8);
             break;
         case QPicturePrivate::PdcSetWindow:
-            s >> r;
-            painter->setWindow(r.toRect());
+            if (d->formatMajor <= 5) {
+                s >> ir;
+                painter->setWindow(ir);
+            } else {
+                s >> r;
+                painter->setWindow(r.toRect());
+            }
             break;
         case QPicturePrivate::PdcSetViewport:
-            s >> r;
-            painter->setViewport(r.toRect());
+            if (d->formatMajor <= 5) {
+                s >> ir;
+                painter->setViewport(ir);
+            } else {
+                s >> r;
+                painter->setViewport(r.toRect());
+            }
             break;
         case QPicturePrivate::PdcSetWXform:
             s >> i_8;

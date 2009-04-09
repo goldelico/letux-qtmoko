@@ -23,46 +23,51 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegClosePath.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPathSegClosePath.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegClosePath)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegClosePathPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegClosePathPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegClosePathPrototypeTable = 
-{
-    2, 1, JSSVGPathSegClosePathPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPathSegClosePathPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegClosePathPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGPathSegClosePathPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegClosePathPrototype::info = { "SVGPathSegClosePathPrototype", 0, &JSSVGPathSegClosePathPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegClosePathPrototype::s_info = { "SVGPathSegClosePathPrototype", 0, &JSSVGPathSegClosePathPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegClosePathPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegClosePathPrototype>(exec, "[[JSSVGPathSegClosePath.prototype]]");
+    return getDOMPrototype<JSSVGPathSegClosePath>(exec);
 }
 
-const ClassInfo JSSVGPathSegClosePath::info = { "SVGPathSegClosePath", &JSSVGPathSeg::info, 0, 0 };
+const ClassInfo JSSVGPathSegClosePath::s_info = { "SVGPathSegClosePath", &JSSVGPathSeg::s_info, 0, 0 };
 
-JSSVGPathSegClosePath::JSSVGPathSegClosePath(ExecState* exec, SVGPathSegClosePath* impl)
-    : JSSVGPathSeg(exec, impl)
+JSSVGPathSegClosePath::JSSVGPathSegClosePath(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegClosePath> impl, SVGElement* context)
+    : JSSVGPathSeg(structure, impl, context)
 {
-    setPrototype(JSSVGPathSegClosePathPrototype::self(exec));
+}
+
+JSObject* JSSVGPathSegClosePath::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegClosePathPrototype(JSSVGPathSegClosePathPrototype::createStructure(JSSVGPathSegPrototype::self(exec)));
 }
 
 

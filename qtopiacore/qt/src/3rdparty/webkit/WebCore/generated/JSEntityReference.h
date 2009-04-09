@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSEntityReference_H
-#define JSEntityReference_H
+#ifndef JSEntityReference_h
+#define JSEntityReference_h
 
 #include "JSNode.h"
 
@@ -28,29 +28,34 @@ namespace WebCore {
 class EntityReference;
 
 class JSEntityReference : public JSNode {
+    typedef JSNode Base;
 public:
-    JSEntityReference(KJS::ExecState*, EntityReference*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSEntityReference(PassRefPtr<JSC::Structure>, PassRefPtr<EntityReference>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 };
 
 
-class JSEntityReferencePrototype : public KJS::JSObject {
+class JSEntityReferencePrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSEntityReferencePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSNodePrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSEntityReferencePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsEntityReferenceConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,7 @@
 #include "QtCore/qstack.h"
 #include "qsvgstyle_p.h"
 #include "private/qcssparser_p.h"
+#include "private/qsvggraphics_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -65,6 +70,7 @@ class QSvgTinyDocument;
 class QSvgHandler;
 class QColor;
 class QSvgStyleSelector;
+class QXmlStreamReader;
 
 struct QSvgCssAttribute
 {
@@ -72,37 +78,34 @@ struct QSvgCssAttribute
     QXmlStreamStringRef value;
 };
 
-#if defined(Q_OS_WINCE) && defined(IN)
-#undef IN
-#endif
-
 class QSvgHandler
 {
 public:
     enum LengthType {
-        PERCENT,
-        PX,
-        PC,
-        PT,
-        MM,
-        CM,
-        IN,
-        OTHER
+        LT_PERCENT,
+        LT_PX,
+        LT_PC,
+        LT_PT,
+        LT_MM,
+        LT_CM,
+        LT_IN,
+        LT_OTHER
     };
 
 public:
     QSvgHandler(QIODevice *device);
     QSvgHandler(const QByteArray &data);
+    QSvgHandler(QXmlStreamReader *const data);
     ~QSvgHandler();
 
     QSvgTinyDocument *document() const;
 
     inline bool ok() const {
-        return document() != 0 && !xml.error();
+        return document() != 0 && !xml->hasError();
     }
 
-    inline QString errorString() const { return xml.errorString(); }
-    inline int lineNumber() const { return xml.lineNumber(); }
+    inline QString errorString() const { return xml->errorString(); }
+    inline int lineNumber() const { return xml->lineNumber(); }
 
     void setDefaultCoordinateSystem(LengthType type);
     LengthType defaultCoordinateSystem() const;
@@ -130,7 +133,7 @@ public:
     bool processingInstruction(const QString &target, const QString &data);
 
 private:
-    QString normalizeCharacters(const QString &input) const;
+    void init();
 
     QSvgTinyDocument *m_doc;
     QStack<QSvgNode*> m_nodes;
@@ -145,17 +148,11 @@ private:
     };
     QStack<CurrentNode> m_skipNodes;
 
-    enum WhitespaceMode
-    {
-        Preserve,
-        Default
-    };
-
     /*!
         Follows the depths of elements. The top is current xml:space
         value that applies for a given element.
      */
-    QStack<WhitespaceMode> m_whitespaceMode;
+    QStack<QSvgText::WhitespaceMode> m_whitespaceMode;
 
     QSvgRefCounter<QSvgStyleProperty> m_style;
 
@@ -170,11 +167,16 @@ private:
 
     int m_animEnd;
 
-    QXmlStreamReader xml;
+    QXmlStreamReader *const xml;
     QCss::Parser m_cssParser;
     void parse();
 
     QPen m_defaultPen;
+    /**
+     * Whether we own the variable xml, and hence whether
+     * we need to delete it.
+     */
+    const bool m_ownsReader;
 };
 
 QT_END_NAMESPACE

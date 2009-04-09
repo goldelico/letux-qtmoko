@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,10 @@
 QT_BEGIN_NAMESPACE
 
 // #define QT_DEBUG_DRAW
+
+static void draw_text_item_win(const QPointF &_pos, const QTextItemInt &ti, HDC hdc,
+                               bool convertToText, const QTransform &xform, const QPointF &topLeft);
+
 
 static const struct {
     int winSizeName;
@@ -148,434 +156,6 @@ static int mapPaperSourceDevmode(QPrinter::PaperSource s)
     while ((sources[i].qtSourceName >= 0) && (sources[i].qtSourceName != s))
         i++;
     return sources[i].winSourceName ? sources[i].winSourceName : s;
-}
-
-QAlphaPaintEngine::QAlphaPaintEngine(QAlphaPaintEnginePrivate &data, PaintEngineFeatures devcaps)
-    : QPaintEngine(data, devcaps)
-{
-
-}
-
-QAlphaPaintEngine::~QAlphaPaintEngine()
-{
-
-}
-
-bool QAlphaPaintEngine::begin(QPaintDevice *pdev)
-{
-    Q_D(QAlphaPaintEngine);
-
-    d->m_continueCall = true;
-    if (d->m_pass != 0) {
-        return true;
-    }
-
-    d->m_savedcaps = gccaps;
-    d->m_pdev = pdev;
-
-    d->m_alphaPen = false;
-    d->m_alphaBrush = false;
-    d->m_alphaOpacity = false;
-    d->m_hasalpha = false;
-    d->m_advancedPen = false;
-    d->m_advancedBrush = false;
-    d->m_complexTransform = false;
-
-    // clear alpha region
-    d->m_alphargn = QRegion();
-    d->m_cliprgn = QRegion();
-    d->m_pen = QPen();
-    d->m_transform = QTransform();
-
-    flushAndInit();
-
-    return true;
-}
-
-extern int qt_defaultDpiX();
-extern int qt_defaultDpiY();
-
-bool QAlphaPaintEngine::end()
-{
-    Q_D(QAlphaPaintEngine);
-
-    d->m_continueCall = true;
-    if (d->m_pass != 0) {
-        return true;
-    }
-
-    flushAndInit(false);
-    return true;
-}
-
-void QAlphaPaintEngine::updateState(const QPaintEngineState &state)
-{
-    Q_D(QAlphaPaintEngine);
-
-    DirtyFlags flags = state.state();
-    if (flags & QPaintEngine::DirtyTransform) {
-        d->m_transform = state.transform();
-        d->m_complexTransform = (d->m_transform.type() > QTransform::TxScale);
-    }
-    if (flags & QPaintEngine::DirtyPen) {
-        d->m_pen = state.pen();
-        if (d->m_pen.style() == Qt::NoPen) {
-            d->m_advancedPen = false;
-            d->m_alphaPen = false;
-        } else {
-            d->m_advancedPen = (d->m_pen.brush().style() != Qt::SolidPattern);
-            d->m_alphaPen = !d->m_pen.brush().isOpaque();
-        }
-    }
-
-    if (d->m_pass != 0) {
-        d->m_continueCall = true;
-        return;
-    }
-    d->m_continueCall = false;
-
-    if (flags & QPaintEngine::DirtyOpacity) {
-        d->m_alphaOpacity = (state.opacity() != 1.0f);
-    }
-
-    if (flags & QPaintEngine::DirtyBrush) {
-        if (state.brush().style() == Qt::NoBrush) {
-            d->m_advancedBrush = false;
-            d->m_alphaBrush = false;
-        } else {
-            d->m_advancedBrush = (state.brush().style() != Qt::SolidPattern);
-            d->m_alphaBrush = !state.brush().isOpaque();
-        }
-    }
-
-
-    d->m_hasalpha = d->m_alphaOpacity || d->m_alphaBrush || d->m_alphaPen;
-
-    if (d->m_picengine)
-        d->m_picengine->updateState(state);
-}
-
-void QAlphaPaintEngine::drawPath(const QPainterPath &path)
-{
-    Q_D(QAlphaPaintEngine);
-
-    QRectF tr = d->addPenWidth(path);
-
-    if (d->m_pass == 0) {
-        d->m_continueCall = false;
-        if (d->m_hasalpha || d->m_advancedPen || d->m_advancedBrush) {
-            d->addAlphaRect(tr);
-        }
-        if (d->m_picengine)
-            d->m_picengine->drawPath(path);
-    } else {
-        d->m_continueCall = !d->fullyContained(tr);
-    }
-}
-
-void QAlphaPaintEngine::drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode)
-{
-    Q_D(QAlphaPaintEngine);
-
-    QPolygonF poly;
-    for (int i=0; i<pointCount; ++i)
-        poly.append(points[i]);
-
-    QPainterPath path;
-    path.addPolygon(poly);
-    QRectF tr = d->addPenWidth(path);
-
-    if (d->m_pass == 0) {
-        d->m_continueCall = false;
-        if (d->m_hasalpha || d->m_advancedPen || d->m_advancedBrush) {
-            d->addAlphaRect(tr);
-        }
-
-        if (d->m_picengine)
-            d->m_picengine->drawPolygon(points, pointCount, mode);
-    } else {
-        d->m_continueCall = !d->fullyContained(tr);
-    }
-}
-
-void QAlphaPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr)
-{
-    Q_D(QAlphaPaintEngine);
-
-    QRectF tr = d->m_transform.mapRect(r);
-    if (d->m_pass == 0) {
-        d->m_continueCall = false;
-        if (pm.hasAlpha() || d->m_alphaOpacity || d->m_complexTransform || pm.isQBitmap()) {
-            d->addAlphaRect(tr);
-        }
-
-        if (d->m_picengine)
-            d->m_picengine->drawPixmap(r, pm, sr);
-
-    } else {
-        d->m_continueCall = !d->fullyContained(tr);
-    }
-}
-
-void QAlphaPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
-{
-    Q_D(QAlphaPaintEngine);
-
-    QRectF tr(p.x(), p.y() - textItem.ascent(), textItem.width() + 5, textItem.ascent() + textItem.descent() + 5);
-    tr = d->m_transform.mapRect(tr);
-
-    if (d->m_pass == 0) {
-        d->m_continueCall = false;
-        if (d->m_alphaPen || d->m_alphaOpacity || d->m_advancedPen) {
-            d->addAlphaRect(tr);
-        }
-        if (d->m_picengine) {
-            d->m_picengine->drawTextItem(p, textItem);
-        }
-    } else {
-        d->m_continueCall = !d->fullyContained(tr);
-    }
-}
-
-void QAlphaPaintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s)
-{
-    Q_D(QAlphaPaintEngine);
-
-    QRectF brect = d->m_transform.mapRect(r);
-
-    if (d->m_pass == 0) {
-        d->m_continueCall = false;
-        if (pixmap.hasAlpha() || d->m_alphaOpacity || d->m_complexTransform || pixmap.isQBitmap()) {
-            d->addAlphaRect(brect);
-        }
-        if (d->m_picengine)
-            d->m_picengine->drawTiledPixmap(r, pixmap, s);
-    } else {
-        d->m_continueCall = !d->fullyContained(brect);
-    }
-}
-
-QRegion QAlphaPaintEngine::alphaClipping() const
-{
-    Q_D(const QAlphaPaintEngine);
-    return d->m_cliprgn;
-}
-
-bool QAlphaPaintEngine::continueCall() const
-{
-    Q_D(const QAlphaPaintEngine);
-    return d->m_continueCall;
-}
-
-void QAlphaPaintEngine::flushAndInit(bool init)
-{
-    Q_D(QAlphaPaintEngine);
-    Q_ASSERT(d->m_pass == 0);
-
-    if (d->m_pic) {
-        d->m_picpainter->end();
-
-        // set clip region
-        d->m_alphargn = d->m_alphargn.intersected(QRect(0, 0, d->m_pdev->width(), d->m_pdev->height()));
-        d->m_cliprgn = d->m_alphargn;
-
-        // now replay the QPicture
-        ++d->m_pass; // we are now doing pass #2
-
-        // reset states
-        gccaps = d->m_savedcaps;
-
-        painter()->save();
-        d->resetState(painter());
-
-        // make sure the output from QPicture is unscaled
-        QTransform mtx;
-        mtx.scale(1.0f / (qreal(d->m_pdev->logicalDpiX()) / qreal(qt_defaultDpiX())),
-                  1.0f / (qreal(d->m_pdev->logicalDpiY()) / qreal(qt_defaultDpiY())));
-        painter()->setTransform(mtx);
-        painter()->drawPicture(0, 0, *d->m_pic);
-        d->m_cliprgn = QRegion();
-        d->resetState(painter());
-
-        QVector<QRect> rects = d->m_alphargn.rects();
-        if (rects.count() > 10) {
-            d->drawAlphaImage(d->m_alphargn.boundingRect());
-        } else {
-            for (int i=0; i<rects.count(); ++i)
-                d->drawAlphaImage(rects.at(i));
-        }
-
-        d->m_alphargn = QRegion();
-
-        painter()->restore();
-
-        --d->m_pass; // pass #2 finished
-
-        cleanUp();
-    }
-
-    if (init) {
-        gccaps = PaintEngineFeatures(AllFeatures & ~QPaintEngine::ObjectBoundingModeGradients);
-
-        d->m_pic = new QPicture();
-        d->m_pic->d_ptr->in_memory_only = true;
-        d->m_picpainter = new QPainter(d->m_pic);
-        d->m_picengine = d->m_picpainter->paintEngine();
-
-        // When newPage() is called and the m_picpainter is recreated
-        // we have to copy the current state of the original printer
-        // painter back to the m_picpainter
-        d->m_picpainter->setPen(painter()->pen());
-        d->m_picpainter->setBrush(painter()->brush());
-        d->m_picpainter->setBrushOrigin(painter()->brushOrigin());
-        d->m_picpainter->setFont(painter()->font());
-        d->m_picpainter->setOpacity(painter()->opacity());
-        d->m_picpainter->setTransform(painter()->combinedTransform());
-        d->m_picengine->syncState();
-    }
-}
-
-void QAlphaPaintEngine::cleanUp()
-{
-    Q_D(QAlphaPaintEngine);
-
-    delete d->m_picpainter;
-    delete d->m_pic;
-
-    d->m_picpainter = 0;
-    d->m_pic = 0;
-    d->m_picengine = 0;
-}
-
-QAlphaPaintEnginePrivate::QAlphaPaintEnginePrivate()
-    :   m_pass(0),
-        m_pic(0),
-        m_picengine(0),
-        m_picpainter(0),
-        m_hasalpha(false),
-        m_alphaPen(false),
-        m_alphaBrush(false),
-        m_alphaOpacity(false),
-        m_advancedPen(false),
-        m_advancedBrush(false),
-        m_complexTransform(false)
-{
-
-}
-
-QAlphaPaintEnginePrivate::~QAlphaPaintEnginePrivate()
-{
-    delete m_picpainter;
-    delete m_pic;
-}
-
-QRectF QAlphaPaintEnginePrivate::addPenWidth(const QPainterPath &path)
-{
-    QPainterPath tmp = path;
-
-    if (m_pen.style() == Qt::NoPen)
-        return (path.controlPointRect() * m_transform).boundingRect();
-    if (m_pen.isCosmetic())
-        tmp = path * m_transform;
-
-    QPainterPathStroker stroker;
-    if (m_pen.widthF() == 0.0f)
-        stroker.setWidth(1.0);
-    else
-        stroker.setWidth(m_pen.widthF());
-    stroker.setJoinStyle(m_pen.joinStyle());
-    stroker.setCapStyle(m_pen.capStyle());
-    tmp = stroker.createStroke(tmp);
-    if (m_pen.isCosmetic())
-        return tmp.controlPointRect();
-
-    return (tmp.controlPointRect() * m_transform).boundingRect();
-}
-
-QRect QAlphaPaintEnginePrivate::toRect(const QRectF &rect) const
-{
-    QRect r;
-    r.setLeft(int(rect.left()));
-    r.setTop(int(rect.top()));
-    r.setRight(int(rect.right() + 1));
-    r.setBottom(int(rect.bottom() + 1));
-    return r;
-}
-
-void QAlphaPaintEnginePrivate::addAlphaRect(const QRectF &rect)
-{
-    m_alphargn |= toRect(rect);
-}
-
-void QAlphaPaintEnginePrivate::drawAlphaImage(const QRectF &rect)
-{
-    Q_Q(QAlphaPaintEngine);
-
-    qreal dpiX = qMax(m_pdev->logicalDpiX(), 300);
-    qreal dpiY = qMax(m_pdev->logicalDpiY(), 300);
-    qreal xscale = (dpiX / m_pdev->logicalDpiX());
-    qreal yscale = (dpiY / m_pdev->logicalDpiY());
-
-    QTransform picscale;
-    picscale.scale(xscale, yscale);
-
-    const int tileSize = 2048;
-    QSize size((int(rect.width() * xscale)), int(rect.height() * yscale));
-    int divw = (size.width() / tileSize);
-    int divh = (size.height() / tileSize);
-    divw += 1;
-    divh += 1;
-
-    int incx = int(rect.width() / divw);
-    int incy = int(rect.height() / divh);
-
-    for (int y=0; y<divh; ++y) {
-        int ypos = int((incy * y) + rect.y());
-        int height = int((y == (divh - 1)) ? (rect.height() - (incy * y)) : incy) + 1;
-
-        for (int x=0; x<divw; ++x) {
-            int xpos = int((incx * x) + rect.x());
-            int width = int((x == (divw - 1)) ? (rect.width() - (incx * x)) : incx) + 1;
-
-            QSize imgsize(int(width * xscale), int(height * yscale));
-            QImage img(imgsize, QImage::Format_ARGB32_Premultiplied);
-            img.fill(0xffffffff);
-
-            QPainter imgpainter(&img);
-            imgpainter.setTransform(picscale);
-            QPointF picpos(qreal(-xpos), qreal(-ypos));
-            imgpainter.drawPicture(picpos, *m_pic);
-            imgpainter.end();
-
-            q->painter()->setTransform(QTransform());
-            QRect r(xpos, ypos, width, height);
-            q->painter()->drawImage(r, img);
-        }
-    }
-}
-
-bool QAlphaPaintEnginePrivate::fullyContained(const QRectF &rect) const
-{
-    QRegion r(toRect(rect));
-    return (m_cliprgn.intersected(r) == r);
-}
-
-void QAlphaPaintEnginePrivate::resetState(QPainter *p)
-{
-    p->setPen(QPen());
-    p->setBrush(QBrush());
-    p->setBrushOrigin(0,0);
-    p->setBackground(QBrush());
-    p->setFont(QFont());
-    p->setTransform(QTransform());
-    // The view transform is already recorded and included in the
-    // picture we're about to replay. If we don't turn if off,
-    // the view matrix will be applied twice.
-    p->setViewTransformEnabled(false);
-    p->setClipRegion(QRegion(), Qt::NoClip);
-    p->setClipPath(QPainterPath(), Qt::NoClip);
-    p->setClipping(false);
-    p->setOpacity(1.0f);
 }
 
 QWin32PrintEngine::QWin32PrintEngine(QPrinter::PrinterMode mode)
@@ -694,6 +274,7 @@ bool QWin32PrintEngine::end()
     }
 
     d->state = QPrinter::Idle;
+    d->reinit = true;
     return true;
 }
 
@@ -775,9 +356,6 @@ bool QWin32PrintEngine::abort()
     return false;
 }
 
-extern void qt_draw_text_item(const QPointF &pos, const QTextItemInt &ti, HDC hdc,
-                              bool convertToText, const QTransform &matrix, const QPointF &topLeft);
-
 void QWin32PrintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
 {
     Q_D(const QWin32PrintEngine);
@@ -835,7 +413,7 @@ void QWin32PrintEngine::drawTextItem(const QPointF &p, const QTextItem &textItem
     SelectObject(d->hdc, CreatePen(PS_SOLID, 1, cf));
     SetTextColor(d->hdc, cf);
 
-    qt_draw_text_item(p, ti, d->hdc, latin1String, d->matrix, d->devPaperRect.topLeft());
+    draw_text_item_win(p, ti, d->hdc, latin1String, d->matrix, d->devPaperRect.topLeft());
     DeleteObject(SelectObject(d->hdc,GetStockObject(HOLLOW_BRUSH)));
     DeleteObject(SelectObject(d->hdc,GetStockObject(BLACK_PEN)));
 }
@@ -863,7 +441,7 @@ int QWin32PrintEngine::metric(QPaintDevice::PaintDeviceMetric m) const
     switch (m) {
     case QPaintDevice::PdmWidth:
         if (d->has_custom_paper_size) {
-            val =  qRound(d->paper_size.width() * d->dpi_x / 72.0);
+            val =  qRound(d->paper_size.width() * res / 72.0);
         } else {
             int logPixelsX = GetDeviceCaps(d->hdc, LOGPIXELSX);
             if (logPixelsX == 0) {
@@ -877,11 +455,11 @@ int QWin32PrintEngine::metric(QPaintDevice::PaintDeviceMetric m) const
         }
         if (d->pageMarginsSet)
             val -= int(mmToInches((d->previousDialogMargins.left() +
-                                   d->previousDialogMargins.width()) / 100.0) * d->dpi_x);
+                                   d->previousDialogMargins.width()) / 100.0) * res);
         break;
     case QPaintDevice::PdmHeight:
         if (d->has_custom_paper_size) {
-            val = qRound(d->paper_size.height() * d->dpi_y / 72.0);
+            val = qRound(d->paper_size.height() * res / 72.0);
         } else {
             int logPixelsY = GetDeviceCaps(d->hdc, LOGPIXELSY);
             if (logPixelsY == 0) {
@@ -895,7 +473,7 @@ int QWin32PrintEngine::metric(QPaintDevice::PaintDeviceMetric m) const
         }
         if (d->pageMarginsSet)
             val -= int(mmToInches((d->previousDialogMargins.top() +
-                                   d->previousDialogMargins.height()) / 100.0) * d->dpi_y);
+                                   d->previousDialogMargins.height()) / 100.0) * res);
         break;
     case QPaintDevice::PdmDpiX:
         val = res;
@@ -1141,8 +719,11 @@ void QWin32PrintEngine::drawPixmap(const QRectF &targetRect,
 
             QPixmap p = pixmap.copy(tileSize * x, tileSize * y, imgw, imgh);
             HBITMAP hbitmap = p.toWinHBITMAP(QPixmap::NoAlpha);
-            HDC hbitmap_hdc = CreateCompatibleDC(qt_win_display_dc());
+            HDC display_dc = GetDC(0);
+            HDC hbitmap_hdc = CreateCompatibleDC(display_dc);
             HGDIOBJ null_bitmap = SelectObject(hbitmap_hdc, hbitmap);
+
+            ReleaseDC(0, display_dc);
 
             if (!StretchBlt(d->hdc, qRound(tposx - xform_offset_x), qRound(tposy - xform_offset_y), width, height,
                             hbitmap_hdc, 0, 0, p.width(), p.height(), SRCCOPY))
@@ -1171,9 +752,12 @@ void QWin32PrintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pm, cons
     } else {
         int dc_state = SaveDC(d->hdc);
 
+        HDC display_dc = GetDC(0);
         HBITMAP hbitmap = pm.toWinHBITMAP(QPixmap::NoAlpha);
-        HDC hbitmap_hdc = CreateCompatibleDC(qt_win_display_dc());
+        HDC hbitmap_hdc = CreateCompatibleDC(display_dc);
         HGDIOBJ null_bitmap = SelectObject(hbitmap_hdc, hbitmap);
+
+        ReleaseDC(0, display_dc);
 
         QRectF trect = d->painterMatrix.mapRect(r);
         int tx = int(trect.left() * d->stretch_x + d->origin_x);
@@ -1313,7 +897,7 @@ void QWin32PrintEnginePrivate::strokePath(const QPainterPath &path, const QColor
         if (pen.isCosmetic()) {
             stroke = stroker.createStroke(path * matrix);
         } else {
-            stroke = stroker.createStroke(path * painterMatrix);
+            stroke = stroker.createStroke(path) * painterMatrix;
             QTransform stretch(stretch_x, 0, 0, stretch_y, origin_x, origin_y);
             stroke = stroke * stretch;
         }
@@ -1390,26 +974,24 @@ void QWin32PrintEnginePrivate::queryDefault()
                           reinterpret_cast<const wchar_t *>(noPrinters.utf16()),
                           reinterpret_cast<wchar_t *>(buffer), 256);
         output = QString::fromUtf16(buffer);
-        if (output == noPrinters) { // no printers
-            qWarning("QPrinter: System has no default printer, are any printers installed?");
+        if (output.isEmpty() || output == noPrinters) // no printers
             return;
-        }
     }, {
         char buffer[256];
         GetProfileStringA("windows", "device", noPrinters.toLatin1(), buffer, 256);
         output = QString::fromLocal8Bit(buffer);
-        if (output == noPrinters) { // no printers
-            qWarning("QPrinter: System has no default printer, are any printers installed?");
+        if (output.isEmpty() || output == noPrinters) // no printers
             return;
-        }
     });
     QStringList info = output.split(QLatin1Char(','));
-    if(name.isEmpty())
-        name = info.at(0);
-    if(program.isEmpty())
-        program = info.at(1);
-    if(port.isEmpty())
-        port = info.at(2);
+    if (info.size() > 0) {
+        if (name.isEmpty())
+            name = info.at(0);
+        if (program.isEmpty())
+            program = info.at(1);
+        if (port.isEmpty())
+            port = info.at(2);
+    }
 }
 
 QWin32PrintEnginePrivate::~QWin32PrintEnginePrivate()
@@ -1516,9 +1098,11 @@ void QWin32PrintEnginePrivate::initHDC()
 {
     Q_ASSERT(hdc);
 
+    HDC display_dc = GetDC(0);
     dpi_x = GetDeviceCaps(hdc, LOGPIXELSX);
     dpi_y = GetDeviceCaps(hdc, LOGPIXELSY);
-    dpi_display = GetDeviceCaps(qt_win_display_dc(), LOGPIXELSY);
+    dpi_display = GetDeviceCaps(display_dc, LOGPIXELSY);
+    ReleaseDC(0, display_dc);
     if (dpi_display == 0) {
         qWarning("QWin32PrintEngine::metric: GetDeviceCaps() failed, "
                 "might be a driver problem");
@@ -1597,8 +1181,9 @@ void QWin32PrintEnginePrivate::release()
         // devMode is a part of the same memory block as pInfo so one free is enough...
         GlobalUnlock(hMem);
         GlobalFree(hMem);
-        ClosePrinter(hPrinter);
     }
+    if (hPrinter)
+        ClosePrinter(hPrinter);
     DeleteDC(hdc);
 
     hdc = 0;
@@ -1832,6 +1417,27 @@ void QWin32PrintEngine::setProperty(PrintEnginePropertyKey key, const QVariant &
         int orientation;
         QT_WA( {
             orientation = d->devModeW()->dmOrientation;
+            DWORD needed = 0;
+            DWORD returned = 0;
+            if (!EnumForms(d->hPrinter, 1, 0, 0, &needed, &returned)) {
+                BYTE *forms = (BYTE *) malloc(needed);
+                if (EnumForms(d->hPrinter, 1, forms, needed, &needed, &returned)) {
+                    for (DWORD i=0; i< returned; ++i) {
+                        FORM_INFO_1 *formArray = reinterpret_cast<FORM_INFO_1 *>(forms);
+                        // the form sizes are specified in 1000th of a mm,
+                        // convert the size to Points
+                        QSizeF size((formArray[i].Size.cx * 72/25.4)/1000.0,
+                                    (formArray[i].Size.cy * 72/25.4)/1000.0);
+                        if (qAbs(d->paper_size.width() - size.width()) <= 2
+                            && qAbs(d->paper_size.height() - size.height()) <= 2)
+                        {
+                            d->devModeW()->dmPaperSize = i+1;
+                            break;
+                        }
+                    }
+                }
+                free(forms);
+            }
         }, {
             orientation = d->devModeA()->dmOrientation;
         } );
@@ -1916,13 +1522,13 @@ QVariant QWin32PrintEngine::property(PrintEnginePropertyKey key) const
     case PPK_PageRect:
         if (d->has_custom_paper_size) {
             QRect rect(0, 0,
-                       qRound(d->paper_size.width() * d->dpi_x / 72.0),
-                       qRound(d->paper_size.height() * d->dpi_y / 72.0));
+                       qRound(d->paper_size.width() * d->resolution / 72.0),
+                       qRound(d->paper_size.height() * d->resolution / 72.0));
             if (d->pageMarginsSet) {
-                rect = rect.adjusted(qRound(mmToInches(d->previousDialogMargins.left()/100.0) * d->dpi_x),
-                                     qRound(mmToInches(d->previousDialogMargins.top()/100.0) * d->dpi_y),
-                                     -qRound(mmToInches(d->previousDialogMargins.width()/100.0) * d->dpi_x),
-                                     -qRound(mmToInches(d->previousDialogMargins.height()/100.0) * d->dpi_y));
+                rect = rect.adjusted(qRound(mmToInches(d->previousDialogMargins.left()/100.0) * d->resolution),
+                                     qRound(mmToInches(d->previousDialogMargins.top()/100.0) * d->resolution),
+                                     -qRound(mmToInches(d->previousDialogMargins.width()/100.0) * d->resolution),
+                                     -qRound(mmToInches(d->previousDialogMargins.height()/100.0) * d->resolution));
             }
             value = rect;
         } else {
@@ -1941,8 +1547,8 @@ QVariant QWin32PrintEngine::property(PrintEnginePropertyKey key) const
                 QT_WA( {
                         value = mapDevmodePaperSize(d->devModeW()->dmPaperSize);
                     }, {
-                           value = mapDevmodePaperSize(d->devModeA()->dmPaperSize);
-                       } );
+                        value = mapDevmodePaperSize(d->devModeA()->dmPaperSize);
+                    } );
             }
         }
         break;
@@ -1950,11 +1556,11 @@ QVariant QWin32PrintEngine::property(PrintEnginePropertyKey key) const
     case PPK_PaperRect:
         if (d->has_custom_paper_size) {
             value = QRect(0, 0,
-                          qRound(d->paper_size.width() * d->dpi_x / 72.0),
-                          qRound(d->paper_size.height() * d->dpi_y / 72.0));
-        }
-        else
+                          qRound(d->paper_size.width() * d->resolution / 72.0),
+                          qRound(d->paper_size.height() * d->resolution / 72.0));
+        } else {
             value = QTransform(1/d->stretch_x, 0, 0, 1/d->stretch_y, 0, 0).mapRect(d->devPaperRect);
+        }
         break;
 
     case PPK_PaperSource:
@@ -2157,6 +1763,8 @@ void QWin32PrintEnginePrivate::readDevmode(HGLOBAL globalDevmode)
                            reinterpret_cast<const wchar_t *>(name.utf16()), 0, dm);
 
             num_copies = devModeW()->dmCopies;
+            if (!OpenPrinterW((LPWSTR)name.utf16(), (LPHANDLE)&hPrinter, 0))
+                qWarning("QPrinter: OpenPrinter() failed after reading DEVMODE.");
         }, {
             DEVMODEA *dm = (DEVMODEA*) GlobalLock(globalDevmode);
             release();
@@ -2165,11 +1773,195 @@ void QWin32PrintEnginePrivate::readDevmode(HGLOBAL globalDevmode)
             hdc = CreateDCA(program.toLatin1(), name.toLatin1(), 0, dm);
 
             num_copies = devModeA()->dmCopies;
+            if (!OpenPrinterA((LPSTR)name.toLatin1().data(), (LPHANDLE)&hPrinter, 0))
+                qWarning("QPrinter: OpenPrinter() failed after reading DEVMODE.");
         } );
     }
 
     if (hdc)
         initHDC();
+}
+
+static void draw_text_item_win(const QPointF &_pos, const QTextItemInt &ti, HDC hdc,
+                               bool convertToText, const QTransform &xform, const QPointF &topLeft)
+{
+
+    // Make sure we translate for systems that can't handle world transforms
+    QPointF pos(QT_WA_INLINE(_pos, _pos + QPointF(xform.dx(), xform.dy())));
+    QFontEngine *fe = ti.fontEngine;
+    QPointF baseline_pos = xform.inverted().map(xform.map(pos) - topLeft);
+
+    SetTextAlign(hdc, TA_BASELINE);
+    SetBkMode(hdc, TRANSPARENT);
+
+    bool has_kerning = ti.f && ti.f->kerning();
+    QFontEngineWin *winfe = (fe->type() == QFontEngine::Win) ? static_cast<QFontEngineWin *>(fe) : 0;
+
+    HFONT hfont;
+    bool ttf = false;
+    bool useTextOutA = false;
+
+    if (winfe) {
+        hfont = winfe->hfont;
+        ttf = winfe->ttf;
+        useTextOutA = winfe->useTextOutA;
+    } else {
+        hfont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+    }
+
+    HGDIOBJ old_font = SelectObject(hdc, hfont);
+    unsigned int options = (ttf && !convertToText) ? ETO_GLYPH_INDEX : 0;
+    wchar_t *convertedGlyphs = (wchar_t *)ti.chars;
+    QGlyphLayout glyphs = ti.glyphs;
+
+    if (!(ti.flags & QTextItem::RightToLeft) && useTextOutA) {
+        qreal x = pos.x();
+        qreal y = pos.y();
+
+        // hack to get symbol fonts working on Win95. See also QFontEngine constructor
+        // can only happen if !ttf
+        for(int i = 0; i < glyphs.numGlyphs; i++) {
+            QString str(QChar(glyphs.glyphs[i]));
+            QT_WA({
+                TextOutW(hdc, qRound(x + glyphs.offsets[i].x.toReal()),
+                        qRound(y + glyphs.offsets[i].y.toReal()),
+                        (LPWSTR)str.utf16(), str.length());
+            } , {
+                QByteArray cstr = str.toLocal8Bit();
+                TextOutA(hdc, qRound(x + glyphs.offsets[i].x.toReal()),
+                        qRound(y + glyphs.offsets[i].y.toReal()),
+                        cstr.data(), cstr.length());
+            });
+            x += glyphs.effectiveAdvance(i).toReal();
+        }
+    } else {
+        bool fast = !has_kerning && !(ti.flags & QTextItem::RightToLeft);
+        for(int i = 0; fast && i < glyphs.numGlyphs; i++) {
+            if (glyphs.offsets[i].x != 0 || glyphs.offsets[i].y != 0 || glyphs.justifications[i].space_18d6 != 0
+                || glyphs.attributes[i].dontPrint) {
+                fast = false;
+                break;
+            }
+        }
+
+#if !defined(Q_OS_WINCE)
+        // Scale, rotate and translate here. This is only valid for systems > Windows Me.
+        // We should never get here on Windows Me or lower if the transformation specifies
+        // scaling or rotation.
+        QT_WA({
+            XFORM win_xform;
+            win_xform.eM11 = xform.m11();
+            win_xform.eM12 = xform.m12();
+            win_xform.eM21 = xform.m21();
+            win_xform.eM22 = xform.m22();
+            win_xform.eDx = xform.dx();
+            win_xform.eDy = xform.dy();
+            SetGraphicsMode(hdc, GM_ADVANCED);
+            SetWorldTransform(hdc, &win_xform);
+        }, {
+            // nothing
+        });
+#endif
+
+        if (fast) {
+            // fast path
+            QVarLengthArray<wchar_t> g(glyphs.numGlyphs);
+            for (int i = 0; i < glyphs.numGlyphs; ++i)
+                g[i] = glyphs.glyphs[i];
+            ExtTextOutW(hdc,
+                        qRound(baseline_pos.x() + glyphs.offsets[0].x.toReal()),
+                        qRound(baseline_pos.y() + glyphs.offsets[0].y.toReal()),
+                        options, 0, convertToText ? convertedGlyphs : g.data(), glyphs.numGlyphs, 0);
+        } else {
+            QVarLengthArray<QFixedPoint> positions;
+            QVarLengthArray<glyph_t> _glyphs;
+
+            QTransform matrix;
+            matrix.translate(baseline_pos.x(), baseline_pos.y());
+            ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags,
+                _glyphs, positions);
+            if (_glyphs.size() == 0) {
+                SelectObject(hdc, old_font);
+                return;
+            }
+
+            convertToText = convertToText && glyphs.numGlyphs == _glyphs.size();
+
+            bool outputEntireItem = (QSysInfo::WindowsVersion & QSysInfo::WV_NT_based)
+                && QSysInfo::WindowsVersion != QSysInfo::WV_NT
+                && _glyphs.size() > 0;
+
+            if (outputEntireItem) {
+                options |= ETO_PDY;
+                QVarLengthArray<INT> glyphDistances(_glyphs.size() * 2);
+                QVarLengthArray<wchar_t> g(_glyphs.size());
+                for (int i=0; i<_glyphs.size() - 1; ++i) {
+                    glyphDistances[i * 2] = qRound(positions[i + 1].x) - qRound(positions[i].x);
+                    glyphDistances[i * 2 + 1] = qRound(positions[i + 1].y) - qRound(positions[i].y);
+                    g[i] = _glyphs[i];
+                }
+                glyphDistances[(_glyphs.size() - 1) * 2] = 0;
+                glyphDistances[(_glyphs.size() - 1) * 2 + 1] = 0;
+                g[_glyphs.size() - 1] = _glyphs[_glyphs.size() - 1];
+                ExtTextOutW(hdc, qRound(positions[0].x), qRound(positions[0].y), options, 0,
+                            convertToText ? convertedGlyphs : g.data(), _glyphs.size(),
+                            glyphDistances.data());
+            } else {
+                int i = 0;
+                while(i < _glyphs.size()) {
+                    wchar_t g = _glyphs[i];
+
+                    ExtTextOutW(hdc, qRound(positions[i].x),
+                        qRound(positions[i].y), options, 0,
+                                convertToText ? convertedGlyphs + i : &g, 1, 0);
+                    ++i;
+                }
+            }
+        }
+
+#if !defined(Q_OS_WINCE)
+        QT_WA({
+            XFORM win_xform;
+            win_xform.eM11 = win_xform.eM22 = 1.0;
+            win_xform.eM12 = win_xform.eM21 = win_xform.eDx = win_xform.eDy = 0.0;
+            SetWorldTransform(hdc, &win_xform);
+        }, {
+            // nothing
+        });
+#endif
+    }
+    SelectObject(hdc, old_font);
+}
+
+
+void QWin32PrintEnginePrivate::updateCustomPaperSize()
+{
+    QT_WA( {
+        uint paperSize = devModeW()->dmPaperSize;
+        if (paperSize > 0 && mapDevmodePaperSize(paperSize) == QPrinter::Custom) {
+            has_custom_paper_size = true;
+            DWORD needed = 0;
+            DWORD returned = 0;
+            if (!EnumForms(hPrinter, 1, 0, 0, &needed, &returned)) {
+                BYTE *forms = (BYTE *) malloc(needed);
+                if (EnumForms(hPrinter, 1, forms, needed, &needed, &returned)) {
+                    if (paperSize <= returned) {
+                        FORM_INFO_1 *formArray = (FORM_INFO_1 *) forms;
+                        int width = formArray[paperSize-1].Size.cx; // 1/1000 of a mm
+                        int height = formArray[paperSize-1].Size.cy; // 1/1000 of a mm
+                        paper_size = QSizeF((width*72/25.4)/1000.0, (height*72/25.4)/1000.0);
+                    } else {
+                        has_custom_paper_size = false;
+                    }
+                }
+                free(forms);
+            }
+        } else {
+            has_custom_paper_size = false;
+        }
+    }, {
+        // Not supported under Win98
+    } );
 }
 
 QT_END_NAMESPACE

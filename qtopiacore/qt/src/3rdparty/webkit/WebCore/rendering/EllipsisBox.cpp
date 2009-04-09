@@ -25,7 +25,6 @@
 #include "Document.h"
 #include "GraphicsContext.h"
 #include "HitTestResult.h"
-#include "TextStyle.h"
 
 namespace WebCore {
 
@@ -47,8 +46,7 @@ void EllipsisBox::paint(RenderObject::PaintInfo& paintInfo, int tx, int ty)
     }
 
     const String& str = m_str;
-    TextStyle textStyle(0, 0, 0, false, style->visuallyOrdered());
-    context->drawText(TextRun(str.characters(), str.length()), IntPoint(m_x + tx, m_y + ty + m_baseline), textStyle);
+    context->drawText(TextRun(str.characters(), str.length(), false, 0, 0, false, style->visuallyOrdered()), IntPoint(m_x + tx, m_y + ty + m_baseline));
 
     if (setShadow)
         context->clearShadow();
@@ -76,7 +74,7 @@ bool EllipsisBox::nodeAtPoint(const HitTestRequest& request, HitTestResult& resu
         }
     }
 
-    if (object()->style()->visibility() == VISIBLE && IntRect(tx, ty, m_width, m_height).contains(x, y)) {
+    if (visibleToHitTesting() && IntRect(tx, ty, m_width, m_height).contains(x, y)) {
         object()->updateHitTestResult(result, IntPoint(x - tx, y - ty));
         return true;
     }

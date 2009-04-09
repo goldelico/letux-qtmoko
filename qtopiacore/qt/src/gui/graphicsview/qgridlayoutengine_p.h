@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -161,17 +165,63 @@ public:
 #ifdef QT_DEBUG
     void dump(int indent = 0) const;
 #endif
-    union {
-        // we want to access the q_{min,pref,max}Size by using for 
-        // instance q_sizes[Qt::PreferredSize] too
-        qreal q_sizes[1];	
-        qreal q_minimumSize;
-    };
+    // This code could use the union-struct-array trick, but a compiler
+    // bug prevents this from working.
+    qreal q_minimumSize;
     qreal q_preferredSize;
     qreal q_maximumSize;
-
     qreal q_minimumDescent;
     qreal q_minimumAscent;
+    inline qreal &q_sizes(int which)
+    {
+        qreal *t;
+        switch (which) {
+        case Qt::MinimumSize:
+            t = &q_minimumSize;
+            break;
+        case Qt::PreferredSize:
+            t = &q_preferredSize;
+            break;
+        case Qt::MaximumSize:
+            t = &q_maximumSize;
+            break;
+        case Qt::MinimumDescent:
+            t = &q_minimumDescent;
+            break;
+        case (Qt::MinimumDescent + 1):
+            t = &q_minimumAscent;
+            break;
+        default:
+            t = 0;
+            break;
+        }
+        return *t;
+    }
+    inline const qreal &q_sizes(int which) const
+    {
+        const qreal *t;
+        switch (which) {
+        case Qt::MinimumSize:
+            t = &q_minimumSize;
+            break;
+        case Qt::PreferredSize:
+            t = &q_preferredSize;
+            break;
+        case Qt::MaximumSize:
+            t = &q_maximumSize;
+            break;
+        case Qt::MinimumDescent:
+            t = &q_minimumDescent;
+            break;
+        case (Qt::MinimumDescent + 1):
+            t = &q_minimumAscent;
+            break;
+        default:
+            t = 0;
+            break;
+        }
+        return *t;
+    }
 };
 
 bool operator==(const QGridLayoutBox &box1, const QGridLayoutBox &box2);
@@ -208,6 +258,7 @@ public:
     MultiCellMap multiCellMap;
     QVector<int> stretches;
     QVector<qreal> spacings;
+    bool hasIgnoreFlag;
 };
 
 class QGridLayoutEngine;
@@ -251,6 +302,7 @@ public:
     void setGeometry(const QRectF &rect);
     void transpose();
     void insertOrRemoveRows(int row, int delta, Qt::Orientation orientation = Qt::Vertical);
+    QSizeF effectiveMaxSize() const;
 
 #ifdef QT_DEBUG
     void dump(int indent = 0) const;
@@ -343,7 +395,8 @@ public:
                     const QSizeF &constraint) const;
     QSizePolicy::ControlTypes controlTypes(LayoutSide side) const;
     void transpose();
-
+    void setVisualDirection(Qt::LayoutDirection direction);
+    Qt::LayoutDirection visualDirection() const;
 #ifdef QT_DEBUG
     void dump(int indent = 0) const;
 #endif
@@ -368,6 +421,7 @@ private:
     QList<QGridLayoutItem *> q_items;
     QLayoutParameter<qreal> q_defaultSpacings[NOrientations];
     QGridLayoutRowInfo q_infos[NOrientations];
+    Qt::LayoutDirection m_visualDirection;
 
     // Lazily computed from the above user input
     mutable int q_cachedEffectiveFirstRows[NOrientations];

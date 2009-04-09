@@ -49,7 +49,7 @@ CL_NS_DEF(search)
         WildcardTermEnum(CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term);
         ~WildcardTermEnum();
 
-        float_t difference() ;
+        qreal difference() ;
 
         bool endEnum() ;
 

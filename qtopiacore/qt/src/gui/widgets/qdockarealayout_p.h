@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,10 +53,10 @@
 // We mean it.
 //
 
-#include "QtCore/qlist.h"
 #include "QtCore/qrect.h"
 #include "QtCore/qpair.h"
 #include "QtCore/qlist.h"
+#include "QtCore/qvector.h"
 #include "QtGui/qlayout.h"
 
 #ifndef QT_NO_DOCKWIDGET
@@ -70,6 +74,17 @@ class QWidgetAnimator;
 class QMainWindowLayout;
 struct QLayoutStruct;
 class QTabBar;
+
+// The classes in this file represent the tree structure that represents all the docks
+// Also see the wiki internal documentation
+// At the root of the tree is: QDockAreaLayout, which handles all 4 sides, so there is only one.
+// For each side it has one QDockAreaLayoutInfo child. (See QDockAreaLayout::docks.)
+// The QDockAreaLayoutInfo have QDockAreaLayoutItems as children (See QDockAreaLayoutInfo::item_list),
+// which then has one QDockAreaLayoutInfo as a child. (QDockAreaLayoutItem::subInfo) or
+// a widgetItem if this is a node of the tree (QDockAreaLayoutItem::widgetItem)
+//
+// A path indetifies uniquely one object in this tree, the first number beeing the side and all the following
+// indexes into the QDockAreaLayoutInfo::item_list.
 
 struct QDockAreaLayoutItem
 {
@@ -173,11 +188,15 @@ public:
     QMainWindowLayout *mainWindowLayout() const;
 
     int sep;
+    QVector<QWidget*> separatorWidgets;
     QInternal::DockPosition dockPos;
     Qt::Orientation o;
     QRect rect;
     QMainWindow *mainWindow;
     QList<QDockAreaLayoutItem> item_list;
+
+    void updateSeparatorWidgets() const;
+    QSet<QWidget*> usedSeparatorWidgets() const;
 
 #ifndef QT_NO_TABBAR
     quintptr currentTabId() const;
@@ -212,6 +231,7 @@ public:
     QDockAreaLayout(QMainWindow *win);
     QDockAreaLayoutInfo docks[4];
     int sep; // separator extent
+    QVector<QWidget*> separatorWidgets;
 
     bool isValid() const;
 
@@ -257,6 +277,7 @@ public:
     QRegion separatorRegion() const;
     int separatorMove(QList<int> separator, const QPoint &origin, const QPoint &dest,
                         QVector<QLayoutStruct> *cache);
+    void updateSeparatorWidgets() const;
 
     QLayoutItem *itemAt(int *x, int index) const;
     QLayoutItem *takeAt(int *x, int index);
@@ -272,6 +293,7 @@ public:
     void keepSize(QDockWidget *w);
 
     QSet<QTabBar*> usedTabBars() const;
+    QSet<QWidget*> usedSeparatorWidgets() const;
 };
 
 QT_END_NAMESPACE

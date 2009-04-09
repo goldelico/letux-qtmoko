@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,6 +45,7 @@
 #include "qnetworkreply.h"
 #include "qnetworkreply_p.h"
 #include "qnetworkcookie.h"
+#include "qabstractnetworkcache.h"
 
 #include "qnetworkaccesshttpbackend_p.h"
 #include "qnetworkaccessftpbackend_p.h"
@@ -93,20 +98,21 @@ static void ensureInitialized()
     post network requests and receive replies
     \since 4.4
 
-    \module network
+    \inmodule QtNetwork
     \reentrant
 
-    The Network Access API is constructed around one
-    QNetworkAccessManager object, which holds the common configuration
-    and settings for the requests sent. It contains the proxy and
-    cache configuration, as well as the signals related to such issues
-    and reply signals.
+    The Network Access API is constructed around one QNetworkAccessManager
+    object, which holds the common configuration and settings for the requests
+    it sends. It contains the proxy and cache configuration, as well as the
+    signals related to such issues, and reply signals that can be used to
+    monitor the progress of a network operation.
 
-    Once a QNetworkAccessManager object has been created, the
-    application can send requests over the network through that
-    object. The methods in QNetworkAccessManager take a request and
-    optionally some data to be uploaded and return a QNetworkReply
-    object. The returned object is where most of the signals as well
+    Once a QNetworkAccessManager object has been created, the application can
+    use it to send requests over the network. A group of standard functions
+    are supplied that take a request and optional data, and each return a
+    QNetworkReply object. The returned object is used to obtain any data
+    returned in response to the corresponding request.
+    the reply to is where most of the signals as well
     as the downloaded data are posted.
 
     A simple download off the network could be accomplished with:
@@ -341,15 +347,18 @@ QNetworkAccessManager::QNetworkAccessManager(QObject *parent)
 */
 QNetworkAccessManager::~QNetworkAccessManager()
 {
+#ifndef QT_NO_NETWORKPROXY
+    delete d_func()->proxyFactory;
+#endif
 }
 
 #ifndef QT_NO_NETWORKPROXY
 /*!
     Returns the QNetworkProxy that the requests sent using this
-    QNetworkAccessManager object will use. By default,
-    QNetworkAccessManager uses the application global proxy settings.
+    QNetworkAccessManager object will use. The default value for the
+    proxy is QNetworkProxy::DefaultProxy.
 
-    \sa setProxy(), proxyAuthenticationRequired()
+    \sa setProxy(), setProxyFactory(), proxyAuthenticationRequired()
 */
 QNetworkProxy QNetworkAccessManager::proxy() const
 {
@@ -362,14 +371,115 @@ QNetworkProxy QNetworkAccessManager::proxy() const
     proxyAuthenticationRequired() signal will be emitted if the proxy
     requests authentication.
 
+    A proxy set with this function will be used for all requests
+    issued by QNetworkAccessManager. In some cases, it might be
+    necessary to select different proxies depending on the type of
+    request being sent or the destination host. If that's the case,
+    you should consider using setProxyFactory().
+
     \sa proxy(), proxyAuthenticationRequired()
 */
 void QNetworkAccessManager::setProxy(const QNetworkProxy &proxy)
 {
     Q_D(QNetworkAccessManager);
+    delete d->proxyFactory;
     d->proxy = proxy;
+    d->proxyFactory = 0;
+}
+
+/*!
+    \fn QNetworkProxyFactory *QNetworkAccessManager::proxyFactory() const
+    \since 4.5
+
+    Returns the proxy factory that this QNetworkAccessManager object
+    is using to determine the proxies to be used for requests.
+
+    Note that the pointer returned by this function is managed by
+    QNetworkAccessManager and could be deleted at any time.
+
+    \sa setProxyFactory(), proxy()
+*/
+QNetworkProxyFactory *QNetworkAccessManager::proxyFactory() const
+{
+    return d_func()->proxyFactory;
+}
+
+/*!
+    \since 4.5
+
+    Sets the proxy factory for this class to be \a factory. A proxy
+    factory is used to determine a more specific list of proxies to be
+    used for a given request, instead of trying to use the same proxy
+    value for all requests.
+
+    All queries sent by QNetworkAccessManager will have type
+    QNetworkProxyQuery::UrlRequest.
+
+    For example, a proxy factory could apply the following rules:
+    \list
+      \o if the target address is in the local network (for example,
+         if the hostname contains no dots or if it's an IP address in
+         the organization's range), return QNetworkProxy::NoProxy
+      \o if the request is FTP, return an FTP proxy
+      \o if the request is HTTP or HTTPS, then return an HTTP proxy
+      \o otherwise, return a SOCKSv5 proxy server
+    \endlist
+
+    The lifetime of the object \a factory will be managed by
+    QNetworkAccessManager. It will delete the object when necessary.
+
+    \note If a specific proxy is set with setProxy(), the factory will not
+    be used.
+
+    \sa proxyFactory(), setProxy(), QNetworkProxyQuery
+*/
+void QNetworkAccessManager::setProxyFactory(QNetworkProxyFactory *factory)
+{
+    Q_D(QNetworkAccessManager);
+    delete d->proxyFactory;
+    d->proxyFactory = factory;
+    d->proxy = QNetworkProxy();
 }
 #endif
+
+/*!
+    \since 4.5
+
+    Returns the cache that is used to store data obtained from the network.
+
+    \sa setCache()
+*/
+QAbstractNetworkCache *QNetworkAccessManager::cache() const
+{
+    Q_D(const QNetworkAccessManager);
+    return d->networkCache;
+}
+
+/*!
+    \since 4.5
+
+    Sets the manager's network cache to be the \a cache specified. The cache
+    is used for all requests dispatched by the manager.
+
+    Use this function to set the network cache object to a class that implements
+    additional features, like saving the cookies to permanent storage.
+
+    \note QNetworkAccessManager takes ownership of the \a cache object.
+
+    QNetworkAccessManager by default does not have a set cache.
+    Qt provides a simple disk cache, QNetworkDiskCache, which can be used.
+
+    \sa cache(), QNetworkRequest::CacheLoadControl
+*/
+void QNetworkAccessManager::setCache(QAbstractNetworkCache *cache)
+{
+    Q_D(QNetworkAccessManager);
+    if (d->networkCache != cache) {
+        delete d->networkCache;
+        d->networkCache = cache;
+        d->networkCache->setParent(this);
+    }
+}
 
 /*!
     Returns the QNetworkCookieJar that is used to store cookies
@@ -387,13 +497,20 @@ QNetworkCookieJar *QNetworkAccessManager::cookieJar() const
 }
 
 /*!
-    Sets the cookie jar that is used by all request sent using this
-    QNetworkAccessManager object to be \a cookieJar. Use this function
-    to set the cookie jar object to a class that implements further
-    features, like saving the cookies to permanent storage.
+    Sets the manager's cookie jar to be the \a cookieJar specified.
+    The cookie jar is used by all requests dispatched by the manager.
 
-    Note that QNetworkAccessManager takes ownership of the object \a
-    cookieJar.
+    Use this function to set the cookie jar object to a class that
+    implements additional features, like saving the cookies to permanent
+    storage.
+
+    \note QNetworkAccessManager takes ownership of the \a cookieJar object.
+
+    QNetworkAccessManager will set the parent of the \a cookieJar
+    passed to itself, so that the cookie jar is deleted when this
+    object is deleted as well. If you want to share cookie jars
+    between different QNetworkAccessManager objects, you may want to
+    set the cookie jar's parent to 0 after calling this function.
 
     QNetworkAccessManager by default does not implement any cookie
     policy of its own: it accepts all cookies sent by the server, as
@@ -412,7 +529,8 @@ void QNetworkAccessManager::setCookieJar(QNetworkCookieJar *cookieJar)
     Q_D(QNetworkAccessManager);
     d->cookieJarCreated = true;
     if (d->cookieJar != cookieJar) {
-        delete d->cookieJar;
+        if (d->cookieJar && d->cookieJar->parent() == this)
+            delete d->cookieJar;
         d->cookieJar = cookieJar;
         d->cookieJar->setParent(this);
     }
@@ -567,14 +685,15 @@ QNetworkReply *QNetworkAccessManager::createRequest(QNetworkAccessManager::Opera
         priv->urlForLastAuthentication = url;
     }
 
-#ifndef QT_NO_NETWORKPROXY
     // third step: setup the reply
-    priv->networkProxy = d->proxy;
-#endif
     priv->setup(op, request, outgoingData);
     if (request.attribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferNetwork).toInt() !=
         QNetworkRequest::AlwaysNetwork)
         priv->setNetworkCache(d->networkCache);
+#ifndef QT_NO_NETWORKPROXY
+    QList<QNetworkProxy> proxyList = d->queryProxy(QNetworkProxyQuery(request.url()));
+    priv->proxyList = proxyList;
+#endif
 
     // fourth step: find a backend
     priv->backend = d->findBackend(op, request);
@@ -745,6 +864,26 @@ QNetworkAccessManagerPrivate::fetchCachedCredentials(const QNetworkProxy &p,
     Q_ASSERT_X(cred, "QNetworkAccessManager",
                "Internal inconsistency: found a cache key for a proxy, but it's empty");
     return cred;
+}
+
+QList<QNetworkProxy> QNetworkAccessManagerPrivate::queryProxy(const QNetworkProxyQuery &query)
+{
+    QList<QNetworkProxy> proxies;
+    if (proxyFactory) {
+        proxies = proxyFactory->queryProxy(query);
+        if (proxies.isEmpty()) {
+            qWarning("QNetworkAccessManager: factory %p has returned an empty result set",
+                     proxyFactory);
+            proxies << QNetworkProxy::NoProxy;
+        }
+    } else if (proxy.type() == QNetworkProxy::DefaultProxy) {
+        // no proxy set, query the application
+        return QNetworkProxyFactory::proxyForQuery(query);
+    } else {
+        proxies << proxy;
+    }
+
+    return proxies;
 }
 #endif
 

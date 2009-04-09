@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,21 @@ void QLocalServerPrivate::init()
 {
 }
 
+bool QLocalServerPrivate::removeServer(const QString &name)
+{
+    QString fileName;
+    if (name.startsWith(QLatin1Char('/'))) {
+        fileName = name;
+    } else {
+        fileName = QDir::cleanPath(QDir::tempPath());
+        fileName += QLatin1Char('/') + name;
+    }
+    if (QFile::exists(fileName))
+        return QFile::remove(fileName);
+    else
+        return true;
+}
+
 bool QLocalServerPrivate::listen(const QString &requestedServerName)
 {
     Q_Q(QLocalServer);
@@ -72,6 +91,7 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     listenSocket = qSocket(PF_UNIX, SOCK_STREAM, 0);
     if (-1 == listenSocket) {
         setError(QLatin1String("QLocalServer::listen"));
+        closeServer();
         return false;
     }
 
@@ -80,6 +100,7 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     addr.sun_family = PF_UNIX;
     if (sizeof(addr.sun_path) < (uint)fullServerName.toLatin1().size() + 1) {
         setError(QLatin1String("QLocalServer::listen"));
+        closeServer();
         return false;
     }
     ::memcpy(addr.sun_path, fullServerName.toLatin1().data(),
@@ -88,7 +109,12 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     // bind
     if(-1 == qBind(listenSocket, (sockaddr *)&addr, sizeof(sockaddr_un))) {
         setError(QLatin1String("QLocalServer::listen"));
-        QT_CLOSE(listenSocket);
+        // if address is in use already, just close the socket, but do not delete the file
+        if(errno == EADDRINUSE)
+            QT_CLOSE(listenSocket);
+        // otherwise, close the socket and delete the file
+        else
+            closeServer();
         listenSocket = -1;
         return false;
     }
@@ -96,7 +122,7 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     // listen for connections
     if (-1 == qListen(listenSocket, 50)) {
         setError(QLatin1String("QLocalServer::listen"));
-        QT_CLOSE(listenSocket);
+        closeServer();
         listenSocket = -1;
         if (error != QAbstractSocket::AddressInUseError)
             QFile::remove(fullServerName);
@@ -147,6 +173,7 @@ void QLocalServerPrivate::_q_socketActivated()
     int connectedSocket = qAccept(listenSocket, (sockaddr *)&addr, &length);
     if(-1 == connectedSocket) {
         setError(QLatin1String("QLocalSocket::activated"));
+        closeServer();
     } else {
         socketNotifier->setEnabled(pendingConnections.size()
                                    <= maxPendingConnections);
@@ -176,6 +203,7 @@ void QLocalServerPrivate::waitForNewConnection(int msec, bool *timedOut)
         result = ::select(listenSocket + 1, &readfds, 0, 0, &timeout);
         if (-1 == result && errno != EINTR) {
             setError(QLatin1String("QLocalServer::waitForNewConnection"));
+            closeServer();
             break;
         }
         if (result > 0)
@@ -190,7 +218,6 @@ void QLocalServerPrivate::setError(const QString &function)
     if (EAGAIN == errno)
         return;
 
-    closeServer();
     switch (errno) {
     case EACCES:
         errorString = QLocalServer::tr("%1: Permission denied").arg(function);

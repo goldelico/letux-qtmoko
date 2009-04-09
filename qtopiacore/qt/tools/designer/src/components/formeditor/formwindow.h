@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,7 @@ class QDesignerTaskMenuExtension;
 class DomConnections;
 
 class QWidget;
+class QAction;
 class QLabel;
 class QTimer;
 class QAction;
@@ -71,8 +76,6 @@ class FormWindowWidgetStack;
 class FormWindowManager;
 class FormWindowDnDItem;
 class SetPropertyCommand;
-class BreakLayoutCommand;
-
 
 class QT_FORMEDITOR_EXPORT FormWindow: public FormWindowBase
 {
@@ -85,6 +88,9 @@ public:
     virtual QDesignerFormEditorInterface *core() const;
 
     virtual QDesignerFormWindowCursorInterface *cursor() const;
+
+    // Overwritten: FormWindowBase
+    virtual QWidget *formContainer() const;
 
     virtual int toolCount() const;
     virtual int currentTool() const;
@@ -190,6 +196,7 @@ public:
 
     void resizeWidget(QWidget *widget, const QRect &geometry);
 
+    bool dropDockWidget(QDesignerDnDItemInterface *item, const QPoint &global_mouse_pos);
     bool dropWidgets(const QList<QDesignerDnDItemInterface*> &item_list, QWidget *target,
                         const QPoint &global_mouse_pos);
 
@@ -205,8 +212,6 @@ public:
 
     bool eventFilter(QObject *watched, QEvent *event);
 
-    QDesignerTaskMenuExtension *widgetTaskMenu(QWidget *w) const;
-
 signals:
     void contextMenuRequested(QMenu *menu, QWidget *widget);
 
@@ -219,16 +224,8 @@ public slots:
     void paste();
     void selectAll();
 
-    void layoutHorizontal();
-    void layoutVertical();
-    void layoutGrid();
-    void layoutFormLayout();
-    void layoutHorizontalSplit();
-    void layoutVerticalSplit();
-    void layoutHorizontalContainer(QWidget *w);
-    void layoutVerticalContainer(QWidget *w);
-    void layoutFormLayoutContainer(QWidget *w);
-    void layoutGridContainer(QWidget *w);
+    void createLayout(int type, QWidget *container = 0);
+    void morphLayout(QWidget *container, int newType);
     void breakLayout(QWidget *w);
 
     void editContents();
@@ -244,6 +241,7 @@ private slots:
     void updateDirty();
     void checkSelection();
     void checkSelectionNow();
+    void slotSelectWidget(QAction *);
 
 private:
     enum MouseState {
@@ -258,6 +256,7 @@ private:
         MouseDeferredSelection
     };
     MouseState m_mouseState;
+    QPointer<QWidget> m_lastClickedWidget;
 
     void init();
     void initializeCoreTools();
@@ -265,7 +264,7 @@ private:
     int getValue(const QRect &rect, int key, bool size) const;
     int calcValue(int val, bool forward, bool snap, int snapOffset) const;
     QRect applyValue(const QRect &rect, int val, int key, bool size) const;
-    void handleClickSelection(QWidget *managedWidget);
+    void handleClickSelection(QWidget *managedWidget, unsigned mouseFlags);
 
     bool frameNeeded(QWidget *w) const;
 
@@ -296,8 +295,6 @@ private:
 
     void dragWidgetWithinForm(QWidget *widget, const QRect &targetGeometry, QWidget *targetContainer);
 
-    BreakLayoutCommand *breakLayoutCommand(QWidget *w);
-
     void setCursorToAll(const QCursor &c, QWidget *start);
 
     QPoint mapToForm(const QWidget *w, const QPoint &pos) const;
@@ -320,7 +317,10 @@ private:
     void layoutContainer(QWidget *w, int type);
 
 private:
+    QWidget *innerContainer(QWidget *outerContainer) const;
     QWidget *containerForPaste() const;
+    QAction *createSelectAncestorSubMenu(QWidget *w);
+    void selectSingleWidget(QWidget *w);
 
     FormEditor *m_core;
     FormWindowCursor *m_cursor;

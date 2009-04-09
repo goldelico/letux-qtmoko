@@ -2,20 +2,21 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/opengl/qgl.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/opengl/qgl.cpp -->
 <head>
-  <title>Qt 4.4: QGLWidget Class Reference</title>
+  <title>Qt 4.5: QGLWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QGLWidget Class Reference<br /><span class="small-subtitle">[<a href="qtopengl.html">QtOpenGL</a> module]</span>
 </h1>
 <p>The QGLWidget class is a widget for rendering OpenGL graphics. <a href="#details">More...</a></p>
 <pre> #include &lt;QGLWidget&gt;</pre><p>Inherits <a href="qwidget.html">QWidget</a>.</p>
+<p>Inherited by </p>
 <ul>
 <li><a href="qglwidget-members.html">List of all members, including inherited members</a></li>
 <li><a href="qglwidget-obsolete.html">Obsolete members</a></li>
@@ -24,89 +25,89 @@
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qglwidget.html#QGLWidget">QGLWidget</a></b> ( QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qglwidget.html#QGLWidget-2">QGLWidget</a></b> ( QGLContext * <i>context</i>, QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qglwidget.html#QGLWidget-3">QGLWidget</a></b> ( const QGLFormat &amp; <i>format</i>, QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qglwidget.html#dtor.QGLWidget">~QGLWidget</a></b> ()</li>
-<li><div class="fn"/>GLuint <b><a href="qglwidget.html#bindTexture">bindTexture</a></b> ( const QImage &amp; <i>image</i>, GLenum <i>target</i> = GL_TEXTURE_2D, GLint <i>format</i> = GL_RGBA )</li>
-<li><div class="fn"/>GLuint <b><a href="qglwidget.html#bindTexture-2">bindTexture</a></b> ( const QPixmap &amp; <i>pixmap</i>, GLenum <i>target</i> = GL_TEXTURE_2D, GLint <i>format</i> = GL_RGBA )</li>
-<li><div class="fn"/>GLuint <b><a href="qglwidget.html#bindTexture-3">bindTexture</a></b> ( const QString &amp; <i>fileName</i> )</li>
-<li><div class="fn"/>const QGLColormap &amp; <b><a href="qglwidget.html#colormap">colormap</a></b> () const</li>
-<li><div class="fn"/>const QGLContext * <b><a href="qglwidget.html#context">context</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#deleteTexture">deleteTexture</a></b> ( GLuint <i>id</i> )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#doneCurrent">doneCurrent</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qglwidget.html#doubleBuffer">doubleBuffer</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#drawTexture">drawTexture</a></b> ( const QRectF &amp; <i>target</i>, GLuint <i>textureId</i>, GLenum <i>textureTarget</i> = GL_TEXTURE_2D )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#drawTexture-2">drawTexture</a></b> ( const QPointF &amp; <i>point</i>, GLuint <i>textureId</i>, GLenum <i>textureTarget</i> = GL_TEXTURE_2D )</li>
-<li><div class="fn"/>QGLFormat <b><a href="qglwidget.html#format">format</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qglwidget.html#grabFrameBuffer">grabFrameBuffer</a></b> ( bool <i>withAlpha</i> = false )</li>
-<li><div class="fn"/>bool <b><a href="qglwidget.html#isSharing">isSharing</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qglwidget.html#isValid">isValid</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#makeCurrent">makeCurrent</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#makeOverlayCurrent">makeOverlayCurrent</a></b> ()</li>
-<li><div class="fn"/>const QGLContext * <b><a href="qglwidget.html#overlayContext">overlayContext</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#qglClearColor">qglClearColor</a></b> ( const QColor &amp; <i>c</i> ) const</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#qglColor">qglColor</a></b> ( const QColor &amp; <i>c</i> ) const</li>
-<li><div class="fn"/>QPixmap <b><a href="qglwidget.html#renderPixmap">renderPixmap</a></b> ( int <i>w</i> = 0, int <i>h</i> = 0, bool <i>useContext</i> = false )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#renderText">renderText</a></b> ( int <i>x</i>, int <i>y</i>, const QString &amp; <i>str</i>, const QFont &amp; <i>font</i> = QFont(), int <i>listBase</i> = 2000 )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#renderText-2">renderText</a></b> ( double <i>x</i>, double <i>y</i>, double <i>z</i>, const QString &amp; <i>str</i>, const QFont &amp; <i>font</i> = QFont(), int <i>listBase</i> = 2000 )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#setColormap">setColormap</a></b> ( const QGLColormap &amp; <i>cmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#setMouseTracking">setMouseTracking</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#swapBuffers">swapBuffers</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qglwidget.html#QGLWidget">QGLWidget</a></b> ( QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qglwidget.html#QGLWidget-2">QGLWidget</a></b> ( QGLContext * <i>context</i>, QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qglwidget.html#QGLWidget-3">QGLWidget</a></b> ( const QGLFormat &amp; <i>format</i>, QWidget * <i>parent</i> = 0, const QGLWidget * <i>shareWidget</i> = 0, Qt::WindowFlags <i>f</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qglwidget.html#dtor.QGLWidget">~QGLWidget</a></b> ()</li>
+<li><div class="fn"></div>GLuint <b><a href="qglwidget.html#bindTexture">bindTexture</a></b> ( const QImage &amp; <i>image</i>, GLenum <i>target</i> = GL_TEXTURE_2D, GLint <i>format</i> = GL_RGBA )</li>
+<li><div class="fn"></div>GLuint <b><a href="qglwidget.html#bindTexture-2">bindTexture</a></b> ( const QPixmap &amp; <i>pixmap</i>, GLenum <i>target</i> = GL_TEXTURE_2D, GLint <i>format</i> = GL_RGBA )</li>
+<li><div class="fn"></div>GLuint <b><a href="qglwidget.html#bindTexture-3">bindTexture</a></b> ( const QString &amp; <i>fileName</i> )</li>
+<li><div class="fn"></div>const QGLColormap &amp; <b><a href="qglwidget.html#colormap">colormap</a></b> () const</li>
+<li><div class="fn"></div>const QGLContext * <b><a href="qglwidget.html#context">context</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#deleteTexture">deleteTexture</a></b> ( GLuint <i>id</i> )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#doneCurrent">doneCurrent</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qglwidget.html#doubleBuffer">doubleBuffer</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#drawTexture">drawTexture</a></b> ( const QRectF &amp; <i>target</i>, GLuint <i>textureId</i>, GLenum <i>textureTarget</i> = GL_TEXTURE_2D )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#drawTexture-2">drawTexture</a></b> ( const QPointF &amp; <i>point</i>, GLuint <i>textureId</i>, GLenum <i>textureTarget</i> = GL_TEXTURE_2D )</li>
+<li><div class="fn"></div>QGLFormat <b><a href="qglwidget.html#format">format</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qglwidget.html#grabFrameBuffer">grabFrameBuffer</a></b> ( bool <i>withAlpha</i> = false )</li>
+<li><div class="fn"></div>bool <b><a href="qglwidget.html#isSharing">isSharing</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qglwidget.html#isValid">isValid</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#makeCurrent">makeCurrent</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#makeOverlayCurrent">makeOverlayCurrent</a></b> ()</li>
+<li><div class="fn"></div>const QGLContext * <b><a href="qglwidget.html#overlayContext">overlayContext</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#qglClearColor">qglClearColor</a></b> ( const QColor &amp; <i>c</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#qglColor">qglColor</a></b> ( const QColor &amp; <i>c</i> ) const</li>
+<li><div class="fn"></div>QPixmap <b><a href="qglwidget.html#renderPixmap">renderPixmap</a></b> ( int <i>w</i> = 0, int <i>h</i> = 0, bool <i>useContext</i> = false )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#renderText">renderText</a></b> ( int <i>x</i>, int <i>y</i>, const QString &amp; <i>str</i>, const QFont &amp; <i>font</i> = QFont(), int <i>listBase</i> = 2000 )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#renderText-2">renderText</a></b> ( double <i>x</i>, double <i>y</i>, double <i>z</i>, const QString &amp; <i>str</i>, const QFont &amp; <i>font</i> = QFont(), int <i>listBase</i> = 2000 )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#setColormap">setColormap</a></b> ( const QGLColormap &amp; <i>cmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#setMouseTracking">setMouseTracking</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#swapBuffers">swapBuffers</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>206 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"/>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
 <ul>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#updateGL">updateGL</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#updateOverlayGL">updateOverlayGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#updateGL">updateGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#updateOverlayGL">updateOverlayGL</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>19 public slots inherited from <a href="qwidget.html#public-slots">QWidget</a></li>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>19 public slots inherited from <a href="qwidget.html#public-slots">QWidget</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QImage <b><a href="qglwidget.html#convertToGLFormat">convertToGLFormat</a></b> ( const QImage &amp; <i>img</i> )</li>
+<li><div class="fn"></div>QImage <b><a href="qglwidget.html#convertToGLFormat">convertToGLFormat</a></b> ( const QImage &amp; <i>img</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
 <ul>
-<li><div class="fn"/>bool <b><a href="qglwidget.html#autoBufferSwap">autoBufferSwap</a></b> () const</li>
-<li><div class="fn"/>virtual bool <b><a href="qglwidget.html#event">event</a></b> ( QEvent * )</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#glDraw">glDraw</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#glInit">glInit</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#initializeGL">initializeGL</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#initializeOverlayGL">initializeOverlayGL</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#paintEvent">paintEvent</a></b> ( QPaintEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#paintGL">paintGL</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#paintOverlayGL">paintOverlayGL</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#resizeEvent">resizeEvent</a></b> ( QResizeEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#resizeGL">resizeGL</a></b> ( int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qglwidget.html#resizeOverlayGL">resizeOverlayGL</a></b> ( int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qglwidget.html#setAutoBufferSwap">setAutoBufferSwap</a></b> ( bool <i>on</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qglwidget.html#autoBufferSwap">autoBufferSwap</a></b> () const</li>
+<li><div class="fn"></div>virtual bool <b><a href="qglwidget.html#event">event</a></b> ( QEvent * )</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#glDraw">glDraw</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#glInit">glInit</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#initializeGL">initializeGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#initializeOverlayGL">initializeOverlayGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#paintEvent">paintEvent</a></b> ( QPaintEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#paintGL">paintGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#paintOverlayGL">paintOverlayGL</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#resizeEvent">resizeEvent</a></b> ( QResizeEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#resizeGL">resizeGL</a></b> ( int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qglwidget.html#resizeOverlayGL">resizeOverlayGL</a></b> ( int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qglwidget.html#setAutoBufferSwap">setAutoBufferSwap</a></b> ( bool <i>on</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
-<li><div class="fn"/>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>57 properties inherited from <a href="qwidget.html#properties">QWidget</a></li>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qwidget.html#signals">QWidget</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
-<li><div class="fn"/>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
+<li><div class="fn"></div>57 properties inherited from <a href="qwidget.html#properties">QWidget</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qwidget.html#signals">QWidget</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -230,7 +231,6 @@
 <p>Calls QGLContext:::bindTexture(<i>image</i>, <i>target</i>, <i>format</i>) on the currently set context.</p>
 <p>See also <a href="qglwidget.html#deleteTexture">deleteTexture</a>().</p>
 <h3 class="fn"><a name="bindTexture-2"></a>GLuint QGLWidget::bindTexture ( const <a href="qpixmap.html">QPixmap</a> &amp; <i>pixmap</i>, GLenum <i>target</i> = GL_TEXTURE_2D, GLint <i>format</i> = GL_RGBA )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Calls QGLContext:::bindTexture(<i>pixmap</i>, <i>target</i>, <i>format</i>) on the currently set context.</p>
 <p>See also <a href="qglwidget.html#deleteTexture">deleteTexture</a>().</p>
 <h3 class="fn"><a name="bindTexture-3"></a>GLuint QGLWidget::bindTexture ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )</h3>
@@ -260,7 +260,6 @@
 <p>Equivalent to the corresponding <a href="qglcontext.html#drawTexture">QGLContext::drawTexture</a>().</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="drawTexture-2"></a>void QGLWidget::drawTexture ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i>, GLuint <i>textureId</i>, GLenum <i>textureTarget</i> = GL_TEXTURE_2D )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Draws the given texture, <i>textureId</i>, at the given <i>point</i> in OpenGL model space. The <i>textureTarget</i> should be a 2D texture target.</p>
 <p>Equivalent to the corresponding <a href="qglcontext.html#drawTexture">QGLContext::drawTexture</a>().</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -361,8 +360,8 @@
 <p>The widget's rendering context will become the current context and <a href="qglwidget.html#initializeGL">initializeGL</a>() will be called if it hasn't already been called.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

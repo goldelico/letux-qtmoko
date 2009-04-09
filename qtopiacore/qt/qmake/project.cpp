@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the qmake application of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -60,8 +64,10 @@
 
 #ifdef Q_OS_WIN32
 #define QT_POPEN _popen
+#define QT_PCLOSE _pclose
 #else
 #define QT_POPEN popen
+#define QT_PCLOSE pclose
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -216,7 +222,7 @@ static QScriptValue qscript_projectWrapper(QScriptEngine *eng, QMakeProject *pro
         for(int i = 0; i < testFuncs.size(); ++i) {
             QString funcName = testFuncs.at(i);
             QScriptValue fun = eng->newFunction(qscript_call_expandfunction);
-            fun.setProperty("qmakeProject", eng->newVariant(project));
+            fun.setProperty("qmakeProject", eng->newVariant(qVariantFromValue(project)));
             fun.setProperty("functionName", QScriptValue(eng, funcName));
             eng->globalObject().setProperty(funcName, fun);
         }
@@ -321,13 +327,13 @@ static QStringList split_arg_list(QString params)
     const QChar *params_data = params.data();
     const int params_len = params.length();
     int last = 0;
-    while(last < params_len && ((params_data+last)->unicode() == SPACE
-                                /*|| (params_data+last)->unicode() == TAB*/))
+    while(last < params_len && (params_data[last].unicode() == SPACE
+                                /*|| params_data[last].unicode() == TAB*/))
         ++last;
     for(int x = last, parens = 0; x <= params_len; x++) {
-        unicode = (params_data+x)->unicode();
+        unicode = params_data[x].unicode();
         if(x == params_len) {
-            while(x && (params_data+(x-1))->unicode() == SPACE)
+            while(x && params_data[x-1].unicode() == SPACE)
                 --x;
             QString mid(params_data+last, x-last);
             if(quote) {
@@ -351,8 +357,8 @@ static QStringList split_arg_list(QString params)
             QString mid = params.mid(last, x - last).trimmed();
             args << mid;
             last = x+1;
-            while(last < params_len && ((params_data+last)->unicode() == SPACE
-                                        /*|| (params_data+last)->unicode() == TAB*/))
+            while(last < params_len && (params_data[last].unicode() == SPACE
+                                        /*|| params_data[last].unicode() == TAB*/))
                 ++last;
         }
     }
@@ -369,17 +375,17 @@ static QStringList split_value_list(const QString &vals, bool do_semicolon=false
     const ushort RPAREN = ')';
     const ushort SINGLEQUOTE = '\'';
     const ushort DOUBLEQUOTE = '"';
-    const ushort SLASH = '\\';
+    const ushort BACKSLASH = '\\';
     const ushort SEMICOLON = ';';
 
     ushort unicode;
     const QChar *vals_data = vals.data();
     const int vals_len = vals.length();
     for(int x = 0, parens = 0; x < vals_len; x++) {
-        unicode = (vals_data+x)->unicode();
-        if(x != (int)vals_len-1 && unicode == SLASH &&
-           ((vals_data+(x+1))->unicode() == '\'' || (vals_data+(x+1))->unicode() == DOUBLEQUOTE)) {
-            build += *(vals_data+(x++)); //get that 'escape'
+        unicode = vals_data[x].unicode();
+        if(x != (int)vals_len-1 && unicode == BACKSLASH &&
+            (vals_data[x+1].unicode() == SINGLEQUOTE || vals_data[x+1].unicode() == DOUBLEQUOTE)) {
+            build += vals_data[x++]; //get that 'escape'
         } else if(!quote.isEmpty() && unicode == quote.top()) {
             quote.pop();
         } else if(unicode == SINGLEQUOTE || unicode == DOUBLEQUOTE) {
@@ -391,11 +397,11 @@ static QStringList split_value_list(const QString &vals, bool do_semicolon=false
         }
 
         if(!parens && quote.isEmpty() && ((do_semicolon && unicode == SEMICOLON) ||
-                                          *(vals_data+x) == Option::field_sep)) {
+                                           vals_data[x] == Option::field_sep)) {
             ret << build;
-            build = "";
+            build.clear();
         } else {
-            build += *(vals_data+x);
+            build += vals_data[x];
         }
     }
     if(!build.isEmpty())
@@ -2083,10 +2089,10 @@ QMakeProject::doProjectExpand(QString func, QList<QStringList> args_list,
         break; }
     case E_SPLIT: {
         if(args.count() < 1 || args.count() > 2) {
-            fprintf(stderr, "%s:%d split(var, sep) requires three arguments\n",
+            fprintf(stderr, "%s:%d split(var, sep) requires one or two arguments\n",
                     parser.file.toLatin1().constData(), parser.line_no);
         } else {
-            QString sep = QString(Option::field_sep), join = QString(Option::field_sep);
+            QString sep = QString(Option::field_sep);
             if(args.count() >= 2)
                 sep = args[1];
             QStringList var = values(args.first(), place);
@@ -2177,6 +2183,8 @@ QMakeProject::doProjectExpand(QString func, QList<QStringList> args_list,
                 output += buff;
             }
             ret += split_value_list(output);
+            if(proc)
+                QT_PCLOSE(proc);
         }
         break; }
     case E_UNIQUE: {
@@ -2899,26 +2907,26 @@ QMakeProject::doVariableReplaceExpand(const QString &str, QMap<QString, QStringL
     int replaced = 0;
     QString current;
     for(int i = 0; i < str_len; ++i) {
-        unicode = (str_data+i)->unicode();
+        unicode = str_data[i].unicode();
         const int start_var = i;
         if(unicode == DOLLAR && str_len > i+2) {
-            unicode = (str_data+(++i))->unicode();
+            unicode = str_data[++i].unicode();
             if(unicode == DOLLAR) {
                 term = 0;
                 var.clear();
                 args.clear();
                 enum { VAR, ENVIRON, FUNCTION, PROPERTY } var_type = VAR;
-                unicode = (str_data+(++i))->unicode();
+                unicode = str_data[++i].unicode();
                 if(unicode == LSQUARE) {
-                    unicode = (str_data+(++i))->unicode();
+                    unicode = str_data[++i].unicode();
                     term = RSQUARE;
                     var_type = PROPERTY;
                 } else if(unicode == LCURLY) {
-                    unicode = (str_data+(++i))->unicode();
+                    unicode = str_data[++i].unicode();
                     var_type = VAR;
                     term = RCURLY;
                 } else if(unicode == LPAREN) {
-                    unicode = (str_data+(++i))->unicode();
+                    unicode = str_data[++i].unicode();
                     var_type = ENVIRON;
                     term = RPAREN;
                 }
@@ -2932,7 +2940,7 @@ QMakeProject::doVariableReplaceExpand(const QString &str, QMap<QString, QStringL
                     var.append(QChar(unicode));
                     if(++i == str_len)
                         break;
-                    unicode = (str_data+i)->unicode();
+                    unicode = str_data[i].unicode();
                     // at this point, i points to either the 'term' or 'next' character (which is in unicode)
                 }
                 if(var_type == VAR && unicode == LPAREN) {
@@ -2941,7 +2949,7 @@ QMakeProject::doVariableReplaceExpand(const QString &str, QMap<QString, QStringL
                     while(1) {
                         if(++i == str_len)
                             break;
-                        unicode = (str_data+i)->unicode();
+                        unicode = str_data[i].unicode();
                         if(unicode == LPAREN) {
                             depth++;
                         } else if(unicode == RPAREN) {
@@ -2952,7 +2960,7 @@ QMakeProject::doVariableReplaceExpand(const QString &str, QMap<QString, QStringL
                         args.append(QChar(unicode));
                     }
                     if(++i < str_len)
-                        unicode = (str_data+(i))->unicode();
+                        unicode = str_data[i].unicode();
                     else
                         unicode = 0;
                     // at this point i is pointing to the 'next' character (which is in unicode)
@@ -3014,7 +3022,7 @@ QMakeProject::doVariableReplaceExpand(const QString &str, QMap<QString, QStringL
             bool escape = false;
             const char *symbols = "[]{}()$\\'\"";
             for(const char *s = symbols; *s; ++s) {
-                if(*(str_data+i+1) == (ushort)*s) {
+                if(str_data[i+1].unicode() == (ushort)*s) {
                     i++;
                     escape = true;
                     if(!(replaced++))

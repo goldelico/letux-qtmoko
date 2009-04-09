@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2007, 2008, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2008 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,32 +30,22 @@
 #ifndef FrameLoader_h
 #define FrameLoader_h
 
-#include "CachedResource.h"
 #include "CachePolicy.h"
 #include "FormState.h"
 #include "FrameLoaderTypes.h"
-#include "KURL.h"
-#include "StringHash.h"
-#include "Timer.h"
-#include <wtf/Forward.h>
-#include <wtf/HashSet.h>
-#include <wtf/HashMap.h>
-#include <wtf/Noncopyable.h>
-#include <wtf/OwnPtr.h>
-#include <wtf/RefPtr.h>
 #include "ResourceRequest.h"
+#include "Timer.h"
+
 #if USE(LOW_BANDWIDTH_DISPLAY)
 #include "CachedResourceClient.h"
 #endif
 
-namespace KJS {
-    class JSValue;
-}
-
 namespace WebCore {
 
+    class Archive;
     class AuthenticationChallenge;
     class CachedPage;
+    class CachedResource;
     class Document;
     class DocumentLoader;
     class Element;
@@ -68,13 +59,13 @@ namespace WebCore {
     class IconLoader;
     class IntSize;
     class NavigationAction;
-    class Node;
-    class Page;
     class RenderPart;
     class ResourceError;
     class ResourceLoader;
-    class ResourceRequest;
     class ResourceResponse;
+    class ScriptSourceCode;
+    class ScriptValue;
+    class SecurityOrigin;
     class SharedBuffer;
     class SubstituteData;
     class TextResourceDecoder;
@@ -124,7 +115,7 @@ namespace WebCore {
 
     class FrameLoader : Noncopyable
 #if USE(LOW_BANDWIDTH_DISPLAY)
-    , private CachedResourceClient
+        , private CachedResourceClient
 #endif
     {
     public:
@@ -135,63 +126,70 @@ namespace WebCore {
 
         Frame* frame() const { return m_frame; }
 
-        // FIXME: This is not cool, people.
+        // FIXME: This is not cool, people. We should aim to consolidate these variety of loading related methods into a smaller set,
+        // and try to reuse more of the same logic by extracting common code paths.
         void prepareForLoadStart();
         void setupForReplace();
         void setupForReplaceByMIMEType(const String& newMIMEType);
-        void finalSetupForReplace(DocumentLoader*);
-        void load(const KURL&, Event*);
-        void load(const FrameLoadRequest&, bool lockHistory, bool userGesture,
-            Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
-        void load(const KURL&, const String& referrer, FrameLoadType, const String& target,
-            Event*, PassRefPtr<FormState>);
-        void post(const KURL&, const String& referrer, const String& target,
-            PassRefPtr<FormData>, const String& contentType,
+
+        void loadWithDocumentLoader(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>);         // Calls continueLoadAfterNavigationPolicy
+        void load(DocumentLoader*);                                                                 // Calls loadWithDocumentLoader   
+
+        void loadWithNavigationAction(const ResourceRequest&, const NavigationAction&,              // Calls loadWithDocumentLoader()
+            FrameLoadType, PassRefPtr<FormState>);
+
+        void loadPostRequest(const ResourceRequest& inRequest, const String& referrer,              // Called by loadFrameRequestWithFormAndValues(), calls loadWithNavigationAction
+            const String& frameName, Event* event, PassRefPtr<FormState> prpFormState);
+
+        void loadURL(const KURL& newURL, const String& referrer, const String& frameName,           // Called by loadFrameRequestWithFormAndValues(), calls loadWithNavigationAction or else dispatches to navigation policy delegate    
+            FrameLoadType, Event* event, PassRefPtr<FormState> prpFormState);                                                         
+        void loadURLIntoChildFrame(const KURL&, const String& referer, Frame*);
+
+        void loadFrameRequestWithFormAndValues(const FrameLoadRequest&, bool lockHistory,           // Called by submitForm, calls loadPostRequest()
             Event*, HTMLFormElement*, const HashMap<String, String>& formValues);
 
-        void load(const ResourceRequest&);
-        void load(const ResourceRequest&, const SubstituteData&);
-        void load(const ResourceRequest&, const String& frameName);
-        void load(const ResourceRequest&, const NavigationAction&, FrameLoadType, PassRefPtr<FormState>);
+        void load(const ResourceRequest&);                                                          // Called by WebFrame, calls (ResourceRequest, SubstituteData)
+        void load(const ResourceRequest&, const SubstituteData&);                                   // Called both by WebFrame and internally, calls (DocumentLoader*)
+        void load(const ResourceRequest&, const String& frameName);                                 // Called by WebPluginController
         
-        void load(DocumentLoader*);
-        void load(DocumentLoader*, FrameLoadType, PassRefPtr<FormState>);
+        void loadArchive(PassRefPtr<Archive> archive);
 
-        static bool canLoad(const KURL&, const String& referrer);
-        static bool canLoad(const KURL&, const Document*);
-        static bool canLoad(const CachedResource&, const Document*);
-        static void reportLocalLoadFailed(const Page*, const String& url);
+        // Returns true for any non-local URL. If Document parameter is supplied, its local load policy dictates,
+        // otherwise if referrer is non-empty and represents a local file, then the local load is allowed.
+        static bool canLoad(const KURL&, const String& referrer, const Document* theDocument = 0);
+        static void reportLocalLoadFailed(Frame*, const String& url);
 
         static bool shouldHideReferrer(const KURL& url, const String& referrer);
 
-        Frame* createWindow(const FrameLoadRequest&, const WindowFeatures&, bool& created);
+        // Called by createWindow in JSDOMWindowBase.cpp, e.g. to fulfill a modal dialog creation
+        Frame* createWindow(FrameLoader* frameLoaderForFrameLookup, const FrameLoadRequest&, const WindowFeatures&, bool& created);
 
-        void loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
+        unsigned long loadResourceSynchronously(const ResourceRequest&, ResourceError&, ResourceResponse&, Vector<char>& data);
 
         bool canHandleRequest(const ResourceRequest&);
 
         // Also not cool.
         void stopAllLoaders();
         void stopForUserCancel(bool deferCheckLoadComplete = false);
-        void cancelPendingArchiveLoad(ResourceLoader*);
 
         bool isLoadingMainResource() const { return m_isLoadingMainResource; }
         bool isLoading() const;
         bool frameHasLoaded() const;
-        bool committedFirstRealDocumentLoad() const { return m_committedFirstRealDocumentLoad; }
 
         int numPendingOrLoadingRequests(bool recurse) const;
-        bool isReloading() const;
         String referrer() const;
         String outgoingReferrer() const;
+        String outgoingOrigin() const;
         void loadEmptyDocumentSynchronously();
 
         DocumentLoader* activeDocumentLoader() const;
         DocumentLoader* documentLoader() const;
-        DocumentLoader* provisionalDocumentLoader();
+        DocumentLoader* policyDocumentLoader() const;
+        DocumentLoader* provisionalDocumentLoader() const;
         FrameState state() const;
         static double timeOfLastCompletedLoad();
-        
+
+        bool shouldUseCredentialStorage(ResourceLoader*);
         void didReceiveAuthenticationChallenge(ResourceLoader*, const AuthenticationChallenge&);
         void didCancelAuthenticationChallenge(ResourceLoader*, const AuthenticationChallenge&);
         
@@ -201,7 +199,6 @@ namespace WebCore {
         void didReceiveData(ResourceLoader*, const char*, int, int lengthReceived);
         void didFinishLoad(ResourceLoader*);
         void didFailToLoad(ResourceLoader*, const ResourceError&);
-        bool privateBrowsingEnabled() const;
         const ResourceRequest& originalRequest() const;
         const ResourceRequest& initialRequest() const;
         void receivedMainResourceError(const ResourceError&, bool isComplete);
@@ -215,8 +212,8 @@ namespace WebCore {
         ResourceError cancelledError(const ResourceRequest&) const;
         ResourceError fileDoesNotExistError(const ResourceResponse&) const;
         ResourceError blockedError(const ResourceRequest&) const;
-        bool willUseArchive(ResourceLoader*, const ResourceRequest&, const KURL&) const;
-        bool isArchiveLoadPending(ResourceLoader*) const;
+        ResourceError cannotShowURLError(const ResourceRequest&) const;
+
         void cannotShowMIMEType(const ResourceResponse&);
         ResourceError interruptionForPolicyChangeError(const ResourceRequest&);
 
@@ -232,7 +229,7 @@ namespace WebCore {
         void checkContentPolicy(const String& MIMEType, ContentPolicyDecisionFunction, void* argument);
         void cancelContentPolicyCheck();
 
-        void reload();
+        void reload(bool endToEndReload = false);
         void reloadAllowingStaleData(const String& overrideEncoding);
 
         void didReceiveServerRedirectForProvisionalLoadForFrame();
@@ -248,40 +245,50 @@ namespace WebCore {
         void didChangeTitle(DocumentLoader*);
 
         FrameLoadType loadType() const;
+        CachePolicy cachePolicy() const;
 
         void didFirstLayout();
         bool firstLayoutDone() const;
 
+        void didFirstVisuallyNonEmptyLayout();
+
         void clientRedirectCancelledOrFinished(bool cancelWithLoadInProgress);
         void clientRedirected(const KURL&, double delay, double fireDate, bool lockHistory, bool isJavaScriptFormAction);
         bool shouldReload(const KURL& currentURL, const KURL& destinationURL);
+#if ENABLE(WML)
+        void setForceReloadWmlDeck(bool);
+#endif
 
         bool isQuickRedirectComing() const;
 
         void sendRemainingDelegateMessages(unsigned long identifier, const ResourceResponse&, int length, const ResourceError&);
         void requestFromDelegate(ResourceRequest&, unsigned long& identifier, ResourceError&);
-        void loadedResourceFromMemoryCache(const ResourceRequest&, const ResourceResponse&, int length);
+        void loadedResourceFromMemoryCache(const CachedResource*);
+        void tellClientAboutPastMemoryCacheLoads();
 
         void recursiveCheckLoadComplete();
         void checkLoadComplete();
         void detachFromParent();
         void detachChildren();
 
-        void addExtraFieldsToRequest(ResourceRequest&, bool isMainResource, bool alwaysFromRequest);
+        void addExtraFieldsToSubresourceRequest(ResourceRequest&);
+        void addExtraFieldsToMainResourceRequest(ResourceRequest&);
+        
+        static void addHTTPOriginIfNeeded(ResourceRequest&, String origin);
 
         FrameLoaderClient* client() const;
 
         void setDefersLoading(bool);
 
-        void changeLocation(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
-        void changeLocation(const KURL& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
+        void changeLocation(const String& url, const String& referrer, bool lockHistory = true, bool userGesture = false, bool refresh = false);
+        void changeLocation(const KURL&, const String& referrer, bool lockHistory = true, bool userGesture = false, bool refresh = false);
         void urlSelected(const ResourceRequest&, const String& target, Event*, bool lockHistory, bool userGesture);
-        void urlSelected(const FrameLoadRequest&, Event*, bool lockHistory, bool userGesture);
+        void urlSelected(const FrameLoadRequest&, Event*, bool lockHistory);
       
-        bool requestFrame(HTMLFrameOwnerElement*, const String& URL, const AtomicString& frameName);
-        Frame* loadSubframe(HTMLFrameOwnerElement*, const KURL& URL, const String& name, const String& referrer);
+        bool requestFrame(HTMLFrameOwnerElement*, const String& url, const AtomicString& frameName);
+        Frame* loadSubframe(HTMLFrameOwnerElement*, const KURL&, const String& name, const String& referrer);
 
-        void submitForm(const char* action, const String& URL, PassRefPtr<FormData>, const String& target, const String& contentType, const String& boundary, Event*);
+        void submitForm(const char* action, const String& url, PassRefPtr<FormData>, const String& target, const String& contentType, const String& boundary, Event*);
         void submitFormAgain();
         void submitForm(const FrameLoadRequest&, Event*);
 
@@ -298,9 +305,9 @@ namespace WebCore {
         String baseTarget() const;
         KURL dataURLBaseFromRequest(const ResourceRequest& request) const;
 
-        bool isScheduledLocationChangePending() const;
-        void scheduleHTTPRedirection(double delay, const String& URL);
-        void scheduleLocationChange(const String& URL, const String& referrer, bool lockHistory = true, bool userGesture = false);
+        bool isScheduledLocationChangePending() const { return m_scheduledRedirection && isLocationChange(*m_scheduledRedirection); }
+        void scheduleHTTPRedirection(double delay, const String& url);
+        void scheduleLocationChange(const String& url, const String& referrer, bool lockHistory = true, bool userGesture = false);
         void scheduleRefresh(bool userGesture = false);
         void scheduleHistoryNavigation(int steps);
 
@@ -310,7 +317,7 @@ namespace WebCore {
         KURL historyURL(int distance);
 
         void begin();
-        void begin(const KURL&, bool dispatchWindowObjectAvailable = true);
+        void begin(const KURL&, bool dispatchWindowObjectAvailable = true, SecurityOrigin* forcedSecurityOrigin = 0);
 
         void write(const char* str, int len = -1, bool flush = false);
         void write(const String&);
@@ -320,8 +327,11 @@ namespace WebCore {
         void setEncoding(const String& encoding, bool userChosen);
         String encoding() const;
 
-        KJS::JSValue* executeScript(const String& URL, int baseLine, const String& script);
-        KJS::JSValue* executeScript(const String& script, bool forceUserGesture = false);
+        // Returns true if url is a JavaScript URL.
+        bool executeIfJavaScriptURL(const KURL& url, bool userGesture = false, bool replaceDocument = true);
+
+        ScriptValue executeScript(const ScriptSourceCode&);
+        ScriptValue executeScript(const String& script, bool forceUserGesture = false);
 
         void gotoAnchor();
         bool gotoAnchor(const String& name); // returns true if the anchor was found
@@ -336,8 +346,6 @@ namespace WebCore {
 
         void dispatchWindowObjectAvailable();
         void restoreDocumentState();
-
-        String overrideMediaType() const;
 
         Frame* opener();
         void setOpener(Frame*);
@@ -360,9 +368,7 @@ namespace WebCore {
 
         void frameDetached();
 
-        // FIXME: Which one of these URL methods is right?
-        KURL url() const;
-        KURL URL() const;
+        const KURL& url() const { return m_URL; }
 
         void updateBaseURLForEmptyDocument();
 
@@ -378,29 +384,22 @@ namespace WebCore {
         void scheduleCheckLoadComplete();
 
         void clearRecordedFormValues();
-        void recordFormValue(const String& name, const String& value, PassRefPtr<HTMLFormElement>);
+        void setFormAboutToBeSubmitted(PassRefPtr<HTMLFormElement> element);
+        void recordFormValue(const String& name, const String& value);
 
         bool isComplete() const;
 
-        bool requestObject(RenderPart* frame, const String& URL, const AtomicString& frameName,
+        bool requestObject(RenderPart* frame, const String& url, const AtomicString& frameName,
             const String& serviceType, const Vector<String>& paramNames, const Vector<String>& paramValues);
 
-        KURL completeURL(const String& URL);
-
-        void didTellBridgeAboutLoad(const String& URL);
-        bool haveToldBridgeAboutLoad(const String& URL);
+        KURL completeURL(const String& url);
 
         KURL originalRequestURL() const;
 
         void cancelAndClear();
 
         void setTitle(const String&);
-        void dispatchDidChangeLocationWithinPage();
         
-        void dispatchDidFinishLoadToClient();
-        void updateGlobalHistoryForStandardLoad(const KURL&);
-        void updateGlobalHistoryForReload(const KURL&);
-        bool shouldGoToHistoryItem(HistoryItem*) const;
         bool shouldTreatURLAsSameAsCurrent(const KURL&) const;
 
         void commitProvisionalLoad(PassRefPtr<CachedPage>);
@@ -420,9 +419,16 @@ namespace WebCore {
 
         void continueLoadWithData(SharedBuffer*, const String& mimeType, const String& textEncoding, const KURL&); 
 
-        static void registerURLSchemeAsLocal(const String& scheme);
+        enum LocalLoadPolicy {
+          AllowLocalLoadsForAll,  // No restriction on local loads.
+          AllowLocalLoadsForLocalAndSubstituteData,
+          AllowLocalLoadsForLocalOnly,
+        };
+        static void setLocalLoadPolicy(LocalLoadPolicy);
         static bool restrictAccessToLocal();
-        static void setRestrictAccessToLocal(bool);
+        static bool allowSubstituteDataAccessToLocal();
+
+        static void registerURLSchemeAsLocal(const String& scheme);
         static bool shouldTreatURLAsLocal(const String&);
         static bool shouldTreatSchemeAsLocal(const String&);
 
@@ -441,6 +447,11 @@ namespace WebCore {
         void iconLoadDecisionAvailable();
 
         bool shouldAllowNavigation(Frame* targetFrame) const;
+        Frame* findFrameForNavigation(const AtomicString& name);
+
+        void startIconLoader();
+
+        void applyUserAgent(ResourceRequest& request);
 
     private:
         PassRefPtr<HistoryItem> createHistoryItem(bool useOriginal);
@@ -455,18 +466,18 @@ namespace WebCore {
         void recursiveGoToItem(HistoryItem*, HistoryItem*, FrameLoadType);
         bool childFramesMatchItem(HistoryItem*) const;
 
-        void addHistoryForCurrentLocation();
         void updateHistoryForBackForwardNavigation();
         void updateHistoryForReload();
         void updateHistoryForStandardLoad();
         void updateHistoryForRedirectWithLockedHistory();
         void updateHistoryForClientRedirect();
         void updateHistoryForCommit();
+        void updateHistoryForAnchorScroll();
     
         void redirectionTimerFired(Timer<FrameLoader>*);
         void checkCompletedTimerFired(Timer<FrameLoader>*);
         void checkLoadCompleteTimerFired(Timer<FrameLoader>*);
-
+        
         void cancelRedirection(bool newLoadInProgress = false);
 
         void started();
@@ -484,9 +495,9 @@ namespace WebCore {
         void receivedFirstData();
 
         void updatePolicyBaseURL();
-        void setPolicyBaseURL(const String&);
-
-        void replaceContentsWithScriptResult(const KURL&);
+        void setPolicyBaseURL(const KURL&);
+        
+        void addExtraFieldsToRequest(ResourceRequest&, FrameLoadType loadType, bool isMainResource, bool cookiePolicyURLFromRequest);
 
         // Also not cool.
         void stopLoadingSubframes();
@@ -516,6 +527,7 @@ namespace WebCore {
         void continueLoadAfterNewWindowPolicy(const ResourceRequest&, PassRefPtr<FormState>, const String& frameName, bool shouldContinue);
         static void callContinueFragmentScrollAfterNavigationPolicy(void*, const ResourceRequest&, PassRefPtr<FormState>, bool shouldContinue);
         void continueFragmentScrollAfterNavigationPolicy(const ResourceRequest&, bool shouldContinue);
+        bool shouldScrollToAnchor(bool isFormSubmission, FrameLoadType loadType, const KURL& url);
         void addHistoryItemForFragmentScroll();
 
         void stopPolicyCheck();
@@ -540,13 +552,9 @@ namespace WebCore {
         bool shouldReloadToHandleUnreachableURL(DocumentLoader*);
         void handleUnimplementablePolicy(const ResourceError&);
 
-        void applyUserAgent(ResourceRequest& request);
-
         void scheduleRedirection(ScheduledRedirection*);
         void startRedirectionTimer();
         void stopRedirectionTimer();
-
-        void startIconLoader();
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
         // implementation of CachedResourceClient        
@@ -562,7 +570,8 @@ namespace WebCore {
         void dispatchDidReceiveResponse(DocumentLoader*, unsigned long identifier, const ResourceResponse&);
         void dispatchDidReceiveContentLength(DocumentLoader*, unsigned long identifier, int length);
         void dispatchDidFinishLoading(DocumentLoader*, unsigned long identifier);
-        bool dispatchDidLoadResourceFromMemoryCache(DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int length);
+
+        static bool isLocationChange(const ScheduledRedirection&);
 
         Frame* m_frame;
         FrameLoaderClient* m_client;
@@ -570,10 +579,17 @@ namespace WebCore {
         FrameState m_state;
         FrameLoadType m_loadType;
 
+        // Document loaders for the three phases of frame loading. Note that while 
+        // a new request is being loaded, the old document loader may still be referenced.
+        // E.g. while a new request is in the "policy" state, the old document loader may
+        // be consulted in particular as it makes sense to imply certain settings on the new loader.
         RefPtr<DocumentLoader> m_documentLoader;
         RefPtr<DocumentLoader> m_provisionalDocumentLoader;
         RefPtr<DocumentLoader> m_policyDocumentLoader;
 
+        // This identifies the type of navigation action which prompted this load. Note 
+        // that WebKit conveys this value as the WebActionNavigationTypeKey value
+        // on navigation action delegate callbacks.
         FrameLoadType m_policyLoadType;
         PolicyCheck m_policyCheck;
 
@@ -588,10 +604,6 @@ namespace WebCore {
         bool m_navigationDuringLoad;
 
         String m_outgoingReferrer;
-
-        CachePolicy m_cachePolicy;
-
-        HashSet<String> m_urlsBridgeKnowsAbout;
 
         OwnPtr<FormSubmission> m_deferredFormSubmission;
 
@@ -646,6 +658,10 @@ namespace WebCore {
         RefPtr<HistoryItem> m_provisionalHistoryItem;
         
         bool m_didPerformFirstNavigation;
+        
+#ifndef NDEBUG
+        bool m_didDispatchDidCommitLoad;
+#endif
 
 #if USE(LOW_BANDWIDTH_DISPLAY)
         // whether to use low bandwidth dislay, set by client
@@ -660,7 +676,11 @@ namespace WebCore {
         
         String m_pendingSourceInLowBandwidthDisplay;        
         HashSet<CachedResource*> m_externalRequestsInLowBandwidthDisplay;
-#endif   
+#endif
+
+#if ENABLE(WML)
+        bool m_forceReloadWmlDeck;
+#endif
     };
 
 }

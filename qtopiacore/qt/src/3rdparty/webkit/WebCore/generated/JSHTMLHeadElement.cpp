@@ -25,132 +25,134 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLHeadElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLHeadElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLHeadElementTableEntries[] =
+static const HashTableValue JSHTMLHeadElementTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "profile", JSHTMLHeadElement::ProfileAttrNum, DontDelete, 0, &JSHTMLHeadElementTableEntries[2] },
-    { "constructor", JSHTMLHeadElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "profile", DontDelete, (intptr_t)jsHTMLHeadElementProfile, (intptr_t)setJSHTMLHeadElementProfile },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLHeadElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHeadElementTable = 
-{
-    2, 3, JSHTMLHeadElementTableEntries, 2
-};
+static const HashTable JSHTMLHeadElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLHeadElementTableValues, 0 };
+#else
+    { 5, 3, JSHTMLHeadElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLHeadElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLHeadElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHeadElementConstructorTable = 
-{
-    2, 1, JSHTMLHeadElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLHeadElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHeadElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHeadElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLHeadElementConstructor : public DOMObject {
 public:
     JSHTMLHeadElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLHeadElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLHeadElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLHeadElementConstructor::info = { "HTMLHeadElementConstructor", 0, &JSHTMLHeadElementConstructorTable, 0 };
+const ClassInfo JSHTMLHeadElementConstructor::s_info = { "HTMLHeadElementConstructor", 0, &JSHTMLHeadElementConstructorTable, 0 };
 
 bool JSHTMLHeadElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLHeadElementConstructor, DOMObject>(exec, &JSHTMLHeadElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHeadElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLHeadElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLHeadElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHeadElementPrototypeTable = 
-{
-    2, 1, JSHTMLHeadElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLHeadElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHeadElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHeadElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLHeadElementPrototype::info = { "HTMLHeadElementPrototype", 0, &JSHTMLHeadElementPrototypeTable, 0 };
+const ClassInfo JSHTMLHeadElementPrototype::s_info = { "HTMLHeadElementPrototype", 0, &JSHTMLHeadElementPrototypeTable, 0 };
 
 JSObject* JSHTMLHeadElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLHeadElementPrototype>(exec, "[[JSHTMLHeadElement.prototype]]");
+    return getDOMPrototype<JSHTMLHeadElement>(exec);
 }
 
-const ClassInfo JSHTMLHeadElement::info = { "HTMLHeadElement", &JSHTMLElement::info, &JSHTMLHeadElementTable, 0 };
+const ClassInfo JSHTMLHeadElement::s_info = { "HTMLHeadElement", &JSHTMLElement::s_info, &JSHTMLHeadElementTable, 0 };
 
-JSHTMLHeadElement::JSHTMLHeadElement(ExecState* exec, HTMLHeadElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLHeadElement::JSHTMLHeadElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLHeadElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLHeadElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLHeadElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLHeadElementPrototype(JSHTMLHeadElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLHeadElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLHeadElement, JSHTMLElement>(exec, &JSHTMLHeadElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLHeadElement, Base>(exec, &JSHTMLHeadElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHeadElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLHeadElementProfile(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ProfileAttrNum: {
-        HTMLHeadElement* imp = static_cast<HTMLHeadElement*>(impl());
-
-        return jsString(imp->profile());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLHeadElement* imp = static_cast<HTMLHeadElement*>(static_cast<JSHTMLHeadElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->profile());
 }
 
-void JSHTMLHeadElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLHeadElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLHeadElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLHeadElementTable, this);
+    return static_cast<JSHTMLHeadElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-void JSHTMLHeadElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSHTMLHeadElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case ProfileAttrNum: {
-        HTMLHeadElement* imp = static_cast<HTMLHeadElement*>(impl());
-
-        imp->setProfile(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    lookupPut<JSHTMLHeadElement, Base>(exec, propertyName, value, &JSHTMLHeadElementTable, this, slot);
 }
 
-JSValue* JSHTMLHeadElement::getConstructor(ExecState* exec)
+void setJSHTMLHeadElementProfile(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSHTMLHeadElementConstructor>(exec, "[[HTMLHeadElement.constructor]]");
+    HTMLHeadElement* imp = static_cast<HTMLHeadElement*>(static_cast<JSHTMLHeadElement*>(thisObject)->impl());
+    imp->setProfile(valueToStringWithNullCheck(exec, value));
 }
+
+JSValuePtr JSHTMLHeadElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLHeadElementConstructor>(exec);
+}
+
 
 }

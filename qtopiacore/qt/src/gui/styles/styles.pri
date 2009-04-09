@@ -14,7 +14,8 @@ SOURCES += \
 	styles/qstyleoption.cpp \
 	styles/qstyleplugin.cpp \
 	styles/qcommonstyle.cpp \
-	styles/qstylesheetstyle.cpp
+        styles/qstylesheetstyle.cpp \
+        styles/qstylesheetstyle_default.cpp
 
 !wince* {
         RESOURCES += styles/qstyle.qrc
@@ -28,12 +29,17 @@ contains( styles, all ) {
 
 x11|embedded|!macx-*:styles -= mac
 
+x11{
+    QMAKE_CXXFLAGS += $$QT_CFLAGS_QGTKSTYLE
+    LIBS += $$QT_LIBS_QGTKSTYLE
+    styles += gtk
+}
+
 contains( styles, mac ) {
 	HEADERS += \
 		styles/qmacstyle_mac.h \
 		styles/qmacstylepixmaps_mac_p.h
-	SOURCES += \
-		styles/qmacstyle_mac.cpp
+        OBJECTIVE_SOURCES += styles/qmacstyle_mac.mm
 
 	!contains( styles, windows ) {
 		message( mac requires windows )
@@ -94,18 +100,33 @@ contains( styles, plastique ) {
 	DEFINES += QT_NO_STYLE_PLASTIQUE
 }
 
+contains( styles, gtk ) {
+        HEADERS += styles/qgtkstyle.h
+        HEADERS += styles/qgtkpainter_p.h
+        HEADERS += styles/gtksymbols_p.h
+        SOURCES += styles/qgtkstyle.cpp
+        SOURCES += styles/qgtkpainter.cpp
+        SOURCES += styles/gtksymbols.cpp
+	!contains( styles, cleanlooks ) {
+		styles += cleanlooks
+		DEFINES+= QT_STYLE_CLEANLOOKS
+	}
+} else {
+	DEFINES += QT_NO_STYLE_GTK
+}
+
 contains( styles, cleanlooks ) {
-	HEADERS += styles/qcleanlooksstyle.h
-	SOURCES += styles/qcleanlooksstyle.cpp
+        HEADERS += styles/qcleanlooksstyle.h
+        HEADERS += styles/qcleanlooksstyle_p.h
+        SOURCES += styles/qcleanlooksstyle.cpp
 	!contains( styles, windows ) {
-		message( cleanlooks requires windows )
 		styles += windows
 		DEFINES+= QT_STYLE_WINDOWS
 	}
 } else {
 	DEFINES += QT_NO_STYLE_CLEANLOOKS
 }
-				
+
 contains( styles, windows ) {
 	HEADERS += styles/qwindowsstyle.h
 	SOURCES += styles/qwindowsstyle.cpp

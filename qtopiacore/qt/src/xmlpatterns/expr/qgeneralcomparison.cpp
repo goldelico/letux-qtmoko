@@ -1,44 +1,49 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#include "qitem_p.h"
 #include "qbuiltintypes_p.h"
 #include "qcommonsequencetypes_p.h"
 #include "qcommonvalues_p.h"
+#include "qebvextractor_p.h"
+#include "qitem_p.h"
 #include "qliteral_p.h"
 #include "qoptimizationpasses_p.h"
 #include "quntypedatomicconverter_p.h"
@@ -52,8 +57,10 @@ using namespace QPatternist;
 
 GeneralComparison::GeneralComparison(const Expression::Ptr &op1,
                                      const AtomicComparator::Operator op,
-                                     const Expression::Ptr &op2) : PairContainer(op1, op2),
-                                                                   m_operator(op)
+                                     const Expression::Ptr &op2,
+                                     const bool isBackwardsCompat) : PairContainer(op1, op2)
+                                                                   , m_operator(op)
+                                                                   , m_isBackwardsCompat(isBackwardsCompat)
 {
 }
 
@@ -129,7 +136,7 @@ Expression::Ptr GeneralComparison::compress(const StaticContext::Ptr &context)
 {
     const Expression::Ptr me(PairContainer::compress(context));
 
-    if(me.data() != this)
+    if(me != this)
         return me;
 
     if(ValueComparison::isCaseInsensitiveCompare(m_operand1, m_operand2))
@@ -173,6 +180,12 @@ Expression::Ptr GeneralComparison::typeCheck(const StaticContext::Ptr &context,
         return me;
 }
 
+void GeneralComparison::updateType(ItemType::Ptr &type,
+                                   const Expression::Ptr &source)
+{
+    type = source->staticType()->itemType();
+}
+
 AtomicComparator::Ptr GeneralComparison::fetchGeneralComparator(Expression::Ptr &op1,
                                                                 Expression::Ptr &op2,
                                                                 const ReportContext::Ptr &context) const
@@ -189,7 +202,7 @@ AtomicComparator::Ptr GeneralComparison::fetchGeneralComparator(Expression::Ptr 
         op2 = Expression::Ptr(new UntypedAtomicConverter(op2, BuiltinTypes::xsDouble));
 
         /* The types might have changed, reload. */
-        t2 = op2->staticType()->itemType();
+        updateType(t2, op2);
     }
     else if(BuiltinTypes::numeric->xdtTypeMatches(t2) &&
             BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t1))
@@ -197,7 +210,25 @@ AtomicComparator::Ptr GeneralComparison::fetchGeneralComparator(Expression::Ptr 
         op1 = Expression::Ptr(new UntypedAtomicConverter(op1, BuiltinTypes::xsDouble));
 
         /* The types might have changed, reload. */
-        t1 = op1->staticType()->itemType();
+        updateType(t1, op1);
+    }
+    /* "If XPath 1.0 compatibility mode is true, a general comparison is
+     *  evaluated by applying the following rules, in order:
+     *  1. If either operand is a single atomic value that is an instance of
+     *  xs:boolean, then the other operand is converted to xs:boolean by taking
+     *  its effective boolean value."
+     *
+     * Notably, it's not conversion to boolean, it is EBV extraction.
+     */
+    else if(m_isBackwardsCompat && BuiltinTypes::xsBoolean->xdtTypeMatches(t1))
+    {
+        op2 = Expression::Ptr(new EBVExtractor(op2));
+        updateType(t2, op2);
+    }
+    else if(m_isBackwardsCompat && BuiltinTypes::xsBoolean->xdtTypeMatches(t2))
+    {
+        op1 = Expression::Ptr(new EBVExtractor(op1));
+        updateType(t1, op1);
     }
     /* b. "If one of the atomic values is an instance of xs:untypedAtomic and
      *    the other is an instance of xs:untypedAtomic or xs:string, then the
@@ -213,7 +244,7 @@ AtomicComparator::Ptr GeneralComparison::fetchGeneralComparator(Expression::Ptr 
             !BuiltinTypes::xsAnyURI->xdtTypeMatches(t2))
     {
         op1 = Expression::Ptr(new UntypedAtomicConverter(op1, t2));
-        t1 = op1->staticType()->itemType();
+        updateType(t1, op1);
     }
     else if(BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t2) &&
             !BuiltinTypes::xsString->xdtTypeMatches(t1) &&
@@ -221,7 +252,7 @@ AtomicComparator::Ptr GeneralComparison::fetchGeneralComparator(Expression::Ptr 
             !BuiltinTypes::xsAnyURI->xdtTypeMatches(t1))
     {
         op2 = Expression::Ptr(new UntypedAtomicConverter(op2, t1));
-        t2 = op2->staticType()->itemType();
+        updateType(t2, op2);
     }
 
     /* d. "After performing the conversions described above, the atomic

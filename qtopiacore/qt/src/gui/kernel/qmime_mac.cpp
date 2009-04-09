@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -82,6 +86,32 @@ static void cleanup_mimes()
     while (!mimes->isEmpty())
         delete mimes->takeFirst();
 }
+
+Q_GLOBAL_STATIC(QStringList, globalDraggedTypesList)
+
+/*!
+    \fn void qRegisterDraggedTypes(const QStringList &types)
+    \relates QMacPasteboardMime
+
+    Registers the given \a types as custom pasteboard types.
+
+    This function should be called to enable the Drag and Drop events 
+    for custom pasteboard types on Cocoa implementations. This is required 
+    in addition to a QMacPasteboardMime subclass implementation. By default 
+    drag and drop is enabled for all standard pasteboard types. 
+ 
+   \sa QMacPasteboardMime
+*/
+Q_GUI_EXPORT void qRegisterDraggedTypes(const QStringList &types)
+{
+    (*globalDraggedTypesList()) += types;
+}
+
+const QStringList& qEnabledDraggedTypes()
+{
+    return (*globalDraggedTypesList());
+}
+
 
 /*****************************************************************************
   QDnD debug facilities
@@ -171,7 +201,10 @@ QString QMacPasteboardMimeAny::convertorName()
 }
 
 QString QMacPasteboardMimeAny::flavorFor(const QString &mime)
-{
+{   
+    // do not handle the mime type name in the drag pasteboard
+    if(mime == QLatin1String("application/x-qt-mime-type-name"))
+        return QString();
     QString ret = QLatin1String("com.trolltech.anymime.") + mime;
     return ret.replace(QLatin1String("/"), QLatin1String("--"));
 }
@@ -208,6 +241,58 @@ QList<QByteArray> QMacPasteboardMimeAny::convertFromMime(const QString &mime, QV
         ret.append(data.toString().toUtf8());
     else
         ret.append(data.toByteArray());
+    return ret;
+}
+
+class QMacPasteboardMimeTypeName : public QMacPasteboardMime {
+private:
+
+public:
+    QMacPasteboardMimeTypeName() : QMacPasteboardMime(MIME_QT_CONVERTOR|MIME_ALL) {
+    }
+    ~QMacPasteboardMimeTypeName() {
+    }
+    QString convertorName();
+
+    QString flavorFor(const QString &mime);
+    QString mimeFor(QString flav);
+    bool canConvert(const QString &mime, QString flav);
+    QVariant convertToMime(const QString &mime, QList<QByteArray> data, QString flav);
+    QList<QByteArray> convertFromMime(const QString &mime, QVariant data, QString flav);
+};
+
+QString QMacPasteboardMimeTypeName::convertorName()
+{
+    return QLatin1String("Qt-Mime-Type");
+}
+
+QString QMacPasteboardMimeTypeName::flavorFor(const QString &mime)
+{
+    if(mime == QLatin1String("application/x-qt-mime-type-name"))
+        return QLatin1String("com.trolltech.qt.MimeTypeName");
+    return QString();
+}
+
+QString QMacPasteboardMimeTypeName::mimeFor(QString)
+{
+    return QString();
+}
+
+bool QMacPasteboardMimeTypeName::canConvert(const QString &, QString)
+{
+    return false;
+}
+
+QVariant QMacPasteboardMimeTypeName::convertToMime(const QString &, QList<QByteArray>, QString)
+{
+    QVariant ret;
+    return ret;
+}
+
+QList<QByteArray> QMacPasteboardMimeTypeName::convertFromMime(const QString &, QVariant, QString)
+{
+    QList<QByteArray> ret;
+    ret.append(QString("x-qt-mime-type-name").toUtf8());
     return ret;
 }
 
@@ -958,7 +1043,7 @@ void QMacPasteboardMime::initialize()
         new QMacPasteboardMimePlainText;
         new QMacPasteboardMimeHTMLText;
         new QMacPasteboardMimeFileUri;
-
+        new QMacPasteboardMimeTypeName;
         //make sure our "non-standard" types are always last! --Sam
         new QMacPasteboardMimeAny;
 #ifdef QT3_SUPPORT
@@ -1031,6 +1116,7 @@ QList<QMacPasteboardMime*> QMacPasteboardMime::all(uchar t)
     }
     return ret;
 }
+
 
 /*!
   \fn QString QMacPasteboardMime::convertorName()

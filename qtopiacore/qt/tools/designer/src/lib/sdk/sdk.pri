@@ -4,6 +4,7 @@ INCLUDEPATH += $$PWD
 
 HEADERS += $$PWD/abstractformeditor.h \
     $$PWD/abstractintrospection_p.h \
+    $$PWD/abstractsettings_p.h \
     $$PWD/abstractformeditorplugin.h \
     $$PWD/abstractresourcebrowser.h \
     $$PWD/abstractintegration.h \
@@ -20,6 +21,7 @@ HEADERS += $$PWD/abstractformeditor.h \
     $$PWD/abstractbrushmanager.h \
     $$PWD/abstracticoncache.h \
     $$PWD/abstractlanguage.h \
+    $$PWD/abstractoptionspage_p.h \
     $$PWD/propertysheet.h \
     $$PWD/dynamicpropertysheet.h \
     $$PWD/membersheet.h \
@@ -30,7 +32,8 @@ HEADERS += $$PWD/abstractformeditor.h \
     $$PWD/abstractdnditem.h \
     $$PWD/abstractpromotioninterface.h \
     $$PWD/abstractdialoggui_p.h \
-    $$PWD/script_p.h
+    $$PWD/script_p.h \
+    $$PWD/abstractnewformwidget_p.h
 
 SOURCES += $$PWD/abstractformeditor.cpp \
     $$PWD/abstractintrospection.cpp \
@@ -51,4 +54,5 @@ SOURCES += $$PWD/abstractformeditor.cpp \
     $$PWD/extrainfo.cpp \
     $$PWD/abstractpromotioninterface.cpp \
     $$PWD/abstractdialoggui.cpp \
-    $$PWD/script.cpp
+    $$PWD/script.cpp \
+    $$PWD/abstractnewformwidget.cpp

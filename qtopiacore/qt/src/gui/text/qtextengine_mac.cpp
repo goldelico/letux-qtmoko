@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,9 +56,9 @@ static void heuristicSetGlyphAttributes(const QChar *uc, int length, QGlyphLayou
 //     qDebug("QScriptEngine::heuristicSetGlyphAttributes, num_glyphs=%d", item->num_glyphs);
 
     const bool symbolFont = false; // ####
-    glyphs[0].attributes.mark = false;
-    glyphs[0].attributes.clusterStart = true;
-    glyphs[0].attributes.dontPrint = (!symbolFont && uc[0].unicode() == 0x00ad) || qIsControlChar(uc[0].unicode());
+    glyphs->attributes[0].mark = false;
+    glyphs->attributes[0].clusterStart = true;
+    glyphs->attributes[0].dontPrint = (!symbolFont && uc[0].unicode() == 0x00ad) || qIsControlChar(uc[0].unicode());
 
     int pos = 0;
     int lastCat = QChar::category(uc[0].unicode());
@@ -68,7 +72,7 @@ static void heuristicSetGlyphAttributes(const QChar *uc, int length, QGlyphLayou
         }
         // hide soft-hyphens by default
         if ((!symbolFont && uc[i].unicode() == 0x00ad) || qIsControlChar(uc[i].unicode()))
-            glyphs[pos].attributes.dontPrint = true;
+            glyphs->attributes[pos].dontPrint = true;
         const QUnicodeTables::Properties *prop = QUnicodeTables::properties(uc[i].unicode());
         int cat = prop->category;
 
@@ -76,19 +80,19 @@ static void heuristicSetGlyphAttributes(const QChar *uc, int length, QGlyphLayou
         // as then the current char belongs to the last one and one gets a space justification point
         // after the space char.
         if (lastCat == QChar::Separator_Space)
-            glyphs[pos-1].attributes.justification = HB_Space;
+            glyphs->attributes[pos-1].justification = HB_Space;
         else if (cat != QChar::Mark_NonSpacing)
-            glyphs[pos-1].attributes.justification = HB_Character;
+            glyphs->attributes[pos-1].justification = HB_Character;
         else
-            glyphs[pos-1].attributes.justification = HB_NoJustification;
+            glyphs->attributes[pos-1].justification = HB_NoJustification;
 
         lastCat = cat;
     }
     pos = logClusters[length-1];
     if (lastCat == QChar::Separator_Space)
-        glyphs[pos].attributes.justification = HB_Space;
+        glyphs->attributes[pos].justification = HB_Space;
     else
-        glyphs[pos].attributes.justification = HB_Character;
+        glyphs->attributes[pos].justification = HB_Character;
 }
 
 struct QArabicProperties {
@@ -548,9 +552,7 @@ void qt_getArabicProperties(const unsigned short *chars, int len, QArabicPropert
 //         qDebug("arabic properties(%d): uc=%x shape=%d, justification=%d", i, chars[i], properties[i].shape, properties[i].justification);
 }
 
-
-
-void QTextEngine::shapeTextWithAtsui(int item) const
+void QTextEngine::shapeTextMac(int item) const
 {
     QScriptItem &si = layoutData->items[item];
 
@@ -562,8 +564,11 @@ void QTextEngine::shapeTextWithAtsui(int item) const
         return;
     }
     
+#ifndef QT_MAC_USE_COCOA
     QFontEngineMacMulti *fe = static_cast<QFontEngineMacMulti *>(font);
-
+#else
+    QCoreTextFontEngineMulti *fe = static_cast<QCoreTextFontEngineMulti *>(font);
+#endif
     QTextEngine::ShaperFlags flags;
     if (si.analysis.bidiLevel % 2)
         flags |= RightToLeft;
@@ -592,20 +597,21 @@ void QTextEngine::shapeTextWithAtsui(int item) const
 
     while (true) {
 	ensureSpace(num_glyphs);
-        num_glyphs = layoutData->num_glyphs - layoutData->used;
+        num_glyphs = layoutData->glyphLayout.numGlyphs - layoutData->used;
 
-        QGlyphLayout *g = glyphs(&si);
+        QGlyphLayout g = availableGlyphs(&si);
+        g.numGlyphs = num_glyphs;
         unsigned short *log_clusters = logClusters(&si);
 
         if (fe->stringToCMap(str,
                              len,
-                             g,
+                             &g,
                              &num_glyphs,
                              flags,
                              log_clusters,
                              attributes())) {
 
-		heuristicSetGlyphAttributes(str, len, g, log_clusters, num_glyphs);
+		heuristicSetGlyphAttributes(str, len, &g, log_clusters, num_glyphs);
 		break;
 	}
     }
@@ -614,7 +620,7 @@ void QTextEngine::shapeTextWithAtsui(int item) const
 
     layoutData->used += si.num_glyphs;
 
-    QGlyphLayout *g = glyphs(&si);
+    QGlyphLayout g = shapedGlyphs(&si);
 
     if (si.analysis.script == QUnicodeTables::Arabic) {
         QVarLengthArray<QArabicProperties> props(len + 2);
@@ -635,7 +641,7 @@ void QTextEngine::shapeTextWithAtsui(int item) const
 
         for (int i = 0; i < len; ++i) {
             int gpos = log_clusters[i];
-            g[gpos].attributes.justification = properties[i].justification;
+            g.attributes[gpos].justification = properties[i].justification;
         }
     }
 

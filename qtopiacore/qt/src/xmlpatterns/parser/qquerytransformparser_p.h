@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -87,19 +91,17 @@
  * int foo(IN char* name, OUT char* path);
  *
  * Hence this un-break fix. Note that this file was auto generated. */
-#ifdef Q_OS_WINCE
-#    ifdef IN
+#ifdef IN
 #  undef IN
-#    endif
-#    ifdef INSTANCE
-#      undef INSTANCE
-#    endif
-#    ifdef STRICT
-#      undef STRICT
-#    endif
-#    ifdef SELF
-#      undef SELF
-#    endif
+#endif
+#ifdef INSTANCE
+#  undef INSTANCE
+#endif
+#ifdef STRICT
+#  undef STRICT
+#endif
+#ifdef SELF
+#  undef SELF
 #endif
 
 /* Tokens.  */
@@ -114,152 +116,167 @@
      XPATH2_STRING_LITERAL = 260,
      QNAME = 261,
      NCNAME = 262,
-     ANY_LOCAL_NAME = 263,
-     ANY_PREFIX = 264,
-     NUMBER = 265,
-     XPATH2_NUMBER = 266,
-     AND = 267,
-     APOS = 268,
-     AS = 269,
-     ASCENDING = 270,
-     ASSIGN = 271,
-     AT = 272,
-     AT_SIGN = 273,
-     ATTRIBUTE = 274,
-     BAR = 275,
-     BASEURI = 276,
-     BEGIN_END_TAG = 277,
-     BOUNDARY_SPACE = 278,
-     BY = 279,
-     CASE = 280,
-     CASTABLE = 281,
-     CAST = 282,
-     COLLATION = 283,
-     COLON = 284,
-     COLONCOLON = 285,
-     COMMA = 286,
-     COMMENT = 287,
-     COMMENT_START = 288,
-     CONSTRUCTION = 289,
-     COPY_NAMESPACES = 290,
-     CURLY_LBRACE = 291,
-     CURLY_RBRACE = 292,
-     DECLARE = 293,
-     DEFAULT = 294,
-     DESCENDING = 295,
-     DIV = 296,
-     DOCUMENT = 297,
-     DOCUMENT_NODE = 298,
-     DOLLAR = 299,
-     DOT = 300,
-     DOTDOT = 301,
-     ELEMENT = 302,
-     ELSE = 303,
-     EMPTY = 304,
-     EMPTY_SEQUENCE = 305,
-     ENCODING = 306,
-     EQ = 307,
-     ERROR = 308,
-     EVERY = 309,
-     EXCEPT = 310,
-     EXTERNAL = 311,
-     FOLLOWS = 312,
-     FOR = 313,
-     FUNCTION = 314,
-     GE = 315,
-     G_EQ = 316,
-     G_GE = 317,
-     G_GT = 318,
-     G_LE = 319,
-     G_LT = 320,
-     G_NE = 321,
-     GREATEST = 322,
-     GT = 323,
-     IDIV = 324,
-     IF = 325,
-     IMPORT = 326,
-     INHERIT = 327,
-     IN = 328,
-     INSTANCE = 329,
-     INTERSECT = 330,
-     IS = 331,
-     ITEM = 332,
-     LAX = 333,
-     LBRACKET = 334,
-     LEAST = 335,
-     LE = 336,
-     LET = 337,
-     LPAREN = 338,
-     LT = 339,
-     MINUS = 340,
-     MOD = 341,
-     MODULE = 342,
-     NAMESPACE = 343,
-     NE = 344,
-     NODE = 345,
-     NO_ELEMENT_CONTENT = 346,
-     NO_INHERIT = 347,
-     NO_PRESERVE = 348,
-     OF = 349,
-     OPTION = 350,
-     ORDER_BY = 351,
-     ORDERED = 352,
-     ORDERING = 353,
-     ORDER = 354,
-     OR = 355,
-     PI_START = 356,
-     PLUS = 357,
-     POSITION_SET = 358,
-     PRAGMA_END = 359,
-     PRAGMA_START = 360,
-     PRECEDES = 361,
-     PRESERVE = 362,
-     PROCESSING_INSTRUCTION = 363,
-     QUESTION = 364,
-     QUICK_TAG_END = 365,
-     QUOTE = 366,
-     RBRACKET = 367,
-     RETURN = 368,
-     RPAREN = 369,
-     SATISFIES = 370,
-     SCHEMA = 371,
-     SCHEMA_ATTRIBUTE = 372,
-     SCHEMA_ELEMENT = 373,
-     SEMI_COLON = 374,
-     SLASH = 375,
-     SLASHSLASH = 376,
-     SOME = 377,
-     STABLE = 378,
-     STAR = 379,
-     STRICT = 380,
-     STRIP = 381,
-     SUCCESS = 382,
-     COMMENT_CONTENT = 383,
-     PI_CONTENT = 384,
-     PI_TARGET = 385,
-     TEXT = 386,
-     THEN = 387,
-     TO = 388,
-     TREAT = 389,
-     TYPESWITCH = 390,
-     UNION = 391,
-     UNORDERED = 392,
-     VALIDATE = 393,
-     VARIABLE = 394,
-     VERSION = 395,
-     WHERE = 396,
-     XQUERY = 397,
-     ANCESTOR_OR_SELF = 398,
-     ANCESTOR = 399,
-     CHILD = 400,
-     DESCENDANT_OR_SELF = 401,
-     DESCENDANT = 402,
-     FOLLOWING_SIBLING = 403,
-     FOLLOWING = 404,
-     PRECEDING = 405,
-     PARENT = 406,
-     PRECEDING_SIBLING = 407,
-     SELF = 408
+     CLARK_NAME = 263,
+     ANY_LOCAL_NAME = 264,
+     ANY_PREFIX = 265,
+     NUMBER = 266,
+     XPATH2_NUMBER = 267,
+     ANCESTOR = 268,
+     ANCESTOR_OR_SELF = 269,
+     AND = 270,
+     APOS = 271,
+     APPLY_TEMPLATE = 272,
+     AS = 273,
+     ASCENDING = 274,
+     ASSIGN = 275,
+     AT = 276,
+     AT_SIGN = 277,
+     ATTRIBUTE = 278,
+     AVT = 279,
+     BAR = 280,
+     BASEURI = 281,
+     BEGIN_END_TAG = 282,
+     BOUNDARY_SPACE = 283,
+     BY = 284,
+     CALL_TEMPLATE = 285,
+     CASE = 286,
+     CASTABLE = 287,
+     CAST = 288,
+     CHILD = 289,
+     COLLATION = 290,
+     COLONCOLON = 291,
+     COMMA = 292,
+     COMMENT = 293,
+     COMMENT_START = 294,
+     CONSTRUCTION = 295,
+     COPY_NAMESPACES = 296,
+     CURLY_LBRACE = 297,
+     CURLY_RBRACE = 298,
+     DECLARE = 299,
+     DEFAULT = 300,
+     DESCENDANT = 301,
+     DESCENDANT_OR_SELF = 302,
+     DESCENDING = 303,
+     DIV = 304,
+     DOCUMENT = 305,
+     DOCUMENT_NODE = 306,
+     DOLLAR = 307,
+     DOT = 308,
+     DOTDOT = 309,
+     ELEMENT = 310,
+     ELSE = 311,
+     EMPTY = 312,
+     EMPTY_SEQUENCE = 313,
+     ENCODING = 314,
+     END_SORT = 315,
+     EQ = 316,
+     ERROR = 317,
+     EVERY = 318,
+     EXCEPT = 319,
+     EXTERNAL = 320,
+     FOLLOWING = 321,
+     FOLLOWING_SIBLING = 322,
+     FOLLOWS = 323,
+     FOR_APPLY_TEMPLATE = 324,
+     FOR = 325,
+     FUNCTION = 326,
+     GE = 327,
+     G_EQ = 328,
+     G_GE = 329,
+     G_GT = 330,
+     G_LE = 331,
+     G_LT = 332,
+     G_NE = 333,
+     GREATEST = 334,
+     GT = 335,
+     IDIV = 336,
+     IF = 337,
+     IMPORT = 338,
+     INHERIT = 339,
+     IN = 340,
+     INSTANCE = 341,
+     INTERSECT = 342,
+     IS = 343,
+     ITEM = 344,
+     LAX = 345,
+     LBRACKET = 346,
+     LEAST = 347,
+     LE = 348,
+     LET = 349,
+     LPAREN = 350,
+     LT = 351,
+     MAP = 352,
+     MATCHES = 353,
+     MINUS = 354,
+     MODE = 355,
+     MOD = 356,
+     MODULE = 357,
+     NAME = 358,
+     NAMESPACE = 359,
+     NE = 360,
+     NODE = 361,
+     NO_INHERIT = 362,
+     NO_PRESERVE = 363,
+     OF = 364,
+     OPTION = 365,
+     ORDERED = 366,
+     ORDERING = 367,
+     ORDER = 368,
+     OR = 369,
+     PARENT = 370,
+     PI_START = 371,
+     PLUS = 372,
+     POSITION_SET = 373,
+     PRAGMA_END = 374,
+     PRAGMA_START = 375,
+     PRECEDES = 376,
+     PRECEDING = 377,
+     PRECEDING_SIBLING = 378,
+     PRESERVE = 379,
+     PRIORITY = 380,
+     PROCESSING_INSTRUCTION = 381,
+     QUESTION = 382,
+     QUICK_TAG_END = 383,
+     QUOTE = 384,
+     RBRACKET = 385,
+     RETURN = 386,
+     RPAREN = 387,
+     SATISFIES = 388,
+     SCHEMA_ATTRIBUTE = 389,
+     SCHEMA_ELEMENT = 390,
+     SCHEMA = 391,
+     SELF = 392,
+     SEMI_COLON = 393,
+     SLASH = 394,
+     SLASHSLASH = 395,
+     SOME = 396,
+     SORT = 397,
+     STABLE = 398,
+     STAR = 399,
+     STRICT = 400,
+     STRIP = 401,
+     SUCCESS = 402,
+     COMMENT_CONTENT = 403,
+     PI_CONTENT = 404,
+     PI_TARGET = 405,
+     XSLT_VERSION = 406,
+     TEMPLATE = 407,
+     TEXT = 408,
+     THEN = 409,
+     TO = 410,
+     TREAT = 411,
+     TUNNEL = 412,
+     TYPESWITCH = 413,
+     UNION = 414,
+     UNORDERED = 415,
+     VALIDATE = 416,
+     VARIABLE = 417,
+     VERSION = 418,
+     WHERE = 419,
+     XQUERY = 420,
+     INTERNAL = 421,
+     INTERNAL_NAME = 422,
+     CURRENT = 423
    };
 #endif
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -73,6 +77,11 @@
     QImageReader can read. QImageReader supports all built-in image
     formats, in addition to any image format plugins that support
     reading.
+
+    QImageReader autodetects the image format by default, by looking at the
+    provided (optional) format string, the file name suffix, and the data
+    stream contents. You can enable or disable this feature, by calling
+    setAutoDetectImageFormat().
 
     \sa QImageWriter, QImageIOHandler, QImageIOPlugin
 */
@@ -186,8 +195,11 @@ static const _qt_BuiltInFormatStruct _qt_BuiltInFormats[] = {
 };
 
 static QImageIOHandler *createReadHandlerHelper(QIODevice *device,
-    const QByteArray &format)
+                                                const QByteArray &format, bool autoDetectImageFormat)
 {
+    if (!autoDetectImageFormat && format.isEmpty())
+        return 0;
+
     QByteArray form = format.toLower();
     QImageIOHandler *handler = 0;
 
@@ -205,7 +217,7 @@ static QImageIOHandler *createReadHandlerHelper(QIODevice *device,
 
 #if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
     int suffixPluginIndex = -1;
-    if (device && format.isEmpty()) {
+    if (device && format.isEmpty() && autoDetectImageFormat) {
         // if there's no format, see if \a device is a file, and if so, find
         // the file suffix and find support for that format among our plugins.
         // this allows plugins to override our built-in handlers.
@@ -246,7 +258,7 @@ static QImageIOHandler *createReadHandlerHelper(QIODevice *device,
             device->seek(pos);
     }
 
-    if (!handler && !testFormat.isEmpty()) {
+    if (!handler && !testFormat.isEmpty() && autoDetectImageFormat) {
         // check if any plugin supports the format (they are not allowed to
         // read from the device yet).
         const qint64 pos = device ? device->pos() : 0;
@@ -303,7 +315,7 @@ static QImageIOHandler *createReadHandlerHelper(QIODevice *device,
     }
 
 #if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
-    if (!handler) {
+    if (!handler && autoDetectImageFormat) {
         // check if any of our plugins recognize the file from its contents.
         const qint64 pos = device ? device->pos() : 0;
         for (int i = 0; i < keys.size(); ++i) {
@@ -323,7 +335,7 @@ static QImageIOHandler *createReadHandlerHelper(QIODevice *device,
     }
 #endif
 
-    if (!handler) {
+    if (!handler && autoDetectImageFormat) {
         // check if any of our built-in handlers recognize the file from its
         // contents.
         int currentFormat = 0;
@@ -421,6 +433,7 @@ public:
 
     // device
     QByteArray format;
+    bool autoDetectImageFormat;
     QIODevice *device;
     bool deleteDevice;
     QImageIOHandler *handler;
@@ -445,6 +458,7 @@ public:
     \internal
 */
 QImageReaderPrivate::QImageReaderPrivate(QImageReader *qq)
+    : autoDetectImageFormat(true)
 {
     device = 0;
     deleteDevice = false;
@@ -479,7 +493,7 @@ bool QImageReaderPrivate::initHandler()
     }
 
     // probe the file extension
-    if (deleteDevice && !device->isOpen() && !device->open(QIODevice::ReadOnly)) {
+    if (deleteDevice && !device->isOpen() && !device->open(QIODevice::ReadOnly) && autoDetectImageFormat) {
         QList<QByteArray> extensions = QImageReader::supportedImageFormats();
         if (!format.isEmpty()) {
             // Try the most probable extension first
@@ -502,12 +516,13 @@ bool QImageReaderPrivate::initHandler()
         if (!device->isOpen()) {
             imageReaderError = QImageReader::FileNotFoundError;
             errorString = QLatin1String(QT_TRANSLATE_NOOP(QImageReader, "File not found"));
+            file->setFileName(fileName); // restore the old file name
             return false;
         }
     }
 
     // assign a handler
-    if (!handler && (handler = createReadHandlerHelper(device, format)) == 0) {
+    if (!handler && (handler = createReadHandlerHelper(device, format, autoDetectImageFormat)) == 0) {
         imageReaderError = QImageReader::UnsupportedFormatError;
         errorString = QLatin1String(QT_TRANSLATE_NOOP(QImageReader, "Unsupported image format"));
         return false;
@@ -616,6 +631,61 @@ QByteArray QImageReader::format() const
     }
 
     return d->format;
+}
+
+/*!
+    If \a enabled is true, image format autodetection is enabled; otherwise,
+    it is disabled. By default, autodetection is enabled.
+
+    QImageReader uses an extensive approach to detecting the image format;
+    firstly, if you pass a file name to QImageReader, it will attempt to
+    detect the file extension if the given file name does not point to an
+    existing file, by appending supported default extensions to the given file
+    name, one at a time. It then uses the following approach to detect the
+    image format:
+
+    \list
+
+    \o Image plugins are queried first, based on either the optional format
+    string, or the file name suffix (if the source device is a file). No
+    content detection is done at this stage. QImageReader will choose the
+    first plugin that supports reading for this format.
+
+    \o If no plugin supports the image format, Qt's built-in handlers are
+    checked based on either the optional format string, or the file name
+    suffix.
+
+    \o If no capable plugins or built-in handlers are found, each plugin is
+    tested by inspecting the content of the data stream.
+
+    \o If no plugins could detect the image format based on data contents,
+    each built-in image handler is tested by inspecting the contents.
+
+    \o Finally, if all above approaches fail, QImageReader will report failure
+    when trying to read the image.
+
+    \endlist    
+
+    By disabling image format autodetection, QImageReader will only query the
+    plugins and built-in handlers based on the format string (i.e., no file
+    name extensions are tested).
+
+    \sa QImageIOHandler::canRead(), QImageIOPlugin::capabilities()
+*/
+void QImageReader::setAutoDetectImageFormat(bool enabled)
+{
+    d->autoDetectImageFormat = enabled;
+}
+
+/*!
+    Returns true if image format autodetection is enabled on this image
+    reader; otherwise returns false. By default, autodetection is enabled.
+
+    \sa setAutoDetectImageFormat()    
+*/
+bool QImageReader::autoDetectImageFormat() const
+{
+    return d->autoDetectImageFormat;
 }
 
 /*!
@@ -733,6 +803,29 @@ QSize QImageReader::size() const
         return d->handler->option(QImageIOHandler::Size).toSize();
 
     return QSize();
+}
+
+/*!
+    \since 4.5
+
+    Returns the format of the image, without actually reading the image
+    contents. The format describes the image format \l QImageReader::read()
+    returns, not the format of the actual image.
+
+    If the image format does not support this feature, this function returns
+    an invalid format.
+
+    \sa QImageIOHandler::ImageOption, QImageIOHandler::option(), QImageIOHandler::supportsOption()
+*/
+QImage::Format QImageReader::imageFormat() const
+{
+    if (!d->initHandler())
+        return QImage::Format_Invalid;
+
+    if (d->handler->supportsOption(QImageIOHandler::ImageFormat))
+        return (QImage::Format)d->handler->option(QImageIOHandler::ImageFormat).toInt();
+
+    return QImage::Format_Invalid;
 }
 
 /*!
@@ -1210,11 +1303,13 @@ QByteArray QImageReader::imageFormat(const QString &fileName)
 /*!
     If supported, this function returns the image format of the device
     \a device. Otherwise, an empty string is returned.
+
+    \sa QImageReader::autoDetectImageFormat()
 */
 QByteArray QImageReader::imageFormat(QIODevice *device)
 {
     QByteArray format;
-    QImageIOHandler *handler = createReadHandlerHelper(device, format);
+    QImageIOHandler *handler = createReadHandlerHelper(device, format, /* autoDetectImageFormat = */ true);
     if (handler) {
         if (handler->canRead())
             format = handler->format();

@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -94,6 +101,22 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool /*destro
 {
     Q_Q(QWidget);
     Qt::WindowType type = q->windowType();
+
+    // Make sure the WindowTitleHint is on if any of the title bar hints are set
+    // Note: This might be moved to cross-platform QWidgetPrivate::adjustFlags()
+    if (  !(data.window_flags & Qt::CustomizeWindowHint) && (
+           (data.window_flags & Qt::WindowSystemMenuHint) ||
+           (data.window_flags & Qt::WindowContextHelpButtonHint) ||
+           (data.window_flags & Qt::WindowMinimizeButtonHint) ||
+           (data.window_flags & Qt::WindowMaximizeButtonHint) ||
+           (data.window_flags & Qt::WindowCloseButtonHint) ) ) {
+        data.window_flags |= Qt::WindowTitleHint;
+    }
+
+    // Decoration plugins on QWS don't support switching on the close button on its own
+    if (data.window_flags & Qt::WindowCloseButtonHint)
+        data.window_flags |= Qt::WindowSystemMenuHint;
+
     Qt::WindowFlags flags = data.window_flags;
 
     data.alloc_region_index = -1;
@@ -141,7 +164,13 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool /*destro
         dialog = popup = false;                        // force these flags off
         data.crect.setRect(0, 0, sw, sh);
     } else if (topLevel && !q->testAttribute(Qt::WA_Resized)) {
-        data.crect.setSize(QSize(sw/2, 4*sh/10));
+        int width = sw / 2;
+        int height = 4 * sh / 10;
+        if (extra) {
+            width = qMax(qMin(width, extra->maxw), extra->minw);
+            height = qMax(qMin(height, extra->maxh), extra->minh);
+        }
+        data.crect.setSize(QSize(width, height));
     }
 
     if (window) {                                // override the old window
@@ -200,7 +229,7 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool /*destro
                 data.crect.translate(topextra->frameStrut.left(), topextra->frameStrut.top());
             if (!topData()->qwsManager) {
                 topData()->qwsManager = new QWSManager(q);
-                if(q->data->window_state & ~Qt::WindowActive == Qt::WindowMaximized)
+                if((q->data->window_state & ~Qt::WindowActive) == Qt::WindowMaximized)
                     topData()->qwsManager->maximize();
             }
 
@@ -535,74 +564,6 @@ void QWidget::activateWindow()
         qwsDisplay()->requestFocus(tlw->internalWinId(), true);
     }
 }
-
-void QWidgetPrivate::dirtyWidget_sys(const QRegion &rgn, bool updateImmediately)
-{
-    Q_Q(QWidget);
-    QWidget *tlw = q->window();
-
-    QTLWExtra *tlwExtra = tlw->d_func()->topData();
-    QWidgetBackingStore *wbs = tlwExtra->backingStore;
-    QRegion wrgn(rgn);
-
-    if (tlw != q) {
-        QPoint offs(q->mapTo(tlw, QPoint()));
-        wrgn.translate(offs);
-    }
-
-    QWSWindowSurface *surface = static_cast<QWSWindowSurface*>(wbs->windowSurface);
-    if (surface) {
-        surface->d_ptr->updateImmediately = updateImmediately;
-        if (tlwExtra->proxyWidget) {
-            // Add the existing dirty region to the current update region before
-            // we reset QWSWindowSurface::dirty. We do this in order to always
-            // send an update event on sub-sequent updates/repaints.
-            wrgn += surface->d_ptr->dirty;
-            surface->d_ptr->dirty = QRegion(); // XXX: hw: Make sure we post/send update requests.
-            surface->d_ptr->clip = wrgn;
-        }
-        surface->setDirty(wrgn);
-
-        // re-get, since setDirty may recreate the surface
-        surface = static_cast<QWSWindowSurface*>(wbs->windowSurface);
-
-        surface->d_ptr->updateImmediately = false;
-
-#ifdef Q_BACKINGSTORE_SUBSURFACES
-        // dirty on all subsurfaces...
-
-        QList<QWindowSurface*> subSurfaces = wbs->subSurfaces;
-        // XXX: hw: only if region intersects any of the subsurfaces
-        for (int i = 0; i < subSurfaces.size(); ++i) {
-            QWSWindowSurface *s = static_cast<QWSWindowSurface*>(subSurfaces.at(i));
-            QPoint p = s->window()->mapTo(tlw, QPoint()); // must use widget?
-            s->d_ptr->updateImmediately = updateImmediately;
-            s->setDirty(wrgn.translated(-p));
-            s->d_ptr->updateImmediately = false;
-        }
-#endif // Q_BACKINGSTORE_SUBSURFACES
-    }
-}
-
-void QWidgetPrivate::cleanWidget_sys(const QRegion& rgn)
-{
-    Q_Q(QWidget);
-    QWidget *tlw = q->window();
-    QTLWExtra *tlwExtra = tlw->d_func()->maybeTopData();
-    if (!tlwExtra || !tlwExtra->proxyWidget || tlwExtra->backingStore)
-        return;
-
-    QRegion wrgn(rgn);
-    if (tlw != q) {
-        QPoint offs(q->mapTo(tlw, QPoint()));
-        wrgn.translate(offs);
-    }
-
-    if (QWSWindowSurface *surface = static_cast<QWSWindowSurface*>(tlwExtra->backingStore->windowSurface))
-        surface->d_ptr->dirty -= wrgn;
-}
-
-
 
 /*
   Should we require that  q is a toplevel window ???
@@ -940,16 +901,6 @@ void QWidgetPrivate::setGeometry_sys(int x, int y, int w, int h, bool isMove)
             }
         }
 
-
-        //### must have frame geometry correct before sending move/resize events
-        if (isMove) {
-            QMoveEvent e(q->pos(), oldPos);
-            QApplication::sendEvent(q, &e);
-        }
-        if (isResize) {
-            QResizeEvent e(r.size(), olds);
-            QApplication::sendEvent(q, &e);
-        }
         if (!toplevelMove) {
             if (q->isWindow()) {
                 if (surface)
@@ -985,15 +936,23 @@ void QWidgetPrivate::setGeometry_sys(int x, int y, int w, int h, bool isMove)
             }
 #endif
             else {
-                if (isMove && !isResize) {
+                if (isMove && !isResize)
                     moveRect(QRect(oldPos, olds), x - oldPos.x(), y - oldPos.y());
-                } else {
-                    q->parentWidget()->d_func()->invalidateBuffer(QRect(oldPos, olds));
-                    invalidateBuffer(q->rect());
-                    //TODO: handle static contents
-                }
+                else
+                    invalidateBuffer_resizeHelper(oldPos, olds);
             }
         }
+
+        //### must have frame geometry correct before sending move/resize events
+        if (isMove) {
+            QMoveEvent e(q->pos(), oldPos);
+            QApplication::sendEvent(q, &e);
+        }
+        if (isResize) {
+            QResizeEvent e(r.size(), olds);
+            QApplication::sendEvent(q, &e);
+        }
+
     } else { // not visible
         if (isMove && q->pos() != oldPos)
             q->setAttribute(Qt::WA_PendingMoveEvent, true);
@@ -1049,9 +1008,17 @@ int QWidget::metric(PaintDeviceMetric m) const
     } else if (m == PdmDepth) {
         return qwsDisplay()->depth();
     } else if (m == PdmDpiX || m == PdmPhysicalDpiX) {
+        if (d->extra && d->extra->customDpiX)
+            return d->extra->customDpiX;
+        else if (d->parent)
+            return static_cast<QWidget *>(d->parent)->metric(m);
         const QScreen *screen = d->getScreen();
         return qRound(screen->width() / double(screen->physicalWidth() / 25.4));
     } else if (m == PdmDpiY || m == PdmPhysicalDpiY) {
+        if (d->extra && d->extra->customDpiY)
+            return d->extra->customDpiY;
+        else if (d->parent)
+            return static_cast<QWidget *>(d->parent)->metric(m);
         const QScreen *screen = d->getScreen();
         return qRound(screen->height() / double(screen->physicalHeight() / 25.4));
     } else {
@@ -1070,13 +1037,10 @@ void QWidgetPrivate::deleteSysExtra()
 
 void QWidgetPrivate::createTLSysExtra()
 {
-    extra->topextra->backingStore = 0;
 }
 
 void QWidgetPrivate::deleteTLSysExtra()
 {
-    delete extra->topextra->backingStore;
-    extra->topextra->backingStore = 0;
 }
 
 void QWidgetPrivate::registerDropSite(bool on)
@@ -1118,47 +1082,23 @@ inline bool QRect::intersects(const QRect &r) const
              qMax(y1, r.y1) <= qMin(y2, r.y2));
 }
 
-void QWidget::setMask(const QRegion& region)
+void QWidgetPrivate::setMask_sys(const QRegion &region)
 {
-    Q_D(QWidget);
-    d->createExtra();
+    Q_UNUSED(region);
+    Q_Q(QWidget);
 
-    if (region == d->extra->mask)
+    if (!q->isVisible() || !q->isWindow())
         return;
 
-    QRegion parentR;
-    if (!isWindow())
-        parentR = d->extra->mask.isEmpty() ? QRegion(rect()) : d->extra->mask ;
-
-    d->extra->mask = region;
-
-    if (isVisible()) {
-        if (isWindow()) {
-            d->data.fstrut_dirty = true;
-            d->invalidateBuffer(rect());
-            QWindowSurface *surface = d->extra->topextra->backingStore->windowSurface;
-            if (surface) {
-                // QWSWindowSurface::setGeometry() returns without doing anything
-                // if old geom  == new geom. Therefore, we need to reset the old value.
-                surface->QWindowSurface::setGeometry(QRect());
-                surface->setGeometry(frameGeometry());
-            }
-        } else {
-            parentR += d->extra->mask;
-            parentWidget()->update(parentR.translated(geometry().topLeft()));
-            update();
-        }
+    data.fstrut_dirty = true;
+    invalidateBuffer(q->rect());
+    QWindowSurface *surface = extra->topextra->backingStore->windowSurface;
+    if (surface) {
+        // QWSWindowSurface::setGeometry() returns without doing anything
+        // if old geom  == new geom. Therefore, we need to reset the old value.
+        surface->QWindowSurface::setGeometry(QRect());
+        surface->setGeometry(q->frameGeometry());
     }
-}
-
-void QWidget::setMask(const QBitmap &bitmap)
-{
-    setMask(QRegion(bitmap));
-}
-
-void QWidget::clearMask()
-{
-    setMask(QRegion());
 }
 
 void QWidgetPrivate::updateFrameStrut()
@@ -1239,6 +1179,15 @@ QPaintEngine *QWidget::paintEngine() const
 //         return d->extraPaintEngine;
 //     }
 //    return qt_widget_paintengine;
+}
+
+QWindowSurface *QWidgetPrivate::createDefaultWindowSurface_sys()
+{
+    Q_Q(QWidget);
+    if (q->windowType() == Qt::Desktop)
+        return 0;
+    q->ensurePolished();
+    return qt_screen->createSurface(q);
 }
 
 void QWidgetPrivate::setModal_sys()

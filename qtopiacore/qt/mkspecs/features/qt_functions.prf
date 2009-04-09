@@ -16,6 +16,7 @@ defineReplace(qtLibraryTarget) {
 }
 
 defineTest(qtAddLibrary) {
+    INCLUDEPATH -= $$QMAKE_INCDIR_QT/$$1
     INCLUDEPATH = $$QMAKE_INCDIR_QT/$$1 $$INCLUDEPATH
 
     LIB_NAME = $$1

@@ -23,135 +23,129 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "JSSVGElement.h"
 #include "JSSVGSVGElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGElement.h"
 #include "SVGSVGElement.h"
 
-using namespace KJS;
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGElementTableEntries[] =
+static const HashTableValue JSSVGElementTableValues[5] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "id", JSSVGElement::IdAttrNum, DontDelete, 0, &JSSVGElementTableEntries[4] },
-    { "xmlbase", JSSVGElement::XmlbaseAttrNum, DontDelete, 0, 0 },
-    { "ownerSVGElement", JSSVGElement::OwnerSVGElementAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "viewportElement", JSSVGElement::ViewportElementAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "id", DontDelete, (intptr_t)jsSVGElementId, (intptr_t)setJSSVGElementId },
+    { "xmlbase", DontDelete, (intptr_t)jsSVGElementXmlbase, (intptr_t)setJSSVGElementXmlbase },
+    { "ownerSVGElement", DontDelete|ReadOnly, (intptr_t)jsSVGElementOwnerSVGElement, (intptr_t)0 },
+    { "viewportElement", DontDelete|ReadOnly, (intptr_t)jsSVGElementViewportElement, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGElementTable = 
-{
-    2, 5, JSSVGElementTableEntries, 4
-};
+static const HashTable JSSVGElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGElementTableValues, 0 };
+#else
+    { 9, 7, JSSVGElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGElementPrototypeTable = 
-{
-    2, 1, JSSVGElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGElementPrototype::info = { "SVGElementPrototype", 0, &JSSVGElementPrototypeTable, 0 };
+const ClassInfo JSSVGElementPrototype::s_info = { "SVGElementPrototype", 0, &JSSVGElementPrototypeTable, 0 };
 
 JSObject* JSSVGElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGElementPrototype>(exec, "[[JSSVGElement.prototype]]");
+    return getDOMPrototype<JSSVGElement>(exec);
 }
 
-const ClassInfo JSSVGElement::info = { "SVGElement", &JSElement::info, &JSSVGElementTable, 0 };
+const ClassInfo JSSVGElement::s_info = { "SVGElement", &JSElement::s_info, &JSSVGElementTable, 0 };
 
-JSSVGElement::JSSVGElement(ExecState* exec, SVGElement* impl)
-    : JSElement(exec, impl)
+JSSVGElement::JSSVGElement(PassRefPtr<Structure> structure, PassRefPtr<SVGElement> impl)
+    : JSElement(structure, impl)
 {
-    setPrototype(JSSVGElementPrototype::self(exec));
+}
+
+JSObject* JSSVGElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGElementPrototype(JSSVGElementPrototype::createStructure(JSElementPrototype::self(exec)));
 }
 
 bool JSSVGElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGElement, JSElement>(exec, &JSSVGElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGElement, Base>(exec, &JSSVGElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGElementId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case IdAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        return jsString(imp->id());
-    }
-    case XmlbaseAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        return jsString(imp->xmlbase());
-    }
-    case OwnerSVGElementAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->ownerSVGElement()));
-    }
-    case ViewportElementAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->viewportElement()));
-    }
-    }
-    return 0;
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->id());
 }
 
-void JSSVGElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGElementXmlbase(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGElement, JSElement>(exec, propertyName, value, attr, &JSSVGElementTable, this);
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlbase());
 }
 
-void JSSVGElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGElementOwnerSVGElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case IdAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setId(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case XmlbaseAttrNum: {
-        SVGElement* imp = static_cast<SVGElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setXmlbase(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->ownerSVGElement()));
 }
 
-SVGElement* toSVGElement(KJS::JSValue* val)
+JSValuePtr jsSVGElementViewportElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSSVGElement::info) ? static_cast<JSSVGElement*>(val)->impl() : 0;
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->viewportElement()));
 }
 
-SVGElement* JSSVGElement::impl() const
+void JSSVGElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return static_cast<SVGElement*>(JSElement::impl());
+    lookupPut<JSSVGElement, Base>(exec, propertyName, value, &JSSVGElementTable, this, slot);
+}
+
+void setJSSVGElementId(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setId(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSSVGElementXmlbase(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGElement* imp = static_cast<SVGElement*>(static_cast<JSSVGElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setXmlbase(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+SVGElement* toSVGElement(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGElement::s_info) ? static_cast<JSSVGElement*>(asObject(value))->impl() : 0;
 }
 
 }

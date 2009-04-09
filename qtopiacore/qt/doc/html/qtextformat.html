@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/text/qtextformat.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/text/qtextformat.cpp -->
 <head>
-  <title>Qt 4.4: QTextFormat Class Reference</title>
+  <title>Qt 4.5: QTextFormat Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QTextFormat Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -23,68 +23,68 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qtextformat.html#FormatType-enum">FormatType</a></b> { InvalidFormat, BlockFormat, CharFormat, ListFormat, ..., UserFormat }</li>
-<li><div class="fn"/>enum <b><a href="qtextformat.html#ObjectTypes-enum">ObjectTypes</a></b> { NoObject, ImageObject, TableObject, TableCellObject, UserObject }</li>
-<li><div class="fn"/>enum <b><a href="qtextformat.html#PageBreakFlag-enum">PageBreakFlag</a></b> { PageBreak_Auto, PageBreak_AlwaysBefore, PageBreak_AlwaysAfter }</li>
-<li><div class="fn"/>flags <b><a href="qtextformat.html#PageBreakFlag-enum">PageBreakFlags</a></b></li>
-<li><div class="fn"/>enum <b><a href="qtextformat.html#Property-enum">Property</a></b> { ObjectIndex, CssFloat, LayoutDirection, OutlinePen, ..., UserProperty }</li>
+<li><div class="fn"></div>enum <b><a href="qtextformat.html#FormatType-enum">FormatType</a></b> { InvalidFormat, BlockFormat, CharFormat, ListFormat, ..., UserFormat }</li>
+<li><div class="fn"></div>enum <b><a href="qtextformat.html#ObjectTypes-enum">ObjectTypes</a></b> { NoObject, ImageObject, TableObject, TableCellObject, UserObject }</li>
+<li><div class="fn"></div>enum <b><a href="qtextformat.html#PageBreakFlag-enum">PageBreakFlag</a></b> { PageBreak_Auto, PageBreak_AlwaysBefore, PageBreak_AlwaysAfter }</li>
+<li><div class="fn"></div>flags <b><a href="qtextformat.html#PageBreakFlag-enum">PageBreakFlags</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qtextformat.html#Property-enum">Property</a></b> { ObjectIndex, CssFloat, LayoutDirection, OutlinePen, ..., UserProperty }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qtextformat.html#QTextFormat">QTextFormat</a></b> ()</li>
-<li><div class="fn"/><b><a href="qtextformat.html#QTextFormat-2">QTextFormat</a></b> ( int <i>type</i> )</li>
-<li><div class="fn"/><b><a href="qtextformat.html#QTextFormat-3">QTextFormat</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
-<li><div class="fn"/><b><a href="qtextformat.html#dtor.QTextFormat">~QTextFormat</a></b> ()</li>
-<li><div class="fn"/>QBrush <b><a href="qtextformat.html#background">background</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#boolProperty">boolProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>QBrush <b><a href="qtextformat.html#brushProperty">brushProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#clearBackground">clearBackground</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#clearForeground">clearForeground</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#clearProperty">clearProperty</a></b> ( int <i>propertyId</i> )</li>
-<li><div class="fn"/>QColor <b><a href="qtextformat.html#colorProperty">colorProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>qreal <b><a href="qtextformat.html#doubleProperty">doubleProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>QBrush <b><a href="qtextformat.html#foreground">foreground</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#hasProperty">hasProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qtextformat.html#intProperty">intProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isBlockFormat">isBlockFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isCharFormat">isCharFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isFrameFormat">isFrameFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isImageFormat">isImageFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isListFormat">isListFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isTableCellFormat">isTableCellFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isTableFormat">isTableFormat</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#isValid">isValid</a></b> () const</li>
-<li><div class="fn"/>Qt::LayoutDirection <b><a href="qtextformat.html#layoutDirection">layoutDirection</a></b> () const</li>
-<li><div class="fn"/>QTextLength <b><a href="qtextformat.html#lengthProperty">lengthProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>QVector&lt;QTextLength&gt; <b><a href="qtextformat.html#lengthVectorProperty">lengthVectorProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#merge">merge</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
-<li><div class="fn"/>int <b><a href="qtextformat.html#objectIndex">objectIndex</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qtextformat.html#objectType">objectType</a></b> () const</li>
-<li><div class="fn"/>QPen <b><a href="qtextformat.html#penProperty">penProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>QMap&lt;int, QVariant&gt; <b><a href="qtextformat.html#properties">properties</a></b> () const</li>
-<li><div class="fn"/>QVariant <b><a href="qtextformat.html#property">property</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qtextformat.html#propertyCount">propertyCount</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setBackground">setBackground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setForeground">setForeground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setLayoutDirection">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setObjectIndex">setObjectIndex</a></b> ( int <i>index</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setObjectType">setObjectType</a></b> ( int <i>type</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setProperty">setProperty</a></b> ( int <i>propertyId</i>, const QVariant &amp; <i>value</i> )</li>
-<li><div class="fn"/>void <b><a href="qtextformat.html#setProperty-2">setProperty</a></b> ( int <i>propertyId</i>, const QVector&lt;QTextLength&gt; &amp; <i>value</i> )</li>
-<li><div class="fn"/>QString <b><a href="qtextformat.html#stringProperty">stringProperty</a></b> ( int <i>propertyId</i> ) const</li>
-<li><div class="fn"/>QTextBlockFormat <b><a href="qtextformat.html#toBlockFormat">toBlockFormat</a></b> () const</li>
-<li><div class="fn"/>QTextCharFormat <b><a href="qtextformat.html#toCharFormat">toCharFormat</a></b> () const</li>
-<li><div class="fn"/>QTextFrameFormat <b><a href="qtextformat.html#toFrameFormat">toFrameFormat</a></b> () const</li>
-<li><div class="fn"/>QTextImageFormat <b><a href="qtextformat.html#toImageFormat">toImageFormat</a></b> () const</li>
-<li><div class="fn"/>QTextListFormat <b><a href="qtextformat.html#toListFormat">toListFormat</a></b> () const</li>
-<li><div class="fn"/>QTextTableCellFormat <b><a href="qtextformat.html#toTableCellFormat">toTableCellFormat</a></b> () const</li>
-<li><div class="fn"/>QTextTableFormat <b><a href="qtextformat.html#toTableFormat">toTableFormat</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qtextformat.html#type">type</a></b> () const</li>
-<li><div class="fn"/><b><a href="qtextformat.html#operator-QVariant">operator QVariant</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#operator-not-eq">operator!=</a></b> ( const QTextFormat &amp; <i>other</i> ) const</li>
-<li><div class="fn"/>QTextFormat &amp; <b><a href="qtextformat.html#operator-eq">operator=</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
-<li><div class="fn"/>bool <b><a href="qtextformat.html#operator-eq-eq">operator==</a></b> ( const QTextFormat &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div><b><a href="qtextformat.html#QTextFormat">QTextFormat</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qtextformat.html#QTextFormat-2">QTextFormat</a></b> ( int <i>type</i> )</li>
+<li><div class="fn"></div><b><a href="qtextformat.html#QTextFormat-3">QTextFormat</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
+<li><div class="fn"></div><b><a href="qtextformat.html#dtor.QTextFormat">~QTextFormat</a></b> ()</li>
+<li><div class="fn"></div>QBrush <b><a href="qtextformat.html#background">background</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#boolProperty">boolProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>QBrush <b><a href="qtextformat.html#brushProperty">brushProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#clearBackground">clearBackground</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#clearForeground">clearForeground</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#clearProperty">clearProperty</a></b> ( int <i>propertyId</i> )</li>
+<li><div class="fn"></div>QColor <b><a href="qtextformat.html#colorProperty">colorProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>qreal <b><a href="qtextformat.html#doubleProperty">doubleProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>QBrush <b><a href="qtextformat.html#foreground">foreground</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#hasProperty">hasProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qtextformat.html#intProperty">intProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isBlockFormat">isBlockFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isCharFormat">isCharFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isFrameFormat">isFrameFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isImageFormat">isImageFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isListFormat">isListFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isTableCellFormat">isTableCellFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isTableFormat">isTableFormat</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#isValid">isValid</a></b> () const</li>
+<li><div class="fn"></div>Qt::LayoutDirection <b><a href="qtextformat.html#layoutDirection">layoutDirection</a></b> () const</li>
+<li><div class="fn"></div>QTextLength <b><a href="qtextformat.html#lengthProperty">lengthProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>QVector&lt;QTextLength&gt; <b><a href="qtextformat.html#lengthVectorProperty">lengthVectorProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#merge">merge</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
+<li><div class="fn"></div>int <b><a href="qtextformat.html#objectIndex">objectIndex</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qtextformat.html#objectType">objectType</a></b> () const</li>
+<li><div class="fn"></div>QPen <b><a href="qtextformat.html#penProperty">penProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>QMap&lt;int, QVariant&gt; <b><a href="qtextformat.html#properties">properties</a></b> () const</li>
+<li><div class="fn"></div>QVariant <b><a href="qtextformat.html#property">property</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qtextformat.html#propertyCount">propertyCount</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setBackground">setBackground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setForeground">setForeground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setLayoutDirection">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setObjectIndex">setObjectIndex</a></b> ( int <i>index</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setObjectType">setObjectType</a></b> ( int <i>type</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setProperty">setProperty</a></b> ( int <i>propertyId</i>, const QVariant &amp; <i>value</i> )</li>
+<li><div class="fn"></div>void <b><a href="qtextformat.html#setProperty-2">setProperty</a></b> ( int <i>propertyId</i>, const QVector&lt;QTextLength&gt; &amp; <i>value</i> )</li>
+<li><div class="fn"></div>QString <b><a href="qtextformat.html#stringProperty">stringProperty</a></b> ( int <i>propertyId</i> ) const</li>
+<li><div class="fn"></div>QTextBlockFormat <b><a href="qtextformat.html#toBlockFormat">toBlockFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextCharFormat <b><a href="qtextformat.html#toCharFormat">toCharFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextFrameFormat <b><a href="qtextformat.html#toFrameFormat">toFrameFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextImageFormat <b><a href="qtextformat.html#toImageFormat">toImageFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextListFormat <b><a href="qtextformat.html#toListFormat">toListFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextTableCellFormat <b><a href="qtextformat.html#toTableCellFormat">toTableCellFormat</a></b> () const</li>
+<li><div class="fn"></div>QTextTableFormat <b><a href="qtextformat.html#toTableFormat">toTableFormat</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qtextformat.html#type">type</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qtextformat.html#operator-QVariant">operator QVariant</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#operator-not-eq">operator!=</a></b> ( const QTextFormat &amp; <i>other</i> ) const</li>
+<li><div class="fn"></div>QTextFormat &amp; <b><a href="qtextformat.html#operator-eq">operator=</a></b> ( const QTextFormat &amp; <i>other</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qtextformat.html#operator-eq-eq">operator==</a></b> ( const QTextFormat &amp; <i>other</i> ) const</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -172,6 +172,9 @@
 <tr><td valign="top"><tt>QTextFormat::FontCapitalization</tt></td><td align="center" valign="top"><tt>FirstFontProperty</tt></td><td valign="top">Specifies the capitalization type that is to be applied to the text.</td></tr>
 <tr><td valign="top"><tt>QTextFormat::FontLetterSpacing</tt></td><td align="center" valign="top"><tt>0x1FE1</tt></td><td valign="top">Changes the default spacing between individual letters in the font. The value is specified in percentage, with 100 as the default value.</td></tr>
 <tr><td valign="top"><tt>QTextFormat::FontWordSpacing</tt></td><td align="center" valign="top"><tt>0x1FE2</tt></td><td valign="top">Changes the default spacing between individual words. A positive value increases the word spacing by the corresponding pixels; a negative value decreases the spacing.</td></tr>
+<tr><td valign="top"><tt>QTextFormat::FontStyleHint</tt></td><td align="center" valign="top"><tt>0x1FE3</tt></td><td valign="top">Corresponds to the <a href="qfont.html#StyleHint-enum">QFont::StyleHint</a> property</td></tr>
+<tr><td valign="top"><tt>QTextFormat::FontStyleStrategy</tt></td><td align="center" valign="top"><tt>0x1FE4</tt></td><td valign="top">Corresponds to the <a href="qfont.html#StyleStrategy-enum">QFont::StyleStrategy</a> property</td></tr>
+<tr><td valign="top"><tt>QTextFormat::FontKerning</tt></td><td align="center" valign="top"><tt>0x1FE5</tt></td><td valign="top">Specifies whether the font has kerning turned on.</td></tr>
 <tr><td valign="top"><tt>QTextFormat::TextUnderlineColor</tt></td><td align="center" valign="top"><tt>0x2010</tt></td><td valign="top">&nbsp;</td></tr>
 <tr><td valign="top"><tt>QTextFormat::TextVerticalAlignment</tt></td><td align="center" valign="top"><tt>0x2021</tt></td><td valign="top">&nbsp;</td></tr>
 <tr><td valign="top"><tt>QTextFormat::TextOutline</tt></td><td align="center" valign="top"><tt>0x2022</tt></td><td valign="top">&nbsp;</td></tr>
@@ -344,7 +347,6 @@
 <p>Sets the property specified by the <i>propertyId</i> to the given <i>value</i>.</p>
 <p>See also <a href="qtextformat.html#property">property</a>().</p>
 <h3 class="fn"><a name="setProperty-2"></a>void QTextFormat::setProperty ( int <i>propertyId</i>, const <a href="qvector.html">QVector</a>&lt;<a href="qtextlength.html">QTextLength</a>&gt; &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Sets the value of the property given by <i>propertyId</i> to <i>value</i>.</p>
 <p>See also <a href="qtextformat.html#lengthVectorProperty">lengthVectorProperty</a>() and <a href="qtextformat.html#Property-enum">Property</a>.</p>
 <h3 class="fn"><a name="stringProperty"></a><a href="qstring.html">QString</a> QTextFormat::stringProperty ( int <i>propertyId</i> ) const</h3>
@@ -378,8 +380,8 @@
 <p>Returns true if this text format is the same as the <i>other</i> text format.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

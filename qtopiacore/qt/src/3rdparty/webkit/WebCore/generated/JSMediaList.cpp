@@ -24,113 +24,127 @@
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
+#include <runtime/PropertyNameArray.h>
+#include "KURL.h"
 #include "MediaList.h"
-#include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSMediaList)
+
 /* Hash table */
 
-static const HashEntry JSMediaListTableEntries[] =
+static const HashTableValue JSMediaListTableValues[4] =
 {
-    { "constructor", JSMediaList::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "length", JSMediaList::LengthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "mediaText", JSMediaList::MediaTextAttrNum, DontDelete, 0, 0 }
+    { "mediaText", DontDelete, (intptr_t)jsMediaListMediaText, (intptr_t)setJSMediaListMediaText },
+    { "length", DontDelete|ReadOnly, (intptr_t)jsMediaListLength, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsMediaListConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSMediaListTable = 
-{
-    2, 3, JSMediaListTableEntries, 3
-};
+static const HashTable JSMediaListTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSMediaListTableValues, 0 };
+#else
+    { 9, 7, JSMediaListTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSMediaListConstructorTableEntries[] =
+static const HashTableValue JSMediaListConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSMediaListConstructorTable = 
-{
-    2, 1, JSMediaListConstructorTableEntries, 1
-};
+static const HashTable JSMediaListConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSMediaListConstructorTableValues, 0 };
+#else
+    { 1, 0, JSMediaListConstructorTableValues, 0 };
+#endif
 
 class JSMediaListConstructor : public DOMObject {
 public:
     JSMediaListConstructor(ExecState* exec)
+        : DOMObject(JSMediaListConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSMediaListPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSMediaListConstructor::info = { "MediaListConstructor", 0, &JSMediaListConstructorTable, 0 };
+const ClassInfo JSMediaListConstructor::s_info = { "MediaListConstructor", 0, &JSMediaListConstructorTable, 0 };
 
 bool JSMediaListConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSMediaListConstructor, DOMObject>(exec, &JSMediaListConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSMediaListConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSMediaListPrototypeTableEntries[] =
+static const HashTableValue JSMediaListPrototypeTableValues[4] =
 {
-    { "deleteMedium", JSMediaList::DeleteMediumFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "item", JSMediaList::ItemFuncNum, DontDelete|Function, 1, &JSMediaListPrototypeTableEntries[3] },
-    { "appendMedium", JSMediaList::AppendMediumFuncNum, DontDelete|Function, 1, 0 }
+    { "item", DontDelete|Function, (intptr_t)jsMediaListPrototypeFunctionItem, (intptr_t)1 },
+    { "deleteMedium", DontDelete|Function, (intptr_t)jsMediaListPrototypeFunctionDeleteMedium, (intptr_t)1 },
+    { "appendMedium", DontDelete|Function, (intptr_t)jsMediaListPrototypeFunctionAppendMedium, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSMediaListPrototypeTable = 
-{
-    2, 4, JSMediaListPrototypeTableEntries, 3
-};
+static const HashTable JSMediaListPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSMediaListPrototypeTableValues, 0 };
+#else
+    { 8, 7, JSMediaListPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSMediaListPrototype::info = { "MediaListPrototype", 0, &JSMediaListPrototypeTable, 0 };
+const ClassInfo JSMediaListPrototype::s_info = { "MediaListPrototype", 0, &JSMediaListPrototypeTable, 0 };
 
 JSObject* JSMediaListPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSMediaListPrototype>(exec, "[[JSMediaList.prototype]]");
+    return getDOMPrototype<JSMediaList>(exec);
 }
 
 bool JSMediaListPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSMediaListPrototypeFunction, JSObject>(exec, &JSMediaListPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSMediaListPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSMediaList::info = { "MediaList", 0, &JSMediaListTable, 0 };
+const ClassInfo JSMediaList::s_info = { "MediaList", 0, &JSMediaListTable, 0 };
 
-JSMediaList::JSMediaList(ExecState* exec, MediaList* impl)
-    : m_impl(impl)
+JSMediaList::JSMediaList(PassRefPtr<Structure> structure, PassRefPtr<MediaList> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSMediaListPrototype::self(exec));
 }
 
 JSMediaList::~JSMediaList()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSMediaList::createPrototype(ExecState* exec)
+{
+    return new (exec) JSMediaListPrototype(JSMediaListPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSMediaList::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    const HashEntry* entry = Lookup::findEntry(&JSMediaListTable, propertyName);
+    const HashEntry* entry = JSMediaListTable.entry(exec, propertyName);
     if (entry) {
-        slot.setStaticEntry(this, entry, staticValueGetter<JSMediaList>);
+        slot.setCustom(this, entry->propertyGetter());
         return true;
     }
     bool ok;
@@ -139,103 +153,113 @@ bool JSMediaList::getOwnPropertySlot(ExecState* exec, const Identifier& property
         slot.setCustomIndex(this, index, indexGetter);
         return true;
     }
-    return KJS::DOMObject::getOwnPropertySlot(exec, propertyName, slot);
+    return getStaticValueSlot<JSMediaList, Base>(exec, &JSMediaListTable, this, propertyName, slot);
 }
 
-JSValue* JSMediaList::getValueProperty(ExecState* exec, int token) const
+bool JSMediaList::getOwnPropertySlot(ExecState* exec, unsigned propertyName, PropertySlot& slot)
 {
-    switch (token) {
-    case MediaTextAttrNum: {
-        MediaList* imp = static_cast<MediaList*>(impl());
-
-        return jsStringOrNull(imp->mediaText());
+    if (propertyName < static_cast<MediaList*>(impl())->length()) {
+        slot.setCustomIndex(this, propertyName, indexGetter);
+        return true;
     }
-    case LengthAttrNum: {
-        MediaList* imp = static_cast<MediaList*>(impl());
-
-        return jsNumber(imp->length());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return getOwnPropertySlot(exec, Identifier::from(exec, propertyName), slot);
 }
 
-void JSMediaList::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsMediaListMediaText(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSMediaList, KJS::DOMObject>(exec, propertyName, value, attr, &JSMediaListTable, this);
+    MediaList* imp = static_cast<MediaList*>(static_cast<JSMediaList*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->mediaText());
 }
 
-void JSMediaList::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsMediaListLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case MediaTextAttrNum: {
-        MediaList* imp = static_cast<MediaList*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setMediaText(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    MediaList* imp = static_cast<MediaList*>(static_cast<JSMediaList*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-JSValue* JSMediaList::getConstructor(ExecState* exec)
+JSValuePtr jsMediaListConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSMediaListConstructor>(exec, "[[MediaList.constructor]]");
+    return static_cast<JSMediaList*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-JSValue* JSMediaListPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+void JSMediaList::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSMediaList::info))
-      return throwError(exec, TypeError);
-
-    MediaList* imp = static_cast<MediaList*>(static_cast<JSMediaList*>(thisObj)->impl());
-
-    switch (id) {
-    case JSMediaList::ItemFuncNum: {
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsStringOrNull(imp->item(index));
-        return result;
-    }
-    case JSMediaList::DeleteMediumFuncNum: {
-        ExceptionCode ec = 0;
-        String oldMedium = args[0]->toString(exec);
-
-        imp->deleteMedium(oldMedium, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSMediaList::AppendMediumFuncNum: {
-        ExceptionCode ec = 0;
-        String newMedium = args[0]->toString(exec);
-
-        imp->appendMedium(newMedium, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    lookupPut<JSMediaList, Base>(exec, propertyName, value, &JSMediaListTable, this, slot);
 }
 
-JSValue* JSMediaList::indexGetter(ExecState* exec, JSObject* originalObject, const Identifier& propertyName, const PropertySlot& slot)
+void setJSMediaListMediaText(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    JSMediaList* thisObj = static_cast<JSMediaList*>(slot.slotBase());
-    return jsStringOrNull(thisObj->impl()->item(slot.index()));
+    MediaList* imp = static_cast<MediaList*>(static_cast<JSMediaList*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setMediaText(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, MediaList* obj)
+
+void JSMediaList::getPropertyNames(ExecState* exec, PropertyNameArray& propertyNames)
 {
-    return KJS::cacheDOMObject<MediaList, JSMediaList>(exec, obj);
+    for (unsigned i = 0; i < static_cast<MediaList*>(impl())->length(); ++i)
+        propertyNames.add(Identifier::from(exec, i));
+     Base::getPropertyNames(exec, propertyNames);
 }
-MediaList* toMediaList(KJS::JSValue* val)
+
+JSValuePtr JSMediaList::getConstructor(ExecState* exec)
 {
-    return val->isObject(&JSMediaList::info) ? static_cast<JSMediaList*>(val)->impl() : 0;
+    return getDOMConstructor<JSMediaListConstructor>(exec);
+}
+
+JSValuePtr jsMediaListPrototypeFunctionItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSMediaList::s_info))
+        return throwError(exec, TypeError);
+    JSMediaList* castedThisObj = static_cast<JSMediaList*>(asObject(thisValue));
+    MediaList* imp = static_cast<MediaList*>(castedThisObj->impl());
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsStringOrNull(exec, imp->item(index));
+    return result;
+}
+
+JSValuePtr jsMediaListPrototypeFunctionDeleteMedium(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSMediaList::s_info))
+        return throwError(exec, TypeError);
+    JSMediaList* castedThisObj = static_cast<JSMediaList*>(asObject(thisValue));
+    MediaList* imp = static_cast<MediaList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& oldMedium = args.at(exec, 0)->toString(exec);
+
+    imp->deleteMedium(oldMedium, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsMediaListPrototypeFunctionAppendMedium(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSMediaList::s_info))
+        return throwError(exec, TypeError);
+    JSMediaList* castedThisObj = static_cast<JSMediaList*>(asObject(thisValue));
+    MediaList* imp = static_cast<MediaList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& newMedium = args.at(exec, 0)->toString(exec);
+
+    imp->appendMedium(newMedium, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+
+JSValuePtr JSMediaList::indexGetter(ExecState* exec, const Identifier& propertyName, const PropertySlot& slot)
+{
+    JSMediaList* thisObj = static_cast<JSMediaList*>(asObject(slot.slotBase()));
+    return jsStringOrNull(exec, thisObj->impl()->item(slot.index()));
+}
+JSC::JSValuePtr toJS(JSC::ExecState* exec, MediaList* object)
+{
+    return getDOMObjectWrapper<JSMediaList>(exec, object);
+}
+MediaList* toMediaList(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSMediaList::s_info) ? static_cast<JSMediaList*>(asObject(value))->impl() : 0;
 }
 
 }

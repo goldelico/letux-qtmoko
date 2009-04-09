@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,9 +68,6 @@
 
 QT_BEGIN_NAMESPACE
 
-/* ### Qt 5: We should get QFlags more typesafe by not allowing implicit
- * construction from int/uint or bool. See task 181764, or talk to Matthias,
- * Jasmin or Frans. */
 
 /*!
     \class QFlag
@@ -113,12 +114,14 @@ QT_BEGIN_NAMESPACE
     Qt::Alignment type is simply a typedef for
     QFlags<Qt::AlignmentFlag>. QLabel::setAlignment() takes a
     Qt::Alignment parameter, which means that any combination of
-    Qt::AlignmentFlag values is legal:
+    Qt::AlignmentFlag values,or 0, is legal:
 
     \snippet doc/src/snippets/code/src_corelib_global_qglobal.cpp 0
 
-    If you try to pass a value from another enum, the compiler will
-    report an error.
+    If you try to pass a value from another enum or just a plain
+    integer other than 0, the compiler will report an error. If you
+    need to cast integer values to flags in a untyped fashion, you can
+    use the explicit QFlags constructor as cast operator.
 
     If you want to use QFlags for your own enum types, use
     the Q_DECLARE_FLAGS() and Q_DECLARE_OPERATORS_FOR_FLAGS().
@@ -129,7 +132,18 @@ QT_BEGIN_NAMESPACE
     You can then use the \c MyClass::Options type to store
     combinations of \c MyClass::Option values.
 
-    A sensible naming convension for enum types and associated QFlags
+    \section1 Flags and the Meta-Object System
+
+    The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object
+    system, so they cannot be used by Qt Script or edited in Qt Designer.
+    To make the flags available for these purposes, the Q_FLAGS() macro must
+    be used:
+
+    \snippet doc/src/snippets/code/src_corelib_global_qglobal.cpp meta-object flags
+
+    \section1 Naming Convention
+
+    A sensible naming convention for enum types and associated QFlags
     types is to give a singular name to the enum type (e.g., \c
     Option) and a plural name to the QFlags type (e.g., \c Options).
     When a singular name is desired for the QFlags type (e.g., \c
@@ -301,15 +315,11 @@ QT_BEGIN_NAMESPACE
     QFlags object is 0); otherwise returns false.
 */
 
-// ### Qt 5: Consider changing the implementation to "return (i & f) == f", see task 221702.
 /*!
     \fn bool QFlags::testFlag(Enum flag) const
     \since 4.2
 
-    Returns true if the \a flag is set, otherwise false. However, in the case
-    that \a flag contains multiple bits, it will return true if any of the bits
-    are set. For instance, if testFlag(Qt::Dialog) is invoked on an instance of
-    Qt::WindowFlags and only Qt::Window is set, \c true will be returned.
+    Returns true if the \a flag is set, otherwise false.
 */
 
 /*!
@@ -512,6 +522,9 @@ QT_BEGIN_NAMESPACE
 
     Note that this function is only available on Mac where mnemonics
     are disabled by default.
+
+    To access to this function, use an extern declaration:
+    extern void qt_set_sequence_auto_mnemonic(bool b);
 
     \sa {QShortcut#mnemonic}{QShortcut}
 */
@@ -1034,13 +1047,21 @@ bool qSharedBuild()
     \value WV_98    Windows 98
     \value WV_Me    Windows Me
 
-    NT-based versions:
+    NT-based versions (note that each operating system version is only represented once rather than each Windows edition):
 
-    \value WV_NT    Windows NT
-    \value WV_2000  Windows 2000
-    \value WV_XP    Windows XP
-    \value WV_2003  Windows Server 2003
-    \value WV_VISTA Windows Vista
+    \value WV_NT    Windows NT (operating system version 4.0)
+    \value WV_2000  Windows 2000 (operating system version 5.0)
+    \value WV_XP    Windows XP (operating system version 5.1)
+    \value WV_2003  Windows Server 2003, Windows Server 2003 R2, Windows Home Server, Windows XP Professional x64 Edition (operating system version 5.2)
+    \value WV_VISTA Windows Vista, Windows Server 2008 (operating system version 6.0)
+
+    Alternatively, you may use the following macros which correspond directly to the Windows operating system version number:
+
+    \value WV_4_0   Operating system version 4.0, corresponds to Windows NT
+    \value WV_5_0   Operating system version 5.0, corresponds to Windows 2000
+    \value WV_5_1   Operating system version 5.1, corresponds to Windows XP
+    \value WV_5_2   Operating system version 5.2, corresponds to Windows Server 2003, Windows Server 2003 R2, Windows Home Server, and Windows XP Professional x64 Edition
+    \value WV_6_0   Operating system version 6.0, corresponds to Windows Vista and Windows Server 2008
 
     CE-based versions:
 
@@ -1084,125 +1105,6 @@ bool qSharedBuild()
     \value MV_LEOPARD  Apple codename for MV_10_5
 
     \sa WinVersion
-*/
-
-/*!
-    \fn T qFromBigEndian(const uchar *src)
-    \since 4.3
-    \relates <QtGlobal>
-
-    Reads a big-endian number from memory location \a src and returns the number in the
-    host byte order representation.
-    On CPU architectures where the host byte order is little-endian (such as x86) this
-    will swap the byte order; otherwise it will just read from \a src.
-
-    \note Template type \c{T} can either be a qint16, qint32 or qint64. Other types of
-    integers, e.g., qlong, are not applicable.
-
-    There are no data alignment constraints for \a src.
-
-    \sa qFromLittleEndian()
-    \sa qToBigEndian()
-    \sa qToLittleEndian()
-*/
-/*!
-    \fn T qFromBigEndian(T src)
-    \since 4.3
-    \relates <QtGlobal>
-    \overload
-
-    Converts \a src from big-endian byte order and returns the number in host byte order
-    representation of that number.
-    On CPU architectures where the host byte order is little-endian (such as x86) this
-    will return \a src with the byte order swapped; otherwise it will return \a src
-    unmodified.
-*/
-/*!
-    \fn T qFromLittleEndian(const uchar *src)
-    \since 4.3
-    \relates <QtGlobal>
-
-    Reads a little-endian number from memory location \a src and returns the number in
-    the host byte order representation.
-    On CPU architectures where the host byte order is big-endian (such as PowerPC) this
-    will swap the byte order; otherwise it will just read from \a src.
-
-    \note Template type \c{T} can either be a qint16, qint32 or qint64. Other types of
-    integers, e.g., qlong, are not applicable.
-
-    There are no data alignment constraints for \a src.
-
-    \sa qFromBigEndian()
-    \sa qToBigEndian()
-    \sa qToLittleEndian()
-*/
-/*!
-    \fn T qFromLittleEndian(T src)
-    \since 4.3
-    \relates <QtGlobal>
-    \overload
-
-    Converts \a src from little-endian byte order and returns the number in host byte
-    order representation of that number.
-    On CPU architectures where the host byte order is big-endian (such as PowerPC) this
-    will return \a src with the byte order swapped; otherwise it will return \a src
-    unmodified.
-*/
-/*!
-    \fn void qToBigEndian(T src, uchar *dest)
-    \since 4.3
-    \relates <QtGlobal>
-
-    Writes the number \a src with template type \c{T} to the memory location at \a dest
-    in big-endian byte order.
-
-    Note that template type \c{T} can only be an integer data type (signed or unsigned).
-
-    There are no data alignment constraints for \a dest.
-
-    \sa qFromBigEndian()
-    \sa qFromLittleEndian()
-    \sa qToLittleEndian()
-*/
-/*!
-    \fn T qToBigEndian(T src)
-    \since 4.3
-    \relates <QtGlobal>
-    \overload
-
-    Converts \a src from host byte order and returns the number in big-endian byte order
-    representation of that number.
-    On CPU architectures where the host byte order is little-endian (such as x86) this
-    will return \a src with the byte order swapped; otherwise it will return \a src
-    unmodified.
-*/
-/*!
-    \fn void qToLittleEndian(T src, uchar *dest)
-    \since 4.3
-    \relates <QtGlobal>
-
-    Writes the number \a src with template type \c{T} to the memory location at \a dest
-    in little-endian byte order.
-
-    Note that template type \c{T} can only be an integer data type (signed or unsigned).
-
-    There are no data alignment constraints for \a dest.
-
-    \sa qFromBigEndian()
-    \sa qFromLittleEndian()
-    \sa qToBigEndian()
-*/
-/*!
-    \fn T qToLittleEndian(T src)
-    \since 4.3
-    \relates <QtGlobal>
-    \overload
-
-    Converts \a src from host byte order and returns the number in little-endian byte
-    order representation of that number.
-    On CPU architectures where the host byte order is big-endian (such as PowerPC) this
-    will return \a src with the byte order swapped; otherwise it will return \a src
-    unmodified.
 */
 
 /*!
@@ -1685,7 +1587,10 @@ QSysInfo::WinVersion QSysInfo::windowsVersion()
 #define VER_PLATFORM_WIN32_CE            3
 #endif
 
-    static QSysInfo::WinVersion winver = QSysInfo::WV_NT;
+    static QSysInfo::WinVersion winver;
+    if (winver)
+        return winver;
+    winver = QSysInfo::WV_NT;
 #ifndef Q_OS_WINCE
     OSVERSIONINFOA osver;
     osver.dwOSVersionInfoSize = sizeof(osver);
@@ -1920,7 +1825,6 @@ void *qMemCopy(void *dest, const void *src, size_t n) { return memcpy(dest, src,
 void *qMemSet(void *dest, int c, size_t n) { return memset(dest, c, n); }
 
 static QtMsgHandler handler = 0;                // pointer to debug handler
-static const int QT_BUFFER_LENGTH = 8192;       // internal buffer length
 
 #ifdef Q_CC_MWERKS
 extern bool qt_is_gui_used;
@@ -1943,7 +1847,7 @@ QString qt_error_string(int errorCode)
     const char *s = 0;
     QString ret;
     if (errorCode == -1) {
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+#if defined(Q_OS_WIN)
         errorCode = GetLastError();
 #else
         errorCode = errno;
@@ -2133,23 +2037,22 @@ void qt_message_output(QtMsgType msgType, const char *buf)
     and outputs a newline at the end. It supports many C++ and Qt
     types.
 
-    \warning The internal buffer is limited to 8192 bytes, including
-    the '\0'-terminator.
+    To supress the output at runtime, install your own message handler
+    with qInstallMsgHandler().
 
     \sa qWarning(), qCritical(), qFatal(), qInstallMsgHandler(),
         {Debugging Techniques}
 */
 void qDebug(const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg);                        // use variable arg list
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qt_message_output(QtDebugMsg, buf);
+    qt_message_output(QtDebugMsg, buf.toLocal8Bit().constData());
 }
 
 #undef qWarning
@@ -2177,23 +2080,22 @@ void qDebug(const char *msg, ...)
     This syntax inserts a space between each item, and
     appends a newline at the end.
 
-    \warning The internal buffer is limited to 8192 bytes, including
-    the '\0'-terminator.
+    To supress the output at runtime, install your own message handler
+    with qInstallMsgHandler().
 
     \sa qDebug(), qCritical(), qFatal(), qInstallMsgHandler(),
         {Debugging Techniques}
 */
 void qWarning(const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg); // use variable arg list
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qt_message_output(QtWarningMsg, buf);
+    qt_message_output(QtWarningMsg, buf.toLocal8Bit().constData());
 }
 
 /*!
@@ -2217,23 +2119,22 @@ void qWarning(const char *msg, ...)
     A space is inserted between the items, and a newline is
     appended at the end.
 
-    \warning The internal buffer is limited to 8192 bytes, including
-    the '\0'-terminator.
+    To supress the output at runtime, install your own message handler
+    with qInstallMsgHandler().
 
     \sa qDebug(), qWarning(), qFatal(), qInstallMsgHandler(),
         {Debugging Techniques}
 */
 void qCritical(const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg); // use variable arg list
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qt_message_output(QtCriticalMsg, buf);
+    qt_message_output(QtCriticalMsg, buf.toLocal8Bit().constData());
 }
 #ifdef QT3_SUPPORT
 void qSystemWarning(const char *msg, int code)
@@ -2242,28 +2143,26 @@ void qSystemWarning(const char *msg, int code)
 
 void qErrnoWarning(const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg);
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qCritical("%s (%s)", buf, qt_error_string(-1).toLocal8Bit().constData());
+    qCritical("%s (%s)", buf.toLocal8Bit().constData(), qt_error_string(-1).toLocal8Bit().constData());
 }
 
 void qErrnoWarning(int code, const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg);
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qCritical("%s (%s)", buf, qt_error_string(code).toLocal8Bit().constData());
+    qCritical("%s (%s)", buf.toLocal8Bit().constData(), qt_error_string(code).toLocal8Bit().constData());
 }
 
 /*!
@@ -2284,23 +2183,22 @@ void qErrnoWarning(int code, const char *msg, ...)
     Example:
     \snippet doc/src/snippets/code/src_corelib_global_qglobal.cpp 30
 
-    \warning The internal buffer is limited to 8192 bytes, including
-    the '\0'-terminator.
+    To supress the output at runtime, install your own message handler
+    with qInstallMsgHandler().
 
     \sa qDebug(), qCritical(), qWarning(), qInstallMsgHandler(),
         {Debugging Techniques}
 */
 void qFatal(const char *msg, ...)
 {
-    char buf[QT_BUFFER_LENGTH];
-    buf[QT_BUFFER_LENGTH - 1] = '\0';
+    QString buf;
     va_list ap;
     va_start(ap, msg); // use variable arg list
     if (msg)
-        qvsnprintf(buf, QT_BUFFER_LENGTH - 1, msg, ap);
+        buf.vsprintf(msg, ap);
     va_end(ap);
 
-    qt_message_output(QtFatalMsg, buf);
+    qt_message_output(QtFatalMsg, buf.toLocal8Bit().constData());
 }
 
 // getenv is declared as deprecated in VS2005. This function
@@ -2489,6 +2387,12 @@ int qrand()
 
     \snippet doc/src/snippets/code/src_corelib_global_qglobal.cpp 34
 
+    The macro QT_TR_NOOP_UTF8() is identical except that it tells lupdate
+    that the source string is encoded in UTF-8. Corresponding variants
+    exist in the QT_TRANSLATE_NOOP() family of macros, too. Note that
+    using these macros is not required if \c CODECFORTR is already set to
+    UTF-8 in the qmake project file.
+
     \sa QT_TRANSLATE_NOOP(), {Internationalization with Qt}
 */
 
@@ -2597,9 +2501,14 @@ int qrand()
     Returns \a str as a \c{const char *}. This is equivalent to
     \a{str}.toLocal8Bit().constData().
 
+    The char pointer will be invalid after the statement in which
+    qPrintable() is used. This is because the array returned by
+    toLocal8Bit() will fall out of scope.
+
     Example:
 
     \snippet doc/src/snippets/code/src_corelib_global_qglobal.cpp 37
+
 
     \sa qDebug(), qWarning(), qCritical(), qFatal()
 */
@@ -2734,7 +2643,7 @@ bool QInternal::activateCallbacks(Callback cb, void **parameters)
     return false;
 }
 
-void qt_set_current_thread_to_main_thread();
+extern void qt_set_current_thread_to_main_thread();
 
 bool QInternal::callFunction(InternalFunction func, void **args)
 {
@@ -2761,6 +2670,7 @@ bool QInternal::callFunction(InternalFunction func, void **args)
         QObjectPrivate::Sender *sender = new QObjectPrivate::Sender;
         sender->sender = (QObject *) args[1];
         sender->signal = *(int *) args[2];
+        sender->ref = 1;
 
         // Store the old sender as "return value"
         args[3] = QObjectPrivate::setCurrentSender(receiver, sender);
@@ -3012,7 +2922,7 @@ bool QInternal::callFunction(InternalFunction func, void **args)
 */
 
 /*!
- \fn bool qFuzzyCompare(double p1, double p2) 
+ \fn bool qFuzzyCompare(double p1, double p2)
  \relates <QtGlobal>
  \since 4.4
  \threadsafe

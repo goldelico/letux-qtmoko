@@ -1,12 +1,10 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1997 Martin Jones (mjones@kde.org)
  *           (C) 1997 Torben Weis (weis@kde.org)
  *           (C) 1998 Waldo Bastian (bastian@kde.org)
  *           (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  * This library is free software; you can redistribute it and/or
@@ -35,7 +33,6 @@
 #include "RenderTableCol.h"
 #include "RenderTableRow.h"
 #include "RenderView.h"
-#include "TextStream.h"
 #include <limits>
 #include <wtf/Vector.h>
 
@@ -82,17 +79,6 @@ void RenderTableSection::destroy()
         recalcTable->setNeedsSectionRecalc();
 }
 
-void RenderTableSection::setStyle(RenderStyle* newStyle)
-{
-    // we don't allow changing this one
-    if (style())
-        newStyle->setDisplay(style()->display());
-    else if (newStyle->display() != TABLE_FOOTER_GROUP && newStyle->display() != TABLE_HEADER_GROUP)
-        newStyle->setDisplay(TABLE_ROW_GROUP);
-
-    RenderContainer::setStyle(newStyle);
-}
-
 void RenderTableSection::addChild(RenderObject* child, RenderObject* beforeChild)
 {
     // Make sure we don't append things after :after-generated content if we have it.
@@ -126,10 +112,10 @@ void RenderTableSection::addChild(RenderObject* child, RenderObject* beforeChild
         }
 
         RenderObject* row = new (renderArena()) RenderTableRow(document() /* anonymous table */);
-        RenderStyle* newStyle = new (renderArena()) RenderStyle();
+        RefPtr<RenderStyle> newStyle = RenderStyle::create();
         newStyle->inheritFrom(style());
         newStyle->setDisplay(TABLE_ROW);
-        row->setStyle(newStyle);
+        row->setStyle(newStyle.release());
         addChild(row, beforeChild);
         row->addChild(child);
         return;
@@ -154,9 +140,10 @@ void RenderTableSection::addChild(RenderObject* child, RenderObject* beforeChild
     }
 
     // If the next renderer is actually wrapped in an anonymous table row, we need to go up and find that.
-    while (beforeChild && !beforeChild->isTableRow())
+    while (beforeChild && beforeChild->parent() != this)
         beforeChild = beforeChild->parent();
 
+    ASSERT(!beforeChild || beforeChild->isTableRow() || isTableSection && beforeChild->element() && beforeChild->element()->hasTagName(formTag) && document()->isHTMLDocument());
     RenderContainer::addChild(child, beforeChild);
 }
 
@@ -168,10 +155,10 @@ bool RenderTableSection::ensureRows(int numRows)
             size_t maxSize = numeric_limits<size_t>::max() / sizeof(RowStruct);
             if (static_cast<size_t>(numRows) > maxSize)
                 return false;
-            m_grid.resize(numRows);
+            m_grid.grow(numRows);
         }
         m_gridRows = numRows;
-        int nCols = table()->numEffCols();
+        int nCols = max(1, table()->numEffCols());
         CellStruct emptyCellStruct;
         emptyCellStruct.cell = 0;
         emptyCellStruct.inColSpan = false;
@@ -270,8 +257,9 @@ void RenderTableSection::addCell(RenderTableCell* cell, RenderObject* row)
 void RenderTableSection::setCellWidths()
 {
     Vector<int>& columnPos = table()->columnPositions();
-    bool pushedLayoutState = false;
 
+    LayoutStateMaintainer statePusher(view());
+    
     for (int i = 0; i < m_gridRows; i++) {
         Row& row = *m_grid[i].row;
         int cols = row.size();
@@ -292,11 +280,10 @@ void RenderTableSection::setCellWidths()
             if (w != oldWidth) {
                 cell->setNeedsLayout(true);
                 if (!table()->selfNeedsLayout() && cell->checkForRepaintDuringLayout()) {
-                    if (!pushedLayoutState) {
+                    if (!statePusher.didPush()) {
                         // Technically, we should also push state for the row, but since
                         // rows don't push a coordinate transform, that's not necessary.
-                        view()->pushLayoutState(this, IntSize(m_x, m_y));
-                        pushedLayoutState = true;
+                        statePusher.push(this, IntSize(m_x, m_y));
                     }
                     cell->repaint();
                 }
@@ -305,16 +292,16 @@ void RenderTableSection::setCellWidths()
         }
     }
     
-    if (pushedLayoutState)
-        view()->popLayoutState();
+    statePusher.pop();  // only pops if we pushed
 }
 
-void RenderTableSection::calcRowHeight()
+int RenderTableSection::calcRowHeight()
 {
     RenderTableCell* cell;
 
     int spacing = table()->vBorderSpacing();
-    bool pushedLayoutState = false;
+
+    LayoutStateMaintainer statePusher(view());
 
     m_rowPos.resize(m_gridRows + 1);
     m_rowPos[0] = spacing;
@@ -343,11 +330,10 @@ void RenderTableSection::calcRowHeight()
             int indx = max(r - cell->rowSpan() + 1, 0);
 
             if (cell->overrideSize() != -1) {
-                if (!pushedLayoutState) {
+                if (!statePusher.didPush()) {
                     // Technically, we should also push state for the row, but since
                     // rows don't push a coordinate transform, that's not necessary.
-                    view()->pushLayoutState(this, IntSize(m_x, m_y));
-                    pushedLayoutState = true;
+                    statePusher.push(this, IntSize(m_x, m_y));
                 }
                 cell->setOverrideSize(-1);
                 cell->setChildNeedsLayout(true, false);
@@ -386,8 +372,9 @@ void RenderTableSection::calcRowHeight()
         m_rowPos[r + 1] = max(m_rowPos[r + 1], m_rowPos[r]);
     }
 
-    if (pushedLayoutState)
-        view()->popLayoutState();
+    statePusher.pop();
+
+    return m_rowPos[m_gridRows];
 }
 
 int RenderTableSection::layoutRows(int toAdd)
@@ -404,9 +391,6 @@ int RenderTableSection::layoutRows(int toAdd)
     m_overflowHeight = 0;
     m_hasOverflowingCell = false;
 
-    if (table()->collapseBorders())
-        recalcOuterBorder();
-    
     if (toAdd && totalRows && (m_rowPos[totalRows] || !nextSibling())) {
         int totalHeight = m_rowPos[totalRows] + toAdd;
 
@@ -470,7 +454,7 @@ int RenderTableSection::layoutRows(int toAdd)
     int vspacing = table()->vBorderSpacing();
     int nEffCols = table()->numEffCols();
 
-    view()->pushLayoutState(this, IntSize(m_x, m_y));
+    LayoutStateMaintainer statePusher(view(), this, IntSize(m_x, m_y));
 
     for (int r = 0; r < totalRows; r++) {
         // Set the row's x/y position and width/height.
@@ -589,7 +573,7 @@ int RenderTableSection::layoutRows(int toAdd)
         }
     }
 
-    view()->popLayoutState();
+    statePusher.pop();
 
     m_height = m_rowPos[totalRows];
     m_overflowHeight = max(m_overflowHeight, m_height);
@@ -853,6 +837,25 @@ void RenderTableSection::recalcOuterBorder()
     m_outerBorderRight = calcOuterBorderRight(rtl);
 }
 
+int RenderTableSection::getBaselineOfFirstLineBox() const
+{
+    if (!m_gridRows)
+        return -1;
+
+    int firstLineBaseline = m_grid[0].baseline;
+    if (firstLineBaseline)
+        return firstLineBaseline + m_rowPos[0];
+
+    firstLineBaseline = -1;
+    Row* firstRow = m_grid[0].row;
+    for (size_t i = 0; i < firstRow->size(); ++i) {
+        RenderTableCell* cell = firstRow->at(i).cell;
+        if (cell)
+            firstLineBaseline = max(firstLineBaseline, cell->yPos() + cell->paddingTop() + cell->borderTop() + cell->contentHeight());
+    }
+
+    return firstLineBaseline;
+}
 
 void RenderTableSection::paint(PaintInfo& paintInfo, int tx, int ty)
 {
@@ -970,11 +973,8 @@ void RenderTableSection::paint(PaintInfo& paintInfo, int tx, int ty)
     }
 }
 
-void RenderTableSection::imageChanged(CachedImage* image)
+void RenderTableSection::imageChanged(WrappedImagePtr, const IntRect*)
 {
-    if (!image || !image->canRender() || !parent())
-        return;
-    
     // FIXME: Examine cells and repaint only the rect the image paints in.
     repaint();
 }
@@ -1076,23 +1076,5 @@ bool RenderTableSection::nodeAtPoint(const HitTestRequest& request, HitTestResul
     
     return false;
 }
-
-#ifndef NDEBUG
-void RenderTableSection::dump(TextStream* stream, DeprecatedString ind) const
-{
-    *stream << endl << ind << "grid=(" << m_gridRows << "," << table()->numEffCols() << ")" << endl << ind;
-    for (int r = 0; r < m_gridRows; r++) {
-        for (int c = 0; c < table()->numEffCols(); c++) {
-            if (cellAt(r, c).cell && !cellAt(r, c).inColSpan)
-                *stream << "(" << cellAt(r, c).cell->row() << "," << cellAt(r, c).cell->col() << ","
-                        << cellAt(r, c).cell->rowSpan() << "," << cellAt(r, c).cell->colSpan() << ") ";
-            else
-                *stream << cellAt(r, c).cell << "null cell ";
-        }
-        *stream << endl << ind;
-    }
-    RenderContainer::dump(stream,ind);
-}
-#endif
 
 } // namespace WebCore

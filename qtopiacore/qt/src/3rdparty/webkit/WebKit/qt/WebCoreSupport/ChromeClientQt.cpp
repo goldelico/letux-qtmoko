@@ -28,18 +28,23 @@
 #include "config.h"
 #include "ChromeClientQt.h"
 
+#include "FileChooser.h"
 #include "Frame.h"
 #include "FrameLoadRequest.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClientQt.h"
 #include "FrameView.h"
-#include "PlatformScrollBar.h"
 #include "HitTestResult.h"
 #include "NotImplemented.h"
+#include "WindowFeatures.h"
+#include "DatabaseTracker.h"
+#include "SecurityOrigin.h"
 
 #include "qwebpage.h"
 #include "qwebpage_p.h"
 #include "qwebframe_p.h"
+#include "qwebsecurityorigin.h"
+#include "qwebsecurityorigin_p.h"
 
 #include <qtooltip.h>
 
@@ -133,25 +138,14 @@ void ChromeClientQt::takeFocus(FocusDirection)
 }
 
 
-Page* ChromeClientQt::createWindow(Frame*, const FrameLoadRequest& request)
+Page* ChromeClientQt::createWindow(Frame*, const FrameLoadRequest& request, const WindowFeatures& features)
 {
-    QWebPage *newPage = m_webPage->createWindow(QWebPage::WebBrowserWindow);
+    QWebPage *newPage = m_webPage->createWindow(features.dialog ? QWebPage::WebModalDialog : QWebPage::WebBrowserWindow);
     if (!newPage)
         return 0;
     newPage->mainFrame()->load(request.resourceRequest().url());
     return newPage->d->page;
 }
-
-
-Page* ChromeClientQt::createModalDialog(Frame*, const FrameLoadRequest& request)
-{
-    QWebPage *newPage = m_webPage->createWindow(QWebPage::WebModalDialog);
-    if (!newPage)
-        return 0;
-    newPage->mainFrame()->load(request.resourceRequest().url());
-    return newPage->d->page;
-}
-
 
 void ChromeClientQt::show()
 {
@@ -307,28 +301,50 @@ IntRect ChromeClientQt::windowResizerRect() const
     return IntRect();
 }
 
-void ChromeClientQt::addToDirtyRegion(const IntRect& r)
+void ChromeClientQt::repaint(const IntRect& windowRect, bool contentChanged, bool immediate, bool repaintContentOnly)
 {
-    QWidget* view = m_webPage->view();
-    if (view) {
-        QRect rect(r);
-        rect = rect.intersected(QRect(QPoint(0, 0), m_webPage->viewportSize()));
-        if (!r.isEmpty())
-            view->update(r);
-    } else
-        emit m_webPage->repaintRequested(r);
+    // No double buffer, so only update the QWidget if content changed.
+    if (contentChanged) {
+        QWidget* view = m_webPage->view();
+        if (view) {
+            QRect rect(windowRect);
+            rect = rect.intersected(QRect(QPoint(0, 0), m_webPage->viewportSize()));
+            if (!rect.isEmpty())
+                view->update(rect);
+        }
+        emit m_webPage->repaintRequested(windowRect);
+    }
+
+    // FIXME: There is no "immediate" support for window painting.  This should be done always whenever the flag
+    // is set.
 }
 
-void ChromeClientQt::scrollBackingStore(int dx, int dy, const IntRect& scrollViewRect, const IntRect& clipRect)
+void ChromeClientQt::scroll(const IntSize& delta, const IntRect& scrollViewRect, const IntRect&)
 {
     QWidget* view = m_webPage->view();
     if (view)
-        view->scroll(dx, dy, scrollViewRect);
-    else
-        emit m_webPage->scrollRequested(dx, dy, scrollViewRect);
+        view->scroll(delta.width(), delta.height(), scrollViewRect);
+    emit m_webPage->scrollRequested(delta.width(), delta.height(), scrollViewRect);
 }
 
-void ChromeClientQt::updateBackingStore()
+IntRect ChromeClientQt::windowToScreen(const IntRect& rect) const
+{
+    notImplemented();
+    return rect;
+}
+
+IntPoint ChromeClientQt::screenToWindow(const IntPoint& point) const
+{
+    notImplemented();
+    return point;
+}
+
+PlatformWidget ChromeClientQt::platformWindow() const
+{
+    return m_webPage->view();
+}
+
+void ChromeClientQt::contentsSizeChanged(Frame*, const IntSize&) const
 {
 }
 
@@ -369,6 +385,46 @@ void ChromeClientQt::print(Frame *frame)
     emit m_webPage->printRequested(QWebFramePrivate::kit(frame));
 }
 
+void ChromeClientQt::exceededDatabaseQuota(Frame* frame, const String& databaseName)
+{
+    quint64 quota = QWebSettings::offlineStorageDefaultQuota();
+#if ENABLE(DATABASE)
+    if (!DatabaseTracker::tracker().hasEntryForOrigin(frame->document()->securityOrigin()))
+        DatabaseTracker::tracker().setQuota(frame->document()->securityOrigin(), quota);
+#endif
+    emit m_webPage->databaseQuotaExceeded(QWebFramePrivate::kit(frame), databaseName);
 }
 
+void ChromeClientQt::runOpenPanel(Frame* frame, PassRefPtr<FileChooser> prpFileChooser)
+{
+    RefPtr<FileChooser> fileChooser = prpFileChooser;
+    bool supportMulti = m_webPage->supportsExtension(QWebPage::ChooseMultipleFilesExtension);
 
+    if (fileChooser->allowsMultipleFiles() && supportMulti) {
+        QWebPage::ChooseMultipleFilesExtensionOption option;
+        option.parentFrame = QWebFramePrivate::kit(frame);
+
+        if (!fileChooser->filenames().isEmpty())
+            for (int i = 0; i < fileChooser->filenames().size(); ++i)
+                option.suggestedFileNames += fileChooser->filenames()[i];
+
+        QWebPage::ChooseMultipleFilesExtensionReturn output;
+        m_webPage->extension(QWebPage::ChooseMultipleFilesExtension, &option, &output);
+
+        if (!output.fileNames.isEmpty()) {
+            Vector<String> names;
+            for (int i = 0; i < output.fileNames.count(); ++i)
+                names.append(output.fileNames.at(i));
+            fileChooser->chooseFiles(names);
+        }
+    } else {
+        QString suggestedFile;
+        if (!fileChooser->filenames().isEmpty())
+            suggestedFile = fileChooser->filenames()[0];
+        QString file = m_webPage->chooseFile(QWebFramePrivate::kit(frame), suggestedFile);
+        if (!file.isEmpty())
+            fileChooser->chooseFile(file);
+    }
+}
+
+}

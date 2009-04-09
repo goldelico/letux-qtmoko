@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -42,6 +46,8 @@
 #include "widgetdatabase_p.h"
 #include "qdesigner_command_p.h"
 #include "signalslotdialog_p.h"
+#include "qdesigner_objectinspector_p.h"
+#include "abstractintrospection_p.h"
 
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerFormWindowCursorInterface>
@@ -85,6 +91,16 @@ PromotionTaskMenu::PromotionTaskMenu(QWidget *widget,Mode mode, QObject *parent)
     connect(m_globalEditAction, SIGNAL(triggered()), this, SLOT(slotEditPromotedWidgets()));
     connect(m_EditPromoteToAction, SIGNAL(triggered()), this, SLOT(slotEditPromoteTo()));
     connect(m_EditSignalsSlotsAction, SIGNAL(triggered()), this, SLOT(slotEditSignalsSlots()));
+}
+
+PromotionTaskMenu::Mode PromotionTaskMenu::mode() const
+{
+    return m_mode;
+}
+
+void PromotionTaskMenu::setMode(Mode m)
+{
+    m_mode = m;
 }
 
 void PromotionTaskMenu::setWidget(QWidget *widget)
@@ -283,19 +299,24 @@ PromotionTaskMenu::PromotionSelectionList PromotionTaskMenu::promotionSelectionL
 
     PromotionSelectionList rc;
 
-    if ( m_mode ==  ModeMultiSelection) {
-        const QString className = m_widget->metaObject()->className();
+    if (m_mode != ModeSingleWidget) {
+        QDesignerFormEditorInterface *core = formWindow->core();
+        const QDesignerIntrospectionInterface *intro = core->introspection();
+        const QString className = intro->metaObject(m_widget)->className();
         const bool promoted = isPromoted(formWindow->core(), m_widget);
-
-        if (QDesignerFormWindowCursorInterface *cursor = formWindow->cursor()) {
-            const int selectedWidgetCount = cursor->selectedWidgetCount();
-            for (int i=0; i < selectedWidgetCount; i++) {
-                QWidget *w = cursor->selectedWidget(i);
-                // Check, put  m_widget last
+        // Just in case someone plugged an old-style Object Inspector
+        if (QDesignerObjectInspector *designerObjectInspector = qobject_cast<QDesignerObjectInspector *>(core->objectInspector())) {
+            Selection s;
+            designerObjectInspector->getSelection(s);
+            // Find objects of similar state
+            const QWidgetList &source = m_mode == ModeManagedMultiSelection ? s.managed : s.unmanaged;
+            const QWidgetList::const_iterator cend = source.constEnd();
+            for (QWidgetList::const_iterator it = source.constBegin(); it != cend; ++it) {
+                QWidget *w = *it;
                 if (w != m_widget) {
-                    if (w->metaObject()->className() != className || isPromoted(formWindow->core(), w) !=  promoted) {
+                    // Selection state mismatch
+                    if (intro->metaObject(w)->className() != className || isPromoted(core, w) !=  promoted)
                         return PromotionSelectionList();
-                    }
                     rc.push_back(w);
                 }
             }
@@ -308,7 +329,10 @@ PromotionTaskMenu::PromotionSelectionList PromotionTaskMenu::promotionSelectionL
 
 QDesignerFormWindowInterface *PromotionTaskMenu::formWindow() const
 {
-    QDesignerFormWindowInterface *result = QDesignerFormWindowInterface::findFormWindow(m_widget);
+    // Use the QObject overload of  QDesignerFormWindowInterface::findFormWindow since that works
+    // for QDesignerMenus also.
+    QObject *o = m_widget;
+    QDesignerFormWindowInterface *result = QDesignerFormWindowInterface::findFormWindow(o);
     Q_ASSERT(result != 0);
     return result;
 }

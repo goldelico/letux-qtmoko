@@ -26,124 +26,136 @@
 
 #include "Screen.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSScreen)
+
 /* Hash table */
 
-static const HashEntry JSScreenTableEntries[] =
+static const HashTableValue JSScreenTableValues[9] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "height", JSScreen::HeightAttrNum, DontDelete|ReadOnly, 0, &JSScreenTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { "width", JSScreen::WidthAttrNum, DontDelete|ReadOnly, 0, &JSScreenTableEntries[9] },
-    { "availHeight", JSScreen::AvailHeightAttrNum, DontDelete|ReadOnly, 0, &JSScreenTableEntries[11] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "availLeft", JSScreen::AvailLeftAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "colorDepth", JSScreen::ColorDepthAttrNum, DontDelete|ReadOnly, 0, &JSScreenTableEntries[10] },
-    { "pixelDepth", JSScreen::PixelDepthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "availTop", JSScreen::AvailTopAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "availWidth", JSScreen::AvailWidthAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "height", DontDelete|ReadOnly, (intptr_t)jsScreenHeight, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsScreenWidth, (intptr_t)0 },
+    { "colorDepth", DontDelete|ReadOnly, (intptr_t)jsScreenColorDepth, (intptr_t)0 },
+    { "pixelDepth", DontDelete|ReadOnly, (intptr_t)jsScreenPixelDepth, (intptr_t)0 },
+    { "availLeft", DontDelete|ReadOnly, (intptr_t)jsScreenAvailLeft, (intptr_t)0 },
+    { "availTop", DontDelete|ReadOnly, (intptr_t)jsScreenAvailTop, (intptr_t)0 },
+    { "availHeight", DontDelete|ReadOnly, (intptr_t)jsScreenAvailHeight, (intptr_t)0 },
+    { "availWidth", DontDelete|ReadOnly, (intptr_t)jsScreenAvailWidth, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSScreenTable = 
-{
-    2, 12, JSScreenTableEntries, 8
-};
+static const HashTable JSScreenTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSScreenTableValues, 0 };
+#else
+    { 18, 15, JSScreenTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSScreenPrototypeTableEntries[] =
+static const HashTableValue JSScreenPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSScreenPrototypeTable = 
-{
-    2, 1, JSScreenPrototypeTableEntries, 1
-};
+static const HashTable JSScreenPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSScreenPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSScreenPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSScreenPrototype::info = { "ScreenPrototype", 0, &JSScreenPrototypeTable, 0 };
+const ClassInfo JSScreenPrototype::s_info = { "ScreenPrototype", 0, &JSScreenPrototypeTable, 0 };
 
 JSObject* JSScreenPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSScreenPrototype>(exec, "[[JSScreen.prototype]]");
+    return getDOMPrototype<JSScreen>(exec);
 }
 
-const ClassInfo JSScreen::info = { "Screen", 0, &JSScreenTable, 0 };
+const ClassInfo JSScreen::s_info = { "Screen", 0, &JSScreenTable, 0 };
 
-JSScreen::JSScreen(ExecState* exec, Screen* impl)
-    : m_impl(impl)
+JSScreen::JSScreen(PassRefPtr<Structure> structure, PassRefPtr<Screen> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSScreenPrototype::self(exec));
 }
 
 JSScreen::~JSScreen()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSScreen::createPrototype(ExecState* exec)
+{
+    return new (exec) JSScreenPrototype(JSScreenPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSScreen::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSScreen, KJS::DOMObject>(exec, &JSScreenTable, this, propertyName, slot);
+    return getStaticValueSlot<JSScreen, Base>(exec, &JSScreenTable, this, propertyName, slot);
 }
 
-JSValue* JSScreen::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsScreenHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case HeightAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->height());
-    }
-    case WidthAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->width());
-    }
-    case ColorDepthAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->colorDepth());
-    }
-    case PixelDepthAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->pixelDepth());
-    }
-    case AvailLeftAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->availLeft());
-    }
-    case AvailTopAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->availTop());
-    }
-    case AvailHeightAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->availHeight());
-    }
-    case AvailWidthAttrNum: {
-        Screen* imp = static_cast<Screen*>(impl());
-
-        return jsNumber(imp->availWidth());
-    }
-    }
-    return 0;
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->height());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, Screen* obj)
+JSValuePtr jsScreenWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<Screen, JSScreen>(exec, obj);
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->width());
 }
-Screen* toScreen(KJS::JSValue* val)
+
+JSValuePtr jsScreenColorDepth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSScreen::info) ? static_cast<JSScreen*>(val)->impl() : 0;
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->colorDepth());
+}
+
+JSValuePtr jsScreenPixelDepth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->pixelDepth());
+}
+
+JSValuePtr jsScreenAvailLeft(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->availLeft());
+}
+
+JSValuePtr jsScreenAvailTop(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->availTop());
+}
+
+JSValuePtr jsScreenAvailHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->availHeight());
+}
+
+JSValuePtr jsScreenAvailWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Screen* imp = static_cast<Screen*>(static_cast<JSScreen*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->availWidth());
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, Screen* object)
+{
+    return getDOMObjectWrapper<JSScreen>(exec, object);
+}
+Screen* toScreen(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSScreen::s_info) ? static_cast<JSScreen*>(asObject(value))->impl() : 0;
 }
 
 }

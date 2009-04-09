@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegCurvetoQuadraticRel_H
-#define JSSVGPathSegCurvetoQuadraticRel_H
+#ifndef JSSVGPathSegCurvetoQuadraticRel_h
+#define JSSVGPathSegCurvetoQuadraticRel_h
 
 
 #if ENABLE(SVG)
@@ -31,30 +31,41 @@ namespace WebCore {
 class SVGPathSegCurvetoQuadraticRel;
 
 class JSSVGPathSegCurvetoQuadraticRel : public JSSVGPathSeg {
+    typedef JSSVGPathSeg Base;
 public:
-    JSSVGPathSegCurvetoQuadraticRel(KJS::ExecState*, SVGPathSegCurvetoQuadraticRel*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPathSegCurvetoQuadraticRel(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathSegCurvetoQuadraticRel>, SVGElement* context);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        XAttrNum, YAttrNum, X1AttrNum, Y1AttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGPathSegCurvetoQuadraticRelPrototype : public KJS::JSObject {
+class JSSVGPathSegCurvetoQuadraticRelPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGPathSegCurvetoQuadraticRelPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGPathSegPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGPathSegCurvetoQuadraticRelPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGPathSegCurvetoQuadraticRelX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoQuadraticRelX(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoQuadraticRelY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoQuadraticRelY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoQuadraticRelX1(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoQuadraticRelX1(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoQuadraticRelY1(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoQuadraticRelY1(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

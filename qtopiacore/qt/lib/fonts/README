@@ -18,7 +18,4 @@ The prerendered fonts are generated from various sources:
     micro*        - Micro font (see micro.bdf).
     unifont*      - Unifont (see unifont.bdf)
                     - full unicode range (about 50000 characters).
-    wenquanyi*    - Chinese character font obtained from
-                    http://wqy.sourceforge.net/en and distributed under
-                    the terms of the GNU General Public License.
 

@@ -23,106 +23,106 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGNumber.h"
 
 #include <wtf/GetPtr.h>
 
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGNumber)
+
 /* Hash table */
 
-static const HashEntry JSSVGNumberTableEntries[] =
+static const HashTableValue JSSVGNumberTableValues[2] =
 {
-    { "value", JSSVGNumber::ValueAttrNum, DontDelete, 0, 0 }
+    { "value", DontDelete, (intptr_t)jsSVGNumberValue, (intptr_t)setJSSVGNumberValue },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGNumberTable = 
-{
-    2, 1, JSSVGNumberTableEntries, 1
-};
+static const HashTable JSSVGNumberTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGNumberTableValues, 0 };
+#else
+    { 2, 1, JSSVGNumberTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGNumberPrototypeTableEntries[] =
+static const HashTableValue JSSVGNumberPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGNumberPrototypeTable = 
-{
-    2, 1, JSSVGNumberPrototypeTableEntries, 1
-};
+static const HashTable JSSVGNumberPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGNumberPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGNumberPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGNumberPrototype::info = { "SVGNumberPrototype", 0, &JSSVGNumberPrototypeTable, 0 };
+const ClassInfo JSSVGNumberPrototype::s_info = { "SVGNumberPrototype", 0, &JSSVGNumberPrototypeTable, 0 };
 
 JSObject* JSSVGNumberPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGNumberPrototype>(exec, "[[JSSVGNumber.prototype]]");
+    return getDOMPrototype<JSSVGNumber>(exec);
 }
 
-const ClassInfo JSSVGNumber::info = { "SVGNumber", 0, &JSSVGNumberTable, 0 };
+const ClassInfo JSSVGNumber::s_info = { "SVGNumber", 0, &JSSVGNumberTable, 0 };
 
-JSSVGNumber::JSSVGNumber(ExecState* exec, JSSVGPODTypeWrapper<double>* impl)
-    : m_impl(impl)
+JSSVGNumber::JSSVGNumber(PassRefPtr<Structure> structure, PassRefPtr<JSSVGPODTypeWrapper<float> > impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGNumberPrototype::self(exec));
 }
 
 JSSVGNumber::~JSSVGNumber()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGNumber::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGNumberPrototype(JSSVGNumberPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGNumber::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGNumber, KJS::DOMObject>(exec, &JSSVGNumberTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGNumber, Base>(exec, &JSSVGNumberTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGNumber::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGNumberValue(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ValueAttrNum: {
-        double& imp(*impl());
-
-        return jsNumber(imp);
-    }
-    }
-    return 0;
+    float imp(*static_cast<JSSVGNumber*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp);
 }
 
-void JSSVGNumber::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+void JSSVGNumber::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    lookupPut<JSSVGNumber, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGNumberTable, this);
+    lookupPut<JSSVGNumber, Base>(exec, propertyName, value, &JSSVGNumberTable, this, slot);
 }
 
-void JSSVGNumber::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void setJSSVGNumberValue(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    switch (token) {
-    case ValueAttrNum: {
-        double& imp(*impl());
-
-        imp = value->toNumber(exec);
-        m_impl->commitChange(exec);
-        break;
-    }
-    }
+    float imp(*static_cast<JSSVGNumber*>(thisObject)->impl());
+    imp = value->toFloat(exec);
+        static_cast<JSSVGNumber*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGNumber*>(thisObject)->context());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, JSSVGPODTypeWrapper<double>* obj)
+JSC::JSValuePtr toJS(JSC::ExecState* exec, JSSVGPODTypeWrapper<float>* object, SVGElement* context)
 {
-    return KJS::cacheDOMObject<JSSVGPODTypeWrapper<double>, JSSVGNumber>(exec, obj);
+    return getDOMObjectWrapper<JSSVGNumber, JSSVGPODTypeWrapper<float> >(exec, object, context);
 }
-double toSVGNumber(KJS::JSValue* val)
+float toSVGNumber(JSC::JSValuePtr value)
 {
-    return val->isObject(&JSSVGNumber::info) ? (double) *static_cast<JSSVGNumber*>(val)->impl() : 0;
+    return value->isObject(&JSSVGNumber::s_info) ? (float) *static_cast<JSSVGNumber*>(asObject(value))->impl() : 0;
 }
 
 }

@@ -39,7 +39,7 @@ CL_NS_DEF(search)
 		int32_t doc;
 
 		/** Expert: The score of this document for the query. */
-		float_t score;
+		qreal score;
 	};
 
 	/** Expert: Returned by low-level search implementations.
@@ -88,7 +88,7 @@ CL_NS_DEF(search)
       * In other words, the score will not necessarily be a float whose value is
       * between 0 and 1.
       */
-      virtual void collect(const int32_t doc, const float_t score) = 0;
+      virtual void collect(const int32_t doc, const qreal score) = 0;
 		virtual ~HitCollector(){}
     };
 
@@ -97,8 +97,8 @@ CL_NS_DEF(search)
    * <p>A Weight is constructed by a query, given a Searcher ({@link
    * Query#_createWeight(Searcher)}).  The {@link #sumOfSquaredWeights()} method
    * is then called on the top-level query to compute the query normalization
-   * factor (@link Similarity#queryNorm(float_t)}).  This factor is then passed to
-   * {@link #normalize(float_t)}.  At this point the weighting is complete and a
+   * factor (@link Similarity#queryNorm(qreal)}).  This factor is then passed to
+   * {@link #normalize(qreal)}.  At this point the weighting is complete and a
    * scorer may be constructed by calling {@link #scorer(IndexReader)}.
    */
 	class Weight: LUCENE_BASE {
@@ -110,13 +110,13 @@ CL_NS_DEF(search)
       virtual Query* getQuery() = 0;
 
       /** The weight for this query. */
-      virtual float_t getValue() = 0;
+      virtual qreal getValue() = 0;
 
       /** The sum of squared weights of contained query clauses. */
-      virtual float_t sumOfSquaredWeights() = 0;
+      virtual qreal sumOfSquaredWeights() = 0;
 
       /** Assigns the query normalization factor to this. */
-      virtual void normalize(float_t norm) = 0;
+      virtual void normalize(qreal norm) = 0;
 
       /** Constructs a scorer for this. */
       virtual Scorer* scorer(CL_NS(index)::IndexReader* reader) = 0;
@@ -131,14 +131,14 @@ CL_NS_DEF(search)
 
    class HitDoc:LUCENE_BASE {
     public:
-		float_t score;
+		qreal score;
 		int32_t id;
 		CL_NS(document)::Document* doc;
 		
 		HitDoc* next;					  // in doubly-linked cache
 		HitDoc* prev;					  // in doubly-linked cache
 		
-		HitDoc(const float_t s, const int32_t i);
+		HitDoc(const qreal s, const int32_t i);
 		~HitDoc();
     };
 
@@ -179,7 +179,7 @@ CL_NS_DEF(search)
 		int32_t id (const int32_t n);
 	    
 		/** Returns the score for the nth document in this set. */
-		float_t score(const int32_t n);
+		qreal score(const int32_t n);
 	      
 	private:
 		// Tries to add new documents to hitDocs.
@@ -206,7 +206,7 @@ CL_NS_DEF(search)
 
       /** Lower-level search API.
       *
-      * <p>{@link HitCollector#collect(int32_t,float_t)} is called for every non-zero
+      * <p>{@link HitCollector#collect(int32_t,qreal)} is called for every non-zero
       * scoring document.
       *
       * <p>Applications should only use this if they need <i>all</i> of the
@@ -323,7 +323,7 @@ CL_NS_DEF(search)
 
 		/** Lower-level search API.
 		*
-		* <p>{@link HitCollector#collect(int32_t	,float_t)} is called for every non-zero
+		* <p>{@link HitCollector#collect(int32_t	,qreal)} is called for every non-zero
 		* scoring document.
 		*
 		* <p>Applications should only use this if they need <i>all</i> of the
@@ -377,7 +377,7 @@ CL_NS_DEF(search)
 	class Query :LUCENE_BASE {
 	private:
 		// query boost factor
-		float_t boost;
+		qreal boost;
 	protected:
 		Query(const Query& clone);
 	public:
@@ -388,13 +388,13 @@ CL_NS_DEF(search)
 		* matching this clause will (in addition to the normal weightings) have
 		* their score multiplied by <code>b</code>.
 		*/
-		void setBoost(float_t b);
+		void setBoost(qreal b);
 
 		/** Gets the boost for this clause.  Documents matching
 		* this clause will (in addition to the normal weightings) have their score
 		* multiplied by <code>b</code>.   The boost is 1.0 by default.
 		*/
-		float_t getBoost() const;
+		qreal getBoost() const;
 
         /** Expert: Constructs an initializes a Weight for a top-level query. */
         Weight* weight(Searcher* searcher);

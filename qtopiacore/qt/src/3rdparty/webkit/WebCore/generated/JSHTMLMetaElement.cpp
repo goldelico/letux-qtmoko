@@ -25,168 +25,173 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLMetaElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLMetaElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLMetaElementTableEntries[] =
+static const HashTableValue JSHTMLMetaElementTableValues[6] =
 {
-    { "name", JSHTMLMetaElement::NameAttrNum, DontDelete, 0, &JSHTMLMetaElementTableEntries[5] },
-    { "httpEquiv", JSHTMLMetaElement::HttpEquivAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSHTMLMetaElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "content", JSHTMLMetaElement::ContentAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "scheme", JSHTMLMetaElement::SchemeAttrNum, DontDelete, 0, 0 }
+    { "content", DontDelete, (intptr_t)jsHTMLMetaElementContent, (intptr_t)setJSHTMLMetaElementContent },
+    { "httpEquiv", DontDelete, (intptr_t)jsHTMLMetaElementHttpEquiv, (intptr_t)setJSHTMLMetaElementHttpEquiv },
+    { "name", DontDelete, (intptr_t)jsHTMLMetaElementName, (intptr_t)setJSHTMLMetaElementName },
+    { "scheme", DontDelete, (intptr_t)jsHTMLMetaElementScheme, (intptr_t)setJSHTMLMetaElementScheme },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLMetaElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMetaElementTable = 
-{
-    2, 6, JSHTMLMetaElementTableEntries, 5
-};
+static const HashTable JSHTMLMetaElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSHTMLMetaElementTableValues, 0 };
+#else
+    { 17, 15, JSHTMLMetaElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLMetaElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLMetaElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMetaElementConstructorTable = 
-{
-    2, 1, JSHTMLMetaElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLMetaElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLMetaElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLMetaElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLMetaElementConstructor : public DOMObject {
 public:
     JSHTMLMetaElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLMetaElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLMetaElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLMetaElementConstructor::info = { "HTMLMetaElementConstructor", 0, &JSHTMLMetaElementConstructorTable, 0 };
+const ClassInfo JSHTMLMetaElementConstructor::s_info = { "HTMLMetaElementConstructor", 0, &JSHTMLMetaElementConstructorTable, 0 };
 
 bool JSHTMLMetaElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLMetaElementConstructor, DOMObject>(exec, &JSHTMLMetaElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLMetaElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLMetaElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLMetaElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMetaElementPrototypeTable = 
-{
-    2, 1, JSHTMLMetaElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLMetaElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLMetaElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLMetaElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLMetaElementPrototype::info = { "HTMLMetaElementPrototype", 0, &JSHTMLMetaElementPrototypeTable, 0 };
+const ClassInfo JSHTMLMetaElementPrototype::s_info = { "HTMLMetaElementPrototype", 0, &JSHTMLMetaElementPrototypeTable, 0 };
 
 JSObject* JSHTMLMetaElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLMetaElementPrototype>(exec, "[[JSHTMLMetaElement.prototype]]");
+    return getDOMPrototype<JSHTMLMetaElement>(exec);
 }
 
-const ClassInfo JSHTMLMetaElement::info = { "HTMLMetaElement", &JSHTMLElement::info, &JSHTMLMetaElementTable, 0 };
+const ClassInfo JSHTMLMetaElement::s_info = { "HTMLMetaElement", &JSHTMLElement::s_info, &JSHTMLMetaElementTable, 0 };
 
-JSHTMLMetaElement::JSHTMLMetaElement(ExecState* exec, HTMLMetaElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLMetaElement::JSHTMLMetaElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLMetaElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLMetaElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLMetaElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLMetaElementPrototype(JSHTMLMetaElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLMetaElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLMetaElement, JSHTMLElement>(exec, &JSHTMLMetaElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLMetaElement, Base>(exec, &JSHTMLMetaElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLMetaElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLMetaElementContent(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ContentAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        return jsString(imp->content());
-    }
-    case HttpEquivAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        return jsString(imp->httpEquiv());
-    }
-    case NameAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        return jsString(imp->name());
-    }
-    case SchemeAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        return jsString(imp->scheme());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->content());
 }
 
-void JSHTMLMetaElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLMetaElementHttpEquiv(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLMetaElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLMetaElementTable, this);
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->httpEquiv());
 }
 
-void JSHTMLMetaElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLMetaElementName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ContentAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        imp->setContent(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case HttpEquivAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        imp->setHttpEquiv(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case NameAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        imp->setName(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case SchemeAttrNum: {
-        HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(impl());
-
-        imp->setScheme(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->name());
 }
 
-JSValue* JSHTMLMetaElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLMetaElementScheme(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLMetaElementConstructor>(exec, "[[HTMLMetaElement.constructor]]");
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->scheme());
 }
+
+JSValuePtr jsHTMLMetaElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLMetaElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLMetaElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLMetaElement, Base>(exec, propertyName, value, &JSHTMLMetaElementTable, this, slot);
+}
+
+void setJSHTMLMetaElementContent(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(thisObject)->impl());
+    imp->setContent(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLMetaElementHttpEquiv(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(thisObject)->impl());
+    imp->setHttpEquiv(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLMetaElementName(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(thisObject)->impl());
+    imp->setName(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLMetaElementScheme(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLMetaElement* imp = static_cast<HTMLMetaElement*>(static_cast<JSHTMLMetaElement*>(thisObject)->impl());
+    imp->setScheme(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLMetaElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLMetaElementConstructor>(exec);
+}
+
 
 }

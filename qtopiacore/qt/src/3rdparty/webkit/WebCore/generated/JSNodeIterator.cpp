@@ -30,151 +30,206 @@
 #include "NodeFilter.h"
 #include "NodeIterator.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSNodeIterator)
+
 /* Hash table */
 
-static const HashEntry JSNodeIteratorTableEntries[] =
+static const HashTableValue JSNodeIteratorTableValues[8] =
 {
-    { "root", JSNodeIterator::RootAttrNum, DontDelete|ReadOnly, 0, &JSNodeIteratorTableEntries[7] },
-    { 0, 0, 0, 0, 0 },
-    { "whatToShow", JSNodeIterator::WhatToShowAttrNum, DontDelete|ReadOnly, 0, &JSNodeIteratorTableEntries[6] },
-    { "referenceNode", JSNodeIterator::ReferenceNodeAttrNum, DontDelete|ReadOnly, 0, &JSNodeIteratorTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "filter", JSNodeIterator::FilterAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "expandEntityReferences", JSNodeIterator::ExpandEntityReferencesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "pointerBeforeReferenceNode", JSNodeIterator::PointerBeforeReferenceNodeAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "root", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorRoot, (intptr_t)0 },
+    { "whatToShow", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorWhatToShow, (intptr_t)0 },
+    { "filter", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorFilter, (intptr_t)0 },
+    { "expandEntityReferences", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorExpandEntityReferences, (intptr_t)0 },
+    { "referenceNode", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorReferenceNode, (intptr_t)0 },
+    { "pointerBeforeReferenceNode", DontDelete|ReadOnly, (intptr_t)jsNodeIteratorPointerBeforeReferenceNode, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsNodeIteratorConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNodeIteratorTable = 
+static const HashTable JSNodeIteratorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSNodeIteratorTableValues, 0 };
+#else
+    { 18, 15, JSNodeIteratorTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSNodeIteratorConstructorTableValues[1] =
 {
-    2, 9, JSNodeIteratorTableEntries, 6
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSNodeIteratorConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSNodeIteratorConstructorTableValues, 0 };
+#else
+    { 1, 0, JSNodeIteratorConstructorTableValues, 0 };
+#endif
+
+class JSNodeIteratorConstructor : public DOMObject {
+public:
+    JSNodeIteratorConstructor(ExecState* exec)
+        : DOMObject(JSNodeIteratorConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSNodeIteratorPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSNodeIteratorConstructor::s_info = { "NodeIteratorConstructor", 0, &JSNodeIteratorConstructorTable, 0 };
+
+bool JSNodeIteratorConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSNodeIteratorConstructor, DOMObject>(exec, &JSNodeIteratorConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSNodeIteratorPrototypeTableEntries[] =
+static const HashTableValue JSNodeIteratorPrototypeTableValues[4] =
 {
-    { "nextNode", JSNodeIterator::NextNodeFuncNum, DontDelete|Function, 0, &JSNodeIteratorPrototypeTableEntries[3] },
-    { 0, 0, 0, 0, 0 },
-    { "previousNode", JSNodeIterator::PreviousNodeFuncNum, DontDelete|Function, 0, 0 },
-    { "detach", JSNodeIterator::DetachFuncNum, DontDelete|Function, 0, 0 }
+    { "nextNode", DontDelete|Function, (intptr_t)jsNodeIteratorPrototypeFunctionNextNode, (intptr_t)0 },
+    { "previousNode", DontDelete|Function, (intptr_t)jsNodeIteratorPrototypeFunctionPreviousNode, (intptr_t)0 },
+    { "detach", DontDelete|Function, (intptr_t)jsNodeIteratorPrototypeFunctionDetach, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNodeIteratorPrototypeTable = 
-{
-    2, 4, JSNodeIteratorPrototypeTableEntries, 3
-};
+static const HashTable JSNodeIteratorPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSNodeIteratorPrototypeTableValues, 0 };
+#else
+    { 8, 7, JSNodeIteratorPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSNodeIteratorPrototype::info = { "NodeIteratorPrototype", 0, &JSNodeIteratorPrototypeTable, 0 };
+const ClassInfo JSNodeIteratorPrototype::s_info = { "NodeIteratorPrototype", 0, &JSNodeIteratorPrototypeTable, 0 };
 
 JSObject* JSNodeIteratorPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSNodeIteratorPrototype>(exec, "[[JSNodeIterator.prototype]]");
+    return getDOMPrototype<JSNodeIterator>(exec);
 }
 
 bool JSNodeIteratorPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSNodeIteratorPrototypeFunction, JSObject>(exec, &JSNodeIteratorPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSNodeIteratorPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSNodeIterator::info = { "NodeIterator", 0, &JSNodeIteratorTable, 0 };
+const ClassInfo JSNodeIterator::s_info = { "NodeIterator", 0, &JSNodeIteratorTable, 0 };
 
-JSNodeIterator::JSNodeIterator(ExecState* exec, NodeIterator* impl)
-    : m_impl(impl)
+JSNodeIterator::JSNodeIterator(PassRefPtr<Structure> structure, PassRefPtr<NodeIterator> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSNodeIteratorPrototype::self(exec));
 }
 
 JSNodeIterator::~JSNodeIterator()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSNodeIterator::createPrototype(ExecState* exec)
+{
+    return new (exec) JSNodeIteratorPrototype(JSNodeIteratorPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSNodeIterator::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSNodeIterator, KJS::DOMObject>(exec, &JSNodeIteratorTable, this, propertyName, slot);
+    return getStaticValueSlot<JSNodeIterator, Base>(exec, &JSNodeIteratorTable, this, propertyName, slot);
 }
 
-JSValue* JSNodeIterator::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsNodeIteratorRoot(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case RootAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->root()));
-    }
-    case WhatToShowAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return jsNumber(imp->whatToShow());
-    }
-    case FilterAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->filter()));
-    }
-    case ExpandEntityReferencesAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return jsBoolean(imp->expandEntityReferences());
-    }
-    case ReferenceNodeAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->referenceNode()));
-    }
-    case PointerBeforeReferenceNodeAttrNum: {
-        NodeIterator* imp = static_cast<NodeIterator*>(impl());
-
-        return jsBoolean(imp->pointerBeforeReferenceNode());
-    }
-    }
-    return 0;
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->root()));
 }
 
-JSValue* JSNodeIteratorPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsNodeIteratorWhatToShow(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSNodeIterator::info))
-      return throwError(exec, TypeError);
-
-    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(thisObj)->impl());
-
-    switch (id) {
-    case JSNodeIterator::NextNodeFuncNum: {
-        ExceptionCode ec = 0;
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->nextNode(ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSNodeIterator::PreviousNodeFuncNum: {
-        ExceptionCode ec = 0;
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->previousNode(ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSNodeIterator::DetachFuncNum: {
-
-        imp->detach();
-        return jsUndefined();
-    }
-    }
-    return 0;
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->whatToShow());
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, NodeIterator* obj)
+
+JSValuePtr jsNodeIteratorFilter(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<NodeIterator, JSNodeIterator>(exec, obj);
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->filter()));
 }
-NodeIterator* toNodeIterator(KJS::JSValue* val)
+
+JSValuePtr jsNodeIteratorExpandEntityReferences(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSNodeIterator::info) ? static_cast<JSNodeIterator*>(val)->impl() : 0;
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->expandEntityReferences());
+}
+
+JSValuePtr jsNodeIteratorReferenceNode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->referenceNode()));
+}
+
+JSValuePtr jsNodeIteratorPointerBeforeReferenceNode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    NodeIterator* imp = static_cast<NodeIterator*>(static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->pointerBeforeReferenceNode());
+}
+
+JSValuePtr jsNodeIteratorConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSNodeIterator*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSNodeIterator::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSNodeIteratorConstructor>(exec);
+}
+
+JSValuePtr jsNodeIteratorPrototypeFunctionNextNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNodeIterator::s_info))
+        return throwError(exec, TypeError);
+    JSNodeIterator* castedThisObj = static_cast<JSNodeIterator*>(asObject(thisValue));
+    return castedThisObj->nextNode(exec, args);
+}
+
+JSValuePtr jsNodeIteratorPrototypeFunctionPreviousNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNodeIterator::s_info))
+        return throwError(exec, TypeError);
+    JSNodeIterator* castedThisObj = static_cast<JSNodeIterator*>(asObject(thisValue));
+    return castedThisObj->previousNode(exec, args);
+}
+
+JSValuePtr jsNodeIteratorPrototypeFunctionDetach(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNodeIterator::s_info))
+        return throwError(exec, TypeError);
+    JSNodeIterator* castedThisObj = static_cast<JSNodeIterator*>(asObject(thisValue));
+    NodeIterator* imp = static_cast<NodeIterator*>(castedThisObj->impl());
+
+    imp->detach();
+    return jsUndefined();
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, NodeIterator* object)
+{
+    return getDOMObjectWrapper<JSNodeIterator>(exec, object);
+}
+NodeIterator* toNodeIterator(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSNodeIterator::s_info) ? static_cast<JSNodeIterator*>(asObject(value))->impl() : 0;
 }
 
 }

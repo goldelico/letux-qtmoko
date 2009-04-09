@@ -23,18 +23,16 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPolylineElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedString.h"
 #include "JSSVGAnimatedTransformList.h"
@@ -43,269 +41,272 @@
 #include "JSSVGPointList.h"
 #include "JSSVGRect.h"
 #include "JSSVGStringList.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGElement.h"
 #include "SVGPointList.h"
 #include "SVGPolylineElement.h"
 #include "SVGStringList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPolylineElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGPolylineElementTableEntries[] =
+static const HashTableValue JSSVGPolylineElementTableValues[14] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "transform", JSSVGPolylineElement::TransformAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmlspace", JSSVGPolylineElement::XmlspaceAttrNum, DontDelete, 0, 0 },
-    { "requiredFeatures", JSSVGPolylineElement::RequiredFeaturesAttrNum, DontDelete|ReadOnly, 0, &JSSVGPolylineElementTableEntries[13] },
-    { "farthestViewportElement", JSSVGPolylineElement::FarthestViewportElementAttrNum, DontDelete|ReadOnly, 0, &JSSVGPolylineElementTableEntries[16] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "style", JSSVGPolylineElement::StyleAttrNum, DontDelete|ReadOnly, 0, &JSSVGPolylineElementTableEntries[15] },
-    { "systemLanguage", JSSVGPolylineElement::SystemLanguageAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "className", JSSVGPolylineElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "externalResourcesRequired", JSSVGPolylineElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "requiredExtensions", JSSVGPolylineElement::RequiredExtensionsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmllang", JSSVGPolylineElement::XmllangAttrNum, DontDelete, 0, &JSSVGPolylineElementTableEntries[14] },
-    { "nearestViewportElement", JSSVGPolylineElement::NearestViewportElementAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "points", JSSVGPolylineElement::PointsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "animatedPoints", JSSVGPolylineElement::AnimatedPointsAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "requiredFeatures", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementRequiredFeatures, (intptr_t)0 },
+    { "requiredExtensions", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementRequiredExtensions, (intptr_t)0 },
+    { "systemLanguage", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementSystemLanguage, (intptr_t)0 },
+    { "xmllang", DontDelete, (intptr_t)jsSVGPolylineElementXmllang, (intptr_t)setJSSVGPolylineElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGPolylineElementXmlspace, (intptr_t)setJSSVGPolylineElementXmlspace },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementExternalResourcesRequired, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementStyle, (intptr_t)0 },
+    { "transform", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementTransform, (intptr_t)0 },
+    { "nearestViewportElement", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementNearestViewportElement, (intptr_t)0 },
+    { "farthestViewportElement", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementFarthestViewportElement, (intptr_t)0 },
+    { "points", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementPoints, (intptr_t)0 },
+    { "animatedPoints", DontDelete|ReadOnly, (intptr_t)jsSVGPolylineElementAnimatedPoints, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPolylineElementTable = 
-{
-    2, 17, JSSVGPolylineElementTableEntries, 13
-};
+static const HashTable JSSVGPolylineElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGPolylineElementTableValues, 0 };
+#else
+    { 33, 31, JSSVGPolylineElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPolylineElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGPolylineElementPrototypeTableValues[7] =
 {
-    { "hasExtension", JSSVGPolylineElement::HasExtensionFuncNum, DontDelete|Function, 1, &JSSVGPolylineElementPrototypeTableEntries[6] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getBBox", JSSVGPolylineElement::GetBBoxFuncNum, DontDelete|Function, 0, &JSSVGPolylineElementPrototypeTableEntries[5] },
-    { "getTransformToElement", JSSVGPolylineElement::GetTransformToElementFuncNum, DontDelete|Function, 1, 0 },
-    { "getCTM", JSSVGPolylineElement::GetCTMFuncNum, DontDelete|Function, 0, 0 },
-    { "getScreenCTM", JSSVGPolylineElement::GetScreenCTMFuncNum, DontDelete|Function, 0, 0 }
+    { "hasExtension", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionHasExtension, (intptr_t)1 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { "getBBox", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionGetBBox, (intptr_t)0 },
+    { "getCTM", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionGetCTM, (intptr_t)0 },
+    { "getScreenCTM", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionGetScreenCTM, (intptr_t)0 },
+    { "getTransformToElement", DontDelete|Function, (intptr_t)jsSVGPolylineElementPrototypeFunctionGetTransformToElement, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPolylineElementPrototypeTable = 
-{
-    2, 7, JSSVGPolylineElementPrototypeTableEntries, 5
-};
+static const HashTable JSSVGPolylineElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 2047, JSSVGPolylineElementPrototypeTableValues, 0 };
+#else
+    { 17, 15, JSSVGPolylineElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPolylineElementPrototype::info = { "SVGPolylineElementPrototype", 0, &JSSVGPolylineElementPrototypeTable, 0 };
+const ClassInfo JSSVGPolylineElementPrototype::s_info = { "SVGPolylineElementPrototype", 0, &JSSVGPolylineElementPrototypeTable, 0 };
 
 JSObject* JSSVGPolylineElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPolylineElementPrototype>(exec, "[[JSSVGPolylineElement.prototype]]");
+    return getDOMPrototype<JSSVGPolylineElement>(exec);
 }
 
 bool JSSVGPolylineElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGPolylineElementPrototypeFunction, JSObject>(exec, &JSSVGPolylineElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGPolylineElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGPolylineElement::info = { "SVGPolylineElement", &JSSVGElement::info, &JSSVGPolylineElementTable, 0 };
+const ClassInfo JSSVGPolylineElement::s_info = { "SVGPolylineElement", &JSSVGElement::s_info, &JSSVGPolylineElementTable, 0 };
 
-JSSVGPolylineElement::JSSVGPolylineElement(ExecState* exec, SVGPolylineElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGPolylineElement::JSSVGPolylineElement(PassRefPtr<Structure> structure, PassRefPtr<SVGPolylineElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGPolylineElementPrototype::self(exec));
+}
+
+JSObject* JSSVGPolylineElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPolylineElementPrototype(JSSVGPolylineElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGPolylineElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPolylineElement, JSSVGElement>(exec, &JSSVGPolylineElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPolylineElement, Base>(exec, &JSSVGPolylineElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPolylineElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPolylineElementRequiredFeatures(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case RequiredFeaturesAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredFeatures()));
-    }
-    case RequiredExtensionsAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredExtensions()));
-    }
-    case SystemLanguageAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->systemLanguage()));
-    }
-    case XmllangAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    case TransformAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedTransformList> obj = imp->transformAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedTransformList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedTransformList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedTransformList>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case NearestViewportElementAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->nearestViewportElement()));
-    }
-    case FarthestViewportElementAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->farthestViewportElement()));
-    }
-    case PointsAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->points()));
-    }
-    case AnimatedPointsAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->animatedPoints()));
-    }
-    }
-    return 0;
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredFeatures()), imp);
 }
 
-void JSSVGPolylineElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPolylineElementRequiredExtensions(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPolylineElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGPolylineElementTable, this);
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredExtensions()), imp);
 }
 
-void JSSVGPolylineElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGPolylineElementSystemLanguage(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(impl());
-
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->systemLanguage()), imp);
 }
 
-JSValue* JSSVGPolylineElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGPolylineElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSSVGPolylineElement::info))
-      return throwError(exec, TypeError);
-
-    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGPolylineElement::HasExtensionFuncNum: {
-        String extension = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasExtension(extension));
-        return result;
-    }
-    case JSSVGPolylineElement::GetBBoxFuncNum: {
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<FloatRect>(imp->getBBox()));
-        return result;
-    }
-    case JSSVGPolylineElement::GetCTMFuncNum: {
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<AffineTransform>(imp->getCTM()));
-        return result;
-    }
-    case JSSVGPolylineElement::GetScreenCTMFuncNum: {
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<AffineTransform>(imp->getScreenCTM()));
-        return result;
-    }
-    case JSSVGPolylineElement::GetTransformToElementFuncNum: {
-        ExceptionCode ec = 0;
-        SVGElement* element = toSVGElement(args[0]);
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<AffineTransform>(imp->getTransformToElement(element, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
 }
+
+JSValuePtr jsSVGPolylineElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
+}
+
+JSValuePtr jsSVGPolylineElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGPolylineElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGPolylineElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
+
+JSValuePtr jsSVGPolylineElementTransform(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedTransformList> obj = imp->transformAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGPolylineElementNearestViewportElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->nearestViewportElement()));
+}
+
+JSValuePtr jsSVGPolylineElementFarthestViewportElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->farthestViewportElement()));
+}
+
+JSValuePtr jsSVGPolylineElementPoints(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->points()), imp);
+}
+
+JSValuePtr jsSVGPolylineElementAnimatedPoints(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->animatedPoints()), imp);
+}
+
+void JSSVGPolylineElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGPolylineElement, Base>(exec, propertyName, value, &JSSVGPolylineElementTable, this, slot);
+}
+
+void setJSSVGPolylineElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGPolylineElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(static_cast<JSSVGPolylineElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionHasExtension(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+    const UString& extension = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasExtension(extension));
+    return result;
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionGetBBox(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<FloatRect>::create(imp->getBBox()).get(), imp);
+    return result;
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionGetCTM(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp->getCTM()).get(), imp);
+    return result;
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionGetScreenCTM(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp->getScreenCTM()).get(), imp);
+    return result;
+}
+
+JSValuePtr jsSVGPolylineElementPrototypeFunctionGetTransformToElement(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPolylineElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPolylineElement* castedThisObj = static_cast<JSSVGPolylineElement*>(asObject(thisValue));
+    SVGPolylineElement* imp = static_cast<SVGPolylineElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    SVGElement* element = toSVGElement(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp->getTransformToElement(element, ec)).get(), imp);
+    setDOMException(exec, ec);
+    return result;
+}
+
 
 }
 

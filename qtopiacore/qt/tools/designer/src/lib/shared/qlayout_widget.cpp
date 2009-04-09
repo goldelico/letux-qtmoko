@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ** This file is provided AS IS with NO WARRANTY OF ANY KND, INCLUDING THE
 ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -39,6 +43,7 @@
 ****************************************************************************/
 
 #include "qlayout_widget_p.h"
+#include "qdesigner_utils_p.h"
 #include "layout_p.h"
 #include "layoutinfo_p.h"
 #include "invisible_widget_p.h"
@@ -67,7 +72,7 @@
 enum { ShiftValue = 1 };
 enum { debugLayout = 0 };
 enum { FormLayoutColumns = 2 };
-
+enum { indicatorSize = 2 };
 // Grid/form Helpers: get info (overloads to make templates work)
 
 namespace { // Do not use static, will break HP-UX due to templates
@@ -112,8 +117,9 @@ QRect gridItemInfo(const QFormLayout *form, int index)
 {
     int row;
     int column;
-    qdesigner_internal::getFormLayoutItemPosition(form, index, &row, &column);
-    return QRect(column, row, 1, 1);
+    int colspan;
+    qdesigner_internal::getFormLayoutItemPosition(form, index, &row, &column, 0, &colspan);
+    return QRect(column, row, colspan, 1);
 }
 } // namespace anonymous
 
@@ -121,16 +127,6 @@ QT_BEGIN_NAMESPACE
 
 static const char *objectNameC = "objectName";
 static const char *sizeConstraintC = "sizeConstraint";
-
-// Is it a a dummy grid placeholder created by Designer?
-static inline bool isEmptyItem(QLayoutItem *item)
-{
-    if (item == 0) {
-        qDebug() << "** WARNING Zero-item passed on to isEmptyItem(). This indicates a layout inconsistency.";
-        return true;
-    }
-    return item->spacerItem() != 0;
-}
 
 /* A padding spacer element that is used to represent an empty form layout cell. It should grow with its cell.
  * Should not be used on a grid as it causes resizing inconsistencies */
@@ -161,7 +157,7 @@ static QDebug debugGridLikeLayout(QDebug str, const GridLikeLayout &gl)
         << " cols " << count << " items\n";
     for (int i = 0; i < count; i++) {
         QLayoutItem *item = gl.itemAt(i);
-        str << "Item " << i << item << item->widget() << gridItemInfo(const_cast<GridLikeLayout *>(&gl), i) << " empty " << isEmptyItem(item) << "\n";
+        str << "Item " << i << item << item->widget() << gridItemInfo(const_cast<GridLikeLayout *>(&gl), i) << " empty=" << qdesigner_internal::LayoutInfo::isEmptyItem(item) << "\n";
     }
     return str;
 }
@@ -171,7 +167,10 @@ static inline QDebug operator<<(QDebug str, const QFormLayout &fl) { return debu
 
 static inline bool isEmptyFormLayoutRow(const QFormLayout *fl, int row)
 {
-    return isEmptyItem(fl->itemAt(row, QFormLayout::LabelRole)) && isEmptyItem(fl->itemAt(row, QFormLayout::FieldRole));
+    // Spanning can never be empty
+    if (fl->itemAt(row, QFormLayout::SpanningRole))
+        return false;
+    return qdesigner_internal::LayoutInfo::isEmptyItem(fl->itemAt(row, QFormLayout::LabelRole)) && qdesigner_internal::LayoutInfo::isEmptyItem(fl->itemAt(row, QFormLayout::FieldRole));
 }
 
 static inline bool canSimplifyFormLayout(const QFormLayout *formLayout, const QRect &restrictionArea)
@@ -231,7 +230,7 @@ static bool removeEmptyCellsOnGrid(GridLikeLayout *grid, const QRect &area)
             const int index = findGridItemAt(grid, r ,c);
             if (index != -1)
                 if (QLayoutItem *item = grid->itemAt(index)) {
-                    if (isEmptyItem(item)) {
+                    if (qdesigner_internal::LayoutInfo::isEmptyItem(item)) {
                         if (indexesToBeRemoved.indexOf(index) == -1)
                             indexesToBeRemoved.push_back(index);
                     } else {
@@ -263,10 +262,16 @@ void LayoutProperties::clear()
     qFill(m_spacings, m_spacings + SpacingsCount, 0);
     qFill(m_spacingsChanged, m_spacingsChanged + SpacingsCount, false);
 
-    m_objectName.clear();
+    m_objectName = QVariant();
     m_objectNameChanged = false;
     m_sizeConstraint = QVariant(QLayout::SetDefaultConstraint);
     m_sizeConstraintChanged = false;
+
+    m_fieldGrowthPolicyChanged = m_rowWrapPolicyChanged =  m_labelAlignmentChanged = m_formAlignmentChanged = false;
+    m_fieldGrowthPolicy =  m_rowWrapPolicy =  m_formAlignment = QVariant();
+
+    m_boxStretchChanged = m_gridRowStretchChanged = m_gridColumnStretchChanged = m_gridRowMinimumHeightChanged = false;
+    m_boxStretch = m_gridRowStretch =  m_gridColumnStretch =  m_gridRowMinimumHeight = QVariant();
 }
 
 int LayoutProperties::visibleProperties(const  QLayout *layout)
@@ -276,9 +281,17 @@ int LayoutProperties::visibleProperties(const  QLayout *layout)
     const bool isGridLike = qobject_cast<const QGridLayout*>(layout) || isFormLayout;
     int rc = ObjectNameProperty|LeftMarginProperty|TopMarginProperty|RightMarginProperty|BottomMarginProperty|
              SizeConstraintProperty;
+
     rc |= isGridLike ? (HorizSpacingProperty|VertSpacingProperty) : SpacingProperty;
-    if (isFormLayout)
+    if (isFormLayout) {
         rc |= FieldGrowthPolicyProperty|RowWrapPolicyProperty|LabelAlignmentProperty|FormAlignmentProperty;
+    } else {
+        if (isGridLike) {
+            rc |=  GridRowStretchProperty|GridColumnStretchProperty|GridRowMinimumHeightProperty|GridColumnMinimumWidthProperty;
+        } else {
+            rc |=  BoxStretchProperty;
+        }
+    }
     return rc;
 }
 
@@ -288,6 +301,11 @@ static const char *fieldGrowthPolicyPropertyC = "fieldGrowthPolicy";
 static const char *rowWrapPolicyPropertyC = "rowWrapPolicy";
 static const char *labelAlignmentPropertyC = "labelAlignment";
 static const char *formAlignmentPropertyC = "formAlignment";
+static const char *boxStretchPropertyC = "stretch";
+static const char *gridRowStretchPropertyC = "rowStretch";
+static const char *gridColumnStretchPropertyC = "columnStretch";
+static const char *gridRowMinimumHeightPropertyC = "rowMinimumHeight";
+static const char *gridColumnMinimumWidthPropertyC = "columnMinimumWidth";
 
 static bool intValueFromSheet(const QDesignerPropertySheetExtension *sheet, const QString &name, int *value, bool *changed)
 {
@@ -321,7 +339,7 @@ int LayoutProperties::fromPropertySheet(const QDesignerFormEditorInterface *core
     if (mask & ObjectNameProperty) {
         const int nameIndex = sheet->indexOf(QLatin1String(objectNameC));
         Q_ASSERT(nameIndex != -1);
-        m_objectName = sheet->property(nameIndex).toString();
+        m_objectName = sheet->property(nameIndex);
         m_objectNameChanged =  sheet->isChanged(nameIndex);
         rc |= ObjectNameProperty;
     }
@@ -343,6 +361,11 @@ int LayoutProperties::fromPropertySheet(const QDesignerFormEditorInterface *core
     variantPropertyFromSheet(mask, RowWrapPolicyProperty, sheet, QLatin1String(rowWrapPolicyPropertyC), &m_rowWrapPolicy, &m_rowWrapPolicyChanged, &rc);
     variantPropertyFromSheet(mask, LabelAlignmentProperty, sheet, QLatin1String(labelAlignmentPropertyC), &m_labelAlignment, &m_labelAlignmentChanged, &rc);
     variantPropertyFromSheet(mask, FormAlignmentProperty, sheet, QLatin1String(formAlignmentPropertyC), &m_formAlignment, &m_formAlignmentChanged, &rc);
+    variantPropertyFromSheet(mask, BoxStretchProperty, sheet, QLatin1String(boxStretchPropertyC), &m_boxStretch, & m_boxStretchChanged, &rc);
+    variantPropertyFromSheet(mask, GridRowStretchProperty, sheet, QLatin1String(gridRowStretchPropertyC), &m_gridRowStretch, &m_gridRowStretchChanged, &rc);
+    variantPropertyFromSheet(mask, GridColumnStretchProperty, sheet, QLatin1String(gridColumnStretchPropertyC), &m_gridColumnStretch, &m_gridColumnStretchChanged, &rc);
+    variantPropertyFromSheet(mask, GridRowMinimumHeightProperty, sheet, QLatin1String(gridRowMinimumHeightPropertyC), &m_gridRowMinimumHeight, &m_gridRowMinimumHeightChanged, &rc);
+    variantPropertyFromSheet(mask, GridColumnMinimumWidthProperty, sheet, QLatin1String(gridColumnMinimumWidthPropertyC), &m_gridColumnMinimumWidth, &m_gridColumnMinimumWidthChanged, &rc);
     return rc;
 }
 
@@ -407,6 +430,11 @@ int LayoutProperties::toPropertySheet(const QDesignerFormEditorInterface *core, 
     variantPropertyToSheet(mask, RowWrapPolicyProperty, applyChanged, sheet, QLatin1String(rowWrapPolicyPropertyC), m_rowWrapPolicy, m_rowWrapPolicyChanged, &rc);
     variantPropertyToSheet(mask, LabelAlignmentProperty, applyChanged, sheet, QLatin1String(labelAlignmentPropertyC), m_labelAlignment, m_labelAlignmentChanged, &rc);
     variantPropertyToSheet(mask, FormAlignmentProperty, applyChanged, sheet, QLatin1String(formAlignmentPropertyC), m_formAlignment, m_formAlignmentChanged, &rc);
+    variantPropertyToSheet(mask, BoxStretchProperty, applyChanged, sheet, QLatin1String(boxStretchPropertyC), m_boxStretch, m_boxStretchChanged, &rc);
+    variantPropertyToSheet(mask, GridRowStretchProperty, applyChanged, sheet, QLatin1String(gridRowStretchPropertyC), m_gridRowStretch, m_gridRowStretchChanged, &rc);
+    variantPropertyToSheet(mask, GridColumnStretchProperty, applyChanged, sheet, QLatin1String(gridColumnStretchPropertyC), m_gridColumnStretch, m_gridColumnStretchChanged, &rc);
+    variantPropertyToSheet(mask, GridRowMinimumHeightProperty, applyChanged, sheet, QLatin1String(gridRowMinimumHeightPropertyC), m_gridRowMinimumHeight, m_gridRowMinimumHeightChanged, &rc);
+    variantPropertyToSheet(mask, GridColumnMinimumWidthProperty, applyChanged, sheet, QLatin1String(gridColumnMinimumWidthPropertyC), m_gridColumnMinimumWidth, m_gridColumnMinimumWidthChanged, &rc);
     return rc;
 }
 
@@ -441,7 +469,6 @@ QRect LayoutHelper::itemInfo(QLayout *lt, const QWidget *widget) const
     return itemInfo(lt, index);
 }
 
-namespace {
     // ---------------- BoxLayoutHelper
     class BoxLayoutHelper : public  LayoutHelper {
     public:
@@ -450,11 +477,12 @@ namespace {
         virtual QRect itemInfo(QLayout *lt, int index) const;
         virtual void insertWidget(QLayout *lt, const QRect &info, QWidget *w);
         virtual void removeWidget(QLayout *lt, QWidget *widget);
+        virtual void replaceWidget(QLayout *lt, QWidget *before, QWidget *after);
 
-        virtual void pushState(const QWidget *);
+        virtual void pushState(const QDesignerFormEditorInterface *, const QWidget *);
         virtual void popState(const QDesignerFormEditorInterface *, QWidget *);
 
-        virtual bool canSimplify(const QWidget *, const QRect &) const { return  false; }
+        virtual bool canSimplify(const QDesignerFormEditorInterface *, const QWidget *, const QRect &) const { return  false; }
         virtual void simplify(const QDesignerFormEditorInterface *, QWidget *, const QRect &) {}
 
         // Helper for restoring layout states
@@ -491,6 +519,26 @@ namespace {
         boxLayout->removeWidget(widget);
     }
 
+    void BoxLayoutHelper::replaceWidget(QLayout *lt, QWidget *before, QWidget *after)
+    {
+        bool ok = false;
+        QDesignerWidgetItemInstaller wii; // Make sure we use QDesignerWidgetItem.
+        if (QBoxLayout *boxLayout = qobject_cast<QBoxLayout *>(lt)) {
+            const int index = boxLayout->indexOf(before);
+            if (index != -1) {
+                const bool visible = before->isVisible();
+                delete boxLayout->takeAt(index);
+                if (visible)
+                    before->hide();
+                before->setParent(0);
+                boxLayout->insertWidget(index, after);
+                ok = true;
+            }
+        }
+        if (!ok)
+            qWarning() << "BoxLayoutHelper::replaceWidget : Unable to replace " << before << " by " << after << " in " << lt;
+    }
+
     BoxLayoutHelper::BoxLayoutState BoxLayoutHelper::state(const QBoxLayout*lt)
     {
         BoxLayoutState rc;
@@ -503,9 +551,9 @@ namespace {
         return rc;
     }
 
-    void BoxLayoutHelper::pushState(const QWidget *w)
+    void BoxLayoutHelper::pushState(const QDesignerFormEditorInterface *core, const QWidget *w)
     {
-        const QBoxLayout *boxLayout = qobject_cast<const QBoxLayout *>(w->layout());
+        const QBoxLayout *boxLayout = qobject_cast<const QBoxLayout *>(LayoutInfo::managedLayout(core, w));
         Q_ASSERT(boxLayout);
         m_states.push(state(boxLayout));
     }
@@ -533,9 +581,9 @@ namespace {
         return rc;
     }
 
-    void BoxLayoutHelper::popState(const QDesignerFormEditorInterface *, QWidget *w)
+    void BoxLayoutHelper::popState(const QDesignerFormEditorInterface *core, QWidget *w)
     {
-        QBoxLayout *boxLayout = qobject_cast<QBoxLayout *>(w->layout());
+        QBoxLayout *boxLayout = qobject_cast<QBoxLayout *>(LayoutInfo::managedLayout(core, w));
         Q_ASSERT(boxLayout);
         const BoxLayoutState savedState = m_states.pop();
         const BoxLayoutState currentState = state(boxLayout);
@@ -661,7 +709,7 @@ namespace {
         const int count = l->count();
         for (int i = 0; i < count; i++) {
             QLayoutItem *item = l->itemAt(i);
-            if (!isEmptyItem(item))
+            if (!LayoutInfo::isEmptyItem(item))
                 widgetItemMap.insert(item->widget(), gridItemInfo(l, i));
         }
     }
@@ -669,7 +717,7 @@ namespace {
     void GridLayoutState::applyToLayout(const QDesignerFormEditorInterface *core, QWidget *w) const
     {
         typedef QMap<QLayoutItem *, QRect> LayoutItemRectMap;
-        QGridLayout *grid = qobject_cast<QGridLayout *>(w->layout());
+        QGridLayout *grid = qobject_cast<QGridLayout *>(LayoutInfo::managedLayout(core, w));
         Q_ASSERT(grid);
         if (debugLayout)
             qDebug() << ">GridLayoutState::applyToLayout" <<  *this << *grid;
@@ -678,7 +726,7 @@ namespace {
         LayoutItemRectMap itemMap;
         while (grid->count()) {
             QLayoutItem *item = grid->takeAt(0);
-            if (!isEmptyItem(item)) {
+            if (!LayoutInfo::isEmptyItem(item)) {
                 QWidget *itemWidget = item->widget();
                 const WidgetItemMap::const_iterator it = widgetItemMap.constFind(itemWidget);
                 if (it == widgetItemMap.constEnd())
@@ -841,11 +889,12 @@ namespace {
         virtual QRect itemInfo(QLayout *lt, int index) const;
         virtual void insertWidget(QLayout *lt, const QRect &info, QWidget *w);
         virtual void removeWidget(QLayout *lt, QWidget *widget);
+        virtual void replaceWidget(QLayout *lt, QWidget *before, QWidget *after);
 
-        virtual void pushState(const QWidget *widgetWithManagedLayout);
+        virtual void pushState(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout);
         virtual void popState(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout);
 
-        virtual bool canSimplify(const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const;
+        virtual bool canSimplify(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const;
         virtual void simplify(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout, const QRect &restrictionArea);
 
         static void insertRow(QGridLayout *grid, int row);
@@ -859,7 +908,8 @@ namespace {
         GridLayoutState state;
         state.fromLayout(grid);
         state.insertRow(row);
-        state.applyToLayout(/* core for recreating when shrinking*/ 0, grid->parentWidget());
+        QDesignerFormWindowInterface *fw = QDesignerFormWindowInterface::findFormWindow(grid);
+        state.applyToLayout(fw->core(), grid->parentWidget());
     }
 
     QRect GridLayoutHelper::itemInfo(QLayout * lt, int index) const
@@ -888,7 +938,7 @@ namespace {
             const int columnCount = gridLayout->columnCount();
             for (int c = column; c <  columnCount; c++) {
                 const int idx = findGridItemAt(gridLayout, row, c);
-                if (idx != -1 && isEmptyItem(gridLayout->itemAt(idx))) {
+                if (idx != -1 && LayoutInfo::isEmptyItem(gridLayout->itemAt(idx))) {
                     freeColumn = c;
                     break;
                 }
@@ -924,9 +974,31 @@ namespace {
                 gridLayout->addItem(createGridSpacer(), r, c);
     }
 
-    void GridLayoutHelper::pushState(const QWidget *widgetWithManagedLayout)
+    void GridLayoutHelper::replaceWidget(QLayout *lt, QWidget *before, QWidget *after)
     {
-        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(widgetWithManagedLayout->layout());
+        bool ok = false;
+        QDesignerWidgetItemInstaller wii; // Make sure we use QDesignerWidgetItem.
+        if (QGridLayout *gridLayout = qobject_cast<QGridLayout *>(lt)) {
+            const int index = gridLayout->indexOf(before);
+            if (index != -1) {
+                int row, column, rowSpan, columnSpan;
+                gridLayout->getItemPosition (index,  &row, &column, &rowSpan, &columnSpan);
+                const bool visible = before->isVisible();
+                delete gridLayout->takeAt(index);
+                if (visible)
+                    before->hide();
+                before->setParent(0);
+                gridLayout->addWidget(after, row, column, rowSpan, columnSpan);
+                ok = true;
+            }
+        }
+        if (!ok)
+            qWarning() << "GridLayoutHelper::replaceWidget : Unable to replace " << before << " by " << after << " in " << lt;
+    }
+
+    void GridLayoutHelper::pushState(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout)
+    {
+        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(gridLayout);
         GridLayoutState gs;
         gs.fromLayout(gridLayout);
@@ -940,9 +1012,9 @@ namespace {
         state.applyToLayout(core, widgetWithManagedLayout);
     }
 
-    bool GridLayoutHelper::canSimplify(const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const
+    bool GridLayoutHelper::canSimplify(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const
     {
-        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(widgetWithManagedLayout->layout());
+        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(gridLayout);
         GridLayoutState gs;
         gs.fromLayout(gridLayout);
@@ -951,7 +1023,7 @@ namespace {
 
     void GridLayoutHelper::simplify(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout, const QRect &restrictionArea)
     {
-        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(widgetWithManagedLayout->layout());
+        QGridLayout *gridLayout = qobject_cast<QGridLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(gridLayout);
         if (debugLayout)
             qDebug() << ">GridLayoutHelper::simplify" <<  *gridLayout;
@@ -974,11 +1046,12 @@ namespace {
         virtual QRect itemInfo(QLayout *lt, int index) const;
         virtual void insertWidget(QLayout *lt, const QRect &info, QWidget *w);
         virtual void removeWidget(QLayout *lt, QWidget *widget);
+        virtual void replaceWidget(QLayout *lt, QWidget *before, QWidget *after);
 
-        virtual void pushState(const QWidget *widgetWithManagedLayout);
+        virtual void pushState(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout);
         virtual void popState(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout);
 
-        virtual bool canSimplify(const QWidget *, const QRect &) const;
+        virtual bool canSimplify(const QDesignerFormEditorInterface *core, const QWidget *, const QRect &) const;
         virtual void simplify(const QDesignerFormEditorInterface *, QWidget *, const QRect &);
 
     private:
@@ -991,33 +1064,22 @@ namespace {
     {
         QFormLayout *form = qobject_cast<QFormLayout *>(lt);
         Q_ASSERT(form);
-        int row, column;
-        getFormLayoutItemPosition(form, index, &row, &column);
-        return QRect(column, row, 1, 1);
+        int row, column, colspan;
+        getFormLayoutItemPosition(form, index, &row, &column, 0, &colspan);
+        return QRect(column, row, colspan, 1);
     }
 
     void FormLayoutHelper::insertWidget(QLayout *lt, const QRect &info, QWidget *w)
     {
+        if (debugLayout)
+            qDebug() << "FormLayoutHelper::insertWidget:" << w << info;
         QDesignerWidgetItemInstaller wii; // Make sure we use QDesignerWidgetItem.
         QFormLayout *formLayout = qobject_cast<QFormLayout *>(lt);
         Q_ASSERT(formLayout);
-        const int row = info.y();
-        const QFormLayout::ItemRole role = info.x() == 0 ? QFormLayout::LabelRole :  QFormLayout::FieldRole;
-        // check if there are any items?
-        if (removeEmptyCellsOnGrid(formLayout, info)) { // lucky, hit a spacer
-            formLayout->setWidget(row, role, w);
-        } else {
-            // Drop on 3rd column or drop of a multiselection on an empty item
-            // Form layout does not have insert semantics. We need to manually insert a row
-            switch (role) {
-            case QFormLayout::LabelRole:
-                formLayout->insertRow(row, w, static_cast<QWidget*>(0));
-                break;
-            case QFormLayout::FieldRole:
-                formLayout->insertRow(row, w);
-                break;
-            }
-        }
+        // check if there are any nonspacer items? (Drop on 3rd column or drop of a multiselection
+        // on an empty item. As the Form layout does not have insert semantics; we need to manually insert a row
+        const bool insert = !removeEmptyCellsOnGrid(formLayout, info);
+        formLayoutAddWidget(formLayout, w, info, insert);
         QLayoutSupport::createEmptyCells(formLayout);
     }
 
@@ -1031,10 +1093,38 @@ namespace {
             return;
         }
         // delete old item and pad with  by spacer items
-        int row, column;
-        getFormLayoutItemPosition(formLayout, index, &row, &column);
+        int row, column, colspan;
+        getFormLayoutItemPosition(formLayout, index, &row, &column, 0, &colspan);
+        if (debugLayout)
+            qDebug() << "FormLayoutHelper::removeWidget: #" << index << widget << " at " << row << column <<  colspan;
         delete formLayout->takeAt(index);
-        formLayout->setItem(row, column == 0 ? QFormLayout::LabelRole :  QFormLayout::FieldRole, createFormSpacer());
+        if (colspan > 1 || column == 0)
+            formLayout->setItem(row, QFormLayout::LabelRole, createFormSpacer());
+        if (colspan > 1 || column == 1)
+            formLayout->setItem(row, QFormLayout::FieldRole, createFormSpacer());
+    }
+
+    void FormLayoutHelper::replaceWidget(QLayout *lt, QWidget *before, QWidget *after)
+    {
+        bool ok = false;
+        QDesignerWidgetItemInstaller wii; // Make sure we use QDesignerWidgetItem.
+        if (QFormLayout *formLayout = qobject_cast<QFormLayout *>(lt)) {
+            const int index = formLayout->indexOf(before);
+            if (index != -1) {
+                int row;
+                QFormLayout::ItemRole role;
+                formLayout->getItemPosition (index, &row, &role);
+                const bool visible = before->isVisible();
+                delete formLayout->takeAt(index);
+                if (visible)
+                    before->hide();
+                before->setParent(0);
+                formLayout->setWidget(row, role, after);
+                ok = true;
+            }
+        }
+        if (!ok)
+            qWarning() << "FormLayoutHelper::replaceWidget : Unable to replace " << before << " by " << after << " in " << lt;
     }
 
     FormLayoutHelper::FormLayoutState FormLayoutHelper::state(const QFormLayout *lt)
@@ -1044,29 +1134,37 @@ namespace {
             return FormLayoutState();
         FormLayoutState rc(rowCount, WidgetPair(0, 0));
         const int count = lt->count();
-        int row, column;
+        int row, column, colspan;
         for (int i = 0; i < count; i++) {
             QLayoutItem *item = lt->itemAt(i);
-            if (!isEmptyItem(item)) {
+            if (!LayoutInfo::isEmptyItem(item)) {
                 QWidget *w = item->widget();
                 Q_ASSERT(w);
-                getFormLayoutItemPosition(lt, i, &row, &column);
-                (column ? rc[row].second : rc[row].first) = w;
+                getFormLayoutItemPosition(lt, i, &row, &column, 0, &colspan);
+                if (colspan > 1 || column == 0)
+                    rc[row].first = w;
+                if (colspan > 1 || column == 1)
+                    rc[row].second = w;
             }
+        }
+        if (debugLayout) {
+            qDebug() << "FormLayoutHelper::state: " << rowCount;
+            for (int r = 0; r < rowCount; r++)
+                qDebug() << "  Row: " << r << rc[r].first << rc[r].second;
         }
         return rc;
     }
 
-    void FormLayoutHelper::pushState(const QWidget *widgetWithManagedLayout)
+    void FormLayoutHelper::pushState(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout)
     {
-        QFormLayout *formLayout = qobject_cast<QFormLayout *>(widgetWithManagedLayout->layout());
+        QFormLayout *formLayout = qobject_cast<QFormLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(formLayout);
         m_states.push(state(formLayout));
     }
 
     void FormLayoutHelper::popState(const QDesignerFormEditorInterface *core, QWidget *widgetWithManagedLayout)
     {
-        QFormLayout *formLayout = qobject_cast<QFormLayout *>(widgetWithManagedLayout->layout());
+        QFormLayout *formLayout = qobject_cast<QFormLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(!m_states.empty() && formLayout);
 
         const FormLayoutState storedState = m_states.pop();
@@ -1074,24 +1172,32 @@ namespace {
         if (currentState ==  storedState)
             return;
         const int rowCount = storedState.size();
-        // clear out, shrink if required, but maintain items via map
+        // clear out, shrink if required, but maintain items via map, pad spacers
         const BoxLayoutHelper::LayoutItemVector items = BoxLayoutHelper::disassembleLayout(formLayout);
         if (rowCount < formLayout->rowCount())
             formLayout = static_cast<QFormLayout*>(recreateManagedLayout(core, widgetWithManagedLayout, formLayout ));
-        for (int r = 0; r < rowCount; r++)
-            for (int c = 0; c < FormLayoutColumns; c++)
-                if (QWidget *w = c ? storedState[r].second : storedState[r].first) {
-                    QLayoutItem *item = BoxLayoutHelper::findItemOfWidget(items, w);
-                    Q_ASSERT(item);
-                    formLayout->setWidget(r, c == 0 ? QFormLayout::LabelRole : QFormLayout::FieldRole, item->widget());
-                } else {
-                    formLayout->setItem(r, c == 0 ? QFormLayout::LabelRole : QFormLayout::FieldRole, createFormSpacer());
+        for (int r = 0; r < rowCount; r++) {
+            QWidget *widgets[FormLayoutColumns] = { storedState[r].first, storedState[r].second };
+            const bool spanning = widgets[0] != 0 && widgets[0] == widgets[1];
+            if (spanning) {
+                formLayout->setWidget(r, QFormLayout::SpanningRole, widgets[0]);
+            } else {
+                for (int c = 0; c < FormLayoutColumns; c++) {
+                    const QFormLayout::ItemRole role = c == 0 ? QFormLayout::LabelRole : QFormLayout::FieldRole;
+                    if (widgets[c]) {
+                        Q_ASSERT(BoxLayoutHelper::findItemOfWidget(items, widgets[c]));
+                        formLayout->setWidget(r, role, widgets[c]);
+                    } else {
+                        formLayout->setItem(r, role, createFormSpacer());
+                    }
                 }
+            }
+        }
     }
 
-    bool FormLayoutHelper::canSimplify(const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const
+    bool FormLayoutHelper::canSimplify(const QDesignerFormEditorInterface *core, const QWidget *widgetWithManagedLayout, const QRect &restrictionArea) const
     {
-        const QFormLayout *formLayout = qobject_cast<QFormLayout *>(widgetWithManagedLayout->layout());
+        const QFormLayout *formLayout = qobject_cast<QFormLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(formLayout);
         return canSimplifyFormLayout(formLayout, restrictionArea);
     }
@@ -1101,23 +1207,29 @@ namespace {
         typedef QPair<QLayoutItem*, QLayoutItem*> LayoutItemPair;
         typedef QVector<LayoutItemPair> LayoutItemPairs;
 
-        QFormLayout *formLayout = qobject_cast<QFormLayout *>(widgetWithManagedLayout->layout());
+        QFormLayout *formLayout = qobject_cast<QFormLayout *>(LayoutInfo::managedLayout(core, widgetWithManagedLayout));
         Q_ASSERT(formLayout);
+        if (debugLayout)
+            qDebug() << "FormLayoutHelper::simplify";
         // Transform into vector of item pairs
         const int rowCount = formLayout->rowCount();
         LayoutItemPairs pairs(rowCount, LayoutItemPair(0, 0));
         for (int i =  formLayout->count() - 1; i >= 0; i--) {
-            int row, col;
-            getFormLayoutItemPosition(formLayout, i, &row, &col);
-            if (col == 0)
-                pairs[row].first = formLayout->takeAt(i);
-            else
-                pairs[row].second = formLayout->takeAt(i);
+            int row, col,colspan;
+            getFormLayoutItemPosition(formLayout, i, &row, &col, 0, &colspan);
+            if (colspan > 1) {
+                 pairs[row].first = pairs[row].second = formLayout->takeAt(i);
+            } else {
+                if (col == 0)
+                    pairs[row].first = formLayout->takeAt(i);
+                else
+                    pairs[row].second = formLayout->takeAt(i);
+            }
         }
         // Weed out empty ones
         const int bottomCheckRow = qMin(rowCount, restrictionArea.y() + restrictionArea.height());
         for (int r = bottomCheckRow - 1; r >= restrictionArea.y(); r--)
-            if (isEmptyItem(pairs[r].first) && isEmptyItem(pairs[r].second)) {
+            if (LayoutInfo::isEmptyItem(pairs[r].first) && LayoutInfo::isEmptyItem(pairs[r].second)) {
                 delete pairs[r].first;
                 delete pairs[r].second;
                 pairs.remove(r);
@@ -1127,11 +1239,15 @@ namespace {
             formLayout = static_cast<QFormLayout *>(recreateManagedLayout(core, widgetWithManagedLayout, formLayout));
         // repopulate
         for (int r = 0; r < simpleRowCount; r++) {
-            formLayout->setItem(r, QFormLayout::LabelRole, pairs[r].first);
-            formLayout->setItem(r, QFormLayout::FieldRole, pairs[r].second);
+            const bool spanning = pairs[r].first == pairs[r].second;
+            if (spanning) {
+                formLayout->setItem(r, QFormLayout::SpanningRole, pairs[r].first);
+            } else {
+                formLayout->setItem(r, QFormLayout::LabelRole, pairs[r].first);
+                formLayout->setItem(r, QFormLayout::FieldRole, pairs[r].second);
+            }
         }
     }
-} //  anonymous namespace
 
 LayoutHelper *LayoutHelper::createLayoutHelper(int type)
 {
@@ -1166,6 +1282,11 @@ QLayoutSupport::QLayoutSupport(QDesignerFormWindowInterface *formWindow, QWidget
 {
 }
 
+QLayout * QLayoutSupport::layout() const
+{
+    return LayoutInfo::managedLayout(m_formWindow->core(), m_widget);
+}
+
 void QLayoutSupport::hideIndicator(Indicator i)
 {
     if (m_indicators[i])
@@ -1194,12 +1315,12 @@ QLayoutSupport::~QLayoutSupport()
 
 QGridLayout * QLayoutSupport::gridLayout() const
 {
-    return qobject_cast<QGridLayout*>(m_widget->layout());
+    return qobject_cast<QGridLayout*>(LayoutInfo::managedLayout(m_formWindow->core(), m_widget));
 }
 
 QRect QLayoutSupport::itemInfo(int index) const
 {
-    return m_helper->itemInfo(m_widget->layout(), index);
+    return m_helper->itemInfo(LayoutInfo::managedLayout(m_formWindow->core(), m_widget), index);
 }
 
 void QLayoutSupport::setInsertMode(InsertMode im)
@@ -1227,15 +1348,15 @@ void QLayoutSupport::adjustIndicator(const QPoint &pos, int index)
     QLayoutItem *item = layout()->itemAt(index);
     const QRect g = extendedGeometry(index);
     // ### cleanup
-    if (isEmptyItem(item)) {
+    if (LayoutInfo::isEmptyItem(item)) {
         // Empty grid/form cell. Draw a rectangle
         QPalette redPalette;
         redPalette.setColor(QPalette::Window, Qt::red);
 
-        showIndicator(LeftIndicator,   QRect(g.x(),     g.y(),      2,         g.height()), redPalette);
-        showIndicator(TopIndicator,    QRect(g.x(),     g.y(),      g.width(), 2), redPalette);
-        showIndicator(RightIndicator,  QRect(g.right(), g.y(),      2,         g.height()), redPalette);
-        showIndicator(BottomIndicator, QRect(g.x(),     g.bottom(), g.width(), 2), redPalette);
+        showIndicator(LeftIndicator,   QRect(g.x(),     g.y(),      indicatorSize, g.height()), redPalette);
+        showIndicator(TopIndicator,    QRect(g.x(),     g.y(),      g.width(),     indicatorSize), redPalette);
+        showIndicator(RightIndicator,  QRect(g.right(), g.y(),      indicatorSize, g.height()), redPalette);
+        showIndicator(BottomIndicator, QRect(g.x(),     g.bottom(), g.width(),     indicatorSize), redPalette);
         setCurrentCellFromIndicatorOnEmptyCell(m_currentIndex);
     } else {
         // Append/Insert. Draw a bar left/right or above/below
@@ -1261,7 +1382,7 @@ void QLayoutSupport::adjustIndicator(const QPoint &pos, int index)
             case  Qt::Vertical: {
                 hideIndicator(BottomIndicator);
                 const bool closeToLeft = fromLeftRight == fromLeft;
-                showIndicator(RightIndicator, QRect(closeToLeft ? g.x() : g.right(), 0, 2, r.height()), bluePalette);
+                showIndicator(RightIndicator, QRect(closeToLeft ? g.x() : g.right() + 1 - indicatorSize, 0, indicatorSize, r.height()), bluePalette);
 
                 const int incr = closeToLeft ? 0 : +1;
                 setCurrentCellFromIndicator(indicatorOrientation, m_currentIndex, incr);
@@ -1270,7 +1391,7 @@ void QLayoutSupport::adjustIndicator(const QPoint &pos, int index)
             case  Qt::Horizontal: {
                 hideIndicator(RightIndicator);
                 const bool closeToTop = fromBottomTop == fromTop;
-                showIndicator(BottomIndicator, QRect(r.x(), closeToTop ? g.y() : g.bottom(), r.width(), 2), bluePalette);
+                showIndicator(BottomIndicator, QRect(r.x(), closeToTop ? g.y() : g.bottom() + 1 - indicatorSize, r.width(), indicatorSize), bluePalette);
 
                 const int incr = closeToTop ? 0 : +1;
                 setCurrentCellFromIndicator(indicatorOrientation, m_currentIndex, incr);
@@ -1356,7 +1477,7 @@ bool QLayoutSupport::canSimplifyQuickCheck(const QGridLayout *gl)
     // try to find a spacer.
     const int count = gl->count();
     for (int index = 0; index < count; index++)
-        if (isEmptyItem(gl->itemAt(index)))
+        if (LayoutInfo::isEmptyItem(gl->itemAt(index)))
             return true;
     return false;
 }
@@ -1579,7 +1700,9 @@ public:
     virtual int findItemAt(int row, int column) const;
 
 protected:
-    GridLikeLayout *gridLikeLayout() const { return qobject_cast<GridLikeLayout*>(widget()->layout()); }
+    GridLikeLayout *gridLikeLayout() const {
+        return qobject_cast<GridLikeLayout*>(LayoutInfo::managedLayout(formWindow()->core(), widget()));
+    }
 
 private:
 
@@ -1756,7 +1879,7 @@ void QFormLayoutSupport::checkCellForInsertion(int *row, int *col) const
 
 QLayoutSupport *QLayoutSupport::createLayoutSupport(QDesignerFormWindowInterface *formWindow, QWidget *widget, QObject *parent)
 {
-    const QLayout *layout = widget->layout();
+    const QLayout *layout = LayoutInfo::managedLayout(formWindow->core(), widget);
     Q_ASSERT(layout);
     QLayoutSupport *rc = 0;
     switch (LayoutInfo::layoutType(formWindow->core(), layout)) {
@@ -1789,9 +1912,6 @@ QLayoutWidget::QLayoutWidget(QDesignerFormWindowInterface *formWindow, QWidget *
 
 void QLayoutWidget::paintEvent(QPaintEvent*)
 {
-    if (!m_formWindow->hasFeature(QDesignerFormWindowInterface::GridFeature))
-        return;
-
     if (m_formWindow->currentTool() != 0)
         return;
 
@@ -1862,7 +1982,7 @@ void QLayoutWidget::paintEvent(QPaintEvent*)
             }
         }
     }
-    p.setPen(QPen(Qt::red, 1));
+    p.setPen(QPen(QColor(255, 0, 0, 128), 1));
     p.drawRect(0, 0, width() - 1, height() - 1);
 }
 

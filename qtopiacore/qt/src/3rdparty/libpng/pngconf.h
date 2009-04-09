@@ -236,6 +236,9 @@
 #  ifdef PNG_DEBUG
 #    undef PNG_DEBUG
 #  endif
+#  ifndef PNG_ABORT
+#    define PNG_ABORT() exit(3)
+#  endif
 #endif
 
 #ifdef PNG_BUILD_DLL

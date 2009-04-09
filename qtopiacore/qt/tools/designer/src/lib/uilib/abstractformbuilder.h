@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,7 @@ QT_BEGIN_NAMESPACE
 #endif
 
 class QAction;
+class QButtonGroup;
 class QActionGroup;
 class QComboBox;
 class QIODevice;
@@ -70,6 +75,8 @@ class QTreeWidget;
 class QTableWidget;
 class QVariant;
 class QWidget;
+class QAbstractButton;
+class QAbstractItemView;
 
 #ifdef QFORMINTERNAL_NAMESPACE
 namespace QFormInternal
@@ -78,6 +85,8 @@ namespace QFormInternal
 
 class DomAction;
 class DomActionGroup;
+class DomButtonGroup;
+class DomButtonGroups;
 class DomActionRef;
 class DomBrush;
 class DomColorGroup;
@@ -95,10 +104,11 @@ class DomWidget;
 class DomResourcePixmap;
 
 class QResourceBuilder;
+class QTextBuilder;
 
 #ifndef QT_FORMBUILDER_NO_SCRIPT
 class QFormScriptRunner;
-#endif 
+#endif
 
 class QDESIGNER_UILIB_EXPORT QAbstractFormBuilder
 {
@@ -114,8 +124,6 @@ public:
 
     void setScriptingEnabled(bool enabled);
     bool isScriptingEnabled() const;
-
-    static int resourceRole();
 
 protected:
 //
@@ -165,11 +173,13 @@ protected:
 
     virtual DomAction *createDom(QAction *action);
     virtual DomActionGroup *createDom(QActionGroup *actionGroup);
+    DomButtonGroup *createDom(QButtonGroup *buttonGroup);
 
     virtual DomConnections *saveConnections();
     virtual DomCustomWidgets *saveCustomWidgets();
     virtual DomTabStops *saveTabStops();
     virtual DomResources *saveResources();
+    DomButtonGroups *saveButtonGroups(const QWidget *mainContainer);
     virtual QList<DomProperty*> computeProperties(QObject *obj);
     virtual bool checkProperty(QObject *obj, const QString &prop) const;
     virtual DomProperty *createProperty(QObject *object, const QString &propertyName, const QVariant &value);
@@ -187,15 +197,23 @@ protected:
     void loadTreeWidgetExtraInfo(DomWidget *ui_widget, QTreeWidget *treeWidget, QWidget *parentWidget);
     void loadTableWidgetExtraInfo(DomWidget *ui_widget, QTableWidget *tableWidget, QWidget *parentWidget);
     void loadComboBoxExtraInfo(DomWidget *ui_widget, QComboBox *comboBox, QWidget *parentWidget);
+    void loadButtonExtraInfo(const DomWidget *ui_widget, QAbstractButton *button, QWidget *parentWidget);
+    void loadItemViewExtraInfo(DomWidget *ui_widget, QAbstractItemView *itemView, QWidget *parentWidget);
 
     void saveListWidgetExtraInfo(QListWidget *widget, DomWidget *ui_widget, DomWidget *ui_parentWidget);
     void saveTreeWidgetExtraInfo(QTreeWidget *treeWidget, DomWidget *ui_widget, DomWidget *ui_parentWidget);
     void saveTableWidgetExtraInfo(QTableWidget *tablWidget, DomWidget *ui_widget, DomWidget *ui_parentWidget);
     void saveComboBoxExtraInfo(QComboBox *widget, DomWidget *ui_widget, DomWidget *ui_parentWidget);
+    void saveButtonExtraInfo(const QAbstractButton *widget, DomWidget *ui_widget, DomWidget *ui_parentWidget);
+    void saveItemViewExtraInfo(const QAbstractItemView *itemView, DomWidget *ui_widget, DomWidget *ui_parentWidget);
 
     void setResourceBuilder(QResourceBuilder *builder);
     QResourceBuilder *resourceBuilder() const;
     DomProperty *saveResource(const QVariant &v) const;
+
+    void setTextBuilder(QTextBuilder *builder);
+    QTextBuilder *textBuilder() const;
+    DomProperty *saveText(const QString &attributeName, const QVariant &v) const;
 //
 // utils
 //
@@ -228,7 +246,7 @@ protected:
 //
     // A Pair of icon path/qrc path.
     typedef QPair<QString, QString> IconPaths;
- 
+
     IconPaths iconPaths(const QIcon &) const;
     IconPaths pixmapPaths(const QPixmap &) const;
     void setIconProperty(DomProperty &, const IconPaths &) const;
@@ -257,7 +275,7 @@ private:
     QAbstractFormBuilder(const QAbstractFormBuilder &other);
     void operator = (const QAbstractFormBuilder &other);
 
-    friend QDESIGNER_UILIB_EXPORT DomProperty *variantToDomProperty(QAbstractFormBuilder *abstractFormBuilder, QObject *object, const QString &propertyName, const QVariant &value);
+    friend QDESIGNER_UILIB_EXPORT DomProperty *variantToDomProperty(QAbstractFormBuilder *abstractFormBuilder, const QMetaObject *meta, const QString &propertyName, const QVariant &value);
     friend QDESIGNER_UILIB_EXPORT QVariant domPropertyToVariant(QAbstractFormBuilder *abstractFormBuilder,const QMetaObject *meta, const DomProperty *property);
 };
 

@@ -24,134 +24,188 @@
 
 #include <wtf/GetPtr.h>
 
+#include "KURL.h"
 #include "RangeException.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSRangeException)
+
 /* Hash table */
 
-static const HashEntry JSRangeExceptionTableEntries[] =
+static const HashTableValue JSRangeExceptionTableValues[5] =
 {
-    { "constructor", JSRangeException::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "code", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionCode, (intptr_t)0 },
+    { "name", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionName, (intptr_t)0 },
+    { "message", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionMessage, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsRangeExceptionConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSRangeExceptionTable = 
-{
-    2, 1, JSRangeExceptionTableEntries, 1
-};
+static const HashTable JSRangeExceptionTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSRangeExceptionTableValues, 0 };
+#else
+    { 10, 7, JSRangeExceptionTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSRangeExceptionConstructorTableEntries[] =
+static const HashTableValue JSRangeExceptionConstructorTableValues[3] =
 {
-    { "BAD_BOUNDARYPOINTS_ERR", RangeException::BAD_BOUNDARYPOINTS_ERR, DontDelete|ReadOnly, 0, 0 },
-    { "INVALID_NODE_TYPE_ERR", RangeException::INVALID_NODE_TYPE_ERR, DontDelete|ReadOnly, 0, 0 }
+    { "BAD_BOUNDARYPOINTS_ERR", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionBAD_BOUNDARYPOINTS_ERR, (intptr_t)0 },
+    { "INVALID_NODE_TYPE_ERR", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionINVALID_NODE_TYPE_ERR, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSRangeExceptionConstructorTable = 
-{
-    2, 2, JSRangeExceptionConstructorTableEntries, 2
-};
+static const HashTable JSRangeExceptionConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSRangeExceptionConstructorTableValues, 0 };
+#else
+    { 4, 3, JSRangeExceptionConstructorTableValues, 0 };
+#endif
 
 class JSRangeExceptionConstructor : public DOMObject {
 public:
     JSRangeExceptionConstructor(ExecState* exec)
+        : DOMObject(JSRangeExceptionConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSRangeExceptionPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSRangeExceptionConstructor::info = { "RangeExceptionConstructor", 0, &JSRangeExceptionConstructorTable, 0 };
+const ClassInfo JSRangeExceptionConstructor::s_info = { "RangeExceptionConstructor", 0, &JSRangeExceptionConstructorTable, 0 };
 
 bool JSRangeExceptionConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSRangeExceptionConstructor, DOMObject>(exec, &JSRangeExceptionConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSRangeExceptionConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSRangeExceptionPrototypeTableEntries[] =
+static const HashTableValue JSRangeExceptionPrototypeTableValues[4] =
 {
-    { "BAD_BOUNDARYPOINTS_ERR", RangeException::BAD_BOUNDARYPOINTS_ERR, DontDelete|ReadOnly, 0, 0 },
-    { "INVALID_NODE_TYPE_ERR", RangeException::INVALID_NODE_TYPE_ERR, DontDelete|ReadOnly, 0, 0 }
+    { "BAD_BOUNDARYPOINTS_ERR", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionBAD_BOUNDARYPOINTS_ERR, (intptr_t)0 },
+    { "INVALID_NODE_TYPE_ERR", DontDelete|ReadOnly, (intptr_t)jsRangeExceptionINVALID_NODE_TYPE_ERR, (intptr_t)0 },
+    { "toString", DontDelete|DontEnum|Function, (intptr_t)jsRangeExceptionPrototypeFunctionToString, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSRangeExceptionPrototypeTable = 
-{
-    2, 2, JSRangeExceptionPrototypeTableEntries, 2
-};
+static const HashTable JSRangeExceptionPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSRangeExceptionPrototypeTableValues, 0 };
+#else
+    { 8, 7, JSRangeExceptionPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSRangeExceptionPrototype::info = { "RangeExceptionPrototype", 0, &JSRangeExceptionPrototypeTable, 0 };
+const ClassInfo JSRangeExceptionPrototype::s_info = { "RangeExceptionPrototype", 0, &JSRangeExceptionPrototypeTable, 0 };
 
 JSObject* JSRangeExceptionPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSRangeExceptionPrototype>(exec, "[[JSRangeException.prototype]]");
+    return getDOMPrototype<JSRangeException>(exec);
 }
 
 bool JSRangeExceptionPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSRangeExceptionPrototype, JSObject>(exec, &JSRangeExceptionPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSRangeExceptionPrototype, JSObject>(exec, &JSRangeExceptionPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSRangeExceptionPrototype::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
+const ClassInfo JSRangeException::s_info = { "RangeException", 0, &JSRangeExceptionTable, 0 };
 
-const ClassInfo JSRangeException::info = { "RangeException", 0, &JSRangeExceptionTable, 0 };
-
-JSRangeException::JSRangeException(ExecState* exec, RangeException* impl)
-    : m_impl(impl)
+JSRangeException::JSRangeException(PassRefPtr<Structure> structure, PassRefPtr<RangeException> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSRangeExceptionPrototype::self(exec));
 }
 
 JSRangeException::~JSRangeException()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSRangeException::createPrototype(ExecState* exec)
+{
+    return new (exec) JSRangeExceptionPrototype(JSRangeExceptionPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSRangeException::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSRangeException, KJS::DOMObject>(exec, &JSRangeExceptionTable, this, propertyName, slot);
+    return getStaticValueSlot<JSRangeException, Base>(exec, &JSRangeExceptionTable, this, propertyName, slot);
 }
 
-JSValue* JSRangeException::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsRangeExceptionCode(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    RangeException* imp = static_cast<RangeException*>(static_cast<JSRangeException*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->code());
 }
 
-JSValue* JSRangeException::getConstructor(ExecState* exec)
+JSValuePtr jsRangeExceptionName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSRangeExceptionConstructor>(exec, "[[RangeException.constructor]]");
+    RangeException* imp = static_cast<RangeException*>(static_cast<JSRangeException*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->name());
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, RangeException* obj)
+
+JSValuePtr jsRangeExceptionMessage(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<RangeException, JSRangeException>(exec, obj);
+    RangeException* imp = static_cast<RangeException*>(static_cast<JSRangeException*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->message());
 }
-RangeException* toRangeException(KJS::JSValue* val)
+
+JSValuePtr jsRangeExceptionConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSRangeException::info) ? static_cast<JSRangeException*>(val)->impl() : 0;
+    return static_cast<JSRangeException*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSRangeException::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSRangeExceptionConstructor>(exec);
+}
+
+JSValuePtr jsRangeExceptionPrototypeFunctionToString(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSRangeException::s_info))
+        return throwError(exec, TypeError);
+    JSRangeException* castedThisObj = static_cast<JSRangeException*>(asObject(thisValue));
+    RangeException* imp = static_cast<RangeException*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->toString());
+    return result;
+}
+
+// Constant getters
+
+JSValuePtr jsRangeExceptionBAD_BOUNDARYPOINTS_ERR(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsRangeExceptionINVALID_NODE_TYPE_ERR(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, RangeException* object)
+{
+    return getDOMObjectWrapper<JSRangeException>(exec, object);
+}
+RangeException* toRangeException(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSRangeException::s_info) ? static_cast<JSRangeException*>(asObject(value))->impl() : 0;
 }
 
 }

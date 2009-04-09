@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,17 +58,17 @@ class QHelpGeneratorPrivate
 {
 public:
     QHelpGeneratorPrivate();
-    ~QHelpGeneratorPrivate();    
+    ~QHelpGeneratorPrivate();
 
     QString error;
     QSqlQuery *query;
-    
-	int namespaceId;
-	int virtualFolderId;
-    
-	QMap<QString, int> fileMap;
+
+    int namespaceId;
+    int virtualFolderId;
+
+    QMap<QString, int> fileMap;
     QMap<int, QSet<int> > fileFilterMap;
-    
+
     double progress;
     double oldProgress;
     double contentStep;
@@ -76,7 +80,7 @@ QHelpGeneratorPrivate::QHelpGeneratorPrivate()
 {
     query = 0;
     namespaceId = -1;
-	virtualFolderId = -1;
+    virtualFolderId = -1;
 }
 
 QHelpGeneratorPrivate::~QHelpGeneratorPrivate()
@@ -152,14 +156,14 @@ bool QHelpGenerator::generate(QHelpDataInterface *helpData,
     if (!helpData || helpData->namespaceName().isEmpty()) {
         d->error = tr("Invalid help data!");
         return false;
-    }    
-    
+    }
+
     QString outFileName = outputFileName;
     if (outFileName.isEmpty()) {
         d->error = tr("No output file name specified!");
         return false;
     }
-    
+
     QFileInfo fi(outFileName);
     if (fi.exists()) {
         if (!fi.dir().remove(fi.fileName())) {
@@ -167,9 +171,9 @@ bool QHelpGenerator::generate(QHelpDataInterface *helpData,
             return false;
         }
     }
-    
+
     setupProgress(helpData);
-    
+
     emit statusChanged(tr("Building up file structure..."));
     bool openingOk = true;
     {
@@ -177,7 +181,7 @@ bool QHelpGenerator::generate(QHelpDataInterface *helpData,
         db.setDatabaseName(outFileName);
         openingOk = db.open();
         if (openingOk)
-            d->query = new QSqlQuery(db);        
+            d->query = new QSqlQuery(db);
     }
 
     if (!openingOk) {
@@ -185,19 +189,19 @@ bool QHelpGenerator::generate(QHelpDataInterface *helpData,
         cleanupDB();
         return false;
     }
-    
+
     addProgress(1.0);
     createTables();
     insertFileNotFoundFile();
     insertMetaData(helpData->metaData());
 
-	if (!registerVirtualFolder(helpData->virtualFolder(), helpData->namespaceName())) {
-		d->error = tr("Cannot register namespace %1!").arg(helpData->namespaceName());
+    if (!registerVirtualFolder(helpData->virtualFolder(), helpData->namespaceName())) {
+        d->error = tr("Cannot register namespace %1!").arg(helpData->namespaceName());
         cleanupDB();
-		return false;
-	}
+        return false;
+    }
     addProgress(1.0);
-    
+
     emit statusChanged(tr("Insert custom filters..."));
     foreach (QHelpDataCustomFilter f, helpData->customFilters()) {
         if (!registerCustomFilter(f.name, f.filterAttributes, true)) {
@@ -293,78 +297,78 @@ QString QHelpGenerator::error() const
 
 bool QHelpGenerator::createTables()
 {
-	if (!d->query)
-		return false;
+    if (!d->query)
+        return false;
 
-	d->query->exec(QLatin1String("SELECT COUNT(*) FROM sqlite_master WHERE TYPE=\'table\'"
-		"AND Name=\'NamespaceTable\'"));
-	d->query->next();
-	if (d->query->value(0).toInt() > 0) {
-		d->error = tr("Some tables already exist!");
-		return false;
-	}
+    d->query->exec(QLatin1String("SELECT COUNT(*) FROM sqlite_master WHERE TYPE=\'table\'"
+        "AND Name=\'NamespaceTable\'"));
+    d->query->next();
+    if (d->query->value(0).toInt() > 0) {
+        d->error = tr("Some tables already exist!");
+        return false;
+    }
 
-	QStringList tables;
-	tables << QLatin1String("CREATE TABLE NamespaceTable ("
-		    "Id INTEGER PRIMARY KEY,"
-			"Name TEXT )")
-		<< QLatin1String("CREATE TABLE FilterAttributeTable ("
-		    "Id INTEGER PRIMARY KEY, "
-			"Name TEXT )")
-		<< QLatin1String("CREATE TABLE FilterNameTable ("
-			"Id INTEGER PRIMARY KEY, "
-			"Name TEXT )")
-		<< QLatin1String("CREATE TABLE FilterTable ("
-			"NameId INTEGER, "
-			"FilterAttributeId INTEGER )")
-		<< QLatin1String("CREATE TABLE IndexTable ("
-			"Id INTEGER PRIMARY KEY, "
-			"Name TEXT, "
-			"Identifier TEXT, "
+    QStringList tables;
+    tables << QLatin1String("CREATE TABLE NamespaceTable ("
+            "Id INTEGER PRIMARY KEY,"
+            "Name TEXT )")
+        << QLatin1String("CREATE TABLE FilterAttributeTable ("
+            "Id INTEGER PRIMARY KEY, "
+            "Name TEXT )")
+        << QLatin1String("CREATE TABLE FilterNameTable ("
+            "Id INTEGER PRIMARY KEY, "
+            "Name TEXT )")
+        << QLatin1String("CREATE TABLE FilterTable ("
+            "NameId INTEGER, "
+            "FilterAttributeId INTEGER )")
+        << QLatin1String("CREATE TABLE IndexTable ("
+            "Id INTEGER PRIMARY KEY, "
+            "Name TEXT, "
+            "Identifier TEXT, "
             "NamespaceId INTEGER, "
             "FileId INTEGER, "
             "Anchor TEXT )")
         << QLatin1String("CREATE TABLE IndexItemTable ("
             "Id INTEGER, "
             "IndexId INTEGER )")
-		<< QLatin1String("CREATE TABLE IndexFilterTable ("
-			"FilterAttributeId INTEGER, "
-			"IndexId INTEGER )")
-		<< QLatin1String("CREATE TABLE ContentsTable ("
-			"Id INTEGER PRIMARY KEY, "
-			"NamespaceId INTEGER, "
-			"Data BLOB )")
-		<< QLatin1String("CREATE TABLE ContentsFilterTable ("
-			"FilterAttributeId INTEGER, "
-			"ContentsId INTEGER )")
+        << QLatin1String("CREATE TABLE IndexFilterTable ("
+            "FilterAttributeId INTEGER, "
+            "IndexId INTEGER )")
+        << QLatin1String("CREATE TABLE ContentsTable ("
+            "Id INTEGER PRIMARY KEY, "
+            "NamespaceId INTEGER, "
+            "Data BLOB )")
+        << QLatin1String("CREATE TABLE ContentsFilterTable ("
+            "FilterAttributeId INTEGER, "
+            "ContentsId INTEGER )")
         << QLatin1String("CREATE TABLE FileAttributeSetTable ("
-			"Id INTEGER, "
-			"FilterAttributeId INTEGER )")
-		<< QLatin1String("CREATE TABLE FileDataTable ("
-			"Id INTEGER PRIMARY KEY, "
-			"Data BLOB )")
+            "Id INTEGER, "
+            "FilterAttributeId INTEGER )")
+        << QLatin1String("CREATE TABLE FileDataTable ("
+            "Id INTEGER PRIMARY KEY, "
+            "Data BLOB )")
         << QLatin1String("CREATE TABLE FileFilterTable ("
-			"FilterAttributeId INTEGER, "
-			"FileId INTEGER )")
-		<< QLatin1String("CREATE TABLE FileNameTable ("
-			"FolderId INTEGER, "
-			"Name TEXT, "
-			"FileId INTEGER, "
-			"Title TEXT )")
-		<< QLatin1String("CREATE TABLE FolderTable("
-			"Id INTEGER PRIMARY KEY, "
-			"Name Text, "
-			"NamespaceID INTEGER )")
+            "FilterAttributeId INTEGER, "
+            "FileId INTEGER )")
+        << QLatin1String("CREATE TABLE FileNameTable ("
+            "FolderId INTEGER, "
+            "Name TEXT, "
+            "FileId INTEGER, "
+            "Title TEXT )")
+        << QLatin1String("CREATE TABLE FolderTable("
+            "Id INTEGER PRIMARY KEY, "
+            "Name Text, "
+            "NamespaceID INTEGER )")
         << QLatin1String("CREATE TABLE MetaDataTable("
-			"Name Text, "
-			"Value BLOB )");			
-		
-	foreach (QString q, tables) {
-		if (!d->query->exec(q)) {
-			d->error = tr("Cannot create tables!");
-			return false;
-		}
-	}
+            "Name Text, "
+            "Value BLOB )");
+
+    foreach (QString q, tables) {
+        if (!d->query->exec(q)) {
+            d->error = tr("Cannot create tables!");
+            return false;
+        }
+    }
 
     d->query->exec(QLatin1String("INSERT INTO MetaDataTable VALUES('qchVersion', '1.0')"));
 
@@ -372,7 +376,7 @@ bool QHelpGenerator::createTables()
     d->query->bindValue(0, QDateTime::currentDateTime().toString(Qt::ISODate));
     d->query->exec();
 
-	return true;
+    return true;
 }
 
 bool QHelpGenerator::insertFileNotFoundFile()
@@ -388,7 +392,7 @@ bool QHelpGenerator::insertFileNotFoundFile()
     d->query->bindValue(0, QByteArray());
     if (!d->query->exec())
         return false;
- 
+
     int fileId = d->query->lastInsertId().toInt();
     d->query->prepare(QLatin1String("INSERT INTO FileNameTable (FolderId, Name, FileId, Title) "
         " VALUES (0, '', ?, '')"));
@@ -403,7 +407,7 @@ bool QHelpGenerator::insertFileNotFoundFile()
 bool QHelpGenerator::registerVirtualFolder(const QString &folderName, const QString &ns)
 {
     if (!d->query || folderName.isEmpty() || ns.isEmpty())
-		return false;
+        return false;
 
     d->query->prepare(QLatin1String("SELECT Id FROM FolderTable WHERE Name=?"));
     d->query->bindValue(0, folderName);
@@ -428,25 +432,25 @@ bool QHelpGenerator::registerVirtualFolder(const QString &folderName, const QStr
             d->namespaceId = d->query->lastInsertId().toInt();
     }
 
-	if (d->namespaceId > 0) {
-		d->query->prepare(QLatin1String("SELECT Id FROM FolderTable WHERE Name=?"));
-		d->query->bindValue(0, folderName);
-		d->query->exec();
-		while (d->query->next())
-			d->virtualFolderId = d->query->value(0).toInt();
+    if (d->namespaceId > 0) {
+        d->query->prepare(QLatin1String("SELECT Id FROM FolderTable WHERE Name=?"));
+        d->query->bindValue(0, folderName);
+        d->query->exec();
+        while (d->query->next())
+            d->virtualFolderId = d->query->value(0).toInt();
 
-		if (d->virtualFolderId > 0)
-			return true;
+        if (d->virtualFolderId > 0)
+            return true;
 
-		d->query->prepare(QLatin1String("INSERT INTO FolderTable (NamespaceId, Name) "
-			"VALUES (?, ?)"));
-		d->query->bindValue(0, d->namespaceId);
-		d->query->bindValue(1, folderName);
-		if (d->query->exec()) {
-			d->virtualFolderId = d->query->lastInsertId().toInt();
-			return d->virtualFolderId > 0;
-		}
-	}
+        d->query->prepare(QLatin1String("INSERT INTO FolderTable (NamespaceId, Name) "
+            "VALUES (?, ?)"));
+        d->query->bindValue(0, d->namespaceId);
+        d->query->bindValue(1, folderName);
+        if (d->query->exec()) {
+            d->virtualFolderId = d->query->lastInsertId().toInt();
+            return d->virtualFolderId > 0;
+        }
+    }
     d->error = tr("Cannot register virtual folder!");
     return false;
 }
@@ -548,11 +552,11 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
                         tmpFileFilterMap[fileId].insert(filter);
                 }
             }
-        }        
+        }
     }
 
     if (tmpFileFilterMap.count()) {
-        d->query->exec(QLatin1String("BEGIN"));            
+        d->query->exec(QLatin1String("BEGIN"));
         QMap<int, QSet<int> >::const_iterator it = tmpFileFilterMap.constBegin();
         while (it != tmpFileFilterMap.constEnd()) {
             QSet<int>::const_iterator i = it.value().constBegin();
@@ -565,7 +569,7 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
             }
             ++it;
         }
-        
+
         QList<QByteArray>::const_iterator fileIt = fileDataList.constBegin();
         while (fileIt != fileDataList.constEnd()) {
             d->query->prepare(QLatin1String("INSERT INTO FileDataTable VALUES (Null, ?)"));
@@ -575,7 +579,7 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
             if (++i%20 == 0)
                 addProgress(d->fileStep*20.0);
         }
-		
+
         QList<FileNameTableData>::const_iterator fileNameIt = fileNameDataList.constBegin();
         while (fileNameIt != fileNameDataList.constEnd()) {
             d->query->prepare(QLatin1String("INSERT INTO FileNameTable (FolderId, Name, FileId, Title) "
@@ -587,9 +591,9 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
             d->query->exec();
             ++fileNameIt;
         }
-		d->query->exec(QLatin1String("COMMIT"));
+        d->query->exec(QLatin1String("COMMIT"));
     }
-	
+
     d->query->exec(QLatin1String("SELECT MAX(Id) FROM FileDataTable"));
     if (d->query->next()
         && d->query->value(0).toInt() == tableFileId-1) {
@@ -602,62 +606,62 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
 bool QHelpGenerator::registerCustomFilter(const QString &filterName, const QStringList &filterAttribs,
                                           bool forceUpdate)
 {
-	if (!d->query)
-		return false;
+    if (!d->query)
+        return false;
 
-	d->query->exec(QLatin1String("SELECT Id, Name FROM FilterAttributeTable"));
-	QStringList idsToInsert = filterAttribs;
-	QMap<QString, int> attributeMap;
-	while (d->query->next()) {
-		attributeMap.insert(d->query->value(1).toString(),
-			d->query->value(0).toInt());
-		if (idsToInsert.contains(d->query->value(1).toString()))
-			idsToInsert.removeAll(d->query->value(1).toString());
-	}
+    d->query->exec(QLatin1String("SELECT Id, Name FROM FilterAttributeTable"));
+    QStringList idsToInsert = filterAttribs;
+    QMap<QString, int> attributeMap;
+    while (d->query->next()) {
+        attributeMap.insert(d->query->value(1).toString(),
+            d->query->value(0).toInt());
+        if (idsToInsert.contains(d->query->value(1).toString()))
+            idsToInsert.removeAll(d->query->value(1).toString());
+    }
 
-	foreach (QString id, idsToInsert) {
-		d->query->prepare(QLatin1String("INSERT INTO FilterAttributeTable VALUES(NULL, ?)"));
-		d->query->bindValue(0, id);
-		d->query->exec();
-		attributeMap.insert(id, d->query->lastInsertId().toInt());
-	}
+    foreach (QString id, idsToInsert) {
+        d->query->prepare(QLatin1String("INSERT INTO FilterAttributeTable VALUES(NULL, ?)"));
+        d->query->bindValue(0, id);
+        d->query->exec();
+        attributeMap.insert(id, d->query->lastInsertId().toInt());
+    }
 
-	int nameId = -1;
-	d->query->prepare(QLatin1String("SELECT Id FROM FilterNameTable WHERE Name=?"));
-	d->query->bindValue(0, filterName);
-	d->query->exec();
-	while (d->query->next()) {
-		nameId = d->query->value(0).toInt();
-		break;
-	}
+    int nameId = -1;
+    d->query->prepare(QLatin1String("SELECT Id FROM FilterNameTable WHERE Name=?"));
+    d->query->bindValue(0, filterName);
+    d->query->exec();
+    while (d->query->next()) {
+        nameId = d->query->value(0).toInt();
+        break;
+    }
 
-	if (nameId < 0) {
-		d->query->prepare(QLatin1String("INSERT INTO FilterNameTable VALUES(NULL, ?)"));
-		d->query->bindValue(0, filterName);
-		if (d->query->exec())
-			nameId = d->query->lastInsertId().toInt();		
-	} else if (!forceUpdate) {
-		d->error = tr("The filter %1 is already registered!").arg(filterName);
-		return false;
-	}
+    if (nameId < 0) {
+        d->query->prepare(QLatin1String("INSERT INTO FilterNameTable VALUES(NULL, ?)"));
+        d->query->bindValue(0, filterName);
+        if (d->query->exec())
+            nameId = d->query->lastInsertId().toInt();
+    } else if (!forceUpdate) {
+        d->error = tr("The filter %1 is already registered!").arg(filterName);
+        return false;
+    }
 
-	if (nameId < 0) {
-		d->error = tr("Cannot register filter %1!").arg(filterName);
-		return false;
-	}
+    if (nameId < 0) {
+        d->error = tr("Cannot register filter %1!").arg(filterName);
+        return false;
+    }
 
-	d->query->prepare(QLatin1String("DELETE FROM FilterTable WHERE NameId=?"));
-	d->query->bindValue(0, nameId);
-	d->query->exec();
+    d->query->prepare(QLatin1String("DELETE FROM FilterTable WHERE NameId=?"));
+    d->query->bindValue(0, nameId);
+    d->query->exec();
 
-	foreach (QString att, filterAttribs) {
-		d->query->prepare(QLatin1String("INSERT INTO FilterTable VALUES(?, ?)"));
-		d->query->bindValue(0, nameId);
-		d->query->bindValue(1, attributeMap[att]);
-		if (!d->query->exec())
-			return false;
-	}
-	return true;
+    foreach (QString att, filterAttribs) {
+        d->query->prepare(QLatin1String("INSERT INTO FilterTable VALUES(?, ?)"));
+        d->query->bindValue(0, nameId);
+        d->query->bindValue(1, attributeMap[att]);
+        if (!d->query->exec())
+            return false;
+    }
+    return true;
 }
 
 bool QHelpGenerator::insertKeywords(const QList<QHelpDataIndexItem> keywords,
@@ -687,7 +691,7 @@ bool QHelpGenerator::insertKeywords(const QList<QHelpDataIndexItem> keywords,
     QString fName;
     int fileId = 1;
     QList<int> indexFilterTable;
-    
+
     int i = 0;
     d->query->exec(QLatin1String("BEGIN"));
     foreach (QHelpDataIndexItem itm, keywords) {
@@ -715,7 +719,7 @@ bool QHelpGenerator::insertKeywords(const QList<QHelpDataIndexItem> keywords,
         d->query->bindValue(3, fileId);
         d->query->bindValue(4, anchor);
         d->query->exec();
-        
+
         indexFilterTable.append(indexId++);
         if (++i%100 == 0)
             addProgress(d->indexStep*100.0);
@@ -733,26 +737,26 @@ bool QHelpGenerator::insertKeywords(const QList<QHelpDataIndexItem> keywords,
         }
     }
     d->query->exec(QLatin1String("COMMIT"));
-    
+
     d->query->exec(QLatin1String("SELECT COUNT(Id) FROM IndexTable"));
     if (d->query->next() && d->query->value(0).toInt() >= keywords.count())
         return true;
-    return false;    
+    return false;
 }
 
-bool QHelpGenerator::insertContents(const QByteArray &ba, 
+bool QHelpGenerator::insertContents(const QByteArray &ba,
                                     const QStringList &filterAttributes)
 {
     if (!d->query)
-		return false;
+        return false;
 
     emit statusChanged(tr("Insert contents..."));
-	d->query->prepare(QLatin1String("INSERT INTO ContentsTable (NamespaceId, Data) "
-		"VALUES(?, ?)"));
-	d->query->bindValue(0, d->namespaceId);
+    d->query->prepare(QLatin1String("INSERT INTO ContentsTable (NamespaceId, Data) "
+        "VALUES(?, ?)"));
+    d->query->bindValue(0, d->namespaceId);
     d->query->bindValue(1, ba);
-	d->query->exec();
-    int contentId = d->query->lastInsertId().toInt();    
+    d->query->exec();
+    int contentId = d->query->lastInsertId().toInt();
     if (contentId < 1) {
         d->error = tr("Cannot insert contents!");
         return false;
@@ -771,26 +775,26 @@ bool QHelpGenerator::insertContents(const QByteArray &ba,
         }
     }
     addProgress(d->contentStep);
-	return true;
+    return true;
 }
 
 bool QHelpGenerator::insertFilterAttributes(const QStringList &attributes)
 {
     if (!d->query)
-		return false;
+        return false;
 
     d->query->exec(QLatin1String("SELECT Name FROM FilterAttributeTable"));
-	QSet<QString> atts;
-	while (d->query->next())
-        atts.insert(d->query->value(0).toString());		
-	
-	foreach (QString s, attributes) {
+    QSet<QString> atts;
+    while (d->query->next())
+        atts.insert(d->query->value(0).toString());
+
+    foreach (QString s, attributes) {
         if (!atts.contains(s)) {
             d->query->prepare(QLatin1String("INSERT INTO FilterAttributeTable VALUES(NULL, ?)"));
             d->query->bindValue(0, s);
             d->query->exec();
         }
-	}
+    }
     return true;
 }
 

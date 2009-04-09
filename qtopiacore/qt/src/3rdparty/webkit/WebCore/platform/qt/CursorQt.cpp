@@ -34,11 +34,12 @@
 #include "Image.h"
 #include "IntPoint.h"
 
-#include "DeprecatedString.h"
 #include "NotImplemented.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#undef CopyCursor
 
 namespace WebCore {
 
@@ -58,7 +59,7 @@ Cursor::~Cursor()
 
 Cursor::Cursor(Image* image, const IntPoint& hotspot)
 #ifndef QT_NO_CURSOR
-    : m_impl(*(image->getPixmap()), hotspot.x(), hotspot.y())
+    : m_impl(*(image->nativeImageForCurrentFrame()), hotspot.x(), hotspot.y())
 #endif
 {
 }
@@ -253,6 +254,51 @@ const Cursor& rowResizeCursor()
 {
     return Cursors::self()->SplitVCursor;
 }
+    
+const Cursor& middlePanningCursor()
+{
+    return moveCursor();
+}
+
+const Cursor& eastPanningCursor()
+{
+    return eastResizeCursor();
+}
+
+const Cursor& northPanningCursor()
+{
+    return northResizeCursor();
+}
+
+const Cursor& northEastPanningCursor()
+{
+    return northEastResizeCursor();
+}
+
+const Cursor& northWestPanningCursor()
+{
+    return northWestResizeCursor();
+}
+
+const Cursor& southPanningCursor()
+{
+    return southResizeCursor();
+}
+
+const Cursor& southEastPanningCursor()
+{
+    return southEastResizeCursor();
+}
+
+const Cursor& southWestPanningCursor()
+{
+    return southWestResizeCursor();
+}
+
+const Cursor& westPanningCursor()
+{
+    return westResizeCursor();
+}    
 
 const Cursor& verticalTextCursor()
 {
@@ -307,6 +353,18 @@ const Cursor& zoomInCursor()
 const Cursor& zoomOutCursor()
 {
     return Cursors::self()->ZoomOutCursor;
+}
+
+const Cursor& grabCursor()
+{
+    notImplemented();
+    return Cursors::self()->PointerCursor;
+}
+
+const Cursor& grabbingCursor()
+{
+    notImplemented();
+    return Cursors::self()->PointerCursor;
 }
 
 }

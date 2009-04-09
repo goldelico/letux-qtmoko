@@ -26,9 +26,9 @@
 #ifndef IMAGE_DECODER_H_
 #define IMAGE_DECODER_H_
 
-#include "config.h"
 #include "IntRect.h"
 #include "ImageSource.h"
+#include "PlatformString.h"
 #include "SharedBuffer.h"
 #include <wtf/Vector.h>
 
@@ -42,10 +42,28 @@ class RGBA32Buffer
 {
 public:
     enum FrameStatus { FrameEmpty, FramePartial, FrameComplete };
+    enum FrameDisposalMethod {
+        // If you change the numeric values of these, make sure you audit all
+        // users, as some users may cast raw values to/from these constants.
+        DisposeNotSpecified = 0,       // Leave frame in framebuffer
+        DisposeKeep = 1,               // Leave frame in framebuffer
+        DisposeOverwriteBgcolor = 2,   // Clear frame to transparent
+        DisposeOverwritePrevious = 3,  // Clear frame to previous framebuffer contents
+    };
 
     RGBA32Buffer() : m_height(0), m_status(FrameEmpty), m_duration(0),
-                     m_includeInNextFrame(false), m_hasAlpha(false)
+                     m_disposalMethod(DisposeNotSpecified), m_hasAlpha(false)
     {} 
+
+    void clear() {
+      m_bytes.clear();
+      m_rect = IntRect();
+      m_height = 0;
+      m_status = FrameEmpty;
+      m_duration = 0;
+      m_disposalMethod = DisposeNotSpecified;
+      m_hasAlpha = false;
+    }
 
     const RGBA32Array& bytes() const { return m_bytes; }
     RGBA32Array& bytes() { return m_bytes; }
@@ -53,14 +71,14 @@ public:
     unsigned height() const { return m_height; }
     FrameStatus status() const { return m_status; }
     unsigned duration() const { return m_duration; }
-    bool includeInNextFrame() const { return m_includeInNextFrame; }
+    FrameDisposalMethod disposalMethod() const { return m_disposalMethod; }
     bool hasAlpha() const { return m_hasAlpha; }
 
     void setRect(const IntRect& r) { m_rect = r; }
     void ensureHeight(unsigned rowIndex) { if (rowIndex > m_height) m_height = rowIndex; }
     void setStatus(FrameStatus s) { m_status = s; }
     void setDuration(unsigned duration) { m_duration = duration; }
-    void setIncludeInNextFrame(bool n) { m_includeInNextFrame = n; }
+    void setDisposalMethod(FrameDisposalMethod method) { m_disposalMethod = method; }
     void setHasAlpha(bool alpha) { m_hasAlpha = alpha; }
 
     static void setRGBA(unsigned& pos, unsigned r, unsigned g, unsigned b, unsigned a)
@@ -87,7 +105,7 @@ private:
     unsigned m_height; // The height (the number of rows we've fully decoded).
     FrameStatus m_status; // Whether or not this frame is completely finished decoding.
     unsigned m_duration; // The animation delay.
-    bool m_includeInNextFrame; // Whether or not the next buffer should be initially populated with our data.
+    FrameDisposalMethod m_disposalMethod; // What to do with this frame's data when initializing the next frame.
     bool m_hasAlpha; // Whether or not any of the pixels in the buffer have transparency.
 };
 
@@ -99,6 +117,9 @@ class ImageDecoder
 public:
     ImageDecoder() :m_sizeAvailable(false), m_failed(false) {}
     virtual ~ImageDecoder() {}
+
+    // The the filename extension usually associated with an undecoded image of this type.
+    virtual String filenameExtension() const = 0;
 
     // All specific decoder plugins must do something with the data they are given.
     virtual void setData(SharedBuffer* data, bool allDataReceived) { m_data = data; }
@@ -127,6 +148,14 @@ public:
 
     bool failed() const { return m_failed; }
     void setFailed() { m_failed = true; }
+
+    // Wipe out frames in the frame buffer cache before |clearBeforeFrame|,
+    // assuming this can be done without breaking decoding.  Different decoders
+    // place different restrictions on what frames are safe to destroy, so this
+    // is left to them to implement.
+    // For convenience's sake, we provide a default (empty) implementation,
+    // since in practice only GIFs will ever use this.
+    virtual void clearFrameBufferCache(size_t clearBeforeFrame) { }
 
 protected:
     RefPtr<SharedBuffer> m_data; // The encoded data.

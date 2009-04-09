@@ -1,48 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** In addition, as a special exception, Nokia gives permission to link
-** the code of its release of Qt with the OpenSSL project's "OpenSSL"
-** library (or modified versions of it that use the same license as the
-** "OpenSSL" library), and distribute the linked executables.  You must
-** comply with the GNU General Public License versions 2.0 or 3.0 in all
-** respects for all of the code used other than the "OpenSSL" code.  If
-** you modify this file, you may extend this exception to your version
-** of the file, but you are not obligated to do so.  If you do not wish
-** to do so, delete this exception statement from your version of this
-** file.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -111,6 +104,8 @@ public:
         for (int i = 0; i < q_CRYPTO_num_locks(); ++i)
             delete locks[i];
         delete [] locks;
+
+        QSslSocketPrivate::deinitialize();
     }
     inline QMutex *lock(int num)
     {
@@ -234,6 +229,9 @@ bool QSslSocketBackendPrivate::initSslContext()
 
     // Create and initialize SSL context. Accept SSLv2, SSLv3 and TLSv1.
     bool client = (mode == QSslSocket::SslClientMode);
+
+    bool reinitialized = false;
+init_context:
     switch (configuration.protocol) {
     case QSsl::SslV2:
         ctx = q_SSL_CTX_new(client ? q_SSLv2_client_method() : q_SSLv2_server_method());
@@ -250,6 +248,14 @@ bool QSslSocketBackendPrivate::initSslContext()
         break;
     }
     if (!ctx) {
+        // After stopping Flash 10 the SSL library looses its ciphers. Try re-adding them
+        // by re-initializing the library.
+        if (!reinitialized) {
+            reinitialized = true;
+            if (q_SSL_library_init() == 1)
+                goto init_context;
+        }
+
         // ### Bad error code
         q->setErrorString(QSslSocket::tr("Error creating SSL context (%1)").arg(SSL_ERRORSTR()));
         q->setSocketError(QAbstractSocket::UnknownSocketError);
@@ -372,6 +378,15 @@ bool QSslSocketBackendPrivate::initSslContext()
 
 /*!
     \internal
+*/
+void QSslSocketPrivate::deinitialize()
+{
+    q_CRYPTO_set_id_callback(0);
+    q_CRYPTO_set_locking_callback(0);
+}
+
+/*!
+    \internal
 
     Declared static in QSslSocketPrivate, makes sure the SSL libraries have
     been initialized.
@@ -396,6 +411,7 @@ bool QSslSocketPrivate::ensureInitialized()
         if (q_SSL_library_init() != 1)
             return false;
         q_SSL_load_error_strings();
+        q_OpenSSL_add_all_algorithms();
 
         // Initialize OpenSSL's random seed.
         if (!q_RAND_status()) {
@@ -739,8 +755,12 @@ bool QSslSocketBackendPrivate::testConnection()
 
     const QList<QPair<int, int> > &lastErrors = _q_sslErrorList()->errors;
     for (int i = 0; i < lastErrors.size(); ++i) {
-        emit q->peerVerifyError(_q_OpenSSL_to_QSslError(lastErrors.at(i).first,
-                                                        QSslCertificate()));
+        const QPair<int, int> &currentError = lastErrors.at(i);
+        // Initialize the peer certificate chain in order to find which certificate caused this error
+        if (configuration.peerCertificateChain.isEmpty())
+            configuration.peerCertificateChain = STACKOFX509_to_QSslCertificates(q_SSL_get_peer_cert_chain(ssl));
+        emit q->peerVerifyError(_q_OpenSSL_to_QSslError(currentError.first,
+                                configuration.peerCertificateChain.value(currentError.second)));
         if (q->state() != QAbstractSocket::ConnectedState)
             break;
     }
@@ -762,11 +782,11 @@ bool QSslSocketBackendPrivate::testConnection()
         default:
             // ### Handle errors better
             q->setErrorString(QSslSocket::tr("Error during SSL handshake: %1").arg(SSL_ERRORSTR()));
-            q->setSocketError(QAbstractSocket::UnknownSocketError);
+            q->setSocketError(QAbstractSocket::SslHandshakeFailedError);
 #ifdef QSSLSOCKET_DEBUG
             qDebug() << "QSslSocketBackendPrivate::testConnection: error!" << q->errorString();
 #endif
-            emit q->error(QAbstractSocket::UnknownSocketError);
+            emit q->error(QAbstractSocket::SslHandshakeFailedError);
             q->abort();
         }
         return false;
@@ -776,47 +796,53 @@ bool QSslSocketBackendPrivate::testConnection()
     // chain includes the peer certificate; for servers, it doesn't. Both the
     // peer certificate and the chain may be empty if the peer didn't present
     // any certificate.
-    configuration.peerCertificateChain = STACKOFX509_to_QSslCertificates(q_SSL_get_peer_cert_chain(ssl));
+    if (configuration.peerCertificateChain.isEmpty())
+        configuration.peerCertificateChain = STACKOFX509_to_QSslCertificates(q_SSL_get_peer_cert_chain(ssl));
     X509 *x509 = q_SSL_get_peer_certificate(ssl);
     configuration.peerCertificate = QSslCertificatePrivate::QSslCertificate_from_X509(x509);
     q_X509_free(x509);
 
     // Start translating errors.
     QList<QSslError> errors;
-    bool dontVerifyPeer = configuration.peerVerifyMode != QSslSocket::VerifyPeer
-                          && (configuration.peerVerifyMode != QSslSocket::AutoVerifyPeer || mode == QSslSocket::SslServerMode);
+    bool doVerifyPeer = configuration.peerVerifyMode == QSslSocket::VerifyPeer
+                        || (configuration.peerVerifyMode == QSslSocket::AutoVerifyPeer
+                            && mode == QSslSocket::SslClientMode);
 
     // Check the peer certificate itself. First try the subject's common name
     // (CN) as a wildcard, then try all alternate subject name DNS entries the
     // same way.
     if (!configuration.peerCertificate.isNull()) {
-        QString peerName = q->peerName();
-        QString commonName = configuration.peerCertificate.subjectInfo(QSslCertificate::CommonName);
+        // but only if we're a client connecting to a server
+        // if we're the server, don't check CN
+        if (mode == QSslSocket::SslClientMode) {
+            QString peerName = q->peerName();
+            QString commonName = configuration.peerCertificate.subjectInfo(QSslCertificate::CommonName);
 
-        QRegExp regexp(commonName, Qt::CaseInsensitive, QRegExp::Wildcard);
-        if (!regexp.exactMatch(peerName)) {
-            bool matched = false;
-            foreach (QString altName, configuration.peerCertificate
-                     .alternateSubjectNames().values(QSsl::DnsEntry)) {
-                regexp.setPattern(altName);
-                if (regexp.exactMatch(peerName)) {
-                    matched = true;
-                    break;
+            QRegExp regexp(commonName, Qt::CaseInsensitive, QRegExp::Wildcard);
+            if (!regexp.exactMatch(peerName)) {
+                bool matched = false;
+                foreach (QString altName, configuration.peerCertificate
+                         .alternateSubjectNames().values(QSsl::DnsEntry)) {
+                    regexp.setPattern(altName);
+                    if (regexp.exactMatch(peerName)) {
+                        matched = true;
+                        break;
+                    }
                 }
-            }
-            if (!matched) {
-                // No matches in common names or alternate names.
-                QSslError error(QSslError::HostNameMismatch);
-                errors << error;
-                emit q->peerVerifyError(error);
-                if (q->state() != QAbstractSocket::ConnectedState)
-                    return false;
+                if (!matched) {
+                    // No matches in common names or alternate names.
+                    QSslError error(QSslError::HostNameMismatch, configuration.peerCertificate);
+                    errors << error;
+                    emit q->peerVerifyError(error);
+                    if (q->state() != QAbstractSocket::ConnectedState)
+                        return false;
+                }
             }
         }
     } else {
         // No peer certificate presented. Report as error if the socket
         // expected one.
-        if (!dontVerifyPeer) {
+        if (doVerifyPeer) {
             QSslError error(QSslError::NoPeerCertificate);
             errors << error;
             emit q->peerVerifyError(error);
@@ -836,7 +862,7 @@ bool QSslSocketBackendPrivate::testConnection()
     if (!errors.isEmpty()) {
         sslErrors = errors;
         emit q->sslErrors(errors);
-        if (!dontVerifyPeer && !ignoreSslErrors) {
+        if (doVerifyPeer && !ignoreSslErrors) {
             q->setErrorString(sslErrors.first().errorString());
             q->setSocketError(QAbstractSocket::SslHandshakeFailedError);
             emit q->error(QAbstractSocket::SslHandshakeFailedError);

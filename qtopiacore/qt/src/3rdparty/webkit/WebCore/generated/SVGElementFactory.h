@@ -27,9 +27,10 @@
  */
 
 
-#ifndef SVGELEMENTFACTORY_H
-#define SVGELEMENTFACTORY_H
+#ifndef SVGElementFactory_h
+#define SVGElementFactory_h
 
+#include <wtf/PassRefPtr.h>
 
 namespace WebCore {
     class Element;
@@ -38,19 +39,18 @@ namespace WebCore {
     class AtomicString;
 }
 
-namespace WebCore
-{
+namespace WebCore {
+
     class SVGElement;
 
     // The idea behind this class is that there will eventually be a mapping from namespace URIs to ElementFactories that can dispense
-    // elements.  In a compound document world, the generic createElement function (will end up being virtual) will be called.
-    class SVGElementFactory
-    {
+    // elements. In a compound document world, the generic createElement function (will end up being virtual) will be called.
+    class SVGElementFactory {
     public:
-        WebCore::Element *createElement(const WebCore::QualifiedName& qName, WebCore::Document *doc, bool createdByParser = true);
-        static SVGElement *createSVGElement(const WebCore::QualifiedName& qName, WebCore::Document *doc, bool createdByParser = true);
+        PassRefPtr<Element> createElement(const WebCore::QualifiedName&, WebCore::Document*, bool createdByParser = true);
+        static PassRefPtr<SVGElement> createSVGElement(const WebCore::QualifiedName&, WebCore::Document*, bool createdByParser = true);
     };
 }
 
-#endif
+#endif // SVGElementFactory_h
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@
 #include <unistd.h>
 #include <AppKit/NSCursor.h>
 #include <qpainter.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,7 +57,7 @@ QT_BEGIN_NAMESPACE
   Externals
  *****************************************************************************/
 extern QCursorData *qt_cursorTable[Qt::LastCursor + 1];
-extern WindowPtr qt_mac_window_for(const QWidget *); //qwidget_mac.cpp
+extern OSWindowRef qt_mac_window_for(const QWidget *); //qwidget_mac.cpp
 extern GrafPtr qt_mac_qd_context(const QPaintDevice *); //qpaintdevice_mac.cpp
 extern bool qt_sendSpontaneousEvent(QObject *, QEvent *); //qapplication_mac.cpp
 
@@ -82,8 +87,10 @@ public:
 protected:
     void timerEvent(QTimerEvent *e) {
         if(e->timerId() == timerId) {
+            /*
             if(SetAnimatedThemeCursor(curs, step++) == themeBadCursorIndexErr)
                 stop();
+            */
         }
     }
 };
@@ -101,11 +108,15 @@ void qt_mac_set_cursor(const QCursor *c, const QPoint &)
         if(currentCursor && currentCursor->type == QCursorData::TYPE_ThemeCursor
                 && currentCursor->curs.tc.anim)
             currentCursor->curs.tc.anim->stop();
-
+        QMacCocoaAutoReleasePool pool;
         if(c->d->type == QCursorData::TYPE_ImageCursor) {
-            QMacCocoaAutoReleasePool pool;
             [static_cast<NSCursor *>(c->d->curs.cp.nscursor) set];
         } else if(c->d->type == QCursorData::TYPE_ThemeCursor) {
+#ifdef QT_MAC_USE_COCOA
+            if (c->d->curs.cp.nscursor == 0)
+                [[NSCursor arrowCursor] set];
+            [static_cast<NSCursor *>(c->d->curs.cp.nscursor) set];
+#else
             if(SetAnimatedThemeCursor(c->d->curs.tc.curs, 0) == themeBadCursorIndexErr) {
                 SetThemeCursor(c->d->curs.tc.curs);
             } else {
@@ -113,25 +124,31 @@ void qt_mac_set_cursor(const QCursor *c, const QPoint &)
                     c->d->curs.tc.anim = new QMacAnimateCursor;
                 c->d->curs.tc.anim->start(c->d->curs.tc.curs);
             }
+#endif
         }
     }
     currentCursor = c->d;
 }
 
-void qt_mac_update_cursor()
+void qt_mac_update_cursor_at_global_pos(const QPoint &globalPos)
 {
     QCursor cursor(Qt::ArrowCursor);
-    if(QApplication::overrideCursor()) {
+    if (QApplication::overrideCursor()) {
         cursor = *QApplication::overrideCursor();
     } else {
-        for(QWidget *w = QApplication::widgetAt(QCursor::pos()); w; w = w->parentWidget()) {
+        for(QWidget *w = QApplication::widgetAt(globalPos); w; w = w->parentWidget()) {
             if(w->testAttribute(Qt::WA_SetCursor)) {
                 cursor = w->cursor();
                 break;
             }
         }
     }
-    qt_mac_set_cursor(&cursor, QCursor::pos());
+    qt_mac_set_cursor(&cursor, globalPos);
+}
+
+void qt_mac_update_cursor()
+{
+    qt_mac_update_cursor_at_global_pos(QCursor::pos());
 }
 
 static int nextCursorId = Qt::BitmapCursor;
@@ -195,9 +212,7 @@ Qt::HANDLE QCursor::handle() const
 
 QPoint QCursor::pos()
 {
-    Point p;
-    GetGlobalMouse(&p);
-    return QPoint(p.h, p.v);
+    return flipPoint([NSEvent mouseLocation]).toPoint();
 }
 
 void QCursor::setPos(int x, int y)
@@ -219,33 +234,6 @@ void QCursor::setPos(int x, int y)
         qt_sendSpontaneousEvent(widget, &me);
     }
 }
-
-QPixmap qt_mac_unmultiplyPixmapAlpha(const QPixmap &pixmap)
-{
-    QPixmap fake_pm = pixmap;
-    fake_pm.detach();
-
-    QMacPixmapData *pm_data = static_cast<QMacPixmapData*>(fake_pm.data);
-    uint numPixels = pm_data->bytesPerRow / 4;
-    for (uint i = 0; i < numPixels; ++i ) {
-        int pixel = pm_data->pixels[i];
-        int alpha = qAlpha(pixel);
-        if (alpha == 0)
-            continue;  // avoid div 0 on Intel
-
-        int red   = qRed(pixel) * 255 / alpha;
-        int green = qGreen(pixel) * 255 / alpha;
-        int blue  = qBlue(pixel) * 255 / alpha;
-
-        pm_data->pixels[i] = qRgba(red, green, blue, alpha);
-#if defined(__i386__)
-        pm_data->pixels[i] = CFSwapInt32(pm_data->pixels[i]);
-#endif
-    }
-    return fake_pm;
-}
-
-extern NSImage *qt_mac_create_ns_image(const QPixmap &pm); // qsystemtrayicon_mac.mm
 
 void QCursorData::initCursorFromBitmap()
 {
@@ -273,7 +261,7 @@ void QCursorData::initCursorFromBitmap()
     curs.cp.my_cursor = true;
     QPixmap bmCopy = QPixmap::fromImage(finalCursor);
     NSPoint hotSpot = { hx, hy };
-    nsimage = qt_mac_create_ns_image(bmCopy);
+    nsimage = static_cast<NSImage*>(qt_mac_create_nsimage(bmCopy));
     curs.cp.nscursor = [[NSCursor alloc] initWithImage:nsimage hotSpot: hotSpot];
     [nsimage release];
 }
@@ -284,7 +272,7 @@ void QCursorData::initCursorFromPixmap()
     curs.cp.my_cursor = true;
     NSPoint hotSpot = { hx, hy };
     NSImage *nsimage;
-    nsimage = qt_mac_create_ns_image(pixmap);
+    nsimage = static_cast<NSImage *>(qt_mac_create_nsimage(pixmap));
     curs.cp.nscursor = [[NSCursor alloc] initWithImage:nsimage hotSpot: hotSpot];
     [nsimage release];
 }
@@ -358,6 +346,102 @@ void QCursorData::update()
 #endif
     const uchar *cursorData = 0;
     const uchar *cursorMaskData = 0;
+#ifdef QT_MAC_USE_COCOA
+    switch (cshape) {                        // map Q cursor to MAC cursor
+    case Qt::BitmapCursor: {
+        if (pixmap.isNull())
+            initCursorFromBitmap();
+        else
+            initCursorFromPixmap();
+        break; }
+    case Qt::BlankCursor: {
+        pixmap = QPixmap(16, 16);
+        pixmap.fill(Qt::transparent);
+        initCursorFromPixmap();
+        break; }
+    case Qt::ArrowCursor: {
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor arrowCursor];
+        break; }
+    case Qt::CrossCursor: {
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor crosshairCursor];
+        break; }
+    case Qt::WaitCursor: {
+        pixmap = QPixmap(QLatin1String(":/trolltech/mac/cursors/images/spincursor.png"));
+        initCursorFromPixmap();
+        break; }
+    case Qt::IBeamCursor: {
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor IBeamCursor];
+        break; }
+    case Qt::SizeAllCursor: {
+        pixmap = QPixmap(QLatin1String(":/trolltech/mac/cursors/images/pluscursor.png"));
+        initCursorFromPixmap();
+        break; }
+    case Qt::WhatsThisCursor: { //for now just use the pointing hand
+    case Qt::PointingHandCursor:
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor pointingHandCursor];
+        break; }
+    case Qt::BusyCursor: {
+        pixmap = QPixmap(QLatin1String(":/trolltech/mac/cursors/images/waitcursor.png"));
+        initCursorFromPixmap();
+        break; }
+    case Qt::SplitVCursor: {
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor resizeUpDownCursor];
+        break; }
+    case Qt::SplitHCursor: {
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor resizeLeftRightCursor];
+        break; }
+    case Qt::ForbiddenCursor: {
+        pixmap = QPixmap(QLatin1String(":/trolltech/mac/cursors/images/forbiddencursor.png"));
+        initCursorFromPixmap();
+        break; }
+    case Qt::OpenHandCursor:
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor openHandCursor];
+        break;
+    case Qt::ClosedHandCursor:
+        type = QCursorData::TYPE_ThemeCursor;
+        curs.cp.nscursor = [NSCursor closedHandCursor];
+        break;
+#define QT_USE_APPROXIMATE_CURSORS
+#ifdef QT_USE_APPROXIMATE_CURSORS
+    case Qt::SizeVerCursor:
+        cursorData = cur_ver_bits;
+        cursorMaskData = mcur_ver_bits;
+        hx = hy = 8;
+        break;
+    case Qt::SizeHorCursor:
+        cursorData = cur_hor_bits;
+        cursorMaskData = mcur_hor_bits;
+        hx = hy = 8;
+        break;
+    case Qt::SizeBDiagCursor:
+        cursorData = cur_fdiag_bits;
+        cursorMaskData = mcur_fdiag_bits;
+        hx = hy = 8;
+        break;
+    case Qt::SizeFDiagCursor:
+        cursorData = cur_bdiag_bits;
+        cursorMaskData = mcur_bdiag_bits;
+        hx = hy = 8;
+        break;
+    case Qt::UpArrowCursor:
+        cursorData = cur_up_arrow_bits;
+        cursorMaskData = mcur_up_arrow_bits;
+        hx = 8;
+        break;
+#endif
+    default:
+        qWarning("Qt: QCursor::update: Invalid cursor shape %d", cshape);
+        return;
+    }
+#else
+    // Carbon
     switch (cshape) {                        // map Q cursor to MAC cursor
     case Qt::BitmapCursor: {
         if (pixmap.isNull())
@@ -451,6 +535,7 @@ void QCursorData::update()
         qWarning("Qt: QCursor::update: Invalid cursor shape %d", cshape);
         return;
     }
+#endif
 
     if (cursorData) {
         bm = new QBitmap(QBitmap::fromData(QSize(16, 16), cursorData,

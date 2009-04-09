@@ -1,8 +1,6 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 2000 Peter Kelly (pmk@post.com)
- * Copyright (C) 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Samuel Weinig (sam@webkit.org)
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  *
@@ -26,26 +24,19 @@
 #ifndef XMLTokenizer_h
 #define XMLTokenizer_h
 
-#include "config.h"
-
 #include "CachedResourceClient.h"
+#include "CachedResourceHandle.h"
 #include "SegmentedString.h"
 #include "StringHash.h"
 #include "Tokenizer.h"
 #include <wtf/HashMap.h>
 #include <wtf/OwnPtr.h>
 
-#if PLATFORM(QT)
-#if !ENABLE(XSLT)
-#define USE_QXMLSTREAM
-#endif
-#endif
-
-#ifndef USE_QXMLSTREAM
+#if USE(QXMLSTREAM)
+#include <QtXml/qxmlstream.h>
+#else
 #include <libxml/tree.h>
 #include <libxml/xmlstring.h>
-#else
-#include <QtXml/qxmlstream.h>
 #endif
 
 namespace WebCore {
@@ -58,6 +49,7 @@ namespace WebCore {
     class Element;
     class FrameView;
     class PendingCallbacks;
+    class ScriptElement;
 
     class XMLTokenizer : public Tokenizer, public CachedResourceClient {
     public:
@@ -80,23 +72,23 @@ namespace WebCore {
 
         void setIsXHTMLDocument(bool isXHTML) { m_isXHTMLDocument = isXHTML; }
         bool isXHTMLDocument() const { return m_isXHTMLDocument; }
+#if ENABLE(WML)
+        bool isWMLDocument() const;
+#endif
 
         // from CachedResourceClient
         virtual void notifyFinished(CachedResource* finishedObj);
 
-#ifndef USE_QXMLSTREAM
-        // callbacks from parser SAX
-        void error(ErrorType, const char* message, va_list args);
-        void startElementNs(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces,
-                            const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes);
-        void endElementNs();
-        void characters(const xmlChar* s, int len);
-        void processingInstruction(const xmlChar* target, const xmlChar* data);
-        void cdataBlock(const xmlChar* s, int len);
-        void comment(const xmlChar* s);
-        void startDocument(const xmlChar* version, const xmlChar* encoding, int standalone);
-        void internalSubset(const xmlChar* name, const xmlChar* externalID, const xmlChar* systemID);
-#else
+
+        void handleError(ErrorType type, const char* m, int lineNumber, int columnNumber);
+
+        virtual bool wellFormed() const { return !m_sawError; }
+
+        int lineNumber() const;
+        int columnNumber() const;
+
+#if USE(QXMLSTREAM)
+private:
         void parse();
         void startDocument();
         void parseStartElement();
@@ -108,17 +100,25 @@ namespace WebCore {
         void endDocument();
         void parseDtd();
         bool hasError() const;
+#else
+public:
+        // callbacks from parser SAX
+        void error(ErrorType, const char* message, va_list args) WTF_ATTRIBUTE_PRINTF(3, 0); 
+        void startElementNs(const xmlChar* xmlLocalName, const xmlChar* xmlPrefix, const xmlChar* xmlURI, int nb_namespaces,
+                            const xmlChar** namespaces, int nb_attributes, int nb_defaulted, const xmlChar** libxmlAttributes);
+        void endElementNs();
+        void characters(const xmlChar* s, int len);
+        void processingInstruction(const xmlChar* target, const xmlChar* data);
+        void cdataBlock(const xmlChar* s, int len);
+        void comment(const xmlChar* s);
+        void startDocument(const xmlChar* version, const xmlChar* encoding, int standalone);
+        void internalSubset(const xmlChar* name, const xmlChar* externalID, const xmlChar* systemID);
+        void endDocument();
 #endif
-
-        void handleError(ErrorType type, const char* m, int lineNumber, int columnNumber);
-
-        virtual bool wellFormed() const { return !m_sawError; }
-
-        int lineNumber() const;
-        int columnNumber() const;
-
     private:
-        void initializeParserContext();
+        friend bool parseXMLDocumentFragment(const String& chunk, DocumentFragment* fragment, Element* parent);
+
+        void initializeParserContext(const char* chunk = 0);
         void setCurrentNode(Node*);
 
         void insertErrorMessageBlock();
@@ -126,16 +126,21 @@ namespace WebCore {
         bool enterText();
         void exitText();
 
+        void doWrite(const String&);
+        void doEnd();
+
         Document* m_doc;
         FrameView* m_view;
 
         String m_originalSourceForTransform;
 
-#ifdef USE_QXMLSTREAM
+#if USE(QXMLSTREAM)
         QXmlStreamReader m_stream;
         bool m_wroteText;
 #else
         xmlParserCtxtPtr m_context;
+        OwnPtr<PendingCallbacks> m_pendingCallbacks;
+        Vector<xmlChar> m_bufferedText;
 #endif
         Node* m_currentNode;
         bool m_currentNodeIsReferenced;
@@ -154,7 +159,7 @@ namespace WebCore {
         int m_lastErrorColumn;
         String m_errorMessages;
 
-        CachedScript* m_pendingScript;
+        CachedResourceHandle<CachedScript> m_pendingScript;
         RefPtr<Element> m_scriptElement;
         int m_scriptStartLine;
 
@@ -163,19 +168,19 @@ namespace WebCore {
 
         typedef HashMap<String, String> PrefixForNamespaceMap;
         PrefixForNamespaceMap m_prefixToNamespaceMap;
-#ifndef USE_QXMLSTREAM
-        OwnPtr<PendingCallbacks> m_pendingCallbacks;
-#endif
         SegmentedString m_pendingSrc;
     };
 
 #if ENABLE(XSLT)
-void* xmlDocPtrForString(DocLoader*, const String& source, const DeprecatedString& URL);
+void* xmlDocPtrForString(DocLoader*, const String& source, const String& url);
 void setLoaderForLibXMLCallbacks(DocLoader*);
 #endif
 
 HashMap<String, String> parseAttributes(const String&, bool& attrsOK);
 bool parseXMLDocumentFragment(const String&, DocumentFragment*, Element* parent = 0);
+
+bool isScriptElement(Element*);
+ScriptElement* castToScriptElement(Element*);
 
 } // namespace WebCore
 

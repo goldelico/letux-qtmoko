@@ -28,470 +28,633 @@
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
 #include "Element.h"
-#include "ExceptionCode.h"
 #include "JSAttr.h"
 #include "JSCSSStyleDeclaration.h"
 #include "JSElement.h"
-#include "JSNode.h"
 #include "JSNodeList.h"
+#include "KURL.h"
 #include "NameNodeList.h"
-#include "Node.h"
 #include "NodeList.h"
-#include "PlatformString.h"
-#include "kjs_dom.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSElement)
+
 /* Hash table */
 
-static const HashEntry JSElementTableEntries[] =
+static const HashTableValue JSElementTableValues[22] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "clientLeft", JSElement::ClientLeftAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[20] },
-    { 0, 0, 0, 0, 0 },
-    { "tagName", JSElement::TagNameAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[16] },
-    { 0, 0, 0, 0, 0 },
-    { "offsetWidth", JSElement::OffsetWidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "offsetParent", JSElement::OffsetParentAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[18] },
-    { 0, 0, 0, 0, 0 },
-    { "scrollWidth", JSElement::ScrollWidthAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[22] },
-    { "offsetTop", JSElement::OffsetTopAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "offsetLeft", JSElement::OffsetLeftAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "scrollLeft", JSElement::ScrollLeftAttrNum, DontDelete, 0, 0 },
-    { "offsetHeight", JSElement::OffsetHeightAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[17] },
-    { "clientTop", JSElement::ClientTopAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[21] },
-    { "clientWidth", JSElement::ClientWidthAttrNum, DontDelete|ReadOnly, 0, &JSElementTableEntries[19] },
-    { "clientHeight", JSElement::ClientHeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "scrollTop", JSElement::ScrollTopAttrNum, DontDelete, 0, 0 },
-    { "scrollHeight", JSElement::ScrollHeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "tagName", DontDelete|ReadOnly, (intptr_t)jsElementTagName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsElementStyle, (intptr_t)0 },
+    { "offsetLeft", DontDelete|ReadOnly, (intptr_t)jsElementOffsetLeft, (intptr_t)0 },
+    { "offsetTop", DontDelete|ReadOnly, (intptr_t)jsElementOffsetTop, (intptr_t)0 },
+    { "offsetWidth", DontDelete|ReadOnly, (intptr_t)jsElementOffsetWidth, (intptr_t)0 },
+    { "offsetHeight", DontDelete|ReadOnly, (intptr_t)jsElementOffsetHeight, (intptr_t)0 },
+    { "offsetParent", DontDelete|ReadOnly, (intptr_t)jsElementOffsetParent, (intptr_t)0 },
+    { "clientLeft", DontDelete|ReadOnly, (intptr_t)jsElementClientLeft, (intptr_t)0 },
+    { "clientTop", DontDelete|ReadOnly, (intptr_t)jsElementClientTop, (intptr_t)0 },
+    { "clientWidth", DontDelete|ReadOnly, (intptr_t)jsElementClientWidth, (intptr_t)0 },
+    { "clientHeight", DontDelete|ReadOnly, (intptr_t)jsElementClientHeight, (intptr_t)0 },
+    { "scrollLeft", DontDelete, (intptr_t)jsElementScrollLeft, (intptr_t)setJSElementScrollLeft },
+    { "scrollTop", DontDelete, (intptr_t)jsElementScrollTop, (intptr_t)setJSElementScrollTop },
+    { "scrollWidth", DontDelete|ReadOnly, (intptr_t)jsElementScrollWidth, (intptr_t)0 },
+    { "scrollHeight", DontDelete|ReadOnly, (intptr_t)jsElementScrollHeight, (intptr_t)0 },
+    { "firstElementChild", DontDelete|ReadOnly, (intptr_t)jsElementFirstElementChild, (intptr_t)0 },
+    { "lastElementChild", DontDelete|ReadOnly, (intptr_t)jsElementLastElementChild, (intptr_t)0 },
+    { "previousElementSibling", DontDelete|ReadOnly, (intptr_t)jsElementPreviousElementSibling, (intptr_t)0 },
+    { "nextElementSibling", DontDelete|ReadOnly, (intptr_t)jsElementNextElementSibling, (intptr_t)0 },
+    { "childElementCount", DontDelete|ReadOnly, (intptr_t)jsElementChildElementCount, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSElementTable = 
-{
-    2, 23, JSElementTableEntries, 16
-};
+static const HashTable JSElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 8191, JSElementTableValues, 0 };
+#else
+    { 68, 63, JSElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSElementConstructorTableEntries[] =
+static const HashTableValue JSElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSElementConstructorTable = 
-{
-    2, 1, JSElementConstructorTableEntries, 1
-};
+static const HashTable JSElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSElementConstructorTableValues, 0 };
+#endif
 
 class JSElementConstructor : public DOMObject {
 public:
     JSElementConstructor(ExecState* exec)
+        : DOMObject(JSElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSElementConstructor::info = { "ElementConstructor", 0, &JSElementConstructorTable, 0 };
+const ClassInfo JSElementConstructor::s_info = { "ElementConstructor", 0, &JSElementConstructorTable, 0 };
 
 bool JSElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSElementConstructor, DOMObject>(exec, &JSElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSElementPrototypeTableEntries[] =
+static const HashTableValue JSElementPrototypeTableValues[26] =
 {
-    { "removeAttributeNode", JSElement::RemoveAttributeNodeFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "removeAttribute", JSElement::RemoveAttributeFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getAttributeNode", JSElement::GetAttributeNodeFuncNum, DontDelete|Function, 1, &JSElementPrototypeTableEntries[27] },
-    { "getAttributeNodeNS", JSElement::GetAttributeNodeNSFuncNum, DontDelete|Function, 2, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getElementsByTagName", JSElement::GetElementsByTagNameFuncNum, DontDelete|Function, 1, 0 },
-    { "getElementsByTagNameNS", JSElement::GetElementsByTagNameNSFuncNum, DontDelete|Function, 2, &JSElementPrototypeTableEntries[24] },
-    { "getAttributeNS", JSElement::GetAttributeNSFuncNum, DontDelete|Function, 2, &JSElementPrototypeTableEntries[25] },
-    { "setAttributeNode", JSElement::SetAttributeNodeFuncNum, DontDelete|Function, 1, &JSElementPrototypeTableEntries[26] },
-    { "scrollByLines", JSElement::ScrollByLinesFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "setAttribute", JSElement::SetAttributeFuncNum, DontDelete|Function, 2, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "scrollByPages", JSElement::ScrollByPagesFuncNum, DontDelete|Function, 1, 0 },
-    { "removeAttributeNS", JSElement::RemoveAttributeNSFuncNum, DontDelete|Function, 2, 0 },
-    { "setAttributeNS", JSElement::SetAttributeNSFuncNum, DontDelete|Function, 3, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "setAttributeNodeNS", JSElement::SetAttributeNodeNSFuncNum, DontDelete|Function, 1, &JSElementPrototypeTableEntries[29] },
-    { "getAttribute", JSElement::GetAttributeFuncNum, DontDelete|Function, 1, &JSElementPrototypeTableEntries[23] },
-    { "scrollIntoView", JSElement::ScrollIntoViewFuncNum, DontDelete|Function, 1, 0 },
-    { "hasAttribute", JSElement::HasAttributeFuncNum, DontDelete|Function, 1, 0 },
-    { "hasAttributeNS", JSElement::HasAttributeNSFuncNum, DontDelete|Function, 2, 0 },
-    { "focus", JSElement::FocusFuncNum, DontDelete|Function, 0, &JSElementPrototypeTableEntries[28] },
-    { "blur", JSElement::BlurFuncNum, DontDelete|Function, 0, 0 },
-    { "insertAdjacentElement", JSElement::InsertAdjacentElementFuncNum, DontDelete|Function, 2, 0 },
-    { "contains", JSElement::ContainsFuncNum, DontDelete|Function, 1, 0 },
-    { "scrollIntoViewIfNeeded", JSElement::ScrollIntoViewIfNeededFuncNum, DontDelete|Function, 1, 0 }
+    { "getAttribute", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetAttribute, (intptr_t)1 },
+    { "setAttribute", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionSetAttribute, (intptr_t)2 },
+    { "removeAttribute", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionRemoveAttribute, (intptr_t)1 },
+    { "getAttributeNode", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetAttributeNode, (intptr_t)1 },
+    { "setAttributeNode", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionSetAttributeNode, (intptr_t)1 },
+    { "removeAttributeNode", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionRemoveAttributeNode, (intptr_t)1 },
+    { "getElementsByTagName", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetElementsByTagName, (intptr_t)1 },
+    { "getAttributeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetAttributeNS, (intptr_t)2 },
+    { "setAttributeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionSetAttributeNS, (intptr_t)3 },
+    { "removeAttributeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionRemoveAttributeNS, (intptr_t)2 },
+    { "getElementsByTagNameNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetElementsByTagNameNS, (intptr_t)2 },
+    { "getAttributeNodeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetAttributeNodeNS, (intptr_t)2 },
+    { "setAttributeNodeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionSetAttributeNodeNS, (intptr_t)1 },
+    { "hasAttribute", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionHasAttribute, (intptr_t)1 },
+    { "hasAttributeNS", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionHasAttributeNS, (intptr_t)2 },
+    { "focus", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionFocus, (intptr_t)0 },
+    { "blur", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionBlur, (intptr_t)0 },
+    { "scrollIntoView", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionScrollIntoView, (intptr_t)1 },
+    { "contains", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionContains, (intptr_t)1 },
+    { "scrollIntoViewIfNeeded", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionScrollIntoViewIfNeeded, (intptr_t)1 },
+    { "scrollByLines", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionScrollByLines, (intptr_t)1 },
+    { "scrollByPages", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionScrollByPages, (intptr_t)1 },
+    { "getElementsByClassName", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionGetElementsByClassName, (intptr_t)1 },
+    { "querySelector", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionQuerySelector, (intptr_t)1 },
+    { "querySelectorAll", DontDelete|Function, (intptr_t)jsElementPrototypeFunctionQuerySelectorAll, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSElementPrototypeTable = 
-{
-    2, 30, JSElementPrototypeTableEntries, 23
-};
+static const HashTable JSElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1023, JSElementPrototypeTableValues, 0 };
+#else
+    { 68, 63, JSElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSElementPrototype::info = { "ElementPrototype", 0, &JSElementPrototypeTable, 0 };
+const ClassInfo JSElementPrototype::s_info = { "ElementPrototype", 0, &JSElementPrototypeTable, 0 };
 
 JSObject* JSElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSElementPrototype>(exec, "[[JSElement.prototype]]");
+    return getDOMPrototype<JSElement>(exec);
 }
 
 bool JSElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSElementPrototypeFunction, JSObject>(exec, &JSElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSElement::info = { "Element", &JSEventTargetNode::info, &JSElementTable, 0 };
+const ClassInfo JSElement::s_info = { "Element", &JSEventTargetNode::s_info, &JSElementTable, 0 };
 
-JSElement::JSElement(ExecState* exec, Element* impl)
-    : JSEventTargetNode(exec, impl)
+JSElement::JSElement(PassRefPtr<Structure> structure, PassRefPtr<Element> impl)
+    : JSEventTargetNode(structure, impl)
 {
-    setPrototype(JSElementPrototype::self(exec));
 }
 
-bool JSElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+JSObject* JSElement::createPrototype(ExecState* exec)
 {
-    return getStaticValueSlot<JSElement, JSEventTargetNode>(exec, &JSElementTable, this, propertyName, slot);
+    return new (exec) JSElementPrototype(JSElementPrototype::createStructure(JSEventTargetNodePrototype::self(exec)));
 }
 
-JSValue* JSElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsElementTagName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TagNameAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsStringOrNull(imp->tagName());
-    }
-    case StyleAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    case OffsetLeftAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->offsetLeft());
-    }
-    case OffsetTopAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->offsetTop());
-    }
-    case OffsetWidthAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->offsetWidth());
-    }
-    case OffsetHeightAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->offsetHeight());
-    }
-    case OffsetParentAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->offsetParent()));
-    }
-    case ClientLeftAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->clientLeft());
-    }
-    case ClientTopAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->clientTop());
-    }
-    case ClientWidthAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->clientWidth());
-    }
-    case ClientHeightAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->clientHeight());
-    }
-    case ScrollLeftAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->scrollLeft());
-    }
-    case ScrollTopAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->scrollTop());
-    }
-    case ScrollWidthAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->scrollWidth());
-    }
-    case ScrollHeightAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        return jsNumber(imp->scrollHeight());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->tagName());
 }
 
-void JSElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSElement, JSEventTargetNode>(exec, propertyName, value, attr, &JSElementTable, this);
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
 }
 
-void JSElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsElementOffsetLeft(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ScrollLeftAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        imp->setScrollLeft(value->toInt32(exec));
-        break;
-    }
-    case ScrollTopAttrNum: {
-        Element* imp = static_cast<Element*>(impl());
-
-        imp->setScrollTop(value->toInt32(exec));
-        break;
-    }
-    }
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetLeft());
 }
 
-JSValue* JSElement::getConstructor(ExecState* exec)
+JSValuePtr jsElementOffsetTop(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSElementConstructor>(exec, "[[Element.constructor]]");
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetTop());
 }
-JSValue* JSElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsElementOffsetWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSElement::info))
-      return throwError(exec, TypeError);
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetWidth());
+}
 
-    Element* imp = static_cast<Element*>(static_cast<JSElement*>(thisObj)->impl());
+JSValuePtr jsElementOffsetHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->offsetHeight());
+}
 
-    switch (id) {
-    case JSElement::GetAttributeFuncNum: {
-        String name = args[0]->toString(exec);
+JSValuePtr jsElementOffsetParent(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->offsetParent()));
+}
+
+JSValuePtr jsElementClientLeft(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientLeft());
+}
+
+JSValuePtr jsElementClientTop(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientTop());
+}
+
+JSValuePtr jsElementClientWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientWidth());
+}
+
+JSValuePtr jsElementClientHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->clientHeight());
+}
+
+JSValuePtr jsElementScrollLeft(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollLeft());
+}
+
+JSValuePtr jsElementScrollTop(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollTop());
+}
+
+JSValuePtr jsElementScrollWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollWidth());
+}
+
+JSValuePtr jsElementScrollHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollHeight());
+}
+
+JSValuePtr jsElementFirstElementChild(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->firstElementChild()));
+}
+
+JSValuePtr jsElementLastElementChild(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->lastElementChild()));
+}
+
+JSValuePtr jsElementPreviousElementSibling(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->previousElementSibling()));
+}
+
+JSValuePtr jsElementNextElementSibling(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->nextElementSibling()));
+}
+
+JSValuePtr jsElementChildElementCount(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->childElementCount());
+}
+
+JSValuePtr jsElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSElement, Base>(exec, propertyName, value, &JSElementTable, this, slot);
+}
+
+void setJSElementScrollLeft(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(thisObject)->impl());
+    imp->setScrollLeft(value->toInt32(exec));
+}
+
+void setJSElementScrollTop(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Element* imp = static_cast<Element*>(static_cast<JSElement*>(thisObject)->impl());
+    imp->setScrollTop(value->toInt32(exec));
+}
+
+JSValuePtr JSElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSElementConstructor>(exec);
+}
+
+JSValuePtr jsElementPrototypeFunctionGetAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = jsStringOrNull(imp->getAttribute(name));
-        return result;
-    }
-    case JSElement::SetAttributeFuncNum: {
-        return static_cast<JSElement*>(thisObj)->setAttribute(exec, args);
-    }
-    case JSElement::RemoveAttributeFuncNum: {
-        ExceptionCode ec = 0;
-        String name = args[0]->toString(exec);
+    JSC::JSValuePtr result = jsStringOrNull(exec, imp->getAttribute(name));
+    return result;
+}
 
-        imp->removeAttribute(name, ec);
-        setDOMException(exec, ec);
+JSValuePtr jsElementPrototypeFunctionSetAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    return castedThisObj->setAttribute(exec, args);
+}
+
+JSValuePtr jsElementPrototypeFunctionRemoveAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+    imp->removeAttribute(name, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionGetAttributeNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getAttributeNode(name)));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionSetAttributeNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    return castedThisObj->setAttributeNode(exec, args);
+}
+
+JSValuePtr jsElementPrototypeFunctionRemoveAttributeNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Attr* oldAttr = toAttr(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->removeAttributeNode(oldAttr, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionGetElementsByTagName(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByTagName(name)));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionGetAttributeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->getAttributeNS(namespaceURI, localName));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionSetAttributeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    return castedThisObj->setAttributeNS(exec, args);
+}
+
+JSValuePtr jsElementPrototypeFunctionRemoveAttributeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+    imp->removeAttributeNS(namespaceURI, localName, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionGetElementsByTagNameNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByTagNameNS(namespaceURI, localName)));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionGetAttributeNodeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getAttributeNodeNS(namespaceURI, localName)));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionSetAttributeNodeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    return castedThisObj->setAttributeNodeNS(exec, args);
+}
+
+JSValuePtr jsElementPrototypeFunctionHasAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasAttribute(name));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionHasAttributeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasAttributeNS(namespaceURI, localName));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionFocus(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+
+    imp->focus();
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionBlur(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+
+    imp->blur();
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionScrollIntoView(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+
+    int argsCount = args.size();
+    if (argsCount < 1) {
+        imp->scrollIntoView();
         return jsUndefined();
     }
-    case JSElement::GetAttributeNodeFuncNum: {
-        String name = args[0]->toString(exec);
 
+    bool alignWithTop = args.at(exec, 0)->toBoolean(exec);
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getAttributeNode(name)));
-        return result;
-    }
-    case JSElement::SetAttributeNodeFuncNum: {
-        return static_cast<JSElement*>(thisObj)->setAttributeNode(exec, args);
-    }
-    case JSElement::RemoveAttributeNodeFuncNum: {
-        ExceptionCode ec = 0;
-        bool oldAttrOk;
-        Attr* oldAttr = toAttr(args[0], oldAttrOk);
-        if (!oldAttrOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->removeAttributeNode(oldAttr, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSElement::GetElementsByTagNameFuncNum: {
-        String name = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementsByTagName(name)));
-        return result;
-    }
-    case JSElement::GetAttributeNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = jsString(imp->getAttributeNS(namespaceURI, localName));
-        return result;
-    }
-    case JSElement::SetAttributeNSFuncNum: {
-        return static_cast<JSElement*>(thisObj)->setAttributeNS(exec, args);
-    }
-    case JSElement::RemoveAttributeNSFuncNum: {
-        ExceptionCode ec = 0;
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-        imp->removeAttributeNS(namespaceURI, localName, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSElement::GetElementsByTagNameNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementsByTagNameNS(namespaceURI, localName)));
-        return result;
-    }
-    case JSElement::GetAttributeNodeNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getAttributeNodeNS(namespaceURI, localName)));
-        return result;
-    }
-    case JSElement::SetAttributeNodeNSFuncNum: {
-        return static_cast<JSElement*>(thisObj)->setAttributeNodeNS(exec, args);
-    }
-    case JSElement::HasAttributeFuncNum: {
-        String name = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasAttribute(name));
-        return result;
-    }
-    case JSElement::HasAttributeNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasAttributeNS(namespaceURI, localName));
-        return result;
-    }
-    case JSElement::FocusFuncNum: {
-
-        imp->focus();
-        return jsUndefined();
-    }
-    case JSElement::BlurFuncNum: {
-
-        imp->blur();
-        return jsUndefined();
-    }
-    case JSElement::ScrollIntoViewFuncNum: {
-
-        int argsCount = args.size();
-        if (argsCount < 1) {
-            imp->scrollIntoView();
-            return jsUndefined();
-        }
-
-        bool alignWithTop = args[0]->toBoolean(exec);
-
-        imp->scrollIntoView(alignWithTop);
-        return jsUndefined();
-    }
-    case JSElement::InsertAdjacentElementFuncNum: {
-        ExceptionCode ec = 0;
-        String position = args[0]->toString(exec);
-        Node* element = toNode(args[1]);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->insertAdjacentElement(position, element, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSElement::ContainsFuncNum: {
-        Element* element = toElement(args[0]);
-
-
-        KJS::JSValue* result = jsBoolean(imp->contains(element));
-        return result;
-    }
-    case JSElement::ScrollIntoViewIfNeededFuncNum: {
-
-        int argsCount = args.size();
-        if (argsCount < 1) {
-            imp->scrollIntoViewIfNeeded();
-            return jsUndefined();
-        }
-
-        bool centerIfNeeded = args[0]->toBoolean(exec);
-
-        imp->scrollIntoViewIfNeeded(centerIfNeeded);
-        return jsUndefined();
-    }
-    case JSElement::ScrollByLinesFuncNum: {
-        bool linesOk;
-        int lines = args[0]->toInt32(exec, linesOk);
-        if (!linesOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->scrollByLines(lines);
-        return jsUndefined();
-    }
-    case JSElement::ScrollByPagesFuncNum: {
-        bool pagesOk;
-        int pages = args[0]->toInt32(exec, pagesOk);
-        if (!pagesOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->scrollByPages(pages);
-        return jsUndefined();
-    }
-    }
-    return 0;
-}
-Element* toElement(KJS::JSValue* val)
-{
-    return val->isObject(&JSElement::info) ? static_cast<JSElement*>(val)->impl() : 0;
+    imp->scrollIntoView(alignWithTop);
+    return jsUndefined();
 }
 
-Element* JSElement::impl() const
+JSValuePtr jsElementPrototypeFunctionContains(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return static_cast<Element*>(JSEventTargetNode::impl());
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    Element* element = toElement(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->contains(element));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionScrollIntoViewIfNeeded(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+
+    int argsCount = args.size();
+    if (argsCount < 1) {
+        imp->scrollIntoViewIfNeeded();
+        return jsUndefined();
+    }
+
+    bool centerIfNeeded = args.at(exec, 0)->toBoolean(exec);
+
+    imp->scrollIntoViewIfNeeded(centerIfNeeded);
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionScrollByLines(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    int lines = args.at(exec, 0)->toInt32(exec);
+
+    imp->scrollByLines(lines);
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionScrollByPages(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    int pages = args.at(exec, 0)->toInt32(exec);
+
+    imp->scrollByPages(pages);
+    return jsUndefined();
+}
+
+JSValuePtr jsElementPrototypeFunctionGetElementsByClassName(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByClassName(name)));
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionQuerySelector(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelector(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsElementPrototypeFunctionQuerySelectorAll(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSElement::s_info))
+        return throwError(exec, TypeError);
+    JSElement* castedThisObj = static_cast<JSElement*>(asObject(thisValue));
+    Element* imp = static_cast<Element*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelectorAll(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+Element* toElement(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSElement::s_info) ? static_cast<JSElement*>(asObject(value))->impl() : 0;
 }
 
 }

@@ -1,17 +1,13 @@
 DESTDIR = $$QT_BUILD_TREE/plugins/phonon_backend
 QT += phonon
-win32:contains(QT_CONFIG,opengl):QT += opengl
-LIBS += strmiids.lib Dmoguids.lib uuid.lib msdmo.lib
+win32:!wince*:contains(QT_CONFIG,opengl):LIBS += opengl32.lib
+win32:!wince*:LIBS += gdi32.lib
+win32-msvc2005:DEFINES += _CRT_SECURE_NO_WARNINGS
+LIBS += strmiids.lib Dmoguids.lib uuid.lib msdmo.lib
 TARGET = phonon_ds9
 
 DEFINES += PHONON_MAKE_QT_ONLY_BACKEND
-PHONON_DS9_DIR = $$QT_SOURCE_TREE/src/3rdparty/kdebase/runtime/phonon/ds9
-
-!wince* {
-  LIBS += gdi32.lib advapi32.lib
-  HEADERS += $$PHONON_DS9_DIR/videorenderer_vmr9.h
-  SOURCES += $$PHONON_DS9_DIR/videorenderer_vmr9.cpp
-}
+PHONON_DS9_DIR = $$QT_SOURCE_TREE/src/3rdparty/phonon/ds9
 
 # Input
 HEADERS += \
@@ -26,6 +22,7 @@ HEADERS += \
            $$PHONON_DS9_DIR/mediaobject.h \
            $$PHONON_DS9_DIR/videowidget.h \
            $$PHONON_DS9_DIR/videorenderer_soft.h \
+           $$PHONON_DS9_DIR/videorenderer_vmr9.h \
            $$PHONON_DS9_DIR/volumeeffect.h \
            $$PHONON_DS9_DIR/qbasefilter.h \
            $$PHONON_DS9_DIR/qpin.h \
@@ -48,6 +45,7 @@ SOURCES += \
            $$PHONON_DS9_DIR/mediaobject.cpp \
            $$PHONON_DS9_DIR/videowidget.cpp \
            $$PHONON_DS9_DIR/videorenderer_soft.cpp \
+           $$PHONON_DS9_DIR/videorenderer_vmr9.cpp \
            $$PHONON_DS9_DIR/volumeeffect.cpp \
            $$PHONON_DS9_DIR/qbasefilter.cpp \
            $$PHONON_DS9_DIR/qpin.cpp \

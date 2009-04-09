@@ -4,21 +4,8 @@ FVISIBILITY_SUPPORT=no
 COMPILER=$1
 VERBOSE=$2
 
-case "$COMPILER" in
-aCC*)
-    ;;
-
-icpc)
-    ICPC_VERSION=`icpc -dumpversion`
-    case "$ICPC_VERSION" in
-    10.1)
-        FVISIBILITY_SUPPORT=yes
-        ;;
-    esac
-    ;;
-
-    *)
-cat >>fvisibility.c << EOF
+RunCompileTest() {
+    cat >>fvisibility.c << EOF
 __attribute__((visibility("default"))) void blah();
 #if !defined(__GNUC__)
 # error "Visiblility support requires GCC"
@@ -27,8 +14,33 @@ __attribute__((visibility("default"))) void blah();
 #endif
 EOF
 
-"$COMPILER" -c -fvisibility=hidden fvisibility.c >/dev/null 2>&1 && FVISIBILITY_SUPPORT=yes
-rm -f fvisibility.c fvisibility.o
+    if [ "$VERBOSE" = "yes" ] ; then
+        "$COMPILER" -c -fvisibility=hidden fvisibility.c && FVISIBILITY_SUPPORT=yes
+    else
+        "$COMPILER" -c -fvisibility=hidden fvisibility.c >/dev/null 2>&1 && FVISIBILITY_SUPPORT=yes
+    fi
+    rm -f fvisibility.c fvisibility.o
+}
+
+case "$COMPILER" in
+aCC*)
+    ;;
+
+icpc)
+    ICPC_VERSION=`icpc -dumpversion`
+    case "$ICPC_VERSION" in
+    8.*|9.*|10.0)
+        # 8.x, 9.x, and 10.0 don't support symbol visibility
+        ;;
+    *)
+        # the compile test works for the intel compiler because it mimics gcc's behavior
+        RunCompileTest
+        ;;
+    esac
+    ;;
+
+    *)
+    RunCompileTest
     ;;
 esac
 

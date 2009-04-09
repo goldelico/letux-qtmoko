@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -96,13 +100,13 @@ QLinkedListData QLinkedListData::shared_null = {
     from a list one at a time and calls \c delete on them:
     \snippet doc/src/snippets/code/src_corelib_tools_qlinkedlist.cpp 2
 
-    QLinkedList's value type must be an \l{assignable data type}.
-    This covers most data types that are commonly used, but the
-    compiler won't let you, for example, store a QWidget as a value;
-    instead, store a QWidget *. A few functions have additional
-    requirements; for example, contains() and removeAll() expect the
-    value type to support \c operator==(). These requirements are
-    documented on a per-function basis.
+    QLinkedList's value type must be an \l {assignable data type}. This
+    covers most data types that are commonly used, but the compiler
+    won't let you, for example, store a QWidget as a value; instead,
+    store a QWidget *. A few functions have additional requirements;
+    for example, contains() and removeAll() expect the value type to
+    support \c operator==().  These requirements are documented on a
+    per-function basis.
 
     If you want to insert, modify, or remove items in the middle of
     the list, you must use an iterator. QLinkedList provides both
@@ -280,6 +284,24 @@ QLinkedListData QLinkedListData::shared_null = {
     \c operator==().
 
     \sa contains()
+*/
+
+/*! \fn bool QLinkedList::startsWith(const T &value) const
+    \since 4.5
+
+    Returns true if the list is not empty and its first
+    item is equal to \a value; otherwise returns false.
+
+    \sa isEmpty(), first()
+*/
+
+/*! \fn bool QLinkedList::endsWith(const T &value) const
+    \since 4.5
+
+    Returns true if the list is not empty and its last
+    item is equal to \a value; otherwise returns false.
+
+    \sa isEmpty(), last()
 */
 
 /*! \fn QLinkedList::iterator QLinkedList::begin()

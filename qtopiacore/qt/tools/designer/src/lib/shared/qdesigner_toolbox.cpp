@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -256,12 +260,12 @@ QToolBoxWidgetPropertySheet::QToolBoxWidgetPropertySheet(QToolBox *object, QObje
     QDesignerPropertySheet(object, parent),
     m_toolBox(object)
 {
-    createFakeProperty(QLatin1String(currentItemTextKey), QString());
+    createFakeProperty(QLatin1String(currentItemTextKey), qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
     createFakeProperty(QLatin1String(currentItemNameKey), QString());
     createFakeProperty(QLatin1String(currentItemIconKey), qVariantFromValue(qdesigner_internal::PropertySheetIconValue()));
     if (formWindowBase())
         formWindowBase()->addReloadableProperty(this, indexOf(QLatin1String(currentItemIconKey)));
-    createFakeProperty(QLatin1String(currentItemToolTipKey), QString());
+    createFakeProperty(QLatin1String(currentItemToolTipKey), qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
     createFakeProperty(QLatin1String(tabSpacingKey), QVariant(tabSpacingDefault));
 }
 
@@ -295,22 +299,25 @@ void QToolBoxWidgetPropertySheet::setProperty(int index, const QVariant &value)
     }
     // index-dependent
     const int currentIndex = m_toolBox->currentIndex();
-    if (currentIndex == -1)
+    QWidget *currentWidget = m_toolBox->currentWidget();
+    if (!currentWidget)
         return;
 
     switch (toolBoxProperty) {
     case PropertyCurrentItemText:
-        m_toolBox->setItemText(currentIndex, value.toString());
+        m_toolBox->setItemText(currentIndex, qvariant_cast<QString>(resolvePropertyValue(index, value)));
+        m_pageToData[currentWidget].text = qVariantValue<qdesigner_internal::PropertySheetStringValue>(value);
         break;
     case PropertyCurrentItemName:
-        m_toolBox->widget(currentIndex)->setObjectName(value.toString());
+        currentWidget->setObjectName(value.toString());
         break;
     case PropertyCurrentItemIcon:
         m_toolBox->setItemIcon(currentIndex, qvariant_cast<QIcon>(resolvePropertyValue(index, value)));
-        m_pageToIcon[currentIndex] = qVariantValue<qdesigner_internal::PropertySheetIconValue>(value);
+        m_pageToData[currentWidget].icon = qVariantValue<qdesigner_internal::PropertySheetIconValue>(value);
         break;
     case PropertyCurrentItemToolTip:
-        m_toolBox->setItemToolTip(currentIndex, value.toString());
+        m_toolBox->setItemToolTip(currentIndex, qvariant_cast<QString>(resolvePropertyValue(index, value)));
+        m_pageToData[currentWidget].tooltip = qVariantValue<qdesigner_internal::PropertySheetStringValue>(value);
         break;
     case PropertyTabSpacing:
     case PropertyToolBoxNone:
@@ -343,23 +350,27 @@ QVariant QToolBoxWidgetPropertySheet::property(int index) const
         break;
     }
     // index-dependent
-    const int currentIndex = m_toolBox->currentIndex();
-    if (currentIndex == -1) {
+    QWidget *currentWidget = m_toolBox->currentWidget();
+    if (!currentWidget) {
         if (toolBoxProperty == PropertyCurrentItemIcon)
             return  qVariantFromValue(qdesigner_internal::PropertySheetIconValue());
+        if (toolBoxProperty == PropertyCurrentItemText)
+            return  qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
+        if (toolBoxProperty == PropertyCurrentItemToolTip)
+            return  qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
         return QVariant(QString());
     }
 
     // index-dependent
     switch (toolBoxProperty) {
     case PropertyCurrentItemText:
-        return m_toolBox->itemText(currentIndex);
+        return qVariantFromValue(m_pageToData.value(currentWidget).text);
     case PropertyCurrentItemName:
-        return m_toolBox->widget(currentIndex)->objectName();
+        return currentWidget->objectName();
     case PropertyCurrentItemIcon:
-        return qVariantFromValue(m_pageToIcon.value(currentIndex));
+        return qVariantFromValue(m_pageToData.value(currentWidget).icon);
     case PropertyCurrentItemToolTip:
-        return m_toolBox->itemToolTip(currentIndex);
+        return qVariantFromValue(m_pageToData.value(currentWidget).tooltip);
     case PropertyTabSpacing:
     case PropertyToolBoxNone:
         break;
@@ -381,19 +392,25 @@ bool QToolBoxWidgetPropertySheet::reset(int index)
         break;
     }
     // index-dependent
-    const int currentIndex = m_toolBox->currentIndex();
-    if (currentIndex == -1)
+    QWidget *currentWidget = m_toolBox->currentWidget();
+    if (!currentWidget)
         return false;
 
     // index-dependent
     switch (toolBoxProperty) {
-    case PropertyCurrentItemText:
     case PropertyCurrentItemName:
+        setProperty(index, QString());
+        break;
     case PropertyCurrentItemToolTip:
+        m_pageToData[currentWidget].tooltip = qdesigner_internal::PropertySheetStringValue();
+        setProperty(index, QString());
+        break;
+    case PropertyCurrentItemText:
+        m_pageToData[currentWidget].text = qdesigner_internal::PropertySheetStringValue();
         setProperty(index, QString());
         break;
     case PropertyCurrentItemIcon:
-        m_pageToIcon.remove(index);
+        m_pageToData[currentWidget].icon = qdesigner_internal::PropertySheetIconValue();
         setProperty(index, QIcon());
         break;
     case PropertyTabSpacing:

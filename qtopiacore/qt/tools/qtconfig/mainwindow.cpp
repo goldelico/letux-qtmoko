@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,6 +60,8 @@
 #include <QStyle>
 #include <QtEvents>
 #include <Q3ValueList>
+#include <QInputContext>
+#include <QInputContextFactory>
 #include <QtDebug>
 
 #include <stdlib.h>
@@ -193,53 +199,30 @@ MainWindow::MainWindow()
       editPalette(palette()), previewPalette(palette()), previewstyle(0)
 {
     modified = true;
-
+    desktopThemeName = tr("Desktop Settings (Default)");
     QStringList gstyles = QStyleFactory::keys();
     gstyles.sort();
+    gstylecombo->addItem(desktopThemeName);
+    gstylecombo->setItemData(gstylecombo->findText(desktopThemeName),
+                                tr("Choose style and palette based on your desktop settings."), Qt::ToolTipRole);
     gstylecombo->insertStringList(gstyles);
 
     QSettings settings(QLatin1String("Trolltech"));
     settings.beginGroup(QLatin1String("Qt"));
 
     QString currentstyle = settings.value(QLatin1String("style")).toString();
-    if (currentstyle.isNull())
+    if (currentstyle.isEmpty()) {
+        gstylecombo->setCurrentItem(gstylecombo->findText(desktopThemeName));
         currentstyle = QLatin1String(QApplication::style()->name());
-    {
-        int s = 0;
-        QStringList::Iterator git = gstyles.begin();
-        while (git != gstyles.end()) {
-            if ((*git).lower() == currentstyle.lower())
-                break;
-            s++;
-            git++;
-        }
-
-        if (s < gstylecombo->count()) {
-            gstylecombo->setCurrentItem(s);
-        } else {
-            // no predefined style, try to find the closest match
-            // class names usually contain the name of the style, so we
-            // iterate over the items in the combobox, and use the one whose
-            // name is contained in the classname of the style
-            s = 0;
-            git = gstyles.begin();
-            while (git != gstyles.end()) {
-                if (currentstyle.contains(*git))
-                    break;
-                s++;
-                git++;
-            }
-
-            if (s < gstylecombo->count()) {
-                gstylecombo->setCurrentItem(s);
-            } else {
-                // we give up
-                gstylecombo->insertItem(QLatin1String("Unknown"));
-                gstylecombo->setCurrentItem(gstylecombo->count() - 1);
-            }
+    } else {
+        int index = gstylecombo->findText(currentstyle, Qt::MatchFixedString);
+        if (index != -1) {
+            gstylecombo->setCurrentItem(index);
+        } else { // we give up
+            gstylecombo->insertItem(QLatin1String("Unknown"));
+            gstylecombo->setCurrentItem(gstylecombo->count() - 1);
         }
     }
-
     buttonMainColor->setColor(palette().color(QPalette::Active,
                                               QColorGroup::Button));
     buttonMainColor2->setColor(palette().color(QPalette::Active,
@@ -371,6 +354,29 @@ MainWindow::MainWindow()
     inputStyleLabel->hide();
 #endif
 
+#if defined(Q_WS_X11) && !defined(QT_NO_XIM)
+    QStringList inputMethods = QInputContextFactory::keys();
+    int inputMethodIndex = -1;
+    QString defaultInputMethod = settings.value(QLatin1String("DefaultInputMethod"), QLatin1String("xim")).toString();
+    for (int i = inputMethods.size()-1; i >= 0; --i) {
+        const QString &im = inputMethods.at(i);
+        if (im.contains(QLatin1String("imsw"))) {
+            inputMethods.removeAt(i);
+            if (inputMethodIndex > i)
+                --inputMethodIndex;
+        } else if (im == defaultInputMethod) {
+            inputMethodIndex = i;
+        }
+    }
+    if (inputMethodIndex == -1 && !inputMethods.isEmpty())
+        inputMethodIndex = 0;
+    inputMethod->addItems(inputMethods);
+    inputMethod->setCurrentIndex(inputMethodIndex);
+#else
+    inputMethod->hide();
+    inputMethodLabel->hide();
+#endif
+
     fontembeddingcheckbox->setChecked(settings.value(QLatin1String("embedFonts"), true).toBool());
     fontpaths = settings.value(QLatin1String("fontPath")).toStringList();
     fontpathlistbox->insertStringList(fontpaths);
@@ -382,25 +388,25 @@ MainWindow::MainWindow()
     audiosinkCombo->setItemData(audiosinkCombo->findText(tr("aRts")),
                                 tr("Experimental aRts support for GStreamer."), Qt::ToolTipRole);
 #ifndef QT_NO_GSTREAMER
-    phononVersionLabel->setText(Phonon::phononVersion());
+    phononVersionLabel->setText(QLatin1String(Phonon::phononVersion()));
     if (gst_init_check(0, 0, 0)) {
         gchar *versionString = gst_version_string();
-        gstversionLabel->setText(versionString);
+        gstversionLabel->setText(QLatin1String(versionString));
         g_free(versionString);
         GList* factoryList = gst_registry_get_feature_list(gst_registry_get_default (), GST_TYPE_ELEMENT_FACTORY);
         QString name, klass, description;
         for (GList* iter = g_list_first(factoryList) ; iter != NULL ; iter = g_list_next(iter)) {
             GstPluginFeature *feature = GST_PLUGIN_FEATURE(iter->data);
-            klass = gst_element_factory_get_klass(GST_ELEMENT_FACTORY(feature));
-            if ( klass == "Sink/Audio" ) {
-                name = GST_PLUGIN_FEATURE_NAME(feature);
-                if (name == "sfsink")
+            klass = QLatin1String(gst_element_factory_get_klass(GST_ELEMENT_FACTORY(feature)));
+            if (klass == QLatin1String("Sink/Audio")) {
+                name = QLatin1String(GST_PLUGIN_FEATURE_NAME(feature));
+                if (name == QLatin1String("sfsink"))
                     continue; //useless to output audio to file when you cannot set the file path
-                else if (name == "autoaudiosink")
+                else if (name == QLatin1String("autoaudiosink"))
                     continue; //This is used implicitly from the auto setting
-                GstElement *sink = gst_element_factory_make (name, NULL);
+                GstElement *sink = gst_element_factory_make (qPrintable(name), NULL);
                 if (sink) {
-                    description = gst_element_factory_get_description (GST_ELEMENT_FACTORY(feature));
+                    description = QLatin1String(gst_element_factory_get_description (GST_ELEMENT_FACTORY(feature)));
                     audiosinkCombo->addItem(name, name);
                     audiosinkCombo->setItemData(audiosinkCombo->findText(name), description, Qt::ToolTipRole);
                     gst_object_unref (sink);
@@ -437,6 +443,7 @@ MainWindow::MainWindow()
     helpview->setText(tr(appearance_text));
 
     setModified(false);
+    updateStyleLayout();
 }
 
 
@@ -466,16 +473,19 @@ void MainWindow::fileSave()
                              psizecombo->currentText().toInt());
 
         QStringList actcg, inactcg, discg;
-        int i;
-        for (i = 0; i < QColorGroup::NColorRoles; i++)
-            actcg << editPalette.color(QPalette::Active,
-                                       (QColorGroup::ColorRole) i).name();
-        for (i = 0; i < QColorGroup::NColorRoles; i++)
-            inactcg << editPalette.color(QPalette::Inactive,
-                                         (QColorGroup::ColorRole) i).name();
-        for (i = 0; i < QColorGroup::NColorRoles; i++)
-            discg << editPalette.color(QPalette::Disabled,
-                                       (QColorGroup::ColorRole) i).name();
+        bool overrideDesktopSettings = (gstylecombo->currentText() != desktopThemeName);
+        if (overrideDesktopSettings) {
+            int i;
+            for (i = 0; i < QColorGroup::NColorRoles; i++)
+                actcg << editPalette.color(QPalette::Active,
+                                           (QColorGroup::ColorRole) i).name();
+            for (i = 0; i < QColorGroup::NColorRoles; i++)
+                inactcg << editPalette.color(QPalette::Inactive,
+                                             (QColorGroup::ColorRole) i).name();
+            for (i = 0; i < QColorGroup::NColorRoles; i++)
+                discg << editPalette.color(QPalette::Disabled,
+                                           (QColorGroup::ColorRole) i).name();
+        }
 
         settings.setValue(QLatin1String("font"), font.toString());
         settings.setValue(QLatin1String("Palette/active"), actcg);
@@ -484,7 +494,8 @@ void MainWindow::fileSave()
 
         settings.setValue(QLatin1String("fontPath"), fontpaths);
         settings.setValue(QLatin1String("embedFonts"), fontembeddingcheckbox->isChecked());
-        settings.setValue(QLatin1String("style"), gstylecombo->currentText());
+        settings.setValue(QLatin1String("style"), overrideDesktopSettings ? gstylecombo->currentText() : QString());
+
         settings.setValue(QLatin1String("doubleClickInterval"), dcispin->value());
         settings.setValue(QLatin1String("cursorFlashTime"), cfispin->value() == 9 ? 0 : cfispin->value() );
         settings.setValue(QLatin1String("wheelScrollLines"), wslspin->value());
@@ -506,6 +517,9 @@ void MainWindow::fileSave()
         else if ( style == trUtf8( "Root" ) )
             str = QLatin1String("Root");
         settings.setValue( QLatin1String("XIMInputStyle"), str );
+#endif
+#if defined(Q_WS_X11) && !defined(QT_NO_XIM)
+        settings.setValue(QLatin1String("DefaultInputMethod"), inputMethod->currentText());
 #endif
 
         QString audioSink = settings.value(QLatin1String("audiosink"), QLatin1String("Auto")).toString();
@@ -751,18 +765,29 @@ void MainWindow::paletteSelected(int)
     setPreviewPalette(editPalette);
 }
 
+void MainWindow::updateStyleLayout()
+{
+    QString currentStyle = gstylecombo->currentText();
+    bool autoStyle = (currentStyle == desktopThemeName);
+    previewFrame->setPreviewVisible(!autoStyle);
+    groupAutoPalette->setEnabled(currentStyle.toLower() != QLatin1String("gtk") && !autoStyle);
+}
 
 void MainWindow::styleSelected(const QString &stylename)
 {
-    QStyle *style = QStyleFactory::create(stylename);
-    if (! style)
-        return;
-
-    setStyleHelper(previewFrame, style);
-    delete previewstyle;
-    previewstyle = style;
-
-    setModified(true);
+    QStyle *style = 0;
+    if (stylename == desktopThemeName) {
+        setModified(true);
+    } else {
+        style = QStyleFactory::create(stylename);
+        if (!style)
+            return;
+        setStyleHelper(previewFrame, style);
+        delete previewstyle;
+        previewstyle = style;
+        setModified(true);
+    }
+    updateStyleLayout();
 }
 
 
@@ -981,14 +1006,14 @@ void MainWindow::helpAbout()
                    "Qt is a comprehensive C++ framework for cross-platform application "
                    "development.<br/><br/>"
                    "You need a commercial Qt license for development of proprietary (closed "
-                   "source) applications. Please see <tt>http://www.trolltech.com/company/model"
+                   "source) applications. Please see <tt>http://qtsoftware.com/company/model"
                    ".html</tt> for an overview of Qt licensing."
 #else
                    "</center><p>This program is licensed to you under the terms of the "
                    "Qt Commercial License Agreement. For details, see the file LICENSE "
                    "that came with this software distribution."
 #endif
-                   "<br/><br/>Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)."
+                   "<br/><br/>Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)."
                    "<br/><br/>The program is provided AS IS with NO WARRANTY OF ANY KIND,"
                    " INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A"
                    " PARTICULAR PURPOSE.<br/> ")

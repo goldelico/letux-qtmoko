@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGDocument.h"
 
 #include <wtf/GetPtr.h>
@@ -35,120 +31,97 @@
 #include "Event.h"
 #include "JSEvent.h"
 #include "JSSVGSVGElement.h"
-#include "PlatformString.h"
 #include "SVGDocument.h"
 #include "SVGSVGElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGDocument)
+
 /* Hash table */
 
-static const HashEntry JSSVGDocumentTableEntries[] =
+static const HashTableValue JSSVGDocumentTableValues[2] =
 {
-    { "title", JSSVGDocument::TitleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "URL", JSSVGDocument::URLAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "domain", JSSVGDocument::DomainAttrNum, DontDelete|ReadOnly, 0, &JSSVGDocumentTableEntries[5] },
-    { "referrer", JSSVGDocument::ReferrerAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "rootElement", JSSVGDocument::RootElementAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "rootElement", DontDelete|ReadOnly, (intptr_t)jsSVGDocumentRootElement, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGDocumentTable = 
-{
-    2, 6, JSSVGDocumentTableEntries, 5
-};
+static const HashTable JSSVGDocumentTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGDocumentTableValues, 0 };
+#else
+    { 2, 1, JSSVGDocumentTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGDocumentPrototypeTableEntries[] =
+static const HashTableValue JSSVGDocumentPrototypeTableValues[2] =
 {
-    { "createEvent", JSSVGDocument::CreateEventFuncNum, DontDelete|Function, 1, 0 }
+    { "createEvent", DontDelete|Function, (intptr_t)jsSVGDocumentPrototypeFunctionCreateEvent, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGDocumentPrototypeTable = 
-{
-    2, 1, JSSVGDocumentPrototypeTableEntries, 1
-};
+static const HashTable JSSVGDocumentPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGDocumentPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGDocumentPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGDocumentPrototype::info = { "SVGDocumentPrototype", 0, &JSSVGDocumentPrototypeTable, 0 };
+const ClassInfo JSSVGDocumentPrototype::s_info = { "SVGDocumentPrototype", 0, &JSSVGDocumentPrototypeTable, 0 };
 
 JSObject* JSSVGDocumentPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGDocumentPrototype>(exec, "[[JSSVGDocument.prototype]]");
+    return getDOMPrototype<JSSVGDocument>(exec);
 }
 
 bool JSSVGDocumentPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGDocumentPrototypeFunction, JSObject>(exec, &JSSVGDocumentPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGDocumentPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGDocument::info = { "SVGDocument", &JSDocument::info, &JSSVGDocumentTable, 0 };
+const ClassInfo JSSVGDocument::s_info = { "SVGDocument", &JSDocument::s_info, &JSSVGDocumentTable, 0 };
 
-JSSVGDocument::JSSVGDocument(ExecState* exec, SVGDocument* impl)
-    : JSDocument(exec, impl)
+JSSVGDocument::JSSVGDocument(PassRefPtr<Structure> structure, PassRefPtr<SVGDocument> impl)
+    : JSDocument(structure, impl)
 {
-    setPrototype(JSSVGDocumentPrototype::self(exec));
+}
+
+JSObject* JSSVGDocument::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGDocumentPrototype(JSSVGDocumentPrototype::createStructure(JSDocumentPrototype::self(exec)));
 }
 
 bool JSSVGDocument::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGDocument, JSDocument>(exec, &JSSVGDocumentTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGDocument, Base>(exec, &JSSVGDocumentTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGDocument::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGDocumentRootElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TitleAttrNum: {
-        SVGDocument* imp = static_cast<SVGDocument*>(impl());
-
-        return jsString(imp->title());
-    }
-    case ReferrerAttrNum: {
-        SVGDocument* imp = static_cast<SVGDocument*>(impl());
-
-        return jsString(imp->referrer());
-    }
-    case DomainAttrNum: {
-        SVGDocument* imp = static_cast<SVGDocument*>(impl());
-
-        return jsString(imp->domain());
-    }
-    case URLAttrNum: {
-        SVGDocument* imp = static_cast<SVGDocument*>(impl());
-
-        return jsString(imp->URL());
-    }
-    case RootElementAttrNum: {
-        SVGDocument* imp = static_cast<SVGDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->rootElement()));
-    }
-    }
-    return 0;
+    SVGDocument* imp = static_cast<SVGDocument*>(static_cast<JSSVGDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->rootElement()));
 }
 
-JSValue* JSSVGDocumentPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGDocumentPrototypeFunctionCreateEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    if (!thisObj->inherits(&JSSVGDocument::info))
-      return throwError(exec, TypeError);
-
-    SVGDocument* imp = static_cast<SVGDocument*>(static_cast<JSSVGDocument*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGDocument::CreateEventFuncNum: {
-        ExceptionCode ec = 0;
-        String eventType = args[0]->toString(exec);
+    if (!thisValue->isObject(&JSSVGDocument::s_info))
+        return throwError(exec, TypeError);
+    JSSVGDocument* castedThisObj = static_cast<JSSVGDocument*>(asObject(thisValue));
+    SVGDocument* imp = static_cast<SVGDocument*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& eventType = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createEvent(eventType, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createEvent(eventType, ec)));
+    setDOMException(exec, ec);
+    return result;
 }
+
 
 }
 

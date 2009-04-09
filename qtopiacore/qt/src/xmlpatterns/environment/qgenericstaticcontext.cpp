@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,19 +56,27 @@ using namespace QPatternist;
 
 GenericStaticContext::GenericStaticContext(const NamePool::Ptr &np,
                                            QAbstractMessageHandler *const handler,
-                                           const QUrl &aBaseURI) : m_boundarySpacePolicy(BSPStrip)
-                                                                 , m_constructionMode(CMPreserve)
-                                                                 , m_defaultFunctionNamespace(CommonNamespaces::XFN)
-                                                                 , m_orderingEmptySequence(Greatest)
-                                                                 , m_orderingMode(Ordered)
-                                                                 , m_defaultCollation(QUrl::fromEncoded(CommonNamespaces::UNICODE_COLLATION))
-                                                                 , m_baseURI(aBaseURI)
-                                                                 , m_messageHandler(handler)
-                                                                 , m_preserveMode(Preserve)
-                                                                 , m_inheritMode(Inherit)
-                                                                 , m_namespaceResolver(GenericNamespaceResolver::defaultXQueryBindings())
-                                                                 , m_namePool(np)
-                                                                 , m_uriResolver(0)
+                                           const QUrl &aBaseURI,
+                                           const FunctionFactory::Ptr &factory,
+                                           const QXmlQuery::QueryLanguage lang) : m_boundarySpacePolicy(BSPStrip)
+                                                                                , m_constructionMode(CMPreserve)
+                                                                                , m_functionFactory(factory)
+                                                                                , m_defaultFunctionNamespace(CommonNamespaces::XFN)
+                                                                                , m_orderingEmptySequence(Greatest)
+                                                                                , m_orderingMode(Ordered)
+                                                                                , m_defaultCollation(QUrl::fromEncoded(CommonNamespaces::UNICODE_COLLATION))
+                                                                                , m_baseURI(aBaseURI)
+                                                                                , m_messageHandler(handler)
+                                                                                , m_preserveMode(Preserve)
+                                                                                , m_inheritMode(Inherit)
+                                                                                , m_namespaceResolver(lang == QXmlQuery::XQuery10
+                                                                                                      ? GenericNamespaceResolver::defaultXQueryBindings()
+                                                                                                      : GenericNamespaceResolver::defaultXSLTBindings())
+                                                                                , m_namePool(np)
+                                                                                , m_uriResolver(0)
+                                                                                , m_queryLanguage(lang)
+                                                                                , m_rangeSlot(-1)
+                                                                                , m_compatModeEnabled(false)
 {
     /* We'll easily have at least this many AST nodes, that we need
      * to track locations for. */
@@ -81,7 +93,7 @@ NamespaceResolver::Ptr GenericStaticContext::namespaceBindings() const
 
 FunctionFactory::Ptr GenericStaticContext::functionSignatures() const
 {
-    return FunctionFactoryCollection::xpath20Factory(m_namePool);
+    return m_functionFactory;
 }
 
 DynamicContext::Ptr GenericStaticContext::dynamicContext() const
@@ -112,7 +124,12 @@ void GenericStaticContext::setBaseURI(const QUrl &uri)
 
 bool GenericStaticContext::compatModeEnabled() const
 {
-    return false; // Currently we're fullblown 2.0
+    return m_compatModeEnabled;
+}
+
+void GenericStaticContext::setCompatModeEnabled(const bool newVal)
+{
+    m_compatModeEnabled = newVal;
 }
 
 QUrl GenericStaticContext::defaultCollation() const
@@ -228,6 +245,11 @@ ItemType::Ptr GenericStaticContext::contextItemType() const
     return m_contextItemType;
 }
 
+ItemType::Ptr GenericStaticContext::currentItemType() const
+{
+    return contextItemType();
+}
+
 void GenericStaticContext::setContextItemType(const ItemType::Ptr &type)
 {
     m_contextItemType = type;
@@ -235,7 +257,7 @@ void GenericStaticContext::setContextItemType(const ItemType::Ptr &type)
 
 StaticContext::Ptr GenericStaticContext::copy() const
 {
-    GenericStaticContext *const retval = new GenericStaticContext(m_namePool, m_messageHandler, m_baseURI);
+    GenericStaticContext *const retval = new GenericStaticContext(m_namePool, m_messageHandler, m_baseURI, m_functionFactory, m_queryLanguage);
     const NamespaceResolver::Ptr newSolver(new GenericNamespaceResolver(m_namespaceResolver->bindings()));
 
     retval->setNamespaceBindings(newSolver);
@@ -302,6 +324,17 @@ QSourceLocation GenericStaticContext::locationFor(const SourceLocationReflection
 QAbstractUriResolver *GenericStaticContext::uriResolver() const
 {
     return m_uriResolver;
+}
+
+VariableSlotID GenericStaticContext::currentRangeSlot() const
+{
+    return m_rangeSlot;
+}
+
+VariableSlotID GenericStaticContext::allocateRangeSlot()
+{
+    ++m_rangeSlot;
+    return m_rangeSlot;
 }
 
 QT_END_NAMESPACE

@@ -24,151 +24,203 @@
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
+#include "DOMWindow.h"
 #include "JSDOMWindow.h"
 #include "UIEvent.h"
-#include "kjs_window.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSUIEvent)
+
 /* Hash table */
 
-static const HashEntry JSUIEventTableEntries[] =
+static const HashTableValue JSUIEventTableValues[11] =
 {
-    { "layerX", JSUIEvent::LayerXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "view", JSUIEvent::ViewAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "pageX", JSUIEvent::PageXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "which", JSUIEvent::WhichAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "detail", JSUIEvent::DetailAttrNum, DontDelete|ReadOnly, 0, &JSUIEventTableEntries[9] },
-    { "keyCode", JSUIEvent::KeyCodeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "charCode", JSUIEvent::CharCodeAttrNum, DontDelete|ReadOnly, 0, &JSUIEventTableEntries[10] },
-    { "layerY", JSUIEvent::LayerYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "pageY", JSUIEvent::PageYAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "view", DontDelete|ReadOnly, (intptr_t)jsUIEventView, (intptr_t)0 },
+    { "detail", DontDelete|ReadOnly, (intptr_t)jsUIEventDetail, (intptr_t)0 },
+    { "keyCode", DontDelete|ReadOnly, (intptr_t)jsUIEventKeyCode, (intptr_t)0 },
+    { "charCode", DontDelete|ReadOnly, (intptr_t)jsUIEventCharCode, (intptr_t)0 },
+    { "layerX", DontDelete|ReadOnly, (intptr_t)jsUIEventLayerX, (intptr_t)0 },
+    { "layerY", DontDelete|ReadOnly, (intptr_t)jsUIEventLayerY, (intptr_t)0 },
+    { "pageX", DontDelete|ReadOnly, (intptr_t)jsUIEventPageX, (intptr_t)0 },
+    { "pageY", DontDelete|ReadOnly, (intptr_t)jsUIEventPageY, (intptr_t)0 },
+    { "which", DontDelete|ReadOnly, (intptr_t)jsUIEventWhich, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsUIEventConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSUIEventTable = 
+static const HashTable JSUIEventTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSUIEventTableValues, 0 };
+#else
+    { 34, 31, JSUIEventTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSUIEventConstructorTableValues[1] =
 {
-    2, 11, JSUIEventTableEntries, 9
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSUIEventConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSUIEventConstructorTableValues, 0 };
+#else
+    { 1, 0, JSUIEventConstructorTableValues, 0 };
+#endif
+
+class JSUIEventConstructor : public DOMObject {
+public:
+    JSUIEventConstructor(ExecState* exec)
+        : DOMObject(JSUIEventConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSUIEventPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSUIEventConstructor::s_info = { "UIEventConstructor", 0, &JSUIEventConstructorTable, 0 };
+
+bool JSUIEventConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSUIEventConstructor, DOMObject>(exec, &JSUIEventConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSUIEventPrototypeTableEntries[] =
+static const HashTableValue JSUIEventPrototypeTableValues[2] =
 {
-    { "initUIEvent", JSUIEvent::InitUIEventFuncNum, DontDelete|Function, 5, 0 }
+    { "initUIEvent", DontDelete|Function, (intptr_t)jsUIEventPrototypeFunctionInitUIEvent, (intptr_t)5 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSUIEventPrototypeTable = 
-{
-    2, 1, JSUIEventPrototypeTableEntries, 1
-};
+static const HashTable JSUIEventPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSUIEventPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSUIEventPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSUIEventPrototype::info = { "UIEventPrototype", 0, &JSUIEventPrototypeTable, 0 };
+const ClassInfo JSUIEventPrototype::s_info = { "UIEventPrototype", 0, &JSUIEventPrototypeTable, 0 };
 
 JSObject* JSUIEventPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSUIEventPrototype>(exec, "[[JSUIEvent.prototype]]");
+    return getDOMPrototype<JSUIEvent>(exec);
 }
 
 bool JSUIEventPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSUIEventPrototypeFunction, JSObject>(exec, &JSUIEventPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSUIEventPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSUIEvent::info = { "UIEvent", &JSEvent::info, &JSUIEventTable, 0 };
+const ClassInfo JSUIEvent::s_info = { "UIEvent", &JSEvent::s_info, &JSUIEventTable, 0 };
 
-JSUIEvent::JSUIEvent(ExecState* exec, UIEvent* impl)
-    : JSEvent(exec, impl)
+JSUIEvent::JSUIEvent(PassRefPtr<Structure> structure, PassRefPtr<UIEvent> impl)
+    : JSEvent(structure, impl)
 {
-    setPrototype(JSUIEventPrototype::self(exec));
+}
+
+JSObject* JSUIEvent::createPrototype(ExecState* exec)
+{
+    return new (exec) JSUIEventPrototype(JSUIEventPrototype::createStructure(JSEventPrototype::self(exec)));
 }
 
 bool JSUIEvent::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSUIEvent, JSEvent>(exec, &JSUIEventTable, this, propertyName, slot);
+    return getStaticValueSlot<JSUIEvent, Base>(exec, &JSUIEventTable, this, propertyName, slot);
 }
 
-JSValue* JSUIEvent::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsUIEventView(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ViewAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->view()));
-    }
-    case DetailAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->detail());
-    }
-    case KeyCodeAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->keyCode());
-    }
-    case CharCodeAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->charCode());
-    }
-    case LayerXAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->layerX());
-    }
-    case LayerYAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->layerY());
-    }
-    case PageXAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->pageX());
-    }
-    case PageYAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->pageY());
-    }
-    case WhichAttrNum: {
-        UIEvent* imp = static_cast<UIEvent*>(impl());
-
-        return jsNumber(imp->which());
-    }
-    }
-    return 0;
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->view()));
 }
 
-JSValue* JSUIEventPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsUIEventDetail(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSUIEvent::info))
-      return throwError(exec, TypeError);
-
-    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(thisObj)->impl());
-
-    switch (id) {
-    case JSUIEvent::InitUIEventFuncNum: {
-        AtomicString type = args[0]->toString(exec);
-        bool canBubble = args[1]->toBoolean(exec);
-        bool cancelable = args[2]->toBoolean(exec);
-        DOMWindow* view = toDOMWindow(args[3]);
-        bool detailOk;
-        int detail = args[4]->toInt32(exec, detailOk);
-        if (!detailOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->initUIEvent(type, canBubble, cancelable, view, detail);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->detail());
 }
+
+JSValuePtr jsUIEventKeyCode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->keyCode());
+}
+
+JSValuePtr jsUIEventCharCode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->charCode());
+}
+
+JSValuePtr jsUIEventLayerX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->layerX());
+}
+
+JSValuePtr jsUIEventLayerY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->layerY());
+}
+
+JSValuePtr jsUIEventPageX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->pageX());
+}
+
+JSValuePtr jsUIEventPageY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->pageY());
+}
+
+JSValuePtr jsUIEventWhich(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    UIEvent* imp = static_cast<UIEvent*>(static_cast<JSUIEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->which());
+}
+
+JSValuePtr jsUIEventConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSUIEvent*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSUIEvent::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSUIEventConstructor>(exec);
+}
+
+JSValuePtr jsUIEventPrototypeFunctionInitUIEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSUIEvent::s_info))
+        return throwError(exec, TypeError);
+    JSUIEvent* castedThisObj = static_cast<JSUIEvent*>(asObject(thisValue));
+    UIEvent* imp = static_cast<UIEvent*>(castedThisObj->impl());
+    const UString& type = args.at(exec, 0)->toString(exec);
+    bool canBubble = args.at(exec, 1)->toBoolean(exec);
+    bool cancelable = args.at(exec, 2)->toBoolean(exec);
+    DOMWindow* view = toDOMWindow(args.at(exec, 3));
+    int detail = args.at(exec, 4)->toInt32(exec);
+
+    imp->initUIEvent(type, canBubble, cancelable, view, detail);
+    return jsUndefined();
+}
+
 
 }

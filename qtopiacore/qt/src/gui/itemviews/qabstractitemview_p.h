@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,6 +54,7 @@
 //
 
 #include "private/qabstractscrollarea_p.h"
+#include "private/qabstractitemmodel_p.h"
 #include "QtGui/qapplication.h"
 #include "QtCore/qdatetime.h"
 #include "QtGui/qevent.h"
@@ -66,10 +71,21 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef QList<QPair<QPersistentModelIndex, QPointer<QWidget> > > _q_abstractitemview_editor_container;
-typedef _q_abstractitemview_editor_container::const_iterator _q_abstractitemview_editor_const_iterator;
-typedef _q_abstractitemview_editor_container::iterator _q_abstractitemview_editor_iterator;
+struct QEditorInfo
+{
+    QEditorInfo() : isStatic(false)
+    {
+    }
 
+    QEditorInfo(const QPersistentModelIndex &i, QWidget *e, bool b) : index(i), editor(e), isStatic(b)
+    {
+    }
+
+    QPersistentModelIndex index;
+    QPointer<QWidget> editor;
+    bool isStatic; //true when called from setIndexWidget
+
+};
 
 class QEmptyModel : public QAbstractItemModel
 {
@@ -96,6 +112,7 @@ public:
     void _q_rowsRemoved(const QModelIndex &parent, int start, int end);
     void _q_columnsAboutToBeRemoved(const QModelIndex &parent, int start, int end);
     void _q_columnsRemoved(const QModelIndex &parent, int start, int end);
+    void _q_columnsInserted(const QModelIndex &parent, int start, int end);
     void _q_modelDestroyed();
     void _q_layoutChanged();
     void _q_fetchMore();
@@ -103,7 +120,8 @@ public:
     bool shouldEdit(QAbstractItemView::EditTrigger trigger, const QModelIndex &index) const;
     bool shouldForwardEvent(QAbstractItemView::EditTrigger trigger, const QEvent *event) const;
     bool shouldAutoScroll(const QPoint &pos) const;
-    void doDelayedItemsLayout();
+    void doDelayedItemsLayout(int delay = 0);
+    void interruptDelayedItemsLayout() const;
 
     bool dropOn(QDropEvent *event, int *row, int *col, QModelIndex *index);
     bool droppingOnItself(QDropEvent *event, const QModelIndex &index);
@@ -119,7 +137,7 @@ public:
                                                                  const QEvent *event) const;
     QItemSelectionModel::SelectionFlags contiguousSelectionCommand(const QModelIndex &index,
                                                                    const QEvent *event) const;
-    void selectAll(QItemSelectionModel::SelectionFlags command);
+    virtual void selectAll(QItemSelectionModel::SelectionFlags command);
 
     inline QItemSelectionModel::SelectionFlags selectionBehaviorFlags() const
     {
@@ -137,7 +155,7 @@ public:
         const QMimeData *mime = e->mimeData();
         for (int i = 0; i < modelTypes.count(); ++i)
             if (mime->hasFormat(modelTypes.at(i))
-                && (e->proposedAction() & model->supportedDropActions()))
+                && (e->dropAction() & model->supportedDropActions()))
                 return true;
         return false;
     }
@@ -168,8 +186,8 @@ public:
     }
 
     inline void executePostedLayout() const {
-        if (delayedLayout.isActive() && state != QAbstractItemView::CollapsingState) {
-            delayedLayout.stop();
+        if (delayedPendingLayout && state != QAbstractItemView::CollapsingState) {
+            interruptDelayedItemsLayout();
             const_cast<QAbstractItemView*>(q_func())->doItemsLayout();
         }
     }
@@ -202,42 +220,20 @@ public:
 
     QPixmap renderToPixmap(const QModelIndexList &indexes, QRect *r = 0) const;
 
-    inline bool isIndexValid(const QModelIndex &index) const {
-         return (index.row() >= 0) && (index.column() >= 0) && (index.model() == model);
-    }
-
-    virtual bool selectionAllowed(const QModelIndex &index) const {
-        // in some views we want to go ahead with selections, even if the index is invalid
-        return isIndexValid(index);
-    }
-
     inline QPoint offset() const {
         const Q_Q(QAbstractItemView);
         return QPoint(q->isRightToLeft() ? -q->horizontalOffset()
                       : q->horizontalOffset(), q->verticalOffset());
     }
 
-    QWidget *editorForIndex(const QModelIndex &index) const;
+    QEditorInfo editorForIndex(const QModelIndex &index) const;
     inline bool hasEditor(const QModelIndex &index) const {
-        return editorForIndex(index) != 0;
+        return editorForIndex(index).editor != 0;
     }
 
     QModelIndex indexForEditor(QWidget *editor) const;
-    void addEditor(const QModelIndex &index, QWidget *editor);
+    void addEditor(const QModelIndex &index, QWidget *editor, bool isStatic);
     void removeEditor(QWidget *editor);
-
-    inline QModelIndex indexForIterator(const _q_abstractitemview_editor_iterator &it) const {
-        return (*it).first.operator const QModelIndex&();
-    }
-    inline QWidget *editorForIterator(const _q_abstractitemview_editor_iterator &it) const {
-        return (*it).second;
-    }
-    inline QModelIndex indexForIterator(const _q_abstractitemview_editor_const_iterator &it) const {
-        return (*it).first.operator const QModelIndex&();
-    }
-    inline QWidget *editorForIterator(const _q_abstractitemview_editor_const_iterator &it) const {
-        return (*it).second;
-    }
 
     inline bool isAnimating() const {
         return state == QAbstractItemView::AnimatingState;
@@ -250,6 +246,27 @@ public:
 	return itemDelegate;
     }
 
+    inline bool isIndexValid(const QModelIndex &index) const {
+         return (index.row() >= 0) && (index.column() >= 0) && (index.model() == model);
+    }
+    inline bool isIndexSelectable(const QModelIndex &index) const {
+        return (model->flags(index) & Qt::ItemIsSelectable);
+    }
+    inline bool isIndexEnabled(const QModelIndex &index) const {
+        return (model->flags(index) & Qt::ItemIsEnabled);
+    }
+    inline bool isIndexDropEnabled(const QModelIndex &index) const {
+        return (model->flags(index) & Qt::ItemIsDropEnabled);
+    }
+    inline bool isIndexDragEnabled(const QModelIndex &index) const {
+        return (model->flags(index) & Qt::ItemIsDragEnabled);
+    }
+
+    virtual bool selectionAllowed(const QModelIndex &index) const {
+        // in some views we want to go ahead with selections, even if the index is invalid
+        return isIndexValid(index) && isIndexSelectable(index);
+    }
+
     // reimplemented from QAbstractScrollAreaPrivate
     virtual QPoint contentsOffset() const {
         Q_Q(const QAbstractItemView);
@@ -257,7 +274,7 @@ public:
     }
 
     /**
-     * For now, assume that we have few editors, if we need a more efficient implementation 
+     * For now, assume that we have few editors, if we need a more efficient implementation
      * we should add a QMap<QAbstractItemDelegate*, int> member.
      */
     int delegateRefCount(const QAbstractItemDelegate *delegate) const
@@ -268,7 +285,7 @@ public:
 
         for (int maps = 0; maps < 2; ++maps) {
             const QMap<int, QPointer<QAbstractItemDelegate> > *delegates = maps ? &columnDelegates : &rowDelegates;
-            for (QMap<int, QPointer<QAbstractItemDelegate> >::const_iterator it = delegates->begin(); 
+            for (QMap<int, QPointer<QAbstractItemDelegate> >::const_iterator it = delegates->begin();
                 it != delegates->end(); ++it) {
                     if (it.value() == delegate) {
                         ++ref;
@@ -281,6 +298,16 @@ public:
         }
         return ref;
     }
+    
+    /**
+     * return true if the index is registered as a QPersistentModelIndex
+     */
+    inline bool isPersistent(const QModelIndex &index) const
+    {
+        return static_cast<QAbstractItemModelPrivate *>(model->d_ptr)->persistent.indexes.contains(index);
+    }
+
+    QModelIndexList selectedDraggableIndexes() const;
 
     QStyleOptionViewItemV4 viewOptionsV4() const;
 
@@ -293,7 +320,7 @@ public:
     QAbstractItemView::SelectionMode selectionMode;
     QAbstractItemView::SelectionBehavior selectionBehavior;
 
-    _q_abstractitemview_editor_container editors;
+    QList<QEditorInfo> editors;
     QSet<QWidget*> persistent;
     QWidget *currentlyCommittingEditor;
 
@@ -302,6 +329,10 @@ public:
     Qt::KeyboardModifiers pressedModifiers;
     QPoint pressedPosition;
     bool pressedAlreadySelected;
+    
+    //forces the next mouseMoveEvent to send the viewportEntered signal 
+    //if the mouse is over the viewport and not over an item
+    bool viewportEnteredNeeded;
 
     QAbstractItemView::State state;
     QAbstractItemView::EditTriggers editTriggers;
@@ -339,7 +370,6 @@ public:
 
     QBasicTimer updateTimer;
     QBasicTimer delayedEditing;
-    mutable QBasicTimer delayedLayout;
     QBasicTimer delayedAutoScroll; //used when an item is clicked
     QTimeLine timeline;
 
@@ -349,6 +379,10 @@ public:
     bool currentIndexSet;
 
     bool wrapItemText;
+    mutable bool delayedPendingLayout;
+
+private:
+    mutable QBasicTimer delayedLayout;
 };
 
 QT_BEGIN_INCLUDE_NAMESPACE

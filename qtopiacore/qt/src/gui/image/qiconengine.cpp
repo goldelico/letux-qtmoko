@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -167,6 +171,56 @@ void QIconEngine::addFile(const QString &/*fileName*/, const QSize &/*size*/, QI
 */
 
 /*!
+    \enum QIconEngineV2::IconEngineHook
+    \since 4.5
+
+    These enum values are used for virtual_hook() to allow additional
+    queries to icon engine without breaking binary compatibility.
+
+    \value AvailableSizesHook Allows to query the sizes of the
+    contained pixmaps for pixmap-based engines. The \a data argument
+    of the virtual_hook() function is a AvailableSizesArgument pointer
+    that should be filled with icon sizes. Engines that work in terms
+    of a scalable, vectorial format normally return an empty list.
+
+    \sa virtual_hook()
+ */
+
+/*!
+    \class QIconEngineV2::AvailableSizesArgument
+    \since 4.5
+
+    This struct represents arguments to virtual_hook() function when
+    \a id parameter is QIconEngineV2::AvailableSizesHook.
+
+    \sa virtual_hook(), QIconEngineV2::IconEngineHook
+ */
+
+/*!
+    \variable QIconEngineV2::AvailableSizesArgument::mode
+    \brief the requested mode of an image.
+
+    \sa QIcon::Mode
+*/
+
+/*!
+    \variable QIconEngineV2::AvailableSizesArgument::state
+    \brief the requested state of an image.
+
+    \sa QIcon::State
+*/
+
+/*!
+    \variable QIconEngineV2::AvailableSizesArgument::sizes
+
+    \brief image sizes that are available with specified \a mode and
+    \a state. This is an output parameter and is filled after call to
+    virtual_hook(). Engines that work in terms of a scalable,
+    vectorial format normally return an empty list.
+*/
+
+
+/*!
     Returns a key that identifies this icon engine.
  */
 QString QIconEngineV2::key() const
@@ -204,10 +258,47 @@ bool QIconEngineV2::write(QDataStream &) const
     return false;
 }
 
-/*! \internal
+/*!
+    \since 4.5
+
+    Additional method to allow extending QIconEngineV2 without
+    adding new virtual methods (and without breaking binary compatibility).
+    The actual action and format of \a data depends on \a id argument
+    which is in fact a constant from IconEngineHook enum.
+
+    \sa IconEngineHook
 */
-void QIconEngineV2::virtual_hook(int, void *)
+void QIconEngineV2::virtual_hook(int id, void *data)
 {
+    switch (id) {
+    case QIconEngineV2::AvailableSizesHook: {
+        QIconEngineV2::AvailableSizesArgument &arg =
+            *reinterpret_cast<QIconEngineV2::AvailableSizesArgument*>(data);
+        arg.sizes.clear();
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+/*!
+    \since 4.5
+
+    Returns sizes of all images that are contained in the engine for the
+    specific \a mode and \a state.
+
+    \note This is a helper method and the actual work is done by
+    virtual_hook() method, hence this method depends on icon engine support
+    and may not work with all icon engines.
+ */
+QList<QSize> QIconEngineV2::availableSizes(QIcon::Mode mode, QIcon::State state)
+{
+    AvailableSizesArgument arg;
+    arg.mode = mode;
+    arg.state = state;
+    virtual_hook(QIconEngineV2::AvailableSizesHook, reinterpret_cast<void*>(&arg));
+    return arg.sizes;
 }
 
 QT_END_NAMESPACE

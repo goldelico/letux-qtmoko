@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -40,6 +44,7 @@
 #include <QtGui/qstyle.h>
 #include <QtGui/qlayout.h>
 #include <QtGui/qdialog.h>
+#include <QtGui/qapplication.h>
 #include <QtGui/private/qwidget_p.h>
 
 #include "qdialogbuttonbox.h"
@@ -277,7 +282,6 @@ public:
     void addButtonsToLayout(const QList<QAbstractButton *> &buttonList, bool reverse);
     void retranslateStrings();
     const char *standardButtonText(QDialogButtonBox::StandardButton sbutton) const;
-
 };
 
 QDialogButtonBoxPrivate::QDialogButtonBoxPrivate(Qt::Orientation orient)
@@ -341,7 +345,7 @@ void QDialogButtonBoxPrivate::addButtonsToLayout(const QList<QAbstractButton *> 
 void QDialogButtonBoxPrivate::layoutButtons()
 {
     Q_Q(QDialogButtonBox);
-    const int MacGap = 24 - 8;	// 8 is the default gap between a widget and a spacer item
+    const int MacGap = 36 - 8;	// 8 is the default gap between a widget and a spacer item
 
     for (int i = buttonLayout->count() - 1; i >= 0; --i) {
         QLayoutItem *item = buttonLayout->takeAt(i);
@@ -511,10 +515,17 @@ QPushButton *QDialogButtonBoxPrivate::createButton(QDialogButtonBox::StandardBut
     buttonText = standardButtonText(sbutton);
 
     QPushButton *button = new QPushButton(QDialogButtonBox::tr(buttonText), q);
-    if (q->style()->styleHint(QStyle::SH_DialogButtonBox_ButtonsHaveIcons, 0, q) && icon != 0)
-        button->setIcon(q->style()->standardIcon(QStyle::StandardPixmap(icon), 0, q));
+    QStyle *style = q->style();
+    if (style->styleHint(QStyle::SH_DialogButtonBox_ButtonsHaveIcons, 0, q) && icon != 0)
+        button->setIcon(style->standardIcon(QStyle::StandardPixmap(icon), 0, q));
+    if (style != QApplication::style()) // Propagate style
+        button->setStyle(style);
     standardButtonHash.insert(button, sbutton);
-    addButton(button, roleFor(sbutton), doLayout);
+    if (roleFor(sbutton) != QDialogButtonBox::InvalidRole) {
+        addButton(button, roleFor(sbutton), doLayout);
+    } else {
+        qWarning("QDialogButtonBox::createButton: Invalid ButtonRole, button not added");
+    }
     return button;
 }
 
@@ -544,21 +555,22 @@ void QDialogButtonBoxPrivate::createStandardButtons(QDialogButtonBox::StandardBu
 const char *QDialogButtonBoxPrivate::standardButtonText(QDialogButtonBox::StandardButton sbutton) const
 {
     const char *buttonText = 0;
+    bool gnomeLayout = (layoutPolicy == QDialogButtonBox::GnomeLayout);
     switch (sbutton) {
     case QDialogButtonBox::Ok:
-        buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "&OK");
+        buttonText = gnomeLayout ? QT_TRANSLATE_NOOP("QDialogButtonBox", "&OK") : QT_TRANSLATE_NOOP("QDialogButtonBox", "OK");
         break;
     case QDialogButtonBox::Save:
-        buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "Save");
+        buttonText = gnomeLayout ? QT_TRANSLATE_NOOP("QDialogButtonBox", "&Save") : QT_TRANSLATE_NOOP("QDialogButtonBox", "Save");
         break;
     case QDialogButtonBox::Open:
         buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "Open");
         break;
     case QDialogButtonBox::Cancel:
-        buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "Cancel");
+        buttonText = gnomeLayout ? QT_TRANSLATE_NOOP("QDialogButtonBox", "&Cancel") : QT_TRANSLATE_NOOP("QDialogButtonBox", "Cancel");
         break;
     case QDialogButtonBox::Close:
-        buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "Close");
+        buttonText = gnomeLayout ? QT_TRANSLATE_NOOP("QDialogButtonBox", "&Close") : QT_TRANSLATE_NOOP("QDialogButtonBox", "Close");
         break;
     case QDialogButtonBox::Apply:
         buttonText = QT_TRANSLATE_NOOP("QDialogButtonBox", "Apply");
@@ -827,7 +839,6 @@ void QDialogButtonBox::clear()
     Returns a list of all the buttons that have been added to the button box.
 
     \sa buttonRole(), addButton(), removeButton()
-
 */
 QList<QAbstractButton *> QDialogButtonBox::buttons() const
 {
@@ -1063,10 +1074,18 @@ bool QDialogButtonBox::centerButtons() const
 */
 void QDialogButtonBox::changeEvent(QEvent *event)
 {
-    Q_D(QDialogButtonBox);
+    typedef QHash<QPushButton *, QDialogButtonBox::StandardButton> StandardButtonHash;
 
+    Q_D(QDialogButtonBox);
     switch (event->type()) {
-    case QEvent::StyleChange:
+    case QEvent::StyleChange:  // Propagate style
+        if (!d->standardButtonHash.empty()) {
+            QStyle *newStyle = style();
+            const StandardButtonHash::iterator end = d->standardButtonHash.end();
+            for (StandardButtonHash::iterator it = d->standardButtonHash.begin(); it != end; ++it)
+                it.key()->setStyle(newStyle);
+        }
+        // fallthrough intended
 #ifdef Q_WS_MAC
     case QEvent::MacSizeChange:
 #endif

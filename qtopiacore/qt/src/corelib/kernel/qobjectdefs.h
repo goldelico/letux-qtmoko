@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,12 +50,12 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Core)
 
-class QString;
-
 class QByteArray;
 
+class QString;
+
 #ifndef Q_MOC_OUTPUT_REVISION
-#define Q_MOC_OUTPUT_REVISION 59
+#define Q_MOC_OUTPUT_REVISION 61
 #endif
 
 // The following macros are our "extensions" to C++
@@ -82,6 +86,8 @@ class QByteArray;
 #endif
 #define Q_SCRIPTABLE
 #define Q_INVOKABLE
+#define Q_SIGNAL
+#define Q_SLOT
 
 #ifndef QT_NO_TRANSLATION
 # ifndef QT_NO_TEXTCODEC
@@ -178,6 +184,8 @@ private:
 #define Q_GADGET Q_GADGET
 #define Q_SCRIPTABLE Q_SCRIPTABLE
 #define Q_INVOKABLE Q_INVOKABLE
+#define Q_SIGNAL Q_SIGNAL
+#define Q_SLOT Q_SLOT
 #endif //Q_MOC_RUN
 
 // macro for onaming members
@@ -191,19 +199,30 @@ private:
 #undef SIGNAL
 #endif
 
-#define METHOD(a)        "0"#a
-#define SLOT(a)                "1"#a
-#define SIGNAL(a)        "2"#a
+Q_CORE_EXPORT const char *qFlagLocation(const char *method);
 
-#ifdef QT3_SUPPORT
-#define METHOD_CODE        0                        // member type codes
-#define SLOT_CODE        1
-#define SIGNAL_CODE        2
+#define QTOSTRING_HELPER(s) #s
+#define QTOSTRING(s) QTOSTRING_HELPER(s)
+#ifndef QT_NO_DEBUG
+# define QLOCATION "\0"__FILE__":"QTOSTRING(__LINE__)
+# define METHOD(a)   qFlagLocation("0"#a QLOCATION)
+# define SLOT(a)     qFlagLocation("1"#a QLOCATION)
+# define SIGNAL(a)   qFlagLocation("2"#a QLOCATION)
+#else
+# define METHOD(a)   "0"#a
+# define SLOT(a)     "1"#a
+# define SIGNAL(a)   "2"#a
 #endif
 
-#define QMETHOD_CODE        0                        // member type codes
-#define QSLOT_CODE        1
-#define QSIGNAL_CODE        2
+#ifdef QT3_SUPPORT
+#define METHOD_CODE   0                        // member type codes
+#define SLOT_CODE     1
+#define SIGNAL_CODE   2
+#endif
+
+#define QMETHOD_CODE  0                        // member type codes
+#define QSLOT_CODE    1
+#define QSIGNAL_CODE  2
 
 #define Q_ARG(type, data) QArgument<type >(#type, data)
 #define Q_RETURN_ARG(type, data) QReturnArgument<type >(#type, data)
@@ -275,11 +294,13 @@ struct Q_CORE_EXPORT QMetaObject
     int propertyOffset() const;
     int classInfoOffset() const;
 
+    int constructorCount() const;
     int methodCount() const;
     int enumeratorCount() const;
     int propertyCount() const;
     int classInfoCount() const;
 
+    int indexOfConstructor(const char *constructor) const;
     int indexOfMethod(const char *method) const;
     int indexOfSignal(const char *signal) const;
     int indexOfSlot(const char *slot) const;
@@ -287,6 +308,7 @@ struct Q_CORE_EXPORT QMetaObject
     int indexOfProperty(const char *name) const;
     int indexOfClassInfo(const char *name) const;
 
+    QMetaMethod constructor(int index) const;
     QMetaMethod method(int index) const;
     QMetaEnum enumerator(int index) const;
     QMetaProperty property(int index) const;
@@ -365,7 +387,6 @@ struct Q_CORE_EXPORT QMetaObject
                                  val3, val4, val5, val6, val7, val8, val9);
     }
 
-
     static inline bool invokeMethod(QObject *obj, const char *member,
                              QGenericArgument val0 = QGenericArgument(0),
                              QGenericArgument val1 = QGenericArgument(),
@@ -382,6 +403,17 @@ struct Q_CORE_EXPORT QMetaObject
                 val1, val2, val3, val4, val5, val6, val7, val8, val9);
     }
 
+    QObject *newInstance(QGenericArgument val0 = QGenericArgument(0),
+                         QGenericArgument val1 = QGenericArgument(),
+                         QGenericArgument val2 = QGenericArgument(),
+                         QGenericArgument val3 = QGenericArgument(),
+                         QGenericArgument val4 = QGenericArgument(),
+                         QGenericArgument val5 = QGenericArgument(),
+                         QGenericArgument val6 = QGenericArgument(),
+                         QGenericArgument val7 = QGenericArgument(),
+                         QGenericArgument val8 = QGenericArgument(),
+                         QGenericArgument val9 = QGenericArgument()) const;
+
     enum Call {
         InvokeMetaMethod,
         ReadProperty,
@@ -391,8 +423,11 @@ struct Q_CORE_EXPORT QMetaObject
         QueryPropertyScriptable,
         QueryPropertyStored,
         QueryPropertyEditable,
-        QueryPropertyUser
+        QueryPropertyUser,
+        CreateInstance
     };
+
+    int static_metacall(Call, int, void **) const;
 
 #ifdef QT3_SUPPORT
     QT3_SUPPORT const char *superClassName() const;
@@ -402,8 +437,14 @@ struct Q_CORE_EXPORT QMetaObject
         const QMetaObject *superdata;
         const char *stringdata;
         const uint *data;
-        const QMetaObject **extradata;
+        const void *extradata;
     } d;
+};
+
+struct QMetaObjectExtraData
+{
+    const QMetaObject **objects;
+    int (*static_metacall)(QMetaObject::Call, int, void **);
 };
 
 inline const char *QMetaObject::className() const

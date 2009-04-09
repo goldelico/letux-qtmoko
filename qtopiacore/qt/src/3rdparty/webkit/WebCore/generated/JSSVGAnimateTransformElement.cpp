@@ -21,51 +21,56 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_ANIMATION)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimateTransformElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGAnimateTransformElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimateTransformElement)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimateTransformElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimateTransformElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimateTransformElementPrototypeTable = 
-{
-    2, 1, JSSVGAnimateTransformElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimateTransformElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimateTransformElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimateTransformElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimateTransformElementPrototype::info = { "SVGAnimateTransformElementPrototype", 0, &JSSVGAnimateTransformElementPrototypeTable, 0 };
+const ClassInfo JSSVGAnimateTransformElementPrototype::s_info = { "SVGAnimateTransformElementPrototype", 0, &JSSVGAnimateTransformElementPrototypeTable, 0 };
 
 JSObject* JSSVGAnimateTransformElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimateTransformElementPrototype>(exec, "[[JSSVGAnimateTransformElement.prototype]]");
+    return getDOMPrototype<JSSVGAnimateTransformElement>(exec);
 }
 
-const ClassInfo JSSVGAnimateTransformElement::info = { "SVGAnimateTransformElement", &JSSVGAnimationElement::info, 0, 0 };
+const ClassInfo JSSVGAnimateTransformElement::s_info = { "SVGAnimateTransformElement", &JSSVGAnimationElement::s_info, 0, 0 };
 
-JSSVGAnimateTransformElement::JSSVGAnimateTransformElement(ExecState* exec, SVGAnimateTransformElement* impl)
-    : JSSVGAnimationElement(exec, impl)
+JSSVGAnimateTransformElement::JSSVGAnimateTransformElement(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimateTransformElement> impl)
+    : JSSVGAnimationElement(structure, impl)
 {
-    setPrototype(JSSVGAnimateTransformElementPrototype::self(exec));
+}
+
+JSObject* JSSVGAnimateTransformElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimateTransformElementPrototype(JSSVGAnimateTransformElementPrototype::createStructure(JSSVGAnimationElementPrototype::self(exec)));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_ANIMATION)

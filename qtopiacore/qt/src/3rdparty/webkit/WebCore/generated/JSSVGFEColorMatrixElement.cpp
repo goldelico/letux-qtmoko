@@ -21,287 +21,269 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEColorMatrixElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumberList.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEColorMatrixElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEColorMatrixElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEColorMatrixElementTableEntries[] =
+static const HashTableValue JSSVGFEColorMatrixElementTableValues[12] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "width", JSSVGFEColorMatrixElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "type", JSSVGFEColorMatrixElement::TypeAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEColorMatrixElementTableEntries[10] },
-    { "values", JSSVGFEColorMatrixElement::ValuesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEColorMatrixElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEColorMatrixElementTableEntries[11] },
-    { "height", JSSVGFEColorMatrixElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEColorMatrixElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEColorMatrixElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFEColorMatrixElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEColorMatrixElementTableEntries[12] },
-    { "className", JSSVGFEColorMatrixElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEColorMatrixElementTableEntries[13] },
-    { "style", JSSVGFEColorMatrixElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementIn1, (intptr_t)0 },
+    { "type", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementType, (intptr_t)0 },
+    { "values", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementValues, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEColorMatrixElementTable = 
+static const HashTable JSSVGFEColorMatrixElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEColorMatrixElementTableValues, 0 };
+#else
+    { 34, 31, JSSVGFEColorMatrixElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGFEColorMatrixElementConstructorTableValues[6] =
 {
-    2, 14, JSSVGFEColorMatrixElementTableEntries, 10
+    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_MATRIX, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_SATURATE, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_HUEROTATE, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGFEColorMatrixElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGFEColorMatrixElementConstructorTableValues, 0 };
+#else
+    { 17, 15, JSSVGFEColorMatrixElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGFEColorMatrixElementConstructor : public DOMObject {
+public:
+    JSSVGFEColorMatrixElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGFEColorMatrixElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGFEColorMatrixElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGFEColorMatrixElementConstructor::s_info = { "SVGFEColorMatrixElementConstructor", 0, &JSSVGFEColorMatrixElementConstructorTable, 0 };
+
+bool JSSVGFEColorMatrixElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGFEColorMatrixElementConstructor, DOMObject>(exec, &JSSVGFEColorMatrixElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEColorMatrixElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEColorMatrixElementPrototypeTableValues[7] =
 {
-    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", WebCore::SVG_FECOLORMATRIX_TYPE_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOLORMATRIX_TYPE_SATURATE", WebCore::SVG_FECOLORMATRIX_TYPE_SATURATE, DontDelete|ReadOnly, 0, &JSSVGFEColorMatrixElementPrototypeTableEntries[5] },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_FECOLORMATRIX_TYPE_MATRIX", WebCore::SVG_FECOLORMATRIX_TYPE_MATRIX, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", WebCore::SVG_FECOLORMATRIX_TYPE_HUEROTATE, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", WebCore::SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_FECOLORMATRIX_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_MATRIX", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_MATRIX, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_SATURATE", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_SATURATE, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_HUEROTATE", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_HUEROTATE, (intptr_t)0 },
+    { "SVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA", DontDelete|ReadOnly, (intptr_t)jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA, (intptr_t)0 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEColorMatrixElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEColorMatrixElementPrototypeTable = 
-{
-    2, 6, JSSVGFEColorMatrixElementPrototypeTableEntries, 5
-};
+static const HashTable JSSVGFEColorMatrixElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGFEColorMatrixElementPrototypeTableValues, 0 };
+#else
+    { 17, 15, JSSVGFEColorMatrixElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEColorMatrixElementPrototype::info = { "SVGFEColorMatrixElementPrototype", 0, &JSSVGFEColorMatrixElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEColorMatrixElementPrototype::s_info = { "SVGFEColorMatrixElementPrototype", 0, &JSSVGFEColorMatrixElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEColorMatrixElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEColorMatrixElementPrototype>(exec, "[[JSSVGFEColorMatrixElement.prototype]]");
+    return getDOMPrototype<JSSVGFEColorMatrixElement>(exec);
 }
 
 bool JSSVGFEColorMatrixElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEColorMatrixElementPrototype, JSObject>(exec, &JSSVGFEColorMatrixElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGFEColorMatrixElementPrototype, JSObject>(exec, &JSSVGFEColorMatrixElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEColorMatrixElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGFEColorMatrixElement::s_info = { "SVGFEColorMatrixElement", &JSSVGElement::s_info, &JSSVGFEColorMatrixElementTable, 0 };
+
+JSSVGFEColorMatrixElement::JSSVGFEColorMatrixElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEColorMatrixElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGFEColorMatrixElement::info = { "SVGFEColorMatrixElement", &JSSVGElement::info, &JSSVGFEColorMatrixElementTable, 0 };
-
-JSSVGFEColorMatrixElement::JSSVGFEColorMatrixElement(ExecState* exec, SVGFEColorMatrixElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGFEColorMatrixElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGFEColorMatrixElementPrototype::self(exec));
+    return new (exec) JSSVGFEColorMatrixElementPrototype(JSSVGFEColorMatrixElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEColorMatrixElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEColorMatrixElement, JSSVGElement>(exec, &JSSVGFEColorMatrixElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEColorMatrixElement, Base>(exec, &JSSVGFEColorMatrixElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEColorMatrixElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEColorMatrixElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEColorMatrixElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEColorMatrixElementValues(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumberList> obj = imp->valuesAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case TypeAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+JSValuePtr jsSVGFEColorMatrixElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEColorMatrixElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEColorMatrixElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case ValuesAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+JSValuePtr jsSVGFEColorMatrixElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEColorMatrixElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumberList> obj = imp->valuesAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumberList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumberList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumberList>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEColorMatrixElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+JSValuePtr jsSVGFEColorMatrixElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEColorMatrixElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGFEColorMatrixElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGFEColorMatrixElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGFEColorMatrixElementConstructor>(exec);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEColorMatrixElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEColorMatrixElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEColorMatrixElement* castedThisObj = static_cast<JSSVGFEColorMatrixElement*>(asObject(thisValue));
+    SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+// Constant getters
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+JSValuePtr jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_MATRIX(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_SATURATE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
+JSValuePtr jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_HUEROTATE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEColorMatrixElement* imp = static_cast<SVGFEColorMatrixElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFEColorMatrixElementSVG_FECOLORMATRIX_TYPE_LUMINANCETOALPHA(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

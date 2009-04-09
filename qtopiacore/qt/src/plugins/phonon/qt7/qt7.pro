@@ -1,23 +1,33 @@
 QT += opengl phonon
 TARGET = phonon_qt7
 DESTDIR = $$QT_BUILD_TREE/plugins/phonon_backend
-LIBS += -framework QuickTime -framework AudioUnit \
+
+# The Quicktime framework is only awailable for 32-bit builds, so we
+# need to check for this before linking against it.
+# QMAKE_MAC_XARCH is not awailable on Tiger, but at the same time,
+# we never build for 64-bit architechtures on Tiger either:
+contains(QMAKE_MAC_XARCH, no) {
+    LIBS += -framework QuickTime
+} else {
+    LIBS += -Xarch_i386 -framework QuickTime -Xarch_ppc -framework QuickTime
+}
+
+LIBS += -framework AudioUnit \
 	-framework AudioToolbox -framework CoreAudio \
 	-framework QuartzCore -framework QTKit
 
 DEPENDPATH += .
 INCLUDEPATH += . 
 
-PHONON_QUICKTIME_DIR=$$QT_SOURCE_TREE/src/3rdparty/kdebase/runtime/phonon/qt7
+PHONON_QUICKTIME_DIR=$$QT_SOURCE_TREE/src/3rdparty/phonon/qt7
 
 # Input
-HEADERS += 	$$PHONON_QUICKTIME_DIR/medianode.h \
+HEADERS += $$PHONON_QUICKTIME_DIR/medianode.h \
 		$$PHONON_QUICKTIME_DIR/backend.h \
 		$$PHONON_QUICKTIME_DIR/videowidget.h \
 		$$PHONON_QUICKTIME_DIR/mediaobject.h \
 		$$PHONON_QUICKTIME_DIR/quicktimevideoplayer.h \
 	   	$$PHONON_QUICKTIME_DIR/backendheader.h \
-	 	$$PHONON_QUICKTIME_DIR/displaylinkcallback.h \
 	   	$$PHONON_QUICKTIME_DIR/medianodevideopart.h \
 	 	$$PHONON_QUICKTIME_DIR/medianodeevent.h  \
 		$$PHONON_QUICKTIME_DIR/quicktimeaudioplayer.h \
@@ -36,31 +46,28 @@ HEADERS += 	$$PHONON_QUICKTIME_DIR/medianode.h \
 	 	$$PHONON_QUICKTIME_DIR/mediaobjectaudionode.h 
 # HEADERS += objc_help.h videoeffect.h
 
-SOURCES += $$PHONON_QUICKTIME_DIR/medianode.cpp \
- 		$$PHONON_QUICKTIME_DIR/backend.cpp \
- 		$$PHONON_QUICKTIME_DIR/videowidget.cpp \
- 		$$PHONON_QUICKTIME_DIR/mediaobject.cpp \
- 		$$PHONON_QUICKTIME_DIR/quicktimevideoplayer.cpp \
-	   	$$PHONON_QUICKTIME_DIR/displaylinkcallback.cpp \
-	 	$$PHONON_QUICKTIME_DIR/error.cpp \
-	   	$$PHONON_QUICKTIME_DIR/medianodevideopart.cpp \
-	 	$$PHONON_QUICKTIME_DIR/medianodeevent.cpp \
-	 	$$PHONON_QUICKTIME_DIR/quicktimeaudioplayer.cpp \
-	   	$$PHONON_QUICKTIME_DIR/audionode.cpp \
-	 	$$PHONON_QUICKTIME_DIR/audiograph.cpp \
-	 	$$PHONON_QUICKTIME_DIR/audiooutput.cpp \
-	 	$$PHONON_QUICKTIME_DIR/quicktimemetadata.cpp \
-	   	$$PHONON_QUICKTIME_DIR/audiomixer.cpp  \
-		$$PHONON_QUICKTIME_DIR/audiodevice.cpp \
-	 	$$PHONON_QUICKTIME_DIR/backendinfo.cpp \
-	 	$$PHONON_QUICKTIME_DIR/audioconnection.cpp \
-	   	$$PHONON_QUICKTIME_DIR/videoframe.cpp \
-	 	$$PHONON_QUICKTIME_DIR/audiosplitter.cpp \
-	 	$$PHONON_QUICKTIME_DIR/audioeffects.cpp \
-	 	$$PHONON_QUICKTIME_DIR/quicktimestreamreader.cpp \
-	 	$$PHONON_QUICKTIME_DIR/mediaobjectaudionode.cpp
-
-OBJECTIVE_SOURCES += $$PHONON_QUICKTIME_DIR/quicktimestreamreader_objc.mm
+OBJECTIVE_SOURCES += $$PHONON_QUICKTIME_DIR/quicktimevideoplayer.mm \
+			$$PHONON_QUICKTIME_DIR/backendheader.mm \
+	   		$$PHONON_QUICKTIME_DIR/medianodevideopart.mm \
+	 		$$PHONON_QUICKTIME_DIR/medianodeevent.mm \
+	 		$$PHONON_QUICKTIME_DIR/audiooutput.mm \
+	 		$$PHONON_QUICKTIME_DIR/backendinfo.mm \
+	 		$$PHONON_QUICKTIME_DIR/audiosplitter.mm \
+	 		$$PHONON_QUICKTIME_DIR/audioeffects.mm \
+	 		$$PHONON_QUICKTIME_DIR/quicktimestreamreader.mm \
+			$$PHONON_QUICKTIME_DIR/medianode.mm \
+			$$PHONON_QUICKTIME_DIR/backend.mm \
+			$$PHONON_QUICKTIME_DIR/mediaobject.mm \
+			$$PHONON_QUICKTIME_DIR/mediaobjectaudionode.mm \
+	   		$$PHONON_QUICKTIME_DIR/audiomixer.mm  \
+			$$PHONON_QUICKTIME_DIR/quicktimeaudioplayer.mm \
+			$$PHONON_QUICKTIME_DIR/videoframe.mm \
+	 		$$PHONON_QUICKTIME_DIR/quicktimemetadata.mm \
+			$$PHONON_QUICKTIME_DIR/audiodevice.mm \
+	 		$$PHONON_QUICKTIME_DIR/audioconnection.mm \
+	 		$$PHONON_QUICKTIME_DIR/audiograph.mm \
+	   		$$PHONON_QUICKTIME_DIR/audionode.mm \
+			$$PHONON_QUICKTIME_DIR/videowidget.mm
 
 target.path = $$[QT_INSTALL_PLUGINS]/phonon_backend
 INSTALLS += target

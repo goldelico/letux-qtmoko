@@ -28,113 +28,127 @@
 #include "HTMLFormElement.h"
 #include "JSHTMLFormElement.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLFieldSetElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLFieldSetElementTableEntries[] =
+static const HashTableValue JSHTMLFieldSetElementTableValues[4] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "form", JSHTMLFieldSetElement::FormAttrNum, DontDelete|ReadOnly, 0, &JSHTMLFieldSetElementTableEntries[2] },
-    { "constructor", JSHTMLFieldSetElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "form", DontDelete|ReadOnly, (intptr_t)jsHTMLFieldSetElementForm, (intptr_t)0 },
+    { "willValidate", DontDelete|ReadOnly, (intptr_t)jsHTMLFieldSetElementWillValidate, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLFieldSetElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFieldSetElementTable = 
-{
-    2, 3, JSHTMLFieldSetElementTableEntries, 2
-};
+static const HashTable JSHTMLFieldSetElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLFieldSetElementTableValues, 0 };
+#else
+    { 8, 7, JSHTMLFieldSetElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLFieldSetElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLFieldSetElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFieldSetElementConstructorTable = 
-{
-    2, 1, JSHTMLFieldSetElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLFieldSetElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLFieldSetElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLFieldSetElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLFieldSetElementConstructor : public DOMObject {
 public:
     JSHTMLFieldSetElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLFieldSetElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLFieldSetElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLFieldSetElementConstructor::info = { "HTMLFieldSetElementConstructor", 0, &JSHTMLFieldSetElementConstructorTable, 0 };
+const ClassInfo JSHTMLFieldSetElementConstructor::s_info = { "HTMLFieldSetElementConstructor", 0, &JSHTMLFieldSetElementConstructorTable, 0 };
 
 bool JSHTMLFieldSetElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLFieldSetElementConstructor, DOMObject>(exec, &JSHTMLFieldSetElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFieldSetElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLFieldSetElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLFieldSetElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFieldSetElementPrototypeTable = 
-{
-    2, 1, JSHTMLFieldSetElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLFieldSetElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLFieldSetElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLFieldSetElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLFieldSetElementPrototype::info = { "HTMLFieldSetElementPrototype", 0, &JSHTMLFieldSetElementPrototypeTable, 0 };
+const ClassInfo JSHTMLFieldSetElementPrototype::s_info = { "HTMLFieldSetElementPrototype", 0, &JSHTMLFieldSetElementPrototypeTable, 0 };
 
 JSObject* JSHTMLFieldSetElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLFieldSetElementPrototype>(exec, "[[JSHTMLFieldSetElement.prototype]]");
+    return getDOMPrototype<JSHTMLFieldSetElement>(exec);
 }
 
-const ClassInfo JSHTMLFieldSetElement::info = { "HTMLFieldSetElement", &JSHTMLElement::info, &JSHTMLFieldSetElementTable, 0 };
+const ClassInfo JSHTMLFieldSetElement::s_info = { "HTMLFieldSetElement", &JSHTMLElement::s_info, &JSHTMLFieldSetElementTable, 0 };
 
-JSHTMLFieldSetElement::JSHTMLFieldSetElement(ExecState* exec, HTMLFieldSetElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLFieldSetElement::JSHTMLFieldSetElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLFieldSetElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLFieldSetElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLFieldSetElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLFieldSetElementPrototype(JSHTMLFieldSetElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLFieldSetElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLFieldSetElement, JSHTMLElement>(exec, &JSHTMLFieldSetElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLFieldSetElement, Base>(exec, &JSHTMLFieldSetElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFieldSetElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLFieldSetElementForm(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case FormAttrNum: {
-        HTMLFieldSetElement* imp = static_cast<HTMLFieldSetElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->form()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLFieldSetElement* imp = static_cast<HTMLFieldSetElement*>(static_cast<JSHTMLFieldSetElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->form()));
 }
 
-JSValue* JSHTMLFieldSetElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLFieldSetElementWillValidate(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLFieldSetElementConstructor>(exec, "[[HTMLFieldSetElement.constructor]]");
+    HTMLFieldSetElement* imp = static_cast<HTMLFieldSetElement*>(static_cast<JSHTMLFieldSetElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->willValidate());
 }
+
+JSValuePtr jsHTMLFieldSetElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLFieldSetElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSHTMLFieldSetElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLFieldSetElementConstructor>(exec);
+}
+
 
 }

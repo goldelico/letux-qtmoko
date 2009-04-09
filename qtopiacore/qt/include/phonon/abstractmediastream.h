@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/abstractmediastream.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/abstractmediastream.h"

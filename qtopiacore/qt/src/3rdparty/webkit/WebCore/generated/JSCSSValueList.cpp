@@ -24,106 +24,118 @@
 
 #include <wtf/GetPtr.h>
 
+#include <runtime/PropertyNameArray.h>
 #include "CSSValue.h"
 #include "CSSValueList.h"
-#include "ExceptionCode.h"
 #include "JSCSSValue.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCSSValueList)
+
 /* Hash table */
 
-static const HashEntry JSCSSValueListTableEntries[] =
+static const HashTableValue JSCSSValueListTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "length", JSCSSValueList::LengthAttrNum, DontDelete|ReadOnly, 0, &JSCSSValueListTableEntries[2] },
-    { "constructor", JSCSSValueList::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "length", DontDelete|ReadOnly, (intptr_t)jsCSSValueListLength, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCSSValueListConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSValueListTable = 
-{
-    2, 3, JSCSSValueListTableEntries, 2
-};
+static const HashTable JSCSSValueListTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSCSSValueListTableValues, 0 };
+#else
+    { 5, 3, JSCSSValueListTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCSSValueListConstructorTableEntries[] =
+static const HashTableValue JSCSSValueListConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSValueListConstructorTable = 
-{
-    2, 1, JSCSSValueListConstructorTableEntries, 1
-};
+static const HashTable JSCSSValueListConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCSSValueListConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCSSValueListConstructorTableValues, 0 };
+#endif
 
 class JSCSSValueListConstructor : public DOMObject {
 public:
     JSCSSValueListConstructor(ExecState* exec)
+        : DOMObject(JSCSSValueListConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCSSValueListPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCSSValueListConstructor::info = { "CSSValueListConstructor", 0, &JSCSSValueListConstructorTable, 0 };
+const ClassInfo JSCSSValueListConstructor::s_info = { "CSSValueListConstructor", 0, &JSCSSValueListConstructorTable, 0 };
 
 bool JSCSSValueListConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCSSValueListConstructor, DOMObject>(exec, &JSCSSValueListConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSValueListConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCSSValueListPrototypeTableEntries[] =
+static const HashTableValue JSCSSValueListPrototypeTableValues[2] =
 {
-    { "item", JSCSSValueList::ItemFuncNum, DontDelete|Function, 1, 0 }
+    { "item", DontDelete|Function, (intptr_t)jsCSSValueListPrototypeFunctionItem, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSValueListPrototypeTable = 
-{
-    2, 1, JSCSSValueListPrototypeTableEntries, 1
-};
+static const HashTable JSCSSValueListPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCSSValueListPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSCSSValueListPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCSSValueListPrototype::info = { "CSSValueListPrototype", 0, &JSCSSValueListPrototypeTable, 0 };
+const ClassInfo JSCSSValueListPrototype::s_info = { "CSSValueListPrototype", 0, &JSCSSValueListPrototypeTable, 0 };
 
 JSObject* JSCSSValueListPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCSSValueListPrototype>(exec, "[[JSCSSValueList.prototype]]");
+    return getDOMPrototype<JSCSSValueList>(exec);
 }
 
 bool JSCSSValueListPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSCSSValueListPrototypeFunction, JSObject>(exec, &JSCSSValueListPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSCSSValueListPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSCSSValueList::info = { "CSSValueList", &JSCSSValue::info, &JSCSSValueListTable, 0 };
+const ClassInfo JSCSSValueList::s_info = { "CSSValueList", &JSCSSValue::s_info, &JSCSSValueListTable, 0 };
 
-JSCSSValueList::JSCSSValueList(ExecState* exec, CSSValueList* impl)
-    : JSCSSValue(exec, impl)
+JSCSSValueList::JSCSSValueList(PassRefPtr<Structure> structure, PassRefPtr<CSSValueList> impl)
+    : JSCSSValue(structure, impl)
 {
-    setPrototype(JSCSSValueListPrototype::self(exec));
+}
+
+JSObject* JSCSSValueList::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCSSValueListPrototype(JSCSSValueListPrototype::createStructure(JSCSSValuePrototype::self(exec)));
 }
 
 bool JSCSSValueList::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    const HashEntry* entry = Lookup::findEntry(&JSCSSValueListTable, propertyName);
+    const HashEntry* entry = JSCSSValueListTable.entry(exec, propertyName);
     if (entry) {
-        slot.setStaticEntry(this, entry, staticValueGetter<JSCSSValueList>);
+        slot.setCustom(this, entry->propertyGetter());
         return true;
     }
     bool ok;
@@ -132,54 +144,57 @@ bool JSCSSValueList::getOwnPropertySlot(ExecState* exec, const Identifier& prope
         slot.setCustomIndex(this, index, indexGetter);
         return true;
     }
-    return JSCSSValue::getOwnPropertySlot(exec, propertyName, slot);
+    return getStaticValueSlot<JSCSSValueList, Base>(exec, &JSCSSValueListTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSValueList::getValueProperty(ExecState* exec, int token) const
+bool JSCSSValueList::getOwnPropertySlot(ExecState* exec, unsigned propertyName, PropertySlot& slot)
 {
-    switch (token) {
-    case LengthAttrNum: {
-        CSSValueList* imp = static_cast<CSSValueList*>(impl());
-
-        return jsNumber(imp->length());
+    if (propertyName < static_cast<CSSValueList*>(impl())->length()) {
+        slot.setCustomIndex(this, propertyName, indexGetter);
+        return true;
     }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return getOwnPropertySlot(exec, Identifier::from(exec, propertyName), slot);
 }
 
-JSValue* JSCSSValueList::getConstructor(ExecState* exec)
+JSValuePtr jsCSSValueListLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSCSSValueListConstructor>(exec, "[[CSSValueList.constructor]]");
-}
-JSValue* JSCSSValueListPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
-{
-    if (!thisObj->inherits(&JSCSSValueList::info))
-      return throwError(exec, TypeError);
-
-    CSSValueList* imp = static_cast<CSSValueList*>(static_cast<JSCSSValueList*>(thisObj)->impl());
-
-    switch (id) {
-    case JSCSSValueList::ItemFuncNum: {
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->item(index)));
-        return result;
-    }
-    }
-    return 0;
+    CSSValueList* imp = static_cast<CSSValueList*>(static_cast<JSCSSValueList*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-JSValue* JSCSSValueList::indexGetter(ExecState* exec, JSObject* originalObject, const Identifier& propertyName, const PropertySlot& slot)
+JSValuePtr jsCSSValueListConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    JSCSSValueList* thisObj = static_cast<JSCSSValueList*>(slot.slotBase());
+    return static_cast<JSCSSValueList*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSCSSValueList::getPropertyNames(ExecState* exec, PropertyNameArray& propertyNames)
+{
+    for (unsigned i = 0; i < static_cast<CSSValueList*>(impl())->length(); ++i)
+        propertyNames.add(Identifier::from(exec, i));
+     Base::getPropertyNames(exec, propertyNames);
+}
+
+JSValuePtr JSCSSValueList::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSCSSValueListConstructor>(exec);
+}
+
+JSValuePtr jsCSSValueListPrototypeFunctionItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCSSValueList::s_info))
+        return throwError(exec, TypeError);
+    JSCSSValueList* castedThisObj = static_cast<JSCSSValueList*>(asObject(thisValue));
+    CSSValueList* imp = static_cast<CSSValueList*>(castedThisObj->impl());
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->item(index)));
+    return result;
+}
+
+
+JSValuePtr JSCSSValueList::indexGetter(ExecState* exec, const Identifier& propertyName, const PropertySlot& slot)
+{
+    JSCSSValueList* thisObj = static_cast<JSCSSValueList*>(asObject(slot.slotBase()));
     return toJS(exec, static_cast<CSSValueList*>(thisObj->impl())->item(slot.index()));
 }
 

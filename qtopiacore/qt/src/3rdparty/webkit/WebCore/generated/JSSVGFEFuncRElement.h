@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGFEFuncRElement_H
-#define JSSVGFEFuncRElement_H
+#ifndef JSSVGFEFuncRElement_h
+#define JSSVGFEFuncRElement_h
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
 #include "JSSVGComponentTransferFunctionElement.h"
 
@@ -31,25 +31,27 @@ namespace WebCore {
 class SVGFEFuncRElement;
 
 class JSSVGFEFuncRElement : public JSSVGComponentTransferFunctionElement {
+    typedef JSSVGComponentTransferFunctionElement Base;
 public:
-    JSSVGFEFuncRElement(KJS::ExecState*, SVGFEFuncRElement*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGFEFuncRElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGFEFuncRElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGFEFuncRElementPrototype : public KJS::JSObject {
+class JSSVGFEFuncRElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGFEFuncRElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGComponentTransferFunctionElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGFEFuncRElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
 #endif

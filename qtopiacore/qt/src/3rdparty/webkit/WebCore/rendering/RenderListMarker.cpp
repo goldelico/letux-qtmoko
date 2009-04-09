@@ -1,9 +1,7 @@
-/**
- * This file is part of the DOM implementation for KDE.
- *
+/*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2003, 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2006 Andrew Wellington (proton@wiretapped.net)
  *
  * This library is free software; you can redistribute it and/or
@@ -473,7 +471,6 @@ String listMarkerText(EListStyleType type, int value)
 
 RenderListMarker::RenderListMarker(RenderListItem* item)
     : RenderBox(item->document())
-    , m_image(0)
     , m_listItem(item)
     , m_selectionState(SelectionNone)
 {
@@ -485,22 +482,27 @@ RenderListMarker::RenderListMarker(RenderListItem* item)
 RenderListMarker::~RenderListMarker()
 {
     if (m_image)
-        m_image->deref(this);
+        m_image->removeClient(this);
 }
 
-void RenderListMarker::setStyle(RenderStyle* s)
+void RenderListMarker::styleWillChange(RenderStyle::Diff diff, const RenderStyle* newStyle)
 {
-    if (style() && (s->listStylePosition() != style()->listStylePosition() || s->listStyleType() != style()->listStyleType()))
+    if (style() && (newStyle->listStylePosition() != style()->listStylePosition() || newStyle->listStyleType() != style()->listStyleType()))
         setNeedsLayoutAndPrefWidthsRecalc();
     
-    RenderBox::setStyle(s);
+    RenderBox::styleWillChange(diff, newStyle);
+}
+
+void RenderListMarker::styleDidChange(RenderStyle::Diff diff, const RenderStyle* oldStyle)
+{
+    RenderBox::styleDidChange(diff, oldStyle);
 
     if (m_image != style()->listStyleImage()) {
         if (m_image)
-            m_image->deref(this);
+            m_image->removeClient(this);
         m_image = style()->listStyleImage();
         if (m_image)
-            m_image->ref(this);
+            m_image->addClient(this);
     }
 }
 
@@ -544,7 +546,7 @@ void RenderListMarker::paint(PaintInfo& paintInfo, int tx, int ty)
         if (style()->highlight() != nullAtom && !paintInfo.context->paintingDisabled())
             paintCustomHighlight(tx, ty, style()->highlight(), true);
 #endif
-        context->drawImage(m_image->image(), marker.location());
+        context->drawImage(m_image->image(this, marker.size()), marker.location());
         if (selectionState() != SelectionNone)
             context->fillRect(selectionRect(), selectionBackgroundColor());
         return;
@@ -608,7 +610,7 @@ void RenderListMarker::paint(PaintInfo& paintInfo, int tx, int ty)
     Vector<UChar> reversedText;
     if (textNeedsReversing) {
         int length = m_text.length();
-        reversedText.resize(length);
+        reversedText.grow(length);
         for (int i = 0; i < length; ++i)
             reversedText[length - i - 1] = m_text[i];
         textRun = TextRun(reversedText.data(), length);
@@ -635,8 +637,8 @@ void RenderListMarker::layout()
     ASSERT(!prefWidthsDirty());
 
     if (isImage()) {
-        m_width = m_image->image()->width();
-        m_height = m_image->image()->height();
+        m_width = m_image->imageSize(this, style()->effectiveZoom()).width();
+        m_height = m_image->imageSize(this, style()->effectiveZoom()).height();
     } else {
         m_width = minPrefWidth();
         m_height = style()->font().height();
@@ -654,13 +656,13 @@ void RenderListMarker::layout()
     setNeedsLayout(false);
 }
 
-void RenderListMarker::imageChanged(CachedImage* o)
+void RenderListMarker::imageChanged(WrappedImagePtr o, const IntRect*)
 {
     // A list marker can't have a background or border image, so no need to call the base class method.
-    if (o != m_image)
+    if (o != m_image->data())
         return;
 
-    if (m_width != m_image->imageSize().width() || m_height != m_image->imageSize().height() || m_image->errorOccurred())
+    if (m_width != m_image->imageSize(this, style()->effectiveZoom()).width() || m_height != m_image->imageSize(this, style()->effectiveZoom()).height() || m_image->errorOccurred())
         setNeedsLayoutAndPrefWidthsRecalc();
     else
         repaint();
@@ -672,14 +674,18 @@ void RenderListMarker::calcPrefWidths()
 
     m_text = "";
 
+    const Font& font = style()->font();
+
     if (isImage()) {
-        m_minPrefWidth = m_maxPrefWidth = m_image->image()->width();
+        // FIXME: This is a somewhat arbitrary width.  Generated images for markers really won't become particularly useful
+        // until we support the CSS3 marker pseudoclass to allow control over the width and height of the marker box.
+        int bulletWidth = font.ascent() / 2;
+        m_image->setImageContainerSize(IntSize(bulletWidth, bulletWidth));
+        m_minPrefWidth = m_maxPrefWidth = m_image->imageSize(this, style()->effectiveZoom()).width();
         setPrefWidthsDirty(false);
         updateMargins();
         return;
     }
-
-    const Font& font = style()->font();
 
     int width = 0;
     EListStyleType type = style()->listStyleType();
@@ -800,14 +806,14 @@ void RenderListMarker::updateMargins()
     style()->setMarginRight(Length(marginRight, Fixed));
 }
 
-short RenderListMarker::lineHeight(bool, bool) const
+int RenderListMarker::lineHeight(bool, bool) const
 {
     if (!isImage())
         return m_listItem->lineHeight(false, true);
     return height();
 }
 
-short RenderListMarker::baselinePosition(bool, bool) const
+int RenderListMarker::baselinePosition(bool, bool) const
 {
     if (!isImage()) {
         const Font& font = style()->font();
@@ -824,7 +830,7 @@ bool RenderListMarker::isInside() const
 IntRect RenderListMarker::getRelativeMarkerRect()
 {
     if (isImage())
-        return IntRect(m_x, m_y, m_image->imageSize().width(), m_image->imageSize().height());
+        return IntRect(m_x, m_y, m_image->imageSize(this, style()->effectiveZoom()).width(), m_image->imageSize(this, style()->effectiveZoom()).height());
 
     switch (style()->listStyleType()) {
         case DISC:
@@ -889,9 +895,8 @@ IntRect RenderListMarker::selectionRect(bool clipToVisibleContent)
     if (clipToVisibleContent)
         computeAbsoluteRepaintRect(rect);
     else {
-        int absx, absy;
-        absolutePosition(absx, absy);
-        rect.move(absx, absy);
+        FloatPoint absPos = localToAbsolute();
+        rect.move(absPos.x(), absPos.y());
     }
     
     return rect;

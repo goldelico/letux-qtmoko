@@ -3,7 +3,7 @@
 #
 # Synchronizes Qt header files - internal Trolltech tool.
 #
-# Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+# Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 # Contact: Qt Software Information (qt-info@nokia.com)
 #
 ######################################################################
@@ -31,6 +31,7 @@ my %modules = ( # path to module name map
         "QtNetwork" => "$basedir/src/network",
         "QtSvg" => "$basedir/src/svg",
         "QtScript" => "$basedir/src/script",
+        "QtScriptTools" => "$basedir/src/scripttools",
         "Qt3Support" => "$basedir/src/qt3support",
         "ActiveQt" => "$basedir/src/activeqt/container;$basedir/src/activeqt/control;$basedir/src/activeqt/shared",
         "QtTest" => "$basedir/src/testlib",
@@ -44,7 +45,7 @@ my %modules = ( # path to module name map
 );
 my %moduleheaders = ( # restrict the module headers to those found in relative path
         "QtWebKit" => "../WebKit/qt/Api",
-        "phonon" => "../3rdparty/kdelibs/phonon",
+        "phonon" => "../3rdparty/phonon/phonon",
 );
 
 #$modules{"QtCore"} .= ";$basedir/mkspecs/" . $ENV{"MKSPEC"} if defined $ENV{"MKSPEC"};
@@ -194,6 +195,7 @@ sub classNames {
                         last unless($line =~ /\\$/);
                     }
                 }
+		return @ret if($line =~ m/^#pragma qt_sync_stop_processing/);
                 push(@ret, "$1") if($line =~ m/^#pragma qt_class\(([^)]*)\)[\r\n]*$/);
 		$line = 0;
             }
@@ -210,6 +212,7 @@ sub classNames {
     }
 
     my $last_definition = 0;
+    my @namespaces;
     for(my $i = 0; $i < length($parsable); $i++) {
         my $definition = 0;
         my $character = substr($parsable, $i, 1);
@@ -247,7 +250,22 @@ sub classNames {
         } elsif($character eq ";") {
             $definition = substr($parsable, $last_definition, $i - $last_definition + 1);
             $last_definition = $i + 1;
+	} elsif($character eq "}") {
+	    # a naked } must be a namespace ending
+	    # if it's not a namespace, it's eaten by the loop above
+	    pop @namespaces;
+	    $last_definition = $i + 1;
 	}
+
+	if (substr($parsable, $last_definition, $i - $last_definition + 1) =~ m/ namespace ([^ ]*) /
+	    && substr($parsable, $i+1, 1) eq "{") {
+	    push @namespaces, $1;
+
+	    # Eat the opening { so that the condensing loop above doesn't see it
+	    $i++;
+	    $last_definition = $i + 1;
+	}
+
         if($definition) {
 	    $definition =~ s=[\n\r]==g;
             my @symbols;
@@ -264,7 +282,10 @@ sub classNames {
 
 	    foreach (@symbols) {
 		my $symbol = $_;
-		push @ret, $symbol if($symbol =~ /^Q/);
+		$symbol = (join("::", @namespaces) . "::" . $symbol) if (scalar @namespaces);
+		push @ret, $symbol
+		    if ($symbol =~ /^Q[^:]*$/		# no-namespace, starting with Q
+			|| $symbol =~ /^Phonon::/);	# or in the Phonon namespace
             }
         }
     }
@@ -641,9 +662,12 @@ foreach (@modules_to_sync) {
     $pathtoheaders = "$moduleheaders{$lib}" if ($moduleheaders{$lib});
 
     #information used after the syncing
-    my $master_contents = "";
     my $pri_install_classes = "";
     my $pri_install_files = "";
+
+    my $libcapitals = $lib;
+    $libcapitals =~ y/a-z/A-Z/;
+    my $master_contents = "#ifndef QT_".$libcapitals."_MODULE_H\n#define QT_".$libcapitals."_MODULE_H\n";
 
     #get dependencies
     if(-e "$dir/" . basename($dir) . ".pro") {
@@ -658,6 +682,7 @@ foreach (@modules_to_sync) {
 			$master_contents .= "#include <QtNetwork/QtNetwork>\n" if("$_" eq "network");
 			$master_contents .= "#include <QtSvg/QtSvg>\n" if("$_" eq "svg");
 			$master_contents .= "#include <QtScript/QtScript>\n" if("$_" eq "script");
+			$master_contents .= "#include <QtScriptTools/QtScriptTools>\n" if("$_" eq "scripttools");
 			$master_contents .= "#include <Qt3Support/Qt3Support>\n" if("$_" eq "qt3support");
 			$master_contents .= "#include <QtSql/QtSql>\n" if("$_" eq "sql");
 			$master_contents .= "#include <QtXml/QtXml>\n" if("$_" eq "xml");
@@ -720,10 +745,12 @@ foreach (@modules_to_sync) {
         my @subdirs = ($headers_dir);
         foreach (@subdirs) {
             my $subdir = "$_";
-            opendir DIR, "$subdir";
+            opendir DIR, "$subdir" or next;
             while(my $t = readdir(DIR)) {
                 push @subdirs, "$subdir/$t" if(-d "$subdir/$t" && !($t eq ".") &&
-					       !($t eq ".."));
+					       !($t eq "..") && !($t eq ".obj") &&
+                                               !($t eq ".moc") && !($t eq ".rcc") &&
+                                               !($t eq ".uic") && !($t eq "build"));
             }
             closedir DIR;
         }
@@ -766,8 +793,12 @@ foreach (@modules_to_sync) {
 			      if ("$lib" ne "phonon" && "$subdir" =~ /^$basedir\/src/);
 
 			    foreach(@classes) {
-				my $class = "$_";
 				my $header_base = basename($header);
+				my $class = $_;
+				if ($class =~ m/::/) {
+				    $class =~ s,::,/,g;
+				    $class = "../" . $class;
+				}
 				$class_lib_map_contents .= "QT_CLASS_LIB($_, $lib, $header_base)\n";
 				$header_copies++ if(syncHeader("$out_basedir/include/$lib/$class", $header, 0));
 			    }
@@ -788,7 +819,12 @@ foreach (@modules_to_sync) {
 			    if($public_header) {
 				my $pri_install_iheader = fixPaths($iheader, $current_dir);
 				foreach(@classes) {
-				    my $class_header = fixPaths("$basedir/include/$lib/$_",
+				    my $class = $_;
+				    if ($class =~ m/::/) {
+					$class =~ s,::,/,g;
+					$class = "../" . $class;
+				    }
+				    my $class_header = fixPaths("$out_basedir/include/$lib/$class",
 								$current_dir) . " ";
 				    $pri_install_classes .= $class_header
 								unless($pri_install_classes =~ $class_header);
@@ -802,6 +838,9 @@ foreach (@modules_to_sync) {
             }
         }
     }
+
+    # close the master include:
+    $master_contents .= "#endif\n";
 
     unless($showonly) {
         #generate the "master" include file
@@ -882,8 +921,10 @@ if($check_includes) {
 		my $subdir = "$_";
 		opendir DIR, "$subdir";
 		while(my $t = readdir(DIR)) {
-		    push @subdirs, "$subdir/$t" if(-d "$subdir/$t" && !($t eq ".") &&
-						   !($t eq ".."));
+                    push @subdirs, "$subdir/$t" if(-d "$subdir/$t" && !($t eq ".") &&
+                                                   !($t eq "..") && !($t eq ".obj") &&
+                                                   !($t eq ".moc") && !($t eq ".rcc") &&
+                                                   !($t eq ".uic") && !($t eq "build"));
 		}
 		closedir DIR;
 	    }
@@ -938,8 +979,8 @@ if($check_includes) {
 				while($line = <F>) {
 				    chomp $line;
 				    my $output_line = 1;
-                                    if($line =~ /^ *\# *pragma qt_no_included_check/) {
-			                break(1);
+                                    if($line =~ /^ *\# *pragma (qt_no_included_check|qt_sync_stop_processing)/) {
+			                last;
 				    } elsif($line =~ /^ *\# *include/) {
 					my $include = $line;
 					if($line =~ /<.*>/) {

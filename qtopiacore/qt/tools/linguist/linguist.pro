@@ -1,6 +1,8 @@
 TEMPLATE = subdirs
-SUBDIRS  = linguist \
-           lrelease \
-           lupdate
+SUBDIRS  = \
+    linguist \
+    lrelease \
+    lupdate \
+    lconvert
 CONFIG  += ordered
 

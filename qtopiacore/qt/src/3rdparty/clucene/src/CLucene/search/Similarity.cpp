@@ -13,7 +13,7 @@
 CL_NS_USE(index)
 CL_NS_DEF(search)
 
-#ifdef HAVE_NO_FLOAT_BYTE
+#ifdef _CL_HAVE_NO_FLOAT_BYTE
 	#if defined(_LUCENE_PRAGMA_WARNINGS)
 	 #pragma message ("==================Using fallback float<->byte encodings!!!==================")
 	#else
@@ -22,7 +22,7 @@ CL_NS_DEF(search)
 
     //if the autoconf figured out that we can't do the conversions properly, then
 	//we fall back on the old, inaccurate way of doing things.
-	float_t NORM_TABLE[]  = {
+	qreal NORM_TABLE[]  = {
 	0.0,5.820766E-10,6.9849193E-10,8.1490725E-10,9.313226E-10,1.1641532E-9,1.3969839E-9,
 	1.6298145E-9,1.8626451E-9,2.3283064E-9,2.7939677E-9,3.259629E-9,3.7252903E-9,
 	4.656613E-9,5.5879354E-9,6.519258E-9,7.4505806E-9,9.313226E-9,1.1175871E-8,1.3038516E-8,
@@ -53,18 +53,18 @@ CL_NS_DEF(search)
 	2147483648.0,2684354560.0,3221225472.0,3758096384.0,4294967296.0,5368709120.0,6442450944.0,7516192768.0
 	};
 
-	float_t Similarity::byteToFloat(uint8_t b) {
+	qreal Similarity::byteToFloat(uint8_t b) {
 		return NORM_TABLE[b];
     }
 
-   uint8_t Similarity::floatToByte(float_t f) {
+   uint8_t Similarity::floatToByte(qreal f) {
 		return Similarity::encodeNorm(f);
    }
 
 #else
 
 	/** Cache of decoded bytes. */
-	float_t NORM_TABLE[256];
+	qreal NORM_TABLE[256];
 	bool NORM_TABLE_initd=false;
 
 	//float to bits conversion utilities...
@@ -73,7 +73,7 @@ CL_NS_DEF(search)
 		float		f; //must use a float type, else types dont match up
 	};
 
-	int32_t floatToIntBits(float_t value)
+	int32_t floatToIntBits(qreal value)
 	{
 		clvalue u;
 		int32_t e, f;
@@ -87,7 +87,7 @@ CL_NS_DEF(search)
 		return u.i;
 	}
 
-	float_t intBitsToFloat(int32_t bits)
+	qreal intBitsToFloat(int32_t bits)
 	{
 		clvalue u;
 		u.i = bits;
@@ -95,7 +95,7 @@ CL_NS_DEF(search)
 	}
 
 	
-   float_t Similarity::byteToFloat(uint8_t b) {
+   qreal Similarity::byteToFloat(uint8_t b) {
       if (b == 0)                                   // zero is a special case
          return 0.0f;
       int32_t mantissa = b & 7;
@@ -104,14 +104,14 @@ CL_NS_DEF(search)
       return intBitsToFloat(bits);
    }
 
-   uint8_t Similarity::floatToByte(float_t f) {
+   uint8_t Similarity::floatToByte(qreal f) {
       if (f < 0.0f)                                 // round negatives up to zero
          f = 0.0f;
 
       if (f == 0.0f)                                // zero is a special case
          return 0;
 
-      int32_t bits = floatToIntBits(f);           // parse float_t into parts
+      int32_t bits = floatToIntBits(f);           // parse qreal into parts
       int32_t mantissa = (bits & 0xffffff) >> 21;
       int32_t exponent = (((bits >> 24) & 0x7f) - 63) + 15;
 
@@ -143,8 +143,8 @@ CL_NS_DEF(search)
       return _defaultImpl;
    }
 
-   float_t Similarity::decodeNorm(uint8_t b) {
-#ifndef HAVE_NO_FLOAT_BYTE
+   qreal Similarity::decodeNorm(uint8_t b) {
+#ifndef _CL_HAVE_NO_FLOAT_BYTE
 	   if ( !NORM_TABLE_initd ){
 		for (int i = 0; i < 256; i++)
 			NORM_TABLE[i] = byteToFloat(i);
@@ -154,8 +154,8 @@ CL_NS_DEF(search)
       return NORM_TABLE[b];
    }
 
-   uint8_t Similarity::encodeNorm(float_t f) {
-#ifdef HAVE_NO_FLOAT_BYTE
+   uint8_t Similarity::encodeNorm(qreal f) {
+#ifdef _CL_HAVE_NO_FLOAT_BYTE
 	   int32_t i=0;
 	   if ( f <= 0 )
 		   return 0;
@@ -175,13 +175,13 @@ CL_NS_DEF(search)
    }
 
 
-   float_t Similarity::idf(Term* term, Searcher* searcher) {
+   qreal Similarity::idf(Term* term, Searcher* searcher) {
       return idf(searcher->docFreq(term), searcher->maxDoc());
    }
 
    
-   float_t Similarity::idf(CL_NS(util)::CLVector<Term*>* terms, Searcher* searcher) {
-      float_t _idf = 0.0f;
+   qreal Similarity::idf(CL_NS(util)::CLVector<Term*>* terms, Searcher* searcher) {
+      qreal _idf = 0.0f;
       for (CL_NS(util)::CLVector<Term*>::iterator i = terms->begin(); i != terms->end(); i++ ) {
          _idf += idf((Term*)*i, searcher);
       }
@@ -199,35 +199,35 @@ CL_NS_DEF(search)
 	DefaultSimilarity::~DefaultSimilarity(){
 	}
 
-  float_t DefaultSimilarity::lengthNorm(const TCHAR* fieldName, int32_t numTerms) {
+  qreal DefaultSimilarity::lengthNorm(const TCHAR* fieldName, int32_t numTerms) {
     if ( numTerms == 0 ) //prevent div by zero
         return 0;
-    float_t ret = (float_t)(1.0 / sqrt((float_t)numTerms));
+    qreal ret = (qreal)(1.0 / sqrt((qreal)numTerms));
 	return ret;
   }
   
-  float_t DefaultSimilarity::queryNorm(float_t sumOfSquaredWeights) {
+  qreal DefaultSimilarity::queryNorm(qreal sumOfSquaredWeights) {
     if ( sumOfSquaredWeights == 0 ) //prevent div by zero
         return 0.0f;
-	float_t ret = (float_t)(1.0 / sqrt(sumOfSquaredWeights));
+	qreal ret = (qreal)(1.0 / sqrt(sumOfSquaredWeights));
 	return ret;
   }
 
-  float_t DefaultSimilarity::tf(float_t freq) {
+  qreal DefaultSimilarity::tf(qreal freq) {
     return sqrt(freq);
   }
     
-  float_t DefaultSimilarity::sloppyFreq(int32_t distance) {
+  qreal DefaultSimilarity::sloppyFreq(int32_t distance) {
     return 1.0f / (distance + 1);
   }
     
-  float_t DefaultSimilarity::idf(int32_t docFreq, int32_t numDocs) {
-    return (float_t)(log(numDocs/(float_t)(docFreq+1)) + 1.0);
+  qreal DefaultSimilarity::idf(int32_t docFreq, int32_t numDocs) {
+    return (qreal)(log(numDocs/(qreal)(docFreq+1)) + 1.0);
   }
     
-  float_t DefaultSimilarity::coord(int32_t overlap, int32_t maxOverlap) {
+  qreal DefaultSimilarity::coord(int32_t overlap, int32_t maxOverlap) {
   	if ( maxOverlap == 0 )
   		return 0.0f;
-    return overlap / (float_t)maxOverlap;
+    return overlap / (qreal)maxOverlap;
   }
 CL_NS_END

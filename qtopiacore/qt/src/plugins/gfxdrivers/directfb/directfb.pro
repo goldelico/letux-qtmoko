@@ -33,4 +33,6 @@ SOURCES	= \
 	qdirectfbkeyboard.cpp \
 	qdirectfbmouse.cpp
 
-include($$QT_SOURCE_TREE/config.tests/qws/directfb/directfb.pri)
+QMAKE_CXXFLAGS += $$QT_CFLAGS_DIRECTFB
+LIBS += $$QT_LIBS_DIRECTFB
+

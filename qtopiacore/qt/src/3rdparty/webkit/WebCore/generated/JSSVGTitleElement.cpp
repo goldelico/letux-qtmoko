@@ -23,137 +23,144 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGTitleElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedString.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGTitleElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGTitleElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGTitleElementTableEntries[] =
+static const HashTableValue JSSVGTitleElementTableValues[5] =
 {
-    { "xmllang", JSSVGTitleElement::XmllangAttrNum, DontDelete, 0, &JSSVGTitleElementTableEntries[4] },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSSVGTitleElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "xmlspace", JSSVGTitleElement::XmlspaceAttrNum, DontDelete, 0, &JSSVGTitleElementTableEntries[5] },
-    { "style", JSSVGTitleElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "xmllang", DontDelete, (intptr_t)jsSVGTitleElementXmllang, (intptr_t)setJSSVGTitleElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGTitleElementXmlspace, (intptr_t)setJSSVGTitleElementXmlspace },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGTitleElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGTitleElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTitleElementTable = 
-{
-    2, 6, JSSVGTitleElementTableEntries, 4
-};
+static const HashTable JSSVGTitleElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGTitleElementTableValues, 0 };
+#else
+    { 9, 7, JSSVGTitleElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGTitleElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGTitleElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGTitleElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTitleElementPrototypeTable = 
-{
-    2, 1, JSSVGTitleElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGTitleElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGTitleElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGTitleElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGTitleElementPrototype::info = { "SVGTitleElementPrototype", 0, &JSSVGTitleElementPrototypeTable, 0 };
+const ClassInfo JSSVGTitleElementPrototype::s_info = { "SVGTitleElementPrototype", 0, &JSSVGTitleElementPrototypeTable, 0 };
 
 JSObject* JSSVGTitleElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGTitleElementPrototype>(exec, "[[JSSVGTitleElement.prototype]]");
+    return getDOMPrototype<JSSVGTitleElement>(exec);
 }
 
-const ClassInfo JSSVGTitleElement::info = { "SVGTitleElement", &JSSVGElement::info, &JSSVGTitleElementTable, 0 };
-
-JSSVGTitleElement::JSSVGTitleElement(ExecState* exec, SVGTitleElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGTitleElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGTitleElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGTitleElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGTitleElement::s_info = { "SVGTitleElement", &JSSVGElement::s_info, &JSSVGTitleElementTable, 0 };
+
+JSSVGTitleElement::JSSVGTitleElement(PassRefPtr<Structure> structure, PassRefPtr<SVGTitleElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGTitleElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGTitleElementPrototype(JSSVGTitleElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGTitleElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGTitleElement, JSSVGElement>(exec, &JSSVGTitleElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGTitleElement, Base>(exec, &JSSVGTitleElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGTitleElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGTitleElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ClassNameAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
 }
 
-void JSSVGTitleElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGTitleElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGTitleElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGTitleElementTable, this);
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
 }
 
-void JSSVGTitleElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGTitleElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGTitleElement* imp = static_cast<SVGTitleElement*>(impl());
+JSValuePtr jsSVGTitleElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+void JSSVGTitleElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGTitleElement, Base>(exec, propertyName, value, &JSSVGTitleElementTable, this, slot);
+}
+
+void setJSSVGTitleElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGTitleElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(static_cast<JSSVGTitleElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr jsSVGTitleElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTitleElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTitleElement* castedThisObj = static_cast<JSSVGTitleElement*>(asObject(thisValue));
+    SVGTitleElement* imp = static_cast<SVGTitleElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 

@@ -21,7 +21,8 @@ HEADERS += $$PWD/propertyeditor.h \
     $$PWD/previewwidget.h \
     $$PWD/previewframe.h \
     $$PWD/newdynamicpropertydialog.h \
-    $$PWD/brushpropertymanager.h
+    $$PWD/brushpropertymanager.h \
+    $$PWD/fontpropertymanager.h
 
 SOURCES += $$PWD/propertyeditor.cpp \
     $$PWD/designerpropertymanager.cpp \
@@ -32,7 +33,8 @@ SOURCES += $$PWD/propertyeditor.cpp \
     $$PWD/previewwidget.cpp \
     $$PWD/previewframe.cpp \
     $$PWD/newdynamicpropertydialog.cpp \
-    $$PWD/brushpropertymanager.cpp
+    $$PWD/brushpropertymanager.cpp \
+    $$PWD/fontpropertymanager.cpp
 
 HEADERS += \
     $$PWD/propertyeditor_global.h \
@@ -42,3 +44,4 @@ HEADERS += \
 SOURCES += $$PWD/defs.cpp \
     $$PWD/qlonglongvalidator.cpp
 
+RESOURCES += $$PWD/propertyeditor.qrc

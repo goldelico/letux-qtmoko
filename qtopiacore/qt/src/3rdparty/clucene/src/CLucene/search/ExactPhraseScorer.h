@@ -25,7 +25,7 @@ CL_NS_DEF(search)
 	}
     protected:
       //Returns the exact freqency of the phrase
-      float_t phraseFreq();
+      qreal phraseFreq();
     };
 CL_NS_END
 #endif

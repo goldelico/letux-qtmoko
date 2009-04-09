@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimateElement_H
-#define JSSVGAnimateElement_H
+#ifndef JSSVGAnimateElement_h
+#define JSSVGAnimateElement_h
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_ANIMATION)
 
 #include "JSSVGAnimationElement.h"
 
@@ -31,25 +31,27 @@ namespace WebCore {
 class SVGAnimateElement;
 
 class JSSVGAnimateElement : public JSSVGAnimationElement {
+    typedef JSSVGAnimationElement Base;
 public:
-    JSSVGAnimateElement(KJS::ExecState*, SVGAnimateElement*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGAnimateElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimateElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGAnimateElementPrototype : public KJS::JSObject {
+class JSSVGAnimateElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGAnimateElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGAnimationElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGAnimateElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_ANIMATION)
 
 #endif

@@ -98,7 +98,6 @@ public:
 };
 
 
-#pragma warning(disable : 4250)
 class MultiTermPositions:public MultiTermDocs,public TermPositions {
 public:
 	MultiTermPositions(IndexReader** subReaders, const int32_t* s);

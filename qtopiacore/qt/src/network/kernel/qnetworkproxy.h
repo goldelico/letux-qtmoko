@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #define QNETWORKPROXY_H
 
 #include <QtNetwork/qhostaddress.h>
+#include <QtCore/qshareddata.h>
 
 #ifndef QT_NO_NETWORKPROXY
 
@@ -48,12 +53,59 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Network)
 
+class QUrl;
+
+class QNetworkProxyQueryPrivate;
+class Q_NETWORK_EXPORT QNetworkProxyQuery
+{
+public:
+    enum QueryType {
+        TcpSocket,
+        UdpSocket,
+        TcpServer = 100,
+        UrlRequest
+    };
+
+    QNetworkProxyQuery();
+    QNetworkProxyQuery(const QUrl &requestUrl, QueryType queryType = UrlRequest);
+    QNetworkProxyQuery(const QString &hostname, int port, const QString &protocolTag = QString(),
+                       QueryType queryType = TcpSocket);
+    QNetworkProxyQuery(quint16 bindPort, const QString &protocolTag = QString(),
+                       QueryType queryType = TcpServer);
+    QNetworkProxyQuery(const QNetworkProxyQuery &other);
+    ~QNetworkProxyQuery();
+    QNetworkProxyQuery &operator=(const QNetworkProxyQuery &other);
+    bool operator==(const QNetworkProxyQuery &other) const;
+    inline bool operator!=(const QNetworkProxyQuery &other) const
+    { return !(*this == other); }
+
+    QueryType queryType() const;
+    void setQueryType(QueryType type);
+
+    int peerPort() const;
+    void setPeerPort(int port);
+
+    QString peerHostName() const;
+    void setPeerHostName(const QString &hostname);
+
+    int localPort() const;
+    void setLocalPort(int port);
+
+    QString protocolTag() const;
+    void setProtocolTag(const QString &protocolTag);
+
+    QUrl url() const;
+    void setUrl(const QUrl &url);
+
+private:
+    QSharedDataPointer<QNetworkProxyQueryPrivate> d;
+};
+Q_DECLARE_TYPEINFO(QNetworkProxyQuery, Q_MOVABLE_TYPE);
+
 class QNetworkProxyPrivate;
 
 class Q_NETWORK_EXPORT QNetworkProxy
 {
-    Q_DECLARE_PRIVATE(QNetworkProxy)
-
 public:
     enum ProxyType {
         DefaultProxy,
@@ -63,6 +115,15 @@ public:
         HttpCachingProxy,
         FtpCachingProxy
     };
+
+    enum Capability {
+        TunnelingCapability = 0x0001,
+        ListeningCapability = 0x0002,
+        UdpTunnelingCapability = 0x0004,
+        CachingCapability = 0x0008,
+        HostNameLookupCapability = 0x0010
+    };
+    Q_DECLARE_FLAGS(Capabilities, Capability)
 
     QNetworkProxy();
     QNetworkProxy(ProxyType type, const QString &hostName = QString(), quint16 port = 0,
@@ -76,6 +137,9 @@ public:
 
     void setType(QNetworkProxy::ProxyType type);
     QNetworkProxy::ProxyType type() const;
+
+    void setCapabilities(Capabilities capab);
+    Capabilities capabilities() const;
     bool isCachingProxy() const;
     bool isTransparentProxy() const;
 
@@ -95,7 +159,21 @@ public:
     static QNetworkProxy applicationProxy();
 
 private:
-    QNetworkProxyPrivate *d_ptr;
+    QSharedDataPointer<QNetworkProxyPrivate> d;
+};
+Q_DECLARE_OPERATORS_FOR_FLAGS(QNetworkProxy::Capabilities)
+
+class Q_NETWORK_EXPORT QNetworkProxyFactory
+{
+public:
+    QNetworkProxyFactory();
+    virtual ~QNetworkProxyFactory();
+
+    virtual QList<QNetworkProxy> queryProxy(const QNetworkProxyQuery &query = QNetworkProxyQuery()) = 0;
+
+    static void setApplicationProxyFactory(QNetworkProxyFactory *factory);
+    static QList<QNetworkProxy> proxyForQuery(const QNetworkProxyQuery &query);
+    static QList<QNetworkProxy> systemProxyForQuery(const QNetworkProxyQuery &query = QNetworkProxyQuery());
 };
 
 QT_END_NAMESPACE

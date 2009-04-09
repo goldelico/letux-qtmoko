@@ -18,72 +18,94 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGLength_H
-#define JSSVGLength_H
+#ifndef JSSVGLength_h
+#define JSSVGLength_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 #include "SVGLength.h"
 #include "JSSVGPODTypeWrapper.h"
 
 namespace WebCore {
 
-class JSSVGLength : public KJS::DOMObject {
+class JSSVGLength : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGLength(KJS::ExecState*, JSSVGPODTypeWrapper<SVGLength>*);
+    JSSVGLength(PassRefPtr<JSC::Structure>, PassRefPtr<JSSVGPODTypeWrapper<SVGLength> >, SVGElement* context);
     virtual ~JSSVGLength();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        UnitTypeAttrNum, ValueAttrNum, ValueInSpecifiedUnitsAttrNum, ValueAsStringAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
-        // Functions
-        NewValueSpecifiedUnitsFuncNum, ConvertToSpecifiedUnitsFuncNum
-    };
+    // Custom attributes
+    JSC::JSValuePtr value(JSC::ExecState*) const;
+
+    // Custom functions
+    JSC::JSValuePtr convertToSpecifiedUnits(JSC::ExecState*, const JSC::ArgList&);
     JSSVGPODTypeWrapper<SVGLength>* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
+    RefPtr<SVGElement> m_context;
     RefPtr<JSSVGPODTypeWrapper<SVGLength> > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, JSSVGPODTypeWrapper<SVGLength>*);
-SVGLength toSVGLength(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, JSSVGPODTypeWrapper<SVGLength>*, SVGElement* context);
+SVGLength toSVGLength(JSC::JSValuePtr);
 
-class JSSVGLengthPrototype : public KJS::JSObject {
+class JSSVGLengthPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGLengthPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSSVGLengthPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGLengthPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSSVGLengthPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsSVGLengthPrototypeFunctionNewValueSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGLengthPrototypeFunctionConvertToSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGLengthUnitType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGLengthValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGLengthValueInSpecifiedUnits(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGLengthValueInSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGLengthValueAsString(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGLengthValueAsString(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGLengthConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_NUMBER(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_PERCENTAGE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_EMS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_EXS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_PX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_CM(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_MM(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_IN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_PT(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLengthSVG_LENGTHTYPE_PC(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

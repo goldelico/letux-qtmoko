@@ -52,7 +52,7 @@ public:
 class Document:LUCENE_BASE {
 private:
 	DocumentFieldEnumeration::DocumentFieldList* fieldList;
-	float_t boost;
+	qreal boost;
 public:
 	Document();
 	~Document();
@@ -96,9 +96,9 @@ public:
 	* each field in this document.  Thus, this method in effect sets a default
 	* boost for the fields of this document.
 	*
-	* @see Field#setBoost(float_t)
+	* @see Field#setBoost(qreal)
 	*/
-	void setBoost(float_t boost);
+	void setBoost(qreal boost);
   
 	/** Returns the boost factor for hits on any field of this document.
 	*
@@ -109,9 +109,9 @@ public:
 	* {@link Hits#doc(int32_t, Document*)} may thus not have the same value present as when
 	* this document was indexed.
 	*
-	* @see #setBoost(float_t)
+	* @see #setBoost(qreal)
 	*/
-	float_t getBoost() const;
+	qreal getBoost() const;
 
 
 	/**

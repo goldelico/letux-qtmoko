@@ -1,4 +1,3 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2003, 2006 Apple Computer, Inc.  All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
@@ -41,18 +40,20 @@ namespace WebCore {
         ReturnCacheDataDontLoad, // results of a post - allow stale data and only use cache
     };
 
-    struct ResourceRequest;
+    const int unspecifiedTimeoutInterval = INT_MAX;
+
+    class ResourceRequest;
 
     // Do not use this type directly.  Use ResourceRequest instead.
-    struct ResourceRequestBase {
-
+    class ResourceRequestBase {
+    public:
         bool isNull() const;
         bool isEmpty() const;
 
         const KURL& url() const;
         void setURL(const KURL& url);
 
-        const ResourceRequestCachePolicy cachePolicy() const;
+        ResourceRequestCachePolicy cachePolicy() const;
         void setCachePolicy(ResourceRequestCachePolicy cachePolicy);
         
         double timeoutInterval() const;
@@ -65,9 +66,9 @@ namespace WebCore {
         void setHTTPMethod(const String& httpMethod);
         
         const HTTPHeaderMap& httpHeaderFields() const;
-        String httpHeaderField(const String& name) const;
-        void setHTTPHeaderField(const String& name, const String& value);
-        void addHTTPHeaderField(const String& name, const String& value);
+        String httpHeaderField(const AtomicString& name) const;
+        void setHTTPHeaderField(const AtomicString& name, const String& value);
+        void addHTTPHeaderField(const AtomicString& name, const String& value);
         void addHTTPHeaderFields(const HTTPHeaderMap& headerFields);
         
         String httpContentType() const { return httpHeaderField("Content-Type");  }
@@ -77,11 +78,17 @@ namespace WebCore {
         void setHTTPReferrer(const String& httpReferrer) { setHTTPHeaderField("Referer", httpReferrer); }
         void clearHTTPReferrer() { m_httpHeaderFields.remove("Referer"); }
         
+        String httpOrigin() const { return httpHeaderField("Origin"); }
+        void setHTTPOrigin(const String& httpOrigin) { setHTTPHeaderField("Origin", httpOrigin); }
+        void clearHTTPOrigin() { m_httpHeaderFields.remove("Origin"); }
+
         String httpUserAgent() const { return httpHeaderField("User-Agent"); }
         void setHTTPUserAgent(const String& httpUserAgent) { setHTTPHeaderField("User-Agent", httpUserAgent); }
 
         String httpAccept() const { return httpHeaderField("Accept"); }
         void setHTTPAccept(const String& httpAccept) { setHTTPHeaderField("Accept", httpAccept); }
+
+        void setResponseContentDispositionEncodingFallbackArray(const String& encoding1, const String& encoding2 = String(), const String& encoding3 = String());
 
         FormData* httpBody() const;
         void setHTTPBody(PassRefPtr<FormData> httpBody);
@@ -102,7 +109,7 @@ namespace WebCore {
         ResourceRequestBase(const KURL& url, ResourceRequestCachePolicy policy)
             : m_url(url)
             , m_cachePolicy(policy)
-            , m_timeoutInterval(defaultTimeoutInterval)
+            , m_timeoutInterval(unspecifiedTimeoutInterval)
             , m_httpMethod("GET")
             , m_allowHTTPCookies(true)
             , m_resourceRequestUpdated(true)
@@ -113,8 +120,6 @@ namespace WebCore {
         void updatePlatformRequest() const; 
         void updateResourceRequest() const; 
 
-        static const int defaultTimeoutInterval = 60;
-
         KURL m_url;
 
         ResourceRequestCachePolicy m_cachePolicy;
@@ -122,6 +127,7 @@ namespace WebCore {
         KURL m_mainDocumentURL;
         String m_httpMethod;
         HTTPHeaderMap m_httpHeaderFields;
+        Vector<String> m_responseContentDispositionEncodingFallbackArray;
         RefPtr<FormData> m_httpBody;
         bool m_allowHTTPCookies;
         mutable bool m_resourceRequestUpdated;

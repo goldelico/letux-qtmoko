@@ -27,8 +27,7 @@ isEmpty(QT_BUILD_PARTS) { #defaults
 #process the projects
 for(PROJECT, $$list($$lower($$unique(QT_BUILD_PARTS)))) {
     isEqual(PROJECT, tools) {
-       !cross_compile:SUBDIRS += tools
-       else:SUBDIRS += tools/qtestlib
+       SUBDIRS += tools
     } else:isEqual(PROJECT, examples) {
        SUBDIRS += examples
     } else:isEqual(PROJECT, demos) {

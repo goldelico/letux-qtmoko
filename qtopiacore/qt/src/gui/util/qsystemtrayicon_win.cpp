@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,8 +60,9 @@
 #include <QApplication>
 #include <QToolTip>
 #include <QDesktopWidget>
+#include <QSettings>
 
-#if defined(Q_OS_WINCE) && !defined(STANDARDSHELL_UI_MODEL) 
+#if defined(Q_OS_WINCE) && !defined(STANDARDSHELL_UI_MODEL)
 #   include <streams.h>
 #endif
 
@@ -70,7 +75,7 @@ static const UINT q_uNOTIFYICONID = 0;
 #endif
 
 static uint MYWM_TASKBARCREATED = 0;
-#define MYWM_NOTIFYICON	(WM_APP+101)
+#define MYWM_NOTIFYICON (WM_APP+101)
 
 typedef BOOL (WINAPI *PtrShell_NotifyIcon)(DWORD,PNOTIFYICONDATA);
 static PtrShell_NotifyIcon ptrShell_NotifyIcon = 0;
@@ -87,8 +92,8 @@ static void resolveLibs()
 #endif
     if (!triedResolve) {
         QLibrary lib(libName);
-	    triedResolve = true;
-	    ptrShell_NotifyIcon = (PtrShell_NotifyIcon) lib.resolve(funcName);
+            triedResolve = true;
+            ptrShell_NotifyIcon = (PtrShell_NotifyIcon) lib.resolve(funcName);
     }
 }
 
@@ -106,6 +111,7 @@ public:
     void setIconContentsA(NOTIFYICONDATAA &data);
     bool showMessageW(const QString &title, const QString &message, QSystemTrayIcon::MessageIcon type, uint uSecs);
     bool showMessageA(const QString &title, const QString &message, QSystemTrayIcon::MessageIcon type, uint uSecs);
+    bool allowsMessages();
     bool supportsMessages();
     QRect findIconGeometry(const int a_iButtonID);
     QRect findTrayGeometry();
@@ -124,11 +130,27 @@ private:
 
 // Checks for the shell32 dll version number, since only version
 // 5 or later of supports ballon messages
+bool QSystemTrayIconSys::allowsMessages()
+{
+#ifndef QT_NO_SETTINGS
+
+    QSettings settings(QLatin1String("HKEY_CURRENT_USER\\Software\\Microsoft"
+                                      "\\Windows\\CurrentVersion\\Explorer\\Advanced"), QSettings::NativeFormat);
+    return settings.value(QLatin1String("EnableBalloonTips"), true).toBool();
+#else
+    return false;
+#endif
+}
+
+// Checks for the shell32 dll version number, since only version
+// 5 or later of supports ballon messages
 bool QSystemTrayIconSys::supportsMessages()
 {
+#if NOTIFYICON_VERSION >= 3
     if (currentShellVersion >= 5)
-        return true;
+        return allowsMessages();
     else
+#endif
         return false;
 }
 
@@ -359,7 +381,7 @@ bool QSystemTrayIconSys::trayMessage(DWORD msg)
 bool QSystemTrayIconSys::iconDrawItem(LPDRAWITEMSTRUCT lpdi)
 {
     if (!hIcon)
-	return false;
+        return false;
 
     DrawIconEx(lpdi->hDC, lpdi->rcItem.left, lpdi->rcItem.top, hIcon, 0, 0, 0, 0, DI_NORMAL);
     return true;
@@ -404,7 +426,7 @@ void QSystemTrayIconSys::createIcon()
     ICONINFO ii;
     ii.fIcon    = true;
     ii.hbmMask  = im;
-    ii.hbmColor = pm.toWinHBITMAP(QPixmap::PremultipliedAlpha);
+    ii.hbmColor = pm.toWinHBITMAP(QPixmap::Alpha);
     ii.xHotspot = 0;
     ii.yHotspot = 0;
     hIcon = CreateIconIndirect(&ii);
@@ -425,10 +447,10 @@ bool QSystemTrayIconSys::winEvent( MSG *m, long *result )
         break;
 
     case WM_DRAWITEM:
-	return iconDrawItem((LPDRAWITEMSTRUCT)m->lParam);
+        return iconDrawItem((LPDRAWITEMSTRUCT)m->lParam);
 
     case MYWM_NOTIFYICON:
-	{
+        {
             RECT r;
             GetWindowRect(winId(), &r);
             QEvent *e = 0;
@@ -463,21 +485,21 @@ bool QSystemTrayIconSys::winEvent( MSG *m, long *result )
                 break;
 #endif
             default:
-		        break;
-	    }
-	    if (e) {
-		bool res = QApplication::sendEvent(q, e);
-		delete e;
-		return res;
-	    }
-	    break;
-	}
+                        break;
+            }
+            if (e) {
+                bool res = QApplication::sendEvent(q, e);
+                delete e;
+                return res;
+            }
+            break;
+        }
     default:
-	if (m->message == MYWM_TASKBARCREATED)
+        if (m->message == MYWM_TASKBARCREATED)
             trayMessage(NIM_ADD);
         else
             return QWidget::winEvent(m, result);
-	break;
+        break;
     }
     return 0;
 }
@@ -527,7 +549,7 @@ QRect QSystemTrayIconSys::findTrayGeometry()
 QRect QSystemTrayIconSys::findIconGeometry(const int iconId)
 {
     QRect ret;
-    
+
     TBBUTTON buttonData;
     DWORD processID = 0;
 #if defined(Q_OS_WINCE)
@@ -568,7 +590,7 @@ QRect QSystemTrayIconSys::findIconGeometry(const int iconId)
     if (processID <= 0)
         return ret;
 
-    HANDLE trayProcess = OpenProcess(PROCESS_ALL_ACCESS, 0, processID);
+    HANDLE trayProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, 0, processID);
     if (!trayProcess)
         return ret;
 
@@ -580,7 +602,7 @@ QRect QSystemTrayIconSys::findIconGeometry(const int iconId)
 #endif
 
     if ( buttonCount < 1 || !data ) {
-	CloseHandle(trayProcess);
+        CloseHandle(trayProcess);
         return ret;
     }
 
@@ -605,7 +627,7 @@ QRect QSystemTrayIconSys::findIconGeometry(const int iconId)
             SendMessage(trayHandle, TB_GETITEMRECT, toolbarButton , (LPARAM)data);
             RECT iconRect = {0, 0};
             if(ReadProcessMemory(trayProcess, data, &iconRect, sizeof(RECT), &numBytes)) {
-    	        MapWindowPoints(trayHandle, NULL, (LPPOINT)&iconRect, 2);
+                MapWindowPoints(trayHandle, NULL, (LPPOINT)&iconRect, 2);
                 QRect geometry(iconRect.left + 1, iconRect.top + 1,
                                 iconRect.right - iconRect.left - 2,
                                 iconRect.bottom - iconRect.top - 2);
@@ -627,7 +649,7 @@ QRect QSystemTrayIconSys::findIconGeometry(const int iconId)
 
 void QSystemTrayIconPrivate::showMessage_sys(const QString &title, const QString &message, QSystemTrayIcon::MessageIcon type, int timeOut)
 {
-    if (!sys)
+    if (!sys || !sys->allowsMessages())
         return;
 
     uint uSecs = 0;
@@ -639,7 +661,7 @@ void QSystemTrayIconPrivate::showMessage_sys(const QString &title, const QString
 
     //message is limited to 255 chars + NULL
     QString messageString;
-    if (message.isEmpty())
+    if (message.isEmpty() && !title.isEmpty())
         messageString = QLatin1String(" "); //ensures that the message shows when only title is set
     else
         messageString = message.left(255) + QChar();
@@ -676,7 +698,7 @@ QRect QSystemTrayIconPrivate::geometry_sys() const
 void QSystemTrayIconPrivate::remove_sys()
 {
     if (!sys)
-	return;
+        return;
 
     sys->trayMessage(NIM_DELETE);
     delete sys;
@@ -686,7 +708,7 @@ void QSystemTrayIconPrivate::remove_sys()
 void QSystemTrayIconPrivate::updateIcon_sys()
 {
     if (!sys)
-	return;
+        return;
 
     HICON hIconToDestroy = sys->hIcon;
 
@@ -710,7 +732,7 @@ void QSystemTrayIconPrivate::updateToolTip_sys()
     updateIcon_sys();
 #else
     if (!sys)
-	return;
+        return;
 
     sys->trayMessage(NIM_MODIFY);
 #endif

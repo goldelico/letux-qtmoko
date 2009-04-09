@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathSegCurvetoCubicSmoothRel_H
-#define JSSVGPathSegCurvetoCubicSmoothRel_H
+#ifndef JSSVGPathSegCurvetoCubicSmoothRel_h
+#define JSSVGPathSegCurvetoCubicSmoothRel_h
 
 
 #if ENABLE(SVG)
@@ -31,30 +31,41 @@ namespace WebCore {
 class SVGPathSegCurvetoCubicSmoothRel;
 
 class JSSVGPathSegCurvetoCubicSmoothRel : public JSSVGPathSeg {
+    typedef JSSVGPathSeg Base;
 public:
-    JSSVGPathSegCurvetoCubicSmoothRel(KJS::ExecState*, SVGPathSegCurvetoCubicSmoothRel*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPathSegCurvetoCubicSmoothRel(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathSegCurvetoCubicSmoothRel>, SVGElement* context);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        XAttrNum, YAttrNum, X2AttrNum, Y2AttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGPathSegCurvetoCubicSmoothRelPrototype : public KJS::JSObject {
+class JSSVGPathSegCurvetoCubicSmoothRelPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGPathSegCurvetoCubicSmoothRelPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGPathSegPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGPathSegCurvetoCubicSmoothRelPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGPathSegCurvetoCubicSmoothRelX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoCubicSmoothRelX(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoCubicSmoothRelY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoCubicSmoothRelY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoCubicSmoothRelX2(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoCubicSmoothRelX2(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathSegCurvetoCubicSmoothRelY2(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathSegCurvetoCubicSmoothRelY2(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
 
 } // namespace WebCore
 

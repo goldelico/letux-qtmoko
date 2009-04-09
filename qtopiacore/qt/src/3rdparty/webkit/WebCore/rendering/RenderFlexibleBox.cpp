@@ -28,6 +28,7 @@
 #include "CharacterNames.h"
 #include "RenderLayer.h"
 #include "RenderView.h"
+#include <wtf/StdLibExtras.h>
 
 using namespace std;
 
@@ -216,10 +217,10 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
     bool checkForRepaint = checkForRepaintDuringLayout();
     if (checkForRepaint) {
         oldBounds = absoluteClippedOverflowRect();
-        oldOutlineBox = absoluteOutlineBox();
+        oldOutlineBox = absoluteOutlineBounds();
     }
 
-    view()->pushLayoutState(this, IntSize(m_x, m_y));
+    LayoutStateMaintainer statePusher(view(), this, IntSize(m_x, m_y), !hasReflection());
 
     int previousWidth = m_width;
     int previousHeight = m_height;
@@ -289,15 +290,23 @@ void RenderFlexibleBox::layoutBlock(bool relayoutChildren)
         m_overflowWidth = m_width;
 
     if (!hasOverflowClip()) {
-        if (ShadowData* boxShadow = style()->boxShadow()) {
+        for (ShadowData* boxShadow = style()->boxShadow(); boxShadow; boxShadow = boxShadow->next) {
             m_overflowLeft = min(m_overflowLeft, boxShadow->x - boxShadow->blur);
             m_overflowWidth = max(m_overflowWidth, m_width + boxShadow->x + boxShadow->blur);
             m_overflowTop = min(m_overflowTop, boxShadow->y - boxShadow->blur);
             m_overflowHeight = max(m_overflowHeight, m_height + boxShadow->y + boxShadow->blur);
         }
+        
+        if (hasReflection()) {
+            IntRect reflection(reflectionBox());
+            m_overflowTop = min(m_overflowTop, reflection.y());
+            m_overflowHeight = max(m_overflowHeight, reflection.bottom());
+            m_overflowLeft = min(m_overflowLeft, reflection.x());
+            m_overflowHeight = max(m_overflowWidth, reflection.right());
+        }
     }
 
-    view()->popLayoutState();
+    statePusher.pop();
 
     // Update our scrollbars if we're overflow:auto/scroll/hidden now that we know if
     // we overflow or not.
@@ -763,7 +772,7 @@ void RenderFlexibleBox::layoutVerticalBox(bool relayoutChildren)
                     continue;
 
                 const UChar ellipsisAndSpace[2] = { horizontalEllipsis, ' ' };
-                static AtomicString ellipsisAndSpaceStr(ellipsisAndSpace, 2);
+                DEFINE_STATIC_LOCAL(AtomicString, ellipsisAndSpaceStr, (ellipsisAndSpace, 2));
 
                 const Font& font = style(numVisibleLines == 1)->font();
                 int ellipsisAndSpaceWidth = font.width(TextRun(ellipsisAndSpace, 2));

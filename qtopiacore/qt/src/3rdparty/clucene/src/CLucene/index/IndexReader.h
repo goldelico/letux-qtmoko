@@ -1,15 +1,19 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_index_IndexReader_
 #define _lucene_index_IndexReader_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
+
+#include <QtCore/QString>
 
 #include "CLucene/store/Directory.h"
 #include "CLucene/store/FSDirectory.h"
@@ -39,7 +43,8 @@ CL_NS_DEF(index)
  <p> An IndexReader can be opened on a directory for which an IndexWriter is
  opened already, but it cannot be used to delete documents from the index then.
 */
-class IndexReader :LUCENE_BASE{
+class IndexReader : LUCENE_BASE
+{
 public:
 	//Callback for classes that need to know if IndexReader is closing.
 	typedef void (*CloseCallback)(IndexReader*, void*);
@@ -77,20 +82,18 @@ public:
 
 
 private:
-	CL_NS(store)::LuceneLock* writeLock;
-
-    bool directoryOwner;
     bool stale;
     bool hasChanges;
     bool closeDirectory;
+    bool directoryOwner;
     
     SegmentInfos* segmentInfos;
-
     CL_NS(store)::Directory* directory;
-	typedef CL_NS(util)::CLSet<CloseCallback, void*, 
-		CloseCallbackCompare,
+	CL_NS(store)::LuceneLock* writeLock;
+
+    typedef CL_NS(util)::CLSet<CloseCallback, void*, CloseCallbackCompare,
 		CloseCallbackCompare> CloseCallbackMap;
-	CloseCallbackMap closeCallbacks;
+    CloseCallbackMap closeCallbacks;
 	
     /** Internal use. Implements commit */
     virtual void doCommit() = 0;
@@ -157,12 +160,15 @@ public:
 	*/
 	virtual void getFieldNames(FieldOption fldOption, CL_NS(util)::StringArrayWithDeletor& retarray) = 0;
 
+	_CL_DEPRECATED( getFieldNames(FieldOption, StringArrayWithDeletor&) ) virtual TCHAR** getFieldNames();
+	_CL_DEPRECATED( getFieldNames(FieldOption, StringArrayWithDeletor&) ) virtual TCHAR** getFieldNames(bool indexed);
+
 	/** Returns the byte-encoded normalization factor for the named field of
 	* every document.  This is used by the search code to score documents.
 	*
 	* The number of bytes returned is the size of the IndexReader->maxDoc()
 	* MEMORY: The values are cached, so don't delete the returned byte array.
-	* @see Field#setBoost(float_t)
+	* @see Field#setBoost(qreal)
 	*/
 	virtual uint8_t* norms(const TCHAR* field) = 0;
 	
@@ -170,7 +176,7 @@ public:
 	/** Reads the byte-encoded normalization factor for the named field of every
 	*  document.  This is used by the search code to score documents.
 	*
-	* @see Field#setBoost(float_t)
+	* @see Field#setBoost(qreal)
 	*/
 	virtual void norms(const TCHAR* field, uint8_t* bytes) = 0;
 
@@ -180,11 +186,11 @@ public:
     * @see #norms(TCHAR*)
     * @see Similarity#decodeNorm(uint8_t)
     */
-    void setNorm(int32_t doc, const TCHAR* field, float_t value);
+    void setNorm(int32_t doc, const TCHAR* field, qreal value);
   
     /** Expert: Resets the normalization factor for the named field of the named
     * document.  The norm represents the product of the field's {@link
-    * Field#setBoost(float_t) boost} and its {@link Similarity#lengthNorm(TCHAR*,
+    * Field#setBoost(qreal) boost} and its {@link Similarity#lengthNorm(TCHAR*,
     * int32_t) length normalization}.  Thus, to preserve the length normalization
     * values when resetting this, one should base the new value upon the old.
     *
@@ -197,7 +203,7 @@ public:
     virtual ~IndexReader();
 
 	/// Returns an IndexReader reading the index in an FSDirectory in the named path. 
-	static IndexReader* open(const char* path);
+	static IndexReader* open(const QString& path);
 
 	/// Returns an IndexReader reading the index in the given Directory. 
 	static IndexReader* open( CL_NS(store)::Directory* directory, bool closeDirectory=false);
@@ -207,7 +213,7 @@ public:
 	* Do not use this to check whether the reader is still up-to-date, use
 	* {@link #isCurrent()} instead. 
 	*/
-	static uint64_t lastModified(const char* directory);
+	static uint64_t lastModified(const QString& directory);
 
 	/** 
 	* Returns the time the index in the named directory was last modified. 
@@ -237,7 +243,7 @@ public:
    * @return version number.
    * @throws IOException if segments file cannot be read
    */
-	static int64_t getCurrentVersion(const char* directory);
+	static int64_t getCurrentVersion(const QString& directory);
 	
 	/**
 	* Version number when this IndexReader was opened.
@@ -292,7 +298,7 @@ public:
 	* @param  directory the directory to check for an index
 	* @return <code>true</code> if an index exists; <code>false</code> otherwise
 	*/
-	static bool indexExists(const char* directory);
+	static bool indexExists(const QString& directory);
 
     /**
 	* Returns <code>true</code> if an index exists at the specified directory.
@@ -397,7 +403,8 @@ public:
 	void deleteDocument(const int32_t docNum);
 
 	///@deprecated. Use deleteDocument instead.
-	_CL_DEPRECATED( deleteDocument ) void deleteDoc(const int32_t docNum){ deleteDocument(docNum); }
+	_CL_DEPRECATED( deleteDocument ) void deleteDoc(const int32_t docNum)
+    { deleteDocument(docNum); }
 
 	/** Deletes all documents containing <code>term</code>.
 	* This is useful if one uses a document field to hold a unique ID string for
@@ -423,7 +430,7 @@ public:
 	static bool isLocked(CL_NS(store)::Directory* directory);
 	
 	///Checks if the index in the named directory is currently locked.       
-	static bool isLocked(const char* directory);
+	static bool isLocked(const QString& directory);
 
 
 	///Forcibly unlocks the index in the named directory.
@@ -431,13 +438,13 @@ public:
 	///when it is known that no other process nor thread is in fact
 	///currently accessing this index.
 	static void unlock(CL_NS(store)::Directory* directory);
-	static void unlock(const char* path);
+	static void unlock(const QString& path);
 
 	 /** Returns the directory this index resides in. */
 	CL_NS(store)::Directory* getDirectory() { return directory; }
 
 	/** Returns true if the file is a lucene filename (based on extension or filename) */
-	static bool isLuceneFile(const char* filename);
+	static bool isLuceneFile(const QString& filename);
 
 	/**
 	* For classes that need to know when the IndexReader closes (such as caches, etc),
@@ -446,30 +453,29 @@ public:
 	void addCloseCallback(CloseCallback callback, void* parameter);
 
 protected:
-	class LockWith:public CL_NS(store)::LuceneLockWith<IndexReader*>{
+	class LockWith : public CL_NS(store)::LuceneLockWith<IndexReader*>
+    {
 	public:
-		CL_NS(store)::Directory* directory;
-		IndexReader* indexReader;
-
-		//Constructor	
 		LockWith(CL_NS(store)::LuceneLock* lock, CL_NS(store)::Directory* dir);
 
 		//Reads the segmentinfo file and depending on the number of segments found
 		//it returns a MultiReader or a SegmentReader
 		IndexReader* doBody();
 
+    private:
+		CL_NS(store)::Directory* directory;
 	};
 	friend class IndexReader::LockWith;
 
-    class CommitLockWith:public CL_NS(store)::LuceneLockWith<void>{
+    class CommitLockWith : public CL_NS(store)::LuceneLockWith<void>
+    {
+	public:
+	    CommitLockWith(CL_NS(store)::LuceneLock* lock, IndexReader* r);
+	    void doBody();
+
     private:
 	    IndexReader* reader;
-	public:
-			
-	    //Constructor	
-	    CommitLockWith( CL_NS(store)::LuceneLock* lock, IndexReader* r );
-	    void doBody();
-	};
+    };
 	friend class IndexReader::CommitLockWith;
 };
 

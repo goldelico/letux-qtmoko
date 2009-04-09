@@ -11,7 +11,7 @@ contains(QT_CONFIG, opengl):QT += opengl
 QMAKE_CXXFLAGS += $$QT_CFLAGS_GSTREAMER
 LIBS += $$QT_LIBS_GSTREAMER -lgstinterfaces-0.10 -lgstvideo-0.10 -lgstbase-0.10 -lgstaudio-0.10
 
-PHONON_GSTREAMER_DIR = $$QT_SOURCE_TREE/src/3rdparty/kdebase/runtime/phonon/gstreamer
+PHONON_GSTREAMER_DIR = $$QT_SOURCE_TREE/src/3rdparty/phonon/gstreamer
 
 HEADERS += $$PHONON_GSTREAMER_DIR/common.h \
  $$PHONON_GSTREAMER_DIR/audiooutput.h \

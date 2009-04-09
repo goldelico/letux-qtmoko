@@ -136,7 +136,7 @@ CL_NS_DEF(search)
 
   /** Lower-level search API.
    *
-   * <p>{@link HitCollector#collect(int32_t,float_t)} is called for every non-zero
+   * <p>{@link HitCollector#collect(int32_t,qreal)} is called for every non-zero
    * scoring document.
    *
    * <p>Applications should only use this if they need <i>all</i> of the
@@ -220,7 +220,7 @@ CL_NS_DEF(search)
 	start(_start) {
   }
 
-  void MultiHitCollector::collect(const int32_t doc, const float_t score) {
+  void MultiHitCollector::collect(const int32_t doc, const qreal score) {
     results->collect(doc + start, score);
   }
 

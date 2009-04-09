@@ -21,13 +21,9 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEDistantLightElement.h"
 
 #include <wtf/GetPtr.h>
@@ -35,102 +31,82 @@
 #include "JSSVGAnimatedNumber.h"
 #include "SVGFEDistantLightElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEDistantLightElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEDistantLightElementTableEntries[] =
+static const HashTableValue JSSVGFEDistantLightElementTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "azimuth", JSSVGFEDistantLightElement::AzimuthAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDistantLightElementTableEntries[2] },
-    { "elevation", JSSVGFEDistantLightElement::ElevationAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "azimuth", DontDelete|ReadOnly, (intptr_t)jsSVGFEDistantLightElementAzimuth, (intptr_t)0 },
+    { "elevation", DontDelete|ReadOnly, (intptr_t)jsSVGFEDistantLightElementElevation, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDistantLightElementTable = 
-{
-    2, 3, JSSVGFEDistantLightElementTableEntries, 2
-};
+static const HashTable JSSVGFEDistantLightElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFEDistantLightElementTableValues, 0 };
+#else
+    { 5, 3, JSSVGFEDistantLightElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEDistantLightElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEDistantLightElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDistantLightElementPrototypeTable = 
-{
-    2, 1, JSSVGFEDistantLightElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEDistantLightElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEDistantLightElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGFEDistantLightElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEDistantLightElementPrototype::info = { "SVGFEDistantLightElementPrototype", 0, &JSSVGFEDistantLightElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEDistantLightElementPrototype::s_info = { "SVGFEDistantLightElementPrototype", 0, &JSSVGFEDistantLightElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEDistantLightElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEDistantLightElementPrototype>(exec, "[[JSSVGFEDistantLightElement.prototype]]");
+    return getDOMPrototype<JSSVGFEDistantLightElement>(exec);
 }
 
-const ClassInfo JSSVGFEDistantLightElement::info = { "SVGFEDistantLightElement", &JSSVGElement::info, &JSSVGFEDistantLightElementTable, 0 };
+const ClassInfo JSSVGFEDistantLightElement::s_info = { "SVGFEDistantLightElement", &JSSVGElement::s_info, &JSSVGFEDistantLightElementTable, 0 };
 
-JSSVGFEDistantLightElement::JSSVGFEDistantLightElement(ExecState* exec, SVGFEDistantLightElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGFEDistantLightElement::JSSVGFEDistantLightElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEDistantLightElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGFEDistantLightElementPrototype::self(exec));
+}
+
+JSObject* JSSVGFEDistantLightElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEDistantLightElementPrototype(JSSVGFEDistantLightElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEDistantLightElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEDistantLightElement, JSSVGElement>(exec, &JSSVGFEDistantLightElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEDistantLightElement, Base>(exec, &JSSVGFEDistantLightElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEDistantLightElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEDistantLightElementAzimuth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AzimuthAttrNum: {
-        SVGFEDistantLightElement* imp = static_cast<SVGFEDistantLightElement*>(impl());
+    SVGFEDistantLightElement* imp = static_cast<SVGFEDistantLightElement*>(static_cast<JSSVGFEDistantLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->azimuthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->azimuthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ElevationAttrNum: {
-        SVGFEDistantLightElement* imp = static_cast<SVGFEDistantLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->elevationAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFEDistantLightElementElevation(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDistantLightElement* imp = static_cast<SVGFEDistantLightElement*>(static_cast<JSSVGFEDistantLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->elevationAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

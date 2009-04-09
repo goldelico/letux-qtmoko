@@ -28,7 +28,7 @@ CL_NS_DEF(search)
       virtual ~FilteredTermEnum();
         
       //Equality measure on the term
-      virtual float_t difference() = 0;
+      virtual qreal difference() = 0;
 
       //Returns the docFreq of the current Term in the enumeration.
       int32_t docFreq() const ;

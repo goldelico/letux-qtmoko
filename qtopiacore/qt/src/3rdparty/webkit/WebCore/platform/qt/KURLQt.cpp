@@ -17,16 +17,22 @@
  * Boston, MA 02110-1301, USA.
  *
  */
+#include "config.h"
 #include "KURL.h"
+#include "CString.h"
+
+#include "NotImplemented.h"
 #include "qurl.h"
 
 namespace WebCore {
 
+#if QT_VERSION < 0x040500
 static const char hexnumbers[] = "0123456789ABCDEF";
 static inline char toHex(char c)
 {
     return hexnumbers[c & 0xf];
 }
+#endif
 
 KURL::KURL(const QUrl& url)
 {
@@ -35,20 +41,22 @@ KURL::KURL(const QUrl& url)
 
 KURL::operator QUrl() const
 {
-    DeprecatedString s = url();
+#if QT_VERSION < 0x040500
+    unsigned length = m_string.length();
 
     QByteArray ba;
-    ba.reserve(s.length());
+    ba.reserve(length);
 
-    const char *src = s.ascii();
-    const char *host = strstr(src, "://");
-    if (host)
+    int path = -1;
+    int host = m_string.find("://");
+    if (host != -1) {
         host += 3;
 
-    const char *path = host ? strstr(host, "/") : 0;
+        path = m_string.find('/', host);
+    }
 
-    for (; *src; ++src) {
-        const char chr = *src;
+    for (unsigned i = 0; i < length; ++i) {
+        const char chr = static_cast<char>(m_string[i]);
 
         switch (chr) {
             encode:
@@ -66,7 +74,7 @@ KURL::operator QUrl() const
             case ']':
                 // special case: if this is the host part, don't encode
                 // otherwise, encode
-                if (!host || (path && src >= path))
+                if (host == -1 || (path != -1 && i >= path))
                     goto encode;
                 // fall through
             default:
@@ -74,9 +82,20 @@ KURL::operator QUrl() const
                 break;
         }
     }
+#else
+    // Qt 4.5 or later
+    // No need for special encoding
+    QByteArray ba = m_string.utf8().data();
+#endif
 
     QUrl url = QUrl::fromEncoded(ba);
     return url;
+}
+
+String KURL::fileSystemPath() const
+{
+    notImplemented();
+    return String();
 }
 
 }

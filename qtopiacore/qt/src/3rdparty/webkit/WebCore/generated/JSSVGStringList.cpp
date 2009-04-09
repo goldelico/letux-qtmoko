@@ -23,199 +23,215 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGStringList.h"
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGStringList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGStringList)
+
 /* Hash table */
 
-static const HashEntry JSSVGStringListTableEntries[] =
+static const HashTableValue JSSVGStringListTableValues[2] =
 {
-    { "numberOfItems", JSSVGStringList::NumberOfItemsAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "numberOfItems", DontDelete|ReadOnly, (intptr_t)jsSVGStringListNumberOfItems, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGStringListTable = 
-{
-    2, 1, JSSVGStringListTableEntries, 1
-};
+static const HashTable JSSVGStringListTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGStringListTableValues, 0 };
+#else
+    { 2, 1, JSSVGStringListTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGStringListPrototypeTableEntries[] =
+static const HashTableValue JSSVGStringListPrototypeTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "clear", JSSVGStringList::ClearFuncNum, DontDelete|Function, 0, &JSSVGStringListPrototypeTableEntries[9] },
-    { "getItem", JSSVGStringList::GetItemFuncNum, DontDelete|Function, 1, &JSSVGStringListPrototypeTableEntries[7] },
-    { "insertItemBefore", JSSVGStringList::InsertItemBeforeFuncNum, DontDelete|Function, 2, &JSSVGStringListPrototypeTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "initialize", JSSVGStringList::InitializeFuncNum, DontDelete|Function, 1, 0 },
-    { "replaceItem", JSSVGStringList::ReplaceItemFuncNum, DontDelete|Function, 2, 0 },
-    { "removeItem", JSSVGStringList::RemoveItemFuncNum, DontDelete|Function, 1, 0 },
-    { "appendItem", JSSVGStringList::AppendItemFuncNum, DontDelete|Function, 1, 0 }
+    { "clear", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionClear, (intptr_t)0 },
+    { "initialize", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionInitialize, (intptr_t)1 },
+    { "getItem", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionGetItem, (intptr_t)1 },
+    { "insertItemBefore", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionInsertItemBefore, (intptr_t)2 },
+    { "replaceItem", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionReplaceItem, (intptr_t)2 },
+    { "removeItem", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionRemoveItem, (intptr_t)1 },
+    { "appendItem", DontDelete|Function, (intptr_t)jsSVGStringListPrototypeFunctionAppendItem, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGStringListPrototypeTable = 
-{
-    2, 10, JSSVGStringListPrototypeTableEntries, 7
-};
+static const HashTable JSSVGStringListPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGStringListPrototypeTableValues, 0 };
+#else
+    { 18, 15, JSSVGStringListPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGStringListPrototype::info = { "SVGStringListPrototype", 0, &JSSVGStringListPrototypeTable, 0 };
+const ClassInfo JSSVGStringListPrototype::s_info = { "SVGStringListPrototype", 0, &JSSVGStringListPrototypeTable, 0 };
 
 JSObject* JSSVGStringListPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGStringListPrototype>(exec, "[[JSSVGStringList.prototype]]");
+    return getDOMPrototype<JSSVGStringList>(exec);
 }
 
 bool JSSVGStringListPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGStringListPrototypeFunction, JSObject>(exec, &JSSVGStringListPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGStringListPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGStringList::info = { "SVGStringList", 0, &JSSVGStringListTable, 0 };
+const ClassInfo JSSVGStringList::s_info = { "SVGStringList", 0, &JSSVGStringListTable, 0 };
 
-JSSVGStringList::JSSVGStringList(ExecState* exec, SVGStringList* impl)
-    : m_impl(impl)
+JSSVGStringList::JSSVGStringList(PassRefPtr<Structure> structure, PassRefPtr<SVGStringList> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGStringListPrototype::self(exec));
 }
 
 JSSVGStringList::~JSSVGStringList()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGStringList::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGStringListPrototype(JSSVGStringListPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGStringList::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGStringList, KJS::DOMObject>(exec, &JSSVGStringListTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGStringList, Base>(exec, &JSSVGStringListTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGStringList::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGStringListNumberOfItems(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NumberOfItemsAttrNum: {
-        SVGStringList* imp = static_cast<SVGStringList*>(impl());
-
-        return jsNumber(imp->numberOfItems());
-    }
-    }
-    return 0;
+    SVGStringList* imp = static_cast<SVGStringList*>(static_cast<JSSVGStringList*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->numberOfItems());
 }
 
-JSValue* JSSVGStringListPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGStringListPrototypeFunctionClear(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    if (!thisObj->inherits(&JSSVGStringList::info))
-      return throwError(exec, TypeError);
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
 
-    SVGStringList* imp = static_cast<SVGStringList*>(static_cast<JSSVGStringList*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGStringList::ClearFuncNum: {
-        ExceptionCode ec = 0;
-
-        imp->clear(ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSSVGStringList::InitializeFuncNum: {
-        ExceptionCode ec = 0;
-        String item = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsString(imp->initialize(item, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGStringList::GetItemFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsString(imp->getItem(index, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGStringList::InsertItemBeforeFuncNum: {
-        ExceptionCode ec = 0;
-        String item = args[0]->toString(exec);
-        bool indexOk;
-        unsigned index = args[1]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsString(imp->insertItemBefore(item, index, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGStringList::ReplaceItemFuncNum: {
-        ExceptionCode ec = 0;
-        String item = args[0]->toString(exec);
-        bool indexOk;
-        unsigned index = args[1]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsString(imp->replaceItem(item, index, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGStringList::RemoveItemFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsString(imp->removeItem(index, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGStringList::AppendItemFuncNum: {
-        ExceptionCode ec = 0;
-        String item = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsString(imp->appendItem(item, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    imp->clear(ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGStringList* obj)
+
+JSValuePtr jsSVGStringListPrototypeFunctionInitialize(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheDOMObject<SVGStringList, JSSVGStringList>(exec, obj);
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& item = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->initialize(item, ec));
+    setDOMException(exec, ec);
+    return result;
 }
-SVGStringList* toSVGStringList(KJS::JSValue* val)
+
+JSValuePtr jsSVGStringListPrototypeFunctionGetItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return val->isObject(&JSSVGStringList::info) ? static_cast<JSSVGStringList*>(val)->impl() : 0;
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->getItem(index, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGStringListPrototypeFunctionInsertItemBefore(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& item = args.at(exec, 0)->toString(exec);
+    unsigned index = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->insertItemBefore(item, index, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGStringListPrototypeFunctionReplaceItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& item = args.at(exec, 0)->toString(exec);
+    unsigned index = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->replaceItem(item, index, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGStringListPrototypeFunctionRemoveItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->removeItem(index, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGStringListPrototypeFunctionAppendItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGStringList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGStringList* castedThisObj = static_cast<JSSVGStringList*>(asObject(thisValue));
+    SVGStringList* imp = static_cast<SVGStringList*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& item = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->appendItem(item, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGStringList* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGStringList>(exec, object, context);
+}
+SVGStringList* toSVGStringList(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGStringList::s_info) ? static_cast<JSSVGStringList*>(asObject(value))->impl() : 0;
 }
 
 }

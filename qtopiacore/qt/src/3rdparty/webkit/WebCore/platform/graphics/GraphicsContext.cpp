@@ -27,8 +27,10 @@
 #include "GraphicsContext.h"
 
 #include "BidiResolver.h"
+#include "Generator.h"
+#include "GraphicsContextPrivate.h"
 #include "Font.h"
-#include "TextStyle.h"
+#include "NotImplemented.h"
 
 using namespace std;
 
@@ -55,7 +57,7 @@ public:
     }
 
     unsigned offset() const { return m_offset; }
-    void increment(BidiResolver<TextRunIterator, BidiCharacterRun>&) { m_offset++; }
+    void increment() { m_offset++; }
     bool atEnd() const { return !m_textRun || m_offset >= m_textRun->length(); }
     UChar current() const { return (*m_textRun)[m_offset]; }
     WTF::Unicode::Direction direction() const { return atEnd() ? WTF::Unicode::OtherNeutral : WTF::Unicode::direction(current()); }
@@ -71,44 +73,6 @@ private:
     const TextRun* m_textRun;
     int m_offset;
 };
-
-struct GraphicsContextState {
-    GraphicsContextState() 
-    : strokeStyle(SolidStroke)
-    , strokeThickness(0)
-    , strokeColor(Color::black)
-    , fillColor(Color::black)
-    , textDrawingMode(cTextFill)
-    , paintingDisabled(false)
-    {}
-    
-    Font font;
-    StrokeStyle strokeStyle;
-    float strokeThickness;
-    Color strokeColor;
-    Color fillColor;
-    int textDrawingMode;
-    bool paintingDisabled;
-};
-        
-class GraphicsContextPrivate {
-public:
-    GraphicsContextPrivate();
-    
-    GraphicsContextState state;
-    Vector<GraphicsContextState> stack;
-    Vector<IntRect> m_focusRingRects;
-    int m_focusRingWidth;
-    int m_focusRingOffset;
-    bool m_updatingControlTints;
-};
-
-GraphicsContextPrivate::GraphicsContextPrivate()
-    : m_focusRingWidth(0)
-    , m_focusRingOffset(0)
-    , m_updatingControlTints(false)
-{
-}
 
 GraphicsContextPrivate* GraphicsContext::createGraphicsContextPrivate()
 {
@@ -170,8 +134,34 @@ void GraphicsContext::setStrokeStyle(const StrokeStyle& style)
 
 void GraphicsContext::setStrokeColor(const Color& color)
 {
+    m_common->state.strokeColorSpace = SolidColorSpace;
     m_common->state.strokeColor = color;
     setPlatformStrokeColor(color);
+}
+
+void GraphicsContext::setShadow(const IntSize& size, int blur, const Color& color)
+{
+    m_common->state.shadowSize = size;
+    m_common->state.shadowBlur = blur;
+    m_common->state.shadowColor = color;
+    setPlatformShadow(size, blur, color);
+}
+
+void GraphicsContext::clearShadow()
+{
+    m_common->state.shadowSize = IntSize();
+    m_common->state.shadowBlur = 0;
+    m_common->state.shadowColor = Color();
+    clearPlatformShadow();
+}
+
+bool GraphicsContext::getShadow(IntSize& size, int& blur, Color& color) const
+{
+    size = m_common->state.shadowSize;
+    blur = m_common->state.shadowBlur;
+    color = m_common->state.shadowColor;
+
+    return color.isValid() && color.alpha() && (blur || size.width() || size.height());
 }
 
 float GraphicsContext::strokeThickness() const
@@ -189,8 +179,29 @@ Color GraphicsContext::strokeColor() const
     return m_common->state.strokeColor;
 }
 
+WindRule GraphicsContext::fillRule() const
+{
+    return m_common->state.fillRule;
+}
+
+void GraphicsContext::setFillRule(WindRule fillRule)
+{
+    m_common->state.fillRule = fillRule;
+}
+
+GradientSpreadMethod GraphicsContext::spreadMethod() const
+{
+    return m_common->state.spreadMethod;
+}
+
+void GraphicsContext::setSpreadMethod(GradientSpreadMethod spreadMethod)
+{
+    m_common->state.spreadMethod = spreadMethod;
+}
+
 void GraphicsContext::setFillColor(const Color& color)
 {
+    m_common->state.fillColorSpace = SolidColorSpace;
     m_common->state.fillColor = color;
     setPlatformFillColor(color);
 }
@@ -198,6 +209,55 @@ void GraphicsContext::setFillColor(const Color& color)
 Color GraphicsContext::fillColor() const
 {
     return m_common->state.fillColor;
+}
+
+void GraphicsContext::setStrokePattern(PassRefPtr<Pattern> pattern)
+{
+    ASSERT(pattern);
+    if (!pattern) {
+        setStrokeColor(Color::black);
+        return;
+    }
+    m_common->state.strokeColorSpace = PatternColorSpace;
+    m_common->state.strokePattern = pattern;
+}
+
+void GraphicsContext::setFillPattern(PassRefPtr<Pattern> pattern)
+{
+    ASSERT(pattern);
+    if (!pattern) {
+        setFillColor(Color::black);
+        return;
+    }
+    m_common->state.fillColorSpace = PatternColorSpace;
+    m_common->state.fillPattern = pattern;
+}
+
+void GraphicsContext::setStrokeGradient(PassRefPtr<Gradient> gradient)
+{
+    ASSERT(gradient);
+    if (!gradient) {
+        setStrokeColor(Color::black);
+        return;
+    }
+    m_common->state.strokeColorSpace = GradientColorSpace;
+    m_common->state.strokeGradient = gradient;
+}
+
+void GraphicsContext::setFillGradient(PassRefPtr<Gradient> gradient)
+{
+    ASSERT(gradient);
+    if (!gradient) {
+        setFillColor(Color::black);
+        return;
+    }
+    m_common->state.fillColorSpace = GradientColorSpace;
+    m_common->state.fillGradient = gradient;
+}
+
+void GraphicsContext::setShadowsIgnoreTransforms(bool ignoreTransforms)
+{
+    m_common->state.shadowsIgnoreTransforms = ignoreTransforms;
 }
 
 bool GraphicsContext::updatingControlTints() const
@@ -243,28 +303,24 @@ void GraphicsContext::drawImage(Image* image, const IntRect& dest, const IntRect
 
 void GraphicsContext::drawText(const TextRun& run, const IntPoint& point, int from, int to)
 {
-    drawText(run, point, TextStyle(), from, to);
-}
-
-void GraphicsContext::drawText(const TextRun& run, const IntPoint& point, const TextStyle& style, int from, int to)
-{
     if (paintingDisabled())
         return;
     
-    font().drawText(this, run, style, point, from, to);
+    font().drawText(this, run, point, from, to);
 }
 
-void GraphicsContext::drawBidiText(const TextRun& run, const IntPoint& point, const TextStyle& style)
+void GraphicsContext::drawBidiText(const TextRun& run, const FloatPoint& point)
 {
     if (paintingDisabled())
         return;
 
     BidiResolver<TextRunIterator, BidiCharacterRun> bidiResolver;
-    WTF::Unicode::Direction paragraphDirection = style.ltr() ? WTF::Unicode::LeftToRight : WTF::Unicode::RightToLeft;
+    WTF::Unicode::Direction paragraphDirection = run.ltr() ? WTF::Unicode::LeftToRight : WTF::Unicode::RightToLeft;
 
-    bidiResolver.setStatus(BidiStatus(paragraphDirection, paragraphDirection, paragraphDirection, new BidiContext(style.ltr() ? 0 : 1, paragraphDirection, style.directionalOverride())));
+    bidiResolver.setStatus(BidiStatus(paragraphDirection, paragraphDirection, paragraphDirection, new BidiContext(run.ltr() ? 0 : 1, paragraphDirection, run.directionalOverride())));
 
-    bidiResolver.createBidiRunsForLine(TextRunIterator(&run, 0), TextRunIterator(&run, run.length()));
+    bidiResolver.setPosition(TextRunIterator(&run, 0));
+    bidiResolver.createBidiRunsForLine(TextRunIterator(&run, run.length()));
 
     if (!bidiResolver.runCount())
         return;
@@ -272,29 +328,29 @@ void GraphicsContext::drawBidiText(const TextRun& run, const IntPoint& point, co
     FloatPoint currPoint = point;
     BidiCharacterRun* bidiRun = bidiResolver.firstRun();
     while (bidiRun) {
-        TextStyle subrunStyle(style);
-        subrunStyle.setRTL(bidiRun->level() % 2);
-        subrunStyle.setDirectionalOverride(bidiRun->dirOverride(false));
 
-        TextRun subrun(run.data(bidiRun->start()), bidiRun->stop() - bidiRun->start());
+        TextRun subrun = run;
+        subrun.setText(run.data(bidiRun->start()), bidiRun->stop() - bidiRun->start());
+        subrun.setRTL(bidiRun->level() % 2);
+        subrun.setDirectionalOverride(bidiRun->dirOverride(false));
 
-        font().drawText(this, subrun, subrunStyle, currPoint);
+        font().drawText(this, subrun, currPoint);
 
         bidiRun = bidiRun->next();
         // FIXME: Have Font::drawText return the width of what it drew so that we don't have to re-measure here.
         if (bidiRun)
-            currPoint.move(font().floatWidth(subrun, subrunStyle), 0.f);
+            currPoint.move(font().floatWidth(subrun), 0.f);
     }
 
     bidiResolver.deleteRuns();
 }
 
-void GraphicsContext::drawHighlightForText(const TextRun& run, const IntPoint& point, int h, const TextStyle& style, const Color& backgroundColor, int from, int to)
+void GraphicsContext::drawHighlightForText(const TextRun& run, const IntPoint& point, int h, const Color& backgroundColor, int from, int to)
 {
     if (paintingDisabled())
         return;
 
-    fillRect(font().selectionRectForText(run, style, point, h, from, to), backgroundColor);
+    fillRect(font().selectionRectForText(run, point, h, from, to), backgroundColor);
 }
 
 void GraphicsContext::initFocusRing(int width, int offset)
@@ -346,11 +402,9 @@ const Vector<IntRect>& GraphicsContext::focusRingRects() const
     return m_common->m_focusRingRects;
 }
 
-static const int cInterpolationCutoff = 800 * 800;
-
 void GraphicsContext::drawImage(Image* image, const FloatRect& dest, const FloatRect& src, CompositeOperator op, bool useLowQualityScale)
 {
-    if (paintingDisabled())
+    if (paintingDisabled() || !image)
         return;
 
     float tsw = src.width();
@@ -368,19 +422,18 @@ void GraphicsContext::drawImage(Image* image, const FloatRect& dest, const Float
     if (th == -1)
         th = image->height();
 
-    bool shouldUseLowQualityInterpolation = useLowQualityScale && (tsw != tw || tsh != th) && tsw * tsh > cInterpolationCutoff;
-    if (shouldUseLowQualityInterpolation) {
+    if (useLowQualityScale) {
         save();
-        setUseLowQualityImageInterpolation(true);
+        setImageInterpolationQuality(InterpolationNone);
     }
     image->draw(this, FloatRect(dest.location(), FloatSize(tw, th)), FloatRect(src.location(), FloatSize(tsw, tsh)), op);
-    if (shouldUseLowQualityInterpolation)
+    if (useLowQualityScale)
         restore();
 }
 
 void GraphicsContext::drawTiledImage(Image* image, const IntRect& rect, const IntPoint& srcPoint, const IntSize& tileSize, CompositeOperator op)
 {
-    if (paintingDisabled())
+    if (paintingDisabled() || !image)
         return;
 
     image->drawTiled(this, rect, srcPoint, tileSize, op);
@@ -388,12 +441,12 @@ void GraphicsContext::drawTiledImage(Image* image, const IntRect& rect, const In
 
 void GraphicsContext::drawTiledImage(Image* image, const IntRect& dest, const IntRect& srcRect, Image::TileRule hRule, Image::TileRule vRule, CompositeOperator op)
 {
-    if (paintingDisabled())
+    if (paintingDisabled() || !image)
         return;
 
     if (hRule == Image::StretchTile && vRule == Image::StretchTile)
         // Just do a scale.
-        return drawImage(image, dest, srcRect);
+        return drawImage(image, dest, srcRect, op);
 
     image->drawTiled(this, dest, srcRect, hRule, vRule, op);
 }
@@ -429,7 +482,14 @@ void GraphicsContext::setTextDrawingMode(int mode)
     setPlatformTextDrawingMode(mode);
 }
 
-#if !PLATFORM(CG)
+void GraphicsContext::fillRect(const FloatRect& rect, Generator& generator)
+{
+    if (paintingDisabled())
+        return;
+    generator.fill(this, rect);
+}
+
+#if !PLATFORM(CG) && !PLATFORM(SKIA)
 // Implement this if you want to go ahead and push the drawing mode into your native context
 // immediately.
 void GraphicsContext::setPlatformTextDrawingMode(int mode)
@@ -437,11 +497,13 @@ void GraphicsContext::setPlatformTextDrawingMode(int mode)
 }
 #endif
 
-#if !PLATFORM(QT) && !PLATFORM(CAIRO)
+#if !PLATFORM(QT) && !PLATFORM(CAIRO) && !PLATFORM(SKIA)
 void GraphicsContext::setPlatformStrokeStyle(const StrokeStyle&)
 {
 }
+#endif
 
+#if !PLATFORM(QT)
 void GraphicsContext::setPlatformFont(const Font&)
 {
 }

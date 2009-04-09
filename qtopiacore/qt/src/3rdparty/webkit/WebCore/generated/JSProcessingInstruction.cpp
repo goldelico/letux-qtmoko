@@ -25,148 +25,151 @@
 #include <wtf/GetPtr.h>
 
 #include "JSStyleSheet.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "ProcessingInstruction.h"
 #include "StyleSheet.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSProcessingInstruction)
+
 /* Hash table */
 
-static const HashEntry JSProcessingInstructionTableEntries[] =
+static const HashTableValue JSProcessingInstructionTableValues[5] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSProcessingInstruction::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "target", JSProcessingInstruction::TargetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "data", JSProcessingInstruction::DataAttrNum, DontDelete, 0, &JSProcessingInstructionTableEntries[4] },
-    { "sheet", JSProcessingInstruction::SheetAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "target", DontDelete|ReadOnly, (intptr_t)jsProcessingInstructionTarget, (intptr_t)0 },
+    { "data", DontDelete, (intptr_t)jsProcessingInstructionData, (intptr_t)setJSProcessingInstructionData },
+    { "sheet", DontDelete|ReadOnly, (intptr_t)jsProcessingInstructionSheet, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsProcessingInstructionConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSProcessingInstructionTable = 
-{
-    2, 5, JSProcessingInstructionTableEntries, 4
-};
+static const HashTable JSProcessingInstructionTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSProcessingInstructionTableValues, 0 };
+#else
+    { 8, 7, JSProcessingInstructionTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSProcessingInstructionConstructorTableEntries[] =
+static const HashTableValue JSProcessingInstructionConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSProcessingInstructionConstructorTable = 
-{
-    2, 1, JSProcessingInstructionConstructorTableEntries, 1
-};
+static const HashTable JSProcessingInstructionConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSProcessingInstructionConstructorTableValues, 0 };
+#else
+    { 1, 0, JSProcessingInstructionConstructorTableValues, 0 };
+#endif
 
 class JSProcessingInstructionConstructor : public DOMObject {
 public:
     JSProcessingInstructionConstructor(ExecState* exec)
+        : DOMObject(JSProcessingInstructionConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSProcessingInstructionPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSProcessingInstructionConstructor::info = { "ProcessingInstructionConstructor", 0, &JSProcessingInstructionConstructorTable, 0 };
+const ClassInfo JSProcessingInstructionConstructor::s_info = { "ProcessingInstructionConstructor", 0, &JSProcessingInstructionConstructorTable, 0 };
 
 bool JSProcessingInstructionConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSProcessingInstructionConstructor, DOMObject>(exec, &JSProcessingInstructionConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSProcessingInstructionConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSProcessingInstructionPrototypeTableEntries[] =
+static const HashTableValue JSProcessingInstructionPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSProcessingInstructionPrototypeTable = 
-{
-    2, 1, JSProcessingInstructionPrototypeTableEntries, 1
-};
+static const HashTable JSProcessingInstructionPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSProcessingInstructionPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSProcessingInstructionPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSProcessingInstructionPrototype::info = { "ProcessingInstructionPrototype", 0, &JSProcessingInstructionPrototypeTable, 0 };
+const ClassInfo JSProcessingInstructionPrototype::s_info = { "ProcessingInstructionPrototype", 0, &JSProcessingInstructionPrototypeTable, 0 };
 
 JSObject* JSProcessingInstructionPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSProcessingInstructionPrototype>(exec, "[[JSProcessingInstruction.prototype]]");
+    return getDOMPrototype<JSProcessingInstruction>(exec);
 }
 
-const ClassInfo JSProcessingInstruction::info = { "ProcessingInstruction", &JSNode::info, &JSProcessingInstructionTable, 0 };
+const ClassInfo JSProcessingInstruction::s_info = { "ProcessingInstruction", &JSNode::s_info, &JSProcessingInstructionTable, 0 };
 
-JSProcessingInstruction::JSProcessingInstruction(ExecState* exec, ProcessingInstruction* impl)
-    : JSNode(exec, impl)
+JSProcessingInstruction::JSProcessingInstruction(PassRefPtr<Structure> structure, PassRefPtr<ProcessingInstruction> impl)
+    : JSNode(structure, impl)
 {
-    setPrototype(JSProcessingInstructionPrototype::self(exec));
+}
+
+JSObject* JSProcessingInstruction::createPrototype(ExecState* exec)
+{
+    return new (exec) JSProcessingInstructionPrototype(JSProcessingInstructionPrototype::createStructure(JSNodePrototype::self(exec)));
 }
 
 bool JSProcessingInstruction::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSProcessingInstruction, JSNode>(exec, &JSProcessingInstructionTable, this, propertyName, slot);
+    return getStaticValueSlot<JSProcessingInstruction, Base>(exec, &JSProcessingInstructionTable, this, propertyName, slot);
 }
 
-JSValue* JSProcessingInstruction::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsProcessingInstructionTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TargetAttrNum: {
-        ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(impl());
-
-        return jsStringOrNull(imp->target());
-    }
-    case DataAttrNum: {
-        ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(impl());
-
-        return jsStringOrNull(imp->data());
-    }
-    case SheetAttrNum: {
-        ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->sheet()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(static_cast<JSProcessingInstruction*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->target());
 }
 
-void JSProcessingInstruction::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsProcessingInstructionData(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSProcessingInstruction, JSNode>(exec, propertyName, value, attr, &JSProcessingInstructionTable, this);
+    ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(static_cast<JSProcessingInstruction*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->data());
 }
 
-void JSProcessingInstruction::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsProcessingInstructionSheet(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DataAttrNum: {
-        ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setData(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(static_cast<JSProcessingInstruction*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->sheet()));
 }
 
-JSValue* JSProcessingInstruction::getConstructor(ExecState* exec)
+JSValuePtr jsProcessingInstructionConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSProcessingInstructionConstructor>(exec, "[[ProcessingInstruction.constructor]]");
+    return static_cast<JSProcessingInstruction*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
+void JSProcessingInstruction::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSProcessingInstruction, Base>(exec, propertyName, value, &JSProcessingInstructionTable, this, slot);
+}
+
+void setJSProcessingInstructionData(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    ProcessingInstruction* imp = static_cast<ProcessingInstruction*>(static_cast<JSProcessingInstruction*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setData(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+JSValuePtr JSProcessingInstruction::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSProcessingInstructionConstructor>(exec);
+}
+
 
 }

@@ -24,251 +24,249 @@
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
 #include "HTMLCollection.h"
 #include "HTMLElement.h"
 #include "HTMLTableRowElement.h"
 #include "JSHTMLCollection.h"
 #include "JSHTMLElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLTableRowElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLTableRowElementTableEntries[] =
+static const HashTableValue JSHTMLTableRowElementTableValues[10] =
 {
-    { "rowIndex", JSHTMLTableRowElement::RowIndexAttrNum, DontDelete|ReadOnly, 0, &JSHTMLTableRowElementTableEntries[9] },
-    { 0, 0, 0, 0, 0 },
-    { "vAlign", JSHTMLTableRowElement::VAlignAttrNum, DontDelete, 0, 0 },
-    { "cells", JSHTMLTableRowElement::CellsAttrNum, DontDelete|ReadOnly, 0, &JSHTMLTableRowElementTableEntries[12] },
-    { 0, 0, 0, 0, 0 },
-    { "align", JSHTMLTableRowElement::AlignAttrNum, DontDelete, 0, 0 },
-    { "bgColor", JSHTMLTableRowElement::BgColorAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "sectionRowIndex", JSHTMLTableRowElement::SectionRowIndexAttrNum, DontDelete|ReadOnly, 0, &JSHTMLTableRowElementTableEntries[10] },
-    { "ch", JSHTMLTableRowElement::ChAttrNum, DontDelete, 0, &JSHTMLTableRowElementTableEntries[11] },
-    { "chOff", JSHTMLTableRowElement::ChOffAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSHTMLTableRowElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "rowIndex", DontDelete|ReadOnly, (intptr_t)jsHTMLTableRowElementRowIndex, (intptr_t)0 },
+    { "sectionRowIndex", DontDelete|ReadOnly, (intptr_t)jsHTMLTableRowElementSectionRowIndex, (intptr_t)0 },
+    { "cells", DontDelete|ReadOnly, (intptr_t)jsHTMLTableRowElementCells, (intptr_t)0 },
+    { "align", DontDelete, (intptr_t)jsHTMLTableRowElementAlign, (intptr_t)setJSHTMLTableRowElementAlign },
+    { "bgColor", DontDelete, (intptr_t)jsHTMLTableRowElementBgColor, (intptr_t)setJSHTMLTableRowElementBgColor },
+    { "ch", DontDelete, (intptr_t)jsHTMLTableRowElementCh, (intptr_t)setJSHTMLTableRowElementCh },
+    { "chOff", DontDelete, (intptr_t)jsHTMLTableRowElementChOff, (intptr_t)setJSHTMLTableRowElementChOff },
+    { "vAlign", DontDelete, (intptr_t)jsHTMLTableRowElementVAlign, (intptr_t)setJSHTMLTableRowElementVAlign },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLTableRowElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLTableRowElementTable = 
-{
-    2, 13, JSHTMLTableRowElementTableEntries, 9
-};
+static const HashTable JSHTMLTableRowElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSHTMLTableRowElementTableValues, 0 };
+#else
+    { 33, 31, JSHTMLTableRowElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLTableRowElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLTableRowElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLTableRowElementConstructorTable = 
-{
-    2, 1, JSHTMLTableRowElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLTableRowElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLTableRowElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLTableRowElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLTableRowElementConstructor : public DOMObject {
 public:
     JSHTMLTableRowElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLTableRowElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLTableRowElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLTableRowElementConstructor::info = { "HTMLTableRowElementConstructor", 0, &JSHTMLTableRowElementConstructorTable, 0 };
+const ClassInfo JSHTMLTableRowElementConstructor::s_info = { "HTMLTableRowElementConstructor", 0, &JSHTMLTableRowElementConstructorTable, 0 };
 
 bool JSHTMLTableRowElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLTableRowElementConstructor, DOMObject>(exec, &JSHTMLTableRowElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLTableRowElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLTableRowElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLTableRowElementPrototypeTableValues[3] =
 {
-    { "insertCell", JSHTMLTableRowElement::InsertCellFuncNum, DontDelete|Function, 1, 0 },
-    { "deleteCell", JSHTMLTableRowElement::DeleteCellFuncNum, DontDelete|Function, 1, 0 }
+    { "insertCell", DontDelete|Function, (intptr_t)jsHTMLTableRowElementPrototypeFunctionInsertCell, (intptr_t)1 },
+    { "deleteCell", DontDelete|Function, (intptr_t)jsHTMLTableRowElementPrototypeFunctionDeleteCell, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLTableRowElementPrototypeTable = 
-{
-    2, 2, JSHTMLTableRowElementPrototypeTableEntries, 2
-};
+static const HashTable JSHTMLTableRowElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSHTMLTableRowElementPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSHTMLTableRowElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLTableRowElementPrototype::info = { "HTMLTableRowElementPrototype", 0, &JSHTMLTableRowElementPrototypeTable, 0 };
+const ClassInfo JSHTMLTableRowElementPrototype::s_info = { "HTMLTableRowElementPrototype", 0, &JSHTMLTableRowElementPrototypeTable, 0 };
 
 JSObject* JSHTMLTableRowElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLTableRowElementPrototype>(exec, "[[JSHTMLTableRowElement.prototype]]");
+    return getDOMPrototype<JSHTMLTableRowElement>(exec);
 }
 
 bool JSHTMLTableRowElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLTableRowElementPrototypeFunction, JSObject>(exec, &JSHTMLTableRowElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLTableRowElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLTableRowElement::info = { "HTMLTableRowElement", &JSHTMLElement::info, &JSHTMLTableRowElementTable, 0 };
+const ClassInfo JSHTMLTableRowElement::s_info = { "HTMLTableRowElement", &JSHTMLElement::s_info, &JSHTMLTableRowElementTable, 0 };
 
-JSHTMLTableRowElement::JSHTMLTableRowElement(ExecState* exec, HTMLTableRowElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLTableRowElement::JSHTMLTableRowElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLTableRowElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLTableRowElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLTableRowElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLTableRowElementPrototype(JSHTMLTableRowElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLTableRowElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLTableRowElement, JSHTMLElement>(exec, &JSHTMLTableRowElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLTableRowElement, Base>(exec, &JSHTMLTableRowElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLTableRowElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLTableRowElementRowIndex(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case RowIndexAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsNumber(imp->rowIndex());
-    }
-    case SectionRowIndexAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsNumber(imp->sectionRowIndex());
-    }
-    case CellsAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->cells()));
-    }
-    case AlignAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsString(imp->align());
-    }
-    case BgColorAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsString(imp->bgColor());
-    }
-    case ChAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsString(imp->ch());
-    }
-    case ChOffAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsString(imp->chOff());
-    }
-    case VAlignAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        return jsString(imp->vAlign());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->rowIndex());
 }
 
-void JSHTMLTableRowElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLTableRowElementSectionRowIndex(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLTableRowElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLTableRowElementTable, this);
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->sectionRowIndex());
 }
 
-void JSHTMLTableRowElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLTableRowElementCells(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AlignAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        imp->setAlign(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case BgColorAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        imp->setBgColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ChAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        imp->setCh(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ChOffAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        imp->setChOff(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case VAlignAttrNum: {
-        HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(impl());
-
-        imp->setVAlign(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->cells()));
 }
 
-JSValue* JSHTMLTableRowElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLTableRowElementAlign(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLTableRowElementConstructor>(exec, "[[HTMLTableRowElement.constructor]]");
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->align());
 }
-JSValue* JSHTMLTableRowElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsHTMLTableRowElementBgColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSHTMLTableRowElement::info))
-      return throwError(exec, TypeError);
-
-    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLTableRowElement::InsertCellFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        int index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->insertCell(index, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSHTMLTableRowElement::DeleteCellFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        int index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->deleteCell(index, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->bgColor());
 }
+
+JSValuePtr jsHTMLTableRowElementCh(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->ch());
+}
+
+JSValuePtr jsHTMLTableRowElementChOff(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->chOff());
+}
+
+JSValuePtr jsHTMLTableRowElementVAlign(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->vAlign());
+}
+
+JSValuePtr jsHTMLTableRowElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLTableRowElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLTableRowElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLTableRowElement, Base>(exec, propertyName, value, &JSHTMLTableRowElementTable, this, slot);
+}
+
+void setJSHTMLTableRowElementAlign(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObject)->impl());
+    imp->setAlign(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLTableRowElementBgColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObject)->impl());
+    imp->setBgColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLTableRowElementCh(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObject)->impl());
+    imp->setCh(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLTableRowElementChOff(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObject)->impl());
+    imp->setChOff(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLTableRowElementVAlign(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(static_cast<JSHTMLTableRowElement*>(thisObject)->impl());
+    imp->setVAlign(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLTableRowElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLTableRowElementConstructor>(exec);
+}
+
+JSValuePtr jsHTMLTableRowElementPrototypeFunctionInsertCell(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLTableRowElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLTableRowElement* castedThisObj = static_cast<JSHTMLTableRowElement*>(asObject(thisValue));
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int index = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->insertCell(index, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsHTMLTableRowElementPrototypeFunctionDeleteCell(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLTableRowElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLTableRowElement* castedThisObj = static_cast<JSHTMLTableRowElement*>(asObject(thisValue));
+    HTMLTableRowElement* imp = static_cast<HTMLTableRowElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int index = args.at(exec, 0)->toInt32(exec);
+
+    imp->deleteCell(index, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
 
 }

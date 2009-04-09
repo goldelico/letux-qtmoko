@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,6 +62,7 @@
 #include <QtGui/QStyle>
 #include <QtGui/QApplication>
 #include <QtGui/QToolBar>
+#include <QtGui/QMainWindow>
 
 QT_BEGIN_NAMESPACE
 
@@ -97,6 +102,12 @@ static const char *layoutFieldGrowthPolicyC = "layoutFieldGrowthPolicy";
 static const char *layoutRowWrapPolicyC = "layoutRowWrapPolicy";
 static const char *layoutLabelAlignmentC = "layoutLabelAlignment";
 static const char *layoutFormAlignmentC = "layoutFormAlignment";
+// stretches
+static const char *layoutboxStretchPropertyC = "layoutStretch";
+static const char *layoutGridRowStretchPropertyC = "layoutRowStretch";
+static const char *layoutGridColumnStretchPropertyC = "layoutColumnStretch";
+static const char *layoutGridRowMinimumHeightC = "layoutRowMinimumHeight";
+static const char *layoutGridColumnMinimumWidthC = "layoutColumnMinimumWidth";
 
 // Find the form editor in the hierarchy.
 // We know that the parent of the sheet is the extension manager
@@ -175,7 +186,7 @@ public:
     typedef QDesignerPropertySheet::PropertyType PropertyType;
     typedef QDesignerPropertySheet::ObjectType ObjectType;
 
-    explicit QDesignerPropertySheetPrivate(QObject *object, QObject *sheetParent);
+    explicit QDesignerPropertySheetPrivate(QDesignerPropertySheet *sheetPublic, QObject *object, QObject *sheetParent);
 
     bool invalidIndex(const char *functionName, int index) const;
     inline int count() const { return m_meta->propertyCount() + m_addProperties.count(); }
@@ -185,12 +196,23 @@ public:
     QLayout* layout(QDesignerPropertySheetExtension **layoutPropertySheet = 0) const;
     static ObjectType objectType(const QObject *o);
 
+    bool isReloadableProperty(int index) const;
     bool isResourceProperty(int index) const;
     void addResourceProperty(int index, QVariant::Type type);
     QVariant resourceProperty(int index) const;
     void setResourceProperty(int index, const QVariant &value);
-    QVariant emptyResourceProperty(int index) const; // of type PropertySheetPixmapType / PropertySheetIconType
+    QVariant emptyResourceProperty(int index) const; // of type PropertySheetPixmapValue / PropertySheetIconValue
     QVariant defaultResourceProperty(int index) const; // of type QPixmap / QIcon (maybe it can be generalized for all types, not resource only)
+
+    bool isStringProperty(int index) const;
+    void addStringProperty(int index);
+    qdesigner_internal::PropertySheetStringValue stringProperty(int index) const;
+    void setStringProperty(int index, const qdesigner_internal::PropertySheetStringValue &value);
+
+    bool isKeySequenceProperty(int index) const;
+    void addKeySequenceProperty(int index);
+    qdesigner_internal::PropertySheetKeySequenceValue keySequenceProperty(int index) const;
+    void setKeySequenceProperty(int index, const qdesigner_internal::PropertySheetKeySequenceValue &value);
 
     enum PropertyKind { NormalProperty, FakeProperty, DynamicProperty, DefaultDynamicProperty };
     class Info {
@@ -209,6 +231,7 @@ public:
 
     Info &ensureInfo(int index);
 
+    QDesignerPropertySheet *q;
     QDesignerFormEditorInterface *m_core;
     const QDesignerMetaObjectInterface *m_meta;
     const ObjectType m_objectType;
@@ -219,6 +242,8 @@ public:
     QHash<int, QVariant> m_addProperties;
     QHash<QString, int> m_addIndex;
     QHash<int, QVariant> m_resourceProperties; // only PropertySheetPixmapValue snd PropertySheetIconValue here
+    QHash<int, qdesigner_internal::PropertySheetStringValue> m_stringProperties; // only PropertySheetStringValue
+    QHash<int, qdesigner_internal::PropertySheetKeySequenceValue> m_keySequenceProperties; // only PropertySheetKeySequenceValue
 
     const bool m_canHaveLayoutAttributes;
 
@@ -231,13 +256,33 @@ public:
     qdesigner_internal::DesignerPixmapCache *m_pixmapCache;
     qdesigner_internal::DesignerIconCache *m_iconCache;
     QPointer<qdesigner_internal::FormWindowBase> m_fwb;
+
+    // Enable Qt's internal properties starting with prefix "_q_"
+    static bool m_internalDynamicPropertiesEnabled;
 };
+
+bool QDesignerPropertySheetPrivate::m_internalDynamicPropertiesEnabled = false;
+
+/*
+    The property is reloadable if its contents depends on resource.
+*/
+bool QDesignerPropertySheetPrivate::isReloadableProperty(int index) const
+{
+    return isResourceProperty(index)
+           || propertyType(index) == QDesignerPropertySheet::PropertyStyleSheet
+           || q->property(index).type() == QVariant::Url;
+}
+
+/*
+    Resource properties are those which:
+        1) are reloadable
+        2) their state is associated with a file which can be taken from resources
+        3) we don't store them in Qt meta object system (because designer keeps different data structure for them)
+*/
 
 bool QDesignerPropertySheetPrivate::isResourceProperty(int index) const
 {
-    if (m_resourceProperties.contains(index))
-        return true;
-    return false;
+    return m_resourceProperties.contains(index);
 }
 
 void QDesignerPropertySheetPrivate::addResourceProperty(int index, QVariant::Type type)
@@ -278,6 +323,50 @@ void QDesignerPropertySheetPrivate::setResourceProperty(int index, const QVarian
         v = value;
 }
 
+bool QDesignerPropertySheetPrivate::isStringProperty(int index) const
+{
+    return m_stringProperties.contains(index);
+}
+
+void QDesignerPropertySheetPrivate::addStringProperty(int index)
+{
+    m_stringProperties.insert(index, qdesigner_internal::PropertySheetStringValue());
+}
+
+qdesigner_internal::PropertySheetStringValue QDesignerPropertySheetPrivate::stringProperty(int index) const
+{
+    return m_stringProperties.value(index);
+}
+
+void QDesignerPropertySheetPrivate::setStringProperty(int index, const qdesigner_internal::PropertySheetStringValue &value)
+{
+    Q_ASSERT(isStringProperty(index));
+
+    m_stringProperties[index] = value;
+}
+
+bool QDesignerPropertySheetPrivate::isKeySequenceProperty(int index) const
+{
+    return m_keySequenceProperties.contains(index);
+}
+
+void QDesignerPropertySheetPrivate::addKeySequenceProperty(int index)
+{
+    m_keySequenceProperties.insert(index, qdesigner_internal::PropertySheetKeySequenceValue());
+}
+
+qdesigner_internal::PropertySheetKeySequenceValue QDesignerPropertySheetPrivate::keySequenceProperty(int index) const
+{
+    return m_keySequenceProperties.value(index);
+}
+
+void QDesignerPropertySheetPrivate::setKeySequenceProperty(int index, const qdesigner_internal::PropertySheetKeySequenceValue &value)
+{
+    Q_ASSERT(isKeySequenceProperty(index));
+
+    m_keySequenceProperties[index] = value;
+}
+
 QDesignerPropertySheetPrivate::Info::Info() :
     changed(false),
     visible(true),
@@ -288,7 +377,8 @@ QDesignerPropertySheetPrivate::Info::Info() :
 {
 }
 
-QDesignerPropertySheetPrivate::QDesignerPropertySheetPrivate(QObject *object, QObject *sheetParent) :
+QDesignerPropertySheetPrivate::QDesignerPropertySheetPrivate(QDesignerPropertySheet *sheetPublic, QObject *object, QObject *sheetParent) :
+    q(sheetPublic),
     m_core(formEditorForObject(sheetParent)),
     m_meta(m_core->introspection()->metaObject(object)),
     m_objectType(QDesignerPropertySheet::objectTypeFromObject(object)),
@@ -388,6 +478,11 @@ QString QDesignerPropertySheetPrivate::transformLayoutPropertyName(int index) co
         typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutRowWrapPolicy, QLatin1String("rowWrapPolicy"));
         typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutLabelAlignment, QLatin1String("labelAlignment"));
         typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutFormAlignment, QLatin1String("formAlignment"));
+        typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutBoxStretch, QLatin1String("stretch"));
+        typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutGridRowStretch, QLatin1String("rowStretch"));
+        typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutGridColumnStretch, QLatin1String("columnStretch"));
+        typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutGridRowMinimumHeight, QLatin1String("rowMinimumHeight"));
+        typeNameMap.insert(QDesignerPropertySheet::PropertyLayoutGridColumnMinimumWidth, QLatin1String("columnMinimumWidth"));
     }
     const TypeNameMap::const_iterator it = typeNameMap.constFind(propertyType(index));
     if (it != typeNameMap.constEnd())
@@ -435,6 +530,11 @@ QDesignerPropertySheet::PropertyType QDesignerPropertySheet::propertyTypeFromNam
         propertyTypeHash.insert(QLatin1String(layoutRowWrapPolicyC),      PropertyLayoutRowWrapPolicy);
         propertyTypeHash.insert(QLatin1String(layoutLabelAlignmentC),     PropertyLayoutLabelAlignment);
         propertyTypeHash.insert(QLatin1String(layoutFormAlignmentC),      PropertyLayoutFormAlignment);
+        propertyTypeHash.insert(QLatin1String(layoutboxStretchPropertyC), PropertyLayoutBoxStretch);
+        propertyTypeHash.insert(QLatin1String(layoutGridRowStretchPropertyC),    PropertyLayoutGridRowStretch);
+        propertyTypeHash.insert(QLatin1String(layoutGridColumnStretchPropertyC), PropertyLayoutGridColumnStretch);
+        propertyTypeHash.insert(QLatin1String(layoutGridRowMinimumHeightC),      PropertyLayoutGridRowMinimumHeight);
+        propertyTypeHash.insert(QLatin1String(layoutGridColumnMinimumWidthC),    PropertyLayoutGridColumnMinimumWidth);
         propertyTypeHash.insert(QLatin1String("buddy"),                   PropertyBuddy);
         propertyTypeHash.insert(QLatin1String("geometry"),                PropertyGeometry);
         propertyTypeHash.insert(QLatin1String("checkable"),               PropertyCheckable);
@@ -446,14 +546,15 @@ QDesignerPropertySheet::PropertyType QDesignerPropertySheet::propertyTypeFromNam
         propertyTypeHash.insert(QLatin1String("windowOpacity"),           PropertyWindowOpacity);
         propertyTypeHash.insert(QLatin1String("windowIconText"),          PropertyWindowIconText);
         propertyTypeHash.insert(QLatin1String("windowModality"),          PropertyWindowModality);
-        propertyTypeHash.insert(QLatin1String("windowModified"),          PropertyWindowModified );
+        propertyTypeHash.insert(QLatin1String("windowModified"),          PropertyWindowModified);
+        propertyTypeHash.insert(QLatin1String("styleSheet"),              PropertyStyleSheet);
     }
     return propertyTypeHash.value(name, PropertyNone);
 }
 
 QDesignerPropertySheet::QDesignerPropertySheet(QObject *object, QObject *parent) :
     QObject(parent),
-    d(new QDesignerPropertySheetPrivate(object, parent))
+    d(new QDesignerPropertySheetPrivate(this, object, parent))
 {
     typedef QDesignerPropertySheetPrivate::Info Info;
     const QDesignerMetaObjectInterface *baseMeta = d->m_meta;
@@ -494,6 +595,10 @@ QDesignerPropertySheet::QDesignerPropertySheet(QObject *object, QObject *parent)
             info.defaultValue = p->read(d->m_object);
             if (p->type() == QVariant::Icon || p->type() == QVariant::Pixmap)
                 d->addResourceProperty(index, p->type());
+        } else if (p->type() == QVariant::String) {
+            d->addStringProperty(index);
+        } else if (p->type() == QVariant::KeySequence) {
+            d->addKeySequenceProperty(index);
         }
     }
 
@@ -513,7 +618,9 @@ QDesignerPropertySheet::QDesignerPropertySheet(QObject *object, QObject *parent)
             static const QString layoutGroup = QLatin1String("Layout");
             const char* fakeLayoutProperties[] = {
                 layoutObjectNameC, layoutLeftMarginC, layoutTopMarginC, layoutRightMarginC, layoutBottomMarginC, layoutSpacingC, layoutHorizontalSpacingC, layoutVerticalSpacingC,
-                layoutFieldGrowthPolicyC, layoutRowWrapPolicyC, layoutLabelAlignmentC, layoutFormAlignmentC
+                layoutFieldGrowthPolicyC, layoutRowWrapPolicyC, layoutLabelAlignmentC, layoutFormAlignmentC,
+                layoutboxStretchPropertyC, layoutGridRowStretchPropertyC, layoutGridColumnStretchPropertyC,
+                layoutGridRowMinimumHeightC, layoutGridColumnMinimumWidthC
 #ifdef USE_LAYOUT_SIZE_CONSTRAINT
                 , layoutSizeConstraintC
 #endif
@@ -529,6 +636,11 @@ QDesignerPropertySheet::QDesignerPropertySheet(QObject *object, QObject *parent)
 
         if (d->m_objectType == ObjectLabel)
             createFakeProperty(QLatin1String("buddy"), QVariant(QByteArray()));
+        /* We need to create a fake property since the property does not work
+         * for non-toplevel windows or on other systems than Mac and only if
+         * it is above a certain Mac OS version. */
+        if (qobject_cast<const QMainWindow *>(d->m_object))
+            createFakeProperty(QLatin1String("unifiedTitleAndToolBarOnMac"), false);
     }
 
     if (qobject_cast<const QDialog*>(object)) {
@@ -571,7 +683,7 @@ bool QDesignerPropertySheet::dynamicPropertiesAllowed() const
 
 bool QDesignerPropertySheet::canAddDynamicProperty(const QString &propName) const
 {
-    const int index = d->m_meta->indexOfProperty(propName.toUtf8());
+    const int index = d->m_meta->indexOfProperty(propName);
     if (index != -1)
         return false; // property already exists and is not a dynamic one
     if (d->m_addIndex.contains(propName)) {
@@ -581,7 +693,7 @@ bool QDesignerPropertySheet::canAddDynamicProperty(const QString &propName) cons
         else
             return true;
     }
-    if (propName.startsWith(QLatin1String("_q_")))
+    if (!QDesignerPropertySheet::internalDynamicPropertiesEnabled() && propName.startsWith(QLatin1String("_q_")))
         return false;
     return true;
 }
@@ -599,6 +711,10 @@ int QDesignerPropertySheet::addDynamicProperty(const QString &propName, const QV
         v = qVariantFromValue(qdesigner_internal::PropertySheetIconValue());
     else if (value.type() == QVariant::Pixmap)
         v = qVariantFromValue(qdesigner_internal::PropertySheetPixmapValue());
+    else if (value.type() == QVariant::String)
+        v = qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
+    else if (value.type() == QVariant::KeySequence)
+        v = qVariantFromValue(qdesigner_internal::PropertySheetKeySequenceValue());
 
 
     if (d->m_addIndex.contains(propName)) {
@@ -607,12 +723,16 @@ int QDesignerPropertySheet::addDynamicProperty(const QString &propName, const QV
         setVisible(idx, true);
         d->m_addProperties.insert(idx, v);
         setChanged(idx, false);
-        const int index = d->m_meta->indexOfProperty(propName.toUtf8());
+        const int index = d->m_meta->indexOfProperty(propName);
         Info &info = d->ensureInfo(index);
         info.defaultValue = value;
         info.kind = QDesignerPropertySheetPrivate::DynamicProperty;
         if (value.type() == QVariant::Icon || value.type() == QVariant::Pixmap)
             d->addResourceProperty(idx, value.type());
+        else if (value.type() == QVariant::String)
+            d->addStringProperty(idx);
+        else if (value.type() == QVariant::KeySequence)
+            d->addKeySequenceProperty(idx);
         return idx;
     }
 
@@ -627,6 +747,10 @@ int QDesignerPropertySheet::addDynamicProperty(const QString &propName, const QV
     setPropertyGroup(index, tr("Dynamic Properties"));
     if (value.type() == QVariant::Icon || value.type() == QVariant::Pixmap)
         d->addResourceProperty(index, value.type());
+    else if (value.type() == QVariant::String)
+        d->addStringProperty(index);
+    else if (value.type() == QVariant::KeySequence)
+        d->addKeySequenceProperty(index);
     return index;
 }
 
@@ -662,6 +786,11 @@ bool QDesignerPropertySheet::isDynamic(int index) const
     case PropertyLayoutRowWrapPolicy:
     case PropertyLayoutLabelAlignment:
     case PropertyLayoutFormAlignment:
+    case PropertyLayoutBoxStretch:
+    case PropertyLayoutGridRowStretch:
+    case PropertyLayoutGridColumnStretch:
+    case PropertyLayoutGridRowMinimumHeight:
+    case PropertyLayoutGridColumnMinimumWidth:
         if (d->m_object->isWidgetType() && d->m_canHaveLayoutAttributes)
             return false;
     default:
@@ -672,7 +801,9 @@ bool QDesignerPropertySheet::isDynamic(int index) const
 
 bool QDesignerPropertySheet::isDynamicProperty(int index) const
 {
-    if (d->invalidIndex(Q_FUNC_INFO, index))
+    // Do not complain here, as an invalid index might be encountered
+    // if someone implements a property sheet only, omitting the dynamic sheet.
+    if (index < 0 || index >= count())
         return false;
     return d->m_info.value(index).kind == QDesignerPropertySheetPrivate::DynamicProperty;
 }
@@ -718,14 +849,18 @@ int QDesignerPropertySheet::createFakeProperty(const QString &propertyName, cons
 {
     typedef QDesignerPropertySheetPrivate::Info Info;
     // fake properties
-    const int index = d->m_meta->indexOfProperty(propertyName.toUtf8());
+    const int index = d->m_meta->indexOfProperty(propertyName);
     if (index != -1) {
         if (!(d->m_meta->property(index)->attributes() & QDesignerMetaPropertyInterface::DesignableAttribute))
             return -1;
         Info &info = d->ensureInfo(index);
         info.visible = false;
         info.kind = QDesignerPropertySheetPrivate::FakeProperty;
-        const QVariant v = value.isValid() ? value : metaProperty(index);
+        QVariant v = value.isValid() ? value : metaProperty(index);
+        if (v.type() == QVariant::String)
+            v = qVariantFromValue(qdesigner_internal::PropertySheetStringValue());
+        if (v.type() == QVariant::KeySequence)
+            v = qVariantFromValue(qdesigner_internal::PropertySheetKeySequenceValue());
         d->m_fakeProperties.insert(index, v);
         return index;
     }
@@ -845,6 +980,26 @@ QVariant QDesignerPropertySheet::property(int index) const
     if (d->isResourceProperty(index))
         return d->resourceProperty(index);
 
+    if (d->isStringProperty(index)) {
+        QString strValue = metaProperty(index).toString();
+        qdesigner_internal::PropertySheetStringValue value = d->stringProperty(index);
+        if (strValue != value.value()) {
+            value.setValue(strValue);
+            d->setStringProperty(index, value); // cache it
+        }
+        return qVariantFromValue(value);
+    }
+
+    if (d->isKeySequenceProperty(index)) {
+        QKeySequence keyValue = qVariantValue<QKeySequence>(metaProperty(index));
+        qdesigner_internal::PropertySheetKeySequenceValue value = d->keySequenceProperty(index);
+        if (keyValue != value.value()) {
+            value.setValue(keyValue);
+            d->setKeySequenceProperty(index, value); // cache it
+        }
+        return qVariantFromValue(value);
+    }
+
     return metaProperty(index);
 }
 
@@ -878,6 +1033,12 @@ QVariant QDesignerPropertySheet::resolvePropertyValue(int index, const QVariant 
 
     if (qVariantCanConvert<qdesigner_internal::PropertySheetFlagValue>(value))
         return qvariant_cast<qdesigner_internal::PropertySheetFlagValue>(value).value;
+
+    if (qVariantCanConvert<qdesigner_internal::PropertySheetStringValue>(value))
+        return qVariantValue<qdesigner_internal::PropertySheetStringValue>(value).value();
+
+    if (qVariantCanConvert<qdesigner_internal::PropertySheetKeySequenceValue>(value))
+        return qVariantValue<qdesigner_internal::PropertySheetKeySequenceValue>(value).value();
 
     if (qVariantCanConvert<qdesigner_internal::PropertySheetPixmapValue>(value)) {
         const QString path = qVariantValue<qdesigner_internal::PropertySheetPixmapValue>(value).path();
@@ -962,6 +1123,10 @@ void QDesignerPropertySheet::setProperty(int index, const QVariant &value)
         if (isDynamicProperty(index)) {
             if (d->isResourceProperty(index))
                 d->setResourceProperty(index, value);
+            if (d->isStringProperty(index))
+                d->setStringProperty(index, qVariantValue<qdesigner_internal::PropertySheetStringValue>(value));
+            if (d->isKeySequenceProperty(index))
+                d->setKeySequenceProperty(index, qVariantValue<qdesigner_internal::PropertySheetKeySequenceValue>(value));
             d->m_object->setProperty(propertyName(index).toUtf8(), resolvePropertyValue(index, value));
             if (d->m_object->isWidgetType()) {
                 QWidget *w = qobject_cast<QWidget *>(d->m_object);
@@ -974,6 +1139,10 @@ void QDesignerPropertySheet::setProperty(int index, const QVariant &value)
     } else {
         if (d->isResourceProperty(index))
             d->setResourceProperty(index, value);
+        if (d->isStringProperty(index))
+            d->setStringProperty(index, qVariantValue<qdesigner_internal::PropertySheetStringValue>(value));
+        if (d->isKeySequenceProperty(index))
+            d->setKeySequenceProperty(index, qVariantValue<qdesigner_internal::PropertySheetKeySequenceValue>(value));
         const QDesignerMetaPropertyInterface *p = d->m_meta->property(index);
         p->write(d->m_object, resolvePropertyValue(index, value));
         if (qobject_cast<QGroupBox *>(d->m_object) && propertyType(index) == PropertyCheckable) {
@@ -1011,6 +1180,10 @@ bool QDesignerPropertySheet::reset(int index)
 {
     if (d->invalidIndex(Q_FUNC_INFO, index))
         return false;
+    if (d->isStringProperty(index))
+        setProperty(index, qVariantFromValue(qdesigner_internal::PropertySheetStringValue()));
+    if (d->isKeySequenceProperty(index))
+        setProperty(index, qVariantFromValue(qdesigner_internal::PropertySheetKeySequenceValue()));
     if (d->isResourceProperty(index)) {
         setProperty(index, d->emptyResourceProperty(index));
         return true;
@@ -1042,6 +1215,11 @@ bool QDesignerPropertySheet::reset(int index)
            case PropertyLayoutSizeConstraint:
               setProperty(index, QVariant(QLayout::SetDefaultConstraint));
               return true;
+           case PropertyLayoutBoxStretch:
+           case PropertyLayoutGridRowStretch:
+           case PropertyLayoutGridColumnStretch:
+           case PropertyLayoutGridRowMinimumHeight:
+           case PropertyLayoutGridColumnMinimumWidth:
            case PropertyLayoutFieldGrowthPolicy:
            case PropertyLayoutRowWrapPolicy:
            case PropertyLayoutLabelAlignment:
@@ -1160,7 +1338,7 @@ void QDesignerPropertySheet::setChanged(int index, bool changed)
             }
         }
     }
-    if (d->isResourceProperty(index)) {
+    if (d->isReloadableProperty(index)) {
         if (d->m_fwb) {
             if (changed)
                 d->m_fwb->addReloadableProperty(this, index);
@@ -1191,6 +1369,11 @@ bool QDesignerPropertySheet::isFakeLayoutProperty(int index) const
     case PropertyLayoutRowWrapPolicy:
     case PropertyLayoutLabelAlignment:
     case PropertyLayoutFormAlignment:
+    case PropertyLayoutBoxStretch:
+    case PropertyLayoutGridRowStretch:
+    case PropertyLayoutGridColumnStretch:
+    case PropertyLayoutGridRowMinimumHeight:
+    case PropertyLayoutGridColumnMinimumWidth:
         return d->m_canHaveLayoutAttributes;
     default:
         break;
@@ -1224,6 +1407,16 @@ bool QDesignerPropertySheet::isVisible(int index) const
                 return visibleMask & qdesigner_internal::LayoutProperties::LabelAlignmentProperty;
             case PropertyLayoutFormAlignment:
                 return visibleMask & qdesigner_internal::LayoutProperties::FormAlignmentProperty;
+            case PropertyLayoutBoxStretch:
+                return visibleMask & qdesigner_internal::LayoutProperties::BoxStretchProperty;
+            case PropertyLayoutGridRowStretch:
+                return visibleMask & qdesigner_internal::LayoutProperties::GridRowStretchProperty;
+            case PropertyLayoutGridColumnStretch:
+                return visibleMask & qdesigner_internal::LayoutProperties::GridColumnStretchProperty;
+            case PropertyLayoutGridRowMinimumHeight:
+                return visibleMask & qdesigner_internal::LayoutProperties::GridRowMinimumHeightProperty;
+            case PropertyLayoutGridColumnMinimumWidth:
+                return visibleMask & qdesigner_internal::LayoutProperties::GridColumnMinimumWidthProperty;
             default:
                 break;
             }
@@ -1317,6 +1510,16 @@ void QDesignerPropertySheet::setAttribute(int index, bool attribute)
 QDesignerFormEditorInterface *QDesignerPropertySheet::core() const
 {
     return d->m_core;
+}
+
+bool QDesignerPropertySheet::internalDynamicPropertiesEnabled()
+{
+    return QDesignerPropertySheetPrivate::m_internalDynamicPropertiesEnabled;
+}
+
+void QDesignerPropertySheet::setInternalDynamicPropertiesEnabled(bool v)
+{
+    QDesignerPropertySheetPrivate::m_internalDynamicPropertiesEnabled = v;
 }
 
 // ---------- QDesignerAbstractPropertySheetFactory

@@ -1,42 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include <private/qwindowsurface_p.h>
 #include <qwidget.h>
+#include <private/qwidget_p.h>
 #include <private/qbackingstore_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -44,11 +49,13 @@ QT_BEGIN_NAMESPACE
 class QWindowSurfacePrivate
 {
 public:
-    QWindowSurfacePrivate(QWidget *w) : window(w) {}
+    QWindowSurfacePrivate(QWidget *w) : window(w), staticContentsSupport(false) {}
 
     QWidget *window;
     QRect geometry;
+    QRegion staticContents;
     QList<QImage*> bufferImages;
+    bool staticContentsSupport;
 };
 
 /*!
@@ -132,7 +139,9 @@ void QWindowSurface::beginPaint(const QRegion &)
 
 void QWindowSurface::endPaint(const QRegion &)
 {
+//     QApplication::syncX();
     qDeleteAll(d_ptr->bufferImages);
+    d_ptr->bufferImages.clear();
 }
 
 /*!
@@ -214,15 +223,37 @@ QImage* QWindowSurface::buffer(const QWidget *widget)
   If \a rectangle is a null rectangle (the default), the entire widget
   is grabbed. Otherwise, the grabbed area is limited to \a rectangle.
 
-  The default implementation returns a null pixmap.
+  The default implementation uses QWindowSurface::buffer().
 
   \sa QPixmap::grabWidget()
 */
 QPixmap QWindowSurface::grabWidget(const QWidget *widget, const QRect &rectangle) const
 {
-    Q_UNUSED(widget);
-    Q_UNUSED(rectangle);
-    return QPixmap();
+    QPixmap result;
+
+    if (widget->window() != window())
+        return result;
+
+    const QImage *img = const_cast<QWindowSurface *>(this)->buffer(widget->window());
+
+    if (!img || img->isNull())
+        return result;
+
+    QRect rect = rectangle.isEmpty() ? widget->rect() : (widget->rect() & rectangle);
+
+    rect.translate(offset(widget) - offset(widget->window()));
+    rect &= QRect(QPoint(), img->size());
+
+    if (rect.isEmpty())
+        return result;
+
+    QImage subimg(img->scanLine(rect.y()) + rect.x() * img->depth() / 8,
+                  rect.width(), rect.height(),
+                  img->bytesPerLine(), img->format());
+    subimg.detach(); //### expensive -- maybe we should have a real SubImage that shares reference count
+
+    result = QPixmap::fromImage(subimg);
+    return result;
 }
 
 /*!
@@ -245,5 +276,74 @@ QPoint QWindowSurface::offset(const QWidget *widget) const
   Returns the rectangle for \a widget in the coordinates of this
   window surface.
 */
+
+bool QWindowSurface::hasStaticContentsSupport() const
+{
+    return d_ptr->staticContentsSupport;
+}
+
+void QWindowSurface::setStaticContentsSupport(bool enable)
+{
+    d_ptr->staticContentsSupport = enable;
+}
+
+void QWindowSurface::setStaticContents(const QRegion &region)
+{
+    d_ptr->staticContents = region;
+}
+
+QRegion QWindowSurface::staticContents() const
+{
+    return d_ptr->staticContents;
+}
+
+bool QWindowSurface::hasStaticContents() const
+{
+    return d_ptr->staticContentsSupport && !d_ptr->staticContents.isEmpty();
+}
+
+void qt_scrollRectInImage(QImage &img, const QRect &rect, const QPoint &offset)
+{
+    // make sure we don't detach
+    uchar *mem = const_cast<uchar*>(const_cast<const QImage &>(img).bits());
+
+    int lineskip = img.bytesPerLine();
+    int depth = img.depth() >> 3;
+
+
+    const QRect r = rect & QRect(0, 0, img.width(), img.height());
+    const QPoint p = rect.topLeft() + offset;
+
+    const uchar *src;
+    uchar *dest;
+
+    if (r.top() < p.y()) {
+        src = mem + r.bottom() * lineskip + r.left() * depth;
+        dest = mem + (p.y() + r.height() - 1) * lineskip + p.x() * depth;
+        lineskip = -lineskip;
+    } else {
+        src = mem + r.top() * lineskip + r.left() * depth;
+        dest = mem + p.y() * lineskip + p.x() * depth;
+    }
+
+    const int w = r.width();
+    int h = r.height();
+    const int bytes = w * depth;
+
+    // overlapping segments?
+    if (offset.y() == 0 && qAbs(offset.x()) < w) {
+        do {
+            ::memmove(dest, src, bytes);
+            dest += lineskip;
+            src += lineskip;
+        } while (--h);
+    } else {
+        do {
+            ::memcpy(dest, src, bytes);
+            dest += lineskip;
+            src += lineskip;
+        } while (--h);
+    }
+}
 
 QT_END_NAMESPACE

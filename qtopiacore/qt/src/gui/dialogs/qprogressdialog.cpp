@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,6 +68,7 @@ static const int minWaitTime = 50;
 class QProgressDialogPrivate : public QDialogPrivate
 {
     Q_DECLARE_PUBLIC(QProgressDialog)
+
 public:
     QProgressDialogPrivate() : label(0), cancel(0), bar(0),
         shown_once(false),
@@ -79,6 +84,7 @@ public:
     void init(const QString &labelText, const QString &cancelText, int min, int max);
     void layout();
     void retranslateStrings();
+    void _q_disconnectOnClose();
 
     QLabel *label;
     QPushButton *cancel;
@@ -98,6 +104,8 @@ public:
     QShortcut *escapeShortcut;
 #endif
     bool useDefaultCancelText;
+    QPointer<QObject> receiverToDisconnectOnClose;
+    QByteArray memberToDisconnectOnClose;
 };
 
 void QProgressDialogPrivate::init(const QString &labelText, const QString &cancelText,
@@ -174,6 +182,17 @@ void QProgressDialogPrivate::retranslateStrings()
         q->setCancelButtonText(QProgressDialog::tr("Cancel"));
 }
 
+void QProgressDialogPrivate::_q_disconnectOnClose()
+{
+    Q_Q(QProgressDialog);
+    if (receiverToDisconnectOnClose) {
+        QObject::disconnect(q, SIGNAL(canceled()), receiverToDisconnectOnClose,
+                            memberToDisconnectOnClose);
+        receiverToDisconnectOnClose = 0;
+    }
+    memberToDisconnectOnClose.clear();
+}
+
 /*!
   \class QProgressDialog
   \brief The QProgressDialog class provides feedback on the progress of a slow operation.
@@ -202,8 +221,10 @@ void QProgressDialogPrivate::retranslateStrings()
   you call setValue() with the value set by setMaximum() as its argument.
 
   The dialog automatically resets and hides itself at the end of the
-  operation. Use setAutoReset() and setAutoClose() to change this
-  behavior.
+  operation.  Use setAutoReset() and setAutoClose() to change this
+  behavior. Note that if you set a new maximum (using setMaximum() or
+  setRange()) that equals your current value(), the dialog will not
+  close regardless.
 
   There are two ways of using QProgressDialog: modal and modeless.
 
@@ -292,9 +313,9 @@ QProgressDialog::QProgressDialog(QWidget *parent, Qt::WindowFlags f)
 */
 
 QProgressDialog::QProgressDialog(const QString &labelText,
-                                  const QString &cancelButtonText,
-                                  int minimum, int maximum,
-                                  QWidget *parent, Qt::WindowFlags f)
+                                 const QString &cancelButtonText,
+                                 int minimum, int maximum,
+                                 QWidget *parent, Qt::WindowFlags f)
     : QDialog(*(new QProgressDialogPrivate), parent, f)
 {
     Q_D(QProgressDialog);
@@ -558,6 +579,14 @@ void QProgressDialog::reset()
     d->cancellation_flag = false;
     d->shown_once = false;
     d->forceTimer->stop();
+
+    /*
+        I wish we could disconnect the user slot provided to open() here but
+        unfortunately reset() is usually called before the slot has been invoked.
+        (reset() is itself invoked when canceled() is emitted.)
+    */
+    if (d->receiverToDisconnectOnClose)
+        QMetaObject::invokeMethod(this, "_q_disconnectOnClose", Qt::QueuedConnection);
 }
 
 /*!
@@ -735,7 +764,7 @@ void QProgressDialog::closeEvent(QCloseEvent *e)
 
 /*!
   \property QProgressDialog::autoReset
-  \brief whether the progress dialog calls reset() as soon as progress() equals totalSteps()
+  \brief whether the progress dialog calls reset() as soon as value() equals maximum()
 
   The default is true.
 
@@ -763,10 +792,10 @@ bool QProgressDialog::autoReset() const
   \sa setAutoReset()
 */
 
-void QProgressDialog::setAutoClose(bool b)
+void QProgressDialog::setAutoClose(bool close)
 {
     Q_D(QProgressDialog);
-    d->autoClose = b;
+    d->autoClose = close;
 }
 
 bool QProgressDialog::autoClose() const
@@ -799,6 +828,7 @@ void QProgressDialog::showEvent(QShowEvent *e)
 void QProgressDialog::forceShow()
 {
     Q_D(QProgressDialog);
+    d->forceTimer->stop();
     if (d->shown_once || d->cancellation_flag)
         return;
 
@@ -806,6 +836,26 @@ void QProgressDialog::forceShow()
     d->shown_once = true;
 }
 
+/*!
+    \since 4.5
+    \overload
+
+    Opens the dialog and connects its accepted() signal to the slot specified
+    by \a receiver and \a member.
+
+    The signal will be disconnected from the slot when the dialog is closed.
+*/
+void QProgressDialog::open(QObject *receiver, const char *member)
+{
+    Q_D(QProgressDialog);
+    connect(this, SIGNAL(canceled()), receiver, member);
+    d->receiverToDisconnectOnClose = receiver;
+    d->memberToDisconnectOnClose = member;
+    QDialog::open();
+}
+
 QT_END_NAMESPACE
+
+#include "moc_qprogressdialog.cpp"
 
 #endif // QT_NO_PROGRESSDIALOG

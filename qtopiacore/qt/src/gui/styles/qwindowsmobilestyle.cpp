@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -1102,12 +1106,6 @@ void QWindowsMobileStyle::drawPrimitive(PrimitiveElement element, const QStyleOp
         }
         painter->restore();
         break; }
-    case PE_PanelMenuBar: {
-          painter->save();
-          painter->setPen(option->palette.shadow().color());
-          painter->drawRect(option->rect.adjusted(0 ,0 ,0 , -1));
-          painter->restore();
-        break; }
    case PE_PanelButtonCommand:
        if (const QStyleOptionButton *button = qstyleoption_cast<const QStyleOptionButton *>(option)) {
            QBrush fill;
@@ -1493,9 +1491,14 @@ void QWindowsMobileStyle::drawControl(ControlElement element, const QStyleOption
 
    QWindowsMobileStylePrivate *d = const_cast<QWindowsMobileStylePrivate*>(d_func());
 
+   
    painter->setClipping(false);
    switch (element) {
-    case CE_PushButtonBevel:
+   case CE_MenuBarEmptyArea:
+        painter->setClipping(true);
+        QWindowsStyle::drawControl(element, option, painter, widget);
+        break;
+   case CE_PushButtonBevel:
         if (const QStyleOptionButton *button = qstyleoption_cast<const QStyleOptionButton *>(option)) {
             QRect br = button->rect;
             int dbi = pixelMetric(PM_ButtonDefaultIndicator, button, widget);
@@ -1566,183 +1569,6 @@ void QWindowsMobileStyle::drawControl(ControlElement element, const QStyleOption
            }
        }
        break;
-#ifndef QT_NO_MENU
-   case CE_MenuTearoff: {
-        if(option->state & State_Selected) {
-            if(pixelMetric(PM_MenuPanelWidth, option, widget) > 1)
-                qDrawShadePanel(painter, option->rect.x(), option->rect.y(), option->rect.width(),
-                                option->rect.height(), option->palette, false, 2,
-                                &option->palette.brush(QPalette::Button));
-            else
-                qDrawShadePanel(painter, option->rect.x()+1, option->rect.y()+1, option->rect.width()-2,
-                                option->rect.height()-2, option->palette, true, 1, &option->palette.brush(QPalette::Button));
-        } else {
-            painter->fillRect(option->rect, option->palette.brush(QPalette::Button));
-        }
-        painter->setPen(QPen(option->palette.dark().color(), 1, Qt::DashLine));
-        painter->drawLine(option->rect.x()+2, option->rect.y()+option->rect.height()/2-1, option->rect.x()+option->rect.width()-4,
-                    option->rect.y()+option->rect.height()/2-1);
-        painter->setPen(QPen(option->palette.light().color(), 1, Qt::DashLine));
-        painter->drawLine(option->rect.x()+2, option->rect.y()+option->rect.height()/2, option->rect.x()+option->rect.width()-4,
-                    option->rect.y()+option->rect.height()/2);
-        break; }
-    case CE_MenuBarItem:
-        if (const QStyleOptionMenuItem *mbi = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
-            bool active = mbi->state & State_Selected;
-            bool hasFocus = mbi->state & State_HasFocus;
-            bool down = mbi->state & State_Sunken;
-            QStyleOptionMenuItem newMbi = *mbi;
-            if (active || hasFocus)
-                QBrush b = mbi->palette.brush(QPalette::Highlight);
-            uint alignment = Qt::AlignCenter | Qt::TextShowMnemonic | Qt::TextDontClip
-                            | Qt::TextSingleLine;
-            if (!styleHint(SH_UnderlineShortcut, mbi, widget))
-                alignment |= Qt::TextHideMnemonic;
-            painter->save();
-            painter->setBrush(mbi->palette.brush(QPalette::Highlight));
-            painter->drawRect(option->rect.adjusted(1,1,-1,-1));
-            QFont f = painter->font();
-            f.setBold(true);
-            painter->setFont(f);
-            QPixmap pix = mbi->icon.pixmap(pixelMetric(PM_SmallIconSize),
-                         (mbi->state & State_Enabled) ? QIcon::Normal : QIcon::Disabled);
-            if (!pix.isNull())
-                drawItemPixmap(painter,mbi->rect, alignment, pix);
-            else
-                if (active && down)
-                  drawItemText(painter, mbi->rect, alignment, mbi->palette, mbi->state & State_Enabled,
-                               mbi->text, QPalette::Link);
-                else
-                  drawItemText(painter, mbi->rect, alignment, mbi->palette, mbi->state & State_Enabled,
-                  mbi->text, QPalette::HighlightedText);
-            painter->restore();
-        }
-        break;
-    case CE_MenuBarEmptyArea: {
-        QRect rect = option->rect;
-        painter->fillRect(rect.adjusted(1,1,-1,-1), option->palette.brush(QPalette::Highlight));
-        break; }
-    case CE_MenuItem:
-        if (const QStyleOptionMenuItem *menuitem = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
-            int x, y, w, h;
-            menuitem->rect.getRect(&x, &y, &w, &h);
-            int tab = menuitem->tabWidth;
-            bool disabled = !(menuitem->state & State_Enabled);
-            bool checked = menuitem->checkType != QStyleOptionMenuItem::NotCheckable
-                ? menuitem->checked : false;
-            bool active = menuitem->state & State_Selected;
-
-            // windows always has a check column, regardless whether we have an icon or not
-            int checkcol = qMax(menuitem->maxIconWidth, windowsCheckMarkWidth);
-            QBrush fill = menuitem->palette.brush(active ? QPalette::Highlight : QPalette::Button);
-            painter->fillRect(menuitem->rect, fill);
-
-            if (menuitem->menuItemType == QStyleOptionMenuItem::Separator) {
-                int yoff = y-1 + h / 2;
-                painter->setPen(menuitem->palette.linkVisited().color());
-                painter->drawLine(x + 4, yoff + 1, x + w - 8, yoff + 1);
-                if (doubleControls())
-                  painter->drawLine(x + 4, yoff + 2, x + w - 8, yoff + 2);
-                return;
-            }
-            QRect vCheckRect = visualRect(option->direction, menuitem->rect, QRect(menuitem->rect.x(),
-                                          menuitem->rect.y(), checkcol, menuitem->rect.height()));
-             if (!checked && !active)
-                painter->fillRect(vCheckRect, menuitem->palette.brush(QPalette::Light));
-            // On Windows Style, if we have a checkable item and an icon we
-            // draw the icon recessed to indicate an item is checked. If we
-            // have no icon, we draw a checkmark instead.
-            if (!menuitem->icon.isNull()) {
-                QIcon::Mode mode = disabled ? QIcon::Disabled : QIcon::Normal;
-                if (active && !disabled)
-                    mode = QIcon::Active;
-                QPixmap pixmap;
-                if (checked)
-                    pixmap = menuitem->icon.pixmap(pixelMetric(PM_SmallIconSize), mode, QIcon::On);
-                else
-                    pixmap = menuitem->icon.pixmap(pixelMetric(PM_SmallIconSize), mode);
-                int pixw = pixmap.width();
-                int pixh = pixmap.height();
-                QRect pmr(0, 0, pixw, pixh);
-                pmr.moveCenter(vCheckRect.center());
-                painter->setPen(menuitem->palette.text().color());
-                painter->drawPixmap(pmr.topLeft(), pixmap);
-            } else if (checked) {
-                QStyleOptionMenuItem newMenuItem = *menuitem;
-                newMenuItem.state = State_None;
-                if (!disabled)
-                    newMenuItem.state |= State_Enabled;
-                if (active)
-                    newMenuItem.state |= State_On;
-                newMenuItem.rect = visualRect(option->direction, menuitem->rect, QRect(menuitem->rect.x() + windowsItemFrame,
-                                              menuitem->rect.y() + windowsItemFrame, checkcol - 2 * windowsItemFrame,
-                                              menuitem->rect.height() - 2*windowsItemFrame));
-                drawPrimitive(PE_IndicatorMenuCheckMark, &newMenuItem, painter, widget);
-            }
-
-
-            /*QColor disabledColor;
-            if (disabled) {
-                disabledColor = menuitem->palette.dark().color();
-                painter->setPen(disabledColor);
-            }*/
-            int xm = windowsItemFrame + checkcol + windowsItemHMargin;
-            int xpos = menuitem->rect.x() + xm;
-            QRect textRect(xpos, y + windowsItemVMargin, w - xm - windowsRightBorder - tab + 1, h - 2 * windowsItemVMargin);
-            QRect vTextRect = visualRect(option->direction, menuitem->rect, textRect);
-            QString s = menuitem->text;
-            if (!s.isEmpty()) {                     // draw text
-                painter->save();
-                int t = s.indexOf(QLatin1Char('\t'));
-                int text_flags = Qt::AlignVCenter | Qt::TextShowMnemonic | Qt::TextDontClip | Qt::TextSingleLine;
-                if (!styleHint(SH_UnderlineShortcut, menuitem, widget))
-                    text_flags |= Qt::TextHideMnemonic;
-                text_flags |= Qt::AlignLeft;
-                if (t >= 0) {
-                    QRect vShortcutRect = visualRect(option->direction, menuitem->rect,
-                        QRect(textRect.topRight(), QPoint(menuitem->rect.right(), textRect.bottom())));
-                    //if (disabled && !active) {
-                    //    painter->setPen(menuitem->palette.dark().color());
-                    //    //painter->drawText(vShortcutRect.adjusted(1, 1, 1, 1), text_flags, s.mid(t + 1));
-                    //}
-                    //painter->drawText(vShortcutRect, text_flags, s.mid(t + 1));
-                    s = s.left(t);
-                }
-                QFont font = menuitem->font;
-                font.setBold(true);
-                painter->setFont(font);
-                painter->setPen(active ? menuitem->palette.highlightedText().color() : menuitem->palette.linkVisited().color());
-                if (disabled && !active) {
-                    painter->setPen(menuitem->palette.mid().color());
-                    //painter->drawText(vTextRect.adjusted(1,1,1,1), text_flags, s.left(t));
-                    //painter->setPen(disabledColor);
-                }
-                painter->drawText(vTextRect, text_flags, s.left(t));
-                painter->restore();
-            }
-            if (menuitem->menuItemType == QStyleOptionMenuItem::SubMenu) {// draw sub menu arrow
-                int dim = (h - 2 * windowsItemFrame) / 2;
-                PrimitiveElement arrow;
-                arrow = (option->direction == Qt::RightToLeft) ? PE_IndicatorArrowLeft : PE_IndicatorArrowRight;
-                xpos = x + w - windowsArrowHMargin - windowsItemFrame - dim;
-                QRect  vSubMenuRect = visualRect(option->direction, menuitem->rect, QRect(xpos, y + h / 2 - dim / 2, dim, dim));
-                QStyleOptionMenuItem newMenuItem = *menuitem;
-                newMenuItem.rect = vSubMenuRect;
-                newMenuItem.state = disabled ? State_None : State_Enabled;
-                if (active)
-                    newMenuItem.palette.setColor(QPalette::ButtonText, menuitem->palette.light().color());
-                else
-                  newMenuItem.palette.setColor(QPalette::ButtonText, menuitem->palette.linkVisited().color());
-                drawPrimitive(arrow, &newMenuItem, painter, widget);
-            }
-        }
-        break;
-#endif // QT_NO_MENU
-    case CE_MenuVMargin:
-        painter->fillRect(option->rect, Qt::white);
-        break;
-    case CE_MenuEmptyArea:
-        break;
 #ifndef QT_NO_PROGRESSBAR
     case CE_ProgressBarGroove:
         if (d->doubleControls)
@@ -1999,7 +1825,8 @@ void QWindowsMobileStyle::drawControl(ControlElement element, const QStyleOption
             if (!dwOpt->title.isEmpty()) {
                 QFont oldFont = painter->font();
                 QFont newFont = oldFont;
-                newFont.setPointSize(newFont.pointSize() - 2);
+                if (newFont.pointSize() > 2)
+                    newFont.setPointSize(newFont.pointSize() - 2);
                 if (floating)
                     newFont.setBold(true);
                 painter->setFont(newFont);
@@ -2093,7 +1920,7 @@ void QWindowsMobileStyle::drawControl(ControlElement element, const QStyleOption
 void QWindowsMobileStyle::drawComplexControl(ComplexControl control, const QStyleOptionComplex *option,
                                              QPainter *painter, const QWidget *widget) const {
 
-    painter->setClipping(false);    
+    painter->setClipping(false);
     QWindowsMobileStylePrivate *d = const_cast<QWindowsMobileStylePrivate*>(d_func());
 
     switch (control) {
@@ -2888,17 +2715,6 @@ QSize QWindowsMobileStyle::sizeFromContents(ContentsType type, const QStyleOptio
         newSize += QSize(0,1);
         break;
 #endif
-    case CT_MenuBarItem:
-        newSize += QSize(5, 1);
-        break;
-    case CT_MenuItem:
-        if (newSize.height() > 0)
-            newSize += QSize(0, -1);
-        break;
-    case CT_MenuBar:
-        if (newSize.height() > 0)
-            newSize += QSize(0,-1);
-        break;
     case CT_ToolButton:
         newSize = QSize(newSize.width() + 1, newSize.height());
         break;
@@ -3282,6 +3098,8 @@ QPalette QWindowsMobileStyle::standardPalette() const {
     palette.setColor(QPalette::Button, QColor(206, 223, 239));
     palette.setColor(QPalette::Highlight, QColor(49, 146, 214));
     palette.setColor(QPalette::Light, Qt::white);
+    palette.setColor(QPalette::Text, Qt::black);
+    palette.setColor(QPalette::ButtonText, Qt::black);
     palette.setColor(QPalette::Midlight, QColor(222, 223, 222 ));
     palette.setColor(QPalette::Dark, QColor(132, 130, 132));
     palette.setColor(QPalette::Mid, QColor(189, 190, 189));
@@ -3307,14 +3125,41 @@ void QWindowsMobileStyle::polish(QWidget *widget) {
     }
     else
 #endif //QT_NO_TOOLBAR
+
+#ifndef QT_NO_PROPERTIES
+        if (QAbstractButton *pushButton = qobject_cast<QAbstractButton*>(widget)) {
+            QVariant oldFont = widget->property("_q_styleWindowsMobileFont");
+            if (!oldFont.isValid()) {
+                QFont f = pushButton->font();
+                widget->setProperty("_q_styleWindowsMobileFont", f);
+                f.setBold(true);
+                int p = f.pointSize();
+                if (p > 2)
+                    f.setPointSize(p-1);
+                pushButton->setFont(f);
+            }
+        }
+#endif
+        QWindowsStyle::polish(widget);
+}
+
+void QWindowsMobileStyle::unpolish(QWidget *widget)
+{
+#ifndef QT_NO_PROPERTIES
     if (QAbstractButton *pushButton = qobject_cast<QAbstractButton*>(widget)) {
-        QFont f = pushButton->font();
-        f.setBold(true);
-        int p = f.pointSize();
-        f.setPointSize(p-1);
-        pushButton->setFont(f);
-      }
-    QWindowsStyle::polish(widget);
+        QVariant oldFont = widget->property("_q_styleWindowsMobileFont");
+        if (oldFont.isValid()) {
+            widget->setFont(qVariantValue<QFont>(oldFont));
+        widget->setProperty("_q_styleWindowsMobileFont", QVariant());
+        }
+    }
+#endif
+    QWindowsStyle::unpolish(widget);
+}
+
+void QWindowsMobileStyle::unpolish(QApplication *app)
+{
+    QWindowsStyle::unpolish(app);
 }
 
 /*! \reimp */
@@ -3346,20 +3191,11 @@ int QWindowsMobileStyle::pixelMetric(PixelMetric pm, const QStyleOption *opt, co
     case PM_DefaultFrameWidth:
         d->doubleControls ? ret = 2 : ret = 1;
         break;
-    case PM_MenuBarHMargin:
-        ret = 0;
-        break;
     case PM_MenuVMargin:
         ret = 1;
         break;
     case PM_MenuHMargin:
         ret = 1;
-        break;
-    case PM_MenuBarVMargin:
-        ret = 0;
-        break;
-    case PM_MenuBarItemSpacing:
-        ret = 0;
         break;
     case PM_MenuButtonIndicator:
         ret = d->doubleControls ? 24 : 14;
@@ -3542,13 +3378,9 @@ int QWindowsMobileStyle::styleHint(StyleHint hint, const QStyleOption *opt, cons
                                    QStyleHintReturn *returnData) const {
 
     int ret;
-
     switch (hint) {
     case SH_Menu_MouseTracking:
     case SH_ComboBox_ListMouseTracking:
-    case SH_MenuBar_MouseTracking:
-        ret = 0;
-        break;
     case SH_EtchDisabledText:
         ret = 0;
         break;

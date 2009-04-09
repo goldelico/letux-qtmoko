@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -128,7 +132,12 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
     mode = QScriptValue::ResolveFlags(stackPtr[0].m_int_value) \
     | QScriptValue::ResolvePrototype; \
     --stackPtr; \
-    const QScriptValueImpl &object = stackPtr[-1]; \
+    QScriptValueImpl object = eng->toObject(stackPtr[-1]); \
+    if (!object.isObject()) { \
+        stackPtr -= 2;  \
+        throwTypeError(QLatin1String("not an object")); \
+        HandleException(); \
+    } \
     QScriptNameIdImpl *memberName = 0; \
     if (stackPtr[0].isString() && stackPtr[0].m_string_value->unique) \
         memberName = stackPtr[0].m_string_value; \
@@ -140,7 +149,7 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
     QScriptValueImpl getter; \
     QScriptValueImpl setter; \
     const bool isMemberAssignment = (object.m_object_value != m_scopeChain.m_object_value); \
-    if (object.resolve(memberName, &member, &base, mode)) { \
+    if (object.resolve(memberName, &member, &base, mode, QScript::ReadWrite)) {  \
         base.get(member, &value); \
         if (hasUncaughtException()) { \
             stackPtr -= 2; \
@@ -178,7 +187,7 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
     } else { \
         base = object; \
         CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
-        eng->newUndefined(&value); \
+        value = undefined; \
     }
 
 #define END_PREFIX_OPERATOR \
@@ -189,11 +198,11 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
             Done(); \
         } \
     } else { \
-        if (isMemberAssignment && (base.m_object_value != object.m_object_value)) { \
-            base = object; \
-            CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
-        } \
         if (member.isWritable()) { \
+            if (isMemberAssignment && (base.m_object_value != object.m_object_value)) { \
+                base = object; \
+                CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
+            } \
             base.put(member, value); \
             if (hasUncaughtException()) { \
                 stackPtr -= 2; \
@@ -230,7 +239,7 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
     QScriptValueImpl getter; \
     QScriptValueImpl setter; \
     const bool isMemberAssignment = (object.m_object_value != m_scopeChain.m_object_value); \
-    if (object.resolve(memberName, &member, &base, mode)) { \
+    if (object.resolve(memberName, &member, &base, mode, QScript::ReadWrite)) {  \
         base.get(member, &lhs); \
         if (hasUncaughtException()) { \
             stackPtr -= 4; \
@@ -268,9 +277,9 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
     } else { \
         base = object; \
         CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
-        eng->newUndefined(&lhs); \
+        lhs = undefined; \
     } \
-    const QScriptValueImpl &rhs = stackPtr[0];
+    QScriptValueImpl rhs = stackPtr[0];
 
 #define END_INPLACE_OPERATOR \
     if (member.isSetter()) { \
@@ -280,11 +289,11 @@ static inline quint32 toArrayIndex(const QScriptValueImpl &v)
             Done(); \
         } \
     } else { \
-        if (isMemberAssignment && (base.m_object_value != object.m_object_value)) { \
-            base = object; \
-            CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
-        } \
         if (member.isWritable()) { \
+            if (isMemberAssignment && (base.m_object_value != object.m_object_value)) { \
+                base = object; \
+                CREATE_MEMBER(base, memberName, &member, /*flags=*/0); \
+            } \
             base.put(member, *stackPtr); \
             if (hasUncaughtException()) { \
                 stackPtr -= 1; \
@@ -299,7 +308,7 @@ namespace QScript {
 void ScriptFunction::execute(QScriptContextPrivate *context)
 {
     if (! m_compiledCode) {
-        QScriptEngine *eng = context->engine();
+        QScriptEnginePrivate *eng = context->engine();
         Compiler compiler(eng);
 
         CompilationUnit unit = compiler.compile(m_definition->body, formals);
@@ -314,12 +323,11 @@ void ScriptFunction::execute(QScriptContextPrivate *context)
     context->execute(m_compiledCode);
 }
 
-QString ScriptFunction::toString(QScriptContextPrivate *context) const
+QString ScriptFunction::toString(QScriptContextPrivate *) const
 {
-    QScriptEngine *eng = context->engine();
     QString str;
     QTextStream out(&str, QIODevice::WriteOnly);
-    PrettyPretty pp(eng, out);
+    PrettyPretty pp(out);
     pp(m_definition, /*indent=*/ 0);
     return str;
 }
@@ -375,7 +383,7 @@ bool QScriptContextPrivate::resolveField(QScriptEnginePrivate *eng,
             *value = arrayInstance->value.at(pos);
 
             if (! value->isValid())
-                eng->newUndefined(value);
+                *value = eng->undefinedValue();
 
             return true;
         }
@@ -384,15 +392,15 @@ bool QScriptContextPrivate::resolveField(QScriptEnginePrivate *eng,
     QScriptNameIdImpl *nameId = m.isString() ? m.m_string_value : 0;
 
     if (! nameId || ! nameId->unique)
-        nameId = eng->nameId(eng->convertToNativeString(m), /*persistent=*/false); // ### slow!
+        nameId = eng->nameId(QScriptEnginePrivate::convertToNativeString(m), /*persistent=*/false); // ### slow!
 
     QScript::Member member;
     QScriptValueImpl base;
 
-    if (! object.resolve(nameId, &member, &base, QScriptValue::ResolveFull)) // ### ...
+    if (! object.resolve(nameId, &member, &base, QScriptValue::ResolveFull, QScript::Read)) // ### ...
         return false;
 
-    if (base.classInfo() == eng->m_globalObject.classInfo())
+    if (QScriptEnginePrivate::strictlyEquals(base, eng->m_globalObject))
         stackPtr[-1] = base;
     else if (object.classInfo() == eng->m_class_with)
         stackPtr[-1] = object.prototype();
@@ -406,7 +414,7 @@ bool QScriptContextPrivate::resolveField(QScriptEnginePrivate *eng,
             getter = *value;
         } else {
             if (!base.m_object_value->findGetter(&member)) {
-                eng->newUndefined(value);
+                *value = eng->undefinedValue();
                 return true;
             }
             base.get(member, &getter);
@@ -434,7 +442,7 @@ void QScriptContextPrivate::execute(QScript::Code *code)
     qout << endl;
 #endif
 
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    QScriptEnginePrivate *eng = engine();
 
     bool wasEvaluating = eng->m_evaluating;
     if (!wasEvaluating) {
@@ -447,8 +455,7 @@ void QScriptContextPrivate::execute(QScript::Code *code)
     if (! tempStack)
         stackPtr = tempStack = eng->tempStackBegin;
 
-    QScriptValueImpl undefined;
-    eng->newUndefined(&undefined);
+    QScriptValueImpl undefined(eng->undefinedValue());
 
     catching = false;
     m_state = QScriptContext::NormalState;
@@ -457,7 +464,8 @@ void QScriptContextPrivate::execute(QScript::Code *code)
     lastInstruction = code->lastInstruction;
     iPtr = code->firstInstruction;
 
-    m_scopeChain = m_activation;
+    if (!m_scopeChain.isValid())
+        m_scopeChain = m_activation;
 
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
     eng->notifyFunctionEntry(this);
@@ -515,21 +523,21 @@ Ltop:
     I(LoadUndefined):
     {
         CHECK_TEMPSTACK(1);
-        eng->newUndefined(++stackPtr);
+        *(++stackPtr) = undefined;
         ++iPtr;
     }   Next();
 
     I(LoadTrue):
     {
         CHECK_TEMPSTACK(1);
-        eng->newBoolean(++stackPtr, true);
+        *(++stackPtr) = QScriptValueImpl(true);
         ++iPtr;
     }   Next();
 
     I(LoadFalse):
     {
         CHECK_TEMPSTACK(1);
-        eng->newBoolean(++stackPtr, false);
+        *(++stackPtr) = QScriptValueImpl(false);
         ++iPtr;
     }   Next();
 
@@ -551,7 +559,7 @@ Ltop:
     I(LoadNull):
     {
         CHECK_TEMPSTACK(1);
-        eng->newNull(++stackPtr);
+        *(++stackPtr) = eng->nullValue();
         ++iPtr;
     }   Next();
 
@@ -622,7 +630,7 @@ Ltop:
             instance->get(member, ++stackPtr);
             base = m_scopeChain;
         } else {
-            if (m_scopeChain.resolve_helper(memberName, &member, &base, QScriptValue::ResolveFull)) {
+            if (m_scopeChain.resolve_helper(memberName, &member, &base, QScriptValue::ResolveFull, QScript::Read)) {
                 base.get(member, ++stackPtr);
                 if (hasUncaughtException()) {
                     stackPtr -= 1;
@@ -649,7 +657,7 @@ Ltop:
             // decide the this-object. This is the object that actually
             // has the getter (in its prototype chain).
             QScriptValueImpl object = m_scopeChain;
-            while (!object.resolve(memberName, &member, &base, QScriptValue::ResolvePrototype))
+            while (!object.resolve(memberName, &member, &base, QScriptValue::ResolvePrototype, QScript::Read))
                 object = object.scope();
             if (object.classInfo() == eng->m_class_with)
                 object = object.prototype();
@@ -685,7 +693,7 @@ Ltop:
         QScript::Member member;
         QScriptValueImpl base;
 
-        if (! object.resolve(memberName, &member, &base, QScriptValue::ResolveLocal)) {
+        if (! object.resolve(memberName, &member, &base, QScriptValue::ResolveLocal, QScript::Write)) {
             base = object;
             CREATE_MEMBER(base, memberName, &member, /*flags=*/0);
         }
@@ -732,7 +740,7 @@ Ltop:
         Q_ASSERT(base.isValid());
         Q_ASSERT(callee.isValid());
 
-        QScriptFunction *function = eng->convertToNativeFunction(callee);
+        QScriptFunction *function = QScriptEnginePrivate::convertToNativeFunction(callee);
         if (! function) {
             QScriptValueImpl member = argp[-1];
             QString message;
@@ -751,8 +759,7 @@ Ltop:
             HandleException();
         }
 
-        QScriptContext *nested = eng->pushContext();
-        QScriptContextPrivate *nested_data = nested->d_func();
+        QScriptContextPrivate *nested_data = eng->pushContext();
         nested_data->m_thisObject = base;
         nested_data->m_callee = callee;
 
@@ -763,7 +770,7 @@ Ltop:
         int formalCount = function->formals.count();
         int mx = qMax(formalCount, argc);
         activation_data->m_members.resize(mx);
-        activation_data->m_objects.resize(mx);
+        activation_data->m_values.resize(mx);
         for (int i = 0; i < mx; ++i) {
             QScriptNameIdImpl *nameId = 0;
             if (i < formalCount)
@@ -772,7 +779,7 @@ Ltop:
             activation_data->m_members[i].object(nameId, i,
                                                  QScriptValue::Undeletable
                                                  | QScriptValue::SkipInEnumeration);
-            activation_data->m_objects[i] = (i < argc) ? argp[i + 1] : undefined;
+            activation_data->m_values[i] = (i < argc) ? argp[i + 1] : undefined;
         }
 
         nested_data->argc = argc;
@@ -807,6 +814,9 @@ Ltop:
         if (eng->shouldAbort())
             Abort();
 
+        if (eng->m_processEventsInterval > 0)
+            eng->processEvents();
+
         ++iPtr;
     }   Next();
 
@@ -814,7 +824,7 @@ Ltop:
     I(NewArray):
     {
         CHECK_TEMPSTACK(1);
-        eng->arrayConstructor->newArray(++stackPtr);
+        eng->arrayConstructor->newArray(++stackPtr, QScript::Array(eng));
         ++iPtr;
     }   Next();
 
@@ -826,12 +836,14 @@ Ltop:
 #ifndef QT_NO_REGEXP
         QString literal = pattern;
 #endif
-        QString flags;
+        int flags = 0;
         if (iPtr->operand[1].isValid()) {
-            flags = eng->toString(iPtr->operand[1].m_string_value);
+            flags = iPtr->operand[1].m_int_value;
 #ifndef QT_NO_REGEXP
-            literal += QLatin1String("/");
-            literal += flags;
+            if (flags != 0) {
+                literal += QLatin1String("/");
+                literal += QString::number(flags);
+            }
 #endif
         }
 
@@ -841,10 +853,7 @@ Ltop:
         QHash<QString, QRegExp>::const_iterator it;
         it = eng->m_regExpLiterals.constFind(literal);
         if (it == eng->m_regExpLiterals.constEnd()) {
-            bool ignoreCase = flags.contains(QLatin1Char('i'));
-            rx = QRegExp(pattern,
-                         (ignoreCase ? Qt::CaseInsensitive: Qt::CaseSensitive),
-                         QRegExp::RegExp2);
+            rx = QScript::Ecma::RegExp::toRegExp(pattern, flags);
             eng->m_regExpLiterals.insert(literal, rx);
         } else {
             rx = *it;
@@ -898,7 +907,7 @@ Ltop:
         // Q_ASSERT(base.isValid());
         Q_ASSERT(callee.isValid());
 
-        QScriptFunction *function = eng->convertToNativeFunction(callee);
+        QScriptFunction *function = QScriptEnginePrivate::convertToNativeFunction(callee);
         if (! function) {
             QScriptValueImpl member = argp[-1];
             QString message;
@@ -917,8 +926,7 @@ Ltop:
             HandleException();
         }
 
-        QScriptContext *nested = eng->pushContext();
-        QScriptContextPrivate *nested_data = nested->d_func();
+        QScriptContextPrivate *nested_data = eng->pushContext();
         nested_data->m_callee = callee;
         nested_data->m_calledAsConstructor = true;
 
@@ -929,7 +937,7 @@ Ltop:
         int formalCount = function->formals.count();
         int mx = qMax(formalCount, argc);
         activation_data->m_members.resize(mx);
-        activation_data->m_objects.resize(mx);
+        activation_data->m_values.resize(mx);
         for (int i = 0; i < mx; ++i) {
             QScriptNameIdImpl *nameId = 0;
             if (i < formalCount)
@@ -938,7 +946,7 @@ Ltop:
             activation_data->m_members[i].object(nameId, i,
                                                  QScriptValue::Undeletable
                                                  | QScriptValue::SkipInEnumeration);
-            activation_data->m_objects[i] = (i < argc) ? argp[i + 1] : undefined;
+            activation_data->m_values[i] = (i < argc) ? argp[i + 1] : undefined;
         }
 
         eng->objectConstructor->newObject(&nested_data->m_thisObject);
@@ -949,14 +957,14 @@ Ltop:
             activation_data->m_scope = eng->m_globalObject;
         nested_data->tempStack = stackPtr;
         nested_data->args = &argp[1];
-        eng->newUndefined(&nested_data->m_result);
+        nested_data->m_result = undefined;
 
         QScriptObject *instance = nested_data->m_thisObject.m_object_value;
 
         // set [[prototype]]
         QScriptValueImpl dummy;
         QScript::Member proto;
-        if (callee.resolve(eng->idTable()->id_prototype, &proto, &dummy, QScriptValue::ResolveLocal))
+        if (callee.resolve(eng->idTable()->id_prototype, &proto, &dummy, QScriptValue::ResolveLocal, QScript::Read))
             callee.get(proto, &instance->m_prototype);
         if (!instance->m_prototype.isObject())
             instance->m_prototype = eng->objectConstructor->publicPrototype;
@@ -970,7 +978,7 @@ Ltop:
             stackPtr -= 2;
 
         if (! nested_data->m_result.isValid())
-            eng->newUndefined(&nested_data->m_result);
+            nested_data->m_result = undefined;
         else if (! nested_data->m_result.isObject())
             nested_data->m_result = nested_data->m_thisObject;
 
@@ -991,6 +999,9 @@ Ltop:
         if (eng->shouldAbort())
             Abort();
 
+        if (eng->m_processEventsInterval > 0)
+            eng->processEvents();
+
         ++iPtr;
     }   Next();
 
@@ -1003,7 +1014,7 @@ Ltop:
             HandleException();
         }
 
-        const QScriptValueImpl &m = stackPtr[0];
+        QScriptValueImpl m = stackPtr[0];
 
         QScript::Ecma::Array::Instance *arrayInstance = 0;
         if (object.classInfo() == eng->arrayConstructor->classInfo())
@@ -1012,13 +1023,12 @@ Ltop:
         if (arrayInstance) {
             quint32 pos = toArrayIndex(m);
             if (pos != 0xFFFFFFFF) {
-                *--stackPtr = arrayInstance->value.at(pos);
-
-                if (! stackPtr->isValid())
-                    eng->newUndefined(&stackPtr[0]);
-
-                ++iPtr;
-                Next();
+                QScriptValueImpl val = arrayInstance->value.at(pos);
+                if (val.isValid()) {
+                    *--stackPtr = val;
+                    ++iPtr;
+                    Next();
+                }
             }
         }
 
@@ -1031,7 +1041,7 @@ Ltop:
                 qscript_uint_to_string(m.m_number_value, str);
 
             if (str.isEmpty())
-                str = eng->convertToNativeString(m);
+                str = QScriptEnginePrivate::convertToNativeString(m);
 
             nameId = eng->nameId(str, /*persistent=*/false);
         }
@@ -1039,7 +1049,7 @@ Ltop:
         QScript::Member member;
         QScriptValueImpl base;
 
-        if (object.resolve(nameId, &member, &base, QScriptValue::ResolvePrototype)) {
+        if (object.resolve(nameId, &member, &base, QScriptValue::ResolvePrototype, QScript::Read)) {
             base.get(member, --stackPtr);
             if (hasUncaughtException()) {
                 stackPtr -= 1;
@@ -1064,7 +1074,7 @@ Ltop:
                 }
             }
         } else {
-            eng->newUndefined(--stackPtr);
+            *(--stackPtr) = undefined;
         }
 
         ++iPtr;
@@ -1075,11 +1085,11 @@ Ltop:
         QScript::Member member;
         QScriptValueImpl base;
         QScriptNameIdImpl *arguments = eng->idTable()->id_arguments;
-        if (!m_activation.resolve(arguments, &member, &base, QScriptValue::ResolveLocal)) {
+        if (!m_activation.resolve(arguments, &member, &base, QScriptValue::ResolveLocal, QScript::Read)) {
             CREATE_MEMBER(m_activation, arguments, &member, QScriptValue::Undeletable);
             if (!m_arguments.isValid()) {
-                if (m_activation.strictlyEquals(eng->globalObject()))
-                    eng->newUndefined(&m_arguments);
+                if (eng->strictlyEquals(m_activation, eng->globalObject()))
+                    m_arguments = undefined;
                 else
                     eng->newArguments(&m_arguments, m_activation, argc, m_callee);
             }
@@ -1097,7 +1107,7 @@ Ltop:
         QScript::Member member;
         QScriptValueImpl object;
 
-        if (! act.resolve(memberName, &member, &object, QScriptValue::ResolveLocal)) {
+        if (! act.resolve(memberName, &member, &object, QScriptValue::ResolveLocal, QScript::ReadWrite)) {
             uint flags = QScriptValue::Undeletable;
             if (readOnly)
                 flags |= QScript::Member::UninitializedConst | QScriptValue::ReadOnly;
@@ -1126,8 +1136,8 @@ Ltop:
             HandleException();
         }
 
-        const QScriptValueImpl &m = stackPtr[-2];
-        QScriptValueImpl &value = stackPtr[0];
+        QScriptValueImpl m = stackPtr[-2];
+        QScriptValueImpl value = stackPtr[0];
 
         quint32 pos = 0xFFFFFFFF;
 
@@ -1146,13 +1156,13 @@ Ltop:
             if (m.isString() && m.m_string_value->unique)
                 memberName = m.m_string_value;
             else
-                memberName = eng->nameId(eng->convertToNativeString(m), /*persistent=*/false);
+                memberName = eng->nameId(QScriptEnginePrivate::convertToNativeString(m), /*persistent=*/false);
 
             QScriptValueImpl base;
             QScript::Member member;
 
             const bool isMemberAssignment = (object.m_object_value != m_scopeChain.m_object_value);
-            if (! object.resolve(memberName, &member, &base, mode)) {
+            if (! object.resolve(memberName, &member, &base, mode, QScript::Write)) {
                 if (isMemberAssignment)
                     base = object;
                 else
@@ -1179,7 +1189,7 @@ Ltop:
                 if (!isMemberAssignment) {
                     // decide the this-object. This is the object that actually
                     // has the setter (in its prototype chain).
-                    while (!object.resolve(memberName, &member, &base, QScriptValue::ResolvePrototype))
+                    while (!object.resolve(memberName, &member, &base, QScriptValue::ResolvePrototype, QScript::Write))
                         object = object.scope();
                     if (object.classInfo() == eng->m_class_with)
                         object = object.prototype();
@@ -1193,14 +1203,14 @@ Ltop:
             } else {
                 if (object.classInfo() == eng->m_class_with)
                     object = object.prototype();
-                if (isMemberAssignment && (base.m_object_value != object.m_object_value)) {
-                    base = object;
-                    CREATE_MEMBER(base, memberName, &member, /*flags=*/0);
-                }
 
-                if (member.isWritable())
+                if (member.isWritable()) {
+                    if (isMemberAssignment && (base.m_object_value != object.m_object_value)) {
+                        base = object;
+                        CREATE_MEMBER(base, memberName, &member, /*flags=*/0);
+                    }
                     base.put(member, value);
-                else if (member.isUninitializedConst()) {
+                } else if (member.isUninitializedConst()) {
                     base.put(member, value);
                     if (member.isObjectProperty()) {
                         base.m_object_value->m_members[member.id()]
@@ -1220,72 +1230,72 @@ Ltop:
 
     I(BitAnd):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[-1]);
-        qint32 v2 = eng->convertToNativeInt32(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 & v2);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[-1]);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 & v2);
         ++iPtr;
     }   Next();
 
     I(BitOr):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[-1]);
-        qint32 v2 = eng->convertToNativeInt32(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 | v2);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[-1]);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 | v2);
         ++iPtr;
     }   Next();
 
     I(BitXor):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[-1]);
-        qint32 v2 = eng->convertToNativeInt32(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 ^ v2);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[-1]);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 ^ v2);
         ++iPtr;
     }   Next();
 
     I(BitNot):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[0]);
-        eng->newNumber(stackPtr, ~v1);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]);
+        *stackPtr = QScriptValueImpl(~v1);
         ++iPtr;
     }   Next();
 
     I(Not):
     {
-        bool v1 = eng->convertToNativeBoolean(stackPtr[0]);
-        eng->newBoolean(stackPtr, !v1);
+        bool v1 = QScriptEnginePrivate::convertToNativeBoolean(stackPtr[0]);
+        *stackPtr = QScriptValueImpl(!v1);
         ++iPtr;
     }   Next();
 
     I(LeftShift):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[-1]);
-        qint32 v2 = eng->convertToNativeInt32(stackPtr[0]) & 0x1f;
-        eng->newNumber(--stackPtr, v1 << v2);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[-1]);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]) & 0x1f;
+        *(--stackPtr) = QScriptValueImpl(v1 << v2);
         ++iPtr;
     } Next();
 
     I(Mod):
     {
-        qsreal v1 = eng->convertToNativeDouble(stackPtr[-1]);
-        qsreal v2 = eng->convertToNativeDouble(stackPtr[0]);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[-1]);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[0]);
 
-        eng->newNumber(--stackPtr, ::fmod(v1, v2));
+        *(--stackPtr) = QScriptValueImpl(::fmod(v1, v2));
         ++iPtr;
     }   Next();
 
     I(RightShift):
     {
-        qint32 v1 = eng->convertToNativeInt32(stackPtr[-1]);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[-1]);
         quint32 v2 = QScriptEnginePrivate::toUint32 (eng->convertToNativeDouble(stackPtr[0])) & 0x1f;
-        eng->newNumber(--stackPtr, v1 >> v2);
+        *(--stackPtr) = QScriptValueImpl(v1 >> v2);
         ++iPtr;
     }   Next();
 
     I(URightShift):
     {
         quint32 v1 = QScriptEnginePrivate::toUint32 (eng->convertToNativeDouble(stackPtr[-1]));
-        qint32 v2 = eng->convertToNativeInt32(stackPtr[0]) & 0x1f;
-        eng->newNumber(--stackPtr, v1 >> v2);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(stackPtr[0]) & 0x1f;
+        *(--stackPtr) = QScriptValueImpl(v1 >> v2);
         ++iPtr;
     }   Next();
 
@@ -1293,26 +1303,20 @@ Ltop:
     {
         QScriptValueImpl object = stackPtr[-1];
         QScriptValueImpl ctor = stackPtr[0];
-        bool result = false;
 
-        // only Function implements [[hasInstance]]
-        if (!ctor.isFunction()) {
+        if (!ctor.isObject() || !ctor.implementsHasInstance()) {
             stackPtr -= 2;
             throwTypeError(QLatin1String("invalid 'instanceof' operand"));
             HandleException();
         }
 
-        if (object.isObject()) {
-            QScriptValueImpl prototype = ctor.property(eng->idTable()->id_prototype);
-            if (!prototype.isObject()) {
-                stackPtr -= 2;
-                throwTypeError(QLatin1String("instanceof: 'prototype' property is not an object"));
-                HandleException();
-            }
-            result = object.instanceOf_helper(prototype);
+        bool result = ctor.hasInstance(object);
+        if (eng->hasUncaughtException()) {
+            stackPtr -= 2;
+            HandleException();
         }
 
-        eng->newBoolean(--stackPtr, result);
+        *(--stackPtr) = QScriptValueImpl(result);
         ++iPtr;
     }   Next();
 
@@ -1324,9 +1328,9 @@ Ltop:
             throwTypeError(QLatin1String("invalid 'in' operand"));
             HandleException();
         }
-        QString propertyName = eng->convertToNativeString(stackPtr[-1]);
+        QString propertyName = QScriptEnginePrivate::convertToNativeString(stackPtr[-1]);
         bool result = object.property(propertyName, QScriptValue::ResolvePrototype).isValid(); // ### hasProperty()
-        eng->newBoolean(--stackPtr, result);
+        *(--stackPtr) = QScriptValueImpl(result);
         ++iPtr;
     }   Next();
 
@@ -1336,13 +1340,13 @@ Ltop:
         QScriptValueImpl rhs = eng->toPrimitive(stackPtr[0], QScriptValueImpl::NoTypeHint);
 
         if (lhs.isString() || rhs.isString()) {
-            QString tmp = eng->convertToNativeString(lhs);
-            tmp += eng->convertToNativeString(rhs);
-            eng->newNameId(--stackPtr, tmp);
+            QString tmp = QScriptEnginePrivate::convertToNativeString(lhs);
+            tmp += QScriptEnginePrivate::convertToNativeString(rhs);
+            eng->newString(--stackPtr, tmp);
         } else {
-            qsreal tmp = eng->convertToNativeDouble(lhs);
-            tmp += eng->convertToNativeDouble(rhs);
-            eng->newNumber(--stackPtr, tmp);
+            qsreal tmp = QScriptEnginePrivate::convertToNativeDouble(lhs);
+            tmp += QScriptEnginePrivate::convertToNativeDouble(rhs);
+            *(--stackPtr) = QScriptValueImpl(tmp);
         }
 
         ++iPtr;
@@ -1350,95 +1354,103 @@ Ltop:
 
     I(Div):
     {
-        qsreal v1 = eng->convertToNativeDouble(stackPtr[-1]);
-        qsreal v2 = eng->convertToNativeDouble(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 / v2);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[-1]);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 / v2);
         ++iPtr;
     }   Next();
 
     I(Equal):
     {
-        bool v = eq_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = QScriptValueImpl(eq_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(GreatOrEqual):
     {
-        bool v = le_cmp(stackPtr[0], stackPtr[-1]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[0];
+        QScriptValueImpl v2 = stackPtr[-1];
+        *(--stackPtr) = QScriptValueImpl(le_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(GreatThan):
     {
-        bool v = lt_cmp(stackPtr[0], stackPtr[-1]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[0];
+        QScriptValueImpl v2 = stackPtr[-1];
+        *(--stackPtr) = QScriptValueImpl(lt_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(LessOrEqual):
     {
-        bool v = le_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = QScriptValueImpl(le_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(LessThan):
     {
-        bool v = lt_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = QScriptValueImpl(lt_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(NotEqual):
     {
-        bool v = ! eq_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = QScriptValueImpl(!eq_cmp(v1, v2));
         ++iPtr;
     }   Next();
 
     I(Mul):
     {
-        qsreal v1 = eng->convertToNativeDouble(stackPtr[-1]);
-        qsreal v2 = eng->convertToNativeDouble(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 * v2);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[-1]);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 * v2);
         ++iPtr;
     }   Next();
 
     I(StrictEqual):
     {
-        bool v = strict_eq_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = strict_eq_cmp(v1, v2);
         ++iPtr;
     }   Next();
 
     I(StrictNotEqual):
     {
-        bool v = ! strict_eq_cmp(stackPtr[-1], stackPtr[0]);
-        eng->newBoolean(--stackPtr, v);
+        QScriptValueImpl v1 = stackPtr[-1];
+        QScriptValueImpl v2 = stackPtr[0];
+        *(--stackPtr) = ! strict_eq_cmp(v1, v2);
         ++iPtr;
     }   Next();
 
     I(Sub):
     {
-        qsreal v1 = eng->convertToNativeDouble(stackPtr[-1]);
-        qsreal v2 = eng->convertToNativeDouble(stackPtr[0]);
-        eng->newNumber(--stackPtr, v1 - v2);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[-1]);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(stackPtr[0]);
+        *(--stackPtr) = QScriptValueImpl(v1 - v2);
         ++iPtr;
     }   Next();
 
     I(UnaryMinus):
     {
-        qsreal v1 = eng->convertToNativeDouble(*stackPtr);
-        eng->newNumber(stackPtr, -v1);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(*stackPtr);
+        *stackPtr = QScriptValueImpl(-v1);
         ++iPtr;
     }   Next();
 
     I(UnaryPlus):
     {
-        qsreal v1 = eng->convertToNativeDouble(*stackPtr);
-        eng->newNumber(stackPtr, +v1);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(*stackPtr);
+        *stackPtr = QScriptValueImpl(+v1);
         ++iPtr;
     }   Next();
 
@@ -1454,7 +1466,7 @@ Ltop:
 
     I(BranchFalse):
     {
-        if (! eng->convertToNativeBoolean(*stackPtr--))
+        if (! QScriptEnginePrivate::convertToNativeBoolean(*stackPtr--))
             iPtr += iPtr->operand[0].m_int_value;
         else
             ++iPtr;
@@ -1533,8 +1545,8 @@ Ltop:
 
         BEGIN_PREFIX_OPERATOR
 
-        qsreal x = eng->convertToNativeDouble(value);
-        eng->newNumber(&value, x + 1);
+        qsreal x = QScriptEnginePrivate::convertToNativeDouble(value);
+        value = QScriptValueImpl(x + 1);
 
         END_PREFIX_OPERATOR
     }   Next();
@@ -1549,8 +1561,8 @@ Ltop:
 
         BEGIN_PREFIX_OPERATOR
 
-        qsreal x = eng->convertToNativeDouble(value);
-        eng->newNumber(&value, x - 1);
+        qsreal x = QScriptEnginePrivate::convertToNativeDouble(value);
+        value = QScriptValueImpl(x - 1);
 
         END_PREFIX_OPERATOR
     }   Next();
@@ -1569,7 +1581,13 @@ Ltop:
 
         --stackPtr;
 
-        const QScriptValueImpl &object = stackPtr[-1];
+        QScriptValueImpl object = eng->toObject(stackPtr[-1]);
+        if (!object.isObject()) {
+            stackPtr -= 2;
+            throwTypeError(QLatin1String("not an object"));
+            HandleException();
+        }
+
         QScriptNameIdImpl *memberName = 0;
         if (stackPtr[0].isString() && stackPtr[0].m_string_value->unique)
             memberName = stackPtr[0].m_string_value;
@@ -1585,14 +1603,14 @@ Ltop:
             if (!member.isGetterOrSetter()) {
                 QScriptValueImpl &r = instance->reference(member);
                 if (r.isNumber()) {
-                    eng->newNumber(--stackPtr, r.m_number_value);
+                    *(--stackPtr) = QScriptValueImpl(r.m_number_value);
                     r.incr();
                     ++iPtr;
                     Next();
                 }
             }
             base = object;
-        } else if (!object.resolve_helper(memberName, &member, &base, mode)) {
+        } else if (!object.resolve_helper(memberName, &member, &base, mode, QScript::ReadWrite)) {
             if (!isMemberAssignment) {
                 stackPtr -= 2;
                 throwNotDefined(memberName);
@@ -1636,9 +1654,9 @@ Ltop:
             }
         }
 
-        qsreal x = eng->convertToNativeDouble(value);
+        qsreal x = QScriptEnginePrivate::convertToNativeDouble(value);
 
-        eng->newNumber(&value, x + 1);
+        value = QScriptValueImpl(x + 1);
 
         if (member.isSetter()) {
             setter.call(object, QScriptValueImplList() << value);
@@ -1660,7 +1678,7 @@ Ltop:
             }
         }
 
-        eng->newNumber(--stackPtr, x);
+        *(--stackPtr) = QScriptValueImpl(x);
 
         ++iPtr;
     }   Next();
@@ -1679,7 +1697,13 @@ Ltop:
 
         --stackPtr;
 
-        const QScriptValueImpl &object = stackPtr[-1];
+        QScriptValueImpl object = eng->toObject(stackPtr[-1]);
+        if (!object.isObject()) {
+            stackPtr -= 2;
+            throwTypeError(QLatin1String("not an object"));
+            HandleException();
+        }
+
         QScriptNameIdImpl *memberName = 0;
         if (stackPtr[0].isString() && stackPtr[0].m_string_value->unique)
             memberName = stackPtr[0].m_string_value;
@@ -1695,14 +1719,14 @@ Ltop:
             if (!member.isGetterOrSetter()) {
                 QScriptValueImpl &r = instance->reference(member);
                 if (r.isNumber()) {
-                    eng->newNumber(--stackPtr, r.m_number_value);
+                    *(--stackPtr) = QScriptValueImpl(r.m_number_value);
                     r.decr();
                     ++iPtr;
                     Next();
                 }
             }
             base = object;
-        } else if (! object.resolve_helper(memberName, &member, &base, mode)) {
+        } else if (! object.resolve_helper(memberName, &member, &base, mode, QScript::ReadWrite)) {
             if (!isMemberAssignment) {
                 stackPtr -= 2;
                 throwNotDefined(memberName);
@@ -1746,9 +1770,9 @@ Ltop:
             }
         }
 
-        qsreal x = eng->convertToNativeDouble(value);
+        qsreal x = QScriptEnginePrivate::convertToNativeDouble(value);
 
-        eng->newNumber(&value, x - 1);
+        value = QScriptValueImpl(x - 1);
 
         if (member.isSetter()) {
             setter.call(object, QScriptValueImplList() << value);
@@ -1770,7 +1794,7 @@ Ltop:
             }
         }
 
-        eng->newNumber(--stackPtr, x);
+        *(--stackPtr) = QScriptValueImpl(x);
 
         ++iPtr;
     }   Next();
@@ -1779,22 +1803,24 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
+        lhs = eng->toPrimitive(lhs);
+        rhs = eng->toPrimitive(rhs);
         if (lhs.isString() || rhs.isString()) {
             if (lhs.isString() && !lhs.m_string_value->unique) {
-                lhs.m_string_value->s += eng->convertToNativeString(rhs);
+                lhs.m_string_value->s += QScriptEnginePrivate::convertToNativeString(rhs);
                 stackPtr -= 3;
                 *stackPtr = lhs;
             } else {
-                QString tmp = eng->convertToNativeString(lhs);
-                tmp += eng->convertToNativeString(rhs);
+                QString tmp = QScriptEnginePrivate::convertToNativeString(lhs);
+                tmp += QScriptEnginePrivate::convertToNativeString(rhs);
                 stackPtr -= 3;
                 eng->newString(stackPtr, tmp);
             }
         } else {
-            qsreal tmp = eng->convertToNativeDouble(lhs);
-            tmp += eng->convertToNativeDouble(rhs);
+            qsreal tmp = QScriptEnginePrivate::convertToNativeDouble(lhs);
+            tmp += QScriptEnginePrivate::convertToNativeDouble(rhs);
             stackPtr -= 3;
-            eng->newNumber(stackPtr, tmp);
+            *stackPtr = QScriptValueImpl(tmp);
         }
 
         END_INPLACE_OPERATOR
@@ -1804,11 +1830,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qsreal v1 = eng->convertToNativeDouble(lhs);
-        qsreal v2 = eng->convertToNativeDouble(rhs);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 - v2);
+        *stackPtr = QScriptValueImpl(v1 - v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1817,11 +1843,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qint32 v1 = eng->convertToNativeInt32(lhs);
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(lhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 & v2);
+        *stackPtr = QScriptValueImpl(v1 & v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1830,11 +1856,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qsreal v1 = eng->convertToNativeDouble(lhs);
-        qsreal v2 = eng->convertToNativeDouble(rhs);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 / v2);
+        *stackPtr = QScriptValueImpl(v1 / v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1843,11 +1869,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qint32 v1 = eng->convertToNativeInt32(lhs);
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(lhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 << v2);
+        *stackPtr = QScriptValueImpl(v1 << v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1856,11 +1882,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qsreal v1 = eng->convertToNativeDouble(lhs);
-        qsreal v2 = eng->convertToNativeDouble(rhs);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, fmod (v1, v2));
+        *stackPtr = QScriptValueImpl(::fmod (v1, v2));
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1869,11 +1895,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qsreal v1 = eng->convertToNativeDouble(lhs);
-        qsreal v2 = eng->convertToNativeDouble(rhs);
+        qsreal v1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+        qsreal v2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 * v2);
+        *stackPtr = QScriptValueImpl(v1 * v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1882,11 +1908,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qint32 v1 = eng->convertToNativeInt32(lhs);
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(lhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 | v2);
+        *stackPtr = QScriptValueImpl(v1 | v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1895,11 +1921,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qint32 v1 = eng->convertToNativeInt32(lhs);
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(lhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 >> v2);
+        *stackPtr = QScriptValueImpl(v1 >> v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1909,10 +1935,10 @@ Ltop:
         BEGIN_INPLACE_OPERATOR
 
         quint32 v1 = QScriptEnginePrivate::toUint32 (eng->convertToNativeDouble(lhs));
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 >> v2);
+        *stackPtr = QScriptValueImpl(v1 >> v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1921,11 +1947,11 @@ Ltop:
     {
         BEGIN_INPLACE_OPERATOR
 
-        qint32 v1 = eng->convertToNativeInt32(lhs);
-        qint32 v2 = eng->convertToNativeInt32(rhs);
+        qint32 v1 = QScriptEnginePrivate::convertToNativeInt32(lhs);
+        qint32 v2 = QScriptEnginePrivate::convertToNativeInt32(rhs);
 
         stackPtr -= 3;
-        eng->newNumber(stackPtr, v1 ^ v2);
+        *stackPtr = QScriptValueImpl(v1 ^ v2);
 
         END_INPLACE_OPERATOR
     }   Next();
@@ -1959,6 +1985,10 @@ Ltop:
         QString typeName;
 
         switch (value.type()) {
+        case QScript::InvalidType:
+            typeName = QLatin1String("invalid");
+            break;
+
         case QScript::UndefinedType:
             typeName = QLatin1String("undefined");
             break;
@@ -1977,6 +2007,7 @@ Ltop:
             break;
 
         case QScript::StringType:
+        case QScript::LazyStringType:
             typeName = QLatin1String("string");
             break;
 
@@ -2010,11 +2041,16 @@ Ltop:
             Abort();
         currentLine = iPtr->operand[0].m_int_value;
         currentColumn = iPtr->operand[1].m_int_value;
-        ++iPtr;
-
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
-        eng->notifyPositionChange(this);
+        if (eng->shouldNotify()) {
+            eng->notifyPositionChange(this);
+            if (hasUncaughtException())
+                HandleException();
+            if (eng->shouldAbort())
+                Abort();
+        }
 #endif
+        ++iPtr;
     }   Next();
 
     I(Delete):
@@ -2029,16 +2065,19 @@ Ltop:
                 object = eng->toObject(object);
 
             QScriptNameIdImpl *nameId = 0;
-            if (stackPtr[-1].isString())
+            if (stackPtr[-1].isString() && stackPtr[-1].m_string_value->unique) {
                 nameId = stackPtr[-1].m_string_value;
-            else
-                nameId = eng->nameId(eng->convertToNativeString(stackPtr[-1]),
+            } else {
+                nameId = eng->nameId(QScriptEnginePrivate::convertToNativeString(stackPtr[-1]),
                                      /*persistent=*/false);
+            }
+            if (object.classInfo() == eng->m_class_with)
+                object = object.prototype();
             result = object.deleteProperty(nameId, QScriptValue::ResolveScope);
             stackPtr -= 2;
         }
 
-        eng->newBoolean(stackPtr, result);
+        *stackPtr = QScriptValueImpl(result);
 
         ++iPtr;
     }   Next();
@@ -2047,11 +2086,6 @@ Ltop:
     I(NewEnumeration): {
         QScriptValueImpl e;
         QScriptValueImpl object = eng->toObject(stackPtr[0]);
-        if (! object.isValid()) {
-            stackPtr -= 1;
-            throwTypeError(QLatin1String("QScript.VM.NewEnumeration"));
-            HandleException();
-        }
         eng->enumerationConstructor->newEnumeration(&e, object);
         *stackPtr = e;
         ++iPtr;
@@ -2119,10 +2153,6 @@ Ltop:
 
     I(Ret):
     {
-//        if (eng->context()->activationObject().m_object_value == eng->globalObject.m_object_value) {
-//            throwSyntaxError("return not in function");
-//            HandleException();
-//        }
         Q_ASSERT(stackPtr->isValid());
         m_result = *stackPtr--;
         ++iPtr;
@@ -2180,6 +2210,14 @@ Ltop:
         ++iPtr;
     }   Next();
 
+    I(Debugger):
+    {
+#ifndef Q_SCRIPT_NO_EVENT_NOTIFY
+        eng->notifyDebugger(this);
+#endif
+        ++iPtr;
+    }   Next();
+
 #ifndef Q_SCRIPT_DIRECT_CODE
     I(Dummy):
     { ; }
@@ -2204,13 +2242,38 @@ Ldone:
         // see if we have an exception handler in this context
         const QScriptInstruction *exPtr = findExceptionHandler(iPtr);
         if (exPtr) {
+            if (m_scopeChain.classInfo() == eng->m_class_with) {
+                // clean up effects of with-statements if necessary
+                int withLevel = 0;
+                for (++iPtr; iPtr != exPtr; ++iPtr) {
+                    if (iPtr->op == QScriptInstruction::OP_EnterWith) {
+                        ++withLevel;
+                    } else if (iPtr->op == QScriptInstruction::OP_LeaveWith) {
+                        --withLevel;
+                        if (withLevel < 0) {
+                            QScriptValueImpl withObject = m_scopeChain;
+                            m_scopeChain = withObject.m_object_value->m_scope;
+                        }
+                    }
+                }
+            } else {
+                iPtr = exPtr;
+            }
             // go to the handler
-            iPtr = exPtr;
             recover();
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
             eng->notifyExceptionCatch(this);
 #endif
             goto Ltop;
+        } else {
+            if (!parentContext()) {
+                // pop all the top-level with-objects
+                while ((m_scopeChain.classInfo() == eng->m_class_with)
+                       && !m_scopeChain.internalValue().isValid()) {
+                    QScriptValueImpl withObject = m_scopeChain;
+                    m_scopeChain = withObject.m_object_value->m_scope;
+                }
+            }
         }
     }
 
@@ -2230,7 +2293,7 @@ Labort:
 
 QScriptValueImpl QScriptContextPrivate::throwError(QScriptContext::Error error, const QString &text)
 {
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+    QScriptEnginePrivate *eng_p = engine();
     QScript::Ecma::Error *ctor = eng_p->errorConstructor;
     m_result.invalidate();
     switch (error) {
@@ -2289,23 +2352,22 @@ QString QScriptContextPrivate::functionName() const
 
 void QScriptContextPrivate::setDebugInformation(QScriptValueImpl *error) const
 {
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
-    error->setProperty(QLatin1String("lineNumber"), QScriptValueImpl(eng_p, currentLine));
+    QScriptEnginePrivate *eng_p = engine();
+    error->setProperty(QLatin1String("lineNumber"), QScriptValueImpl(currentLine));
     if (!fileName().isEmpty())
         error->setProperty(QLatin1String("fileName"), QScriptValueImpl(eng_p, fileName()));
 
-    const QScriptContext *ctx = q_func();
+    const QScriptContextPrivate *ctx = this;
     QScriptValueImpl stackArray = eng_p->newArray();
     int i = 0;
     while (ctx) {
         QScriptValueImpl obj = eng_p->newObject();
-        obj.setProperty(QLatin1String("frame"), QScriptValuePrivate::valueOf(ctx->activationObject()));
-        const QScriptContextPrivate *ctx_p = QScriptContextPrivate::get(ctx);
-        obj.setProperty(QLatin1String("lineNumber"), QScriptValueImpl(eng_p, ctx_p->currentLine));
-        if (!ctx_p->fileName().isEmpty())
-            obj.setProperty(QLatin1String("fileName"), QScriptValueImpl(eng_p, ctx_p->fileName()));
-        if (!ctx_p->functionName().isEmpty())
-            obj.setProperty(QLatin1String("functionName"), QScriptValueImpl(eng_p, ctx_p->functionName()));
+        obj.setProperty(QLatin1String("frame"), ctx->activationObject());
+        obj.setProperty(QLatin1String("lineNumber"), QScriptValueImpl(ctx->currentLine));
+        if (!ctx->fileName().isEmpty())
+            obj.setProperty(QLatin1String("fileName"), QScriptValueImpl(eng_p, ctx->fileName()));
+        if (!ctx->functionName().isEmpty())
+            obj.setProperty(QLatin1String("functionName"), QScriptValueImpl(eng_p, ctx->functionName()));
         stackArray.setProperty(i, obj);
         ctx = ctx->parentContext();
         ++i;
@@ -2316,17 +2378,16 @@ void QScriptContextPrivate::setDebugInformation(QScriptValueImpl *error) const
 QStringList QScriptContextPrivate::backtrace() const
 {
     QStringList result;
-    const QScriptContext *ctx = q_func();
+    const QScriptContextPrivate *ctx = this;
     while (ctx) {
-        const QScriptContextPrivate *ctx_p = QScriptContextPrivate::get(ctx);
         QString s;
-        QString functionName = ctx_p->functionName();
+        QString functionName = ctx->functionName();
         if (!functionName.isEmpty())
             s += functionName;
         else {
             if (ctx->parentContext()) {
-                if (ctx_p->callee().isFunction()
-                    && ctx_p->callee().toFunction()->type() != QScriptFunction::Script) {
+                if (ctx->callee().isFunction()
+                    && ctx->callee().toFunction()->type() != QScriptFunction::Script) {
                     s += QLatin1String("<native>");
                 } else {
                     s += QLatin1String("<anonymous>");
@@ -2336,18 +2397,18 @@ QStringList QScriptContextPrivate::backtrace() const
             }
         }
         s += QLatin1String("(");
-        for (int i = 0; i < ctx_p->argc; ++i) {
+        for (int i = 0; i < ctx->argc; ++i) {
             if (i > 0)
                 s += QLatin1String(",");
-            QScriptValueImpl arg = ctx_p->args[i];
+            QScriptValueImpl arg = ctx->args[i];
             if (arg.isObject())
                 s += QLatin1String("[object Object]"); // don't do a function call
             else
                 s += arg.toString();
         }
         s += QLatin1String(")@");
-        s += ctx_p->fileName();
-        s += QString::fromLatin1(":%0").arg(ctx_p->currentLine);
+        s += ctx->fileName();
+        s += QString::fromLatin1(":%0").arg(ctx->currentLine);
         result.append(s);
         ctx = ctx->parentContext();
     }
@@ -2372,13 +2433,11 @@ QScriptValueImpl QScriptContextPrivate::throwNotDefined(const QString &name)
 
 QScriptValueImpl QScriptContextPrivate::throwNotDefined(QScriptNameIdImpl *nameId)
 {
-    return throwNotDefined(QScriptEnginePrivate::get(engine())->toString(nameId));
+    return throwNotDefined(QScriptEnginePrivate::toString(nameId));
 }
 
 bool QScriptContextPrivate::eq_cmp_helper(QScriptValueImpl lhs, QScriptValueImpl rhs)
 {
-    QScriptEnginePrivate *eng = enginePrivate();
-
     if (lhs.isNull() && rhs.isUndefined())
         return true;
 
@@ -2386,26 +2445,26 @@ bool QScriptContextPrivate::eq_cmp_helper(QScriptValueImpl lhs, QScriptValueImpl
         return true;
 
     else if (isNumerical(lhs) && rhs.isString())
-        return eng->convertToNativeDouble(lhs) == eng->convertToNativeDouble(rhs);
+        return QScriptEnginePrivate::convertToNativeDouble(lhs) == QScriptEnginePrivate::convertToNativeDouble(rhs);
 
     else if (lhs.isString() && isNumerical(rhs))
-        return eng->convertToNativeString(lhs) == eng->convertToNativeString(rhs);
+        return QScriptEnginePrivate::convertToNativeDouble(lhs) == QScriptEnginePrivate::convertToNativeDouble(rhs);
 
     else if (lhs.isBoolean())
-        return eq_cmp(QScriptValueImpl(eng, eng->convertToNativeDouble(lhs)), rhs);
+        return eq_cmp(QScriptValueImpl(QScriptEnginePrivate::convertToNativeDouble(lhs)), rhs);
 
     else if (rhs.isBoolean())
-        return eq_cmp(lhs, QScriptValueImpl(eng, eng->convertToNativeDouble(rhs)));
+        return eq_cmp(lhs, QScriptValueImpl(QScriptEnginePrivate::convertToNativeDouble(rhs)));
 
     else if (lhs.isObject() && ! rhs.isNull()) {
-        lhs = eng->toPrimitive(lhs);
+        lhs = lhs.engine()->toPrimitive(lhs);
 
         if (lhs.isValid() && ! lhs.isObject())
             return eq_cmp(lhs, rhs);
     }
 
     else if (rhs.isObject() && ! lhs.isNull()) {
-        rhs = eng->toPrimitive(rhs);
+        rhs = rhs.engine()->toPrimitive(rhs);
 
         if (rhs.isValid() && ! rhs.isObject())
             return eq_cmp(lhs, rhs);
@@ -2419,6 +2478,7 @@ bool QScriptContextPrivate::lt_cmp(QScriptValueImpl lhs, QScriptValueImpl rhs)
 {
     if (lhs.type() == rhs.type()) {
         switch (lhs.type()) {
+        case QScript::InvalidType:
         case QScript::UndefinedType:
         case QScript::NullType:
             return false;
@@ -2443,19 +2503,17 @@ bool QScriptContextPrivate::lt_cmp_helper(QScriptValueImpl lhs, QScriptValueImpl
     if ((lhs.type() == rhs.type()) && (lhs.type() == QScript::StringType))
         return lhs.m_string_value->s < rhs.m_string_value->s;
 
-    QScriptEnginePrivate *eng = enginePrivate();
-
     if (lhs.isObject())
-        lhs = eng->toPrimitive(lhs, QScriptValueImpl::NumberTypeHint);
+        lhs = lhs.engine()->toPrimitive(lhs, QScriptValueImpl::NumberTypeHint);
 
     if (rhs.isObject())
-        rhs = eng->toPrimitive(rhs, QScriptValueImpl::NumberTypeHint);
+        rhs = rhs.engine()->toPrimitive(rhs, QScriptValueImpl::NumberTypeHint);
 
     if (lhs.isString() && rhs.isString())
-        return eng->convertToNativeString(lhs) < eng->convertToNativeString(rhs);
+        return QScriptEnginePrivate::convertToNativeString(lhs) < QScriptEnginePrivate::convertToNativeString(rhs);
 
-    qsreal n1 = eng->convertToNativeDouble(lhs);
-    qsreal n2 = eng->convertToNativeDouble(rhs);
+    qsreal n1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+    qsreal n2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
 #if defined Q_CC_MSVC && !defined Q_CC_MSVC_NET
     if (qIsNaN(n1) || qIsNaN(n2))
         return false;
@@ -2468,19 +2526,17 @@ bool QScriptContextPrivate::le_cmp_helper(QScriptValueImpl lhs, QScriptValueImpl
     if ((lhs.type() == rhs.type()) && (lhs.type() == QScript::StringType))
         return lhs.m_string_value->s <= rhs.m_string_value->s;
 
-    QScriptEnginePrivate *eng = enginePrivate();
-
     if (lhs.isObject())
-        lhs = eng->toPrimitive(lhs, QScriptValueImpl::NumberTypeHint);
+        lhs = lhs.engine()->toPrimitive(lhs, QScriptValueImpl::NumberTypeHint);
 
     if (rhs.isObject())
-        rhs = eng->toPrimitive(rhs, QScriptValueImpl::NumberTypeHint);
+        rhs = rhs.engine()->toPrimitive(rhs, QScriptValueImpl::NumberTypeHint);
 
     if (lhs.isString() && rhs.isString())
-        return eng->convertToNativeString(lhs) <= eng->convertToNativeString(rhs);
+        return QScriptEnginePrivate::convertToNativeString(lhs) <= QScriptEnginePrivate::convertToNativeString(rhs);
 
-    qsreal n1 = eng->convertToNativeDouble(lhs);
-    qsreal n2 = eng->convertToNativeDouble(rhs);
+    qsreal n1 = QScriptEnginePrivate::convertToNativeDouble(lhs);
+    qsreal n2 = QScriptEnginePrivate::convertToNativeDouble(rhs);
     return n1 <= n2;
 }
 
@@ -2512,7 +2568,7 @@ const QScriptInstruction *QScriptContextPrivate::findExceptionHandlerRecursive(
                 return ep;
             }
         }
-        ctx = QScriptContextPrivate::get(ctx->parentContext());
+        ctx = ctx->parentContext();
         if (ctx)
             iip = ctx->iPtr;
     }
@@ -2532,7 +2588,9 @@ QScriptContextPrivate *QScriptContextPrivate::exceptionHandlerContext() const
 
 QScriptContext *QScriptContextPrivate::get(QScriptContextPrivate *d)
 {
-    return d->q_func();
+    if (d)
+        return d->q_func();
+    return 0;
 }
 
 QT_END_NAMESPACE

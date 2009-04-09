@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,16 +55,10 @@
 #include <QPair>
 #include <QSharedData>
 #include <QString>
+#include <QUrl>
 
-#include "qatomiccomparator_p.h"
-#include "qatomicmathematician_p.h"
-#include "qcombinenodes_p.h"
-#include "qfunctionargument_p.h"
-#include "qitemtype_p.h"
-#include "qitem_p.h"
-#include "qorderby_p.h"
-#include "qquerytransformparser_p.h"
-#include "qvalidate_p.h"
+#include "qparsercontext_p.h"
+#include "qtokensource_p.h"
 
 /**
  * @file
@@ -73,8 +71,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QPatternist
 {
-    class ParserContext;
-
     typedef QPair<QString, Expression::Ptr> AttributeHolder;
     typedef QVector<AttributeHolder> AttributeHolderVector;
 
@@ -98,32 +94,12 @@ namespace QPatternist
     };
 
     /**
-     * @short A union of all the enums the parser uses.
-     */
-    union EnumUnion
-    {
-        AtomicComparator::Operator              valueOperator;
-        AtomicMathematician::Operator           mathOperator;
-        CombineNodes::Operator                  combinedNodeOp;
-        QXmlNodeModelIndex::Axis                axis;
-        QXmlNodeModelIndex::DocumentOrder       nodeOperator;
-        StaticContext::BoundarySpacePolicy      boundarySpacePolicy;
-        StaticContext::ConstructionMode         constructionMode;
-        StaticContext::OrderingEmptySequence    orderingEmptySequence;
-        StaticContext::OrderingMode             orderingMode;
-        OrderBy::OrderSpec::Direction           sortDirection;
-        Validate::Mode                          validationMode;
-        VariableSlotID                          slot;
-        int                                     tokenizerPosition;
-        qint16                                  zeroer;
-    };
-
-    /**
-     * This is the value the parser and scanner uses for
-     * tokens and non-terminals. It is inefficient, but ensures
-     * nothing leaks, by invoking C++ destructors even in the cases
-     * the code throws exceptions. This might be able to be done in a more
-     * efficient way -- suggestions are welcome.
+     * @short The value the parser, but not the tokenizers, uses for tokens and
+     * non-terminals.
+     *
+     * It is inefficient but ensures nothing leaks, by invoking C++
+     * destructors even in the cases the code throws exceptions. This might be
+     * able to be done in a more efficient way -- suggestions are welcome.
      */
     class TokenValue
     {
@@ -138,7 +114,8 @@ namespace QPatternist
         SequenceType::Ptr               sequenceType;
         FunctionArgument::List          functionArguments;
         FunctionArgument::Ptr           functionArgument;
-        QXmlName                           qName;
+        QVector<QXmlName>               qNameVector;
+        QXmlName                        qName;
         /**
          * Holds enum values.
          */
@@ -175,54 +152,15 @@ namespace QPatternist
      * Tokenizer for XPath or XQuery</a>
      * @author Frans Englich <fenglich@trolltech.com>
      */
-    class Tokenizer : public QSharedData
+    class Tokenizer : public TokenSource
     {
     public:
-        inline Tokenizer()
+        inline Tokenizer(const QUrl &queryU) : m_queryURI(queryU)
         {
+            Q_ASSERT(queryU.isValid());
         }
 
         typedef QExplicitlySharedDataPointer<Tokenizer> Ptr;
-
-        /**
-         * typedef for the enum Bison generates that contains
-         * the token symbols.
-         */
-        typedef yytokentype TokenType;
-
-        /**
-         * Represents a token by carrying its name and value.
-         */
-        class Token
-        {
-        public:
-            /**
-             * Constructs an invalid Token. This default constructor
-             * is need in Qt's container classes.
-             */
-            inline Token() {}
-            inline Token(const TokenType t) : type(t) {enums.zeroer = 0;}
-            inline Token(const TokenType t, const QString &val) : type(t), value(val) {enums.zeroer = 0;}
-            inline Token(const TokenType t, const EnumUnion val) : type(t), enums(val) {}
-
-            TokenType type;
-            QString value;
-
-            /**
-             * Is 0 if not set.
-             */
-            EnumUnion enums;
-        };
-
-        /**
-         * Destructor.
-         */
-        virtual ~Tokenizer();
-
-        /**
-         * @returns the next token.
-         */
-        virtual Token nextToken(YYLTYPE *const sourceLocator) = 0;
 
         /**
          * Switches the Tokenizer to only do scanning, and returns complete
@@ -246,13 +184,30 @@ namespace QPatternist
         /**
          * @returns the URI of the resource being tokenized.
          */
-        virtual QUrl uri() const = 0;
+        inline const QUrl &queryURI() const
+        {
+            return m_queryURI;
+        }
+
+        virtual void setParserContext(const ParserContext::Ptr &parseInfo) = 0;
+
+    protected:
+        /**
+         * Returns a string representation of @p token.
+         *
+         * This function is used for debugging purposes. The implementation of
+         * this function is in querytransformparser.ypp.
+         */
+        static QString tokenToString(const Token &token);
 
     private:
         Q_DISABLE_COPY(Tokenizer)
+        const QUrl m_queryURI;
     };
 
 }
+
+#undef Patternist_DEBUG_PARSER // disable it for now
 
 QT_END_NAMESPACE
 

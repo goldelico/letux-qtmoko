@@ -142,9 +142,16 @@ SOURCES += \
 
 
 !embedded:mac {
-    HEADERS += widgets/qhiviewwidget_mac_p.h
-    SOURCES += widgets/qmenu_mac.cpp \
-               widgets/qhiviewwidget_mac.cpp
+    HEADERS += widgets/qmacnativewidget_mac.h \
+               widgets/qmaccocoaviewcontainer_mac.h
+    OBJECTIVE_HEADERS += widgets/qcocoatoolbardelegate_mac_p.h \ 
+                         widgets/qcocoamenu_mac_p.h
+    OBJECTIVE_SOURCES += widgets/qmenu_mac.mm \
+                         widgets/qmaccocoaviewcontainer_mac.mm \
+                         widgets/qcocoatoolbardelegate_mac.mm \
+                         widgets/qmainwindowlayout_mac.mm \
+                         widgets/qmacnativewidget_mac.mm \
+                         widgets/qcocoamenu_mac.mm
 }
 
 wince*: {
@@ -153,4 +160,3 @@ wince*: {
     RC_FILE = widgets/qmenu_wince.rc
     !static: QMAKE_WRITE_DEFAULT_RC = 1
 }
-

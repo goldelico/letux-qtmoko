@@ -50,8 +50,6 @@ public:
     void splitFlow(RenderObject* beforeChild, RenderBlock* newBlockBox,
                    RenderObject* newChild, RenderFlow* oldCont);
 
-    virtual void setStyle(RenderStyle*);
-
     virtual void layout() { } // Do nothing for layout()
 
     virtual void paint(PaintInfo&, int tx, int ty);
@@ -70,10 +68,13 @@ public:
     virtual int offsetTop() const;
 
     void absoluteRects(Vector<IntRect>&, int tx, int ty, bool topLevel = true);
+    virtual void absoluteQuads(Vector<FloatQuad>&, bool topLevel = true);
 
     virtual VisiblePosition positionForCoordinates(int x, int y);
 
 protected:
+    virtual void styleDidChange(RenderStyle::Diff, const RenderStyle* oldStyle);
+
     static RenderInline* cloneInline(RenderFlow* src);
 
 };

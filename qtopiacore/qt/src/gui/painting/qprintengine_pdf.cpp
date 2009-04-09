@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -80,7 +84,7 @@ static const bool do_compress = true;
 #endif
 
 QPdfPage::QPdfPage()
-    : QPdf::ByteStream(&data)
+    : QPdf::ByteStream(true) // Enable file backing
 {
 }
 
@@ -119,8 +123,10 @@ bool QPdfEngine::begin(QPaintDevice *pdev)
 {
     Q_D(QPdfEngine);
 
-    if(!QPdfBaseEngine::begin(pdev))
+    if(!QPdfBaseEngine::begin(pdev)) {
+        state = QPrinter::Error;
         return false;
+    }
     d->stream->setDevice(d->outDevice);
 
     d->streampos = 0;
@@ -171,13 +177,15 @@ void QPdfEngine::drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, con
     QRect sourceRect = sr.toRect();
     QPixmap pm = sourceRect != pixmap.rect() ? pixmap.copy(sourceRect) : pixmap;
     QImage image = pm.toImage();
+    bool bitmap = true;
+    const int object = d->addImage(image, &bitmap, pm.cacheKey());
+    if (object < 0)
+        return;
 
     *d->currentPage << "q\n/GSa gs\n";
     *d->currentPage
         << QPdf::generateMatrix(QTransform(rectangle.width() / sr.width(), 0, 0, rectangle.height() / sr.height(),
                                            rectangle.x(), rectangle.y()) * (d->simplePen ? QTransform() : d->stroker.matrix));
-    bool bitmap = true;
-    int object = d->addImage(image, &bitmap, pm.cacheKey());
     if (bitmap) {
         // set current pen as d->brush
         d->brush = d->pen.brush();
@@ -197,13 +205,15 @@ void QPdfEngine::drawImage(const QRectF &rectangle, const QImage &image, const Q
 
     QRect sourceRect = sr.toRect();
     QImage im = sourceRect != image.rect() ? image.copy(sourceRect) : image;
+    bool bitmap = true;
+    const int object = d->addImage(image, &bitmap, im.cacheKey());
+    if (object < 0)
+        return;
 
     *d->currentPage << "q\n/GSa gs\n";
     *d->currentPage
         << QPdf::generateMatrix(QTransform(rectangle.width() / sr.width(), 0, 0, rectangle.height() / sr.height(),
                                            rectangle.x(), rectangle.y()) * (d->simplePen ? QTransform() : d->stroker.matrix));
-    bool bitmap = false;
-    int object = d->addImage(im, &bitmap, im.cacheKey());
     setBrush();
     d->currentPage->streamImage(im.width(), im.height(), object);
     *d->currentPage << "Q\n";
@@ -404,19 +414,19 @@ int QPdfEnginePrivate::gradientBrush(const QBrush &b, const QMatrix &matrix, int
 }
 #endif
 
-int QPdfEnginePrivate::addConstantAlphaObject(int alpha)
+int QPdfEnginePrivate::addConstantAlphaObject(int brushAlpha, int penAlpha)
 {
-    if (alpha == 255)
+    if (brushAlpha == 255 && penAlpha == 255)
         return 0;
-    int object = alphaCache.value(alpha, 0);
+    int object = alphaCache.value(QPair<uint, uint>(brushAlpha, penAlpha), 0);
     if (!object) {
         object = addXrefEntry(-1);
         QByteArray alphaDef;
         QPdf::ByteStream s(&alphaDef);
-        s << "<<\n/ca " << (alpha/qreal(255.)) << "\n";
-        s << "/CA " << (alpha/qreal(255.)) << "\n>>";
+        s << "<<\n/ca " << (brushAlpha/qreal(255.)) << "\n";
+        s << "/CA " << (penAlpha/qreal(255.)) << "\n>>";
         xprintf("%s\nendobj\n", alphaDef.constData());
-        alphaCache.insert(alpha, object);
+        alphaCache.insert(QPair<uint, uint>(brushAlpha, penAlpha), object);
     }
     if (currentPage->graphicStates.indexOf(object) < 0)
         currentPage->graphicStates.append(object);
@@ -449,9 +459,10 @@ int QPdfEnginePrivate::addBrushPattern(const QTransform &m, bool *specifyColor, 
     }
 
     if ((!brush.isOpaque() && brush.style() < Qt::LinearGradientPattern) || opacity != 1.0)
-        *gStateObject = addConstantAlphaObject(qRound(brush.color().alpha() * opacity));
+        *gStateObject = addConstantAlphaObject(qRound(brush.color().alpha() * opacity),
+                                               qRound(pen.color().alpha() * opacity));
 
-    int imageObject = 0;
+    int imageObject = -1;
     QByteArray pattern = QPdf::patternForBrush(brush);
     if (pattern.isEmpty()) {
         if (brush.style() != Qt::TexturePattern)
@@ -459,17 +470,19 @@ int QPdfEnginePrivate::addBrushPattern(const QTransform &m, bool *specifyColor, 
         QImage image = brush.texture().toImage();
         bool bitmap = true;
         imageObject = addImage(image, &bitmap, qt_pixmap_id(brush.texture()));
-        QImage::Format f = image.format();
-        if (f != QImage::Format_MonoLSB && f != QImage::Format_Mono) {
-            paintType = 1; // Colored tiling
-            *specifyColor = false;
+        if (imageObject != -1) {
+            QImage::Format f = image.format();
+            if (f != QImage::Format_MonoLSB && f != QImage::Format_Mono) {
+                paintType = 1; // Colored tiling
+                *specifyColor = false;
+            }
+            w = image.width();
+            h = image.height();
+            QTransform m(w, 0, 0, -h, 0, h);
+            QPdf::ByteStream s(&pattern);
+            s << QPdf::generateMatrix(m);
+            s << "/Im" << imageObject << " Do\n";
         }
-        w = image.width();
-        h = image.height();
-        QTransform m(w, 0, 0, -h, 0, h);
-        QPdf::ByteStream s(&pattern);
-        s << QPdf::generateMatrix(m);
-        s << "/Im" << imageObject << " Do\n";
     }
 
     QByteArray str;
@@ -490,7 +503,7 @@ int QPdfEnginePrivate::addBrushPattern(const QTransform &m, bool *specifyColor, 
       << matrix.dx()
       << matrix.dy() << "]\n"
         "/Resources \n<< "; // open resource tree
-    if (imageObject) {
+    if (imageObject > 0) {
         s << "/XObject << /Im" << imageObject << ' ' << imageObject << "0 R >> ";
     }
     s << ">>\n"
@@ -507,6 +520,9 @@ int QPdfEnginePrivate::addBrushPattern(const QTransform &m, bool *specifyColor, 
     return patternObj;
 }
 
+/*!
+ * Adds an image to the pdf and return the pdf-object id. Returns -1 if adding the image failed.
+ */
 int QPdfEnginePrivate::addImage(const QImage &img, bool *bitmap, qint64 serial_no)
 {
     if (img.isNull())
@@ -732,6 +748,80 @@ void QPdfEnginePrivate::xprintf(const char* fmt, ...)
     streampos += bufsize;
 }
 
+int QPdfEnginePrivate::writeCompressed(QIODevice *dev)
+{
+#ifndef QT_NO_COMPRESS
+    if (do_compress) {
+        int size = QPdfPage::chunkSize();
+        int sum = 0;
+        ::z_stream zStruct;
+        zStruct.zalloc = Z_NULL;
+        zStruct.zfree = Z_NULL;
+        zStruct.opaque = Z_NULL;
+        if (::deflateInit(&zStruct, Z_DEFAULT_COMPRESSION) != Z_OK) {
+            qWarning("QPdfStream::writeCompressed: Error in deflateInit()");
+            return sum;
+        }
+        zStruct.avail_in = 0;
+        QByteArray in, out;
+        out.resize(size);
+        while (!dev->atEnd() || zStruct.avail_in != 0) {
+            if (zStruct.avail_in == 0) {
+                in = dev->read(size);
+                zStruct.avail_in = in.size();
+                zStruct.next_in = reinterpret_cast<unsigned char*>(in.data());
+                if (in.size() <= 0) {
+                    qWarning("QPdfStream::writeCompressed: Error in read()");
+                    ::deflateEnd(&zStruct);
+                    return sum;
+                }
+            }
+            zStruct.next_out = reinterpret_cast<unsigned char*>(out.data());
+            zStruct.avail_out = out.size();
+            if (::deflate(&zStruct, 0) != Z_OK) {
+                qWarning("QPdfStream::writeCompressed: Error in deflate()");
+                ::deflateEnd(&zStruct);
+                return sum;
+            }
+            int written = out.size() - zStruct.avail_out;
+            stream->writeRawData(out.constData(), written);
+            streampos += written;
+            sum += written;
+        }
+        int ret;
+        do {
+            zStruct.next_out = reinterpret_cast<unsigned char*>(out.data());
+            zStruct.avail_out = out.size();
+            ret = ::deflate(&zStruct, Z_FINISH);
+            if (ret != Z_OK && ret != Z_STREAM_END) {
+                qWarning("QPdfStream::writeCompressed: Error in deflate()");
+                ::deflateEnd(&zStruct);
+                return sum;
+            }
+            int written = out.size() - zStruct.avail_out;
+            stream->writeRawData(out.constData(), written);
+            streampos += written;
+            sum += written;
+        } while (ret == Z_OK);
+
+        ::deflateEnd(&zStruct);
+
+        return sum;
+    } else
+#endif
+    {
+        QByteArray arr;
+        int sum = 0;
+        while (!dev->atEnd()) {
+            arr = dev->read(QPdfPage::chunkSize());
+            stream->writeRawData(arr.constData(), arr.size());
+            streampos += arr.size();
+            sum += arr.size();
+        }
+        return sum;
+    }
+}
+
 int QPdfEnginePrivate::writeCompressed(const char *src, int len)
 {
 #ifndef QT_NO_COMPRESS
@@ -845,7 +935,7 @@ void QPdfEnginePrivate::writeInfo()
             "/Title (%s)\n"
 //            "/Author (%s)\n"
             "/Creator (%s)\n"
-            "/Producer (Qt " QT_VERSION_STR " (C) 1992-2008 Nokia Corporation and/or its subsidiary(-ies))\n",
+            "/Producer (Qt " QT_VERSION_STR " (C) 1992-2009 Nokia Corporation and/or its subsidiary(-ies))\n",
             title.toUtf8().constData(),
 //            author.toUtf8().constData(),
             creator.toUtf8().constData());
@@ -1082,7 +1172,7 @@ void QPdfEnginePrivate::writePage()
 
     xprintf(">>\n");
     xprintf("stream\n");
-    QByteArray content = currentPage->content();
+    QIODevice *content = currentPage->stream();
     int len = writeCompressed(content);
     xprintf("endstream\n"
             "endobj\n");

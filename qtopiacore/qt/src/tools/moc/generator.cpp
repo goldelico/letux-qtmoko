@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -61,7 +65,8 @@ enum PropertyFlags  {
     Editable = 0x00040000,
     ResolveEditable = 0x00080000,
     User = 0x00100000,
-    ResolveUser = 0x00200000
+    ResolveUser = 0x00200000,
+    Notify = 0x00400000
 };
 enum MethodFlags {
     AccessPrivate = 0x00,
@@ -70,6 +75,7 @@ enum MethodFlags {
     MethodMethod = 0x00,
     MethodSignal = 0x04,
     MethodSlot = 0x08,
+    MethodConstructor = 0x0c,
     MethodCompatibility = 0x10,
     MethodCloned = 0x20,
     MethodScriptable = 0x40
@@ -159,6 +165,7 @@ void Generator::generateCode()
 {
     bool isQt = (cdef->classname == "Qt");
     bool isQObject = (cdef->classname == "QObject");
+    bool isConstructible = !cdef->constructorList.isEmpty();
 
 //
 // build the data array
@@ -187,10 +194,10 @@ void Generator::generateCode()
     QByteArray qualifiedClassNameIdentifier = cdef->qualified;
     qualifiedClassNameIdentifier.replace(':', '_');
 
-    int index = 10;
+    int index = 12;
     fprintf(out, "static const uint qt_meta_data_%s[] = {\n", qualifiedClassNameIdentifier.constData());
     fprintf(out, "\n // content:\n");
-    fprintf(out, "    %4d,       // revision\n", 1);
+    fprintf(out, "    %4d,       // revision\n", 2);
     fprintf(out, "    %4d,       // classname\n", strreg(cdef->qualified));
     fprintf(out, "    %4d, %4d, // classinfo\n", cdef->classInfoList.count(), cdef->classInfoList.count() ? index : 0);
     index += cdef->classInfoList.count() * 2;
@@ -200,8 +207,15 @@ void Generator::generateCode()
     index += methodCount * 5;
     fprintf(out, "    %4d, %4d, // properties\n", cdef->propertyList.count(), cdef->propertyList.count() ? index : 0);
     index += cdef->propertyList.count() * 3;
+    if(cdef->notifyableProperties)
+        index += cdef->propertyList.count();
     fprintf(out, "    %4d, %4d, // enums/sets\n", cdef->enumList.count(), cdef->enumList.count() ? index : 0);
 
+    int enumsIndex = index;
+    for (i = 0; i < cdef->enumList.count(); ++i)
+        index += 4 + (cdef->enumList.at(i).values.count() * 2);
+    fprintf(out, "    %4d, %4d, // constructors\n", isConstructible ? cdef->constructorList.count() : 0,
+            isConstructible ? index : 0);
 
 //
 // Build classinfo array
@@ -232,7 +246,13 @@ void Generator::generateCode()
 //
 // Build enums array
 //
-    generateEnums(index);
+    generateEnums(enumsIndex);
+
+//
+// Build constructors array
+//
+    if (isConstructible)
+        generateFunctions(cdef->constructorList, "constructor", MethodConstructor);
 
 //
 // Terminate data array
@@ -281,6 +301,12 @@ void Generator::generateCode()
 
 
 //
+// Generate internal qt_static_metacall() function
+//
+    if (isConstructible)
+        generateStaticMetacall(qualifiedClassNameIdentifier);
+
+//
 // Build extra array
 //
     QList<QByteArray> extraList;
@@ -305,6 +331,19 @@ void Generator::generateCode()
         fprintf(out, ",0\n};\n\n");
     }
 
+    if (isConstructible || !extraList.isEmpty()) {
+        fprintf(out, "static const QMetaObjectExtraData qt_meta_extradata2_%s = {\n    ",
+                qualifiedClassNameIdentifier.constData());
+        if (extraList.isEmpty())
+            fprintf(out, "0, ");
+        else
+            fprintf(out, "qt_meta_extradata_%s, ", qualifiedClassNameIdentifier.constData());
+        if (!isConstructible)
+            fprintf(out, "0");
+        else
+            fprintf(out, "%s_qt_static_metacall", qualifiedClassNameIdentifier.constData());
+        fprintf(out, " \n};\n\n");
+    }
 
 //
 // Finally create and initialize the static meta object
@@ -323,10 +362,10 @@ void Generator::generateCode()
         fprintf(out, "    { 0, ");
     fprintf(out, "qt_meta_stringdata_%s,\n      qt_meta_data_%s, ",
              qualifiedClassNameIdentifier.constData(), qualifiedClassNameIdentifier.constData());
-    if (extraList.isEmpty())
+    if (!isConstructible && extraList.isEmpty())
         fprintf(out, "0 }\n");
     else
-        fprintf(out, "qt_meta_extradata_%s }\n", qualifiedClassNameIdentifier.constData());
+        fprintf(out, "&qt_meta_extradata2_%s }\n", qualifiedClassNameIdentifier.constData());
     fprintf(out, "};\n");
 
     if (isQt || !cdef->hasQObject)
@@ -382,7 +421,6 @@ void Generator::generateCode()
 //
     for (int signalindex = 0; signalindex < cdef->signalList.size(); ++signalindex)
         generateSignal(&cdef->signalList[signalindex], signalindex);
-
 }
 
 
@@ -481,8 +519,20 @@ void Generator::generateProperties()
             p.gspec = spec;
             break;
         }
+        if(!p.notify.isEmpty()) {
+            int notifyId = -1;
+            for (int j = 0; j < cdef->signalList.count(); ++j) {
+                const FunctionDef &f = cdef->signalList.at(j);
+                if(f.name != p.notify) {
+                    continue;
+                } else {
+                    notifyId = j /* Signal indexes start from 0 */;
+                    break;
+                }
+            }
+            p.notifyId = notifyId;
+        }
     }
-
 
     //
     // Create meta data
@@ -536,12 +586,27 @@ void Generator::generateProperties()
         else if (p.user != "false")
             flags |= User;
 
+        if (p.notifyId != -1)
+            flags |= Notify;
+
         fprintf(out, "    %4d, %4d, 0x%.8x,\n",
                  strreg(p.name),
                  strreg(p.type),
                  flags);
     }
 
+    if(cdef->notifyableProperties) {
+        fprintf(out, "\n // properties: notify_signal_id\n");
+        for (int i = 0; i < cdef->propertyList.count(); ++i) {
+            const PropertyDef &p = cdef->propertyList.at(i);
+            if(p.notifyId == -1)
+                fprintf(out, "    %4d,\n",
+                        0);
+            else
+                fprintf(out, "    %4d,\n",
+                        p.notifyId);
+        }
+    }
 }
 
 void Generator::generateEnums(int index)
@@ -626,6 +691,7 @@ void Generator::generateMetacall()
                         noRef(f.normalizedType).constData());
             fprintf(out, " break;\n");
         }
+        fprintf(out, "        default: ;\n");
         fprintf(out, "        }\n");
     }
     if (methodList.size())
@@ -841,10 +907,46 @@ void Generator::generateMetacall()
     fprintf(out,"return _id;\n}\n");
 }
 
+void Generator::generateStaticMetacall(const QByteArray &prefix)
+{
+    bool isQObject = (cdef->classname == "QObject");
+
+    fprintf(out, "static int %s_qt_static_metacall(QMetaObject::Call _c, int _id, void **_a)\n{\n",
+            prefix.constData());
+
+    fprintf(out, "    if (_c == QMetaObject::CreateInstance) {\n");
+    fprintf(out, "        switch (_id) {\n");
+    for (int ctorindex = 0; ctorindex < cdef->constructorList.count(); ++ctorindex) {
+        fprintf(out, "        case %d: { %s *_r = new %s(", ctorindex,
+                cdef->classname.constData(), cdef->classname.constData());
+        const FunctionDef &f = cdef->constructorList.at(ctorindex);
+        int offset = 1;
+        for (int j = 0; j < f.arguments.count(); ++j) {
+            const ArgumentDef &a = f.arguments.at(j);
+            if (j)
+                fprintf(out, ",");
+            fprintf(out, "(*reinterpret_cast< %s>(_a[%d]))", a.typeNameForCast.constData(), offset++);
+        }
+        fprintf(out, ");\n");
+        fprintf(out, "            if (_a[0]) *reinterpret_cast<QObject**>(_a[0]) = _r; } break;\n");
+    }
+    fprintf(out, "        }\n");
+    fprintf(out, "        _id -= %d;\n", cdef->constructorList.count());
+    fprintf(out, "        return _id;\n");
+    fprintf(out, "    }\n");
+
+    if (!isQObject)
+        fprintf(out, "    _id = %s::staticMetaObject.superClass()->static_metacall(_c, _id, _a);\n", cdef->classname.constData());
+
+    fprintf(out, "    if (_id < 0)\n        return _id;\n");
+
+    fprintf(out, "    return _id;\n");
+    fprintf(out, "}\n\n");
+}
 
 void Generator::generateSignal(FunctionDef *def,int index)
 {
-    if (def->wasCloned)
+    if (def->wasCloned || def->isAbstract)
         return;
     fprintf(out, "\n// SIGNAL %d\n%s %s::%s(",
             index, def->type.name.constData(), cdef->qualified.constData(), def->name.constData());

@@ -30,37 +30,48 @@
 #include "CSSStyleDeclaration.h"
 #include "Comment.h"
 #include "DOMImplementation.h"
+#include "DOMSelection.h"
+#include "DOMWindow.h"
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "DocumentType.h"
 #include "Element.h"
 #include "EntityReference.h"
 #include "Event.h"
-#include "ExceptionCode.h"
+#include "HTMLCollection.h"
+#include "HTMLElement.h"
 #include "JSAttr.h"
 #include "JSCDATASection.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCanvasRenderingContext2D.h"
 #include "JSComment.h"
 #include "JSCustomXPathNSResolver.h"
 #include "JSDOMImplementation.h"
+#include "JSDOMSelection.h"
+#include "JSDOMWindow.h"
 #include "JSDocumentFragment.h"
 #include "JSDocumentType.h"
 #include "JSElement.h"
 #include "JSEntityReference.h"
 #include "JSEvent.h"
+#include "JSHTMLCollection.h"
+#include "JSHTMLElement.h"
 #include "JSNode.h"
 #include "JSNodeFilter.h"
 #include "JSNodeIterator.h"
 #include "JSNodeList.h"
 #include "JSProcessingInstruction.h"
 #include "JSRange.h"
+#include "JSStyleSheetList.h"
 #include "JSText.h"
 #include "JSTreeWalker.h"
 #include "JSXPathExpression.h"
 #include "JSXPathNSResolver.h"
 #include "JSXPathResult.h"
+#include "KURL.h"
 #include "NameNodeList.h"
 #include "Node.h"
+#include "NodeFilter.h"
 #include "NodeIterator.h"
 #include "NodeList.h"
 #include "PlatformString.h"
@@ -72,611 +83,967 @@
 #include "XPathExpression.h"
 #include "XPathNSResolver.h"
 #include "XPathResult.h"
-#include "kjs_css.h"
-#include "kjs_window.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSDocument)
+
 /* Hash table */
 
-static const HashEntry JSDocumentTableEntries[] =
+static const HashTableValue JSDocumentTableValues[31] =
 {
-    { "documentElement", JSDocument::DocumentElementAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "doctype", JSDocument::DoctypeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "selectedStylesheetSet", JSDocument::SelectedStylesheetSetAttrNum, DontDelete, 0, 0 },
-    { "preferredStylesheetSet", JSDocument::PreferredStylesheetSetAttrNum, DontDelete|ReadOnly, 0, &JSDocumentTableEntries[20] },
-    { "xmlVersion", JSDocument::XMLVersionAttrNum, DontDelete, 0, 0 },
-    { "defaultView", JSDocument::DefaultViewAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "readyState", JSDocument::ReadyStateAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmlStandalone", JSDocument::XMLStandaloneAttrNum, DontDelete, 0, 0 },
-    { "inputEncoding", JSDocument::InputEncodingAttrNum, DontDelete|ReadOnly, 0, &JSDocumentTableEntries[18] },
-    { 0, 0, 0, 0, 0 },
-    { "documentURI", JSDocument::DocumentURIAttrNum, DontDelete, 0, 0 },
-    { "implementation", JSDocument::ImplementationAttrNum, DontDelete|ReadOnly, 0, &JSDocumentTableEntries[19] },
-    { 0, 0, 0, 0, 0 },
-    { "URL", JSDocument::URLAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmlEncoding", JSDocument::XMLEncodingAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "charset", JSDocument::CharsetAttrNum, DontDelete, 0, 0 },
-    { "defaultCharset", JSDocument::DefaultCharsetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "styleSheets", JSDocument::StyleSheetsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "characterSet", JSDocument::CharacterSetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSDocument::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "doctype", DontDelete|ReadOnly, (intptr_t)jsDocumentDoctype, (intptr_t)0 },
+    { "implementation", DontDelete|ReadOnly, (intptr_t)jsDocumentImplementation, (intptr_t)0 },
+    { "documentElement", DontDelete|ReadOnly, (intptr_t)jsDocumentDocumentElement, (intptr_t)0 },
+    { "inputEncoding", DontDelete|ReadOnly, (intptr_t)jsDocumentInputEncoding, (intptr_t)0 },
+    { "xmlEncoding", DontDelete|ReadOnly, (intptr_t)jsDocumentXMLEncoding, (intptr_t)0 },
+    { "xmlVersion", DontDelete, (intptr_t)jsDocumentXMLVersion, (intptr_t)setJSDocumentXMLVersion },
+    { "xmlStandalone", DontDelete, (intptr_t)jsDocumentXMLStandalone, (intptr_t)setJSDocumentXMLStandalone },
+    { "documentURI", DontDelete, (intptr_t)jsDocumentDocumentURI, (intptr_t)setJSDocumentDocumentURI },
+    { "defaultView", DontDelete|ReadOnly, (intptr_t)jsDocumentDefaultView, (intptr_t)0 },
+    { "styleSheets", DontDelete|ReadOnly, (intptr_t)jsDocumentStyleSheets, (intptr_t)0 },
+    { "title", DontDelete, (intptr_t)jsDocumentTitle, (intptr_t)setJSDocumentTitle },
+    { "referrer", DontDelete|ReadOnly, (intptr_t)jsDocumentReferrer, (intptr_t)0 },
+    { "domain", DontDelete, (intptr_t)jsDocumentDomain, (intptr_t)setJSDocumentDomain },
+    { "URL", DontDelete|ReadOnly, (intptr_t)jsDocumentURL, (intptr_t)0 },
+    { "cookie", DontDelete, (intptr_t)jsDocumentCookie, (intptr_t)setJSDocumentCookie },
+    { "body", DontDelete, (intptr_t)jsDocumentBody, (intptr_t)setJSDocumentBody },
+    { "images", DontDelete|ReadOnly, (intptr_t)jsDocumentImages, (intptr_t)0 },
+    { "applets", DontDelete|ReadOnly, (intptr_t)jsDocumentApplets, (intptr_t)0 },
+    { "links", DontDelete|ReadOnly, (intptr_t)jsDocumentLinks, (intptr_t)0 },
+    { "forms", DontDelete|ReadOnly, (intptr_t)jsDocumentForms, (intptr_t)0 },
+    { "anchors", DontDelete|ReadOnly, (intptr_t)jsDocumentAnchors, (intptr_t)0 },
+    { "lastModified", DontDelete|ReadOnly, (intptr_t)jsDocumentLastModified, (intptr_t)0 },
+    { "location", DontDelete, (intptr_t)jsDocumentLocation, (intptr_t)setJSDocumentLocation },
+    { "charset", DontDelete, (intptr_t)jsDocumentCharset, (intptr_t)setJSDocumentCharset },
+    { "defaultCharset", DontDelete|ReadOnly, (intptr_t)jsDocumentDefaultCharset, (intptr_t)0 },
+    { "readyState", DontDelete|ReadOnly, (intptr_t)jsDocumentReadyState, (intptr_t)0 },
+    { "characterSet", DontDelete|ReadOnly, (intptr_t)jsDocumentCharacterSet, (intptr_t)0 },
+    { "preferredStylesheetSet", DontDelete|ReadOnly, (intptr_t)jsDocumentPreferredStylesheetSet, (intptr_t)0 },
+    { "selectedStylesheetSet", DontDelete, (intptr_t)jsDocumentSelectedStylesheetSet, (intptr_t)setJSDocumentSelectedStylesheetSet },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsDocumentConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentTable = 
-{
-    2, 21, JSDocumentTableEntries, 18
-};
+static const HashTable JSDocumentTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSDocumentTableValues, 0 };
+#else
+    { 71, 63, JSDocumentTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSDocumentConstructorTableEntries[] =
+static const HashTableValue JSDocumentConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentConstructorTable = 
-{
-    2, 1, JSDocumentConstructorTableEntries, 1
-};
+static const HashTable JSDocumentConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSDocumentConstructorTableValues, 0 };
+#else
+    { 1, 0, JSDocumentConstructorTableValues, 0 };
+#endif
 
 class JSDocumentConstructor : public DOMObject {
 public:
     JSDocumentConstructor(ExecState* exec)
+        : DOMObject(JSDocumentConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSDocumentPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSDocumentConstructor::info = { "DocumentConstructor", 0, &JSDocumentConstructorTable, 0 };
+const ClassInfo JSDocumentConstructor::s_info = { "DocumentConstructor", 0, &JSDocumentConstructorTable, 0 };
 
 bool JSDocumentConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSDocumentConstructor, DOMObject>(exec, &JSDocumentConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSDocumentConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSDocumentPrototypeTableEntries[] =
+static const HashTableValue JSDocumentPrototypeTableValues[37] =
 {
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "queryCommandState", JSDocument::QueryCommandStateFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "importNode", JSDocument::ImportNodeFuncNum, DontDelete|Function, 2, 0 },
-    { "createEntityReference", JSDocument::CreateEntityReferenceFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[36] },
-    { "createNodeIterator", JSDocument::CreateNodeIteratorFuncNum, DontDelete|Function, 4, 0 },
-    { "queryCommandIndeterm", JSDocument::QueryCommandIndetermFuncNum, DontDelete|Function, 1, 0 },
-    { "createElement", JSDocument::CreateElementFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[35] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "createComment", JSDocument::CreateCommentFuncNum, DontDelete|Function, 1, 0 },
-    { "queryCommandEnabled", JSDocument::QueryCommandEnabledFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "queryCommandValue", JSDocument::QueryCommandValueFuncNum, DontDelete|Function, 1, 0 },
-    { "createElementNS", JSDocument::CreateElementNSFuncNum, DontDelete|Function, 2, 0 },
-    { "createCDATASection", JSDocument::CreateCDATASectionFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getElementsByTagNameNS", JSDocument::GetElementsByTagNameNSFuncNum, DontDelete|Function, 2, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "createDocumentFragment", JSDocument::CreateDocumentFragmentFuncNum, DontDelete|Function, 0, &JSDocumentPrototypeTableEntries[30] },
-    { "createAttribute", JSDocument::CreateAttributeFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[32] },
-    { "getElementsByTagName", JSDocument::GetElementsByTagNameFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[41] },
-    { "createAttributeNS", JSDocument::CreateAttributeNSFuncNum, DontDelete|Function, 2, &JSDocumentPrototypeTableEntries[37] },
-    { "createTreeWalker", JSDocument::CreateTreeWalkerFuncNum, DontDelete|Function, 4, &JSDocumentPrototypeTableEntries[38] },
-    { 0, 0, 0, 0, 0 },
-    { "getElementById", JSDocument::GetElementByIdFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[33] },
-    { "createTextNode", JSDocument::CreateTextNodeFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[31] },
-    { "createProcessingInstruction", JSDocument::CreateProcessingInstructionFuncNum, DontDelete|Function, 2, &JSDocumentPrototypeTableEntries[34] },
-    { "adoptNode", JSDocument::AdoptNodeFuncNum, DontDelete|Function, 1, 0 },
-    { "createEvent", JSDocument::CreateEventFuncNum, DontDelete|Function, 1, 0 },
-    { "createRange", JSDocument::CreateRangeFuncNum, DontDelete|Function, 0, 0 },
-    { "getOverrideStyle", JSDocument::GetOverrideStyleFuncNum, DontDelete|Function, 2, 0 },
-    { "createExpression", JSDocument::CreateExpressionFuncNum, DontDelete|Function, 2, 0 },
-    { "createNSResolver", JSDocument::CreateNSResolverFuncNum, DontDelete|Function, 1, &JSDocumentPrototypeTableEntries[40] },
-    { "evaluate", JSDocument::EvaluateFuncNum, DontDelete|Function, 5, &JSDocumentPrototypeTableEntries[39] },
-    { "execCommand", JSDocument::ExecCommandFuncNum, DontDelete|Function, 3, 0 },
-    { "queryCommandSupported", JSDocument::QueryCommandSupportedFuncNum, DontDelete|Function, 1, 0 },
-    { "elementFromPoint", JSDocument::ElementFromPointFuncNum, DontDelete|Function, 2, 0 }
+    { "createElement", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateElement, (intptr_t)1 },
+    { "createDocumentFragment", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateDocumentFragment, (intptr_t)0 },
+    { "createTextNode", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateTextNode, (intptr_t)1 },
+    { "createComment", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateComment, (intptr_t)1 },
+    { "createCDATASection", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateCDATASection, (intptr_t)1 },
+    { "createProcessingInstruction", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateProcessingInstruction, (intptr_t)2 },
+    { "createAttribute", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateAttribute, (intptr_t)1 },
+    { "createEntityReference", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateEntityReference, (intptr_t)1 },
+    { "getElementsByTagName", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetElementsByTagName, (intptr_t)1 },
+    { "importNode", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionImportNode, (intptr_t)2 },
+    { "createElementNS", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateElementNS, (intptr_t)2 },
+    { "createAttributeNS", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateAttributeNS, (intptr_t)2 },
+    { "getElementsByTagNameNS", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetElementsByTagNameNS, (intptr_t)2 },
+    { "getElementById", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetElementById, (intptr_t)1 },
+    { "adoptNode", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionAdoptNode, (intptr_t)1 },
+    { "createEvent", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateEvent, (intptr_t)1 },
+    { "createRange", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateRange, (intptr_t)0 },
+    { "createNodeIterator", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateNodeIterator, (intptr_t)4 },
+    { "createTreeWalker", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateTreeWalker, (intptr_t)4 },
+    { "getOverrideStyle", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetOverrideStyle, (intptr_t)2 },
+    { "createExpression", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateExpression, (intptr_t)2 },
+    { "createNSResolver", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionCreateNSResolver, (intptr_t)1 },
+    { "evaluate", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionEvaluate, (intptr_t)5 },
+    { "execCommand", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionExecCommand, (intptr_t)3 },
+    { "queryCommandEnabled", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQueryCommandEnabled, (intptr_t)1 },
+    { "queryCommandIndeterm", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQueryCommandIndeterm, (intptr_t)1 },
+    { "queryCommandState", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQueryCommandState, (intptr_t)1 },
+    { "queryCommandSupported", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQueryCommandSupported, (intptr_t)1 },
+    { "queryCommandValue", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQueryCommandValue, (intptr_t)1 },
+    { "getElementsByName", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetElementsByName, (intptr_t)1 },
+    { "elementFromPoint", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionElementFromPoint, (intptr_t)2 },
+    { "getSelection", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetSelection, (intptr_t)0 },
+    { "getCSSCanvasContext", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetCSSCanvasContext, (intptr_t)4 },
+    { "getElementsByClassName", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionGetElementsByClassName, (intptr_t)1 },
+    { "querySelector", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQuerySelector, (intptr_t)1 },
+    { "querySelectorAll", DontDelete|Function, (intptr_t)jsDocumentPrototypeFunctionQuerySelectorAll, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentPrototypeTable = 
-{
-    2, 42, JSDocumentPrototypeTableEntries, 30
-};
+static const HashTable JSDocumentPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 511, JSDocumentPrototypeTableValues, 0 };
+#else
+    { 135, 127, JSDocumentPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSDocumentPrototype::info = { "DocumentPrototype", 0, &JSDocumentPrototypeTable, 0 };
+const ClassInfo JSDocumentPrototype::s_info = { "DocumentPrototype", 0, &JSDocumentPrototypeTable, 0 };
 
 JSObject* JSDocumentPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSDocumentPrototype>(exec, "[[JSDocument.prototype]]");
+    return getDOMPrototype<JSDocument>(exec);
 }
 
 bool JSDocumentPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSDocumentPrototypeFunction, JSObject>(exec, &JSDocumentPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSDocumentPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSDocument::info = { "Document", &JSEventTargetNode::info, &JSDocumentTable, 0 };
+const ClassInfo JSDocument::s_info = { "Document", &JSEventTargetNode::s_info, &JSDocumentTable, 0 };
 
-JSDocument::JSDocument(ExecState* exec, Document* impl)
-    : JSEventTargetNode(exec, impl)
+JSDocument::JSDocument(PassRefPtr<Structure> structure, PassRefPtr<Document> impl)
+    : JSEventTargetNode(structure, impl)
 {
-    setPrototype(JSDocumentPrototype::self(exec));
 }
 
 JSDocument::~JSDocument()
 {
-    ScriptInterpreter::forgetDOMObject(static_cast<Document*>(impl()));
+    forgetDOMObject(*Heap::heap(this)->globalData(), static_cast<Document*>(impl()));
 }
 
-bool JSDocument::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+JSObject* JSDocument::createPrototype(ExecState* exec)
 {
-    return getStaticValueSlot<JSDocument, JSEventTargetNode>(exec, &JSDocumentTable, this, propertyName, slot);
+    return new (exec) JSDocumentPrototype(JSDocumentPrototype::createStructure(JSEventTargetNodePrototype::self(exec)));
 }
 
-JSValue* JSDocument::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsDocumentDoctype(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DoctypeAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->doctype()));
-    }
-    case ImplementationAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->implementation()));
-    }
-    case DocumentElementAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->documentElement()));
-    }
-    case InputEncodingAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->inputEncoding());
-    }
-    case XMLEncodingAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->xmlEncoding());
-    }
-    case XMLVersionAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->xmlVersion());
-    }
-    case XMLStandaloneAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsBoolean(imp->xmlStandalone());
-    }
-    case DocumentURIAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->documentURI());
-    }
-    case DefaultViewAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->defaultView()));
-    }
-    case StyleSheetsAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->styleSheets()), imp);
-    }
-    case URLAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsString(imp->URL());
-    }
-    case CharsetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrUndefined(imp->charset());
-    }
-    case DefaultCharsetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrUndefined(imp->defaultCharset());
-    }
-    case ReadyStateAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrUndefined(imp->readyState());
-    }
-    case CharacterSetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->characterSet());
-    }
-    case PreferredStylesheetSetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->preferredStylesheetSet());
-    }
-    case SelectedStylesheetSetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        return jsStringOrNull(imp->selectedStylesheetSet());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->doctype()));
 }
 
-void JSDocument::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsDocumentImplementation(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSDocument, JSEventTargetNode>(exec, propertyName, value, attr, &JSDocumentTable, this);
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->implementation()));
 }
 
-void JSDocument::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsDocumentDocumentElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XMLVersionAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setXMLVersion(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case XMLStandaloneAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setXMLStandalone(value->toBoolean(exec), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case DocumentURIAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        imp->setDocumentURI(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case CharsetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        imp->setCharset(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case SelectedStylesheetSetAttrNum: {
-        Document* imp = static_cast<Document*>(impl());
-
-        imp->setSelectedStylesheetSet(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->documentElement()));
 }
 
-JSValue* JSDocument::getConstructor(ExecState* exec)
+JSValuePtr jsDocumentInputEncoding(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSDocumentConstructor>(exec, "[[Document.constructor]]");
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->inputEncoding());
 }
-JSValue* JSDocumentPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsDocumentXMLEncoding(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSDocument::info))
-      return throwError(exec, TypeError);
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->xmlEncoding());
+}
 
-    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObj)->impl());
+JSValuePtr jsDocumentXMLVersion(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->xmlVersion());
+}
 
-    switch (id) {
-    case JSDocument::CreateElementFuncNum: {
-        ExceptionCode ec = 0;
-        String tagName = args[0]->toString(exec);
+JSValuePtr jsDocumentXMLStandalone(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->xmlStandalone());
+}
+
+JSValuePtr jsDocumentDocumentURI(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->documentURI());
+}
+
+JSValuePtr jsDocumentDefaultView(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->defaultView()));
+}
+
+JSValuePtr jsDocumentStyleSheets(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->styleSheets()));
+}
+
+JSValuePtr jsDocumentTitle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->title());
+}
+
+JSValuePtr jsDocumentReferrer(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->referrer());
+}
+
+JSValuePtr jsDocumentDomain(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->domain());
+}
+
+JSValuePtr jsDocumentURL(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->url());
+}
+
+JSValuePtr jsDocumentCookie(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->cookie());
+}
+
+JSValuePtr jsDocumentBody(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->body()));
+}
+
+JSValuePtr jsDocumentImages(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->images()));
+}
+
+JSValuePtr jsDocumentApplets(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->applets()));
+}
+
+JSValuePtr jsDocumentLinks(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->links()));
+}
+
+JSValuePtr jsDocumentForms(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->forms()));
+}
+
+JSValuePtr jsDocumentAnchors(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->anchors()));
+}
+
+JSValuePtr jsDocumentLastModified(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->lastModified());
+}
+
+JSValuePtr jsDocumentLocation(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSDocument*>(asObject(slot.slotBase()))->location(exec);
+}
+
+JSValuePtr jsDocumentCharset(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrUndefined(exec, imp->charset());
+}
+
+JSValuePtr jsDocumentDefaultCharset(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrUndefined(exec, imp->defaultCharset());
+}
+
+JSValuePtr jsDocumentReadyState(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrUndefined(exec, imp->readyState());
+}
+
+JSValuePtr jsDocumentCharacterSet(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->characterSet());
+}
+
+JSValuePtr jsDocumentPreferredStylesheetSet(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->preferredStylesheetSet());
+}
+
+JSValuePtr jsDocumentSelectedStylesheetSet(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->selectedStylesheetSet());
+}
+
+JSValuePtr jsDocumentConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSDocument*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSDocument::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSDocument, Base>(exec, propertyName, value, &JSDocumentTable, this, slot);
+}
+
+void setJSDocumentXMLVersion(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setXMLVersion(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSDocumentXMLStandalone(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setXMLStandalone(value->toBoolean(exec), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSDocumentDocumentURI(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setDocumentURI(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSDocumentTitle(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setTitle(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSDocumentDomain(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setDomain(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSDocumentCookie(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setCookie(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSDocumentBody(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setBody(toHTMLElement(value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSDocumentLocation(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    static_cast<JSDocument*>(thisObject)->setLocation(exec, value);
+}
+
+void setJSDocumentCharset(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setCharset(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSDocumentSelectedStylesheetSet(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Document* imp = static_cast<Document*>(static_cast<JSDocument*>(thisObject)->impl());
+    imp->setSelectedStylesheetSet(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSDocument::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSDocumentConstructor>(exec);
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateElement(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& tagName = valueToStringWithNullCheck(exec, args.at(exec, 0));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createElement(tagName, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateDocumentFragmentFuncNum: {
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createElement(tagName, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateDocumentFragment(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createDocumentFragment()));
-        return result;
-    }
-    case JSDocument::CreateTextNodeFuncNum: {
-        String data = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createDocumentFragment()));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateTextNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& data = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createTextNode(data)));
-        return result;
-    }
-    case JSDocument::CreateCommentFuncNum: {
-        String data = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createTextNode(data)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateComment(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& data = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createComment(data)));
-        return result;
-    }
-    case JSDocument::CreateCDATASectionFuncNum: {
-        ExceptionCode ec = 0;
-        String data = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createComment(data)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateCDATASection(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& data = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createCDATASection(data, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateProcessingInstructionFuncNum: {
-        ExceptionCode ec = 0;
-        String target = args[0]->toString(exec);
-        String data = args[1]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createCDATASection(data, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateProcessingInstruction(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& target = args.at(exec, 0)->toString(exec);
+    const UString& data = args.at(exec, 1)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createProcessingInstruction(target, data, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateAttributeFuncNum: {
-        ExceptionCode ec = 0;
-        String name = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createProcessingInstruction(target, data, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& name = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createAttribute(name, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateEntityReferenceFuncNum: {
-        ExceptionCode ec = 0;
-        String name = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createAttribute(name, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateEntityReference(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& name = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createEntityReference(name, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::GetElementsByTagNameFuncNum: {
-        String tagname = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createEntityReference(name, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetElementsByTagName(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& tagname = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementsByTagName(tagname)));
-        return result;
-    }
-    case JSDocument::ImportNodeFuncNum: {
-        ExceptionCode ec = 0;
-        Node* importedNode = toNode(args[0]);
-        bool deep = args[1]->toBoolean(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByTagName(tagname)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionImportNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* importedNode = toNode(args.at(exec, 0));
+    bool deep = args.at(exec, 1)->toBoolean(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->importNode(importedNode, deep, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateElementNSFuncNum: {
-        ExceptionCode ec = 0;
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String qualifiedName = args[1]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->importNode(importedNode, deep, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateElementNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& qualifiedName = valueToStringWithNullCheck(exec, args.at(exec, 1));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createElementNS(namespaceURI, qualifiedName, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateAttributeNSFuncNum: {
-        ExceptionCode ec = 0;
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String qualifiedName = args[1]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createElementNS(namespaceURI, qualifiedName, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateAttributeNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& qualifiedName = valueToStringWithNullCheck(exec, args.at(exec, 1));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createAttributeNS(namespaceURI, qualifiedName, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::GetElementsByTagNameNSFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-        String localName = args[1]->toString(exec);
+    JSC::JSValuePtr result = toJSNewlyCreated(exec, WTF::getPtr(imp->createAttributeNS(namespaceURI, qualifiedName, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetElementsByTagNameNS(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+    const UString& localName = args.at(exec, 1)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementsByTagNameNS(namespaceURI, localName)));
-        return result;
-    }
-    case JSDocument::GetElementByIdFuncNum: {
-        String elementId = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByTagNameNS(namespaceURI, localName)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetElementById(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& elementId = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementById(elementId)));
-        return result;
-    }
-    case JSDocument::AdoptNodeFuncNum: {
-        ExceptionCode ec = 0;
-        Node* source = toNode(args[0]);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementById(elementId)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionAdoptNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* source = toNode(args.at(exec, 0));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->adoptNode(source, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateEventFuncNum: {
-        ExceptionCode ec = 0;
-        String eventType = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->adoptNode(source, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& eventType = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createEvent(eventType, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateRangeFuncNum: {
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createEvent(eventType, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateRange(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createRange()));
-        return result;
-    }
-    case JSDocument::CreateNodeIteratorFuncNum: {
-        ExceptionCode ec = 0;
-        Node* root = toNode(args[0]);
-        bool whatToShowOk;
-        unsigned whatToShow = args[1]->toInt32(exec, whatToShowOk);
-        if (!whatToShowOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createRange()));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateNodeIterator(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* root = toNode(args.at(exec, 0));
+    unsigned whatToShow = args.at(exec, 1)->toInt32(exec);
+    RefPtr<NodeFilter> filter = toNodeFilter(args.at(exec, 2));
+    bool expandEntityReferences = args.at(exec, 3)->toBoolean(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createNodeIterator(root, whatToShow, filter.get(), expandEntityReferences, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateTreeWalker(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* root = toNode(args.at(exec, 0));
+    unsigned whatToShow = args.at(exec, 1)->toInt32(exec);
+    RefPtr<NodeFilter> filter = toNodeFilter(args.at(exec, 2));
+    bool expandEntityReferences = args.at(exec, 3)->toBoolean(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createTreeWalker(root, whatToShow, filter.get(), expandEntityReferences, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetOverrideStyle(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    Element* element = toElement(args.at(exec, 0));
+    const UString& pseudoElement = args.at(exec, 1)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getOverrideStyle(element, pseudoElement)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateExpression(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& expression = args.at(exec, 0)->toString(exec);
+    RefPtr<XPathNSResolver> customResolver;
+    XPathNSResolver* resolver = toXPathNSResolver(args.at(exec, 1));
+    if (!resolver) {
+        customResolver = JSCustomXPathNSResolver::create(exec, args.at(exec, 1));
+        if (exec->hadException())
             return jsUndefined();
-        }
-        NodeFilter* filter = toNodeFilter(args[2]);
-        bool entityReferenceExpansion = args[3]->toBoolean(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createNodeIterator(root, whatToShow, filter, entityReferenceExpansion, ec)));
-        setDOMException(exec, ec);
-        return result;
+        resolver = customResolver.get();
     }
-    case JSDocument::CreateTreeWalkerFuncNum: {
-        ExceptionCode ec = 0;
-        Node* root = toNode(args[0]);
-        bool whatToShowOk;
-        unsigned whatToShow = args[1]->toInt32(exec, whatToShowOk);
-        if (!whatToShowOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createExpression(expression, resolver, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionCreateNSResolver(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    Node* nodeResolver = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->createNSResolver(nodeResolver)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionEvaluate(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& expression = args.at(exec, 0)->toString(exec);
+    Node* contextNode = toNode(args.at(exec, 1));
+    RefPtr<XPathNSResolver> customResolver;
+    XPathNSResolver* resolver = toXPathNSResolver(args.at(exec, 2));
+    if (!resolver) {
+        customResolver = JSCustomXPathNSResolver::create(exec, args.at(exec, 2));
+        if (exec->hadException())
             return jsUndefined();
-        }
-        NodeFilter* filter = toNodeFilter(args[2]);
-        bool entityReferenceExpansion = args[3]->toBoolean(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createTreeWalker(root, whatToShow, filter, entityReferenceExpansion, ec)));
-        setDOMException(exec, ec);
-        return result;
+        resolver = customResolver.get();
     }
-    case JSDocument::GetOverrideStyleFuncNum: {
-        Element* element = toElement(args[0]);
-        String pseudoElement = args[1]->toString(exec);
+    unsigned short type = args.at(exec, 3)->toInt32(exec);
+    XPathResult* inResult = toXPathResult(args.at(exec, 4));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getOverrideStyle(element, pseudoElement)));
-        return result;
-    }
-    case JSDocument::CreateExpressionFuncNum: {
-        ExceptionCode ec = 0;
-        String expression = args[0]->toString(exec);
-        RefPtr<XPathNSResolver> customResolver;
-        XPathNSResolver* resolver = toXPathNSResolver(args[1]);
-        if (!resolver) {
-            customResolver = JSCustomXPathNSResolver::create(exec, args[1]);
-            if (exec->hadException())
-                return jsUndefined();
-            resolver = customResolver.get();
-        }
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->evaluate(expression, contextNode, resolver, type, inResult, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionExecCommand(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
+    bool userInterface = args.at(exec, 1)->toBoolean(exec);
+    const UString& value = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 2));
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createExpression(expression, resolver, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::CreateNSResolverFuncNum: {
-        Node* nodeResolver = toNode(args[0]);
+    JSC::JSValuePtr result = jsBoolean(imp->execCommand(command, userInterface, value));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQueryCommandEnabled(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->createNSResolver(nodeResolver)));
-        return result;
-    }
-    case JSDocument::EvaluateFuncNum: {
-        ExceptionCode ec = 0;
-        String expression = args[0]->toString(exec);
-        Node* contextNode = toNode(args[1]);
-        RefPtr<XPathNSResolver> customResolver;
-        XPathNSResolver* resolver = toXPathNSResolver(args[2]);
-        if (!resolver) {
-            customResolver = JSCustomXPathNSResolver::create(exec, args[2]);
-            if (exec->hadException())
-                return jsUndefined();
-            resolver = customResolver.get();
-        }
-        unsigned short type = args[3]->toInt32(exec);
-        XPathResult* inResult = toXPathResult(args[4]);
+    JSC::JSValuePtr result = jsBoolean(imp->queryCommandEnabled(command));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQueryCommandIndeterm(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->evaluate(expression, contextNode, resolver, type, inResult, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSDocument::ExecCommandFuncNum: {
-        String command = args[0]->toString(exec);
-        bool userInterface = args[1]->toBoolean(exec);
-        String value = valueToStringWithUndefinedOrNullCheck(exec, args[2]);
+    JSC::JSValuePtr result = jsBoolean(imp->queryCommandIndeterm(command));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQueryCommandState(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = jsBoolean(imp->execCommand(command, userInterface, value));
-        return result;
-    }
-    case JSDocument::QueryCommandEnabledFuncNum: {
-        String command = args[0]->toString(exec);
+    JSC::JSValuePtr result = jsBoolean(imp->queryCommandState(command));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQueryCommandSupported(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = jsBoolean(imp->queryCommandEnabled(command));
-        return result;
-    }
-    case JSDocument::QueryCommandIndetermFuncNum: {
-        String command = args[0]->toString(exec);
+    JSC::JSValuePtr result = jsBoolean(imp->queryCommandSupported(command));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQueryCommandValue(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& command = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = jsBoolean(imp->queryCommandIndeterm(command));
-        return result;
-    }
-    case JSDocument::QueryCommandStateFuncNum: {
-        String command = args[0]->toString(exec);
+    JSC::JSValuePtr result = jsStringOrFalse(exec, imp->queryCommandValue(command));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetElementsByName(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& elementName = args.at(exec, 0)->toString(exec);
 
 
-        KJS::JSValue* result = jsBoolean(imp->queryCommandState(command));
-        return result;
-    }
-    case JSDocument::QueryCommandSupportedFuncNum: {
-        String command = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByName(elementName)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionElementFromPoint(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    int x = args.at(exec, 0)->toInt32(exec);
+    int y = args.at(exec, 1)->toInt32(exec);
 
 
-        KJS::JSValue* result = jsBoolean(imp->queryCommandSupported(command));
-        return result;
-    }
-    case JSDocument::QueryCommandValueFuncNum: {
-        String command = args[0]->toString(exec);
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->elementFromPoint(x, y)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetSelection(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
 
 
-        KJS::JSValue* result = jsStringOrFalse(imp->queryCommandValue(command));
-        return result;
-    }
-    case JSDocument::ElementFromPointFuncNum: {
-        bool xOk;
-        int x = args[0]->toInt32(exec, xOk);
-        if (!xOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool yOk;
-        int y = args[1]->toInt32(exec, yOk);
-        if (!yOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getSelection()));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetCSSCanvasContext(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& contextId = args.at(exec, 0)->toString(exec);
+    const UString& name = args.at(exec, 1)->toString(exec);
+    int width = args.at(exec, 2)->toInt32(exec);
+    int height = args.at(exec, 3)->toInt32(exec);
 
 
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->elementFromPoint(x, y)));
-        return result;
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getCSSCanvasContext(contextId, name, width, height)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionGetElementsByClassName(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    const UString& tagname = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getElementsByClassName(tagname)));
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQuerySelector(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelector(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsDocumentPrototypeFunctionQuerySelectorAll(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocument::s_info))
+        return throwError(exec, TypeError);
+    JSDocument* castedThisObj = static_cast<JSDocument*>(asObject(thisValue));
+    Document* imp = static_cast<Document*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelectorAll(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+Document* toDocument(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSDocument::s_info) ? static_cast<JSDocument*>(asObject(value))->impl() : 0;
 }
 
 }

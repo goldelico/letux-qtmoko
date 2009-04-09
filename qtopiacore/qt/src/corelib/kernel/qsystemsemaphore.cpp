@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
   \class QSystemSemaphore
+  \ingroup ipc
   \since 4.4
 
   \brief The QSystemSemaphore class provides a general counting system semaphore.
@@ -60,43 +65,6 @@ QT_BEGIN_NAMESPACE
   {processes}. This means QSystemSemaphore is a much heavier class, so
   if your application doesn't need to access your semaphores across
   multiple processes, you will probably want to use QSemaphore.
-
-  When using this class, be aware of the following platform
-  differences:
-
-  \list
-
-  \o Windows: QSystemSemaphore does not own its underlying system
-  semaphore. Windows owns it. This means that when all instances of
-  QSystemSemaphore for a particular key have been destroyed, either by
-  having their destructors called, or because one or more processes
-  crash, Windows removes the underlying system semaphore.
-
-  \o Unix: QSystemSemaphore owns the underlying system semaphore in
-  Unix systems. This means that the last process having an instance of
-  QSystemSemaphore for a particular key must remove the underlying
-  system semaphore in its destructor. If the last process crashes
-  without running the QSystemSemaphore destructor, Unix does not
-  automatically remove the underlying system semaphore, and the
-  semaphore survives the crash. A subsequent process that constructs a
-  QSystemSemaphore with the same key will then be given the existing
-  system semaphore. In that case, if the QSystemSemaphore constructor
-  has specified its \l {QSystemSemaphore::AccessMode} {access mode} as
-  \l {QSystemSemaphore::} {Open}, its initial resource count will not
-  be reset to the one provided but remain set to the value it received
-  in the crashed process. To protect against this, the first process
-  to create a semaphore for a particular key (usually a server), must
-  pass its \l {QSystemSemaphore::AccessMode} {access mode} as \l
-  {QSystemSemaphore::} {Create}, which will force Unix to reset the
-  resource count in the underlying system semaphore.
-
-  \o Unix: When a process using QSystemSemaphore terminates for any
-  reason, Unix automatically reverses the effect of all acquire
-  operations that were not released. Thus if the process acquires a
-  resource and then exits without releasing it, Unix will release that
-  resource.
-
-  \endlist
 
   Semaphores support two fundamental operations, acquire() and release():
 
@@ -118,7 +86,46 @@ QT_BEGIN_NAMESPACE
   to a circular buffer shared by a producer process and a consumer
   processes.
 
-  See also QSharedMemory, QSemaphore
+  \section1 Platform-Specific Behavior
+
+  When using this class, be aware of the following platform
+  differences:
+
+  \bold{Windows:} QSystemSemaphore does not own its underlying system
+  semaphore. Windows owns it. This means that when all instances of
+  QSystemSemaphore for a particular key have been destroyed, either by
+  having their destructors called, or because one or more processes
+  crash, Windows removes the underlying system semaphore.
+
+  \bold{Unix:}
+
+  \list
+  \o QSystemSemaphore owns the underlying system semaphore
+  in Unix systems. This means that the last process having an instance of
+  QSystemSemaphore for a particular key must remove the underlying
+  system semaphore in its destructor. If the last process crashes
+  without running the QSystemSemaphore destructor, Unix does not
+  automatically remove the underlying system semaphore, and the
+  semaphore survives the crash. A subsequent process that constructs a
+  QSystemSemaphore with the same key will then be given the existing
+  system semaphore. In that case, if the QSystemSemaphore constructor
+  has specified its \l {QSystemSemaphore::AccessMode} {access mode} as
+  \l {QSystemSemaphore::} {Open}, its initial resource count will not
+  be reset to the one provided but remain set to the value it received
+  in the crashed process. To protect against this, the first process
+  to create a semaphore for a particular key (usually a server), must
+  pass its \l {QSystemSemaphore::AccessMode} {access mode} as \l
+  {QSystemSemaphore::} {Create}, which will force Unix to reset the
+  resource count in the underlying system semaphore.
+
+  \o When a process using QSystemSemaphore terminates for
+  any reason, Unix automatically reverses the effect of all acquire
+  operations that were not released. Thus if the process acquires a
+  resource and then exits without releasing it, Unix will release that
+  resource.
+  \endlist
+
+  \sa QSharedMemory, QSemaphore
  */
 
 /*!
@@ -259,7 +266,9 @@ QString QSystemSemaphore::key() const
   them is released by another process or thread having a semaphore
   with the same key.
 
-  If false is returned, a system error has occurred.
+  If false is returned, a system error has occurred. Call error()
+  to get a value of QSystemSemaphore::SystemSemaphoreError that
+  indicates which error occurred.
 
   \sa release()
  */

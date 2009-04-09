@@ -11,6 +11,20 @@ CL_NS_USE(analysis)
 CL_NS_USE(util)
 CL_NS_DEF2(analysis,standard)
 
+  const static TCHAR* tokenImageArray[] = {
+    _T("<EOF>"),
+    _T("<UNKNOWN>"),
+    _T("<ALPHANUM>"),
+    _T("<APOSTROPHE>"),
+    _T("<ACRONYM>"),
+    _T("<COMPANY>"),
+    _T("<EMAIL>"),
+    _T("<HOST>"),
+    _T("<NUM>"),
+    _T("<CJK>")
+  };
+  const TCHAR** tokenImage = tokenImageArray;
+
   /* A bunch of shortcut macros, many of which make assumptions about variable
   ** names.  These macros enhance readability, not just convenience! */
   #define EOS           (ch==-1 || rd->Eos())

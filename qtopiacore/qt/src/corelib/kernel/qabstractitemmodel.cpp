@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,40 +54,18 @@
 
 QT_BEGIN_NAMESPACE
 
-class QPersistentModelIndexDataLessThan
-{
-public:
-    inline bool operator()(const QPersistentModelIndexData *left,
-                           const QPersistentModelIndexData *right) const
-    { return (left->index < right->index); }
-};
-
 QPersistentModelIndexData *QPersistentModelIndexData::create(const QModelIndex &index)
 {
     Q_ASSERT(index.isValid()); // we will _never_ insert an invalid index in the list
     QPersistentModelIndexData *d = 0;
-    const QAbstractItemModelPrivate *p = index.model()->d_func();
-    const QPersistentModelIndexData *previous = p->persistent.previous;
-    if (previous && previous->index == index) {
-        d = p->persistent.previous;
-    } else { // do a binary search, or sorted insert
-        const QPersistentModelIndexData tmp(index);
-        QAbstractItemModel *model = const_cast<QAbstractItemModel*>(index.model());
-        QVector<QPersistentModelIndexData*> *indexes = &(model->d_func()->persistent.indexes);
-        QVector<QPersistentModelIndexData*>::iterator begin = indexes->begin();
-        QVector<QPersistentModelIndexData*>::iterator end = indexes->end();
-        QVector<QPersistentModelIndexData*>::iterator it =
-            qLowerBound(begin, end, &tmp, QPersistentModelIndexDataLessThan());
-        if (it != end && (*it)->index == index) {
-            d = (*it);
-        } else {
-            d = new QPersistentModelIndexData();
-            d->model = index.model();
-            d->index = index;
-            model->d_func()->persistent.indexes.insert(it, d);
-            model->d_func()->addPersistentIndexData(d);
-        }
-        model->d_func()->persistent.previous = d;
+    QAbstractItemModel *model = const_cast<QAbstractItemModel *>(index.model());
+    QHash<QModelIndex, QPersistentModelIndexData *> &indexes = model->d_func()->persistent.indexes;
+    const QHash<QModelIndex, QPersistentModelIndexData *>::iterator it = indexes.find(index);
+    if (it != indexes.end()) {
+        d = (*it);
+    } else {
+        d = new QPersistentModelIndexData(index);
+        indexes.insert(index, d);
     }
     Q_ASSERT(d);
     return d;
@@ -93,7 +75,7 @@ void QPersistentModelIndexData::destroy(QPersistentModelIndexData *data)
 {
     Q_ASSERT(data);
     Q_ASSERT(data->ref == 0);
-    QAbstractItemModel *model = const_cast<QAbstractItemModel*>(data->model);
+    QAbstractItemModel *model = const_cast<QAbstractItemModel *>(data->model);
     // a valid persistent model index with a null model pointer can only happen if the model was destroyed
     if (model) {
         QAbstractItemModelPrivate *p = model->d_func();
@@ -204,6 +186,7 @@ bool QPersistentModelIndex::operator<(const QPersistentModelIndex &other) const
 {
     if (d && other.d)
         return d->index < other.d->index;
+
     return d < other.d;
 }
 
@@ -486,53 +469,25 @@ QAbstractItemModel *QAbstractItemModelPrivate::staticEmptyModel()
 
 void QAbstractItemModelPrivate::removePersistentIndexData(QPersistentModelIndexData *data)
 {
-    int data_index = persistent.indexes.indexOf(data);
-    persistent.indexes.remove(data_index);
+    if (data->index.isValid()) {
+        int removed = persistent.indexes.remove(data->index);
+        Q_ASSERT_X(removed == 1, "QPersistentModelIndex::~QPersistentModelIndex",
+                   "persistent model indexes corrupted"); //maybe the index was somewhat invalid?
+        // This assert may happen if the model use changePersistentIndex in a way that could result on two
+        // QPersistentModelIndex pointing to the same index.
+        Q_UNUSED(removed);
+    }
     // make sure our optimization still works
-    if (persistent.previous == data)
-        persistent.previous = 0;
-    Q_ASSERT(!persistent.indexes.contains(data));
-    // update the references to moved persistent indexes
     for (int i = persistent.moved.count() - 1; i >= 0; --i) {
-        QList<int> moved = persistent.moved.at(i);
-        for (int j = moved.count() - 1; j >= 0; --j) {
-            if (moved.at(j) > data_index)
-                --persistent.moved[i][j];
-            else if (moved.at(j) == data_index)
-                persistent.moved[i].removeAll(j);
-        }
+        int idx = persistent.moved[i].indexOf(data);
+        if (idx >= 0)
+            persistent.moved[i].remove(idx);
     }
     // update the references to invalidated persistent indexes
     for (int i = persistent.invalidated.count() - 1; i >= 0; --i) {
-        QList<int> invalidated = persistent.invalidated.at(i);
-        for (int j = invalidated.count() - 1; j >= 0; --j) {
-            if (invalidated.at(j) > data_index)
-                --persistent.invalidated[i][j];
-            else if (invalidated.at(j) == data_index)
-                persistent.invalidated[i].removeAll(j);
-        }
-    }
-
-}
-
-void QAbstractItemModelPrivate::addPersistentIndexData(QPersistentModelIndexData *data)
-{
-    int data_index = persistent.indexes.indexOf(data);
-    // update the references to moved persistent indexes
-    for (int i = persistent.moved.count() - 1; i >= 0; --i) {
-        QList<int> moved = persistent.moved.at(i);
-        for (int j = moved.count() - 1; j >= 0; --j) {
-            if (moved.at(j) >= data_index)
-                ++persistent.moved[i][j];
-        }
-    }
-    // update the references to invalidated persistent indexes
-    for (int i = persistent.invalidated.count() - 1; i >= 0; --i) {
-        QList<int> invalidated = persistent.invalidated.at(i);
-        for (int j = invalidated.count() - 1; j >= 0; --j) {
-            if (invalidated.at(j) >= data_index)
-                ++persistent.invalidated[i][j];
-        }
+        int idx = persistent.invalidated[i].indexOf(data);
+        if (idx >= 0)
+            persistent.invalidated[i].remove(idx);
     }
 
 }
@@ -542,12 +497,14 @@ void QAbstractItemModelPrivate::rowsAboutToBeInserted(const QModelIndex &parent,
 {
     Q_Q(QAbstractItemModel);
     Q_UNUSED(last);
-    QList<int> persistent_moved;
+    QVector<QPersistentModelIndexData *> persistent_moved;
     if (first < q->rowCount(parent)) {
-        for (int position = 0; position < persistent.indexes.count(); ++position) {
-            const QModelIndex &index = persistent.indexes.at(position)->index;
+        for (QHash<QModelIndex, QPersistentModelIndexData *>::const_iterator it = persistent.indexes.constBegin();
+             it != persistent.indexes.constEnd(); ++it) {
+            QPersistentModelIndexData *data = *it;
+            const QModelIndex &index = data->index;
             if (index.row() >= first && index.isValid() && index.parent() == parent) {
-                persistent_moved.append(position);
+                persistent_moved.append(data);
             }
         }
     }
@@ -557,33 +514,41 @@ void QAbstractItemModelPrivate::rowsAboutToBeInserted(const QModelIndex &parent,
 void QAbstractItemModelPrivate::rowsInserted(const QModelIndex &parent,
                                              int first, int last)
 {
-    QList<int> persistent_moved = persistent.moved.pop();
+    QVector<QPersistentModelIndexData *> persistent_moved = persistent.moved.pop();
     int count = (last - first) + 1; // it is important to only use the delta, because the change could be nested
-    for (int i = 0; i < persistent_moved.count(); ++i) {
-        int position = persistent_moved.at(i);
-        QModelIndex old = persistent.indexes.at(position)->index;
-        persistent.indexes[position]->index =
-            q_func()->index(old.row() + count, old.column(), parent);
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_moved.constBegin();
+         it != persistent_moved.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        QModelIndex old = data->index;
+        persistent.indexes.erase(persistent.indexes.find(old));
+        data->index = q_func()->index(old.row() + count, old.column(), parent);
+        if (data->index.isValid()) {
+            persistent.insertMultiAtEnd(data->index, data);
+        } else {
+            qWarning() << "QAbstractItemModel::endInsertRows:  Invalid index (" << old.row() + count << "," << old.column() << ") in model" << q_func();
+        }
     }
 }
 
 void QAbstractItemModelPrivate::rowsAboutToBeRemoved(const QModelIndex &parent,
                                                      int first, int last)
 {
-    QList<int> persistent_moved;
-    QList<int> persistent_invalidated;
+    QVector<QPersistentModelIndexData *>  persistent_moved;
+    QVector<QPersistentModelIndexData *>  persistent_invalidated;
     // find the persistent indexes that are affected by the change, either by being in the removed subtree
     // or by being on the same level and below the removed rows
-    for (int position = 0; position < persistent.indexes.count(); ++position) {
+    for (QHash<QModelIndex, QPersistentModelIndexData *>::const_iterator it = persistent.indexes.constBegin();
+         it != persistent.indexes.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
         bool level_changed = false;
-        QModelIndex current = persistent.indexes.at(position)->index;
+        QModelIndex current = data->index;
         while (current.isValid()) {
             QModelIndex current_parent = current.parent();
             if (current_parent == parent) { // on the same level as the change
                 if (!level_changed && current.row() > last) // below the removed rows
-                    persistent_moved.append(position);
+                    persistent_moved.append(data);
                 else if (current.row() <= last && current.row() >= first) // in the removed subtree
-                    persistent_invalidated.append(position);
+                    persistent_invalidated.append(data);
                 break;
             }
             current = current_parent;
@@ -598,25 +563,28 @@ void QAbstractItemModelPrivate::rowsAboutToBeRemoved(const QModelIndex &parent,
 void QAbstractItemModelPrivate::rowsRemoved(const QModelIndex &parent,
                                             int first, int last)
 {
-    QList<int> persistent_moved = persistent.moved.pop();
-    // it is important that we update the persistent index positions first and then invalidate indexes later
-    // this is because the invalidation of indexes may remove them from the list of persistent indexes
-    // and this in turn will go through the list of moved and invalidated indexes and update them
+    QVector<QPersistentModelIndexData *> persistent_moved = persistent.moved.pop();
     int count = (last - first) + 1; // it is important to only use the delta, because the change could be nested
-    for (int i = 0; i < persistent_moved.count(); ++i) {
-        int position = persistent_moved.at(i);
-        QModelIndex old = persistent.indexes.at(position)->index;
-        persistent.indexes[position]->index =
-            q_func()->index(old.row() - count, old.column(), parent);
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_moved.constBegin();
+         it != persistent_moved.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        QModelIndex old = data->index;
+        persistent.indexes.erase(persistent.indexes.find(old));
+        data->index = q_func()->index(old.row() - count, old.column(), parent);
+        if (data->index.isValid()) {
+            persistent.insertMultiAtEnd(data->index, data);
+        } else {
+            qWarning() << "QAbstractItemModel::endRemoveRows:  Invalid index (" << old.row() + count << "," << old.column() << ") in model" << q_func();
+        }
     }
-    QList<int> persistent_invalidated = persistent.invalidated.pop();
-    for (int j = 0; j < persistent_invalidated.count(); ++j) {
-        int position = persistent_invalidated.at(j);
-        persistent.indexes.at(position)->index = QModelIndex();
+    QVector<QPersistentModelIndexData *> persistent_invalidated = persistent.invalidated.pop();
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_invalidated.constBegin();
+         it != persistent_invalidated.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        persistent.indexes.erase(persistent.indexes.find(data->index));
+        data->index = QModelIndex();
+        data->model = 0;
     }
-    // if indexes were invalidated we need to restore the sorted order
-    if (!persistent_invalidated.isEmpty())
-        qSort(persistent.indexes);
 }
 
 void QAbstractItemModelPrivate::columnsAboutToBeInserted(const QModelIndex &parent,
@@ -624,12 +592,14 @@ void QAbstractItemModelPrivate::columnsAboutToBeInserted(const QModelIndex &pare
 {
     Q_Q(QAbstractItemModel);
     Q_UNUSED(last);
-    QList<int> persistent_moved;
+    QVector<QPersistentModelIndexData *> persistent_moved;
     if (first < q->columnCount(parent)) {
-        for (int position = 0; position < persistent.indexes.count(); ++position) {
-            const QModelIndex &index = persistent.indexes.at(position)->index;
+        for (QHash<QModelIndex, QPersistentModelIndexData *>::const_iterator it = persistent.indexes.constBegin();
+             it != persistent.indexes.constEnd(); ++it) {
+            QPersistentModelIndexData *data = *it;
+            const QModelIndex &index = data->index;
             if (index.column() >= first && index.isValid() && index.parent() == parent)
-                persistent_moved.append(position);
+                persistent_moved.append(data);
         }
     }
     persistent.moved.push(persistent_moved);
@@ -638,33 +608,41 @@ void QAbstractItemModelPrivate::columnsAboutToBeInserted(const QModelIndex &pare
 void QAbstractItemModelPrivate::columnsInserted(const QModelIndex &parent,
                                                 int first, int last)
 {
-    QList<int> persistent_moved = persistent.moved.pop();
+    QVector<QPersistentModelIndexData *> persistent_moved = persistent.moved.pop();
     int count = (last - first) + 1; // it is important to only use the delta, because the change could be nested
-    for (int i = 0; i < persistent_moved.count(); ++i) {
-        int position = persistent_moved.at(i);
-        QModelIndex old = persistent.indexes.at(position)->index;
-        persistent.indexes[position]->index =
-            q_func()->index(old.row(), old.column() + count, parent);
-    }
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_moved.constBegin();
+         it != persistent_moved.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        QModelIndex old = data->index;
+        persistent.indexes.erase(persistent.indexes.find(old));
+        data->index = q_func()->index(old.row(), old.column() + count, parent);
+        if (data->index.isValid()) {
+            persistent.insertMultiAtEnd(data->index, data);
+        } else {
+            qWarning() << "QAbstractItemModel::endInsertColumns:  Invalid index (" << old.row() + count << "," <<old.column() << ") in model" << q_func();
+        }
+     }
 }
 
 void QAbstractItemModelPrivate::columnsAboutToBeRemoved(const QModelIndex &parent,
                                                         int first, int last)
 {
-    QList<int> persistent_moved;
-    QList<int> persistent_invalidated;
+    QVector<QPersistentModelIndexData *> persistent_moved;
+    QVector<QPersistentModelIndexData *> persistent_invalidated;
     // find the persistent indexes that are affected by the change, either by being in the removed subtree
     // or by being on the same level and to the right of the removed columns
-    for (int position = 0; position < persistent.indexes.count(); ++position) {
+    for (QHash<QModelIndex, QPersistentModelIndexData *>::const_iterator it = persistent.indexes.constBegin();
+         it != persistent.indexes.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
         bool level_changed = false;
-        QModelIndex current = persistent.indexes.at(position)->index;
+        QModelIndex current = data->index;
         while (current.isValid()) {
             QModelIndex current_parent = current.parent();
             if (current_parent == parent) { // on the same level as the change
                 if (!level_changed && current.column() > last) // right of the removed columns
-                    persistent_moved.append(position);
+                    persistent_moved.append(data);
                 else if (current.column() <= last && current.column() >= first) // in the removed subtree
-                    persistent_invalidated.append(position);
+                    persistent_invalidated.append(data);
                 break;
             }
             current = current_parent;
@@ -674,37 +652,34 @@ void QAbstractItemModelPrivate::columnsAboutToBeRemoved(const QModelIndex &paren
 
     persistent.moved.push(persistent_moved);
     persistent.invalidated.push(persistent_invalidated);
+
 }
 
 void QAbstractItemModelPrivate::columnsRemoved(const QModelIndex &parent,
                                                int first, int last)
 {
-    QList<int> persistent_moved = persistent.moved.pop();
-    // it is important that we update the persistent index positions first and then invalidate indexes later
-    // this is because the invalidation of indexes may remove them from the list of persistent indexes
-    // and this in turn will go through the list of moved and invalidated indexes and update them
+    QVector<QPersistentModelIndexData *> persistent_moved = persistent.moved.pop();
     int count = (last - first) + 1; // it is important to only use the delta, because the change could be nested
-    for (int i = 0; i < persistent_moved.count(); ++i) {
-        int position = persistent_moved.at(i);
-        QModelIndex old = persistent.indexes.at(position)->index;
-        persistent.indexes[position]->index =
-            q_func()->index(old.row(), old.column() - count, parent);
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_moved.constBegin();
+         it != persistent_moved.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        QModelIndex old = data->index;
+        persistent.indexes.erase(persistent.indexes.find(old));
+        data->index = q_func()->index(old.row(), old.column() - count, parent);
+        if (data->index.isValid()) {
+            persistent.insertMultiAtEnd(data->index, data);
+        } else {
+            qWarning() << "QAbstractItemModel::endRemoveRows:  Invalid index (" << old.row() + count << "," << old.column() << ") in model" << q_func();
+        }
     }
-    QList<int> persistent_invalidated = persistent.invalidated.pop();
-    for (int j = 0; j < persistent_invalidated.count(); ++j) {
-        int position = persistent_invalidated.at(j);
-        persistent.indexes.at(position)->index = QModelIndex();
+    QVector<QPersistentModelIndexData *> persistent_invalidated = persistent.invalidated.pop();
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = persistent_invalidated.constBegin();
+         it != persistent_invalidated.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        persistent.indexes.erase(persistent.indexes.find(data->index));
+        data->index = QModelIndex();
+        data->model = 0;
     }
-    // if indexes were invalidated we need to restore the sorted order
-    if (!persistent_invalidated.isEmpty())
-        qSort(persistent.indexes);
-}
-
-void QAbstractItemModelPrivate::reset()
-{
-    // invalidate persistent indexes
-    for (int i = 0; i < persistent.indexes.count(); ++i)
-        persistent.indexes[i]->index = QModelIndex();
 }
 
 /*!
@@ -903,144 +878,144 @@ void QAbstractItemModelPrivate::reset()
     \ingroup model-view
     \mainclass
 
-    The QAbstractItemModel class defines the standard interface that
-    item models must use to be able to interoperate with other
-    components in the model/view architecture. It is not supposed to
-    be instantiated directly. Instead, you should subclass it to create
-    new models.
+    The QAbstractItemModel class defines the standard interface that item
+    models must use to be able to interoperate with other components in the
+    model/view architecture. It is not supposed to be instantiated directly.
+    Instead, you should subclass it to create new models.
 
     The QAbstractItemModel class is one of the \l{Model/View Classes}
     and is part of Qt's \l{Model/View Programming}{model/view framework}.
 
-    If you need a model to use with a QListView or a QTableView, you
-    should consider subclassing QAbstractListModel or QAbstractTableModel
-    instead of this class.
+    If you need a model to use with a QListView or a QTableView, you should
+    consider subclassing QAbstractListModel or QAbstractTableModel instead of
+    this class.
 
-    The underlying data model is exposed to views and delegates as
-    a hierarchy of tables. If you don't make use of the hierarchy,
-    then the model is a simple table of rows and columns. Each item
-    has a unique index specified by a QModelIndex.
+    The underlying data model is exposed to views and delegates as a hierarchy
+    of tables. If you do not make use of the hierarchy, then the model is a
+    simple table of rows and columns. Each item has a unique index specified by
+    a QModelIndex.
 
     \img modelindex-no-parent.png
 
-    Every item of data that can be accessed via a model has an associated
-    model index that is obtained using the index() function. Each index
-    may have a sibling() index; child items have a parent() index.
+    Every item of data that can be accessed via a model has an associated model
+    index. You can obtain this model index using the index() function. Each
+    index may have a sibling() index; child items have a parent() index.
 
-    Each item has a number of data elements associated with it, and each
-    of these can be retrieved by specifying a role (see \l Qt::ItemDataRole)
-    to the model's data() function. Data for all available roles can be
-    obtained at the same time using the itemData() function.
+    Each item has a number of data elements associated with it and they can be
+    retrieved by specifying a role (see \l Qt::ItemDataRole) to the model's
+    data() function. Data for all available roles can be obtained at the same
+    time using the itemData() function.
 
-    Data for each role is set using a particular \l Qt::ItemDataRole.
-    Data for individual roles are set individually with setData(), or they
-    can be set for all roles with setItemData().
+    Data for each role is set using a particular \l Qt::ItemDataRole. Data for
+    individual roles are set individually with setData(), or they can be set
+    for all roles with setItemData().
 
-    Items can be queried with flags() (see \l Qt::ItemFlag) to see if they
-    can be selected, dragged, or manipulated in other ways.
+    Items can be queried with flags() (see \l Qt::ItemFlag) to see if they can
+    be selected, dragged, or manipulated in other ways.
 
     If an item has child objects, hasChildren() returns true for the
     corresponding index.
 
-    The model has a rowCount() and a columnCount() for each level of
-    the hierarchy. Rows and columns can be inserted and removed with
-    insertRows(), insertColumns(), removeRows(), and removeColumns().
+    The model has a rowCount() and a columnCount() for each level of the
+    hierarchy. Rows and columns can be inserted and removed with insertRows(),
+    insertColumns(), removeRows(), and removeColumns().
 
-    The model emits signals to indicate changes. For example,
-    dataChanged() is emitted whenever items of data made available by
-    the model are changed. Changes to the headers supplied by the model
-    cause headerDataChanged() to be emitted. If the structure of the
-    underlying data changes, the model can emit layoutChanged() to
-    indicate to any attached views that they should redisplay any items
-    shown, taking the new structure into account.
+    The model emits signals to indicate changes. For example, dataChanged() is
+    emitted whenever items of data made available by the model are changed.
+    Changes to the headers supplied by the model cause headerDataChanged() to
+    be emitted. If the structure of the underlying data changes, the model can
+    emit layoutChanged() to indicate to any attached views that they should
+    redisplay any items shown, taking the new structure into account.
 
-    The items available through the model can be searched for particular
-    data using the match() function.
+    The items available through the model can be searched for particular data
+    using the match() function.
 
-    If the model is sortable, it can be sorted with sort().
+    To sort the model, you can use sort().
+
 
     \section1 Subclassing
 
-    \bold{Note:} Some general guidelines for subclassing models are
-    available in the \l{Model Subclassing Reference}.
+    \note Some general guidelines for subclassing models are available in the
+    \l{Model Subclassing Reference}.
 
-    When subclassing QAbstractItemModel, at the very least you must
-    implement index(), parent(), rowCount(), columnCount(), and
-    data(). These functions are used in all read-only models, and
-    form the basis of editable models.
+    When subclassing QAbstractItemModel, at the very least you must implement
+    index(), parent(), rowCount(), columnCount(), and data(). These functions
+    are used in all read-only models, and form the basis of editable models.
 
-    You can also reimplement hasChildren() to provide special behavior
-    for models where the implementation of rowCount() is expensive.
-    This makes it possible for models to restrict the amount of data
-    requested by views, and can be used as a way to implement lazy
-    population of model data.
+    You can also reimplement hasChildren() to provide special behavior for
+    models where the implementation of rowCount() is expensive. This makes it
+    possible for models to restrict the amount of data requested by views, and
+    can be used as a way to implement lazy population of model data.
 
-    To enable editing in your model, you must also implement
-    setData(), and reimplement flags() to ensure that \c
-    ItemIsEditable is returned.  You can also reimplement headerData()
-    and setHeaderData() to control the way the headers for your model
-    are presented.
+    To enable editing in your model, you must also implement setData(), and
+    reimplement flags() to ensure that \c ItemIsEditable is returned.  You can
+    also reimplement headerData() and setHeaderData() to control the way the
+    headers for your model are presented.
 
-    Note that the dataChanged() and headerDataChanged() signals must
-    be emitted explicitly when reimplementing the setData() and
-    setHeaderData() functions, respectively.
+    The dataChanged() and headerDataChanged() signals must be emitted
+    explicitly when reimplementing the setData() and setHeaderData() functions,
+    respectively.
 
-    Custom models need to create model indexes for other components to use.
-    To do this, call createIndex() with suitable row and column numbers for
-    the item, and an identifier for it, either as a pointer or as an
-    integer value. The combination of these values must be unique for each
-    item. Custom models typically use these unique identifiers in other
-    reimplemented functions to retrieve item data and access information
-    about the item's parents and children.
-    See the \l{itemviews/simpletreemodel}{Simple Tree Model} example for
-    more information about unique identifiers.
+    Custom models need to create model indexes for other components to use. To
+    do this, call createIndex() with suitable row and column numbers for the
+    item, and an identifier for it, either as a pointer or as an integer value.
+    The combination of these values must be unique for each item. Custom models
+    typically use these unique identifiers in other reimplemented functions to
+    retrieve item data and access information about the item's parents and
+    children. See the \l{Simple Tree Model Example} for more information about
+    unique identifiers.
 
     It is not necessary to support every role defined in Qt::ItemDataRole.
     Depending on the type of data contained within a model, it may only be
     useful to implement the data() function to return valid information for
     some of the more common roles. Most models provide at least a textual
     representation of item data for the Qt::DisplayRole, and well-behaved
-    models should also provide valid information for the Qt::ToolTipRole
-    and Qt::WhatsThisRole. Supporting these roles enables models to be used
-    with standard Qt views. However, for some models that handle
-    highly-specialized data, it may be appropriate to provide data only for
-    user-defined roles.
+    models should also provide valid information for the Qt::ToolTipRole and
+    Qt::WhatsThisRole. Supporting these roles enables models to be used with
+    standard Qt views. However, for some models that handle highly-specialized
+    data, it may be appropriate to provide data only for user-defined roles.
 
-    Models that provide interfaces to resizable data structures can
-    provide implementations of insertRows(), removeRows(), insertColumns(),
-    and removeColumns(). When implementing these functions, it is
-    important to notify any connected views about changes to the model's
-    dimensions both \e before and \e after they occur:
+    Models that provide interfaces to resizable data structures can provide
+    implementations of insertRows(), removeRows(), insertColumns(),and
+    removeColumns(). When implementing these functions, it is important to
+    notify any connected views about changes to the model's dimensions both
+    \e before and \e after they occur:
 
     \list
-    \o An insertRows() implementation must call beginInsertRows()
-       \e before inserting new rows into the data structure, and it must
-       call endInsertRows() \e{immediately afterwards}.
-    \o An insertColumns() implementation must call beginInsertColumns()
-       \e before inserting new columns into the data structure, and it must
-       call endInsertColumns() \e{immediately afterwards}.
-    \o A removeRows() implementation must call beginRemoveRows()
-       \e before the rows are removed from the data structure, and it must
-       call endRemoveRows() \e{immediately afterwards}.
-    \o A removeColumns() implementation must call beginRemoveColumns()
-       \e before the columns are removed from the data structure, and it must
-       call endRemoveColumns() \e{immediately afterwards}.
+        \o An insertRows() implementation must call beginInsertRows() \e before
+           inserting new rows into the data structure, and endInsertRows()
+           \e{immediately afterwards}.
+        \o An insertColumns() implementation must call beginInsertColumns()
+           \e before inserting new columns into the data structure, and
+           endInsertColumns() \e{immediately afterwards}.
+        \o A removeRows() implementation must call beginRemoveRows() \e before
+           the rows are removed from the data structure, and endRemoveRows()
+           \e{immediately afterwards}.
+        \o A removeColumns() implementation must call beginRemoveColumns()
+           \e before the columns are removed from the data structure, and
+           endRemoveColumns() \e{immediately afterwards}.
     \endlist
 
-    The \e private signals that these functions emit give attached
-    components the chance to take action before any data becomes
-    unavailable. The encapsulation of the insert and remove operations
-    with these begin and end functions also enables the model to
-    manage \l{QPersistentModelIndex}{persistent model indexes}
-    correctly. \bold{If you want selections to be handled properly,
-    you must ensure that you call these functions.} If you insert or
-    remove an item with child items, you don't need to call these
-    functions for the child items.
+    The \e private signals that these functions emit give attached components
+    the chance to take action before any data becomes unavailable. The
+    encapsulation of the insert and remove operations with these begin and end
+    functions also enables the model to manage \l{QPersistentModelIndex}
+    {persistent model indexes} correctly. \bold{If you want selections to be
+    handled properly, you must ensure that you call these functions.} If you
+    insert or remove an item with children, you do not need to call these
+    functions for the child items. In other words, the parent item will take
+    care of its child items.
+
+    To create models that populate incrementally, you can reimplement
+    fetchMore() and canFetchMore(). If the reimplementation of fetchMore() adds
+    rows to the model, \l{QAbstractItemModel::}{beginInsertRows()} and
+    \l{QAbstractItemModel::}{endInsertRows()} must be called.
 
     \sa {Model Classes}, {Model Subclassing Reference}, QModelIndex,
         QAbstractItemView, {Using Drag and Drop with Item Views},
         {Simple DOM Model Example},
-        {Simple Tree Model Example}
+        {Simple Tree Model Example}, {Editable Tree Model Example},
+        {Fetch More Example}
 */
 
 /*!
@@ -1239,12 +1214,14 @@ QAbstractItemModel::~QAbstractItemModel()
 /*!
     \fn void QAbstractItemModel::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight)
 
-    This signal is emitted whenever the data in an existing item
-    changes. The affected items are those between \a topLeft and \a
-    bottomRight inclusive (of the same parent).
+    This signal is emitted whenever the data in an existing item changes.
 
-    Note that this signal must be emitted explicitly when
-    reimplementing the setData() function.
+    If the items are of the same parent, the affected ones are those between
+    \a topLeft and \a bottomRight inclusive. If the items do not have the same
+    parent, the behavior is undefined.
+
+    When reimplementing the setData() function, this signal must be emitted
+    explicitly.
 
     \sa headerDataChanged(), setData(), layoutChanged()
 */
@@ -1432,16 +1409,18 @@ bool QAbstractItemModel::setData(const QModelIndex &index, const QVariant &value
     Returns the data stored under the given \a role for the item referred to
     by the \a index.
 
-    \note If you do not have a value to return, return an \bold empty
+    \note If you do not have a value to return, return an \bold invalid
     QVariant() instead of returning 0.
 
     \sa Qt::ItemDataRole, setData(), headerData()
 */
 
 /*!
-    For every Qt::ItemDataRole in \a roles, sets the role data for the item at
-    \a index to the associated value in \a roles. Returns true if
-    successful; otherwise returns false.
+    Sets the role data for the item at \a index to the associated value in
+    \a roles, for every Qt::ItemDataRole. Returns true if successful; otherwise
+    returns false.
+
+    Roles that are not in \a roles will not be modified.
 
     \sa setData() data() itemData()
 */
@@ -1678,14 +1657,14 @@ bool QAbstractItemModel::removeColumns(int, int, const QModelIndex &)
 }
 
 /*!
-  Fetches any available data for the items with the parent specified by the
-  \a parent index.
+    Fetches any available data for the items with the parent specified by the
+    \a parent index.
 
-  Reimplement this if you have incremental data.
+    Reimplement this if you are populating your model incrementally.
 
-  The default implementation does nothing.
+    The default implementation does nothing.
 
-  \sa canFetchMore()
+    \sa canFetchMore()
 */
 void QAbstractItemModel::fetchMore(const QModelIndex &)
 {
@@ -1693,12 +1672,16 @@ void QAbstractItemModel::fetchMore(const QModelIndex &)
 }
 
 /*!
-  Returns true if there is more data available for \a parent,
-  otherwise false.
+    Returns true if there is more data available for \a parent; otherwise returns
+    false.
+    
+    The default implementation always returns false.
 
-  The default implementation always returns false.
+    If canFetchMore() returns true, QAbstractItemView will call fetchMore().
+    However, the fetchMore() function is only called when the model is being
+    populated incrementally.
 
-  \sa fetchMore()
+    \sa fetchMore()
 */
 bool QAbstractItemModel::canFetchMore(const QModelIndex &) const
 {
@@ -1938,6 +1921,7 @@ bool QAbstractItemModel::setHeaderData(int section, Qt::Orientation orientation,
 
     This function provides a consistent interface that model subclasses must
     use to create model indexes.
+    \sa QModelIndex::internalId()
 */
 
 /*!
@@ -2007,6 +1991,7 @@ bool QAbstractItemModel::decodeData(int row, int column, const QModelIndex &pare
     row = qMax(0, row);
     column = qMax(0, column);
 
+    QVector<QPersistentModelIndex> newIndexes(data.size());
     // set the data in the table
     for (int j = 0; j < data.size(); ++j) {
         int relativeRow = rows.at(j) - top;
@@ -2023,10 +2008,14 @@ bool QAbstractItemModel::decodeData(int row, int column, const QModelIndex &pare
             isWrittenTo.resize(++dragRowCount * dragColumnCount);
         }
         if (!isWrittenTo.testBit(flat)) {
-            QModelIndex idx = index(destinationRow, destinationColumn, parent);
-            setItemData(idx, data.at(j));
+            newIndexes[j] = index(destinationRow, destinationColumn, parent);
             isWrittenTo.setBit(flat);
         }
+    }
+
+    for(int k = 0; k < newIndexes.size(); k++) {
+        if (newIndexes.at(k).isValid())
+            setItemData(newIndexes.at(k), data.at(k));
     }
 
     return true;
@@ -2255,13 +2244,14 @@ void QAbstractItemModel::endRemoveColumns()
 /*!
     Resets the model to its original state in any attached views.
 
-    When a model is reset it means that any previous data reported from
-    the model is now invalid and has to be queried for again.
+    \note The view to which the model is attached to will be reset as well.
 
-    When a model radically changes its data it can sometimes be easier
-    to just call this function rather than emit dataChanged() to inform
-    other components when the underlying data source, or its structure,
-    has changed.
+    When a model is reset it means that any previous data reported from the
+    model is now invalid and has to be queried for again.
+
+    When a model radically changes its data it can sometimes be easier to just
+    call this function rather than emit dataChanged() to inform other
+    components when the underlying data source, or its structure, has changed.
 
     \sa modelAboutToBeReset(), modelReset()
 */
@@ -2269,7 +2259,7 @@ void QAbstractItemModel::reset()
 {
     Q_D(QAbstractItemModel);
     emit modelAboutToBeReset();
-    d->reset();
+    d->invalidatePersistentIndexes();
     emit modelReset();
 }
 
@@ -2288,20 +2278,15 @@ void QAbstractItemModel::changePersistentIndex(const QModelIndex &from, const QM
     if (d->persistent.indexes.isEmpty())
         return;
     // find the data and reinsert it sorted
-    const QPersistentModelIndexData tmp(from);
-    QVector<QPersistentModelIndexData*>::iterator begin = d->persistent.indexes.begin();
-    QVector<QPersistentModelIndexData*>::iterator end = d->persistent.indexes.end();
-    QVector<QPersistentModelIndexData*>::iterator it =
-        qLowerBound(begin, end, &tmp, QPersistentModelIndexDataLessThan());
-    if (it != end && (*it)->index == from && !d->persistent.indexes.isEmpty()) {
+    const QHash<QModelIndex, QPersistentModelIndexData *>::iterator it = d->persistent.indexes.find(from);
+    if (it != d->persistent.indexes.end()) {
         QPersistentModelIndexData *data = *it;
         d->persistent.indexes.erase(it);
         data->index = to;
-        it = qLowerBound(begin, end, data, QPersistentModelIndexDataLessThan());
-        if (it != end)
-            d->persistent.indexes.insert(it, data);
+        if (to.isValid())
+            d->persistent.insertMultiAtEnd(to, data);
         else
-            d->persistent.indexes.append(data);
+            data->model = 0;
     }
 }
 
@@ -2322,34 +2307,27 @@ void QAbstractItemModel::changePersistentIndexList(const QModelIndexList &from,
     Q_D(QAbstractItemModel);
     if (d->persistent.indexes.isEmpty())
         return;
-    QVector<QPersistentModelIndexData*> persistentIndexes = d->persistent.indexes;
-    QVector<QPersistentModelIndexData*> toBeReinserted;
-    // find, remove and update
+    QVector<QPersistentModelIndexData *> toBeReinserted;
+    toBeReinserted.reserve(to.count());
     for (int i = 0; i < from.count(); ++i) {
         if (from.at(i) == to.at(i))
             continue;
-        QVector<QPersistentModelIndexData*>::iterator begin = d->persistent.indexes.begin();
-        QVector<QPersistentModelIndexData*>::iterator end = d->persistent.indexes.end();
-        const QPersistentModelIndexData tmp(from.at(i));
-        QVector<QPersistentModelIndexData*>::iterator it =
-            qLowerBound(begin, end, &tmp, QPersistentModelIndexDataLessThan());
-        if (it != end && (*it)->index == from.at(i) && !d->persistent.indexes.isEmpty()) {
-            (*it)->index = to.at(i);
-            toBeReinserted.append(*it);
+        const QHash<QModelIndex, QPersistentModelIndexData *>::iterator it = d->persistent.indexes.find(from.at(i));
+        if (it != d->persistent.indexes.end()) {
+            QPersistentModelIndexData *data = *it;
             d->persistent.indexes.erase(it);
-            end = d->persistent.indexes.end();
+            data->index = to.at(i);
+            if (data->index.isValid())
+                toBeReinserted << data;
+            else
+                data->model = 0;
         }
     }
-    // then reinsert sorted
-    for (int j = 0; j < toBeReinserted.count(); ++j) {
-        QVector<QPersistentModelIndexData*>::iterator begin = d->persistent.indexes.begin();
-        QVector<QPersistentModelIndexData*>::iterator end = d->persistent.indexes.end();
-        QVector<QPersistentModelIndexData*>::iterator it =
-            qLowerBound(begin, end, toBeReinserted.at(j), QPersistentModelIndexDataLessThan());
-        if (it != end)
-            d->persistent.indexes.insert(it, toBeReinserted.at(j));
-        else 
-            d->persistent.indexes.append(toBeReinserted.at(j));
+
+    for (QVector<QPersistentModelIndexData *>::const_iterator it = toBeReinserted.constBegin();
+         it != toBeReinserted.constEnd() ; ++it) {
+        QPersistentModelIndexData *data = *it;
+        d->persistent.insertMultiAtEnd(data->index, data);
     }
 }
 
@@ -2361,10 +2339,12 @@ void QAbstractItemModel::changePersistentIndexList(const QModelIndexList &from,
 QModelIndexList QAbstractItemModel::persistentIndexList() const
 {
     Q_D(const QAbstractItemModel);
-    QVector<QPersistentModelIndexData*> persistentIndexes = d->persistent.indexes;
     QModelIndexList result;
-    for (int i = 0; i < persistentIndexes.count(); ++i)
-        result.append(persistentIndexes.at(i)->index);
+    for (QHash<QModelIndex, QPersistentModelIndexData *>::const_iterator it = d->persistent.indexes.constBegin();
+         it != d->persistent.indexes.constEnd(); ++it) {
+        QPersistentModelIndexData *data = *it;
+        result.append(data->index);
+    }
     return result;
 }
 
@@ -2769,5 +2749,35 @@ bool QAbstractListModel::dropMimeData(const QMimeData *data, Qt::DropAction acti
     Returns true if this model index is smaller than the \a other
     model index; otherwise returns false.
 */
+
+/*!
+    \fn uint qHash(const QPersistentModelIndex &index)
+    \since 4.5
+
+    Returns a hash of the QPersistentModelIndex
+ */
+
+
+/*!
+    \internal
+    QHash::insertMulti insert the value before the old value. and find() return the new value.
+    We need insertMultiAtEnd because we don't want to overwrite the old one, which should be removed later
+
+    There should be only one instance QPersistentModelIndexData per index, but in some intermediate state there may be
+    severals of PersistantModelIndex pointing to the same index, but one is already updated, and the other one is not.
+    This make sure than when updating the first one we don't overwrite the second one in the hash, and the second one
+    will be updated right later.
+ */
+void QAbstractItemModelPrivate::Persistent::insertMultiAtEnd(const QModelIndex& key, QPersistentModelIndexData *data)
+{
+    QHash<QModelIndex,QPersistentModelIndexData *>::iterator newIt =
+            indexes.insertMulti(key, data);
+    QHash<QModelIndex,QPersistentModelIndexData *>::iterator it = newIt + 1;
+    while (it != indexes.end() && it.key() == key) {
+        qSwap(*newIt,*it);
+        newIt = it;
+        ++it;
+    }
+}
 
 QT_END_NAMESPACE

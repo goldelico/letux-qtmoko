@@ -1,42 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qnetworkreplyimpl_p.h"
 #include "qnetworkcookie.h"
+#include "qabstractnetworkcache.h"
 #include "QtCore/qcoreapplication.h"
 #include "QtCore/qdatetime.h"
 #include "QtNetwork/qsslconfiguration.h"
@@ -47,8 +52,9 @@ QT_BEGIN_NAMESPACE
 
 inline QNetworkReplyImplPrivate::QNetworkReplyImplPrivate()
     : copyDevice(0), networkCache(0),
+      cacheEnabled(false), cacheSaveDevice(0),
       bytesDownloaded(0), lastBytesDownloaded(-1), bytesUploaded(-1),
-      state(Idle), isEncrypted(false)
+      state(Idle)
 {
 }
 
@@ -131,18 +137,20 @@ void QNetworkReplyImplPrivate::_q_copyReadyRead()
 
     bytesToRead = qBound<qint64>(1, bytesToRead, copyDevice->bytesAvailable());
     char *ptr = readBuffer.reserve(bytesToRead);
-    qint64 bytesRead = copyDevice->read(ptr, bytesToRead);
-    if (bytesRead == -1 || (!copyDevice->isSequential() && copyDevice->atEnd())) {
-        // EOF
+    qint64 bytesActuallyRead = copyDevice->read(ptr, bytesToRead);
+    if (bytesActuallyRead == -1) {
         readBuffer.chop(bytesToRead);
         backendNotify(NotifyCopyFinished);
         return;
     }
 
-    if (bytesRead != bytesToRead)
-        readBuffer.chop(bytesToRead - bytesRead);
+    if (bytesActuallyRead != bytesToRead)
+        readBuffer.chop(bytesToRead - bytesActuallyRead);
 
-    bytesDownloaded += bytesRead;
+    if (!copyDevice->isSequential() && copyDevice->atEnd())
+        backendNotify(NotifyCopyFinished);
+
+    bytesDownloaded += bytesActuallyRead;
     lastBytesDownloaded = bytesDownloaded;
     QVariant totalSize = cookedHeaders.value(QNetworkRequest::ContentLengthHeader);
     emit q->downloadProgress(bytesDownloaded,
@@ -229,6 +237,57 @@ void QNetworkReplyImplPrivate::handleNotifications()
     }
 }
 
+void QNetworkReplyImplPrivate::createCache()
+{
+    // check if we can save and if we're allowed to
+    if (!networkCache || !request.attribute(QNetworkRequest::CacheSaveControlAttribute, true).toBool())
+        return;
+    cacheEnabled = true;
+}
+
+bool QNetworkReplyImplPrivate::isCachingEnabled() const
+{
+    return (cacheEnabled && networkCache != 0);
+}
+
+void QNetworkReplyImplPrivate::setCachingEnabled(bool enable)
+{
+    if (!enable && !cacheEnabled)
+        return;                 // nothing to do
+    if (enable && cacheEnabled)
+        return;                 // nothing to do either!
+
+    if (enable) {
+        if (bytesDownloaded) {
+            // refuse to enable in this case
+            qCritical("QNetworkReplyImpl: backend error: caching was enabled after some bytes had been written");
+            return;
+        }
+
+        createCache();
+    } else {
+        // someone told us to turn on, then back off?
+        // ok... but you should make up your mind
+        qDebug("QNetworkReplyImpl: setCachingEnabled(true) called after setCachingEnabled(false) -- "
+               "backend %s probably needs to be fixed",
+               backend->metaObject()->className());
+        networkCache->remove(url);
+        cacheSaveDevice = 0;
+        cacheEnabled = false;
+    }
+}
+
+void QNetworkReplyImplPrivate::completeCacheSave()
+{
+    if (cacheEnabled && errorCode != QNetworkReplyImpl::NoError) {
+        networkCache->remove(url);
+    } else if (cacheEnabled && cacheSaveDevice) {
+        networkCache->insert(cacheSaveDevice);
+    }
+    cacheSaveDevice = 0;
+    cacheEnabled = false;
+}
+
 void QNetworkReplyImplPrivate::consume(qint64 count)
 {
     Q_Q(QNetworkReplyImpl);
@@ -270,6 +329,27 @@ void QNetworkReplyImplPrivate::feed(const QByteArray &data)
     char *ptr = readBuffer.reserve(data.size());
     memcpy(ptr, data.constData(), data.size());
 
+    if (cacheEnabled && !cacheSaveDevice) {
+        // save the meta data
+        QNetworkCacheMetaData metaData;
+        metaData.setUrl(url);
+        metaData = backend->fetchCacheMetaData(metaData);
+        cacheSaveDevice = networkCache->prepare(metaData);
+        if (!cacheSaveDevice || (cacheSaveDevice && !cacheSaveDevice->isOpen())) {
+            if (cacheSaveDevice && !cacheSaveDevice->isOpen())
+                qCritical("QNetworkReplyImpl: network cache returned a device that is not open -- "
+                      "class %s probably needs to be fixed",
+                      networkCache->metaObject()->className());
+
+            networkCache->remove(url);
+            cacheSaveDevice = 0;
+            cacheEnabled = false;
+        }
+    }
+
+    if (cacheSaveDevice)
+        cacheSaveDevice->write(data);
+
     bytesDownloaded += data.size();
     lastBytesDownloaded = bytesDownloaded;
 
@@ -291,8 +371,7 @@ void QNetworkReplyImplPrivate::feed(const QByteArray &data)
 void QNetworkReplyImplPrivate::feed(QIODevice *data)
 {
     Q_Q(QNetworkReplyImpl);
-    if (!q->isOpen())
-        return;
+    Q_ASSERT(q->isOpen());
 
     // read until EOF from data
     if (copyDevice) {
@@ -323,6 +402,8 @@ void QNetworkReplyImplPrivate::finished()
         emit q->downloadProgress(bytesDownloaded, bytesDownloaded);
     if (bytesUploaded == -1 && outgoingData)
         emit q->uploadProgress(0, 0);
+
+    completeCacheSave();
 
     // note: might not be a good idea, since users could decide to delete us
     // which would delete the backend too...
@@ -380,6 +461,9 @@ QNetworkReplyImpl::QNetworkReplyImpl(QObject *parent)
 
 QNetworkReplyImpl::~QNetworkReplyImpl()
 {
+    Q_D(QNetworkReplyImpl);
+    if (d->isCachingEnabled())
+        d->networkCache->remove(url());
 }
 
 void QNetworkReplyImpl::abort()

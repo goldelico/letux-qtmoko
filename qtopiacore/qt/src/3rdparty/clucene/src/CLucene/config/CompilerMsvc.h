@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 *
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #if !defined(_lucene_COMPILER_MSVC)
 #define _lucene_COMPILER_MSVC
@@ -21,6 +21,7 @@
     #endif
 	# pragma warning(disable: 4512) // This would be very annoying
 	# pragma warning(disable: 4290) // Ignore exception specification warning
+    # pragma warning(disable: 4250) // Ignore 'class1' : inherits 'class2::member' via dominance (e.g. in MultiReader)
 	#if (_MSC_VER < 1310)
 		#define CL_NS_HASHING(func) std::func //the namespace is different on VC 7.0
 	#else
@@ -106,19 +107,17 @@
 //java long type
 typedef __int64 int64_t; 
 typedef unsigned __int64 uint64_t;
-//#define LUCENE_INT64_MAX _I64_MAX
 
 //java int type
 typedef int int32_t;
 typedef unsigned int uint32_t;
-//#define LUCENE_INT32_MAX INT_MAX
 
 //java byte type
 typedef unsigned char uint8_t;
-//#define LUCENE_UINT8_MAX UCHAR_MAX
 
 //floating point type
-typedef double float_t;
+//we are going to use qreal now
+//typedef double float_t;
 
 #define _CL_ILONG(x) x ## L
 #define _ILONGLONG(x) x ## i64

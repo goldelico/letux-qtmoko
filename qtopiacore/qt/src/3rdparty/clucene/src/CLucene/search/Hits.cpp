@@ -18,7 +18,7 @@ CL_NS_USE(index)
 
 CL_NS_DEF(search)
 
-	HitDoc::HitDoc(const float_t s, const int32_t i)
+	HitDoc::HitDoc(const qreal s, const int32_t i)
 	{
 	//Func - Constructor
 	//Pre  - true
@@ -92,7 +92,7 @@ CL_NS_DEF(search)
 		return getHitDoc(n)->id;
 	}
 
-	float_t Hits::score(const int32_t n){
+	qreal Hits::score(const int32_t n){
 		return getHitDoc(n)->score;
 	}
 
@@ -114,7 +114,7 @@ CL_NS_DEF(search)
 		ScoreDoc* scoreDocs = topDocs->scoreDocs;
 		int32_t scoreDocsLength = topDocs->scoreDocsLength;
 
-		float_t scoreNorm = 1.0f;
+		qreal scoreNorm = 1.0f;
 		//Check that scoreDocs is a valid pointer before using it
 		if (scoreDocs != NULL){
 			if (_length > 0 && scoreDocs[0].score > 1.0f){

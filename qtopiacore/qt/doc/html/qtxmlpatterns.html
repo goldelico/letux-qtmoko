@@ -2,9 +2,9 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/qtxmlpatterns.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qtxmlpatterns.qdoc -->
 <head>
-  <title>Qt 4.4: QtXmlPatterns Module</title>
+  <title>Qt 4.5: QtXmlPatterns Module</title>
   <link rel="prev" href="qtxml.html" />
   <link rel="contents" href="modules.html" />
   <link rel="next" href="phonon-module.html" />
@@ -13,7 +13,7 @@
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [Previous: <a href="qtxml.html">QtXml Module</a>]
@@ -65,14 +65,18 @@
 <li><a href="#denial-of-service-attacks">Denial of Service Attacks</a></li>
 </ul>
 <li><a href="#features-and-conformance">Features and Conformance</a></li>
-<ul><li><a href="#conformance">Conformance</a></li>
+<ul><li><a href="#xquery-1-0">XQuery 1.0</a></li>
+<li><a href="#xslt-2-0">XSLT 2.0</a></li>
+<li><a href="#xpath-2-0">XPath 2.0</a></li>
+<li><a href="#xml-id">xml:id</a></li>
 <li><a href="#resource-loading">Resource Loading</a></li>
+<li><a href="#xml">XML</a></li>
 </ul>
 </ul>
 <a name="introduction"></a>
 <h3>Introduction</h3>
 <p>XQuery is a language for traversing XML documents to select and aggregate items of interest and to transform them for output as XML or some other format. XPath is the <i>element selection</i> part of XQuery.</p>
-<p>The QtXmlPatterns module supports using <a href="http://www.w3.org/TR/xquery">XQuery 1.0</a> and <a href="http://www.w3.org/TR/xpath20">XPath 2.0</a> in Qt applications, for querying XML data <i>and</i> for querying <a href="qabstractxmlnodemodel.html">non-XML data that can be modeled to look like XML</a>. The QtXmlPatterns module is included in the <a href="commercialeditions.html#qt-full-framework-edition">Qt Full Framework Edition</a>, and the <a href="opensourceedition.html">Qt Open Source Edition</a>. Readers who are not familiar with the XQuery/XPath language can read <a href="xquery-introduction.html">A Short Path to XQuery</a> for a brief introduction.</p>
+<p>The QtXmlPatterns module supports using <a href="http://www.w3.org/TR/xquery">XQuery 1.0</a> and <a href="http://www.w3.org/TR/xpath20">XPath 2.0</a> in Qt applications, for querying XML data <i>and</i> for querying <a href="qabstractxmlnodemodel.html">non-XML data that can be modeled to look like XML</a>. The QtXmlPatterns module is included in the <a href="commercialeditions.html#qt-full-framework-edition">Qt Full Framework Edition</a>, and the <a href="opensourceedition.html">Open Source Versions of Qt</a>. Readers who are not familiar with the XQuery/XPath language can read <a href="xquery-introduction.html">A Short Path to XQuery</a> for a brief introduction.</p>
 <a name="advantages-of-using-qtxmlpatterns-and-xquery"></a>
 <h3>Advantages of using QtXmlPatterns and XQuery</h3>
 <p>The XQuery/XPath language simplifies data searching and transformation tasks by eliminating the need for doing a lot of C++ or Java procedural programming for each new query task. Here is an XQuery that constructs a bibliography of the contents of a library:</p>
@@ -133,11 +137,12 @@
      qlonglong year = 1234;
 
      QXmlQuery query;
-     query.setQuery(&amp;xq, QUrl::fromLocalFile(xq.fileName()));
 
      query.bindVariable(&quot;file&quot;, QVariant(fileName));
      query.bindVariable(&quot;publisher&quot;, QVariant(publisherName));
      query.bindVariable(&quot;year&quot;, QVariant(year));
+
+     query.setQuery(&amp;xq, QUrl::fromLocalFile(xq.fileName()));
 
      QXmlSerializer serializer(query, myOutputDevice);
      query.evaluateTo(&amp;serializer);</pre>
@@ -176,11 +181,12 @@
      qlonglong year = 1234;
 
      QXmlQuery query;
-     query.setQuery(&amp;xq, QUrl::fromLocalFile(xq.fileName()));
 
      query.bindVariable(&quot;file&quot;, QVariant(fileName));
      query.bindVariable(&quot;publisher&quot;, QVariant(publisherName));
      query.bindVariable(&quot;year&quot;, QVariant(year));
+
+     query.setQuery(&amp;xq, QUrl::fromLocalFile(xq.fileName()));
 
      QXmlResultItems result;
      query.evaluateTo(&amp;result);
@@ -336,40 +342,91 @@
 <h3>Security Considerations</h3>
 <a name="code-injection"></a>
 <h4>Code Injection</h4>
-<p>Like SQL, XQuery is vulnerable to <a href="http://en.wikipedia.org/wiki/Code_injection">code injection attacks</a>. If an XQuery is constructed by concatenation, where concatenated strings can come from user input, the final XQuery can become malevolent. The best way to prevent code injection attacks is to not construct XQueries from user-written strings, but only accept user data input using <a href="qvariant.html">QVariant</a> and variable bindings. See <a href="qxmlquery.html#bindVariable">QXmlQuery::bindVariable</a>()</p>
-<p>The articles <a href="http://www.ibm.com/developerworks/xml/library/x-xpathinjection.html">Avoid the dangers of XPath injection, Robi Sen</a> and <a href="http://www.packetstormsecurity.org/papers/bypass/Blind_XPath_Injection_20040518.pdf">Blind XPath Injection, Amit Klein</a> discuss the XQuery code injection problem in more detail.</p>
+<p>XQuery is vulnerable to <a href="http://en.wikipedia.org/wiki/Code_injection">code injection attacks</a> in the same way as the SQL language. If an XQuery is constructed by concatenating strings, and the strings come from user input, the constructed XQuery could be malevolent. The best way to prevent code injection attacks is to not construct XQueries from user-written strings, but only accept user data input using <a href="qvariant.html">QVariant</a> and variable bindings. See <a href="qxmlquery.html#bindVariable">QXmlQuery::bindVariable</a>().</p>
+<p>The articles <a href="http://www.ibm.com/developerworks/xml/library/x-xpathinjection.html">Avoid the dangers of XPath injection</a>, by Robi Sen and <a href="http://www.packetstormsecurity.org/papers/bypass/Blind_XPath_Injection_20040518.pdf">Blind XPath Injection</a>, by Amit Klein, discuss the XQuery code injection problem in more detail.</p>
 <a name="denial-of-service-attacks"></a>
 <h4>Denial of Service Attacks</h4>
-<p>Applications using QtXmlPatterns are subject to the same software limits as any other system. Generally, these can not be checked. This means QtXmlPatterns does not prevent rogue queries from consuming too many resources. For example, a query could take too much time to execute, or could attempt to transfer too much data. Or a query could cause an unreasonable amount of recursion, which could crash the system. XQueries can do these things accidentally, but they can also be meant as deliberate, denial of service attacks.</p>
+<p>Applications using QtXmlPatterns are subject to the same limitations of software as other systems. Generally, these can not be checked. This means QtXmlPatterns does not prevent rogue queries from consuming too many resources. For example, a query could take too much time to execute or try to transfer too much data. A query could also do too much recursion, which could crash the system. XQueries can do these things accidentally, but they can also be done as deliberate denial of service attacks.</p>
 <a name="features-and-conformance"></a>
 <h3>Features and Conformance</h3>
-<a name="conformance"></a>
-<h4>Conformance</h4>
-<p>QtXmlPatterns aims at being a <a href="http://www.w3.org/TR/xquery/#id-xquery-conformance">conformant XQuery processor</a>. Apart from adhering to {http://www.w3.org/TR/xquery/#id-minimal-conformance} {Minimal Conformance}, QtXmlPatterns supports the <a href="http://www.w3.org/TR/xquery/#id-serialization-feature">Serialization Feature</a> and the <a href="http://www.w3.org/TR/xquery/#id-full-axis-feature">Full Axis Feature</a>. QtXmlPatterns passes 97% of the tests in the <a href="http://www.w3.org/XML/Query/test-suite">XML Query Test Suite</a>, and it is expected this will improve over time. Areas where conformance may be questionable and where behavior may be changed in future releases are:</p>
+<a name="xquery-1-0"></a>
+<h4>XQuery 1.0</h4>
+<p>QtXmlPatterns aims at being a <a href="http://www.w3.org/TR/xquery/#id-xquery-conformance">conformant XQuery processor</a>. It adheres to <a href="http://www.w3.org/TR/xquery/#id-minimal-conformance">Minimal Conformance</a> and supports the <a href="http://www.w3.org/TR/xquery/#id-serialization-feature">Serialization Feature</a> and the <a href="http://www.w3.org/TR/xquery/#id-full-axis-feature">Full Axis Feature</a>. QtXmlPatterns currently passes 97% of the tests in the <a href="http://www.w3.org/XML/Query/test-suite">XML Query Test Suite</a>. Areas where conformance may be questionable and where behavior may be changed in future releases include:</p>
+<ul>
+<li>Some corner cases involving namespaces and element constructors are incorrect.</li>
+<li>XPath is a subset of XQuery and the implementation of QtXmlPatterns uses XPath 2.0 with XQuery 1.0&#x2e;</li>
+</ul>
+<p>The specifications discusses conformance further: <a href="http://www.w3.org/TR/xquery/">XQuery 1.0: An XML Query Language</a>. W3C's XQuery testing effort can be of interest as well, <a href="http://www.w3.org/XML/Query/test-suite/">XML Query Test Suite</a>.</p>
+<p>Currently <tt>fn:collection()</tt> does not access any data set, and there is no API for providing data through the collection. As a result, evaluating <tt>fn:collection()</tt> returns the empty sequence. We intend to provide functionality for this in a future release of Qt.</p>
+<p>Only queries encoded in UTF-8 are supported.</p>
+<a name="xslt-2-0"></a>
+<h4>XSLT 2.0</h4>
+<p>Partial support for XSLT was introduced in Qt 4.5&#x2e; Future releases of QtXmlPatterns will aim to support these XSLT features:</p>
+<ul>
+<li>Basic XSLT 2.0 processor</li>
+<li>Serialization feature</li>
+<li>Backwards Compatibility feature</li>
+</ul>
+<p>For details, see <a href="http://www.w3.org/TR/xslt20/#conformance">XSL Transformations (XSLT) Version 2.0, 21 Conformance</a>.</p>
+<p><b>Note:</b> In this release, XSLT support is considered experimental.</p>
+<p>Unsupported or partially supported XSLT features are documented in the following table. The implementation of XSLT in Qt 4.5 can be seen as XSLT 1.0 but with the data model of XPath 2.0 and XSLT 2.0, and using the using the functionality of XPath 2.0 and its accompanying function library. When QtXmlPatterns encounters an unsupported or partially support feature, it will either report a syntax error or silently continue, unless otherwise noted in the table.</p>
+<p>The implementation currently passes 42% of W3C's XSLT test suite, which focus on features introduced in XSLT 2.0&#x2e;</p>
+<p><table align="center" cellpadding="2" cellspacing="1" border="0">
+<thead><tr valign="top" class="qt-style"><th>XSL Feature</th><th>Support Status</th></tr></thead>
+<tr valign="top" class="odd"><td><tt>xsl:key</tt> and <tt>fn:key()</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:include</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:import</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:copy</tt></td><td>The <tt>copy-namespaces</tt> and <tt>inherit-namespaces</tt> attributes have no effect. For copied comments, attributes and processing instructions, the copy has the same node identity as the original.</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:copy-of</tt></td><td>The <tt>copy-namespaces</tt> attribute has no effect.</td></tr>
+<tr valign="top" class="even"><td><tt>fn:format-number()</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:message</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:use-when</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>Tunnel</tt> Parameters</td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:attribute-set</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:decimal-format</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:fallback</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:apply-imports</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:character-map</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:number</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:namespace-alias</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:output</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:output-character</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td><tt>xsl:preserve-space</tt></td><td>not supported</td></tr>
+<tr valign="top" class="even"><td><tt>xsl:result-document</tt></td><td>not supported</td></tr>
+<tr valign="top" class="odd"><td>Patterns</td><td>Complex patterns or patterns with predicates have issues.</td></tr>
+<tr valign="top" class="even"><td><tt>2.0</tt> Compatibility Mode</td><td>Stylesheets are interpreted as XSLT 2.0 stylesheets, even if the <tt>version</tt> attribute is in the XSLT source is 1.0&#x2e; In other words, the version attribute is ignored.</td></tr>
+<tr valign="top" class="odd"><td>Grouping</td><td><tt>fn:current-group()</tt>, <tt>fn:grouping-key()</tt> and <tt>xsl:for-each-group</tt>.</td></tr>
+<tr valign="top" class="even"><td>Regexp elements</td><td><tt>xsl:analyze-string</tt>, <tt>xsl:matching-substring</tt>, <tt>xsl:non-matching-substring</tt>, and <tt>fn:regex-group()</tt></td></tr>
+<tr valign="top" class="odd"><td>Date &amp; Time formatting</td><td><tt>fn:format-dateTime()</tt>, <tt>fn:format-date()</tt> and fn:format-time().</td></tr>
+<tr valign="top" class="even"><td>XPath Conformance</td><td>Since XPath is a subset of XSLT, its issues are in affect too.</td></tr>
+</table></p>
+<p>The QtXmlPatterns implementation of the XPath Data Model does not include entities (due to <a href="qxmlstreamreader.html">QXmlStreamReader</a> not reporting them). This means that functions <tt>unparsed-entity-uri()</tt> and <tt>unparsed-entity-public-id()</tt> always return negatively.</p>
+<a name="xpath-2-0"></a>
+<h4>XPath 2.0</h4>
+<p>Since XPath 2.0 is a subset of XQuery 1.0, XPath 2.0 is supported. Areas where conformance may be questionable and, consequently, where behavior may be changed in future releases include:</p>
 <ul>
 <li>Regular expression support is currently not conformant but follows Qt's <a href="qregexp.html">QRegExp</a> standard syntax.</li>
 <li>Operators for <tt>xs:time</tt>, <tt>xs:date</tt>, and <tt>xs:dateTime</tt> are incomplete.</li>
 <li>Formatting of very large or very small <tt>xs:double</tt>, <tt>xs:float</tt>, and <tt>xs:decimal</tt> values may be incorrect.</li>
-<li>Some corner cases involving namespaces and element constructors are incorrect.</li>
 </ul>
-<p>XML 1.0 and XML Namespaces 1.0 are supported, as opposed to the 1.1 versions. When a strings is passed to a query as a <a href="qstring.html">QString</a>, the characters must be XML 1.0 characters. Otherwise, the behavior is undefined. This is not checked.</p>
-<p>Since XPath 2.0 is a subset of XQuery 1.0, it is supported.</p>
-<p>The specifications discusses conformance further: <a href="http://www.w3.org/TR/xquery/">XQuery 1.0: An XML Query Language</a>. W3C's XQuery testing effort can be of interest as well, <a href="http://www.w3.org/XML/Query/test-suite/">XML Query Test Suite</a>.</p>
-<p>Currently <tt>fn:collection()</tt> does not access any data set, and there is no API for providing data through the collection. As a result, evaluating <tt>fn:collection()</tt> returns the empty sequence. We intend to provide functionality for this in a future release of Qt.</p>
-<p>Processing of XML files supports <tt>xml:id</tt>. In practice, this allows elements that have an attribute named <tt>xml:id</tt> to be looked up efficiently with the <tt>fn:id()</tt> function. See <a href="http://www.w3.org/TR/xml-id/">xml:id Version 1.0</a> for details.</p>
-<p>Only queries encoded in UTF-8 are supported.</p>
+<a name="xml-id"></a>
+<h4>xml:id</h4>
+<p>Processing of XML files supports <tt>xml:id</tt>. This allows elements that have an attribute named <tt>xml:id</tt> to be looked up efficiently with the <tt>fn:id()</tt> function. See <a href="http://www.w3.org/TR/xml-id/">xml:id Version 1.0</a> for details.</p>
 <a name="resource-loading"></a>
 <h4>Resource Loading</h4>
-<p>When QtXmlPatterns loads an XML resource, e.g&#x2e;, using <tt>fn:doc()</tt> function, the following schemes are supported:</p>
+<p>When QtXmlPatterns loads an XML resource, e.g&#x2e;, using the <tt>fn:doc()</tt> function, the following schemes are supported:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Scheme Name</th><th>Description</th></tr></thead>
 <tr valign="top" class="odd"><td><tt>file</tt></td><td>Local files.</td></tr>
-<tr valign="top" class="even"><td><tt>data</tt></td><td>The bytes are encoded in the URI itself. For instance, <tt>data:application/xml,%3Ce%2F%3E</tt> is <tt>&lt;e/&gt;</tt>.</td></tr>
+<tr valign="top" class="even"><td><tt>data</tt></td><td>The bytes are encoded in the URI itself. e.g&#x2e;, <tt>data:application/xml,%3Ce%2F%3E</tt> is <tt>&lt;e/&gt;</tt>.</td></tr>
 <tr valign="top" class="odd"><td><tt>ftp</tt></td><td>Resources retrieved via FTP.</td></tr>
 <tr valign="top" class="even"><td><tt>http</tt></td><td>Resources retrieved via HTTP.</td></tr>
 <tr valign="top" class="odd"><td><tt>https</tt></td><td>Resources retrieved via HTTPS. This will succeed if no SSL errors are encountered.</td></tr>
 <tr valign="top" class="even"><td><tt>qrc</tt></td><td>Qt Resource files. Expressing it as an empty scheme, :/..&#x2e;, is not supported.</td></tr>
 </table></p>
+<a name="xml"></a>
+<h4>XML</h4>
+<p>XML 1.0 and XML Namespaces 1.0 are supported, as opposed to the 1.1 versions. When a strings is passed to a query as a <a href="qstring.html">QString</a>, the characters must be XML 1.0 characters. Otherwise, the behavior is undefined. This is not checked.</p>
 <p>URIs are first passed to <a href="qabstracturiresolver.html">QAbstractUriResolver</a>. Check <a href="qxmlquery.html#setUriResolver">QXmlQuery::setUriResolver</a>() for possible rewrites.</p>
 <p>
 [Previous: <a href="qtxml.html">QtXml Module</a>]
@@ -378,8 +435,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

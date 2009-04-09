@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,16 @@ TRANSLATOR qdesigner_internal::QDesignerTaskMenu
 #include "signalslotdialog_p.h"
 #include "qdesigner_membersheet_p.h"
 #include "qdesigner_propertycommand_p.h"
+#include "qdesigner_utils_p.h"
+#include "qdesigner_objectinspector_p.h"
+#include "morphmenu_p.h"
+#include "qdesigner_integration_p.h"
+#include "formlayoutmenu_p.h"
+#include "ui_selectsignaldialog.h"
+#include "widgetfactory_p.h"
+#include "abstractintrospection_p.h"
+#include "widgetdatabase_p.h"
+
 #include <shared_enums_p.h>
 
 #include <QtDesigner/QDesignerFormWindowInterface>
@@ -75,6 +89,8 @@ TRANSLATOR qdesigner_internal::QDesignerTaskMenu
 #include <QtGui/QPushButton>
 #include <QtGui/QUndoStack>
 #include <QtCore/QDebug>
+#include <QtCore/QSignalMapper>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,6 +124,22 @@ static inline QAction *createSeparatorHelper(QObject *parent) {
     return rc;
 }
 
+static inline qdesigner_internal::QDesignerIntegration *integration(const QDesignerFormEditorInterface *core) {
+    return qobject_cast<qdesigner_internal::QDesignerIntegration *>(core->integration());
+}
+
+static QString objName(const QDesignerFormEditorInterface *core, QObject *object) {
+    QDesignerPropertySheetExtension *sheet
+            = qt_extension<QDesignerPropertySheetExtension*>(core->extensionManager(), object);
+    Q_ASSERT(sheet != 0);
+
+    const QString objectNameProperty = QLatin1String("objectName");
+    const int index = sheet->indexOf(objectNameProperty);
+    const qdesigner_internal::PropertySheetStringValue objectNameValue
+            = qVariantValue<qdesigner_internal::PropertySheetStringValue>(sheet->property(index));
+    return objectNameValue.value();
+}
+
 enum { ApplyMinimumWidth = 0x1, ApplyMinimumHeight = 0x2, ApplyMaximumWidth = 0x4, ApplyMaximumHeight = 0x8 };
 
 namespace  {
@@ -127,11 +159,11 @@ ObjectNameDialog::ObjectNameDialog(QWidget *parent, const QString &oldName)
       m_editor( new qdesigner_internal::TextPropertyEditor(this, qdesigner_internal::TextPropertyEditor::EmbeddingNone,
                                                            qdesigner_internal::ValidationObjectName))
 {
-    setWindowTitle(QObject::tr("Change Object Name"));
+    setWindowTitle(QCoreApplication::translate("ObjectNameDialog", "Change Object Name"));
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
     QVBoxLayout *vboxLayout = new QVBoxLayout(this);
-    vboxLayout->addWidget(new QLabel(QObject::tr("Object Name")));
+    vboxLayout->addWidget(new QLabel(QCoreApplication::translate("ObjectNameDialog", "Object Name")));
 
     m_editor->setText(oldName);
     m_editor->selectAll();
@@ -160,6 +192,8 @@ namespace qdesigner_internal {
 class QDesignerTaskMenuPrivate {
 public:
     QDesignerTaskMenuPrivate(QWidget *widget, QObject *parent);
+
+    QDesignerTaskMenu *m_q;
     QPointer<QWidget> m_widget;
     QAction *m_separator;
     QAction *m_separator2;
@@ -167,10 +201,13 @@ public:
     QAction *m_separator4;
     QAction *m_separator5;
     QAction *m_separator6;
+    QAction *m_separator7;
     QAction *m_changeObjectNameAction;
     QAction *m_changeToolTip;
     QAction *m_changeWhatsThis;
     QAction *m_changeStyleSheet;
+    MorphMenu *m_morphMenu;
+    FormLayoutMenu *m_formLayoutMenu;
 
     QAction *m_addMenuBar;
     QAction *m_addToolBar;
@@ -178,12 +215,14 @@ public:
     QAction *m_removeStatusBar;
     QAction *m_changeScript;
     QAction *m_containerFakeMethods;
+    QAction *m_navigateToSlot;
     PromotionTaskMenu* m_promotionTaskMenu;
     QActionGroup *m_sizeActionGroup;
     QAction *m_sizeActionsSubMenu;
 };
 
 QDesignerTaskMenuPrivate::QDesignerTaskMenuPrivate(QWidget *widget, QObject *parent) :
+    m_q(0),
     m_widget(widget),
     m_separator(createSeparatorHelper(parent)),
     m_separator2(createSeparatorHelper(parent)),
@@ -191,17 +230,21 @@ QDesignerTaskMenuPrivate::QDesignerTaskMenuPrivate(QWidget *widget, QObject *par
     m_separator4(createSeparatorHelper(parent)),
     m_separator5(createSeparatorHelper(parent)),
     m_separator6(createSeparatorHelper(parent)),
+    m_separator7(createSeparatorHelper(parent)),
     m_changeObjectNameAction(new QAction(QDesignerTaskMenu::tr("Change objectName..."), parent)),
     m_changeToolTip(new QAction(QDesignerTaskMenu::tr("Change toolTip..."), parent)),
     m_changeWhatsThis(new QAction(QDesignerTaskMenu::tr("Change whatsThis..."), parent)),
     m_changeStyleSheet(new QAction(QDesignerTaskMenu::tr("Change styleSheet..."), parent)),
+    m_morphMenu(new MorphMenu(parent)),
+    m_formLayoutMenu(new FormLayoutMenu(parent)),
     m_addMenuBar(new QAction(QDesignerTaskMenu::tr("Create Menu Bar"), parent)),
     m_addToolBar(new QAction(QDesignerTaskMenu::tr("Add Tool Bar"), parent)),
     m_addStatusBar(new QAction(QDesignerTaskMenu::tr("Create Status Bar"), parent)),
     m_removeStatusBar(new QAction(QDesignerTaskMenu::tr("Remove Status Bar"), parent)),
     m_changeScript(new QAction(QDesignerTaskMenu::tr("Change script..."), parent)),
     m_containerFakeMethods(new QAction(QDesignerTaskMenu::tr("Change signals/slots..."), parent)),
-    m_promotionTaskMenu(new PromotionTaskMenu(widget, PromotionTaskMenu::ModeMultiSelection, parent)),
+    m_navigateToSlot(new QAction(QDesignerTaskMenu::tr("Go to slot..."), parent)),
+    m_promotionTaskMenu(new PromotionTaskMenu(widget, PromotionTaskMenu::ModeManagedMultiSelection, parent)),
     m_sizeActionGroup(new QActionGroup(parent)),
     m_sizeActionsSubMenu(new QAction(QDesignerTaskMenu::tr("Size Constraints"), parent))
 {
@@ -233,11 +276,13 @@ QDesignerTaskMenuPrivate::QDesignerTaskMenuPrivate(QWidget *widget, QObject *par
     sizeAction->setData(ApplyMaximumWidth|ApplyMaximumHeight);
     sizeMenu->addAction(sizeAction);
 }
+
 // --------- QDesignerTaskMenu
 QDesignerTaskMenu::QDesignerTaskMenu(QWidget *widget, QObject *parent) :
     QObject(parent),
     d(new QDesignerTaskMenuPrivate(widget, parent))
 {
+    d->m_q = this;
     Q_ASSERT(qobject_cast<QDesignerFormWindowInterface*>(widget) == 0);
 
     connect(d->m_changeObjectNameAction, SIGNAL(triggered()), this, SLOT(changeObjectName()));
@@ -250,6 +295,7 @@ QDesignerTaskMenu::QDesignerTaskMenu(QWidget *widget, QObject *parent) :
     connect(d->m_removeStatusBar, SIGNAL(triggered()), this, SLOT(removeStatusBar()));
     connect(d->m_changeScript, SIGNAL(triggered()), this, SLOT(changeScript()));
     connect(d->m_containerFakeMethods, SIGNAL(triggered()), this, SLOT(containerFakeMethods()));
+    connect(d->m_navigateToSlot, SIGNAL(triggered()), this, SLOT(slotNavigateToSlot()));
     connect(d->m_sizeActionGroup, SIGNAL(triggered(QAction*)), this,  SLOT(applySize(QAction*)));
 }
 
@@ -360,12 +406,16 @@ QList<QAction*> QDesignerTaskMenu::taskActions() const
         }
     }
     actions.append(d->m_changeObjectNameAction);
+    d->m_morphMenu->populate(d->m_widget, formWindow, actions);
+    d->m_formLayoutMenu->populate(d->m_widget, formWindow, actions);
     actions.append(d->m_separator2);
     actions.append(d->m_changeToolTip);
     actions.append(d->m_changeWhatsThis);
     actions.append(d->m_changeStyleSheet);
     actions.append(d->m_separator6);
     actions.append(d->m_sizeActionsSubMenu);
+    d->m_promotionTaskMenu->setMode(formWindow->isManaged(d->m_widget) ?
+                                    PromotionTaskMenu::ModeManagedMultiSelection : PromotionTaskMenu::ModeUnmanagedMultiSelection);
     d->m_promotionTaskMenu->addActions(formWindow, PromotionTaskMenu::LeadingSeparator, actions);
 
 #ifdef WANT_SCRIPT_OPTION
@@ -378,6 +428,12 @@ QList<QAction*> QDesignerTaskMenu::taskActions() const
         actions.append(d->m_separator5);
         actions.append(d->m_containerFakeMethods);
     }
+
+    if (isSlotNavigationEnabled(formWindow->core())) {
+        actions.append(d->m_separator7);
+        actions.append(d->m_navigateToSlot);
+    }
+
     return actions;
 }
 
@@ -386,17 +442,17 @@ void QDesignerTaskMenu::changeObjectName()
     QDesignerFormWindowInterface *fw = formWindow();
     Q_ASSERT(fw != 0);
 
-    QDesignerFormEditorInterface *core = fw->core();
-    QDesignerPropertySheetExtension *sheet = qt_extension<QDesignerPropertySheetExtension*>(core->extensionManager(), widget());
-    Q_ASSERT(sheet != 0);
+    const QString oldObjectName = objName(fw->core(), widget());
 
-    const QString objectNameProperty = QLatin1String("objectName");
-    const QString oldObjectName = sheet->property(sheet->indexOf(objectNameProperty)).toString();
     ObjectNameDialog dialog(fw, oldObjectName);
     if (dialog.exec() == QDialog::Accepted) {
         const QString newObjectName = dialog.newObjectName();
-        if (!newObjectName.isEmpty() && newObjectName  != oldObjectName )
-            fw->cursor()->setProperty(objectNameProperty, newObjectName);
+        if (!newObjectName.isEmpty() && newObjectName  != oldObjectName ) {
+            const QString objectNameProperty = QLatin1String("objectName");
+            PropertySheetStringValue objectNameValue;
+            objectNameValue.setValue(newObjectName);
+            setProperty(fw, CurrentWidgetMode, objectNameProperty, qVariantFromValue(objectNameValue));
+        }
     }
 }
 
@@ -413,13 +469,14 @@ void QDesignerTaskMenu::changeTextProperty(const QString &propertyName, const QS
         qDebug() << "** WARNING Invalid property" << propertyName << " passed to changeTextProperty!";
         return;
     }
-    const QString oldText = sheet->property(index).toString();
+    PropertySheetStringValue textValue = qVariantValue<PropertySheetStringValue>(sheet->property(index));
+    const QString oldText = textValue.value();
     // Pop up respective dialog
     bool accepted = false;
     QString newText;
     switch (desiredFormat) {
     case Qt::PlainText: {
-        PlainTextEditorDialog dlg(fw);
+        PlainTextEditorDialog dlg(fw->core(), fw);
         if (!windowTitle.isEmpty())
             dlg.setWindowTitle(windowTitle);
         dlg.setDefaultFont(d->m_widget->font());
@@ -443,14 +500,9 @@ void QDesignerTaskMenu::changeTextProperty(const QString &propertyName, const QS
     if (!accepted || oldText == newText)
           return;
 
-    switch (pm) {
-    case CurrentWidgetMode:
-        fw->cursor()->setWidgetProperty(d->m_widget, propertyName, QVariant(newText));
-        break;
-    case MultiSelectionMode:
-        fw->cursor()->setProperty(propertyName, QVariant(newText));
-        break;
-    }
+
+    textValue.setValue(newText);
+    setProperty(fw, pm, propertyName, qVariantFromValue(textValue));
 }
 
 void QDesignerTaskMenu::changeToolTip()
@@ -493,18 +545,8 @@ void QDesignerTaskMenu::changeScript()
         return;
 
     // compile list of selected objects
-    ScriptCommand::ObjectList objects;
-    objects += (QWidget *)d->m_widget;
-
-    const QDesignerFormWindowCursorInterface *cursor = fw->cursor();
-    const int selectionCount =  cursor->selectedWidgetCount();
-    for (int i = 0; i < selectionCount; i++) {
-        QWidget *w = cursor->selectedWidget(i);
-        if (w != d->m_widget)
-             objects += w;
-    }
     ScriptCommand *scriptCommand = new ScriptCommand(fw);
-    if (!scriptCommand->init(objects, newScript)) {
+    if (!scriptCommand->init(applicableObjects(fw, MultiSelectionMode), newScript)) {
         delete scriptCommand;
         return;
     }
@@ -518,6 +560,128 @@ void QDesignerTaskMenu::containerFakeMethods()
     if (!fw)
         return;
     SignalSlotDialog::editMetaDataBase(fw, d->m_widget, fw);
+}
+
+static QString declaredInClass(const QDesignerMetaObjectInterface *metaObject, const QString &member)
+{
+    // Find class whose superclass does not contain the method.
+    const QDesignerMetaObjectInterface *meta = metaObject;
+
+    for (;;) {
+        const QDesignerMetaObjectInterface *tmpMeta = meta->superClass();
+        if (tmpMeta == 0)
+            break;
+        if (tmpMeta->indexOfMethod(member) == -1)
+            break;
+        meta = tmpMeta;
+    }
+    return meta->className();
+}
+
+bool QDesignerTaskMenu::isSlotNavigationEnabled(const QDesignerFormEditorInterface *core)
+{
+    if (QDesignerIntegration *integr = integration(core))
+        return integr->isSlotNavigationEnabled();
+    return false;
+}
+
+void QDesignerTaskMenu::slotNavigateToSlot()
+{
+    QDesignerFormEditorInterface *core = formWindow()->core();
+    Q_ASSERT(core);
+    navigateToSlot(core, widget());
+}
+
+void QDesignerTaskMenu::navigateToSlot(QDesignerFormEditorInterface *core,
+                                       QObject *object,
+                                       const QString &defaultSignal)
+{
+    const QString objectName = objName(core, object);
+    QMap<QString, QMap<QString, QStringList> > classToSignalList;
+
+    QDesignerIntegration *integr = integration(core);
+
+    // "real" signals
+    if (const QDesignerMetaObjectInterface *metaObject = core->introspection()->metaObject(object)) {
+        const int methodCount = metaObject->methodCount();
+        for (int i = 0; i < methodCount; ++i) {
+            const QDesignerMetaMethodInterface *metaMethod = metaObject->method(i);
+            if (metaMethod->methodType() == QDesignerMetaMethodInterface::Signal) {
+                const QString signature = metaMethod->signature();
+                const QStringList parameterNames = metaMethod->parameterNames();
+                classToSignalList[declaredInClass(metaObject, signature)][signature] = parameterNames;
+            }
+        }
+    }
+
+    // fake signals
+    if (qdesigner_internal::MetaDataBase *metaDataBase
+        = qobject_cast<qdesigner_internal::MetaDataBase *>(core->metaDataBase())) {
+        qdesigner_internal::MetaDataBaseItem *item = metaDataBase->metaDataBaseItem(object);
+        Q_ASSERT(item);
+        const QStringList fakeSignals = item->fakeSignals();
+        foreach (const QString &fakeSignal, fakeSignals)
+            classToSignalList[item->customClassName()][fakeSignal] = QStringList();
+    }
+
+    if (object->isWidgetType()) {
+        QWidget *widget = static_cast<QWidget *>(object);
+        if (WidgetDataBase *db = qobject_cast<WidgetDataBase *>(core->widgetDataBase())) {
+            const QString promotedClassName = promotedCustomClassName(core, widget);
+            const int index = core->widgetDataBase()->indexOfClassName(promotedClassName);
+            if (index >= 0) {
+                WidgetDataBaseItem* item = static_cast<WidgetDataBaseItem*>(db->item(index));
+                const QStringList fakeSignals = item->fakeSignals();
+                foreach (const QString &fakeSignal, fakeSignals)
+                    classToSignalList[promotedClassName][fakeSignal] = QStringList();
+            }
+        }
+    }
+
+    Ui::SelectSignalDialog dialogUi;
+    QDialog selectSignalDialog(0, Qt::WindowTitleHint | Qt::WindowSystemMenuHint);
+    dialogUi.setupUi(&selectSignalDialog);
+
+    QMap<QString, QMap<QString, QStringList> >::const_iterator iter(classToSignalList.constBegin());
+    for (; iter != classToSignalList.constEnd(); ++iter) {
+        const QString className = iter.key();
+        QMap<QString, QStringList> signalNames = iter.value();
+
+        QMap<QString, QStringList>::const_iterator itSignal(signalNames.constBegin());
+        for (; itSignal != signalNames.constEnd(); ++itSignal) {
+            const QString signalName = itSignal.key();
+            QTreeWidgetItem *row = new QTreeWidgetItem(QStringList() << signalName << className);
+            row->setData(0, Qt::UserRole, itSignal.value());
+            dialogUi.signalList->addTopLevelItem(row);
+        }
+    }
+    if (dialogUi.signalList->topLevelItemCount() == 0) {
+        QTreeWidgetItem *row = new QTreeWidgetItem(QStringList() << tr("no signals available"));
+        dialogUi.signalList->addTopLevelItem(row);
+        dialogUi.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+    } else {
+        connect(dialogUi.signalList, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int)),
+                &selectSignalDialog, SLOT(accept()));
+    }
+
+    if (defaultSignal.isEmpty()) {
+        dialogUi.signalList->setCurrentItem(dialogUi.signalList->topLevelItem(0));
+    } else {
+        const QList<QTreeWidgetItem *> items = dialogUi.signalList->findItems (defaultSignal, Qt::MatchExactly, 0);
+        if (!items.empty())
+            dialogUi.signalList->setCurrentItem(items.front());
+    }
+
+    dialogUi.signalList->resizeColumnToContents(0);
+
+    if (selectSignalDialog.exec() == QDialog::Accepted) {
+        QTreeWidgetItem *selectedItem = dialogUi.signalList->selectedItems().first();
+        const QString signalSignature = selectedItem->text(0);
+        const QStringList parameterNames = qVariantValue<QStringList>(selectedItem->data(0, Qt::UserRole));
+
+        // TODO: Check wether signal is connected to slot
+        integr->emitNavigateToSlot(objectName, signalSignature, parameterNames);
+    }
 }
 
 // Add a command that takes over the value of the current geometry as
@@ -552,39 +716,65 @@ void QDesignerTaskMenu::applySize(QAction *a)
     QDesignerFormWindowInterface *fw = formWindow();
     if (!fw)
         return;
-    const QDesignerFormWindowCursorInterface *cursor = fw->cursor();
-    const int selectionCount =  cursor->selectedWidgetCount();
-    if (selectionCount == 0)
+
+    const QWidgetList selection = applicableWidgets(fw, MultiSelectionMode);
+    if (selection.isEmpty())
         return;
 
     const int mask = a->data().toInt();
-    fw->commandHistory()->beginMacro(tr("Set size constraint on %n widget(s)", 0, selectionCount));
-    for (int i = 0; i < selectionCount; i++)
-        createSizeCommand(fw, cursor->selectedWidget(i), mask);
+    const int size = selection.size();
+    fw->commandHistory()->beginMacro(tr("Set size constraint on %n widget(s)", 0, size));
+    for (int i = 0; i < size; i++)
+        createSizeCommand(fw, selection.at(i), mask);
     fw->commandHistory()->endMacro();
 }
 
-// ---------------- QDesignerTaskMenuFactory
-QDesignerTaskMenuFactory::QDesignerTaskMenuFactory(QExtensionManager *extensionManager)
-    : QExtensionFactory(extensionManager)
+template <class Container>
+    static void getApplicableObjects(const QDesignerFormWindowInterface *fw, QWidget *current,
+                                     QDesignerTaskMenu::PropertyMode pm, Container *c)
 {
+    // Current is always first
+    c->push_back(current);
+    if (pm == QDesignerTaskMenu::CurrentWidgetMode)
+        return;
+    QDesignerObjectInspector *designerObjectInspector = qobject_cast<QDesignerObjectInspector *>(fw->core()->objectInspector());
+    if (!designerObjectInspector)
+        return; // Ooops, someone plugged an old-style Object Inspector
+    // Add managed or unmanaged selection according to current type, make current first
+    Selection s;
+    designerObjectInspector->getSelection(s);
+    const QWidgetList &source = fw->isManaged(current) ? s.managed : s.unmanaged;
+    const QWidgetList::const_iterator cend = source.constEnd();
+    for ( QWidgetList::const_iterator it = source.constBegin(); it != cend; ++it)
+        if (*it != current) // was first
+            c->push_back(*it);
 }
 
-QObject *QDesignerTaskMenuFactory::createExtension(QObject *object, const QString &iid, QObject *parent) const
+QObjectList QDesignerTaskMenu::applicableObjects(const QDesignerFormWindowInterface *fw, PropertyMode pm) const
 {
-    if (iid != QLatin1String("QDesignerInternalTaskMenuExtension"))
-        return 0;
-
-    QWidget *widget = qobject_cast<QWidget*>(object);
-    if (widget == 0)
-        return 0;
-
-    // check if is an internal widget (### generalize)
-    if (qobject_cast<const QLayoutWidget*>(widget) || qobject_cast<const Spacer*>(widget))
-        return 0;
-
-    return new QDesignerTaskMenu(widget, parent);
+    QObjectList rc;
+    getApplicableObjects(fw, d->m_widget, pm, &rc);
+    return rc;
 }
+
+QWidgetList QDesignerTaskMenu::applicableWidgets(const QDesignerFormWindowInterface *fw, PropertyMode pm) const
+{
+    QWidgetList rc;
+    getApplicableObjects(fw, d->m_widget, pm, &rc);
+    return rc;
+}
+
+void QDesignerTaskMenu::setProperty(QDesignerFormWindowInterface *fw,  PropertyMode pm, const QString &name, const QVariant &newValue)
+{
+    SetPropertyCommand* setPropertyCommand = new SetPropertyCommand(fw);
+    if (setPropertyCommand->init(applicableObjects(fw, pm), name, newValue, d->m_widget)) {
+        fw->commandHistory()->push(setPropertyCommand);
+    } else {
+        delete setPropertyCommand;
+        qDebug() << "Unable to set property " << name << '.';
+    }
+}
+
 
 } // namespace qdesigner_internal
 

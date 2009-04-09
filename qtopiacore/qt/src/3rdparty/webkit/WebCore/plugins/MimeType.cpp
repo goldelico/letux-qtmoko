@@ -62,7 +62,7 @@ PassRefPtr<Plugin> MimeType::enabledPlugin() const
     const Vector<PluginInfo*>& plugins = m_pluginData->plugins();
     for (size_t i = 0; i < plugins.size(); ++i) {
         if (plugins[i] == info)
-            return new Plugin(m_pluginData.get(), i);
+            return Plugin::create(m_pluginData.get(), i);
     }
     return 0;
 }

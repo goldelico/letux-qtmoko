@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#define LANGUAGE_CPP			"Cpp"
+#define LANGUAGE_CPP                        "Cpp"
 
 /* qmake ignore Q_OBJECT */
 
@@ -57,15 +61,28 @@ QT_BEGIN_NAMESPACE
   Keep in sync with tokenizer.h.
 */
 static const char *kwords[] = {
-    "char", "class", "const", "double", "enum", "explicit", "friend", "inline", "int", "long",
-    "namespace", "operator", "private", "protected", "public", "short", "signals", "signed",
-    "slots", "static", "struct", "template", "typedef", "typename", "union", "unsigned",
-    "using", "virtual",
-    "void", "volatile", "__int64", "Q_OBJECT", "Q_OVERRIDE", "Q_PROPERTY",
-    "Q_DECLARE_SEQUENTIAL_ITERATOR", "Q_DECLARE_MUTABLE_SEQUENTIAL_ITERATOR",
-    "Q_DECLARE_ASSOCIATIVE_ITERATOR", "Q_DECLARE_MUTABLE_ASSOCIATIVE_ITERATOR", "Q_DECLARE_FLAGS",
-    "Q_SIGNALS", "Q_SLOTS",  "QT_COMPAT", "QT_COMPAT_CONSTRUCTOR", "QT_DEPRECATED", "QT_MOC_COMPAT",
-    "QT_MODULE", "QT3_SUPPORT", "QT3_SUPPORT_CONSTRUCTOR", "QT3_MOC_SUPPORT", "QDOC_PROPERTY"
+    "char", "class", "const", "double", "enum", "explicit",
+    "friend", "inline", "int", "long", "namespace", "operator",
+    "private", "protected", "public", "short", "signals", "signed",
+    "slots", "static", "struct", "template", "typedef", "typename",
+    "union", "unsigned", "using", "virtual", "void", "volatile",
+    "__int64", "Q_OBJECT", "Q_OVERRIDE", "Q_PROPERTY",
+    "Q_DECLARE_SEQUENTIAL_ITERATOR",
+    "Q_DECLARE_MUTABLE_SEQUENTIAL_ITERATOR",
+    "Q_DECLARE_ASSOCIATIVE_ITERATOR",
+    "Q_DECLARE_MUTABLE_ASSOCIATIVE_ITERATOR",
+    "Q_DECLARE_FLAGS",
+    "Q_SIGNALS",
+    "Q_SLOTS",
+    "QT_COMPAT",
+    "QT_COMPAT_CONSTRUCTOR",
+    "QT_DEPRECATED",
+    "QT_MOC_COMPAT",
+    "QT_MODULE",
+    "QT3_SUPPORT",
+    "QT3_SUPPORT_CONSTRUCTOR",
+    "QT3_MOC_SUPPORT",
+    "QDOC_PROPERTY"
 };
 
 static const int KwordHashTableSize = 4096;
@@ -88,15 +105,15 @@ static QRegExp *falsehoods = 0;
 static int hashKword(const char *s, int len)
 {
     return (((uchar) s[0]) + (((uchar) s[2]) << 5) +
-	     (((uchar) s[len - 1]) << 3) ) % KwordHashTableSize;
+             (((uchar) s[len - 1]) << 3) ) % KwordHashTableSize;
 }
 
 static void insertKwordIntoHash(const char *s, int number)
 {
     int k = hashKword(s, strlen(s));
     while (kwordHashTable[k]) {
-	if (++k == KwordHashTableSize)
-	    k = 0;
+        if (++k == KwordHashTableSize)
+            k = 0;
     }
     kwordHashTable[k] = number;
 }
@@ -133,25 +150,25 @@ int Tokenizer::getToken()
     yyLex = t;
 
     while ( yyCh != EOF ) {
-	yyTokLoc = yyCurLoc;
-	yyLexLen = 0;
+        yyTokLoc = yyCurLoc;
+        yyLexLen = 0;
 
-	if ( isspace(yyCh) ) {
-	    do {
-		yyCh = getChar();
-	    } while ( isspace(yyCh) );
-	} else if ( isalpha(yyCh) || yyCh == '_' ) {
-	    do {
-		yyCh = getChar();
-	    } while ( isalnum(yyCh) || yyCh == '_' );
+        if ( isspace(yyCh) ) {
+            do {
+                yyCh = getChar();
+            } while ( isspace(yyCh) );
+        } else if ( isalpha(yyCh) || yyCh == '_' ) {
+            do {
+                yyCh = getChar();
+            } while ( isalnum(yyCh) || yyCh == '_' );
 
-	    int k = hashKword( yyLex, yyLexLen );
-	    for ( ;; ) {
-		int i = kwordHashTable[k];
-		if ( i == 0 ) {
-		    return Tok_Ident;
-		} else if ( i == -1 ) {
-		    if (!parsingMacro && ignoredTokensAndDirectives->contains(yyLex)) {
+            int k = hashKword( yyLex, yyLexLen );
+            for ( ;; ) {
+                int i = kwordHashTable[k];
+                if ( i == 0 ) {
+                    return Tok_Ident;
+                } else if ( i == -1 ) {
+                    if (!parsingMacro && ignoredTokensAndDirectives->contains(yyLex)) {
                         if (ignoredTokensAndDirectives->value(yyLex)) { // it's a directive
                             int parenDepth = 0;
                             while (yyCh != EOF && (yyCh != ')' || parenDepth > 1)) {
@@ -161,286 +178,289 @@ int Tokenizer::getToken()
                                     --parenDepth;
                                 yyCh = getChar();
                             }
-			    if (yyCh == ')')
-				yyCh = getChar();
+                            if (yyCh == ')')
+                                yyCh = getChar();
                         }
-			break;
+                        break;
                     }
-		} else if ( strcmp(yyLex, kwords[i - 1]) == 0 ) {
+                } else if ( strcmp(yyLex, kwords[i - 1]) == 0 ) {
                     int ret = (int) Tok_FirstKeyword + i - 1;
                     if (ret != Tok_explicit && ret != Tok_inline && ret != Tok_typename)
                         return ret;
                     break;
-		}
+                }
 
-		if ( ++k == KwordHashTableSize )
-		    k = 0;
-	    }
-	} else if ( isdigit(yyCh) ) {
-	    do {
-		yyCh = getChar();
-	    } while ( isalnum(yyCh) || yyCh == '.' || yyCh == '+' ||
-		      yyCh == '-' );
-	    return Tok_Number;
-	} else {
-	    switch ( yyCh ) {
-	    case '!':
-	    case '%':
-		yyCh = getChar();
-		if ( yyCh == '=' )
-		    yyCh = getChar();
-		return Tok_SomeOperator;
-	    case '"':
-		yyCh = getChar();
+                if ( ++k == KwordHashTableSize )
+                    k = 0;
+            }
+        } else if ( isdigit(yyCh) ) {
+            do {
+                yyCh = getChar();
+            } while ( isalnum(yyCh) || yyCh == '.' || yyCh == '+' ||
+                      yyCh == '-' );
+            return Tok_Number;
+        } else {
+            switch ( yyCh ) {
+            case '!':
+            case '%':
+                yyCh = getChar();
+                if ( yyCh == '=' )
+                    yyCh = getChar();
+                return Tok_SomeOperator;
+            case '"':
+                yyCh = getChar();
 
-		while ( yyCh != EOF && yyCh != '"' ) {
-		    if ( yyCh == '\\' )
-			yyCh = getChar();
-		    yyCh = getChar();
-		}
-		yyCh = getChar();
+                while ( yyCh != EOF && yyCh != '"' ) {
+                    if ( yyCh == '\\' )
+                        yyCh = getChar();
+                    yyCh = getChar();
+                }
+                yyCh = getChar();
 
-		if ( yyCh == EOF )
-		    yyTokLoc.warning(tr("Unterminated C++ string literal"),
+                if ( yyCh == EOF )
+                    yyTokLoc.warning(tr("Unterminated C++ string literal"),
                                      tr("Maybe you forgot '/*!' at the beginning of the file?"));
-		else
-		    return Tok_String;
-		break;
-	    case '#':
-		return getTokenAfterPreprocessor();
-	    case '&':
-		yyCh = getChar();
-		if ( yyCh == '&' || yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_Ampersand;
-		}
-	    case '\'':
-		yyCh = getChar();
-		if ( yyCh == '\\' )
-		    yyCh = getChar();
-		do {
-		    yyCh = getChar();
-		} while ( yyCh != EOF && yyCh != '\'' );
+                else
+                    return Tok_String;
+                break;
+            case '#':
+                return getTokenAfterPreprocessor();
+            case '&':
+                yyCh = getChar();
+                if ( yyCh == '&' || yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_Ampersand;
+                }
+            case '\'':
+                yyCh = getChar();
+                if ( yyCh == '\\' )
+                    yyCh = getChar();
+                do {
+                    yyCh = getChar();
+                } while ( yyCh != EOF && yyCh != '\'' );
 
-		if ( yyCh == EOF ) {
-		    yyTokLoc.warning( tr("Unterminated C++ character"
-					 " literal") );
-		} else {
-		    yyCh = getChar();
-		    return Tok_Number;
-		}
-		break;
-	    case '(':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyParenDepth++;
-		if ( isspace(yyCh) ) {
-		    do {
-			yyCh = getChar();
-		    } while ( isspace(yyCh) );
-		    yyLexLen = 1;
-		    yyLex[1] = '\0';
-		}
-		if ( yyCh == '*' ) {
-		    yyCh = getChar();
-		    return Tok_LeftParenAster;
-		}
-		return Tok_LeftParen;
-	    case ')':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyParenDepth--;
-		return Tok_RightParen;
-	    case '*':
-		yyCh = getChar();
-		if ( yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_Aster;
-		}
-	    case '^':
-		yyCh = getChar();
-		if ( yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_Caret;
-		}
-	    case '+':
-		yyCh = getChar();
-		if ( yyCh == '+' || yyCh == '=' )
-		    yyCh = getChar();
-		return Tok_SomeOperator;
-	    case ',':
-		yyCh = getChar();
-		return Tok_Comma;
-	    case '-':
-		yyCh = getChar();
-		if ( yyCh == '-' || yyCh == '=' ) {
-		    yyCh = getChar();
-		} else if ( yyCh == '>' ) {
-		    yyCh = getChar();
-		    if ( yyCh == '*' )
-			yyCh = getChar();
-		}
-		return Tok_SomeOperator;
-	    case '.':
-		yyCh = getChar();
-		if ( yyCh == '*' ) {
-		    yyCh = getChar();
-		} else if ( yyCh == '.' ) {
-		    do {
-			yyCh = getChar();
-		    } while ( yyCh == '.' );
-		    return Tok_Ellipsis;
-		} else if ( isdigit(yyCh) ) {
-		    do {
-			yyCh = getChar();
-		    } while ( isalnum(yyCh) || yyCh == '.' || yyCh == '+' ||
-			      yyCh == '-' );
-		    return Tok_Number;
-		}
-		return Tok_SomeOperator;
-	    case '/':
-		yyCh = getChar();
-		if ( yyCh == '/' ) {
-		    do {
-			yyCh = getChar();
-		    } while ( yyCh != EOF && yyCh != '\n' );
-		} else if ( yyCh == '*' ) {
-		    bool metDoc = false; // empty doc is no doc
-		    bool metSlashAsterBang = false;
-		    bool metAster = false;
-		    bool metAsterSlash = false;
+                if ( yyCh == EOF ) {
+                    yyTokLoc.warning( tr("Unterminated C++ character"
+                                         " literal") );
+                } else {
+                    yyCh = getChar();
+                    return Tok_Number;
+                }
+                break;
+            case '(':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyParenDepth++;
+                if ( isspace(yyCh) ) {
+                    do {
+                        yyCh = getChar();
+                    } while ( isspace(yyCh) );
+                    yyLexLen = 1;
+                    yyLex[1] = '\0';
+                }
+                if ( yyCh == '*' ) {
+                    yyCh = getChar();
+                    return Tok_LeftParenAster;
+                }
+                return Tok_LeftParen;
+            case ')':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyParenDepth--;
+                return Tok_RightParen;
+            case '*':
+                yyCh = getChar();
+                if ( yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_Aster;
+                }
+            case '^':
+                yyCh = getChar();
+                if ( yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_Caret;
+                }
+            case '+':
+                yyCh = getChar();
+                if ( yyCh == '+' || yyCh == '=' )
+                    yyCh = getChar();
+                return Tok_SomeOperator;
+            case ',':
+                yyCh = getChar();
+                return Tok_Comma;
+            case '-':
+                yyCh = getChar();
+                if ( yyCh == '-' || yyCh == '=' ) {
+                    yyCh = getChar();
+                } else if ( yyCh == '>' ) {
+                    yyCh = getChar();
+                    if ( yyCh == '*' )
+                        yyCh = getChar();
+                }
+                return Tok_SomeOperator;
+            case '.':
+                yyCh = getChar();
+                if ( yyCh == '*' ) {
+                    yyCh = getChar();
+                } else if ( yyCh == '.' ) {
+                    do {
+                        yyCh = getChar();
+                    } while ( yyCh == '.' );
+                    return Tok_Ellipsis;
+                } else if ( isdigit(yyCh) ) {
+                    do {
+                        yyCh = getChar();
+                    } while ( isalnum(yyCh) || yyCh == '.' || yyCh == '+' ||
+                              yyCh == '-' );
+                    return Tok_Number;
+                }
+                return Tok_SomeOperator;
+            case '/':
+                yyCh = getChar();
+                if ( yyCh == '/' ) {
+                    do {
+                        yyCh = getChar();
+                    } while ( yyCh != EOF && yyCh != '\n' );
+                } else if ( yyCh == '*' ) {
+                    bool metDoc = false; // empty doc is no doc
+                    bool metSlashAsterBang = false;
+                    bool metAster = false;
+                    bool metAsterSlash = false;
 
-		    yyCh = getChar();
-		    if ( yyCh == '!' )
-			metSlashAsterBang = true;
+                    yyCh = getChar();
+                    if ( yyCh == '!' )
+                        metSlashAsterBang = true;
 
-		    while ( !metAsterSlash ) {
-			if ( yyCh == EOF ) {
-			    yyTokLoc.warning( tr("Unterminated C++ comment") );
-			    break;
-			} else {
-			    if ( yyCh == '*' ) {
-				metAster = true;
-			    } else if ( metAster && yyCh == '/' ) {
-				metAsterSlash = true;
-			    } else {
-				metAster = false;
-				if ( isgraph(yyCh) )
-				    metDoc = true;
-			    }
-			}
-			yyCh = getChar();
-		    }
-		    if ( metSlashAsterBang && metDoc )
-			return Tok_Doc;
-		    else if ( yyParenDepth > 0 )
-			return Tok_Comment;
-		} else {
-		    if ( yyCh == '=' )
-			yyCh = getChar();
-		    return Tok_SomeOperator;
-		}
-		break;
-	    case ':':
-		yyCh = getChar();
-		if ( yyCh == ':' ) {
-		    yyCh = getChar();
-		    return Tok_Gulbrandsen;
-		} else {
-		    return Tok_Colon;
-		}
-	    case ';':
-		yyCh = getChar();
-		return Tok_Semicolon;
-	    case '<':
-		yyCh = getChar();
-		if ( yyCh == '<' ) {
-		    yyCh = getChar();
-		    if ( yyCh == '=' )
-			yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else if ( yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_LeftAngle;
-		}
-	    case '=':
-		yyCh = getChar();
-		if ( yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_Equal;
-		}
-	    case '>':
-		yyCh = getChar();
-		if ( yyCh == '>' ) {
-		    yyCh = getChar();
-		    if ( yyCh == '=' )
-			yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else if ( yyCh == '=' ) {
-		    yyCh = getChar();
-		    return Tok_SomeOperator;
-		} else {
-		    return Tok_RightAngle;
-		}
-	    case '?':
-		yyCh = getChar();
-		return Tok_SomeOperator;
-	    case '[':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyBracketDepth++;
-		return Tok_LeftBracket;
-	    case '\\':
-		yyCh = getChar();
-		yyCh = getChar(); // skip one character
-		break;
-	    case ']':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyBracketDepth--;
-		return Tok_RightBracket;
-	    case '{':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyBraceDepth++;
-		return Tok_LeftBrace;
-	    case '}':
-		yyCh = getChar();
-		if ( yyNumPreprocessorSkipping == 0 )
-		    yyBraceDepth--;
-		return Tok_RightBrace;
-	    case '|':
-		yyCh = getChar();
-		if ( yyCh == '|' || yyCh == '=' )
-		    yyCh = getChar();
-		return Tok_SomeOperator;
-	    case '~':
-		yyCh = getChar();
-		return Tok_Tilde;
-	    default:
+                    while ( !metAsterSlash ) {
+                        if ( yyCh == EOF ) {
+                            yyTokLoc.warning( tr("Unterminated C++ comment") );
+                            break;
+                        } else {
+                            if ( yyCh == '*' ) {
+                                metAster = true;
+                            } else if ( metAster && yyCh == '/' ) {
+                                metAsterSlash = true;
+                            } else {
+                                metAster = false;
+                                if ( isgraph(yyCh) )
+                                    metDoc = true;
+                            }
+                        }
+                        yyCh = getChar();
+                    }
+                    if ( metSlashAsterBang && metDoc )
+                        return Tok_Doc;
+                    else if ( yyParenDepth > 0 )
+                        return Tok_Comment;
+                } else {
+                    if ( yyCh == '=' )
+                        yyCh = getChar();
+                    return Tok_SomeOperator;
+                }
+                break;
+            case ':':
+                yyCh = getChar();
+                if ( yyCh == ':' ) {
+                    yyCh = getChar();
+                    return Tok_Gulbrandsen;
+                } else {
+                    return Tok_Colon;
+                }
+            case ';':
+                yyCh = getChar();
+                return Tok_Semicolon;
+            case '<':
+                yyCh = getChar();
+                if ( yyCh == '<' ) {
+                    yyCh = getChar();
+                    if ( yyCh == '=' )
+                        yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else if ( yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_LeftAngle;
+                }
+            case '=':
+                yyCh = getChar();
+                if ( yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_Equal;
+                }
+            case '>':
+                yyCh = getChar();
+                if ( yyCh == '>' ) {
+                    yyCh = getChar();
+                    if ( yyCh == '=' )
+                        yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else if ( yyCh == '=' ) {
+                    yyCh = getChar();
+                    return Tok_SomeOperator;
+                } else {
+                    return Tok_RightAngle;
+                }
+            case '?':
+                yyCh = getChar();
+                return Tok_SomeOperator;
+            case '[':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyBracketDepth++;
+                return Tok_LeftBracket;
+            case '\\':
+                yyCh = getChar();
+                yyCh = getChar(); // skip one character
+                break;
+            case ']':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyBracketDepth--;
+                return Tok_RightBracket;
+            case '{':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyBraceDepth++;
+                return Tok_LeftBrace;
+            case '}':
+                yyCh = getChar();
+                if ( yyNumPreprocessorSkipping == 0 )
+                    yyBraceDepth--;
+                return Tok_RightBrace;
+            case '|':
+                yyCh = getChar();
+                if ( yyCh == '|' || yyCh == '=' )
+                    yyCh = getChar();
+                return Tok_SomeOperator;
+            case '~':
+                yyCh = getChar();
+                return Tok_Tilde;
+            case '@':
+                yyCh = getChar();
+                return Tok_At;
+            default:
                 // ### We should really prevent qdoc from looking at snippet files rather than
                 // ### suppress warnings when reading them.
                 if ( yyNumPreprocessorSkipping == 0 && !yyTokLoc.fileName().endsWith(".qdoc") ) {
-		    yyTokLoc.warning( tr("Hostile character 0x%1 in C++ source")
-				      .arg((uchar)yyCh, 1, 16) );
+                    yyTokLoc.warning( tr("Hostile character 0x%1 in C++ source")
+                                      .arg((uchar)yyCh, 1, 16) );
                 }
-		yyCh = getChar();
-	    }
-	}
+                yyCh = getChar();
+            }
+        }
     }
 
     if ( yyPreprocessorSkipping.count() > 1 ) {
-	yyTokLoc.warning( tr("Expected #endif before end of file") );
+        yyTokLoc.warning( tr("Expected #endif before end of file") );
         // clear it out or we get an infinite loop!
         while ( !yyPreprocessorSkipping.isEmpty() ) {
             popSkipping();
@@ -460,8 +480,8 @@ void Tokenizer::initialize(const Config &config)
     comment->setMinimal( true );
     versionX = new QRegExp( "$cannot possibly match^" );
     if (!versionSym.isEmpty())
-	versionX->setPattern("[ \t]*(?:" + QRegExp::escape(versionSym)
-			     + ")[ \t]+\"([^\"]*)\"[ \t]*");
+        versionX->setPattern("[ \t]*(?:" + QRegExp::escape(versionSym)
+                             + ")[ \t]+\"([^\"]*)\"[ \t]*");
     definedX = new QRegExp("defined ?\\( ?([A-Z_0-9a-z]+) ?\\)");
 
     QStringList d = config.getStringList(CONFIG_DEFINES);
@@ -471,21 +491,23 @@ void Tokenizer::initialize(const Config &config)
 
     memset(kwordHashTable, 0, sizeof(kwordHashTable));
     for (int i = 0; i < Tok_LastKeyword - Tok_FirstKeyword + 1; i++)
-	insertKwordIntoHash(kwords[i], i + 1);
+        insertKwordIntoHash(kwords[i], i + 1);
 
     ignoredTokensAndDirectives = new QHash<QByteArray, bool>;
 
     QStringList tokens = config.getStringList(LANGUAGE_CPP + Config::dot + CONFIG_IGNORETOKENS);
-    foreach (QString t, tokens) {
-	ignoredTokensAndDirectives->insert(t.toAscii(), false);
-	insertKwordIntoHash(t.toAscii().data(), -1);
+    foreach (const QString &t, tokens) {
+        const QByteArray tb = t.toAscii();
+        ignoredTokensAndDirectives->insert(tb, false);
+        insertKwordIntoHash(tb.data(), -1);
     }
 
     QStringList directives = config.getStringList(LANGUAGE_CPP + Config::dot
                                                   + CONFIG_IGNOREDIRECTIVES);
-    foreach (QString d, directives) {
-	ignoredTokensAndDirectives->insert(d.toAscii(), true);
-	insertKwordIntoHash(d.toAscii().data(), -1);
+    foreach (const QString &d, directives) {
+        const QByteArray db = d.toAscii();
+        ignoredTokensAndDirectives->insert(db, true);
+        insertKwordIntoHash(db.data(), -1);
     }
 }
 
@@ -547,7 +569,7 @@ int Tokenizer::getTokenAfterPreprocessor()
 {
     yyCh = getChar();
     while ( isspace(yyCh) && yyCh != '\n' )
-	yyCh = getChar();
+        yyCh = getChar();
 
     /*
       #directive condition
@@ -556,78 +578,78 @@ int Tokenizer::getTokenAfterPreprocessor()
     QString condition;
 
     while ( isalpha(yyCh) ) {
-	directive += QChar( yyCh );
-	yyCh = getChar();
+        directive += QChar( yyCh );
+        yyCh = getChar();
     }
     if ( !directive.isEmpty() ) {
-	while ( yyCh != EOF && yyCh != '\n' ) {
-	    if ( yyCh == '\\' )
-		yyCh = getChar();
-	    condition += yyCh;
-	    yyCh = getChar();
-	}
-	condition.replace( *comment, "" );
-	condition = condition.simplified();
+        while ( yyCh != EOF && yyCh != '\n' ) {
+            if ( yyCh == '\\' )
+                yyCh = getChar();
+            condition += yyCh;
+            yyCh = getChar();
+        }
+        condition.replace( *comment, "" );
+        condition = condition.simplified();
 
-	/*
-	  The #if, #ifdef, #ifndef, #elif, #else, and #endif
-	  directives have an effect on the skipping stack.  For
-	  instance, if the code processed so far is
+        /*
+          The #if, #ifdef, #ifndef, #elif, #else, and #endif
+          directives have an effect on the skipping stack.  For
+          instance, if the code processed so far is
 
-	      #if 1
-	      #if 0
-	      #if 1
-	      // ...
-	      #else
+              #if 1
+              #if 0
+              #if 1
+              // ...
+              #else
 
-	  the skipping stack contains, from bottom to top, false true
-	  true (assuming 0 is false and 1 is true).  If at least one
-	  entry of the stack is true, the tokens are skipped.
+          the skipping stack contains, from bottom to top, false true
+          true (assuming 0 is false and 1 is true).  If at least one
+          entry of the stack is true, the tokens are skipped.
 
-	  This mechanism is simple yet hard to understand.
-	*/
-	if ( directive[0] == QChar('i') ) {
-	    if ( directive == QString("if") )
-		pushSkipping( !isTrue(condition) );
-	    else if ( directive == QString("ifdef") )
-		pushSkipping( !defines->exactMatch(condition) );
-	    else if ( directive == QString("ifndef") )
-		pushSkipping( defines->exactMatch(condition) );
-	} else if ( directive[0] == QChar('e') ) {
-	    if ( directive == QString("elif") ) {
-		bool old = popSkipping();
-		if ( old )
-		    pushSkipping( !isTrue(condition) );
-		else
-		    pushSkipping( true );
-	    } else if ( directive == QString("else") ) {
-		pushSkipping( !popSkipping() );
-	    } else if ( directive == QString("endif") ) {
-		popSkipping();
-	    }
-	} else if ( directive == QString("define") ) {
-	    if (versionX->exactMatch(condition))
-		yyVersion = versionX->cap(1);
-	}
+          This mechanism is simple yet hard to understand.
+        */
+        if ( directive[0] == QChar('i') ) {
+            if ( directive == QString("if") )
+                pushSkipping( !isTrue(condition) );
+            else if ( directive == QString("ifdef") )
+                pushSkipping( !defines->exactMatch(condition) );
+            else if ( directive == QString("ifndef") )
+                pushSkipping( defines->exactMatch(condition) );
+        } else if ( directive[0] == QChar('e') ) {
+            if ( directive == QString("elif") ) {
+                bool old = popSkipping();
+                if ( old )
+                    pushSkipping( !isTrue(condition) );
+                else
+                    pushSkipping( true );
+            } else if ( directive == QString("else") ) {
+                pushSkipping( !popSkipping() );
+            } else if ( directive == QString("endif") ) {
+                popSkipping();
+            }
+        } else if ( directive == QString("define") ) {
+            if (versionX->exactMatch(condition))
+                yyVersion = versionX->cap(1);
+        }
     }
 
     int tok;
     do {
-	/*
-	  We set yyLex now, and after getToken() this will be
-	  yyPrevLex. This way, we skip over the preprocessor
-	  directive.
-	*/
-	qstrcpy( yyLex, yyPrevLex );
+        /*
+          We set yyLex now, and after getToken() this will be
+          yyPrevLex. This way, we skip over the preprocessor
+          directive.
+        */
+        qstrcpy( yyLex, yyPrevLex );
 
-	/*
-	  If getToken() meets another #, it will call
-	  getTokenAfterPreprocessor() once again, which could in turn
-	  call getToken() again, etc. Unless there are 10,000 or so
-	  preprocessor directives in a row, this shouldn't overflow
-	  the stack.
-	*/
-	tok = getToken();
+        /*
+          If getToken() meets another #, it will call
+          getTokenAfterPreprocessor() once again, which could in turn
+          call getToken() again, etc. Unless there are 10,000 or so
+          preprocessor directives in a row, this shouldn't overflow
+          the stack.
+        */
+        tok = getToken();
     } while ( yyNumPreprocessorSkipping > 0 );
     return tok;
 }
@@ -640,7 +662,7 @@ void Tokenizer::pushSkipping( bool skip )
 {
     yyPreprocessorSkipping.push( skip );
     if ( skip )
-	yyNumPreprocessorSkipping++;
+        yyNumPreprocessorSkipping++;
 }
 
 /*
@@ -649,13 +671,13 @@ void Tokenizer::pushSkipping( bool skip )
 bool Tokenizer::popSkipping()
 {
     if ( yyPreprocessorSkipping.isEmpty() ) {
-	yyTokLoc.warning( tr("Unexpected #elif, #else or #endif") );
-	return true;
+        yyTokLoc.warning( tr("Unexpected #elif, #else or #endif") );
+        return true;
     }
 
     bool skip = yyPreprocessorSkipping.pop();
     if ( skip )
-	yyNumPreprocessorSkipping--;
+        yyNumPreprocessorSkipping--;
     return skip;
 }
 
@@ -675,50 +697,50 @@ bool Tokenizer::isTrue(const QString &condition)
       Find the first logical operator at top level, but be careful
       about precedence. Examples:
 
-	  X || Y          // the or
-	  X || Y || Z     // the leftmost or
-	  X || Y && Z     // the or
-	  X && Y || Z     // the or
-	  (X || Y) && Z   // the and
+          X || Y          // the or
+          X || Y || Z     // the leftmost or
+          X || Y && Z     // the or
+          X && Y || Z     // the or
+          (X || Y) && Z   // the and
     */
     for ( int i = 0; i < (int) condition.length() - 1; i++ ) {
-	QChar ch = condition[i];
-	if ( ch == QChar('(') ) {
-	    parenDepth++;
-	} else if ( ch == QChar(')') ) {
-	    parenDepth--;
-	} else if ( parenDepth == 0 ) {
-	    if ( condition[i + 1] == ch ) {
-		if ( ch == QChar('|') ) {
-		    firstOr = i;
-		    break;
-		} else if ( ch == QChar('&') ) {
-		    if ( firstAnd == -1 )
-			firstAnd = i;
-		}
-	    }
-	}
+        QChar ch = condition[i];
+        if ( ch == QChar('(') ) {
+            parenDepth++;
+        } else if ( ch == QChar(')') ) {
+            parenDepth--;
+        } else if ( parenDepth == 0 ) {
+            if ( condition[i + 1] == ch ) {
+                if ( ch == QChar('|') ) {
+                    firstOr = i;
+                    break;
+                } else if ( ch == QChar('&') ) {
+                    if ( firstAnd == -1 )
+                        firstAnd = i;
+                }
+            }
+        }
     }
     if ( firstOr != -1 )
-	return isTrue( condition.left(firstOr) ) ||
-	       isTrue( condition.mid(firstOr + 2) );
+        return isTrue( condition.left(firstOr) ) ||
+               isTrue( condition.mid(firstOr + 2) );
     if ( firstAnd != -1 )
-	return isTrue( condition.left(firstAnd) ) &&
-	       isTrue( condition.mid(firstAnd + 2) );
+        return isTrue( condition.left(firstAnd) ) &&
+               isTrue( condition.mid(firstAnd + 2) );
 
     QString t = condition.simplified();
     if ( t.isEmpty() )
-	return true;
+        return true;
 
     if ( t[0] == QChar('!') )
-	return !isTrue( t.mid(1) );
+        return !isTrue( t.mid(1) );
     if ( t[0] == QChar('(') && t.right(1)[0] == QChar(')') )
-	return isTrue( t.mid(1, t.length() - 2) );
+        return isTrue( t.mid(1, t.length() - 2) );
 
     if ( definedX->exactMatch(t) )
-	return defines->exactMatch( definedX->cap(1) );
+        return defines->exactMatch( definedX->cap(1) );
     else
-	return !falsehoods->exactMatch( t );
+        return !falsehoods->exactMatch( t );
 }
 
 QT_END_NAMESPACE

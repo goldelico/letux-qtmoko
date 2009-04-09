@@ -18,45 +18,57 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGElement_H
-#define JSSVGElement_H
+#ifndef JSSVGElement_h
+#define JSSVGElement_h
 
 
 #if ENABLE(SVG)
 
 #include "JSElement.h"
-
+#include "SVGElement.h"
 namespace WebCore {
 
 class SVGElement;
 
 class JSSVGElement : public JSElement {
+    typedef JSElement Base;
 public:
-    JSSVGElement(KJS::ExecState*, SVGElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        IdAttrNum, XmlbaseAttrNum, OwnerSVGElementAttrNum, ViewportElementAttrNum
-    };
-    SVGElement* impl() const;
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    SVGElement* impl() const
+    {
+        return static_cast<SVGElement*>(Base::impl());
+    }
 };
 
-SVGElement* toSVGElement(KJS::JSValue*);
+SVGElement* toSVGElement(JSC::JSValuePtr);
 
-class JSSVGElementPrototype : public KJS::JSObject {
+class JSSVGElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGElementId(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGElementId(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGElementXmlbase(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGElementXmlbase(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGElementOwnerSVGElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGElementViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

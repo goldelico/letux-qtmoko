@@ -18,78 +18,77 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLCollection_H
-#define JSHTMLCollection_H
+#ifndef JSHTMLCollection_h
+#define JSHTMLCollection_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
+#include <runtime/CallData.h>
 
 namespace WebCore {
 
 class HTMLCollection;
 
-class JSHTMLCollection : public KJS::DOMObject {
+class JSHTMLCollection : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSHTMLCollection(KJS::ExecState*, HTMLCollection*);
+    JSHTMLCollection(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLCollection>);
     virtual ~JSHTMLCollection();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-    virtual bool implementsCall() const;
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        LengthAttrNum, 
+    virtual JSC::CallType getCallData(JSC::CallData&);
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        ItemFuncNum, NamedItemFuncNum, TagsFuncNum
-    };
+    virtual void getPropertyNames(JSC::ExecState*, JSC::PropertyNameArray&);
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
     // Custom functions
-    KJS::JSValue* item(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* namedItem(KJS::ExecState*, const KJS::List&);
+    JSC::JSValuePtr item(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr namedItem(JSC::ExecState*, const JSC::ArgList&);
     HTMLCollection* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<HTMLCollection> m_impl;
+    static JSC::JSValuePtr indexGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 private:
-    static KJS::JSValue* indexGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
-private:
-    static bool canGetItemsForName(KJS::ExecState*, HTMLCollection*, const KJS::Identifier&);
-    static KJS::JSValue* nameGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
+    static bool canGetItemsForName(JSC::ExecState*, HTMLCollection*, const JSC::Identifier&);
+    static JSC::JSValuePtr nameGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, HTMLCollection*);
-HTMLCollection* toHTMLCollection(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, HTMLCollection*);
+HTMLCollection* toHTMLCollection(JSC::JSValuePtr);
 
-class JSHTMLCollectionPrototype : public KJS::JSObject {
+class JSHTMLCollectionPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSHTMLCollectionPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSHTMLCollectionPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSHTMLCollectionPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSHTMLCollectionPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsHTMLCollectionPrototypeFunctionItem(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLCollectionPrototypeFunctionNamedItem(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLCollectionPrototypeFunctionTags(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsHTMLCollectionLength(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLCollectionConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

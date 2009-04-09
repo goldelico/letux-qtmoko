@@ -18,46 +18,52 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLTableCaptionElement_H
-#define JSHTMLTableCaptionElement_H
+#ifndef JSHTMLTableCaptionElement_h
+#define JSHTMLTableCaptionElement_h
 
 #include "JSHTMLElement.h"
-
+#include "HTMLTableCaptionElement.h"
 namespace WebCore {
 
 class HTMLTableCaptionElement;
 
 class JSHTMLTableCaptionElement : public JSHTMLElement {
+    typedef JSHTMLElement Base;
 public:
-    JSHTMLTableCaptionElement(KJS::ExecState*, HTMLTableCaptionElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSHTMLTableCaptionElement(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLTableCaptionElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        AlignAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
-    HTMLTableCaptionElement* impl() const;
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
+    HTMLTableCaptionElement* impl() const
+    {
+        return static_cast<HTMLTableCaptionElement*>(Base::impl());
+    }
 };
 
-HTMLTableCaptionElement* toHTMLTableCaptionElement(KJS::JSValue*);
+HTMLTableCaptionElement* toHTMLTableCaptionElement(JSC::JSValuePtr);
 
-class JSHTMLTableCaptionElementPrototype : public KJS::JSObject {
+class JSHTMLTableCaptionElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSHTMLTableCaptionElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSHTMLElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSHTMLTableCaptionElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsHTMLTableCaptionElementAlign(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLTableCaptionElementAlign(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLTableCaptionElementConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

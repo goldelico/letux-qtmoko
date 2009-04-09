@@ -17,6 +17,18 @@ no_keywords:DEFINES += QT_NO_KEYWORDS
 plugin { #Qt plugins
    static:DEFINES += QT_STATICPLUGIN
    DEFINES += QT_PLUGIN
+
+   # Triggers both on Qt being configured with -arch boundschecker,
+   # and if you qmake CONFIG+=boundchecker on your plugin project
+   boundschecker|contains(QT_CONFIG,boundschecker) {
+      # This option is added for plugins when Qt is configured for Boundschecker,
+      # since we want Boundschecker to not instrument the qt_plugin_query_verification_data
+      # function, as we call that function without the plugin's dependent DLLs, thus
+      # Boundscheckers instrumentation will fail. The function only returns a const char *,
+      # so no instrumentation is really needed on that function anyways.
+      QMAKE_CFLAGS += /nmignore:*:qt_plugin_query_verification_data
+      QMAKE_CXXFLAGS += /nmignore:*:qt_plugin_query_verification_data
+   }
 }
 
 #handle includes
@@ -24,7 +36,7 @@ INCLUDEPATH = $$QMAKE_INCDIR_QT $$INCLUDEPATH #prepending prevents us from picki
 win32:INCLUDEPATH += $$QMAKE_INCDIR_QT/ActiveQt
 
 # As order does matter for static libs, we reorder the QT variable here
-TMPLIBS = webkit phonon dbus testlib script svg qt3support sql xmlpatterns xml opengl gui network core
+TMPLIBS = webkit phonon dbus testlib script scripttools svg qt3support sql xmlpatterns xml opengl gui network core
 for(QTLIB, $$list($$TMPLIBS)) {
    contains(QT, $$QTLIB): QT_ORDERED += $$QTLIB
 }
@@ -59,8 +71,9 @@ for(QT_CURRENT_VERIFY, $$list($$QT_PLUGIN_VERIFY)) {
        INPUTPLUGINS = qimsw-multi
        MOUSEDRIVERPLUGINS = qtslibmousehandler
        SQLPLUGINS = qsqldb2 qsqloci qsqltds qsqlodbc qsqlpsql qsqlibase qsqlmysql qsqlite2 qsqlite
+       PHONONPLUGINS = phonon_waveout phonon_ds9
 
-       ALLQTPLUGINS = $$ACCESSIBLEPLUGINS $$CODECPLUGINS $$DECORATIONPLUGINS $$GFXDRIVERPLUGINS $$IMAGEPLUGINS $$INPUTPLUGINS $$MOUSEDRIVERPLUGINS $$SQLPLUGINS
+       ALLQTPLUGINS = $$ACCESSIBLEPLUGINS $$CODECPLUGINS $$DECORATIONPLUGINS $$GFXDRIVERPLUGINS $$IMAGEPLUGINS $$INPUTPLUGINS $$MOUSEDRIVERPLUGINS $$SQLPLUGINS $$PHONONPLUGINS
 
        QT_PLUGINPATH =
        contains(ALLQTPLUGINS, $$QTPLUG) {
@@ -73,6 +86,7 @@ for(QT_CURRENT_VERIFY, $$list($$QT_PLUGIN_VERIFY)) {
            contains(INPUTPLUGINS, $$QTPLUG): QT_PLUGINPATH = inputmethods
            contains(MOUSEDRIVERPLUGINS, $$QTPLUG): QT_PLUGINPATH = mousedrivers
            contains(SQLPLUGINS, $$QTPLUG):  QT_PLUGINPATH = sqldrivers
+	   contains(PHONONPLUGINS, $$QTPLUG): QT_PLUGINPATH = phonon_backend
         }
 
         # Generate the plugin linker line
@@ -132,6 +146,7 @@ for(QTLIB, $$list($$lower($$unique(QT)))) {
    else:isEqual(QTLIB, qt3support):qlib = Qt3Support
    else:isEqual(QTLIB, svg):qlib = QtSvg
    else:isEqual(QTLIB, script):qlib = QtScript
+   else:isEqual(QTLIB, scripttools):qlib = QtScriptTools
    else:isEqual(QTLIB, testlib):qlib = QtTest
    else:isEqual(QTLIB, dbus):qlib = QtDBus
    else:isEqual(QTLIB, phonon):qlib = phonon
@@ -142,10 +157,6 @@ for(QTLIB, $$list($$lower($$unique(QT)))) {
          warning($$TARGET cannot have a QT of $$QTLIB)
       } else {
          DEFINES *= $$upper(QT_$${QTLIB}_LIB)
-	 exists($$QMAKE_INCDIR_QT/$$qlib) {
-             INCLUDEPATH -= $$QMAKE_INCDIR_QT/$$qlib
-             INCLUDEPATH = $$QMAKE_INCDIR_QT/$$qlib $$INCLUDEPATH
-         }
 	 isEqual(QTLIB, opengl):CONFIG += opengl
 	 isEqual(QTLIB, qt3support):DEFINES *= QT3_SUPPORT
          isEqual(QTLIB, testlib):CONFIG += console
@@ -167,3 +178,6 @@ wince*:static:gui {
 }
 
 !isEmpty(QT_NAMESPACE):DEFINES *= QT_NAMESPACE=$$QT_NAMESPACE
+mac {
+    !isEmpty(QT_NAMESPACE_MAC_CRC):DEFINES *= QT_NAMESPACE_MAC_CRC=$$QT_NAMESPACE_MAC_CRC
+}

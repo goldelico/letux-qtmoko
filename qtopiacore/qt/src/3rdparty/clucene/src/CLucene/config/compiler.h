@@ -153,9 +153,9 @@
 //this is the max filename... for now its just the same,
 //but this could change, so we use a different name
 #define CL_MAX_NAME CL_MAX_PATH
-//todo: this is a temporary fix for a potential buffer overflow...
-//should never use this
-#define CL_MAX_DIR CL_MAX_PATH*32
+//this used to be CL_MAX_NAME * 32, but as Alex Hudson points out, this could come to be 128kb.
+//the above logic for CL_MAX_NAME should be correct enough to handle all file names
+#define CL_MAX_DIR CL_MAX_PATH
 
 #ifdef _LARGE_FILES
 #define LUCENE_MAX_FILELENGTH LUCENE_INT64_MAX_SHOULDBE
@@ -202,13 +202,15 @@
 #error "Unable to identify the compiler, issue error diagnostic. Edit <CLucene/config/CompilerMycomp.h> to set Lucene up for your compiler."
 #include "CLucene/config/LuceneMycomp.h"
 #endif /* end of compiler choice */
-    
+
 #ifndef _CL_HAVE_FLOAT_T
-#    ifdef _CL_HAVE_LONG_DOUBLE
-        typedef long double float_t;    /* `float' expressions are evaluated as `long double'.  */
-#    else
-        typedef double float_t;
-#    endif
+//#ifdef _CL_HAVE_LONG_DOUBLE
+// long double's are not working (reported by Mark Ashworth on Solaris 64)
+//   typedef long double float_t;    /* `float' expressions are evaluated as `long double'.  */
+//#else
+//  we are going to use qreal now
+//  typedef double float_t;
+//#endif
 #endif
 
 /*todo: but need to define SIZEOF_VOID_P #if (SIZEOF_VOID_P > 4 && SIZEOF_VOID_P <= 8)

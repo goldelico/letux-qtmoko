@@ -23,7 +23,7 @@ private:
 		CL_NS(util)::BitSet* bits;
 	public:    
 		QFHitCollector(CL_NS(util)::BitSet* bits);
-		void collect(const int32_t doc, const float_t score);
+		void collect(const int32_t doc, const qreal score);
     };
 
 protected:

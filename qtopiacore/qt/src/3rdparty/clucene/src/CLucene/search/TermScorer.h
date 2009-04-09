@@ -23,7 +23,7 @@ CL_NS_DEF(search)
 		CL_NS(index)::TermDocs* termDocs;
 		uint8_t* norms;
 		Weight* weight;
-		const float_t weightValue;
+		const qreal weightValue;
 		int32_t _doc;
 
 		int32_t docs[32];	  // buffered doc numbers
@@ -31,7 +31,7 @@ CL_NS_DEF(search)
 		int32_t pointer;
 		int32_t pointerMax;
 
-		float_t scoreCache[LUCENE_SCORE_CACHE_SIZE];
+		qreal scoreCache[LUCENE_SCORE_CACHE_SIZE];
 	public:
 
 		//TermScorer takes TermDocs and delets it when TermScorer is cleaned up
@@ -47,7 +47,7 @@ CL_NS_DEF(search)
 		void explain(int32_t doc, Explanation* ret);
 		TCHAR* toString();
 
-		float_t score();
+		qreal score();
     };
 CL_NS_END
 #endif

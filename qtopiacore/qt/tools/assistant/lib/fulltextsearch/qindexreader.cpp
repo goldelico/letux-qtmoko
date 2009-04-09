@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QCLucene library and is distributable under
@@ -51,16 +51,13 @@ bool QCLuceneIndexReader::isLuceneFile(const QString &filename)
 {
     using namespace lucene::index;
 
-    const QByteArray tmpPath = filename.toLocal8Bit();
-    return IndexReader::isLuceneFile(tmpPath.constData());
+    return IndexReader::isLuceneFile(filename);
 }
 
 bool QCLuceneIndexReader::indexExists(const QString &directory)
 {
     using namespace lucene::index;
-
-    const QByteArray tmpPath = directory.toLocal8Bit();
-    return IndexReader::indexExists(tmpPath.constData());
+    return IndexReader::indexExists(directory);
 }
 
 QCLuceneIndexReader QCLuceneIndexReader::open(const QString &path)
@@ -68,8 +65,7 @@ QCLuceneIndexReader QCLuceneIndexReader::open(const QString &path)
     using namespace lucene::index;
 
     QCLuceneIndexReader indexReader;
-    const QByteArray tmpPath = path.toLocal8Bit();
-    indexReader.d->reader = IndexReader::open(tmpPath.constData());
+    indexReader.d->reader = IndexReader::open(path);
     
     return indexReader;
 }
@@ -77,33 +73,25 @@ QCLuceneIndexReader QCLuceneIndexReader::open(const QString &path)
 void QCLuceneIndexReader::unlock(const QString &path)
 {
     using namespace lucene::index;
-
-    const QByteArray tmpPath = path.toLocal8Bit();
-    IndexReader::unlock(tmpPath.constData());
+    IndexReader::unlock(path);
 }
 
 bool QCLuceneIndexReader::isLocked(const QString &directory)
 {
     using namespace lucene::index;
-
-    const QByteArray tmpPath = directory.toLocal8Bit();
-    return IndexReader::isLocked(tmpPath.constData());
+    return IndexReader::isLocked(directory);
 }
 
 quint64 QCLuceneIndexReader::lastModified(const QString &directory)
 {
     using namespace lucene::index;
-
-    const QByteArray tmpPath = directory.toLocal8Bit();
-    return quint64(IndexReader::lastModified(tmpPath.constData()));
+    return quint64(IndexReader::lastModified(directory));
 }
 
 qint64 QCLuceneIndexReader::getCurrentVersion(const QString &directory)
 {
     using namespace lucene::index;
-
-    const QByteArray tmpPath = directory.toLocal8Bit();
-    return qint64(IndexReader::getCurrentVersion(tmpPath.constData()));
+    return qint64(IndexReader::getCurrentVersion(directory));
 }
 
 void QCLuceneIndexReader::close()
@@ -159,7 +147,7 @@ bool QCLuceneIndexReader::document(qint32 index, QCLuceneDocument &document)
 void QCLuceneIndexReader::setNorm(qint32 doc, const QString &field, qreal value)
 {
     TCHAR *fieldName = QStringToTChar(field);
-    d->reader->setNorm(int32_t(doc), fieldName, float_t(value));
+    d->reader->setNorm(int32_t(doc), fieldName, qreal(value));
     delete [] fieldName;
 }
 

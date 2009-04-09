@@ -25,263 +25,261 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLAreaElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLAreaElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLAreaElementTableEntries[] =
+static const HashTableValue JSHTMLAreaElementTableValues[16] =
 {
-    { "hostname", JSHTMLAreaElement::HostnameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "target", JSHTMLAreaElement::TargetAttrNum, DontDelete, 0, 0 },
-    { "hash", JSHTMLAreaElement::HashAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "href", JSHTMLAreaElement::HrefAttrNum, DontDelete, 0, &JSHTMLAreaElementTableEntries[17] },
-    { "alt", JSHTMLAreaElement::AltAttrNum, DontDelete, 0, &JSHTMLAreaElementTableEntries[18] },
-    { 0, 0, 0, 0, 0 },
-    { "port", JSHTMLAreaElement::PortAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "shape", JSHTMLAreaElement::ShapeAttrNum, DontDelete, 0, 0 },
-    { "coords", JSHTMLAreaElement::CoordsAttrNum, DontDelete, 0, &JSHTMLAreaElementTableEntries[16] },
-    { "accessKey", JSHTMLAreaElement::AccessKeyAttrNum, DontDelete, 0, 0 },
-    { "noHref", JSHTMLAreaElement::NoHrefAttrNum, DontDelete, 0, 0 },
-    { "tabIndex", JSHTMLAreaElement::TabIndexAttrNum, DontDelete, 0, 0 },
-    { "host", JSHTMLAreaElement::HostAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "pathname", JSHTMLAreaElement::PathnameAttrNum, DontDelete|ReadOnly, 0, &JSHTMLAreaElementTableEntries[19] },
-    { "protocol", JSHTMLAreaElement::ProtocolAttrNum, DontDelete|ReadOnly, 0, &JSHTMLAreaElementTableEntries[20] },
-    { "search", JSHTMLAreaElement::SearchAttrNum, DontDelete|ReadOnly, 0, &JSHTMLAreaElementTableEntries[21] },
-    { "constructor", JSHTMLAreaElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "accessKey", DontDelete, (intptr_t)jsHTMLAreaElementAccessKey, (intptr_t)setJSHTMLAreaElementAccessKey },
+    { "alt", DontDelete, (intptr_t)jsHTMLAreaElementAlt, (intptr_t)setJSHTMLAreaElementAlt },
+    { "coords", DontDelete, (intptr_t)jsHTMLAreaElementCoords, (intptr_t)setJSHTMLAreaElementCoords },
+    { "href", DontDelete, (intptr_t)jsHTMLAreaElementHref, (intptr_t)setJSHTMLAreaElementHref },
+    { "noHref", DontDelete, (intptr_t)jsHTMLAreaElementNoHref, (intptr_t)setJSHTMLAreaElementNoHref },
+    { "shape", DontDelete, (intptr_t)jsHTMLAreaElementShape, (intptr_t)setJSHTMLAreaElementShape },
+    { "target", DontDelete, (intptr_t)jsHTMLAreaElementTarget, (intptr_t)setJSHTMLAreaElementTarget },
+    { "hash", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementHash, (intptr_t)0 },
+    { "host", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementHost, (intptr_t)0 },
+    { "hostname", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementHostname, (intptr_t)0 },
+    { "pathname", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementPathname, (intptr_t)0 },
+    { "port", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementPort, (intptr_t)0 },
+    { "protocol", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementProtocol, (intptr_t)0 },
+    { "search", DontDelete|ReadOnly, (intptr_t)jsHTMLAreaElementSearch, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLAreaElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLAreaElementTable = 
-{
-    2, 22, JSHTMLAreaElementTableEntries, 16
-};
+static const HashTable JSHTMLAreaElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 511, JSHTMLAreaElementTableValues, 0 };
+#else
+    { 36, 31, JSHTMLAreaElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLAreaElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLAreaElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLAreaElementConstructorTable = 
-{
-    2, 1, JSHTMLAreaElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLAreaElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLAreaElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLAreaElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLAreaElementConstructor : public DOMObject {
 public:
     JSHTMLAreaElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLAreaElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLAreaElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLAreaElementConstructor::info = { "HTMLAreaElementConstructor", 0, &JSHTMLAreaElementConstructorTable, 0 };
+const ClassInfo JSHTMLAreaElementConstructor::s_info = { "HTMLAreaElementConstructor", 0, &JSHTMLAreaElementConstructorTable, 0 };
 
 bool JSHTMLAreaElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLAreaElementConstructor, DOMObject>(exec, &JSHTMLAreaElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLAreaElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLAreaElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLAreaElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLAreaElementPrototypeTable = 
-{
-    2, 1, JSHTMLAreaElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLAreaElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLAreaElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLAreaElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLAreaElementPrototype::info = { "HTMLAreaElementPrototype", 0, &JSHTMLAreaElementPrototypeTable, 0 };
+const ClassInfo JSHTMLAreaElementPrototype::s_info = { "HTMLAreaElementPrototype", 0, &JSHTMLAreaElementPrototypeTable, 0 };
 
 JSObject* JSHTMLAreaElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLAreaElementPrototype>(exec, "[[JSHTMLAreaElement.prototype]]");
+    return getDOMPrototype<JSHTMLAreaElement>(exec);
 }
 
-const ClassInfo JSHTMLAreaElement::info = { "HTMLAreaElement", &JSHTMLElement::info, &JSHTMLAreaElementTable, 0 };
+const ClassInfo JSHTMLAreaElement::s_info = { "HTMLAreaElement", &JSHTMLElement::s_info, &JSHTMLAreaElementTable, 0 };
 
-JSHTMLAreaElement::JSHTMLAreaElement(ExecState* exec, HTMLAreaElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLAreaElement::JSHTMLAreaElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLAreaElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLAreaElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLAreaElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLAreaElementPrototype(JSHTMLAreaElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLAreaElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLAreaElement, JSHTMLElement>(exec, &JSHTMLAreaElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLAreaElement, Base>(exec, &JSHTMLAreaElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLAreaElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLAreaElementAccessKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AccessKeyAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->accessKey());
-    }
-    case AltAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->alt());
-    }
-    case CoordsAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->coords());
-    }
-    case HrefAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->href());
-    }
-    case NoHrefAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsBoolean(imp->noHref());
-    }
-    case ShapeAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->shape());
-    }
-    case TabIndexAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsNumber(imp->tabIndex());
-    }
-    case TargetAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->target());
-    }
-    case HashAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->hash());
-    }
-    case HostAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->host());
-    }
-    case HostnameAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->hostname());
-    }
-    case PathnameAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->pathname());
-    }
-    case PortAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->port());
-    }
-    case ProtocolAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->protocol());
-    }
-    case SearchAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        return jsString(imp->search());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->accessKey());
 }
 
-void JSHTMLAreaElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLAreaElementAlt(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLAreaElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLAreaElementTable, this);
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->alt());
 }
 
-void JSHTMLAreaElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLAreaElementCoords(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AccessKeyAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setAccessKey(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case AltAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setAlt(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case CoordsAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setCoords(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case HrefAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setHref(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case NoHrefAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setNoHref(value->toBoolean(exec));
-        break;
-    }
-    case ShapeAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setShape(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TabIndexAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setTabIndex(value->toInt32(exec));
-        break;
-    }
-    case TargetAttrNum: {
-        HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(impl());
-
-        imp->setTarget(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->coords());
 }
 
-JSValue* JSHTMLAreaElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLAreaElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLAreaElementConstructor>(exec, "[[HTMLAreaElement.constructor]]");
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->href());
 }
+
+JSValuePtr jsHTMLAreaElementNoHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->noHref());
+}
+
+JSValuePtr jsHTMLAreaElementShape(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->shape());
+}
+
+JSValuePtr jsHTMLAreaElementTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->target());
+}
+
+JSValuePtr jsHTMLAreaElementHash(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->hash());
+}
+
+JSValuePtr jsHTMLAreaElementHost(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->host());
+}
+
+JSValuePtr jsHTMLAreaElementHostname(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->hostname());
+}
+
+JSValuePtr jsHTMLAreaElementPathname(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->pathname());
+}
+
+JSValuePtr jsHTMLAreaElementPort(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->port());
+}
+
+JSValuePtr jsHTMLAreaElementProtocol(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->protocol());
+}
+
+JSValuePtr jsHTMLAreaElementSearch(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->search());
+}
+
+JSValuePtr jsHTMLAreaElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLAreaElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLAreaElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLAreaElement, Base>(exec, propertyName, value, &JSHTMLAreaElementTable, this, slot);
+}
+
+void setJSHTMLAreaElementAccessKey(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setAccessKey(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLAreaElementAlt(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setAlt(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLAreaElementCoords(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setCoords(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLAreaElementHref(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setHref(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLAreaElementNoHref(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setNoHref(value->toBoolean(exec));
+}
+
+void setJSHTMLAreaElementShape(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setShape(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLAreaElementTarget(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLAreaElement* imp = static_cast<HTMLAreaElement*>(static_cast<JSHTMLAreaElement*>(thisObject)->impl());
+    imp->setTarget(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLAreaElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLAreaElementConstructor>(exec);
+}
+
 
 }

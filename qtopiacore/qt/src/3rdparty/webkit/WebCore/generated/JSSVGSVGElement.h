@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGSVGElement_H
-#define JSSVGSVGElement_H
+#ifndef JSSVGSVGElement_h
+#define JSSVGSVGElement_h
 
 
 #if ENABLE(SVG)
@@ -31,61 +31,107 @@ namespace WebCore {
 class SVGSVGElement;
 
 class JSSVGSVGElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGSVGElement(KJS::ExecState*, SVGSVGElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGSVGElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGSVGElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        XAttrNum, YAttrNum, WidthAttrNum, HeightAttrNum, 
-        ContentScriptTypeAttrNum, ContentStyleTypeAttrNum, ViewportAttrNum, PixelUnitToMillimeterXAttrNum, 
-        PixelUnitToMillimeterYAttrNum, ScreenPixelToMillimeterXAttrNum, ScreenPixelToMillimeterYAttrNum, UseCurrentViewAttrNum, 
-        CurrentScaleAttrNum, CurrentTranslateAttrNum, RequiredFeaturesAttrNum, RequiredExtensionsAttrNum, 
-        SystemLanguageAttrNum, XmllangAttrNum, XmlspaceAttrNum, ExternalResourcesRequiredAttrNum, 
-        ClassNameAttrNum, StyleAttrNum, NearestViewportElementAttrNum, FarthestViewportElementAttrNum, 
-        ViewBoxAttrNum, PreserveAspectRatioAttrNum, ZoomAndPanAttrNum, 
-
-        // Functions
-        SuspendRedrawFuncNum, UnsuspendRedrawFuncNum, UnsuspendRedrawAllFuncNum, ForceRedrawFuncNum, 
-        PauseAnimationsFuncNum, UnpauseAnimationsFuncNum, AnimationsPausedFuncNum, GetCurrentTimeFuncNum, 
-        SetCurrentTimeFuncNum, GetIntersectionListFuncNum, GetEnclosureListFuncNum, CheckIntersectionFuncNum, 
-        CheckEnclosureFuncNum, DeselectAllFuncNum, CreateSVGNumberFuncNum, CreateSVGLengthFuncNum, 
-        CreateSVGAngleFuncNum, CreateSVGPointFuncNum, CreateSVGMatrixFuncNum, CreateSVGRectFuncNum, 
-        CreateSVGTransformFuncNum, CreateSVGTransformFromMatrixFuncNum, HasExtensionFuncNum, GetBBoxFuncNum, 
-        GetCTMFuncNum, GetScreenCTMFuncNum, GetTransformToElementFuncNum
-    };
-};
-
-
-class JSSVGSVGElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGSVGElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
-};
-
-class JSSVGSVGElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGSVGElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
 };
+
+
+class JSSVGSVGElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGSVGElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionSuspendRedraw(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionUnsuspendRedraw(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionUnsuspendRedrawAll(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionForceRedraw(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionPauseAnimations(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionUnpauseAnimations(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionAnimationsPaused(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetCurrentTime(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionSetCurrentTime(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetIntersectionList(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetEnclosureList(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCheckIntersection(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCheckEnclosure(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionDeselectAll(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGNumber(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGAngle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGPoint(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGMatrix(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGRect(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGTransform(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionCreateSVGTransformFromMatrix(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionHasExtension(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetPresentationAttribute(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetBBox(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetScreenCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGSVGElementPrototypeFunctionGetTransformToElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGSVGElementX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementHeight(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementContentScriptType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementContentScriptType(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementContentStyleType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementContentStyleType(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementViewport(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementPixelUnitToMillimeterX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementPixelUnitToMillimeterY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementScreenPixelToMillimeterX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementScreenPixelToMillimeterY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementUseCurrentView(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementUseCurrentView(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementCurrentScale(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementCurrentScale(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementCurrentTranslate(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementRequiredFeatures(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementRequiredExtensions(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementSystemLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementXmllang(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementXmlspace(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGSVGElementExternalResourcesRequired(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementClassName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementNearestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementFarthestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementViewBox(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementPreserveAspectRatio(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementZoomAndPan(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGSVGElementZoomAndPan(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+// Constants
+
+JSC::JSValuePtr jsSVGSVGElementSVG_ZOOMANDPAN_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementSVG_ZOOMANDPAN_DISABLE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGSVGElementSVG_ZOOMANDPAN_MAGNIFY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -47,6 +51,11 @@
 #include "qpixmapcache.h"
 #include "qvariant.h"
 #include "qdebug.h"
+
+#ifdef Q_WS_MAC
+#include <private/qt_mac_p.h>
+#include <Carbon/Carbon.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -83,21 +92,32 @@ QT_BEGIN_NAMESPACE
   \value On  Display the pixmap when the widget is in an "on" state
 */
 
-extern Q_GUI_EXPORT qint64 qt_pixmap_id(const QPixmap &pixmap);
-
 static QBasicAtomicInt serialNumCounter = Q_BASIC_ATOMIC_INITIALIZER(1);
 
 class QIconPrivate
 {
 public:
-    QIconPrivate():ref(1), engine(0), serialNum(serialNumCounter.fetchAndAddRelaxed(1)), detach_no(0), engine_version(2) {}
+    QIconPrivate(): engine(0), ref(1), serialNum(serialNumCounter.fetchAndAddRelaxed(1)), detach_no(0), engine_version(2), v1RefCount(0) {}
 
-    ~QIconPrivate() { delete engine; }
-    QAtomicInt ref;
+    ~QIconPrivate() {
+        if (engine_version == 1) {
+            if (!v1RefCount->deref()) {
+                delete engine;
+                delete v1RefCount;
+            }
+        } else if (engine_version == 2) {
+            delete engine;
+        }
+    }
+
     QIconEngine *engine;
+
+    QAtomicInt ref;
     int serialNum;
     int detach_no;
     int engine_version;
+
+    QAtomicInt *v1RefCount;
 };
 
 
@@ -133,6 +153,7 @@ public:
     QIconEngineV2 *clone() const;
     bool read(QDataStream &in);
     bool write(QDataStream &out) const;
+    void virtual_hook(int id, void *data);
 
 private:
     QPixmapIconEngineEntry *tryMatch(const QSize &size, QIcon::Mode mode, QIcon::State state);
@@ -156,7 +177,11 @@ QPixmapIconEngine::~QPixmapIconEngine()
 
 void QPixmapIconEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state)
 {
-    painter->drawPixmap(rect, pixmap(rect.size(), mode, state));
+    QSize pixmapSize = rect.size();
+#if defined(Q_WS_MAC) && !defined(Q_WS_MAC64)
+    pixmapSize *= (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4) ? HIGetScaleFactor() : 1;
+#endif
+    painter->drawPixmap(rect, pixmap(pixmapSize, mode, state));
 }
 
 static inline int area(const QSize &s) { return s.width() * s.height(); }
@@ -258,15 +283,26 @@ QPixmap QPixmapIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::St
     if (pe)
         pm = pe->pixmap;
 
-    if (pm.isNull())
-        return pm;
+    if (pm.isNull()) {
+        int idx = pixmaps.count();
+        while (--idx >= 0) {
+            if (pe == &pixmaps[idx]) {
+                pixmaps.remove(idx);
+                break;
+            }
+        }
+        if (pixmaps.isEmpty())
+            return pm;
+        else
+            return pixmap(size, mode, state);
+    }
 
     QSize actualSize = pm.size();
     if (!actualSize.isNull() && (actualSize.width() > size.width() || actualSize.height() > size.height()))
         actualSize.scale(size, Qt::KeepAspectRatio);
 
     QString key = QLatin1String("$qt_icon_")
-                  + QString::number(qt_pixmap_id(pm))
+                  + QString::number(pm.cacheKey())
                   + QString::number(pe->mode)
                   + QString::number(actualSize.width())
                   + QLatin1Char('_')
@@ -281,7 +317,7 @@ QPixmap QPixmapIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::St
             QStyleOption opt(0);
             opt.palette = QApplication::palette();
             QPixmap active = QApplication::style()->generatedIconPixmap(QIcon::Active, pm, &opt);
-            if (qt_pixmap_id(pm) == qt_pixmap_id(active))
+            if (pm.cacheKey() == active.cacheKey())
                 return pm;
         }
     }
@@ -415,6 +451,29 @@ bool QPixmapIconEngine::write(QDataStream &out) const
         out << (uint) pixmaps.at(i).state;
     }
     return true;
+}
+
+void QPixmapIconEngine::virtual_hook(int id, void *data)
+{
+    switch (id) {
+    case QIconEngineV2::AvailableSizesHook: {
+        QIconEngineV2::AvailableSizesArgument &arg =
+            *reinterpret_cast<QIconEngineV2::AvailableSizesArgument*>(data);
+        arg.sizes.clear();
+        for (int i = 0; i < pixmaps.size(); ++i) {
+            QPixmapIconEngineEntry &pe = pixmaps[i];
+            if (pe.size == QSize() && pe.pixmap.isNull()) {
+                pe.pixmap = QPixmap(pe.fileName);
+                pe.size = pe.pixmap.size();
+            }
+            if (pe.mode == arg.mode && pe.state == arg.state && !pe.size.isEmpty())
+                arg.sizes.push_back(pe.size);
+        }
+        break;
+    }
+    default:
+        QIconEngineV2::virtual_hook(id, data);
+    }
 }
 
 #if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
@@ -553,6 +612,7 @@ QIcon::QIcon(QIconEngine *engine)
 {
     d->engine_version = 1;
     d->engine = engine;
+    d->v1RefCount = new QAtomicInt(1);
 }
 
 /*!
@@ -565,7 +625,6 @@ QIcon::QIcon(QIconEngineV2 *engine)
     d->engine_version = 2;
     d->engine = engine;
 }
-
 
 /*!
     Destroys the icon.
@@ -741,6 +800,8 @@ void QIcon::detach()
                 x->engine = engine->clone();
             } else {
                 x->engine = d->engine;
+                x->v1RefCount = d->v1RefCount;
+                x->v1RefCount->ref();
             }
             x->engine_version = d->engine_version;
             if (!d->ref.deref())
@@ -818,6 +879,7 @@ void QIcon::addFile(const QString &fileName, const QSize &size, Mode mode, State
                         d = new QIconPrivate;
                         d->engine = engine;
                         d->engine_version = 1;
+                        d->v1RefCount = new QAtomicInt(1);
                     }
                 }
             }
@@ -832,6 +894,20 @@ void QIcon::addFile(const QString &fileName, const QSize &size, Mode mode, State
         detach();
     }
     d->engine->addFile(fileName, size, mode, state);
+}
+
+/*!
+    \since 4.5
+
+    Returns a list of available icon sizes for the specified \a mode and
+    \a state.
+*/
+QList<QSize> QIcon::availableSizes(Mode mode, State state) const
+{
+    if (!d || !d->engine || d->engine_version < 2)
+        return QList<QSize>();
+    QIconEngineV2 *engine = static_cast<QIconEngineV2*>(d->engine);
+    return engine->availableSizes(mode, state);
 }
 
 /*****************************************************************************

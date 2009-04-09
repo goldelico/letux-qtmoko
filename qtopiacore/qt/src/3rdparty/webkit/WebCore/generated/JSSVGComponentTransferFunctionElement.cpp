@@ -21,13 +21,9 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGComponentTransferFunctionElement.h"
 
 #include <wtf/GetPtr.h>
@@ -37,56 +33,105 @@
 #include "JSSVGAnimatedNumberList.h"
 #include "SVGComponentTransferFunctionElement.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGComponentTransferFunctionElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGComponentTransferFunctionElementTableEntries[] =
+static const HashTableValue JSSVGComponentTransferFunctionElementTableValues[9] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "intercept", JSSVGComponentTransferFunctionElement::InterceptAttrNum, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementTableEntries[9] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "type", JSSVGComponentTransferFunctionElement::TypeAttrNum, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementTableEntries[7] },
-    { 0, 0, 0, 0, 0 },
-    { "slope", JSSVGComponentTransferFunctionElement::SlopeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "tableValues", JSSVGComponentTransferFunctionElement::TableValuesAttrNum, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementTableEntries[8] },
-    { "amplitude", JSSVGComponentTransferFunctionElement::AmplitudeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "exponent", JSSVGComponentTransferFunctionElement::ExponentAttrNum, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementTableEntries[10] },
-    { "offset", JSSVGComponentTransferFunctionElement::OffsetAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "type", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementType, (intptr_t)0 },
+    { "tableValues", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementTableValues, (intptr_t)0 },
+    { "slope", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSlope, (intptr_t)0 },
+    { "intercept", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementIntercept, (intptr_t)0 },
+    { "amplitude", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementAmplitude, (intptr_t)0 },
+    { "exponent", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementExponent, (intptr_t)0 },
+    { "offset", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementOffset, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGComponentTransferFunctionElementTable = 
+static const HashTable JSSVGComponentTransferFunctionElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSSVGComponentTransferFunctionElementTableValues, 0 };
+#else
+    { 19, 15, JSSVGComponentTransferFunctionElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGComponentTransferFunctionElementConstructorTableValues[7] =
 {
-    2, 11, JSSVGComponentTransferFunctionElementTableEntries, 7
+    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_IDENTITY, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_TABLE, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_DISCRETE, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_LINEAR, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_GAMMA, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGComponentTransferFunctionElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGComponentTransferFunctionElementConstructorTableValues, 0 };
+#else
+    { 17, 15, JSSVGComponentTransferFunctionElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGComponentTransferFunctionElementConstructor : public DOMObject {
+public:
+    JSSVGComponentTransferFunctionElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGComponentTransferFunctionElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGComponentTransferFunctionElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGComponentTransferFunctionElementConstructor::s_info = { "SVGComponentTransferFunctionElementConstructor", 0, &JSSVGComponentTransferFunctionElementConstructorTable, 0 };
+
+bool JSSVGComponentTransferFunctionElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGComponentTransferFunctionElementConstructor, DOMObject>(exec, &JSSVGComponentTransferFunctionElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGComponentTransferFunctionElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGComponentTransferFunctionElementPrototypeTableValues[7] =
 {
-    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_TABLE, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_LINEAR, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementPrototypeTableEntries[6] },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY, DontDelete|ReadOnly, 0, &JSSVGComponentTransferFunctionElementPrototypeTableEntries[7] },
-    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", WebCore::SVG_FECOMPONENTTRANSFER_TYPE_GAMMA, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_IDENTITY, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_TABLE", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_TABLE, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_DISCRETE", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_DISCRETE, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_LINEAR", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_LINEAR, (intptr_t)0 },
+    { "SVG_FECOMPONENTTRANSFER_TYPE_GAMMA", DontDelete|ReadOnly, (intptr_t)jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_GAMMA, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGComponentTransferFunctionElementPrototypeTable = 
-{
-    2, 8, JSSVGComponentTransferFunctionElementPrototypeTableEntries, 6
-};
+static const HashTable JSSVGComponentTransferFunctionElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGComponentTransferFunctionElementPrototypeTableValues, 0 };
+#else
+    { 17, 15, JSSVGComponentTransferFunctionElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGComponentTransferFunctionElementPrototype::info = { "SVGComponentTransferFunctionElementPrototype", 0, &JSSVGComponentTransferFunctionElementPrototypeTable, 0 };
+const ClassInfo JSSVGComponentTransferFunctionElementPrototype::s_info = { "SVGComponentTransferFunctionElementPrototype", 0, &JSSVGComponentTransferFunctionElementPrototypeTable, 0 };
 
 JSObject* JSSVGComponentTransferFunctionElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGComponentTransferFunctionElementPrototype>(exec, "[[JSSVGComponentTransferFunctionElement.prototype]]");
+    return getDOMPrototype<JSSVGComponentTransferFunctionElement>(exec);
 }
 
 bool JSSVGComponentTransferFunctionElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -94,166 +139,114 @@ bool JSSVGComponentTransferFunctionElementPrototype::getOwnPropertySlot(ExecStat
     return getStaticValueSlot<JSSVGComponentTransferFunctionElementPrototype, JSObject>(exec, &JSSVGComponentTransferFunctionElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGComponentTransferFunctionElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGComponentTransferFunctionElement::s_info = { "SVGComponentTransferFunctionElement", &JSSVGElement::s_info, &JSSVGComponentTransferFunctionElementTable, 0 };
+
+JSSVGComponentTransferFunctionElement::JSSVGComponentTransferFunctionElement(PassRefPtr<Structure> structure, PassRefPtr<SVGComponentTransferFunctionElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGComponentTransferFunctionElement::info = { "SVGComponentTransferFunctionElement", &JSSVGElement::info, &JSSVGComponentTransferFunctionElementTable, 0 };
-
-JSSVGComponentTransferFunctionElement::JSSVGComponentTransferFunctionElement(ExecState* exec, SVGComponentTransferFunctionElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGComponentTransferFunctionElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGComponentTransferFunctionElementPrototype::self(exec));
+    return new (exec) JSSVGComponentTransferFunctionElementPrototype(JSSVGComponentTransferFunctionElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGComponentTransferFunctionElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGComponentTransferFunctionElement, JSSVGElement>(exec, &JSSVGComponentTransferFunctionElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGComponentTransferFunctionElement, Base>(exec, &JSSVGComponentTransferFunctionElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGComponentTransferFunctionElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGComponentTransferFunctionElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGComponentTransferFunctionElementTableValues(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumberList> obj = imp->tableValuesAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->typeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGComponentTransferFunctionElementSlope(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->slopeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case TableValuesAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
+JSValuePtr jsSVGComponentTransferFunctionElementIntercept(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->interceptAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGComponentTransferFunctionElementAmplitude(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->amplitudeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumberList> obj = imp->tableValuesAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumberList>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumberList>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumberList>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGComponentTransferFunctionElementExponent(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->exponentAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SlopeAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
+JSValuePtr jsSVGComponentTransferFunctionElementOffset(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->offsetAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGComponentTransferFunctionElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGComponentTransferFunctionElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGComponentTransferFunctionElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGComponentTransferFunctionElementConstructor>(exec);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->slopeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+// Constant getters
 
-        return toJS(exec, obj.get());
-    }
-    case InterceptAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_IDENTITY(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->interceptAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_TABLE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case AmplitudeAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_DISCRETE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_LINEAR(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->amplitudeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ExponentAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->exponentAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case OffsetAttrNum: {
-        SVGComponentTransferFunctionElement* imp = static_cast<SVGComponentTransferFunctionElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->offsetAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+JSValuePtr jsSVGComponentTransferFunctionElementSVG_FECOMPONENTTRANSFER_TYPE_GAMMA(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

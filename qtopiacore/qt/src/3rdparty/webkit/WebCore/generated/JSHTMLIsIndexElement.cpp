@@ -27,138 +27,141 @@
 #include "HTMLFormElement.h"
 #include "HTMLIsIndexElement.h"
 #include "JSHTMLFormElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLIsIndexElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLIsIndexElementTableEntries[] =
+static const HashTableValue JSHTMLIsIndexElementTableValues[4] =
 {
-    { "constructor", JSHTMLIsIndexElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "form", JSHTMLIsIndexElement::FormAttrNum, DontDelete|ReadOnly, 0, &JSHTMLIsIndexElementTableEntries[3] },
-    { "prompt", JSHTMLIsIndexElement::PromptAttrNum, DontDelete, 0, 0 }
+    { "form", DontDelete|ReadOnly, (intptr_t)jsHTMLIsIndexElementForm, (intptr_t)0 },
+    { "prompt", DontDelete, (intptr_t)jsHTMLIsIndexElementPrompt, (intptr_t)setJSHTMLIsIndexElementPrompt },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLIsIndexElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLIsIndexElementTable = 
-{
-    2, 4, JSHTMLIsIndexElementTableEntries, 3
-};
+static const HashTable JSHTMLIsIndexElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLIsIndexElementTableValues, 0 };
+#else
+    { 8, 7, JSHTMLIsIndexElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLIsIndexElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLIsIndexElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLIsIndexElementConstructorTable = 
-{
-    2, 1, JSHTMLIsIndexElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLIsIndexElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLIsIndexElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLIsIndexElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLIsIndexElementConstructor : public DOMObject {
 public:
     JSHTMLIsIndexElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLIsIndexElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLIsIndexElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLIsIndexElementConstructor::info = { "HTMLIsIndexElementConstructor", 0, &JSHTMLIsIndexElementConstructorTable, 0 };
+const ClassInfo JSHTMLIsIndexElementConstructor::s_info = { "HTMLIsIndexElementConstructor", 0, &JSHTMLIsIndexElementConstructorTable, 0 };
 
 bool JSHTMLIsIndexElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLIsIndexElementConstructor, DOMObject>(exec, &JSHTMLIsIndexElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLIsIndexElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLIsIndexElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLIsIndexElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLIsIndexElementPrototypeTable = 
-{
-    2, 1, JSHTMLIsIndexElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLIsIndexElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLIsIndexElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLIsIndexElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLIsIndexElementPrototype::info = { "HTMLIsIndexElementPrototype", 0, &JSHTMLIsIndexElementPrototypeTable, 0 };
+const ClassInfo JSHTMLIsIndexElementPrototype::s_info = { "HTMLIsIndexElementPrototype", 0, &JSHTMLIsIndexElementPrototypeTable, 0 };
 
 JSObject* JSHTMLIsIndexElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLIsIndexElementPrototype>(exec, "[[JSHTMLIsIndexElement.prototype]]");
+    return getDOMPrototype<JSHTMLIsIndexElement>(exec);
 }
 
-const ClassInfo JSHTMLIsIndexElement::info = { "HTMLIsIndexElement", &JSHTMLInputElement::info, &JSHTMLIsIndexElementTable, 0 };
+const ClassInfo JSHTMLIsIndexElement::s_info = { "HTMLIsIndexElement", &JSHTMLInputElement::s_info, &JSHTMLIsIndexElementTable, 0 };
 
-JSHTMLIsIndexElement::JSHTMLIsIndexElement(ExecState* exec, HTMLIsIndexElement* impl)
-    : JSHTMLInputElement(exec, impl)
+JSHTMLIsIndexElement::JSHTMLIsIndexElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLIsIndexElement> impl)
+    : JSHTMLInputElement(structure, impl)
 {
-    setPrototype(JSHTMLIsIndexElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLIsIndexElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLIsIndexElementPrototype(JSHTMLIsIndexElementPrototype::createStructure(JSHTMLInputElementPrototype::self(exec)));
 }
 
 bool JSHTMLIsIndexElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLIsIndexElement, JSHTMLInputElement>(exec, &JSHTMLIsIndexElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLIsIndexElement, Base>(exec, &JSHTMLIsIndexElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLIsIndexElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLIsIndexElementForm(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case FormAttrNum: {
-        HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->form()));
-    }
-    case PromptAttrNum: {
-        HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(impl());
-
-        return jsString(imp->prompt());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(static_cast<JSHTMLIsIndexElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->form()));
 }
 
-void JSHTMLIsIndexElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLIsIndexElementPrompt(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLIsIndexElement, JSHTMLInputElement>(exec, propertyName, value, attr, &JSHTMLIsIndexElementTable, this);
+    HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(static_cast<JSHTMLIsIndexElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->prompt());
 }
 
-void JSHTMLIsIndexElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLIsIndexElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case PromptAttrNum: {
-        HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(impl());
-
-        imp->setPrompt(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    return static_cast<JSHTMLIsIndexElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLIsIndexElement::getConstructor(ExecState* exec)
+void JSHTMLIsIndexElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLIsIndexElementConstructor>(exec, "[[HTMLIsIndexElement.constructor]]");
+    lookupPut<JSHTMLIsIndexElement, Base>(exec, propertyName, value, &JSHTMLIsIndexElementTable, this, slot);
 }
+
+void setJSHTMLIsIndexElementPrompt(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLIsIndexElement* imp = static_cast<HTMLIsIndexElement*>(static_cast<JSHTMLIsIndexElement*>(thisObject)->impl());
+    imp->setPrompt(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLIsIndexElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLIsIndexElementConstructor>(exec);
+}
+
 
 }

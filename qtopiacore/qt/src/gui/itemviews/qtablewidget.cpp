@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -166,7 +170,7 @@ void QTableModel::setItem(int row, int column, QTableWidgetItem *item)
 
     // set new
     if (item)
-        item->d->id = i; 
+        item->d->id = i;
     tableItems[i] = item;
 
     if (view && view->isSortingEnabled()
@@ -450,7 +454,7 @@ bool QTableModel::setItemData(const QModelIndex &index, const QMap<int, QVariant
     if (itm) {
         itm->view = 0; // prohibits item from calling itemChanged()
         bool changed = false;
-        for (QMap<int, QVariant>::ConstIterator it = roles.begin(); it != roles.end(); ++it) {
+        for (QMap<int, QVariant>::ConstIterator it = roles.constBegin(); it != roles.constEnd(); ++it) {
             if (itm->data(it.key()) != it.value()) {
                 itm->setData(it.key(), it.value());
                 changed = true;
@@ -466,7 +470,7 @@ bool QTableModel::setItemData(const QModelIndex &index, const QMap<int, QVariant
         return false;
 
     itm = createItem();
-    for (QMap<int, QVariant>::ConstIterator it = roles.begin(); it != roles.end(); ++it)
+    for (QMap<int, QVariant>::ConstIterator it = roles.constBegin(); it != roles.constEnd(); ++it)
         itm->setData(it.key(), it.value());
     view->setItem(index.row(), index.column(), itm);
     return true;
@@ -1743,7 +1747,7 @@ void QTableWidgetPrivate::_q_dataChanged(const QModelIndex &topLeft,
   \since 4.1
   \fn void QTableWidget::cellPressed(int row, int column)
 
-  This signal is emitted whenever a cell the table is pressed.
+  This signal is emitted whenever a cell in the table is pressed.
   The \a row and \a column specified is the cell that was pressed.
 */
 
@@ -1950,9 +1954,10 @@ QTableWidgetItem *QTableWidget::item(int row, int column) const
 
     The table takes ownership of the item.
 
-    Note that if sorting is enabled (see \l{sortingEnabled}) and \a
-    column is the current sort column, the \a row will be moved to the
-    sorted position determined by \a item.
+    Note that if sorting is enabled (see
+    \l{QTableView::sortingEnabled} {sortingEnabled}) and \a column is
+    the current sort column, the \a row will be moved to the sorted
+    position determined by \a item.
 
     If you want to set several items of a particular row (say, by
     calling setItem() in a loop), you may want to turn off sorting
@@ -2145,7 +2150,7 @@ void QTableWidget::setCurrentItem(QTableWidgetItem *item)
 
 /*!
   \since 4.4
-  
+
   Sets the current item to be \a item, using the given \a command.
 
   \sa currentItem(), setCurrentCell()
@@ -2163,7 +2168,7 @@ void QTableWidget::setCurrentItem(QTableWidgetItem *item, QItemSelectionModel::S
     column).
 
     Depending on the current \l{QAbstractItemView::SelectionMode}{selection mode},
-    the cell may also be selected. 
+    the cell may also be selected.
 
     \sa setCurrentItem(), currentRow(), currentColumn()
 */
@@ -2174,7 +2179,7 @@ void QTableWidget::setCurrentCell(int row, int column)
 
 /*!
   \since 4.4
-  
+
   Sets the current cell to be the cell at position (\a row, \a
   column), using the given \a command.
 
@@ -2270,9 +2275,14 @@ QWidget *QTableWidget::cellWidget(int row, int column) const
 /*!
     \since 4.1
 
-    Sets the \a widget to be displayed in the cell in the given \a row and \a column.
+    Sets the given \a widget to be displayed in the cell in the given \a row
+    and \a column, passing the ownership of the widget to the table.
 
-    \note The table takes ownership of the widget.
+    If cell widget A is replaced with cell widget B, cell widget A will be
+    deleted. For example, in the code snippet below, the QLineEdit object will
+    be deleted.
+
+    \snippet doc/src/snippets/code/src_gui_itemviews_qtablewidget.cpp 0
 
     \sa cellWidget()
 */
@@ -2410,7 +2420,7 @@ int QTableWidget::visualColumn(int logicalColumn) const
   \fn QTableWidgetItem *QTableWidget::itemAt(const QPoint &point) const
 
   Returns a pointer to the item at the given \a point, or returns 0 if
-  the point is not covered by an item in the table widget.
+  \a point is not covered by an item in the table widget.
 
   \sa item()
 */
@@ -2651,7 +2661,7 @@ bool QTableWidget::event(QEvent *e)
 /*! \reimp */
 void QTableWidget::dropEvent(QDropEvent *event) {
     Q_D(QTableWidget);
-    if (event->source() == this && (event->proposedAction() == Qt::MoveAction ||
+    if (event->source() == this && (event->dropAction() == Qt::MoveAction ||
                                     dragDropMode() == QAbstractItemView::InternalMove)) {
         QModelIndex topIndex;
         int col = -1;

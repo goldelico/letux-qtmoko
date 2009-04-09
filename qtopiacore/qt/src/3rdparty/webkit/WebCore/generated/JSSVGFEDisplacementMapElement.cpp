@@ -21,328 +21,285 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEDisplacementMapElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEDisplacementMapElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEDisplacementMapElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEDisplacementMapElementTableEntries[] =
+static const HashTableValue JSSVGFEDisplacementMapElementTableValues[14] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "scale", JSSVGFEDisplacementMapElement::ScaleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "in2", JSSVGFEDisplacementMapElement::In2AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "xChannelSelector", JSSVGFEDisplacementMapElement::XChannelSelectorAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementTableEntries[12] },
-    { "x", JSSVGFEDisplacementMapElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementTableEntries[13] },
-    { "in1", JSSVGFEDisplacementMapElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementTableEntries[14] },
-    { "width", JSSVGFEDisplacementMapElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFEDisplacementMapElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "yChannelSelector", JSSVGFEDisplacementMapElement::YChannelSelectorAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFEDisplacementMapElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFEDisplacementMapElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEDisplacementMapElement::ResultAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementTableEntries[15] },
-    { "className", JSSVGFEDisplacementMapElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementIn1, (intptr_t)0 },
+    { "in2", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementIn2, (intptr_t)0 },
+    { "scale", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementScale, (intptr_t)0 },
+    { "xChannelSelector", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementXChannelSelector, (intptr_t)0 },
+    { "yChannelSelector", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementYChannelSelector, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDisplacementMapElementTable = 
+static const HashTable JSSVGFEDisplacementMapElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEDisplacementMapElementTableValues, 0 };
+#else
+    { 36, 31, JSSVGFEDisplacementMapElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGFEDisplacementMapElementConstructorTableValues[6] =
 {
-    2, 16, JSSVGFEDisplacementMapElementTableEntries, 12
+    { "SVG_CHANNEL_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_UNKNOWN, (intptr_t)0 },
+    { "SVG_CHANNEL_R", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_R, (intptr_t)0 },
+    { "SVG_CHANNEL_G", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_G, (intptr_t)0 },
+    { "SVG_CHANNEL_B", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_B, (intptr_t)0 },
+    { "SVG_CHANNEL_A", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_A, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGFEDisplacementMapElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFEDisplacementMapElementConstructorTableValues, 0 };
+#else
+    { 16, 15, JSSVGFEDisplacementMapElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGFEDisplacementMapElementConstructor : public DOMObject {
+public:
+    JSSVGFEDisplacementMapElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGFEDisplacementMapElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGFEDisplacementMapElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGFEDisplacementMapElementConstructor::s_info = { "SVGFEDisplacementMapElementConstructor", 0, &JSSVGFEDisplacementMapElementConstructorTable, 0 };
+
+bool JSSVGFEDisplacementMapElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGFEDisplacementMapElementConstructor, DOMObject>(exec, &JSSVGFEDisplacementMapElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEDisplacementMapElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEDisplacementMapElementPrototypeTableValues[7] =
 {
-    { "SVG_CHANNEL_R", WebCore::SVG_CHANNEL_R, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementPrototypeTableEntries[5] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_CHANNEL_UNKNOWN", WebCore::SVG_CHANNEL_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_CHANNEL_G", WebCore::SVG_CHANNEL_G, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_CHANNEL_B", WebCore::SVG_CHANNEL_B, DontDelete|ReadOnly, 0, &JSSVGFEDisplacementMapElementPrototypeTableEntries[6] },
-    { "SVG_CHANNEL_A", WebCore::SVG_CHANNEL_A, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_CHANNEL_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_UNKNOWN, (intptr_t)0 },
+    { "SVG_CHANNEL_R", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_R, (intptr_t)0 },
+    { "SVG_CHANNEL_G", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_G, (intptr_t)0 },
+    { "SVG_CHANNEL_B", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_B, (intptr_t)0 },
+    { "SVG_CHANNEL_A", DontDelete|ReadOnly, (intptr_t)jsSVGFEDisplacementMapElementSVG_CHANNEL_A, (intptr_t)0 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEDisplacementMapElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDisplacementMapElementPrototypeTable = 
-{
-    2, 7, JSSVGFEDisplacementMapElementPrototypeTableEntries, 5
-};
+static const HashTable JSSVGFEDisplacementMapElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFEDisplacementMapElementPrototypeTableValues, 0 };
+#else
+    { 16, 15, JSSVGFEDisplacementMapElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEDisplacementMapElementPrototype::info = { "SVGFEDisplacementMapElementPrototype", 0, &JSSVGFEDisplacementMapElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEDisplacementMapElementPrototype::s_info = { "SVGFEDisplacementMapElementPrototype", 0, &JSSVGFEDisplacementMapElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEDisplacementMapElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEDisplacementMapElementPrototype>(exec, "[[JSSVGFEDisplacementMapElement.prototype]]");
+    return getDOMPrototype<JSSVGFEDisplacementMapElement>(exec);
 }
 
 bool JSSVGFEDisplacementMapElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEDisplacementMapElementPrototype, JSObject>(exec, &JSSVGFEDisplacementMapElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGFEDisplacementMapElementPrototype, JSObject>(exec, &JSSVGFEDisplacementMapElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEDisplacementMapElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGFEDisplacementMapElement::s_info = { "SVGFEDisplacementMapElement", &JSSVGElement::s_info, &JSSVGFEDisplacementMapElementTable, 0 };
+
+JSSVGFEDisplacementMapElement::JSSVGFEDisplacementMapElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEDisplacementMapElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGFEDisplacementMapElement::info = { "SVGFEDisplacementMapElement", &JSSVGElement::info, &JSSVGFEDisplacementMapElementTable, 0 };
-
-JSSVGFEDisplacementMapElement::JSSVGFEDisplacementMapElement(ExecState* exec, SVGFEDisplacementMapElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGFEDisplacementMapElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGFEDisplacementMapElementPrototype::self(exec));
+    return new (exec) JSSVGFEDisplacementMapElementPrototype(JSSVGFEDisplacementMapElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEDisplacementMapElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEDisplacementMapElement, JSSVGElement>(exec, &JSSVGFEDisplacementMapElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEDisplacementMapElement, Base>(exec, &JSSVGFEDisplacementMapElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEDisplacementMapElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEDisplacementMapElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementIn2(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in2Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementScale(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->scaleAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case In2AttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+JSValuePtr jsSVGFEDisplacementMapElementXChannelSelector(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->xChannelSelectorAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementYChannelSelector(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->yChannelSelectorAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in2Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case ScaleAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+JSValuePtr jsSVGFEDisplacementMapElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->scaleAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XChannelSelectorAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+JSValuePtr jsSVGFEDisplacementMapElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->xChannelSelectorAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YChannelSelectorAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+JSValuePtr jsSVGFEDisplacementMapElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGFEDisplacementMapElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGFEDisplacementMapElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGFEDisplacementMapElementConstructor>(exec);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEDisplacementMapElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEDisplacementMapElement* castedThisObj = static_cast<JSSVGFEDisplacementMapElement*>(asObject(thisValue));
+    SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->yChannelSelectorAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+// Constant getters
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementSVG_CHANNEL_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
+JSValuePtr jsSVGFEDisplacementMapElementSVG_CHANNEL_R(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDisplacementMapElementSVG_CHANNEL_G(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDisplacementMapElementSVG_CHANNEL_B(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEDisplacementMapElement* imp = static_cast<SVGFEDisplacementMapElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFEDisplacementMapElementSVG_CHANNEL_A(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

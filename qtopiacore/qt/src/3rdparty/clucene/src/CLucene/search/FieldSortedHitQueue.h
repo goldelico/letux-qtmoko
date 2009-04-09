@@ -161,7 +161,7 @@ protected:
   /** Stores the maximum score value encountered, for normalizing.
    *  we only care about scores greater than 1.0 - if all the scores
    *  are less than 1.0, we don't have to normalize. */
-  float_t maxscore;
+  qreal maxscore;
 
   /**
    * Returns whether <code>a</code> is less relevant than <code>b</code>.

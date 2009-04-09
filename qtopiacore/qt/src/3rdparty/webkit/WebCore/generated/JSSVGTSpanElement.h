@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTSpanElement_H
-#define JSSVGTSpanElement_H
+#ifndef JSSVGTSpanElement_h
+#define JSSVGTSpanElement_h
 
 
 #if ENABLE(SVG)
@@ -31,22 +31,24 @@ namespace WebCore {
 class SVGTSpanElement;
 
 class JSSVGTSpanElement : public JSSVGTextPositioningElement {
+    typedef JSSVGTextPositioningElement Base;
 public:
-    JSSVGTSpanElement(KJS::ExecState*, SVGTSpanElement*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGTSpanElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGTSpanElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGTSpanElementPrototype : public KJS::JSObject {
+class JSSVGTSpanElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGTSpanElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGTextPositioningElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGTSpanElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 

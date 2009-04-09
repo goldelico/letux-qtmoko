@@ -25,6 +25,7 @@ macro.i81                       = "\\o{8,1}"
 macro.i91                       = "\\o{9,1}"
 macro.img                       = "\\image"
 macro.endquote                  = "\\endquotation"
+macro.relatesto                 = "\\relates"
 
 spurious			= "Missing comma in .*" \
 				  "Missing pattern .*"

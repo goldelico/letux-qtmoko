@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/abstractaudiooutput_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/abstractaudiooutput_p.h"

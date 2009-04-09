@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #ifndef QT_NO_STATUSBAR
 
 #include "qlist.h"
+#include "qdebug.h"
 #include "qevent.h"
 #include "qlayout.h"
 #include "qpainter.h"
@@ -46,8 +51,9 @@
 #include "qstyle.h"
 #include "qstyleoption.h"
 #include "qsizegrip.h"
-#include <private/qlayoutengine_p.h>
+#include "qmainwindow.h"
 
+#include <private/qlayoutengine_p.h>
 #include <private/qwidget_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -79,6 +85,10 @@ public:
 
     int savedStrut;
 
+#ifdef Q_WS_MAC
+    QPoint dragStart;
+#endif
+
     int indexToLastNonPermanentWidget() const
     {
         int i = items.size() - 1;
@@ -103,7 +113,45 @@ public:
         resizer->setAttribute(Qt::WA_WState_ExplicitShowHide, false);
     }
 #endif
+
+    QRect messageRect() const;
 };
+
+
+QRect QStatusBarPrivate::messageRect() const
+{
+    Q_Q(const QStatusBar);
+    bool rtl = q->layoutDirection() == Qt::RightToLeft;
+
+    int left = 6;
+    int right = q->width() - 12;
+
+#ifndef QT_NO_SIZEGRIP
+    if (resizer && resizer->isVisible()) {
+        if (rtl)
+            left = resizer->x() + resizer->width();
+        else
+            right = resizer->x();
+    }
+#endif
+
+    for (int i=0; i<items.size(); ++i) {
+        QStatusBarPrivate::SBItem* item = items.at(i);
+        if (!item)
+            break;
+        if (item->p && item->w->isVisible()) {
+                if (item->p) {
+                    if (rtl)
+                        left = qMax(left, item->w->x() + item->w->width() + 2);
+                    else
+                        right = qMin(right, item->w->x()-1);
+                }
+                break;
+        }
+    }
+    return QRect(left, 0, right-left, q->height());
+}
+
 
 /*!
     \class QStatusBar
@@ -381,7 +429,7 @@ int QStatusBar::insertPermanentWidget(int index, QWidget *widget, int stretch)
 
 /*!
     Removes the specified \a widget from the status bar.
-    
+
     \note This function does not delete the widget but \e hides it.
     To add the widget again, you must call both the addWidget() and
     show() functions.
@@ -644,7 +692,7 @@ void QStatusBar::hideOrShow()
     }
 
     emit messageChanged(d->tempItem);
-    repaint();
+    repaint(d->messageRect());
 }
 
 /*!
@@ -659,7 +707,6 @@ void QStatusBar::showEvent(QShowEvent *)
 #endif
 }
 
-
 /*!
     \reimp
     \fn void QStatusBar::paintEvent(QPaintEvent *event)
@@ -667,7 +714,7 @@ void QStatusBar::showEvent(QShowEvent *)
     Shows the temporary message, if appropriate, in response to the
     paint \a event.
 */
-void QStatusBar::paintEvent(QPaintEvent *)
+void QStatusBar::paintEvent(QPaintEvent *event)
 {
     Q_D(QStatusBar);
     bool haveMessage = !d->tempItem.isEmpty();
@@ -677,45 +724,22 @@ void QStatusBar::paintEvent(QPaintEvent *)
     opt.initFrom(this);
     style()->drawPrimitive(QStyle::PE_PanelStatusBar, &opt, &p, this);
 
-    QStatusBarPrivate::SBItem* item = 0;
-
-    bool rtl = layoutDirection() == Qt::RightToLeft;
-
-    int left = 6;
-    int right = width() - 12;
-
-#ifndef QT_NO_SIZEGRIP
-    if (d->resizer && d->resizer->isVisible()) {
-        if (rtl)
-            left = d->resizer->x() + d->resizer->width();
-        else
-            right = d->resizer->x();
-    }
-#endif
-
     for (int i=0; i<d->items.size(); ++i) {
-        item = d->items.at(i);
-        if (!item)
-            break;
-        if (!haveMessage || item->p)
-            if (item->w->isVisible()) {
-                if (item->p) {
-                    if (rtl)
-                        left = qMax(left, item->w->x() + item->w->width() + 2);
-                    else
-                        right = qMin(right, item->w->x()-1);
-                }
+        QStatusBarPrivate::SBItem* item = d->items.at(i);
+        if (item && item->w->isVisible() && (!haveMessage || item->p)) {
+            QRect ir = item->w->geometry().adjusted(-2, -1, 2, 1);
+            if (event->rect().contains(ir)) {
                 QStyleOption opt(0);
-                opt.rect.setRect(item->w->x() - 2, item->w->y() - 1,
-                                 item->w->width() + 4, item->w->height() + 2);
+                opt.rect = ir;
                 opt.palette = palette();
                 opt.state = QStyle::State_None;
                 style()->drawPrimitive(QStyle::PE_FrameStatusBarItem, &opt, &p, item->w);
             }
+        }
     }
     if (haveMessage) {
         p.setPen(palette().foreground().color());
-        p.drawText(left, 0, right-left, height(), Qt::AlignLeading | Qt::AlignVCenter | Qt::TextSingleLine, d->tempItem);
+        p.drawText(d->messageRect(), Qt::AlignLeading | Qt::AlignVCenter | Qt::TextSingleLine, d->tempItem);
     }
 }
 
@@ -774,7 +798,48 @@ bool QStatusBar::event(QEvent *e)
             }
         }
     }
+    
+// On Mac OS X Leopard it is possible to drag the window by clicking
+// on the tool bar on most applications.
+#ifndef Q_WS_MAC
     return QWidget::event(e);
+#else
+    if (QSysInfo::MacintoshVersion <= QSysInfo::MV_10_4)
+        return QWidget::event(e);
+
+    // Enable drag-click only if the status bar is the status bar for a
+    // QMainWindow with a unifed toolbar.
+    if (parent() == 0 || qobject_cast<QMainWindow *>(parent()) == 0 || 
+        qobject_cast<QMainWindow *>(parent())->unifiedTitleAndToolBarOnMac() == false )
+        return QWidget::event(e);
+
+    // Check for mouse events.
+    QMouseEvent *mouseEvent;
+    if (e->type() == QEvent::MouseButtonPress ||
+        e->type() == QEvent::MouseMove ||
+        e->type() == QEvent::MouseButtonRelease) {
+        mouseEvent = static_cast <QMouseEvent*>(e);
+    } else {
+        return QWidget::event(e);
+    }
+
+    // The following is a standard mouse drag handler.
+    if (e->type() == QEvent::MouseButtonPress && (mouseEvent->button() == Qt::LeftButton)) {
+        d->dragStart = mouseEvent->pos();
+    } else if (e->type() == QEvent::MouseMove){
+        if (d->dragStart == QPoint())
+            return QWidget::event(e);
+        QPoint pos = mouseEvent->pos();
+        QPoint delta = (pos - d->dragStart);
+        window()->move(window()->pos() + delta);
+    } else if (e->type() == QEvent::MouseButtonRelease && (mouseEvent->button() == Qt::LeftButton)){
+        d->dragStart = QPoint();
+    } else {
+        return QWidget::event(e);
+    }
+
+    return true;
+#endif
 }
 
 QT_END_NAMESPACE

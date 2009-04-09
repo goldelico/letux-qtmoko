@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -142,13 +146,13 @@ static int numerusHelper(int n, const uchar *rules, int rulesSize)
                 int opcode = rules[i++];
 
                 int leftOperand = n;
-                if (opcode & MOD_10) {
+                if (opcode & Q_MOD_10) {
                     leftOperand %= 10;
-                } else if (opcode & MOD_100) {
+                } else if (opcode & Q_MOD_100) {
                     leftOperand %= 100;
                 }
 
-                int op = opcode & OP_MASK;
+                int op = opcode & Q_OP_MASK;
 
                 CHECK_RANGE;
                 int rightOperand = rules[i++];
@@ -156,35 +160,35 @@ static int numerusHelper(int n, const uchar *rules, int rulesSize)
                 switch (op) {
                 default:
                     return -1;
-                case EQ:
+                case Q_EQ:
                     truthValue = (leftOperand == rightOperand);
                     break;
-                case LT:
+                case Q_LT:
                     truthValue = (leftOperand < rightOperand);
                     break;
-                case LEQ:
+                case Q_LEQ:
                     truthValue = (leftOperand <= rightOperand);
                     break;
-		case BETWEEN:
+		case Q_BETWEEN:
                     int bottom = rightOperand;
                     CHECK_RANGE;
                     int top = rules[i++];
                     truthValue = (leftOperand >= bottom && leftOperand <= top);
                 }
 
-                if (opcode & NOT)
+                if (opcode & Q_NOT)
                     truthValue = !truthValue;
 
                 andExprTruthValue = andExprTruthValue && truthValue;
 
-                if (i == rulesSize || rules[i] != AND)
+                if (i == rulesSize || rules[i] != Q_AND)
                     break;
                 ++i;
             }
 
             orExprTruthValue = orExprTruthValue || andExprTruthValue;
 
-            if (i == rulesSize || rules[i] != OR)
+            if (i == rulesSize || rules[i] != Q_OR)
                 break;
             ++i;
         }
@@ -197,7 +201,7 @@ static int numerusHelper(int n, const uchar *rules, int rulesSize)
         if (i == rulesSize)
             return result;
 
-        if (rules[i++] != NEWRULE)
+        if (rules[i++] != Q_NEWRULE)
             break;
     }
     return -1;
@@ -212,12 +216,12 @@ public:
     enum { Contexts = 0x2f, Hashes = 0x42, Messages = 0x69, NumerusRules = 0x88 };
 
     QTranslatorPrivate()
-        : used_mmap(0), unmapPointer(0), unmapLength(0), messageArray(0), offsetArray(0),
-          contextArray(0), numerusRulesArray(0), messageLength(0), offsetLength(0),
-          contextLength(0), numerusRulesLength(0) {}
+        : used_mmap(0), unmapPointer(0), unmapLength(0),
+          messageArray(0), offsetArray(0), contextArray(0), numerusRulesArray(0),
+          messageLength(0), offsetLength(0), contextLength(0), numerusRulesLength(0) {}
 
     // for mmap'ed files, this is what needs to be unmapped.
-    uint used_mmap : 1;
+    bool used_mmap : 1;
     char *unmapPointer;
     unsigned int unmapLength;
 
@@ -266,14 +270,16 @@ public:
     class. The other functions provided by this class are useful for
     applications that work on translator files.
 
-    It is possible to lookup a translation using translate() (as tr()
+    \section1 Looking up Translations
+
+    It is possible to look up a translation using translate() (as tr()
     and QApplication::translate() do). The translate() function takes
     up to three parameters:
 
     \list
     \o The \e context - usually the class name for the tr() caller.
     \o The \e {source text} - usually the argument to tr().
-    \o The \e comment - an optional comment that helps disambiguate
+    \o The \e disambiguation - an optional string that helps disambiguate
        different uses of the same text in the same context.
     \endlist
 
@@ -288,15 +294,30 @@ public:
     probably require both "Activado" and "Activada" as translations
     for "Enabled". In this case the source text would be "Enabled" in
     both cases, and the context would be the dialog's class name, but
-    the two items would have disambiguating comments such as
-    "two-sided printing" for one and "binding" for the other. The
-    comment enables the translator to choose the appropriate gender
-    for the Spanish version, and enables Qt to distinguish between
-    translations.
+    the two items would have disambiguations such as "two-sided printing"
+    for one and "binding" for the other. The disambiguation enables the
+    translator to choose the appropriate gender for the Spanish version,
+    and enables Qt to distinguish between translations.
+
+    \section1 Using Multiple Translations
+
+    Multiple translation files can be installed in an application.
+    Translations are searched for in the reverse order in which they were
+    installed, so the most recently installed translation file is searched
+    for translations first and the earliest translation file is searched
+    last. The search stops as soon as a translation containing a matching
+    string is found.
+
+    This mechanism makes it possible for a specific translation to be
+    "selected" or given priority over the others; simply uninstall the
+    translator from the application by passing it to the
+    QApplication::removeTranslator() function and reinstall it with
+    QApplication::installTranslator(). It will then be the first
+    translation to be searched for matching strings.
 
     \sa QApplication::installTranslator(), QApplication::removeTranslator(),
         QObject::tr(), QApplication::translate(), {I18N Example},
-	{Hello tr() Example}, {Arrow Pad Example}, {Troll Print Example}
+        {Hello tr() Example}, {Arrow Pad Example}, {Troll Print Example}
 */
 
 /*!
@@ -311,7 +332,7 @@ QTranslator::QTranslator(QObject * parent)
 
 #ifdef QT3_SUPPORT
 /*!
-    \overload
+    \overload QTranslator()
     \obsolete
  */
 QTranslator::QTranslator(QObject * parent, const char * name)
@@ -478,7 +499,7 @@ bool QTranslator::load(const QString & filename, const QString & directory,
 }
 
 /*!
-  \overload
+  \overload load()
   \fn bool QTranslator::load(const uchar *data, int len)
 
   Loads the .qm file data \a data of length \a len into the
@@ -514,7 +535,7 @@ static quint32 read32(const uchar *data)
 
 bool QTranslatorPrivate::do_load(const uchar *data, int len)
 {
-    if (!data || len < MagicLength || memcmp(data, magic, MagicLength) != 0)
+    if (!data || len < MagicLength || memcmp(data, magic, MagicLength))
         return false;
 
     bool ok = true;
@@ -744,8 +765,10 @@ void QTranslatorPrivate::clear()
 }
 
 /*!
+    \since 4.5
+
     Returns the translation for the key (\a context, \a sourceText,
-    \a comment). If none is found, also tries (\a context, \a
+    \a disambiguation). If none is found, also tries (\a context, \a
     sourceText, ""). If that still fails, returns an empty string.
 
     If you need to programatically insert translations in to a
@@ -753,18 +776,18 @@ void QTranslatorPrivate::clear()
 
     \sa load()
 */
-QString QTranslator::translate(const char *context, const char *sourceText, const char *comment) const
+QString QTranslator::translate(const char *context, const char *sourceText, const char *disambiguation) const
 {
     Q_D(const QTranslator);
-    return d->do_translate(context, sourceText, comment, -1);
+    return d->do_translate(context, sourceText, disambiguation, -1);
 }
 
 
 /*!
-    \overload
+    \overload translate()
 
     Returns the translation for the key (\a context, \a sourceText,
-    \a comment). If none is found, also tries (\a context, \a
+    \a disambiguation). If none is found, also tries (\a context, \a
     sourceText, ""). If that still fails, returns an empty string.
 
     If \a n is not -1, it is used to choose an appropriate form for
@@ -772,14 +795,14 @@ QString QTranslator::translate(const char *context, const char *sourceText, cons
 
     \sa load()
 */
-QString QTranslator::translate(const char *context, const char *sourceText, const char *comment,
+QString QTranslator::translate(const char *context, const char *sourceText, const char *disambiguation,
                                int n) const
 {
     Q_D(const QTranslator);
     // this step is necessary because the 3-parameter translate() overload is virtual
     if (n == -1)
-        return translate(context, sourceText, comment);
-    return d->do_translate(context, sourceText, comment, n);
+        return translate(context, sourceText, disambiguation);
+    return d->do_translate(context, sourceText, disambiguation, n);
 }
 
 /*!

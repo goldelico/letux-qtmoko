@@ -19,10 +19,12 @@
 
 module window {
 
-    interface Navigator {
+    interface [
+        CustomMarkFunction
+    ] Navigator {
         readonly attribute DOMString appCodeName;
         readonly attribute DOMString appName;
-        readonly attribute DOMString appVersion;
+        readonly attribute [CustomGetter] DOMString appVersion;
         readonly attribute DOMString language;
         readonly attribute DOMString userAgent;
         readonly attribute DOMString platform;
@@ -34,6 +36,11 @@ module window {
         readonly attribute DOMString vendorSub;
         readonly attribute boolean cookieEnabled;
         boolean javaEnabled();
+        
+        readonly attribute boolean onLine;
+#if ENABLE_GEOLOCATION
+        readonly attribute Geolocation geolocation;
+#endif
     };
 
 }

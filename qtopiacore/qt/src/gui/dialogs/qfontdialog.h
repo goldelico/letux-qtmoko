@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,51 +56,84 @@ QT_MODULE(Gui)
 
 class QFontDialogPrivate;
 
-class Q_GUI_EXPORT QFontDialog: public QDialog
+class Q_GUI_EXPORT QFontDialog : public QDialog
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QFontDialog)
+    Q_ENUMS(FontDialogOption)
+    Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged)
+    Q_PROPERTY(FontDialogOptions options READ options WRITE setOptions)
 
 public:
-    // ### Qt5: merge overloads
-    static QFont getFont(bool *ok, const QFont &def, QWidget* parent, const QString &caption);
-    static QFont getFont(bool *ok, const QFont &def, QWidget* parent=0);
-    static QFont getFont(bool *ok, QWidget* parent=0);
+    enum FontDialogOption {
+        NoButtons           = 0x00000001,
+        DontUseNativeDialog = 0x00000002
+    };
+
+    Q_DECLARE_FLAGS(FontDialogOptions, FontDialogOption)
+
+    explicit QFontDialog(QWidget *parent = 0);
+    explicit QFontDialog(const QFont &initial, QWidget *parent = 0);
+    ~QFontDialog();
+
+    void setCurrentFont(const QFont &font);
+    QFont currentFont() const;
+
+    QFont selectedFont() const;
+
+    void setOption(FontDialogOption option, bool on = true);
+    bool testOption(FontDialogOption option) const;
+    void setOptions(FontDialogOptions options);
+    FontDialogOptions options() const;
+
+#ifdef Q_NO_USING_KEYWORD
+#ifndef Q_QDOC
+    void open() { QDialog::open(); }
+#endif
+#else
+    using QDialog::open;
+#endif
+    void open(QObject *receiver, const char *member);
+
+    void setVisible(bool visible);
+
+    // ### Qt 5: merge overloads
+    static QFont getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title,
+                         FontDialogOptions options);
+    static QFont getFont(bool *ok, const QFont &initial, QWidget *parent, const QString &title);
+    static QFont getFont(bool *ok, const QFont &initial, QWidget *parent = 0);
+    static QFont getFont(bool *ok, QWidget *parent = 0);
 
 #ifdef QT3_SUPPORT
-    static QFont getFont(bool *ok, const QFont &def, QWidget* parent, const char* name)
-        { Q_UNUSED(name); return getFont(ok, def, parent); }
-    static QFont getFont(bool *ok, QWidget* parent, const char* name)
+    static QFont getFont(bool *ok, const QFont &initial, QWidget *parent, const char *name)
+        { Q_UNUSED(name); return getFont(ok, initial, parent); }
+    static QFont getFont(bool *ok, QWidget *parent, const char *name)
         { Q_UNUSED(name); return getFont(ok, parent); }
 #endif
 
+Q_SIGNALS:
+    void currentFontChanged(const QFont &font);
+    void fontSelected(const QFont &font);
+
 protected:
-    void changeEvent(QEvent *e);
-private:
-    static QFont getFont(bool *ok, const QFont *def, QWidget* parent=0);
-
-    explicit QFontDialog(QWidget* parent=0, bool modal=false, Qt::WindowFlags f=0);
-    ~QFontDialog();
-
-    QFont font() const;
-    void setFont(const QFont &font);
-
-    bool eventFilter(QObject *, QEvent *);
-
-    void updateFamilies();
-    void updateStyles();
-    void updateSizes();
+    void changeEvent(QEvent *event);
+    void done(int result);
 
 private:
+    // ### Qt 5: make protected
+    bool eventFilter(QObject *object, QEvent *event);
+
+    Q_DISABLE_COPY(QFontDialog)
+
     Q_PRIVATE_SLOT(d_func(), void _q_sizeChanged(const QString &))
     Q_PRIVATE_SLOT(d_func(), void _q_familyHighlighted(int))
     Q_PRIVATE_SLOT(d_func(), void _q_writingSystemHighlighted(int))
     Q_PRIVATE_SLOT(d_func(), void _q_styleHighlighted(int))
     Q_PRIVATE_SLOT(d_func(), void _q_sizeHighlighted(int))
     Q_PRIVATE_SLOT(d_func(), void _q_updateSample())
-
-    Q_DISABLE_COPY(QFontDialog)
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QFontDialog::FontDialogOptions)
 
 #endif // QT_NO_FONTDIALOG
 

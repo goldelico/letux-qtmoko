@@ -26,134 +26,143 @@
 
 #include "HTMLMarqueeElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLMarqueeElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLMarqueeElementTableEntries[] =
+static const HashTableValue JSHTMLMarqueeElementTableValues[2] =
 {
-    { "constructor", JSHTMLMarqueeElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLMarqueeElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMarqueeElementTable = 
-{
-    2, 1, JSHTMLMarqueeElementTableEntries, 1
-};
+static const HashTable JSHTMLMarqueeElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLMarqueeElementTableValues, 0 };
+#else
+    { 2, 1, JSHTMLMarqueeElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLMarqueeElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLMarqueeElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMarqueeElementConstructorTable = 
-{
-    2, 1, JSHTMLMarqueeElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLMarqueeElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLMarqueeElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLMarqueeElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLMarqueeElementConstructor : public DOMObject {
 public:
     JSHTMLMarqueeElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLMarqueeElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLMarqueeElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLMarqueeElementConstructor::info = { "HTMLMarqueeElementConstructor", 0, &JSHTMLMarqueeElementConstructorTable, 0 };
+const ClassInfo JSHTMLMarqueeElementConstructor::s_info = { "HTMLMarqueeElementConstructor", 0, &JSHTMLMarqueeElementConstructorTable, 0 };
 
 bool JSHTMLMarqueeElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLMarqueeElementConstructor, DOMObject>(exec, &JSHTMLMarqueeElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLMarqueeElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLMarqueeElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLMarqueeElementPrototypeTableValues[3] =
 {
-    { "start", JSHTMLMarqueeElement::StartFuncNum, DontDelete|Function, 0, &JSHTMLMarqueeElementPrototypeTableEntries[2] },
-    { 0, 0, 0, 0, 0 },
-    { "stop", JSHTMLMarqueeElement::StopFuncNum, DontDelete|Function, 0, 0 }
+    { "start", DontDelete|Function, (intptr_t)jsHTMLMarqueeElementPrototypeFunctionStart, (intptr_t)0 },
+    { "stop", DontDelete|Function, (intptr_t)jsHTMLMarqueeElementPrototypeFunctionStop, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLMarqueeElementPrototypeTable = 
-{
-    2, 3, JSHTMLMarqueeElementPrototypeTableEntries, 2
-};
+static const HashTable JSHTMLMarqueeElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLMarqueeElementPrototypeTableValues, 0 };
+#else
+    { 5, 3, JSHTMLMarqueeElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLMarqueeElementPrototype::info = { "HTMLMarqueeElementPrototype", 0, &JSHTMLMarqueeElementPrototypeTable, 0 };
+const ClassInfo JSHTMLMarqueeElementPrototype::s_info = { "HTMLMarqueeElementPrototype", 0, &JSHTMLMarqueeElementPrototypeTable, 0 };
 
 JSObject* JSHTMLMarqueeElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLMarqueeElementPrototype>(exec, "[[JSHTMLMarqueeElement.prototype]]");
+    return getDOMPrototype<JSHTMLMarqueeElement>(exec);
 }
 
 bool JSHTMLMarqueeElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLMarqueeElementPrototypeFunction, JSObject>(exec, &JSHTMLMarqueeElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLMarqueeElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLMarqueeElement::info = { "HTMLMarqueeElement", &JSHTMLElement::info, &JSHTMLMarqueeElementTable, 0 };
+const ClassInfo JSHTMLMarqueeElement::s_info = { "HTMLMarqueeElement", &JSHTMLElement::s_info, &JSHTMLMarqueeElementTable, 0 };
 
-JSHTMLMarqueeElement::JSHTMLMarqueeElement(ExecState* exec, HTMLMarqueeElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLMarqueeElement::JSHTMLMarqueeElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLMarqueeElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLMarqueeElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLMarqueeElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLMarqueeElementPrototype(JSHTMLMarqueeElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLMarqueeElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLMarqueeElement, JSHTMLElement>(exec, &JSHTMLMarqueeElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLMarqueeElement, Base>(exec, &JSHTMLMarqueeElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLMarqueeElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLMarqueeElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSHTMLMarqueeElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLMarqueeElement::getConstructor(ExecState* exec)
+JSValuePtr JSHTMLMarqueeElement::getConstructor(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLMarqueeElementConstructor>(exec, "[[HTMLMarqueeElement.constructor]]");
+    return getDOMConstructor<JSHTMLMarqueeElementConstructor>(exec);
 }
-JSValue* JSHTMLMarqueeElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsHTMLMarqueeElementPrototypeFunctionStart(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    if (!thisObj->inherits(&JSHTMLMarqueeElement::info))
-      return throwError(exec, TypeError);
+    if (!thisValue->isObject(&JSHTMLMarqueeElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLMarqueeElement* castedThisObj = static_cast<JSHTMLMarqueeElement*>(asObject(thisValue));
+    HTMLMarqueeElement* imp = static_cast<HTMLMarqueeElement*>(castedThisObj->impl());
 
-    HTMLMarqueeElement* imp = static_cast<HTMLMarqueeElement*>(static_cast<JSHTMLMarqueeElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLMarqueeElement::StartFuncNum: {
-
-        imp->start();
-        return jsUndefined();
-    }
-    case JSHTMLMarqueeElement::StopFuncNum: {
-
-        imp->stop();
-        return jsUndefined();
-    }
-    }
-    return 0;
+    imp->start();
+    return jsUndefined();
 }
+
+JSValuePtr jsHTMLMarqueeElementPrototypeFunctionStop(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLMarqueeElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLMarqueeElement* castedThisObj = static_cast<JSHTMLMarqueeElement*>(asObject(thisValue));
+    HTMLMarqueeElement* imp = static_cast<HTMLMarqueeElement*>(castedThisObj->impl());
+
+    imp->stop();
+    return jsUndefined();
+}
+
 
 }

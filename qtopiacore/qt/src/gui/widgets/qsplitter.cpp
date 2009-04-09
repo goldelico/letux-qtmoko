@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,6 +57,7 @@
 #include "qvector.h"
 #include "private/qlayoutengine_p.h"
 #include "private/qsplitter_p.h"
+#include "qtimer.h"
 #include "qdebug.h"
 
 #include <ctype.h>
@@ -640,6 +645,34 @@ void QSplitterPrivate::updateHandles()
     recalc(q->isVisible());
 }
 
+void QSplitterPrivate::setSizes_helper(const QList<int> &sizes, bool clampNegativeSize)
+{
+    int j = 0;
+
+    for (int i = 0; i < list.size(); ++i) {
+        QSplitterLayoutStruct *s = list.at(i);
+
+        s->collapsed = false;
+        s->sizer = sizes.value(j++);
+        if (clampNegativeSize && s->sizer < 0)
+            s->sizer = 0;
+        int smartMinSize = pick(qSmartMinSize(s->widget));
+
+        // Make sure that we reset the collapsed state.
+        if (s->sizer == 0) {
+            if (collapsible(s) && smartMinSize > 0) {
+                s->collapsed = true;
+            } else {
+                s->sizer = smartMinSize;
+            }
+        } else {
+            if (s->sizer < smartMinSize)
+                s->sizer = smartMinSize;
+        }
+    }
+    doResize();
+}
+
 void QSplitterPrivate::setGeo(QSplitterLayoutStruct *sls, int p, int s, bool allowCollapse)
 {
     Q_Q(QSplitter);
@@ -671,12 +704,14 @@ void QSplitterPrivate::setGeo(QSplitterLayoutStruct *sls, int p, int s, bool all
     if (!sls->handle->isHidden()) {
         QSplitterHandle *h = sls->handle;
         QSize hs = h->sizeHint();
+        int left, top, right, bottom;
+        h->getContentsMargins(&left, &top, &right, &bottom);
         if (orient==Qt::Horizontal) {
             if (q->isRightToLeft())
                 p = contents.width() - p + hs.width();
-            h->setGeometry(p-hs.width(), contents.y(), hs.width(), contents.height());
+            h->setGeometry(p-hs.width() - left, contents.y(), hs.width() + left + right, contents.height());
         } else {
-            h->setGeometry(contents.x(), p-hs.height(), contents.width(), hs.height());
+            h->setGeometry(contents.x(), p-hs.height() - top, contents.width(), hs.height() + top + bottom);
         }
     }
 }
@@ -864,6 +899,7 @@ QSplitterLayoutStruct *QSplitterPrivate::insertWidget(int index, QWidget *w)
         newHandle->setObjectName(tmp);
         sls->handle = newHandle;
         sls->widget = w;
+        w->lower();
         list.insert(index,sls);
 
         if (newHandle && q->isVisible())
@@ -966,6 +1002,7 @@ QSplitter::QSplitter(Qt::Orientation orientation, QWidget *parent)
 QSplitter::~QSplitter()
 {
     Q_D(QSplitter);
+    delete d->rubberBand;
     while (!d->list.isEmpty())
         delete d->list.takeFirst();
 }
@@ -1248,24 +1285,23 @@ void QSplitter::setRubberBand(int pos)
     Q_D(QSplitter);
     if (pos < 0) {
         if (d->rubberBand)
-            d->rubberBand->hide();
+            QTimer::singleShot(0, d->rubberBand, SLOT(deleteLater()));
         return;
     }
     QRect r = contentsRect();
     const int rBord = 3; // customizable?
     int hw = handleWidth();
     if (!d->rubberBand) {
-        QBoolBlocker block(d->blockChildAdd);
-        d->rubberBand = new QRubberBand(QRubberBand::Line, this);
+        d->rubberBand = new QRubberBand(QRubberBand::Line);
         // For accessibility to identify this special widget.
         d->rubberBand->setObjectName(QLatin1String("qt_rubberband"));
     }
     if (d->orient == Qt::Horizontal)
         d->rubberBand->setGeometry(QRect(QPoint(pos + hw / 2 - rBord, r.y()),
-                                         QSize(2 * rBord, r.height())));
+                                         QSize(2 * rBord, r.height())).translated(mapToGlobal(QPoint())));
     else
         d->rubberBand->setGeometry(QRect(QPoint(r.x(), pos + hw / 2 - rBord),
-                                   QSize(r.width(), 2 * rBord)));
+                                   QSize(r.width(), 2 * rBord)).translated(mapToGlobal(QPoint())));
     if (!d->rubberBand->isVisible())
         d->rubberBand->show();
 }
@@ -1474,7 +1510,7 @@ void QSplitter::setOpaqueResize(bool on)
 /*!
     \fn void QSplitter::setMargin(int margin)
     Sets the width of the margin around the contents of the widget to \a margin.
-    
+
     Use QWidget::setContentsMargins() instead.
     \sa margin(), QWidget::setContentsMargins()
 */
@@ -1482,7 +1518,7 @@ void QSplitter::setOpaqueResize(bool on)
 /*!
     \fn int QSplitter::margin() const
     Returns the with of the the margin around the contents of the widget.
-    
+
     Use QWidget::getContentsMargins() instead.
     \sa setMargin(), QWidget::getContentsMargins()
 */
@@ -1549,21 +1585,17 @@ QSize QSplitter::minimumSizeHint() const
 
 
 /*!
-    Returns a list of the size parameters of all the widgets in this
-    splitter.
+    Returns a list of the size parameters of all the widgets in this splitter.
 
-    If the splitter's orientation is horizontal, the list is a list of
-    widget widths; if the orientation is vertical, the list is a list
-    of widget heights.
+    If the splitter's orientation is horizontal, the list contains the
+    widgets width in pixels, from left to right; if the orientation is
+    vertical, the list contains the widgets height in pixels,
+    from top to bottom.
 
     Giving the values to another splitter's setSizes() function will
     produce a splitter with the same layout as this one.
 
     Note that invisible widgets have a size of 0.
-
-    The easiest way to iterate over the list is to use the Java-style iterators.
-
-    \snippet doc/src/snippets/splitter/splitter.cpp 3
 
     \sa setSizes()
 */
@@ -1582,18 +1614,22 @@ QList<int> QSplitter::sizes() const
 }
 
 /*!
-    Sets the size parameters to the values given in the \a list.
-    The available space is divided according to the weights specified in
-    the list.
+    Sets the child widgets respective sizes to the values given in the \a list.
 
     If the splitter is horizontal, the values set the widths of each
-    widget, from left to right based on the given weight. If the
-    splitter is vertical, the heights of each widget is set, from top
-    to bottom. Extra values in the \a list are ignored.
+    widget in pixels, from left to right. If the splitter is vertical, the
+    heights of each widget is set, from top to bottom.
 
-    If \a list contains too few values, the result is undefined but
-    the program will still be well-behaved. If you specify a size of 0,
-    the widget will be invisible.
+    Extra values in the \a list are ignored. If \a list contains too few
+    values, the result is undefined but the program will still be well-behaved.
+
+    The overall size of the splitter widget is not affected.
+    Instead, any additional/missing space is distributed amongst the
+    widgets according to the relative weight of the sizes.
+
+    If you specify a size of 0, the widget will be invisible. The size policies
+    of the widgets are preserved. That is, a value smaller then the minimal size
+    hint of the respective widget will be replaced by the value of the hint.
 
     \sa sizes()
 */
@@ -1601,28 +1637,7 @@ QList<int> QSplitter::sizes() const
 void QSplitter::setSizes(const QList<int> &list)
 {
     Q_D(QSplitter);
-    int j = 0;
-
-    for (int i = 0; i < d->list.size(); ++i) {
-        QSplitterLayoutStruct *s = d->list.at(i);
-
-        s->collapsed = false;
-        s->sizer = qMax(list.value(j++), 0);
-        int smartMinSize = d->pick(qSmartMinSize(s->widget));
-
-        // Make sure that we reset the collapsed state.
-        if (s->sizer == 0) {
-            if (d->collapsible(s) && smartMinSize > 0) {
-                s->collapsed = true;
-            } else {
-                s->sizer = smartMinSize;
-            }
-        } else {
-            if (s->sizer < smartMinSize)
-                s->sizer = smartMinSize;
-        }
-    }
-    d->doResize();
+    d->setSizes_helper(list, true);
 }
 
 /*!
@@ -1676,13 +1691,19 @@ static const qint32 SplitterMagic = 0xff;
 */
 QByteArray QSplitter::saveState() const
 {
+    Q_D(const QSplitter);
     int version = 0;
     QByteArray data;
     QDataStream stream(&data, QIODevice::WriteOnly);
 
     stream << qint32(SplitterMagic);
     stream << qint32(version);
-    stream << sizes();
+    QList<int> list;
+    for (int i = 0; i < d->list.size(); ++i) {
+        QSplitterLayoutStruct *s = d->list.at(i);
+        list.append(s->sizer);
+    }
+    stream << list;
     stream << childrenCollapsible();
     stream << qint32(handleWidth());
     stream << opaqueResize();
@@ -1724,7 +1745,7 @@ bool QSplitter::restoreState(const QByteArray &state)
         return false;
 
     stream >> list;
-    setSizes(list);
+    d->setSizes_helper(list, false);
 
     stream >> b;
     setChildrenCollapsible(b);

@@ -1,11 +1,17 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #include "CLucene/StdHeader.h"
 #include "IndexModifier.h"
+
+#include "Term.h"
+#include "IndexWriter.h"
+#include "IndexReader.h"
 
 CL_NS_DEF(index)
 CL_NS_USE(util)
@@ -17,7 +23,7 @@ IndexModifier::IndexModifier(Directory* directory, Analyzer* analyzer, bool crea
 	init(directory, analyzer, create);
 }
 
-IndexModifier::IndexModifier(const char* dirName, Analyzer* analyzer, bool create) {
+IndexModifier::IndexModifier(const QString& dirName, Analyzer* analyzer, bool create) {
 	Directory* dir = FSDirectory::getDirectory(dirName, create);
 	init(dir, analyzer, create);
 }
@@ -198,13 +204,10 @@ void IndexModifier::close() {
 	open = false;
 }
 
-TCHAR* IndexModifier::toString() const{
-	TCHAR* dir = directory->toString();
-	TCHAR* ret = _CL_NEWARRAY(TCHAR,_tcslen(dir)+7); //strlen("Index@")
-	_tcscpy(ret,_T("Index@"));
-	_tcscat(ret,dir);
-	_CLDELETE_CARRAY(dir);
-	return ret;
+QString IndexModifier::toString() const
+{
+	QString ret(QLatin1String("Index@"));
+	return ret.append(directory->toString());
 }
 
 

@@ -25,107 +25,157 @@
 #include <wtf/GetPtr.h>
 
 #include "DocumentFragment.h"
+#include "Element.h"
+#include "JSElement.h"
+#include "JSNodeList.h"
+#include "NameNodeList.h"
+#include "NodeList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSDocumentFragment)
+
 /* Hash table */
 
-static const HashEntry JSDocumentFragmentTableEntries[] =
+static const HashTableValue JSDocumentFragmentTableValues[2] =
 {
-    { "constructor", JSDocumentFragment::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsDocumentFragmentConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentFragmentTable = 
-{
-    2, 1, JSDocumentFragmentTableEntries, 1
-};
+static const HashTable JSDocumentFragmentTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSDocumentFragmentTableValues, 0 };
+#else
+    { 2, 1, JSDocumentFragmentTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSDocumentFragmentConstructorTableEntries[] =
+static const HashTableValue JSDocumentFragmentConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentFragmentConstructorTable = 
-{
-    2, 1, JSDocumentFragmentConstructorTableEntries, 1
-};
+static const HashTable JSDocumentFragmentConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSDocumentFragmentConstructorTableValues, 0 };
+#else
+    { 1, 0, JSDocumentFragmentConstructorTableValues, 0 };
+#endif
 
 class JSDocumentFragmentConstructor : public DOMObject {
 public:
     JSDocumentFragmentConstructor(ExecState* exec)
+        : DOMObject(JSDocumentFragmentConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSDocumentFragmentPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSDocumentFragmentConstructor::info = { "DocumentFragmentConstructor", 0, &JSDocumentFragmentConstructorTable, 0 };
+const ClassInfo JSDocumentFragmentConstructor::s_info = { "DocumentFragmentConstructor", 0, &JSDocumentFragmentConstructorTable, 0 };
 
 bool JSDocumentFragmentConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSDocumentFragmentConstructor, DOMObject>(exec, &JSDocumentFragmentConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSDocumentFragmentConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSDocumentFragmentPrototypeTableEntries[] =
+static const HashTableValue JSDocumentFragmentPrototypeTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "querySelector", DontDelete|Function, (intptr_t)jsDocumentFragmentPrototypeFunctionQuerySelector, (intptr_t)1 },
+    { "querySelectorAll", DontDelete|Function, (intptr_t)jsDocumentFragmentPrototypeFunctionQuerySelectorAll, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSDocumentFragmentPrototypeTable = 
-{
-    2, 1, JSDocumentFragmentPrototypeTableEntries, 1
-};
+static const HashTable JSDocumentFragmentPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSDocumentFragmentPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSDocumentFragmentPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSDocumentFragmentPrototype::info = { "DocumentFragmentPrototype", 0, &JSDocumentFragmentPrototypeTable, 0 };
+const ClassInfo JSDocumentFragmentPrototype::s_info = { "DocumentFragmentPrototype", 0, &JSDocumentFragmentPrototypeTable, 0 };
 
 JSObject* JSDocumentFragmentPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSDocumentFragmentPrototype>(exec, "[[JSDocumentFragment.prototype]]");
+    return getDOMPrototype<JSDocumentFragment>(exec);
 }
 
-const ClassInfo JSDocumentFragment::info = { "DocumentFragment", &JSEventTargetNode::info, &JSDocumentFragmentTable, 0 };
-
-JSDocumentFragment::JSDocumentFragment(ExecState* exec, DocumentFragment* impl)
-    : JSEventTargetNode(exec, impl)
+bool JSDocumentFragmentPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSDocumentFragmentPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSDocumentFragmentPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSDocumentFragment::s_info = { "DocumentFragment", &JSEventTargetNode::s_info, &JSDocumentFragmentTable, 0 };
+
+JSDocumentFragment::JSDocumentFragment(PassRefPtr<Structure> structure, PassRefPtr<DocumentFragment> impl)
+    : JSEventTargetNode(structure, impl)
+{
+}
+
+JSObject* JSDocumentFragment::createPrototype(ExecState* exec)
+{
+    return new (exec) JSDocumentFragmentPrototype(JSDocumentFragmentPrototype::createStructure(JSEventTargetNodePrototype::self(exec)));
 }
 
 bool JSDocumentFragment::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSDocumentFragment, JSEventTargetNode>(exec, &JSDocumentFragmentTable, this, propertyName, slot);
+    return getStaticValueSlot<JSDocumentFragment, Base>(exec, &JSDocumentFragmentTable, this, propertyName, slot);
 }
 
-JSValue* JSDocumentFragment::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsDocumentFragmentConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSDocumentFragment*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSDocumentFragment::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSDocumentFragmentConstructor>(exec);
 }
 
-JSValue* JSDocumentFragment::getConstructor(ExecState* exec)
+JSValuePtr jsDocumentFragmentPrototypeFunctionQuerySelector(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheGlobalObject<JSDocumentFragmentConstructor>(exec, "[[DocumentFragment.constructor]]");
+    if (!thisValue->isObject(&JSDocumentFragment::s_info))
+        return throwError(exec, TypeError);
+    JSDocumentFragment* castedThisObj = static_cast<JSDocumentFragment*>(asObject(thisValue));
+    DocumentFragment* imp = static_cast<DocumentFragment*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelector(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
 }
+
+JSValuePtr jsDocumentFragmentPrototypeFunctionQuerySelectorAll(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSDocumentFragment::s_info))
+        return throwError(exec, TypeError);
+    JSDocumentFragment* castedThisObj = static_cast<JSDocumentFragment*>(asObject(thisValue));
+    DocumentFragment* imp = static_cast<DocumentFragment*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& selectors = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->querySelectorAll(selectors, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
 
 }

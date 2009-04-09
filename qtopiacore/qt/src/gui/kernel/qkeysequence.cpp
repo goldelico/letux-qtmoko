@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,16 +57,72 @@
 
 #ifdef Q_WS_MAC
 # include <private/qt_mac_p.h>
-# define QMAC_CTRL QChar(kCommandUnicode)
-# define QMAC_META QChar(kControlUnicode)
-# define QMAC_ALT  QChar(kOptionUnicode)
-# define QMAC_SHIFT QChar(kShiftUnicode)
+
 #endif
 
 QT_BEGIN_NAMESPACE
 
 #ifdef Q_WS_MAC
 static bool qt_sequence_no_mnemonics = true;
+struct MacSpecialKey {
+    int key;
+    ushort macSymbol;
+};
+
+static const int NumEntries = 21;
+static const MacSpecialKey entries[NumEntries] = {
+    { Qt::Key_Escape, 0x238B },
+    { Qt::Key_Tab, 0x21E5 },
+    { Qt::Key_Backtab, 0x21E4 },
+    { Qt::Key_Backspace, 0x232B },
+    { Qt::Key_Return, 0x21B5 },
+    { Qt::Key_Enter, 0x21B5 },
+    { Qt::Key_Delete, 0x2326 },
+    { Qt::Key_Home, 0x2196 },
+    { Qt::Key_End, 0x2198 },
+    { Qt::Key_Left, 0x2190 },
+    { Qt::Key_Up, 0x2191 },
+    { Qt::Key_Right, 0x2192 },
+    { Qt::Key_Down, 0x2193 },
+    { Qt::Key_PageUp, 0x21DE },
+    { Qt::Key_PageDown, 0x21DF },
+    { Qt::Key_Shift, kShiftUnicode },
+    { Qt::Key_Control, kCommandUnicode },
+    { Qt::Key_Meta, kControlUnicode },
+    { Qt::Key_Alt, kOptionUnicode },
+    { Qt::Key_CapsLock, 0x21EA },
+};
+
+static bool operator<(const MacSpecialKey &entry, int key)
+{
+    return entry.key < key;
+}
+
+static bool operator<(int key, const MacSpecialKey &entry)
+{
+    return key < entry.key;
+}
+
+static const MacSpecialKey * const MacSpecialKeyEntriesEnd = entries + NumEntries;
+
+static QChar macSymbolForQtKey(int key)
+{
+    const MacSpecialKey *i = qBinaryFind(entries, MacSpecialKeyEntriesEnd, key);
+    if (i == MacSpecialKeyEntriesEnd)
+        return QChar();
+    return QChar(i->macSymbol);
+}
+
+static int qtkeyForMacSymbol(const QChar ch)
+{
+    for (int i = 0; i < NumEntries; ++i) {
+        const MacSpecialKey &entry = entries[i];
+        if (entry.macSymbol == ch.unicode())
+            return entry.key;
+    }
+    return -1;
+}
+
 #else
 static bool qt_sequence_no_mnemonics = false;
 #endif
@@ -105,14 +165,14 @@ void Q_GUI_EXPORT qt_set_sequence_auto_mnemonic(bool b) { qt_sequence_no_mnemoni
 
     \snippet doc/src/snippets/code/src_gui_kernel_qkeysequence.cpp 0
 
-    Note that, for letters, the case used in the specification string does not
-    matter. In the above examples, the user does not need to hold down the
-    \key{Shift} key to activate a shortcut specified with "Ctrl+P". However,
-    for other keys, the use of \key{Shift} as an unspecified extra modifier
-    key can lead to confusion for users of an application whose keyboards have
-    different layouts to those used by the developers. See the
-    \l{#Keyboard Layout Issues}{Keyboard Layout Issues} section below for more
-    details.
+    Note that, for letters, the case used in the specification string
+    does not matter. In the above examples, the user does not need to
+    hold down the \key{Shift} key to activate a shortcut specified
+    with "Ctrl+P". However, for other keys, the use of \key{Shift} as
+    an unspecified extra modifier key can lead to confusion for users
+    of an application whose keyboards have different layouts to those
+    used by the developers. See the \l{Keyboard Layout Issues} section
+    below for more details.
 
     It is preferable to use standard shortcuts where possible.
     When creating key sequences for non-standard shortcuts, you should use
@@ -137,14 +197,14 @@ void Q_GUI_EXPORT qt_set_sequence_auto_mnemonic(bool b) { qt_sequence_no_mnemoni
 
     \section1 Standard Shortcuts
 
-    QKeySequence defines many \l{StandardKey} standard keyboard shortcuts to
-    reduce the amount of effort required when setting up actions in a typical
-    application. The table below shows some common key sequences that are
-    often used for these standard shortcuts by applications on four widely-used
-    platforms.
-    Note that on Mac OS X, the \key Ctrl value corresponds to the \key Command
-    keys on the Macintosh keyboard, and the \key Meta value corresponds to the
-    \key Control keys.
+    QKeySequence defines many \l{QKeySequence::StandardKey} {standard
+    keyboard shortcuts} to reduce the amount of effort required when
+    setting up actions in a typical application. The table below shows
+    some common key sequences that are often used for these standard
+    shortcuts by applications on four widely-used platforms.  Note
+    that on Mac OS X, the \key Ctrl value corresponds to the \key
+    Command keys on the Macintosh keyboard, and the \key Meta value
+    corresponds to the \key Control keys.
 
     \table
     \header \i StandardKey      \i Windows                              \i Mac OS X                 \i KDE          \i GNOME
@@ -153,6 +213,7 @@ void Q_GUI_EXPORT qt_set_sequence_auto_mnemonic(bool b) { qt_sequence_no_mnemoni
     \row    \i Open             \i Ctrl+O                               \i Ctrl+O                   \i Ctrl+O       \i Ctrl+O
     \row    \i Close            \i Ctrl+F4, Ctrl+W                      \i Ctrl+W, Ctrl+F4          \i Ctrl+W       \i Ctrl+W
     \row    \i Save             \i Ctrl+S                               \i Ctrl+S                   \i Ctrl+S       \i Ctrl+S
+    \row    \i SaveAs           \i                                      \i Ctrl+Shift+S             \i              \i Ctrl+Shift+S
     \row    \i New              \i Ctrl+N                               \i Ctrl+N                   \i Ctrl+N       \i Ctrl+N
     \row    \i Delete           \i Del                                  \i Del, Meta+D              \i Del, Ctrl+D  \i Del, Ctrl+D
     \row    \i Cut              \i Ctrl+X, Shift+Del                    \i Ctrl+X                   \i Ctrl+X, F20, Shift+Del \i Ctrl+X, F20, Shift+Del 
@@ -208,6 +269,8 @@ void Q_GUI_EXPORT qt_set_sequence_auto_mnemonic(bool b) { qt_sequence_no_mnemoni
     \row    \i DeleteStartOfWord    \i Ctrl+Backspace                   \i Alt+Backspace          \i Ctrl+Backspace \i Ctrl+Backspace
     \row    \i DeleteEndOfWord      \i Ctrl+Del                         \i (none)                 \i Ctrl+Del       \i Ctrl+Del
     \row    \i DeleteEndOfLine      \i (none)                           \i (none)                 \i Ctrl+K         \i Ctrl+K
+    \row    \i InsertParagraphSeparator     \i Enter                    \i Enter                  \i Enter          \i Enter
+    \row    \i InsertLineSeparator          \i Shift+Enter              \i Meta+Enter             \i Shift+Enter    \i Shift+Enter
     \endtable
 
     Note that, since the key sequences used for the standard shortcuts differ
@@ -249,11 +312,12 @@ void Q_GUI_EXPORT qt_set_sequence_auto_mnemonic(bool b) { qt_sequence_no_mnemoni
     keyboard, making the required shortcut effectively \key{Ctrl Shift Shift =}
     (an impossible key combination).
 
-    As a result, both human-readable strings and hard-coded key codes can both
-    be problematic to use when specifying a key sequence that can be used on
-    a variety of different keyboard layouts. Only the use of
-    \l{StandardKey}{standard shortcuts} guarantees that the user will be able
-    to use the shortcuts that the developer intended.
+    As a result, both human-readable strings and hard-coded key codes
+    can both be problematic to use when specifying a key sequence that
+    can be used on a variety of different keyboard layouts. Only the
+    use of \l{QKeySequence::StandardKey} {standard shortcuts}
+    guarantees that the user will be able to use the shortcuts that
+    the developer intended.
 
     Despite this, we can address this issue by ensuring that human-readable
     strings are used, making it possible for translations of key sequences to
@@ -414,6 +478,8 @@ static const struct {
 const QKeyBinding QKeySequencePrivate::keyBindings[] = {
 //   StandardKey                            Priority    Key Sequence                            Platforms
     {QKeySequence::Back,                    0,          Qt::Key_Backspace,                      QApplicationPrivate::KB_Win},
+    {QKeySequence::InsertParagraphSeparator,0,          Qt::Key_Return,                         QApplicationPrivate::KB_All},
+    {QKeySequence::InsertParagraphSeparator,0,          Qt::Key_Enter,                          QApplicationPrivate::KB_All},
     {QKeySequence::Delete,                  1,          Qt::Key_Delete,                         QApplicationPrivate::KB_All},
     {QKeySequence::MoveToStartOfLine,       0,          Qt::Key_Home,                           QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11},
     {QKeySequence::MoveToStartOfDocument,   0,          Qt::Key_Home,                           QApplicationPrivate::KB_Mac},
@@ -436,6 +502,8 @@ const QKeyBinding QKeySequencePrivate::keyBindings[] = {
     {QKeySequence::PreviousChild,           0,          Qt::Key_Back,                           QApplicationPrivate::KB_All},
     {QKeySequence::NextChild,               0,          Qt::Key_Forward,                        QApplicationPrivate::KB_All}, 
     {QKeySequence::Forward,                 0,          Qt::SHIFT | Qt::Key_Backspace,          QApplicationPrivate::KB_Win},
+    {QKeySequence::InsertLineSeparator,     0,          Qt::SHIFT | Qt::Key_Return,             QApplicationPrivate::KB_All},
+    {QKeySequence::InsertLineSeparator,     0,          Qt::SHIFT | Qt::Key_Enter,              QApplicationPrivate::KB_All},
     {QKeySequence::Paste,                   0,          Qt::SHIFT | Qt::Key_Insert,             QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11}, 
     {QKeySequence::Cut,                     0,          Qt::SHIFT | Qt::Key_Delete,             QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11}, //## Check if this should work on mac
     {QKeySequence::SelectStartOfLine,       0,          Qt::SHIFT | Qt::Key_Home,               QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11},
@@ -507,6 +575,7 @@ const QKeyBinding QKeySequencePrivate::keyBindings[] = {
     {QKeySequence::FindPrevious,            1,          Qt::CTRL | Qt::SHIFT | Qt::Key_G,       QApplicationPrivate::KB_Gnome | QApplicationPrivate::KB_Mac},
     {QKeySequence::FindPrevious,            0,          Qt::CTRL | Qt::SHIFT | Qt::Key_G,       QApplicationPrivate::KB_Win},
     {QKeySequence::AddTab,                  1,          Qt::CTRL | Qt::SHIFT | Qt::Key_N,       QApplicationPrivate::KB_KDE},
+    {QKeySequence::SaveAs,                  0,          Qt::CTRL | Qt::SHIFT | Qt::Key_S,       QApplicationPrivate::KB_Gnome | QApplicationPrivate::KB_Mac},
     {QKeySequence::Redo,                    0,          Qt::CTRL | Qt::SHIFT | Qt::Key_Z,       QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11},
     {QKeySequence::Redo,                    1,          Qt::CTRL | Qt::SHIFT | Qt::Key_Z,       QApplicationPrivate::KB_Mac}, //different priority from above
     {QKeySequence::PreviousChild,           1,          Qt::CTRL | Qt::SHIFT | Qt::Key_Backtab, QApplicationPrivate::KB_Win | QApplicationPrivate::KB_X11},
@@ -539,6 +608,8 @@ const QKeyBinding QKeySequencePrivate::keyBindings[] = {
     {QKeySequence::MoveToStartOfBlock,      0,          Qt::META | Qt::Key_A,                   QApplicationPrivate::KB_Mac},
     {QKeySequence::Delete,                  0,          Qt::META | Qt::Key_D,                   QApplicationPrivate::KB_Mac},
     {QKeySequence::MoveToEndOfBlock,        0,          Qt::META | Qt::Key_E,                   QApplicationPrivate::KB_Mac},
+    {QKeySequence::InsertLineSeparator,     0,          Qt::META | Qt::Key_Return,              QApplicationPrivate::KB_Mac},
+    {QKeySequence::InsertLineSeparator,     0,          Qt::META | Qt::Key_Enter,               QApplicationPrivate::KB_Mac},
     {QKeySequence::MoveToStartOfLine,       0,          Qt::META | Qt::Key_Left,                QApplicationPrivate::KB_Mac},
     {QKeySequence::MoveToPreviousPage,      0,          Qt::META | Qt::Key_Up,                  QApplicationPrivate::KB_Mac},
     {QKeySequence::MoveToEndOfLine,         0,          Qt::META | Qt::Key_Right,               QApplicationPrivate::KB_Mac},
@@ -564,67 +635,70 @@ const uint QKeySequencePrivate::numberOfKeyBindings = sizeof(QKeySequencePrivate
     Note that the key bindings are platform dependent. The currently
     bound shortcuts can be queried using keyBindings().
 
-    \value UnknownKey       Unbound key.
-    \value HelpContents     Open help contents.
-    \value WhatsThis        Activate whats this.
-    \value Open             Open Document.
-    \value Close            Close Document/Tab.
-    \value Save             Save Document.
-    \value New              Create new Document.
-    \value Delete           Delete.
-    \value Cut              Cut.
-    \value Copy             Copy.
-    \value Paste            Paste.
-    \value Undo             Undo.
-    \value Redo             Redo.
-    \value Back             Navigate back.
-    \value Forward          Navigate forward.
-    \value Refresh          Refresh or reload current document.
-    \value ZoomIn           Zoom in.
-    \value ZoomOut          Zoom out.
-    \value Print            Print document.
     \value AddTab           Add new tab.
-    \value NextChild        Navigate to next tab or child window.
-    \value PreviousChild    Navigate to previous tab or child window.
+    \value Back             Navigate back.
+    \value Bold             Bold text.
+    \value Close            Close document/tab.
+    \value Copy             Copy.
+    \value Cut              Cut.
+    \value Delete           Delete.
+    \value DeleteEndOfLine          Delete end of line.
+    \value DeleteEndOfWord          Delete word from the end of the cursor.
+    \value DeleteStartOfWord        Delete the beginning of a word up to the cursor.
     \value Find             Find in document.
     \value FindNext         Find next result.
     \value FindPrevious     Find previous result.
-    \value Replace          Find and replace.
-    \value SelectAll        Select all text.
-    \value Bold             Bold text.
+    \value Forward          Navigate forward.
+    \value HelpContents     Open help contents.
+    \value InsertLineSeparator      Insert a new line.
+    \value InsertParagraphSeparator Insert a new paragraph.
     \value Italic           Italic text.
-    \value Underline        Underline text.
-    \value MoveToNextChar           Move cursor to next character.
-    \value MoveToPreviousChar       Move cursor to previous character.
-    \value MoveToNextWord           Move cursor to next word.
-    \value MoveToPreviousWord       Move cursor to previous word.
-    \value MoveToNextLine           Move cursor to next line.
-    \value MoveToPreviousLine       Move cursor to previous line.
-    \value MoveToNextPage           Move cursor to next page.
-    \value MoveToPreviousPage       Move cursor to previous page.
-    \value MoveToStartOfLine        Move cursor to start of line.
-    \value MoveToEndOfLine          Move cursor to end of line.
-    \value MoveToStartOfBlock       Move cursor to start of a block. This shortcut is only used on OS X.
     \value MoveToEndOfBlock         Move cursor to end of block. This shortcut is only used on the OS X.
-    \value MoveToStartOfDocument    Move cursor to start of document.
     \value MoveToEndOfDocument      Move cursor to end of document.
-    \value SelectNextChar           Extend selection to next character.
-    \value SelectPreviousChar       Extend selection to previous character.
-    \value SelectNextWord           Extend selection to next word.
-    \value SelectPreviousWord       Extend selection to previous word.
-    \value SelectNextLine           Extend selection to next line.
-    \value SelectPreviousLine       Extend selection to previous line.
-    \value SelectNextPage           Extend selection to next page.
-    \value SelectPreviousPage       Extend selection to previous page.
-    \value SelectStartOfLine        Extend selection to start of line.
-    \value SelectEndOfLine          Extend selection to end of line.
-    \value SelectStartOfBlock       Extend selection to the start of a text block. This shortcut is only used on OS X.
+    \value MoveToEndOfLine          Move cursor to end of line.
+    \value MoveToNextChar           Move cursor to next character.
+    \value MoveToNextLine           Move cursor to next line.
+    \value MoveToNextPage           Move cursor to next page.
+    \value MoveToNextWord           Move cursor to next word.
+    \value MoveToPreviousChar       Move cursor to previous character.
+    \value MoveToPreviousLine       Move cursor to previous line.
+    \value MoveToPreviousPage       Move cursor to previous page.
+    \value MoveToPreviousWord       Move cursor to previous word.
+    \value MoveToStartOfBlock       Move cursor to start of a block. This shortcut is only used on OS X.
+    \value MoveToStartOfDocument    Move cursor to start of document.
+    \value MoveToStartOfLine        Move cursor to start of line.
+    \value New              Create new document.
+    \value NextChild        Navigate to next tab or child window.
+    \value Open             Open document.
+    \value Paste            Paste.
+    \value PreviousChild    Navigate to previous tab or child window.
+    \value Print            Print document.
+    \value Redo             Redo.
+    \value Refresh          Refresh or reload current document.
+    \value Replace          Find and replace.
+    \value SaveAs                   Save document after prompting the user for a file name.
+    \value Save             Save document.
+    \value SelectAll        Select all text.
     \value SelectEndOfBlock         Extend selection to the end of a text block. This shortcut is only used on OS X.
-    \value SelectStartOfDocument    Extend selection to start of document. 
     \value SelectEndOfDocument      Extend selection to end of document.
-    \value DeleteStartOfWord        Delete the beginning of a word up to the cursor.
-    \value DeleteEndOfWord          Delete word from the end of the cursor.
-    \value DeleteEndOfLine          Delete end of line.
+    \value SelectEndOfLine          Extend selection to end of line.
+    \value SelectNextChar           Extend selection to next character.
+    \value SelectNextLine           Extend selection to next line.
+    \value SelectNextPage           Extend selection to next page.
+    \value SelectNextWord           Extend selection to next word.
+    \value SelectPreviousChar       Extend selection to previous character.
+    \value SelectPreviousLine       Extend selection to previous line.
+    \value SelectPreviousPage       Extend selection to previous page.
+    \value SelectPreviousWord       Extend selection to previous word.
+    \value SelectStartOfBlock       Extend selection to the start of a text block. This shortcut is only used on OS X.
+    \value SelectStartOfDocument    Extend selection to start of document. 
+    \value SelectStartOfLine        Extend selection to start of line.
+    \value Underline        Underline text.
+    \value Undo             Undo.
+    \value UnknownKey       Unbound key.
+    \value WhatsThis        Activate whats this.
+    \value ZoomIn           Zoom in.
+    \value ZoomOut          Zoom out.
 */
 
 /*!
@@ -894,17 +968,11 @@ int QKeySequencePrivate::decodeString(const QString &str, QKeySequence::Sequence
     if (nativeText) {
         gmodifs = globalModifs();
         if (gmodifs->isEmpty()) {
-#ifdef QMAC_CTRL
-            *gmodifs << QModifKeyName(Qt::CTRL, QMAC_CTRL);
-#endif
-#ifdef QMAC_ALT
-            *gmodifs << QModifKeyName(Qt::ALT, QMAC_ALT);
-#endif
-#ifdef QMAC_META
-            *gmodifs << QModifKeyName(Qt::META, QMAC_META);
-#endif
-#ifdef QMAC_SHIFT
-            *gmodifs << QModifKeyName(Qt::SHIFT, QMAC_SHIFT);
+#ifdef Q_WS_MAC
+            *gmodifs << QModifKeyName(Qt::CTRL, QChar(kCommandUnicode));
+            *gmodifs << QModifKeyName(Qt::ALT, QChar(kOptionUnicode));
+            *gmodifs << QModifKeyName(Qt::META, QChar(kControlUnicode));
+            *gmodifs << QModifKeyName(Qt::SHIFT, QChar(kShiftUnicode));
 #endif
             *gmodifs << QModifKeyName(Qt::CTRL, QLatin1String("ctrl+"))
                      << QModifKeyName(Qt::SHIFT, QLatin1String("shift+"))
@@ -969,7 +1037,15 @@ int QKeySequencePrivate::decodeString(const QString &str, QKeySequence::Sequence
 
     int fnum = 0;
     if (accel.length() == 1) {
-        ret |= accel[0].toUpper().unicode();
+#ifdef Q_WS_MAC
+        int qtKey = qtkeyForMacSymbol(accel[0]);
+        if (qtKey != -1) {
+            ret |= qtKey;
+        } else
+#endif
+        {
+            ret |= accel[0].toUpper().unicode();
+        }
     } else if (accel[0] == QLatin1Char('f') && (fnum = accel.mid(1).toInt()) && (fnum >= 1) && (fnum <= 35)) {
         ret |= Qt::Key_F1 + fnum - 1;
     } else {
@@ -993,6 +1069,8 @@ int QKeySequencePrivate::decodeString(const QString &str, QKeySequence::Sequence
             if (found)
                 break;
         }
+#ifdef Q_WS_MAC
+#endif
     }
     return ret;
 }
@@ -1023,13 +1101,13 @@ QString QKeySequencePrivate::encodeString(int key, QKeySequence::SequenceFormat 
     if (nativeText) {
         // On MAC the order is Meta, Alt, Shift, Control.
         if ((key & Qt::META) == Qt::META)
-            s += QMAC_META;
+            s += macSymbolForQtKey(Qt::Key_Meta);
         if ((key & Qt::ALT) == Qt::ALT)
-            s += QMAC_ALT;
+            s += macSymbolForQtKey(Qt::Key_Alt);
         if ((key & Qt::SHIFT) == Qt::SHIFT)
-            s += QMAC_SHIFT;
+            s += macSymbolForQtKey(Qt::Key_Shift);
         if ((key & Qt::CTRL) == Qt::CTRL)
-            s += QMAC_CTRL;
+            s += macSymbolForQtKey(Qt::Key_Control);
     } else
 #endif
     {
@@ -1060,24 +1138,38 @@ QString QKeySequencePrivate::encodeString(int key, QKeySequence::SequenceFormat 
                            : QString::fromLatin1("F%1").arg(key - Qt::Key_F1 + 1);
     } else if (key) {
         int i=0;
-        while (keyname[i].name) {
-            if (key == keyname[i].key) {
-                p = nativeText ? QShortcut::tr(keyname[i].name)
-                               : QString::fromLatin1(keyname[i].name);
-                break;
+#if defined(Q_WS_MAC)
+        if (nativeText) {
+            QChar ch = macSymbolForQtKey(key);
+            if (!ch.isNull())
+                p = ch;
+            else
+                goto NonSymbol;
+        } else
+#endif
+        {
+#ifdef Q_WS_MAC
+NonSymbol:
+#endif
+            while (keyname[i].name) {
+                if (key == keyname[i].key) {
+                    p = nativeText ? QShortcut::tr(keyname[i].name)
+                                   : QString::fromLatin1(keyname[i].name);
+                    break;
+                }
+                ++i;
             }
-            ++i;
-        }
-        // If we can't find the actual translatable keyname,
-        // fall back on the unicode representation of it...
-        // Or else characters like Qt::Key_aring may not get displayed
-        // (Really depends on you locale)
-        if (!keyname[i].name) {
-            if (key < 0x10000) {
-                p = QChar(key & 0xffff).toUpper();
-            } else {
-                p = QChar((key-0x10000)/0x400+0xd800);
-                p += QChar((key-0x10000)%400+0xdc00);
+            // If we can't find the actual translatable keyname,
+            // fall back on the unicode representation of it...
+            // Or else characters like Qt::Key_aring may not get displayed
+            // (Really depends on you locale)
+            if (!keyname[i].name) {
+                if (key < 0x10000) {
+                    p = QChar(key & 0xffff).toUpper();
+                } else {
+                    p = QChar((key-0x10000)/0x400+0xd800);
+                    p += QChar((key-0x10000)%400+0xdc00);
+                }
             }
         }
     }

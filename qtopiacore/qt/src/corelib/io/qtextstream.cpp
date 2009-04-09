@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -78,8 +82,8 @@ static const int QTEXTSTREAM_BUFFERSIZE = 16384;
     is used for reading and writing, but you can also set the codec by
     calling setCodec(). Automatic Unicode detection is also
     supported. When this feature is enabled (the default behavior),
-    QTextStream will detect the UTF-16 BOM (Byte Order Mark) and
-    switch to the appropriate UTF-16 codec when reading. QTextStream
+    QTextStream will detect the UTF-16 or the UTF-32 BOM (Byte Order Mark) and
+    switch to the appropriate UTF codec when reading. QTextStream
     does not write a BOM by default, but you can enable this by calling
     setGenerateByteOrderMark(true). When QTextStream operates on a QString
     directly, the codec is disabled.
@@ -232,8 +236,10 @@ static const int QTEXTSTREAM_BUFFERSIZE = 16384;
 #ifndef Q_OS_WINCE
 #include <locale.h>
 #endif
+#include "private/qlocale_p.h"
 
 #include <stdlib.h>
+#include <new>
 
 #if defined QTEXTSTREAM_DEBUG
 #include <ctype.h>
@@ -359,6 +365,7 @@ public:
     QTextCodec *codec;
     QTextCodec::ConverterState readConverterState;
     QTextCodec::ConverterState writeConverterState;
+    QTextCodec::ConverterState *readConverterSavedState;
     bool autoDetectUnicode;
 #endif
 
@@ -375,6 +382,8 @@ public:
     inline const QChar *readPtr() const;
     inline void consumeLastToken();
     inline void consume(int nchars);
+    void saveConverterState(qint64 newPos);
+    void restoreToSavedConverterState();
     int lastTokenSize;
 
     // Return value type for getNumber()
@@ -395,14 +404,12 @@ public:
 
     // buffers
     bool fillReadBuffer(qint64 maxBytes = -1);
+    void resetReadBuffer();
     bool flushWriteBuffer();
     QString writeBuffer;
     QString readBuffer;
     int readBufferOffset;
     qint64 readBufferStartDevicePos;
-#ifndef QT_NO_TEXTCODEC
-    QTextCodec::ConverterState readBufferStartReadConverterState;
-#endif
 
     // streaming parameters
     int realNumberPrecision;
@@ -416,12 +423,19 @@ public:
     // status
     QTextStream::Status status;
 
+    QLocale locale;
+
     QTextStream *q_ptr;
 };
 
 /*! \internal
 */
 QTextStreamPrivate::QTextStreamPrivate(QTextStream *q_ptr)
+    :
+#ifndef QT_NO_TEXTCODEC
+    readConverterSavedState(0),
+#endif
+    locale(QLocale::C)
 {
     this->q_ptr = q_ptr;
     reset();
@@ -431,18 +445,22 @@ QTextStreamPrivate::QTextStreamPrivate(QTextStream *q_ptr)
 */
 QTextStreamPrivate::~QTextStreamPrivate()
 {
-    if (deleteDevice)
+    if (deleteDevice) {
+#ifndef QT_NO_QOBJECT
+        device->blockSignals(true);
+#endif
         delete device;
+    }
+#ifndef QT_NO_TEXTCODEC
+    delete readConverterSavedState;
+#endif
 }
 
 #ifndef QT_NO_TEXTCODEC
 static void resetCodecConverterStateHelper(QTextCodec::ConverterState *state)
 {
-    state->flags = QTextCodec::DefaultConversion;
-    state->remainingChars = state->invalidChars =
-           state->state_data[0] = state->state_data[1] = state->state_data[2] = 0;
-    if (state->d) qFree(state->d);
-    state->d = 0;
+    state->~ConverterState();
+    new (state) QTextCodec::ConverterState;
 }
 
 static void copyConverterStateHelper(QTextCodec::ConverterState *dest,
@@ -450,12 +468,12 @@ static void copyConverterStateHelper(QTextCodec::ConverterState *dest,
 {
     // ### QTextCodec::ConverterState's copy constructors and assignments are
     // private. This function copies the structure manually.
+    Q_ASSERT(!src->d);
     dest->flags = src->flags;
     dest->invalidChars = src->invalidChars;
     dest->state_data[0] = src->state_data[0];
     dest->state_data[1] = src->state_data[1];
     dest->state_data[2] = src->state_data[2];
-    dest->d = src->d; // <- ### wrong?
 }
 #endif
 
@@ -485,7 +503,8 @@ void QTextStreamPrivate::reset()
     codec = QTextCodec::codecForLocale();
     resetCodecConverterStateHelper(&readConverterState);
     resetCodecConverterStateHelper(&writeConverterState);
-    resetCodecConverterStateHelper(&readBufferStartReadConverterState);
+    delete readConverterSavedState;
+    readConverterSavedState = 0;
     writeConverterState.flags |= QTextCodec::IgnoreHeader;
     autoDetectUnicode = true;
 #endif
@@ -537,7 +556,7 @@ bool QTextStreamPrivate::fillReadBuffer(qint64 maxBytes)
     // codec has been set to 0.
     if (!codec || autoDetectUnicode) {
         autoDetectUnicode = false;
-        
+
         if (bytesRead >= 4 && ((uchar(buf[0]) == 0xff && uchar(buf[1]) == 0xfe && uchar(buf[2]) == 0 && uchar(buf[3]) == 0)
                                || (uchar(buf[0]) == 0 && uchar(buf[1]) == 0 && uchar(buf[2]) == 0xfe && uchar(buf[3]) == 0xff))) {
             codec = QTextCodec::codecForName("UTF-32");
@@ -559,7 +578,7 @@ bool QTextStreamPrivate::fillReadBuffer(qint64 maxBytes)
     qDebug("QTextStreamPrivate::fillReadBuffer(), device->read(\"%s\", %d) == %d",
            qt_prettyDebug(buf, qMin(32,int(bytesRead)) , int(bytesRead)).constData(), sizeof(buf), int(bytesRead));
 #endif
-    
+
     if (bytesRead <= 0)
         return false;
 
@@ -610,6 +629,15 @@ bool QTextStreamPrivate::fillReadBuffer(qint64 maxBytes)
            qt_prettyDebug(readBuffer.toLatin1(), readBuffer.size(), readBuffer.size()).data());
 #endif
     return true;
+}
+
+/*! \internal
+*/
+void QTextStreamPrivate::resetReadBuffer()
+{
+    readBuffer.clear();
+    readBufferOffset = 0;
+    readBufferStartDevicePos = (device ? device->pos() : 0);
 }
 
 /*! \internal
@@ -804,13 +832,45 @@ inline void QTextStreamPrivate::consume(int size)
         if (readBufferOffset >= readBuffer.size()) {
             readBufferOffset = 0;
             readBuffer.clear();
-            readBufferStartDevicePos = device->pos();
-#ifndef QT_NO_TEXTCODEC
-            copyConverterStateHelper(&readBufferStartReadConverterState,
-                &readConverterState);
-#endif
+            saveConverterState(device->pos());
         }
     }
+}
+
+/*! \internal
+*/
+inline void QTextStreamPrivate::saveConverterState(qint64 newPos)
+{
+#ifndef QT_NO_TEXTCODEC
+    if (readConverterState.d) {
+        // converter cannot be copied, so don't save anything
+        // don't update readBufferStartDevicePos either
+        return;
+    }
+
+    if (!readConverterSavedState)
+        readConverterSavedState = new QTextCodec::ConverterState;
+    copyConverterStateHelper(readConverterSavedState, &readConverterState);
+#endif
+
+    readBufferStartDevicePos = newPos;
+}
+
+/*! \internal
+*/
+inline void QTextStreamPrivate::restoreToSavedConverterState()
+{
+#ifndef QT_NO_TEXTCODEC
+    if (readConverterSavedState) {
+        // we have a saved state
+        // that means the converter can be copied
+        copyConverterStateHelper(&readConverterState, readConverterSavedState);
+    } else {
+        // the only state we could save was the initial
+        // so reset to that
+        resetCodecConverterStateHelper(&readConverterState);
+    }
+#endif
 }
 
 /*! \internal
@@ -881,7 +941,7 @@ inline bool QTextStreamPrivate::putString(const QString &s, bool number)
             tmp.prepend(QString(padSize, padChar));
             if (fieldAlignment == QTextStream::AlignAccountingStyle && number) {
                 const QChar sign = s.size() > 0 ? s.at(0) : QChar();
-                if (sign == QLatin1Char('-') || sign == QLatin1Char('+')) {
+                if (sign == locale.negativeSign() || sign == locale.positiveSign()) {
                     QChar *data = tmp.data();
                     data[padSize] = tmp.at(0);
                     data[0] = sign;
@@ -1098,15 +1158,14 @@ bool QTextStream::seek(qint64 pos)
         d->flushWriteBuffer();
         if (!d->device->seek(pos))
             return false;
-        d->readBuffer.clear();
-        d->readBufferOffset = 0;
-        d->readBufferStartDevicePos = d->device->pos();
+        d->resetReadBuffer();
 
 #ifndef QT_NO_TEXTCODEC
         // Reset the codec converter states.
         resetCodecConverterStateHelper(&d->readConverterState);
-        resetCodecConverterStateHelper(&d->readBufferStartReadConverterState);
         resetCodecConverterStateHelper(&d->writeConverterState);
+        delete d->readConverterSavedState;
+        d->readConverterSavedState = 0;
 #endif
         return true;
     }
@@ -1151,13 +1210,8 @@ qint64 QTextStream::pos() const
         QTextStreamPrivate *thatd = const_cast<QTextStreamPrivate *>(d);
         thatd->readBuffer.clear();
 
-        // Restore the codec converter state and end state to the read buffer
-        // start state.
 #ifndef QT_NO_TEXTCODEC
-        copyConverterStateHelper(&thatd->readConverterState,
-            &d->readBufferStartReadConverterState);
-#endif
-#ifndef QT_NO_TEXTCODEC
+        thatd->restoreToSavedConverterState();
         if (d->readBufferStartDevicePos == 0)
             thatd->autoDetectUnicode = true;
 #endif
@@ -1205,9 +1259,9 @@ void QTextStream::skipWhiteSpace()
     Sets the current device to \a device. If a device has already been
     assigned, QTextStream will call flush() before the old device is
     replaced.
-    
-    \note This function resets the codec to the default codec,
-    QTextCodec::codecForLocale().
+
+    \note This function resets locale to the default locale ('C')
+    and codec to the default codec, QTextCodec::codecForLocale().
 
     \sa device(), setString()
 */
@@ -1222,10 +1276,11 @@ void QTextStream::setDevice(QIODevice *device)
         delete d->device;
         d->deleteDevice = false;
     }
-    
+
     d->reset();
-    d->status = Ok;    
+    d->status = Ok;
     d->device = device;
+    d->resetReadBuffer();
 #ifndef QT_NO_QOBJECT
     d->deviceClosedNotifier.setupDevice(this, d->device);
 #endif
@@ -1257,11 +1312,12 @@ void QTextStream::setString(QString *string, QIODevice::OpenMode openMode)
     if (d->deleteDevice) {
 #ifndef QT_NO_QOBJECT
         d->deviceClosedNotifier.disconnect();
+        d->device->blockSignals(true);
 #endif
         delete d->device;
         d->deleteDevice = false;
     }
-    
+
     d->reset();
     d->status = Ok;
     d->string = string;
@@ -1647,7 +1703,7 @@ QTextStreamPrivate::NumberParsingStatus QTextStreamPrivate::getNumber(qulonglong
                 base = 10;
             }
             ungetChar(ch2);
-        } else if (ch == QLatin1Char('-') || ch == QLatin1Char('+') || ch.isDigit()) {
+        } else if (ch == locale.negativeSign() || ch == locale.positiveSign() || ch.isDigit()) {
             base = 10;
         } else {
             ungetChar(ch);
@@ -1720,7 +1776,7 @@ QTextStreamPrivate::NumberParsingStatus QTextStreamPrivate::getNumber(qulonglong
         int ndigits = 0;
         if (!getChar(&sign))
             return npsMissingDigit;
-        if (sign != QLatin1Char('-') && sign != QLatin1Char('+')) {
+        if (sign != locale.negativeSign() && sign != locale.positiveSign()) {
             if (!sign.isDigit()) {
                 ungetChar(sign);
                 return npsMissingDigit;
@@ -1734,6 +1790,9 @@ QTextStreamPrivate::NumberParsingStatus QTextStreamPrivate::getNumber(qulonglong
             if (ch.isDigit()) {
                 val *= 10;
                 val += ch.digitValue();
+            } else if (locale.language() != QLocale::C
+                       && ch == locale.groupSeparator()) {
+                continue;
             } else {
                 ungetChar(ch);
                 break;
@@ -1742,7 +1801,7 @@ QTextStreamPrivate::NumberParsingStatus QTextStreamPrivate::getNumber(qulonglong
         }
         if (ndigits == 0)
             return npsMissingDigit;
-        if (sign == QLatin1Char('-')) {
+        if (sign == locale.negativeSign()) {
             qlonglong ival = qlonglong(val);
             if (ival > 0)
                 ival = -ival;
@@ -1855,20 +1914,9 @@ bool QTextStreamPrivate::getReal(double *f)
     QChar c;
     while (getChar(&c)) {
         switch (c.unicode()) {
-        case '+':
-        case '-':
-            input = InputSign;
-            break;
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
             input = InputDigit;
-            break;
-        case '.':
-            input = InputDot;
-            break;
-        case 'e':
-        case 'E':
-            input = InputExp;
             break;
         case 'i': case 'I':
             input = InputI;
@@ -1885,8 +1933,21 @@ bool QTextStreamPrivate::getReal(double *f)
         case 't': case 'T':
             input = InputT;
             break;
-        default:
-            input = None;
+        default: {
+            QChar lc = c.toLower();
+            if (lc == locale.decimalPoint().toLower())
+                input = InputDot;
+            else if (lc == locale.exponential().toLower())
+                input = InputExp;
+            else if (lc == locale.negativeSign().toLower()
+                     || lc == locale.positiveSign().toLower())
+                input = InputSign;
+            else if (locale.language() != QLocale::C // backward-compatibility
+                     && lc == locale.groupSeparator().toLower())
+                input = InputDigit; // well, it isn't a digit, but no one cares.
+            else
+                input = None;
+        }
             break;
         }
 
@@ -1912,24 +1973,25 @@ bool QTextStreamPrivate::getReal(double *f)
         return false;
     if (!f)
         return true;
+    buf[i] = '\0';
 
-    // ### Number parsing should really be handled by QLocale.
-    char c0 = buf[0] | 32; // tolower
-    char c1 = buf[1] | 32; // tolower
-    bool sign = true;
-    if (c0 == '+' || c0 == '-') {
-        sign = (c0 == '+');
-        c0 = c1;
+    // backward-compatibility. Old implmentation supported +nan/-nan
+    // for some reason. QLocale only checks for lower-case
+    // nan/+inf/-inf, so here we also check for uppercase and mixed
+    // case versions.
+    if (!qstricmp(buf, "nan") || !qstricmp(buf, "+nan") || !qstricmp(buf, "-nan")) {
+        *f = qSNaN();
+        return true;
+    } else if (!qstricmp(buf, "+inf") || !qstricmp(buf, "inf")) {
+        *f = qInf();
+        return true;
+    } else if (!qstricmp(buf, "-inf")) {
+        *f = -qInf();
+        return true;
     }
-    if (c0 == 'i') {
-        *f = sign ? qInf() : -qInf();
-    } else if (c0 == 'n') {
-        *f = qQNaN();
-    } else {
-        buf[i] = '\0';
-        *f = strtod(buf, 0);
-    }
-    return true;
+    bool ok;
+    *f = locale.toDouble(QString::fromLatin1(buf), &ok);
+    return ok;
 }
 
 /*!
@@ -2191,28 +2253,45 @@ QTextStream &QTextStream::operator>>(char *c)
  */
 bool QTextStreamPrivate::putNumber(qulonglong number, bool negative)
 {
-    QString prefix;
-    if (negative)
-        prefix = QLatin1Char('-');
-    else if (numberFlags & QTextStream::ForceSign)
-        prefix = QLatin1Char('+');
+    QString result;
 
-    if (numberFlags & QTextStream::ShowBase) {
-        switch (integerBase) {
-        case 2: prefix += QLatin1String("0b"); break;
-        case 8: prefix += QLatin1String("0"); break;
-        case 16: prefix += QLatin1String("0x"); break;
-        default: break;
-        }
-        if (numberFlags & QTextStream::UppercaseBase)
-            prefix = prefix.toUpper(); // ### in-place instead
-    }
-
-    QString digits = QString::number(number, integerBase ? integerBase : 10);
+    unsigned flags = 0;
+    if (numberFlags & QTextStream::ShowBase)
+        flags |= QLocalePrivate::ShowBase;
+    if (numberFlags & QTextStream::ForceSign)
+        flags |= QLocalePrivate::AlwaysShowSign;
+    if (numberFlags & QTextStream::UppercaseBase)
+        flags |= QLocalePrivate::UppercaseBase;
     if (numberFlags & QTextStream::UppercaseDigits)
-        digits = digits.toUpper(); // ### in-place instead
+        flags |= QLocalePrivate::CapitalEorX;
 
-    return putString(prefix + digits, true);
+    // add thousands group separators. For backward compatibility we
+    // don't add a group separator for C locale.
+    if (locale.language() != QLocale::C)
+        flags |= QLocalePrivate::ThousandsGroup;
+
+    const QLocalePrivate *dd = locale.d();
+    int base = integerBase ? integerBase : 10;
+    if (negative && base == 10) {
+        result = dd->longLongToString(-static_cast<qlonglong>(number), -1,
+                                      base, -1, flags);
+    } else if (negative) {
+        // Workaround for backward compatibility for writing negative
+        // numbers in octal and hex:
+        // QTextStream(result) << showbase << hex << -1 << oct << -1
+        // should output: -0x1 -0b1
+        result = dd->unsLongLongToString(number, -1, base, -1, flags);
+        result.prepend(locale.negativeSign());
+    } else {
+        result = dd->unsLongLongToString(number, -1, base, -1, flags);
+        // workaround for backward compatibility - in octal form with
+        // ShowBase flag set zero should be written as '00'
+        if (number == 0 && base == 8 && numberFlags & QTextStream::ShowBase
+            && result == QLatin1String("0")) {
+            result.prepend(QLatin1String("0"));
+        }
+    }
+    return putString(result, true);
 }
 
 /*!
@@ -2384,56 +2463,33 @@ QTextStream &QTextStream::operator<<(double f)
     Q_D(QTextStream);
     CHECK_VALID_STREAM(*this);
 
-    // Handle nans and infs.
-    bool upperCaseDigits = (d->numberFlags & QTextStream::UppercaseDigits);
-    if (qIsInf(f)) {
-        if (f < 0) {
-            operator<<(upperCaseDigits ? "-INF" : "-inf");
-        } else {
-            operator<<(upperCaseDigits ? "INF" : "inf");
-        }
-        return *this;
-    }
-    if (qIsNaN(f)) {
-        operator<<(upperCaseDigits ? "NAN" : "nan");
-        return *this;
+    QLocalePrivate::DoubleForm form = QLocalePrivate::DFDecimal;
+    switch (realNumberNotation()) {
+    case FixedNotation:
+        form = QLocalePrivate::DFDecimal;
+        break;
+    case ScientificNotation:
+        form = QLocalePrivate::DFExponent;
+        break;
+    case SmartNotation:
+        form = QLocalePrivate::DFSignificantDigits;
+        break;
     }
 
-    char f_char;
-    char format[16];
-    if (d->realNumberNotation == FixedNotation)
-        f_char = 'f';
-    else if (d->realNumberNotation == ScientificNotation)
-        f_char = (d->numberFlags & UppercaseBase) ? 'E' : 'e';
-    else
-        f_char = (d->numberFlags & UppercaseBase) ? 'G' : 'g';
+    uint flags = 0;
+    if (numberFlags() & ShowBase)
+        flags |= QLocalePrivate::ShowBase;
+    if (numberFlags() & ForceSign)
+        flags |= QLocalePrivate::AlwaysShowSign;
+    if (numberFlags() & UppercaseBase)
+        flags |= QLocalePrivate::UppercaseBase;
+    if (numberFlags() & UppercaseDigits)
+        flags |= QLocalePrivate::CapitalEorX;
+    if (numberFlags() & ForcePoint)
+        flags |= QLocalePrivate::Alternate;
 
-    // generate format string
-    register char *fs = format;
-
-    // "%.<prec>l<f_char>"
-    *fs++ = '%';
-    if (d->numberFlags & QTextStream::ForcePoint)
-        *fs++ = '#';
-    *fs++ = '.';
-    int prec = d->realNumberPrecision;
-    if (prec > 99)
-        prec = 99;
-    if (prec >= 10) {
-        *fs++ = prec / 10 + '0';
-        *fs++ = prec % 10 + '0';
-    } else {
-        *fs++ = prec + '0';
-    }
-    *fs++ = 'l';
-    *fs++ = f_char;
-    *fs = '\0';
-    QString num;
-    num.sprintf(format, f);                        // convert to text
-
-    if (f > 0.0 && (d->numberFlags & ForceSign))
-        num.prepend(QLatin1Char('+'));
-
+    const QLocalePrivate *dd = d->locale.d();
+    QString num = dd->doubleToString(f, d->realNumberPrecision, form, -1, flags);
     d->putString(num, true);
     return *this;
 }
@@ -2859,8 +2915,8 @@ QTextStream &ws(QTextStream &stream)
 /*!
     \relates QTextStream
 
-    Toggles insertion of the UTF-16 Byte Order Mark on \a stream when
-    QTextStream is used with a UTF-16 codec.
+    Toggles insertion of the Byte Order Mark on \a stream when QTextStream is
+    used with a UTF codec.
 
     \sa QTextStream::setGenerateByteOrderMark(), {QTextStream manipulators}
 */
@@ -2883,7 +2939,7 @@ QTextStream &bom(QTextStream &stream)
     from an open sequential socket, the internal buffer may still contain
     text decoded using the old codec.
 
-    \sa codec(), setAutoDetectUnicode()
+    \sa codec(), setAutoDetectUnicode(), setLocale()
 */
 void QTextStream::setCodec(QTextCodec *codec)
 {
@@ -2909,7 +2965,7 @@ void QTextStream::setCodec(QTextCodec *codec)
 
     \snippet doc/src/snippets/code/src_corelib_io_qtextstream.cpp 10
 
-    \sa QTextCodec::codecForName()
+    \sa QTextCodec::codecForName(), setLocale()
 */
 void QTextStream::setCodec(const char *codecName)
 {
@@ -2921,7 +2977,7 @@ void QTextStream::setCodec(const char *codecName)
 /*!
     Returns the codec that is current assigned to the stream.
 
-    \sa setCodec(), setAutoDetectUnicode()
+    \sa setCodec(), setAutoDetectUnicode(), locale()
 */
 QTextCodec *QTextStream::codec() const
 {
@@ -2932,8 +2988,8 @@ QTextCodec *QTextStream::codec() const
 /*!
     If \a enabled is true, QTextStream will attempt to detect Unicode
     encoding by peeking into the stream data to see if it can find the
-    UTF-16 BOM (Byte Order Mark). If this mark is found, QTextStream
-    will replace the current codec with the UTF-16 codec.
+    UTF-16 or UTF-32 BOM (Byte Order Mark). If this mark is found, QTextStream
+    will replace the current codec with the UTF codec.
 
     This function can be used together with setCodec(). It is common
     to set the codec to UTF-8, and then enable UTF-16 detection.
@@ -2959,7 +3015,7 @@ bool QTextStream::autoDetectUnicode() const
 }
 
 /*!
-    If \a generate is true and a UTF-16 codec is used, QTextStream will insert
+    If \a generate is true and a UTF codec is used, QTextStream will insert
     the BOM (Byte Order Mark) before any data has been written to the
     device. If \a generate is false, no BOM will be inserted. This function
     must be called before any data is written. Otherwise, it does nothing.
@@ -2978,8 +3034,8 @@ void QTextStream::setGenerateByteOrderMark(bool generate)
 }
 
 /*!
-    Returns true if QTextStream is set to generate the UTF-16 BOM (Byte Order
-    Mark) when using a UTF-16 codec; otherwise returns false.
+    Returns true if QTextStream is set to generate the UTF BOM (Byte Order
+    Mark) when using a UTF codec; otherwise returns false.
 
     \sa setGenerateByteOrderMark()
 */
@@ -2990,6 +3046,36 @@ bool QTextStream::generateByteOrderMark() const
 }
 
 #endif
+
+/*!
+    \since 4.5
+
+    Sets the locale for this stream to \a locale. The specified locale is
+    used for conversions between numbers and their string representations.
+
+    The default locale is C and it is a special case - the thousands
+    group separator is not used for backward compatibility reasons.
+
+    \sa locale()
+*/
+void QTextStream::setLocale(const QLocale &locale)
+{
+    Q_D(QTextStream);
+    d->locale = locale;
+}
+
+/*!
+    \since 4.5
+
+    Returns the locale for this stream. The default locale is C.
+
+    \sa setLocale()
+*/
+QLocale QTextStream::locale() const
+{
+    Q_D(const QTextStream);
+    return d->locale;
+}
 
 #ifdef QT3_SUPPORT
 /*!

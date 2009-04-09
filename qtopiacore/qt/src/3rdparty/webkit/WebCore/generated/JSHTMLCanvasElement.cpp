@@ -26,165 +26,183 @@
 
 #include "HTMLCanvasElement.h"
 #include "JSCanvasRenderingContext2D.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLCanvasElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLCanvasElementTableEntries[] =
+static const HashTableValue JSHTMLCanvasElementTableValues[4] =
 {
-    { "constructor", JSHTMLCanvasElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "width", JSHTMLCanvasElement::WidthAttrNum, DontDelete, 0, 0 },
-    { "height", JSHTMLCanvasElement::HeightAttrNum, DontDelete, 0, 0 }
+    { "width", DontDelete, (intptr_t)jsHTMLCanvasElementWidth, (intptr_t)setJSHTMLCanvasElementWidth },
+    { "height", DontDelete, (intptr_t)jsHTMLCanvasElementHeight, (intptr_t)setJSHTMLCanvasElementHeight },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLCanvasElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLCanvasElementTable = 
-{
-    2, 3, JSHTMLCanvasElementTableEntries, 3
-};
+static const HashTable JSHTMLCanvasElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSHTMLCanvasElementTableValues, 0 };
+#else
+    { 9, 7, JSHTMLCanvasElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLCanvasElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLCanvasElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLCanvasElementConstructorTable = 
-{
-    2, 1, JSHTMLCanvasElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLCanvasElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLCanvasElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLCanvasElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLCanvasElementConstructor : public DOMObject {
 public:
     JSHTMLCanvasElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLCanvasElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLCanvasElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLCanvasElementConstructor::info = { "HTMLCanvasElementConstructor", 0, &JSHTMLCanvasElementConstructorTable, 0 };
+const ClassInfo JSHTMLCanvasElementConstructor::s_info = { "HTMLCanvasElementConstructor", 0, &JSHTMLCanvasElementConstructorTable, 0 };
 
 bool JSHTMLCanvasElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLCanvasElementConstructor, DOMObject>(exec, &JSHTMLCanvasElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLCanvasElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLCanvasElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLCanvasElementPrototypeTableValues[3] =
 {
-    { "getContext", JSHTMLCanvasElement::GetContextFuncNum, DontDelete|Function, 1, 0 }
+    { "toDataURL", DontDelete|Function, (intptr_t)jsHTMLCanvasElementPrototypeFunctionToDataURL, (intptr_t)1 },
+    { "getContext", DontDelete|Function, (intptr_t)jsHTMLCanvasElementPrototypeFunctionGetContext, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLCanvasElementPrototypeTable = 
-{
-    2, 1, JSHTMLCanvasElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLCanvasElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSHTMLCanvasElementPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSHTMLCanvasElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLCanvasElementPrototype::info = { "HTMLCanvasElementPrototype", 0, &JSHTMLCanvasElementPrototypeTable, 0 };
+const ClassInfo JSHTMLCanvasElementPrototype::s_info = { "HTMLCanvasElementPrototype", 0, &JSHTMLCanvasElementPrototypeTable, 0 };
 
 JSObject* JSHTMLCanvasElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLCanvasElementPrototype>(exec, "[[JSHTMLCanvasElement.prototype]]");
+    return getDOMPrototype<JSHTMLCanvasElement>(exec);
 }
 
 bool JSHTMLCanvasElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLCanvasElementPrototypeFunction, JSObject>(exec, &JSHTMLCanvasElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLCanvasElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLCanvasElement::info = { "HTMLCanvasElement", &JSHTMLElement::info, &JSHTMLCanvasElementTable, 0 };
+const ClassInfo JSHTMLCanvasElement::s_info = { "HTMLCanvasElement", &JSHTMLElement::s_info, &JSHTMLCanvasElementTable, 0 };
 
-JSHTMLCanvasElement::JSHTMLCanvasElement(ExecState* exec, HTMLCanvasElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLCanvasElement::JSHTMLCanvasElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLCanvasElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLCanvasElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLCanvasElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLCanvasElementPrototype(JSHTMLCanvasElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLCanvasElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLCanvasElement, JSHTMLElement>(exec, &JSHTMLCanvasElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLCanvasElement, Base>(exec, &JSHTMLCanvasElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLCanvasElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLCanvasElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case WidthAttrNum: {
-        HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(impl());
-
-        return jsNumber(imp->width());
-    }
-    case HeightAttrNum: {
-        HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(impl());
-
-        return jsNumber(imp->height());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(static_cast<JSHTMLCanvasElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->width());
 }
 
-void JSHTMLCanvasElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLCanvasElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLCanvasElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLCanvasElementTable, this);
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(static_cast<JSHTMLCanvasElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->height());
 }
 
-void JSHTMLCanvasElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLCanvasElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case WidthAttrNum: {
-        HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(impl());
-
-        imp->setWidth(value->toInt32(exec));
-        break;
-    }
-    case HeightAttrNum: {
-        HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(impl());
-
-        imp->setHeight(value->toInt32(exec));
-        break;
-    }
-    }
+    return static_cast<JSHTMLCanvasElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLCanvasElement::getConstructor(ExecState* exec)
+void JSHTMLCanvasElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLCanvasElementConstructor>(exec, "[[HTMLCanvasElement.constructor]]");
+    lookupPut<JSHTMLCanvasElement, Base>(exec, propertyName, value, &JSHTMLCanvasElementTable, this, slot);
 }
-JSValue* JSHTMLCanvasElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+void setJSHTMLCanvasElementWidth(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    if (!thisObj->inherits(&JSHTMLCanvasElement::info))
-      return throwError(exec, TypeError);
-
-    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(static_cast<JSHTMLCanvasElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLCanvasElement::GetContextFuncNum: {
-        String contextId = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getContext(contextId)));
-        return result;
-    }
-    }
-    return 0;
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(static_cast<JSHTMLCanvasElement*>(thisObject)->impl());
+    imp->setWidth(value->toInt32(exec));
 }
+
+void setJSHTMLCanvasElementHeight(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(static_cast<JSHTMLCanvasElement*>(thisObject)->impl());
+    imp->setHeight(value->toInt32(exec));
+}
+
+JSValuePtr JSHTMLCanvasElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLCanvasElementConstructor>(exec);
+}
+
+JSValuePtr jsHTMLCanvasElementPrototypeFunctionToDataURL(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLCanvasElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLCanvasElement* castedThisObj = static_cast<JSHTMLCanvasElement*>(asObject(thisValue));
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& type = valueToStringWithUndefinedOrNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->toDataURL(type, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsHTMLCanvasElementPrototypeFunctionGetContext(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLCanvasElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLCanvasElement* castedThisObj = static_cast<JSHTMLCanvasElement*>(asObject(thisValue));
+    HTMLCanvasElement* imp = static_cast<HTMLCanvasElement*>(castedThisObj->impl());
+    const UString& contextId = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getContext(contextId)));
+    return result;
+}
+
 
 }

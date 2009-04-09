@@ -124,12 +124,12 @@ public:
 	};
 
 	class Float:public ScoreDocComparator {
-		float_t* fieldOrder;
+		qreal* fieldOrder;
 #ifdef _CL__CND_DEBUG
 		int32_t length;
 #endif
 	public:
-		Float(float_t* fieldOrder, int32_t len)
+		Float(qreal* fieldOrder, int32_t len)
 		{
 			this->fieldOrder = fieldOrder;
 #ifdef _CL__CND_DEBUG

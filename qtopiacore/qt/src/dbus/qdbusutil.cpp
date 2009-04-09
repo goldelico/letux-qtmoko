@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -69,6 +73,164 @@ static inline bool isValidNumber(const QChar &c)
     return (u >= '0' && u <= '9');
 }
 
+static bool argToString(const QDBusArgument &arg, QString &out);
+
+static bool variantToString(const QVariant &arg, QString &out)
+{
+    int argType = arg.userType();
+
+    if (argType == QVariant::StringList) {
+        out += QLatin1String("{");
+        QStringList list = arg.toStringList();
+        foreach (QString item, list)
+            out += QLatin1Char('\"') + item + QLatin1String("\", ");
+        if (!list.isEmpty())
+            out.chop(2);
+        out += QLatin1String("}");
+    } else if (argType == QVariant::ByteArray) {
+        out += QLatin1String("{");
+        QByteArray list = arg.toByteArray();
+        for (int i = 0; i < list.count(); ++i) {
+            out += QString::number(list.at(i));
+            out += QLatin1String(", ");
+        }
+        if (!list.isEmpty())
+            out.chop(2);
+        out += QLatin1String("}");
+    } else if (argType == QVariant::List) {
+        out += QLatin1String("{");
+        QList<QVariant> list = arg.toList();
+        foreach (QVariant item, list) {
+            if (!variantToString(item, out))
+                return false;
+            out += QLatin1String(", ");
+        }
+        if (!list.isEmpty())
+            out.chop(2);
+        out += QLatin1String("}");
+    } else if (argType == QMetaType::Char || argType == QMetaType::Short || argType == QMetaType::Int
+               || argType == QMetaType::Long || argType == QMetaType::LongLong) {
+        out += QString::number(arg.toLongLong());
+    } else if (argType == QMetaType::UChar || argType == QMetaType::UShort || argType == QMetaType::UInt
+               || argType == QMetaType::ULong || argType == QMetaType::ULongLong) {
+        out += QString::number(arg.toULongLong());
+    } else if (argType == QMetaType::Double) {
+        out += QString::number(arg.toDouble());
+    } else if (argType == QMetaType::Bool) {
+        out += QLatin1String(arg.toBool() ? "true" : "false");
+    } else if (argType == qMetaTypeId<QDBusArgument>()) {
+        argToString(qvariant_cast<QDBusArgument>(arg), out);
+    } else if (argType == qMetaTypeId<QDBusObjectPath>()) {
+        const QString path = qvariant_cast<QDBusObjectPath>(arg).path();
+        out += QLatin1String("[ObjectPath: ");
+        out += path;
+        out += QLatin1Char(']');
+    } else if (argType == qMetaTypeId<QDBusSignature>()) {
+        out += QLatin1String("[Signature: ") + qvariant_cast<QDBusSignature>(arg).signature();
+        out += QLatin1Char(']');
+    } else if (argType == qMetaTypeId<QDBusVariant>()) {
+        const QVariant v = qvariant_cast<QDBusVariant>(arg).variant();
+        out += QLatin1String("[Variant");
+        int vUserType = v.userType();
+        if (vUserType != qMetaTypeId<QDBusVariant>()
+                && vUserType != qMetaTypeId<QDBusSignature>()
+                && vUserType != qMetaTypeId<QDBusObjectPath>()
+                && vUserType != qMetaTypeId<QDBusArgument>())
+            out += QLatin1Char('(') + QLatin1String(v.typeName()) + QLatin1Char(')');
+        out += QLatin1String(": ");
+        if (!variantToString(v, out))
+            return false;
+        out += QLatin1Char(']');
+    } else if (arg.canConvert(QVariant::String)) {
+        out += QLatin1String("\"") + arg.toString() + QLatin1String("\"");
+    } else {
+        out += QLatin1Char('[');
+        out += QLatin1String(arg.typeName());
+        out += QLatin1Char(']');
+    }
+
+    return true;
+}
+
+bool argToString(const QDBusArgument &busArg, QString &out)
+{
+    QString busSig = busArg.currentSignature();
+    bool doIterate = false;
+    QDBusArgument::ElementType elementType = busArg.currentType();
+
+    if (elementType != QDBusArgument::BasicType && elementType != QDBusArgument::VariantType
+            && elementType != QDBusArgument::MapEntryType)
+        out += QLatin1String("[Argument: ") + busSig + QLatin1Char(' ');
+
+    switch (elementType) {
+        case QDBusArgument::BasicType:
+        case QDBusArgument::VariantType:
+            if (!variantToString(busArg.asVariant(), out))
+                return false;
+            break;
+        case QDBusArgument::StructureType:
+            busArg.beginStructure();
+            doIterate = true;
+            break;
+        case QDBusArgument::ArrayType:
+            busArg.beginArray();
+            out += QLatin1Char('{');
+            doIterate = true;
+            break;
+        case QDBusArgument::MapType:
+            busArg.beginMap();
+            out += QLatin1Char('{');
+            doIterate = true;
+            break;
+        case QDBusArgument::MapEntryType:
+            busArg.beginMapEntry();
+            if (!variantToString(busArg.asVariant(), out))
+                return false;
+            out += QLatin1String(" = ");
+            if (!argToString(busArg, out))
+                return false;
+            busArg.endMapEntry();
+            break;
+        case QDBusArgument::UnknownType:
+        default:
+            out += QLatin1String("<ERROR - Unknown Type>");
+            return false;
+    }
+    if (doIterate && !busArg.atEnd()) {
+        while (!busArg.atEnd()) {
+            if (!argToString(busArg, out))
+                return false;
+            out += QLatin1String(", ");
+        }
+        out.chop(2);
+    }
+    switch (elementType) {
+        case QDBusArgument::BasicType:
+        case QDBusArgument::VariantType:
+        case QDBusArgument::UnknownType:
+        case QDBusArgument::MapEntryType:
+            // nothing to do
+            break;
+        case QDBusArgument::StructureType:
+            busArg.endStructure();
+            break;
+        case QDBusArgument::ArrayType:
+            out += QLatin1Char('}');
+            busArg.endArray();
+            break;
+        case QDBusArgument::MapType:
+            out += QLatin1Char('}');
+            busArg.endMap();
+            break;
+    }
+
+    if (elementType != QDBusArgument::BasicType && elementType != QDBusArgument::VariantType
+            && elementType != QDBusArgument::MapEntryType)
+        out += QLatin1String("]");
+
+    return true;
+}
+
 /*!
     \namespace QDBusUtil
     \inmodule QtDBus
@@ -79,6 +241,20 @@ static inline bool isValidNumber(const QChar &c)
 */
 namespace QDBusUtil
 {
+    /*!
+        \internal
+        \since 4.5
+        Dumps the contents of a QtDBus argument from \a arg into a string.
+    */
+    QString argumentToString(const QVariant &arg)
+    {
+        QString out;
+
+        variantToString(arg, out);
+
+        return out;
+    }
+
     /*!
         \internal
         \fn bool QDBusUtil::isValidPartOfObjectPath(const QString &part)

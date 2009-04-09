@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 //#define QT_RASTER_PAINTENGINE
@@ -47,11 +51,13 @@
 #include "qdebug.h"
 #include <private/qdrawhelper_p.h>
 #include <private/qpixmap_mac_p.h>
+#include <private/qpixmap_raster_p.h>
 #ifdef QT_RASTER_PAINTENGINE
 #  include <private/qpaintengine_raster_p.h>
 #endif
 #include <private/qpaintengine_mac_p.h>
 #include <private/qt_mac_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 
 #include <limits.h>
 #include <string.h>
@@ -85,6 +91,10 @@ void qt_mac_cgimage_data_free(void *info, const void *memoryToFree, size_t)
     if (!pmdata) {
         free(const_cast<void *>(memoryToFree));
     } else {
+        if (QMacPixmapData::validDataPointers.contains(pmdata) == false) {
+            free(const_cast<void *>(memoryToFree));
+            return;
+        }
         if (pmdata->pixels == pmdata->pixelsToFree) {
             // something we aren't expecting, just free it.
             Q_ASSERT(memoryToFree != pmdata->pixelsToFree);
@@ -95,6 +105,39 @@ void qt_mac_cgimage_data_free(void *info, const void *memoryToFree, size_t)
         }
         pmdata->cg_dataBeingReleased = 0;
     }
+}
+
+CGImageRef qt_mac_image_to_cgimage(const QImage &image)
+{
+    int bitsPerColor = 8;
+    int bitsPerPixel = 32;
+    if (image.depth() == 1) {
+        bitsPerColor = 1;
+        bitsPerPixel = 1;
+    }
+    QCFType<CGDataProviderRef> provider =
+        CGDataProviderCreateWithData(0, image.bits(), image.bytesPerLine() * image.height(),
+                                     0);
+
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
+    uint cgflags = kCGImageAlphaPremultipliedFirst;
+#ifdef kCGBitmapByteOrder32Host //only needed because CGImage.h added symbols in the minor version
+    if(QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4)
+        cgflags |= kCGBitmapByteOrder32Host;
+#endif
+#else
+    CGImageAlphaInfo cgflags = kCGImageAlphaPremultipliedFirst;
+#endif
+
+    CGImageRef cgImage = CGImageCreate(image.width(), image.height(), bitsPerColor, bitsPerPixel,
+                                       image.bytesPerLine(),
+                                       QCoreGraphicsPaintEngine::macGenericColorSpace(),
+                                       cgflags, provider,
+                                       0,
+                                       0,
+                                       kCGRenderingIntentDefault);
+
+    return cgImage;
 }
 
 /*****************************************************************************
@@ -122,6 +165,8 @@ static inline QRgb qt_conv16ToRgb(ushort c) {
     return qRgb(tr,tg,tb);
 }
 
+QSet<QMacPixmapData*> QMacPixmapData::validDataPointers;
+
 QMacPixmapData::QMacPixmapData(PixelType type)
     : QPixmapData(type, MacClass), w(0), h(0), d(0), has_alpha(0), has_mask(0),
       uninit(true), pixels(0), pixelsToFree(0), bytesPerRow(0),
@@ -144,9 +189,11 @@ void QMacPixmapData::resize(int width, int height)
     w = width;
     h = height;
     d = (pixelType() == BitmapType ? 1 : 32);
-
-    bool make_null = w == 0 || h == 0;                // create null pixmap
-    if (make_null || w < 0 || h < 0 || d == 0) {
+    bool make_null = w <= 0 || h <= 0;                // create null pixmap
+    if (make_null || d == 0) {
+        w = 0;
+        h = 0;
+        d = 0;
         if (!make_null)
             qWarning("Qt: QPixmap: Invalid pixmap parameters");
         return;
@@ -169,6 +216,18 @@ void QMacPixmapData::fromImage(const QImage &img,
                                Qt::ImageConversionFlags flags)
 {
     setSerialNumber(++qt_pixmap_serial);
+
+    // the conversion code only handles format >=
+    // Format_ARGB32_Premultiplied at the moment..
+    if (img.format() > QImage::Format_ARGB32_Premultiplied) {
+        QImage image;
+        if (img.hasAlphaChannel())
+            image = img.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+        else
+            image = img.convertToFormat(QImage::Format_RGB32);
+        fromImage(image, flags);
+        return;
+    }
 
     w = img.width();
     h = img.height();
@@ -213,7 +272,7 @@ void QMacPixmapData::fromImage(const QImage &img,
         image.setColor(1, QColor(Qt::color1).rgba());
     }
 
-    if (d == 16) {
+    if (d == 16 || d == 24) {
         image = image.convertToFormat(QImage::Format_RGB32, flags);
         fromImage(image, flags);
         return;
@@ -403,16 +462,17 @@ void QMacPixmapData::setMask(const QBitmap &mask)
     macSetAlphaChannel(maskData, true);
 }
 
-int QMacPixmapData::metric(QPaintDevice::PaintDeviceMetric metric) const
+int QMacPixmapData::metric(QPaintDevice::PaintDeviceMetric theMetric) const
 {
-    switch (metric) {
+    switch (theMetric) {
     case QPaintDevice::PdmWidth:
         return w;
     case QPaintDevice::PdmHeight:
         return h;
     case QPaintDevice::PdmWidthMM:
+        return qRound(metric(QPaintDevice::PdmWidth) * 25.4 / qreal(metric(QPaintDevice::PdmDpiX)));
     case QPaintDevice::PdmHeightMM:
-        return 0;
+        return qRound(metric(QPaintDevice::PdmHeight) * 25.4 / qreal(metric(QPaintDevice::PdmDpiY)));
     case QPaintDevice::PdmNumColors:
         return 1 << d;
     case QPaintDevice::PdmDpiX:
@@ -435,6 +495,7 @@ int QMacPixmapData::metric(QPaintDevice::PaintDeviceMetric metric) const
 
 QMacPixmapData::~QMacPixmapData()
 {
+    validDataPointers.remove(this);
 #ifndef QT_MAC_NO_QUICKDRAW
     macQDDisposeAlpha();
     if (qd_data) {
@@ -580,6 +641,7 @@ void QMacPixmapData::macCreateCGImageRef()
     QCFType<CGDataProviderRef> provider = CGDataProviderCreateWithData(this,
                                                               pixels, bytesPerRow * h,
                                                               qt_mac_cgimage_data_free);
+    validDataPointers.insert(this);
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
     uint cgflags = kCGImageAlphaPremultipliedFirst;
 #ifdef kCGBitmapByteOrder32Host //only needed because CGImage.h added symbols in the minor version
@@ -730,7 +792,7 @@ static PtrglReadPixels ptrglReadPixels = 0;
 static bool resolveOpenGLSymbols()
 {
     if (ptrCGLChoosePixelFormat == 0) {
-        QLibrary library(QLatin1String("/System/Library/Frameworks/OpenGL.framework/OpenGl"));
+        QLibrary library(QLatin1String("/System/Library/Frameworks/OpenGL.framework/OpenGL"));
         ptrCGLChoosePixelFormat = (PtrCGLChoosePixelFormat)(library.resolve("CGLChoosePixelFormat"));
         ptrCGLClearDrawable = (PtrCGLClearDrawable)(library.resolve("CGLClearDrawable"));
         ptrCGLCreateContext = (PtrCGLCreateContext)(library.resolve("CGLCreateContext"));
@@ -908,7 +970,7 @@ static QPixmap qt_mac_grabScreenRect(const QRect &rect)
     }
 }
 
-#ifndef Q_WS_MAC64 // no QuickDraw in 64-bit mode
+#ifndef QT_MAC_USE_COCOA // no QuickDraw in 64-bit mode
 static QPixmap qt_mac_grabScreenRect_10_3(int x, int y, int w, int h, QWidget *widget)
 {
     QPixmap pm = QPixmap(w, h);
@@ -942,9 +1004,11 @@ QPixmap QPixmap::grabWindow(WId window, int x, int y, int w, int h)
     if(h == -1)
         h = widget->height() - y;
 
-    QRect rect(widget->x() + x, widget->y() + y, w, h);
+    QPoint globalCoord(0, 0);
+    globalCoord = widget->mapToGlobal(globalCoord);
+    QRect rect(globalCoord.x() + x, globalCoord.y() + y, w, h);
 
-#ifdef Q_WS_MAC64
+#ifdef QT_MAC_USE_COCOA
     return qt_mac_grabScreenRect(rect);
 #else
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
@@ -1031,12 +1095,17 @@ Qt::HANDLE QPixmap::macQDAlphaHandle() const
 
 Qt::HANDLE QPixmap::macCGHandle() const
 {
-    QMacPixmapData *d = static_cast<QMacPixmapData*>(data);
-    if (!d->cg_data)
-        d->macCreateCGImageRef();
-    CGImageRef ret = d->cg_data;
-    CGImageRetain(ret);
-    return ret;
+    if (data->classId() == QPixmapData::MacClass) {
+        QMacPixmapData *d = static_cast<QMacPixmapData *>(data);
+        if (!d->cg_data)
+            d->macCreateCGImageRef();
+        CGImageRef ret = d->cg_data;
+        CGImageRetain(ret);
+        return ret;
+    } else if (data->classId() == QPixmapData::RasterClass) {
+        return qt_mac_image_to_cgimage(static_cast<QRasterPixmapData *>(data)->image);
+    }
+    return 0;
 }
 
 bool QMacPixmapData::hasAlphaChannel() const
@@ -1075,12 +1144,9 @@ CGImageRef qt_mac_create_imagemask(const QPixmap &pixmap, const QRectF &sr)
     return px->cg_mask;
 }
 
+#ifndef QT_MAC_USE_COCOA
 IconRef qt_mac_create_iconref(const QPixmap &px)
 {
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5) && defined(Q_WS_MAC64)
-# warning "For now --Sam"
-    return 0;
-#endif
     if (px.isNull())
         return 0;
 
@@ -1100,10 +1166,11 @@ IconRef qt_mac_create_iconref(const QPixmap &px)
         };
         for(int i = 0; images[i].mac_type; i++) {
             //get QPixmap data
-            QPixmap scaled_px = px.scaled(images[i].width, images[i].height);
-            QMacPixmapData *scaledData = static_cast<QMacPixmapData*>(scaled_px.data);
-            quint32 *sptr = scaledData->pixels, *srow;
-            const uint sbpr = scaledData->bytesPerRow;
+            QImage scaled_px = px.toImage().scaled(images[i].width, images[i].height);
+
+            quint32 *sptr = (quint32 *) scaled_px.bits();
+            quint32 *srow;
+            uint sbpr = scaled_px.bytesPerLine();
 
             //get Handle data
             const int dbpr = images[i].width * (images[i].depth/8);
@@ -1156,6 +1223,7 @@ IconRef qt_mac_create_iconref(const QPixmap &px)
     return ret;
 
 }
+#endif
 
 QPixmap qt_mac_convert_iconref(const IconRef icon, int width, int height)
 {
@@ -1255,7 +1323,7 @@ QPixmap QPixmap::fromMacCGImageRef(CGImageRef image)
     QPixmap ret(w, h);
     CGRect rect = CGRectMake(0, 0, w, h);
     CGContextRef ctx = qt_mac_cg_context(&ret);
-    HIViewDrawCGImage(ctx, &rect, image);
+    qt_mac_drawCGImage(ctx, &rect, image);
     CGContextRelease(ctx);
     return ret;
 }

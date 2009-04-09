@@ -26,6 +26,9 @@
     <file>images/plus-16.png</file>
     <file>images/minus-16.png</file>
     <file>images/prefix-add.png</file>
+    <file>images/downplus.png</file>
+    <file>images/leveldown.png</file>
+    <file>images/levelup.png</file>
     <file>images/mac/adjustsize.png</file>
     <file>images/mac/widgettool.png</file>
     <file>images/mac/signalslottool.png</file>
@@ -68,12 +71,15 @@
     <file>images/dropdownbutton.png</file>
     <file>images/widgets/calendarwidget.png</file>
     <file>images/widgets/checkbox.png</file>
-    <file>images/widgets/commandlinkbutton.png</file>
     <file>images/widgets/columnview.png</file>
     <file>images/widgets/combobox.png</file>
+    <file>images/widgets/commandlinkbutton.png</file>
+    <file>images/widgets/dateedit.png</file>
     <file>images/widgets/datetimeedit.png</file>
     <file>images/widgets/dial.png</file>
     <file>images/widgets/dialogbuttonbox.png</file>
+    <file>images/widgets/dockwidget.png</file>
+    <file>images/widgets/doublespinbox.png</file>
     <file>images/widgets/fontcombobox.png</file>
     <file>images/widgets/frame.png</file>
     <file>images/widgets/graphicsview.png</file>
@@ -84,10 +90,11 @@
     <file>images/widgets/label.png</file>
     <file>images/widgets/lcdnumber.png</file>
     <file>images/widgets/line.png</file>
-    <file>images/widgets/vline.png</file>
     <file>images/widgets/lineedit.png</file>
     <file>images/widgets/listbox.png</file>
     <file>images/widgets/listview.png</file>
+    <file>images/widgets/mdiarea.png</file>
+    <file>images/widgets/plaintextedit.png</file>
     <file>images/widgets/progress.png</file>
     <file>images/widgets/pushbutton.png</file>
     <file>images/widgets/radiobutton.png</file>
@@ -97,16 +104,17 @@
     <file>images/widgets/table.png</file>
     <file>images/widgets/tabwidget.png</file>
     <file>images/widgets/textedit.png</file>
+    <file>images/widgets/timeedit.png</file>
     <file>images/widgets/toolbox.png</file>
     <file>images/widgets/toolbutton.png</file>
+    <file>images/widgets/vline.png</file>
     <file>images/widgets/vscrollbar.png</file>
     <file>images/widgets/vslider.png</file>
     <file>images/widgets/vspacer.png</file>
     <file>images/widgets/widget.png</file>
-    <file>images/widgets/wizard.png</file>
-    <file>images/widgets/mdiarea.png</file>
-    <file>images/widgets/widgetstack.png</file>
     <file>images/widgets/widget.png</file>
+    <file>images/widgets/widgetstack.png</file>
+    <file>images/widgets/wizard.png</file>
     <file>images/win/adjustsize.png</file>
     <file>images/win/widgettool.png</file>
     <file>images/win/signalslottool.png</file>

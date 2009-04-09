@@ -34,7 +34,8 @@ HEADERS += $$PWD/qabstractnodetest_p.h              \
            $$PWD/qschematype_p.h                    \
            $$PWD/qsequencetype_p.h                  \
            $$PWD/qtypechecker_p.h                   \
-           $$PWD/quntyped_p.h
+           $$PWD/quntyped_p.h                       \
+           $$PWD/qxsltnodetest_p.h
 
 SOURCES += $$PWD/qabstractnodetest.cpp            \
            $$PWD/qanyitemtype.cpp                 \
@@ -65,4 +66,5 @@ SOURCES += $$PWD/qabstractnodetest.cpp            \
            $$PWD/qschematypefactory.cpp           \
            $$PWD/qsequencetype.cpp                \
            $$PWD/qtypechecker.cpp                 \
-           $$PWD/quntyped.cpp
+           $$PWD/quntyped.cpp                     \
+           $$PWD/qxsltnodetest.cpp

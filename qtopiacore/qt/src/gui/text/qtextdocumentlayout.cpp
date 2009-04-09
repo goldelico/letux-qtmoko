@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,6 +59,7 @@
 #include <limits.h>
 #include <qstyle.h>
 #include <qbasictimer.h>
+#include "private/qfunctions_p.h"
 
 // #define LAYOUT_DEBUG
 
@@ -386,12 +391,12 @@ struct QCheckPoint
 };
 Q_DECLARE_TYPEINFO(QCheckPoint, Q_PRIMITIVE_TYPE);
 
-static bool operator<(const QCheckPoint &checkPoint, QFixed y)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QCheckPoint &checkPoint, QFixed y)
 {
     return checkPoint.y < y;
 }
 
-static bool operator<(const QCheckPoint &checkPoint, int pos)
+Q_STATIC_GLOBAL_OPERATOR bool operator<(const QCheckPoint &checkPoint, int pos)
 {
     return checkPoint.positionInFrame < pos;
 }
@@ -429,6 +434,8 @@ public:
     int cursorWidth;
 
     QSizeF lastReportedSize;
+    QRectF viewportRect;
+    QRectF clipRect;
 
     mutable int currentLazyLayoutPosition;
     mutable int lazyLayoutStepSize;
@@ -448,7 +455,7 @@ public:
     void drawFlow(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
                   QTextFrame::Iterator it, const QList<QTextFrame *> &floats, QTextBlock *cursorBlockNeedingRepaint) const;
     void drawBlock(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
-                   QTextBlock bl) const;
+                   QTextBlock bl, bool inRootFrame) const;
     void drawListItem(const QPointF &offset, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &context,
                       QTextBlock bl, const QTextCharFormat *selectionFormat) const;
     void drawTableCell(const QRectF &cellRect, QPainter *painter, const QAbstractTextDocumentLayout::PaintContext &cell_context,
@@ -994,7 +1001,8 @@ void QTextDocumentLayoutPrivate::drawFrame(const QPointF &offset, QPainter *pain
 
                     cellRect.translate(off.x(), headerOffset);
                     // we need to account for the cell border in the clipping test
-                    if (cell_context.clip.isValid() && !cellRect.adjusted(1 - border, 1 - border, border, border).intersects(cell_context.clip))
+                    int leftAdjust = qMin(qreal(0), 1 - border);
+                    if (cell_context.clip.isValid() && !cellRect.adjusted(leftAdjust, leftAdjust, border, border).intersects(cell_context.clip))
                         continue;
 
                     drawTableCell(cellRect, painter, cell_context, table, td, r, c, &cursorBlockNeedingRepaint,
@@ -1035,7 +1043,8 @@ void QTextDocumentLayoutPrivate::drawFrame(const QPointF &offset, QPainter *pain
 
                 cellRect.translate(off);
                 // we need to account for the cell border in the clipping test
-                if (cell_context.clip.isValid() && !cellRect.adjusted(1 - border, 1 - border, border, border).intersects(cell_context.clip))
+                int leftAdjust = qMin(qreal(0), 1 - border);
+                if (cell_context.clip.isValid() && !cellRect.adjusted(leftAdjust, leftAdjust, border, border).intersects(cell_context.clip))
                     continue;
 
                 drawTableCell(cellRect, painter, cell_context, table, td, r, c, &cursorBlockNeedingRepaint,
@@ -1204,7 +1213,7 @@ void QTextDocumentLayoutPrivate::drawFlow(const QPointF &offset, QPainter *paint
             QAbstractTextDocumentLayout::PaintContext pc = context;
             if (isEmptyBlockAfterTable(it.currentBlock(), previousFrame))
                 pc.selections.clear();
-            drawBlock(offset, painter, pc, it.currentBlock());
+            drawBlock(offset, painter, pc, it.currentBlock(), inRootFrame);
         }
 
         // when entering a table and the previous block is empty
@@ -1241,7 +1250,7 @@ void QTextDocumentLayoutPrivate::drawFlow(const QPointF &offset, QPainter *paint
 
 void QTextDocumentLayoutPrivate::drawBlock(const QPointF &offset, QPainter *painter,
                                            const QAbstractTextDocumentLayout::PaintContext &context,
-                                           QTextBlock bl) const
+                                           QTextBlock bl, bool inRootFrame) const
 {
     const QTextLayout *tl = bl.layout();
     QRectF r = tl->boundingRect();
@@ -1253,8 +1262,19 @@ void QTextDocumentLayoutPrivate::drawBlock(const QPointF &offset, QPainter *pain
     QTextBlockFormat blockFormat = bl.blockFormat();
 
     QBrush bg = blockFormat.background();
-    if (bg != Qt::NoBrush)
-        fillBackground(painter, r, bg, r.topLeft());
+    if (bg != Qt::NoBrush) {
+        QRectF rect = r;
+
+        // extend the background rectangle if we're in the root frame with NoWrap,
+        // as the rect of the text block will then be only the width of the text
+        // instead of the full page width
+        if (inRootFrame && document->pageSize().width() <= 0) {
+            const QTextFrameData *fd = data(document->rootFrame());
+            rect.setRight((fd->size.width - fd->rightMargin).toReal());
+        }
+
+        fillBackground(painter, rect, bg, r.topLeft());
+    }
 
     QVector<QTextLayout::FormatRange> selections;
     int blpos = bl.position();
@@ -1295,7 +1315,7 @@ void QTextDocumentLayoutPrivate::drawBlock(const QPointF &offset, QPainter *pain
     QPen oldPen = painter->pen();
     painter->setPen(context.palette.color(QPalette::Text));
 
-    tl->draw(painter, offset, selections, context.clip);
+    tl->draw(painter, offset, selections, context.clip.isValid() ? (context.clip & clipRect) : clipRect);
 
     if ((context.cursorPosition >= blpos && context.cursorPosition < blpos + bllen)
         || (context.cursorPosition < -1 && !tl->preeditAreaText().isEmpty())) {
@@ -2496,9 +2516,15 @@ void QTextDocumentLayoutPrivate::layoutBlock(const QTextBlock &bl, int blockPosi
     if (blockFormat.hasProperty(QTextFormat::LayoutDirection))
         dir = blockFormat.layoutDirection();
 
+    QFixed extraMargin;
+    if (docPrivate->defaultTextOption.flags() & QTextOption::AddSpaceForLineAndParagraphSeparators) {
+        QFontMetricsF fm(bl.charFormat().font());
+        extraMargin = QFixed::fromReal(fm.width(QChar(QChar(0x21B5))));
+    }
+
     const QFixed indent = this->blockIndent(blockFormat);
-    const QFixed totalLeftMargin = QFixed::fromReal(blockFormat.leftMargin()) + (dir == Qt::RightToLeft ? 0 : indent);
-    const QFixed totalRightMargin = QFixed::fromReal(blockFormat.rightMargin()) + (dir == Qt::RightToLeft ? indent : 0);
+    const QFixed totalLeftMargin = QFixed::fromReal(blockFormat.leftMargin()) + (dir == Qt::RightToLeft ? extraMargin : indent);
+    const QFixed totalRightMargin = QFixed::fromReal(blockFormat.rightMargin()) + (dir == Qt::RightToLeft ? indent : extraMargin);
 
     const QPointF oldPosition = tl->position();
     tl->setPosition(QPointF(layoutStruct->x_left.toReal(), layoutStruct->y.toReal()));
@@ -2734,14 +2760,34 @@ void QTextDocumentLayout::draw(QPainter *painter, const PaintContext &context)
 {
     Q_D(QTextDocumentLayout);
     QTextFrame *frame = d->document->rootFrame();
-    if(data(frame)->sizeDirty)
+    QTextFrameData *fd = data(frame);
+
+    if(fd->sizeDirty)
         return;
+
     if (context.clip.isValid()) {
         d->ensureLayouted(QFixed::fromReal(context.clip.bottom()));
     } else {
         d->ensureLayoutFinished();
     }
+
+    QFixed width = fd->size.width;
+    if (d->document->pageSize().width() == 0 && d->viewportRect.isValid()) {
+        // we're in NoWrap mode, meaning the frame should expand to the viewport
+        // so that backgrounds are drawn correctly
+        fd->size.width = qMax(width, QFixed::fromReal(d->viewportRect.right()));
+    }
+
+    // Make sure we conform to the root frames bounds when drawing.
+    d->clipRect = QRectF(fd->position.toPointF(), fd->size.toSizeF()).adjusted(fd->leftMargin.toReal(), 0, -fd->rightMargin.toReal(), 0);
     d->drawFrame(QPointF(), painter, context, frame);
+    fd->size.width = width;
+}
+
+void QTextDocumentLayout::setViewport(const QRectF &viewport)
+{
+    Q_D(QTextDocumentLayout);
+    d->viewportRect = viewport;
 }
 
 static void markFrames(QTextFrame *current, int from, int oldLength, int length)
@@ -2911,10 +2957,10 @@ void QTextDocumentLayout::resizeInlineObject(QTextInlineObject item, int posInDo
     item.setWidth(inlineSize.width());
     if (f.verticalAlignment() == QTextCharFormat::AlignMiddle) {
         item.setDescent(inlineSize.height() / 2);
-        item.setAscent(inlineSize.height() / 2);
+        item.setAscent(inlineSize.height() / 2 - 1);
     } else {
         item.setDescent(0);
-        item.setAscent(inlineSize.height());
+        item.setAscent(inlineSize.height() - 1);
     }
 }
 

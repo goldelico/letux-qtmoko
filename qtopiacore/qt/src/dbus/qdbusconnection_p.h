@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -80,6 +84,7 @@ class QDBusInterfacePrivate;
 struct QDBusMetaObject;
 class QDBusAbstractInterface;
 class QDBusConnectionInterface;
+class QDBusPendingCallPrivate;
 
 class QDBusErrorInternal
 {
@@ -144,6 +149,8 @@ public:
     // typedefs
     typedef QMultiHash<int, Watcher> WatcherHash;
     typedef QHash<int, DBusTimeout *> TimeoutHash;
+    typedef QList<QPair<DBusTimeout *, int> > PendingTimeoutList;
+
     typedef QMultiHash<QString, SignalHook> SignalHookHash;
     typedef QHash<QString, QDBusMetaObject* > MetaObjectHash;
     typedef QHash<QByteArray, int> MatchRefCountHash;
@@ -165,6 +172,7 @@ public:
     int send(const QDBusMessage &message);
     QDBusMessage sendWithReply(const QDBusMessage &message, int mode, int timeout = -1);
     QDBusMessage sendWithReplyLocal(const QDBusMessage &message);
+    QDBusPendingCallPrivate *sendWithReplyAsync(const QDBusMessage &message, int timeout = -1);
     int sendWithReplyAsync(const QDBusMessage &message, QObject *receiver,
                            const char *returnMethod, const char *errorMethod, int timeout = -1);
     void connectSignal(const QString &key, const SignalHook &hook);
@@ -178,6 +186,7 @@ public:
                          QDBusAbstractInterface *receiver, const char *signal);
 
     bool handleMessage(const QDBusMessage &msg);
+    void waitForFinished(QDBusPendingCallPrivate *pcall);
 
     QDBusMetaObject *findMetaObject(const QString &service, const QString &path,
                                     const QString &interface, QDBusError &error);
@@ -202,8 +211,6 @@ private:
     void activateObject(ObjectTreeNode &node, const QDBusMessage &msg, int pathStartPos);
     bool activateInternalFilters(const ObjectTreeNode &node, const QDBusMessage &msg);
     bool activateCall(QObject *object, int flags, const QDBusMessage &msg);
-    QDBusCallDeliveryEvent *prepareReply(QObject *object, int idx, const QList<int> &metaTypes,
-                                         const QDBusMessage &msg);
 
     void sendError(const QDBusMessage &msg, QDBusError::ErrorType code);
     void deliverCall(QObject *object, int flags, const QDBusMessage &msg,
@@ -239,12 +246,17 @@ public:
     // members accessed in unlocked mode (except for deletion)
     // connection and server provide their own locking mechanisms
     // busService doesn't have state to be changed
-    // watchers and timeouts are accessed only in the object's owning thread
     DBusConnection *connection;
     DBusServer *server;
     QDBusConnectionInterface *busService;
+
+    // watchers and timeouts are accessed from any thread
+    // but the corresponding timer and QSocketNotifier must be handled
+    // only in the object's thread
+    QMutex watchAndTimeoutLock;
     WatcherHash watchers;
     TimeoutHash timeouts;
+    PendingTimeoutList timeoutsPendingAdd;
 
     // members accessed through a lock
     QMutex dispatchLock;
@@ -269,7 +281,10 @@ public:
                             QObject *receiver, const char *signal, int minMIdx,
                             bool buildSignature);
     static DBusHandlerResult messageFilter(DBusConnection *, DBusMessage *, void *);
-    static void messageResultReceived(DBusPendingCall *, void *);
+    static QDBusCallDeliveryEvent *prepareReply(QDBusConnectionPrivate *target, QObject *object,
+                                                int idx, const QList<int> &metaTypes,
+                                                const QDBusMessage &msg);
+    static void processFinishedCall(QDBusPendingCallPrivate *call);
 
     static QDBusConnectionPrivate *d(const QDBusConnection& q) { return q.d; }
     static QDBusConnection q(QDBusConnectionPrivate *connection) { return QDBusConnection(connection); }
@@ -292,6 +307,8 @@ extern QDBusMessage qDBusPropertyGet(const QDBusConnectionPrivate::ObjectTreeNod
                                      const QDBusMessage &msg);
 extern QDBusMessage qDBusPropertySet(const QDBusConnectionPrivate::ObjectTreeNode &node,
                                      const QDBusMessage &msg);
+extern QDBusMessage qDBusPropertyGetAll(const QDBusConnectionPrivate::ObjectTreeNode &node,
+                                        const QDBusMessage &msg);
 
 // in qdbusxmlgenerator.cpp
 extern QString qDBusInterfaceFromMetaObject(const QMetaObject *mo);

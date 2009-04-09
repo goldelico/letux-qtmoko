@@ -27,41 +27,15 @@
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
+#include "Geolocation.h"
 #include "Language.h"
 #include "MimeTypeArray.h"
+#include "Page.h"
 #include "PlatformString.h"
 #include "PluginArray.h"
 #include "PluginData.h"
+#include "ScriptController.h"
 #include "Settings.h"
-
-#ifndef WEBCORE_NAVIGATOR_PLATFORM
-#if PLATFORM(MAC) && PLATFORM(PPC)
-#define WEBCORE_NAVIGATOR_PLATFORM "MacPPC"
-#elif PLATFORM(MAC) && PLATFORM(X86)
-#define WEBCORE_NAVIGATOR_PLATFORM "MacIntel"
-#elif PLATFORM(WIN_OS)
-#define WEBCORE_NAVIGATOR_PLATFORM "Win32"
-#else
-#define WEBCORE_NAVIGATOR_PLATFORM ""
-#endif
-#endif // ifndef WEBCORE_NAVIGATOR_PLATFORM
-
-#ifndef WEBCORE_NAVIGATOR_PRODUCT
-#define WEBCORE_NAVIGATOR_PRODUCT "Gecko"
-#endif // ifndef WEBCORE_NAVIGATOR_PRODUCT
-
-#ifndef WEBCORE_NAVIGATOR_PRODUCT_SUB
-#define WEBCORE_NAVIGATOR_PRODUCT_SUB "20030107"
-#endif // ifndef WEBCORE_NAVIGATOR_PRODUCT_SUB
-
-#ifndef WEBCORE_NAVIGATOR_VENDOR
-#define WEBCORE_NAVIGATOR_VENDOR "Apple Computer, Inc."
-#endif // ifndef WEBCORE_NAVIGATOR_VENDOR
-
-#ifndef WEBCORE_NAVIGATOR_VENDOR_SUB
-#define WEBCORE_NAVIGATOR_VENDOR_SUB ""
-#endif // ifndef WEBCORE_NAVIGATOR_VENDOR_SUB
-
 
 namespace WebCore {
 
@@ -85,26 +59,38 @@ void Navigator::disconnectFrame()
         m_mimeTypes->disconnectFrame();
         m_mimeTypes = 0;
     }
+    if (m_geolocation) {
+        m_geolocation->disconnectFrame();
+        m_geolocation = 0;
+    }
     m_frame = 0;
 }
 
-String Navigator::appCodeName() const
+// If this function returns true, we need to hide the substring "4." that would otherwise
+// appear in the appVersion string. This is to avoid problems with old versions of a
+// library called OpenCube QuickMenu, which as of this writing is still being used on
+// sites such as nwa.com -- the library thinks Safari is Netscape 4 if we don't do this!
+static bool shouldHideFourDot(Frame* frame)
 {
-    return "Mozilla";
-}
-
-String Navigator::appName() const
-{
-    return "Netscape";
+    const String* sourceURL = frame->script()->sourceURL();
+    if (!sourceURL)
+        return false;
+    if (!(sourceURL->endsWith("/dqm_script.js") || sourceURL->endsWith("/dqm_loader.js")))
+        return false;
+    Settings* settings = frame->settings();
+    if (!settings)
+        return false;
+    return settings->needsSiteSpecificQuirks();
 }
 
 String Navigator::appVersion() const
 {
     if (!m_frame)
         return String();
-    // Version is everything in the user agent string past the "Mozilla/" prefix.
-    const String& userAgent = m_frame->loader()->userAgent(m_frame->document() ? m_frame->document()->URL() : KURL());
-    return userAgent.substring(userAgent.find('/') + 1);
+    String appVersion = NavigatorBase::appVersion();
+    if (shouldHideFourDot(m_frame))
+        appVersion.replace("4.", "4_");
+    return appVersion;
 }
 
 String Navigator::language() const
@@ -116,50 +102,28 @@ String Navigator::userAgent() const
 {
     if (!m_frame)
         return String();
-    return m_frame->loader()->userAgent(m_frame->document() ? m_frame->document()->URL() : KURL());
-}
-
-String Navigator::platform() const
-{
-    return WEBCORE_NAVIGATOR_PLATFORM;
+    return m_frame->loader()->userAgent(m_frame->document() ? m_frame->document()->url() : KURL());
 }
 
 PluginArray* Navigator::plugins() const
 {
     if (!m_plugins)
-        m_plugins = new PluginArray(m_frame);
+        m_plugins = PluginArray::create(m_frame);
     return m_plugins.get();
 }
 
 MimeTypeArray* Navigator::mimeTypes() const
 {
     if (!m_mimeTypes)
-        m_mimeTypes = new MimeTypeArray(m_frame);
+        m_mimeTypes = MimeTypeArray::create(m_frame);
     return m_mimeTypes.get();
-}
-
-String Navigator::product() const
-{
-    return WEBCORE_NAVIGATOR_PRODUCT;
-}
-
-String Navigator::productSub() const
-{
-    return WEBCORE_NAVIGATOR_PRODUCT_SUB;
-}
-
-String Navigator::vendor() const
-{
-    return WEBCORE_NAVIGATOR_VENDOR;
-}
-
-String Navigator::vendorSub() const
-{
-    return WEBCORE_NAVIGATOR_VENDOR_SUB;
 }
 
 bool Navigator::cookieEnabled() const
 {
+    if (m_frame->page() && !m_frame->page()->cookieEnabled())
+        return false;
+
     return cookiesEnabled(m_frame->document());
 }
 
@@ -170,4 +134,11 @@ bool Navigator::javaEnabled() const
     return m_frame->settings()->isJavaEnabled();
 }
 
+Geolocation* Navigator::geolocation() const
+{
+    if (!m_geolocation)
+        m_geolocation = Geolocation::create(m_frame);
+    return m_geolocation.get();
+}
+    
 } // namespace WebCore

@@ -24,122 +24,130 @@
 
 #include <wtf/GetPtr.h>
 
+#include "KURL.h"
 #include "Notation.h"
-#include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSNotation)
+
 /* Hash table */
 
-static const HashEntry JSNotationTableEntries[] =
+static const HashTableValue JSNotationTableValues[4] =
 {
-    { "publicId", JSNotation::PublicIdAttrNum, DontDelete|ReadOnly, 0, &JSNotationTableEntries[3] },
-    { "systemId", JSNotation::SystemIdAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSNotation::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "publicId", DontDelete|ReadOnly, (intptr_t)jsNotationPublicId, (intptr_t)0 },
+    { "systemId", DontDelete|ReadOnly, (intptr_t)jsNotationSystemId, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsNotationConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNotationTable = 
-{
-    2, 4, JSNotationTableEntries, 3
-};
+static const HashTable JSNotationTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSNotationTableValues, 0 };
+#else
+    { 9, 7, JSNotationTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSNotationConstructorTableEntries[] =
+static const HashTableValue JSNotationConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNotationConstructorTable = 
-{
-    2, 1, JSNotationConstructorTableEntries, 1
-};
+static const HashTable JSNotationConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSNotationConstructorTableValues, 0 };
+#else
+    { 1, 0, JSNotationConstructorTableValues, 0 };
+#endif
 
 class JSNotationConstructor : public DOMObject {
 public:
     JSNotationConstructor(ExecState* exec)
+        : DOMObject(JSNotationConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSNotationPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSNotationConstructor::info = { "NotationConstructor", 0, &JSNotationConstructorTable, 0 };
+const ClassInfo JSNotationConstructor::s_info = { "NotationConstructor", 0, &JSNotationConstructorTable, 0 };
 
 bool JSNotationConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSNotationConstructor, DOMObject>(exec, &JSNotationConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSNotationConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSNotationPrototypeTableEntries[] =
+static const HashTableValue JSNotationPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNotationPrototypeTable = 
-{
-    2, 1, JSNotationPrototypeTableEntries, 1
-};
+static const HashTable JSNotationPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSNotationPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSNotationPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSNotationPrototype::info = { "NotationPrototype", 0, &JSNotationPrototypeTable, 0 };
+const ClassInfo JSNotationPrototype::s_info = { "NotationPrototype", 0, &JSNotationPrototypeTable, 0 };
 
 JSObject* JSNotationPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSNotationPrototype>(exec, "[[JSNotation.prototype]]");
+    return getDOMPrototype<JSNotation>(exec);
 }
 
-const ClassInfo JSNotation::info = { "Notation", &JSNode::info, &JSNotationTable, 0 };
+const ClassInfo JSNotation::s_info = { "Notation", &JSNode::s_info, &JSNotationTable, 0 };
 
-JSNotation::JSNotation(ExecState* exec, Notation* impl)
-    : JSNode(exec, impl)
+JSNotation::JSNotation(PassRefPtr<Structure> structure, PassRefPtr<Notation> impl)
+    : JSNode(structure, impl)
 {
-    setPrototype(JSNotationPrototype::self(exec));
+}
+
+JSObject* JSNotation::createPrototype(ExecState* exec)
+{
+    return new (exec) JSNotationPrototype(JSNotationPrototype::createStructure(JSNodePrototype::self(exec)));
 }
 
 bool JSNotation::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSNotation, JSNode>(exec, &JSNotationTable, this, propertyName, slot);
+    return getStaticValueSlot<JSNotation, Base>(exec, &JSNotationTable, this, propertyName, slot);
 }
 
-JSValue* JSNotation::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsNotationPublicId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case PublicIdAttrNum: {
-        Notation* imp = static_cast<Notation*>(impl());
-
-        return jsStringOrNull(imp->publicId());
-    }
-    case SystemIdAttrNum: {
-        Notation* imp = static_cast<Notation*>(impl());
-
-        return jsStringOrNull(imp->systemId());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Notation* imp = static_cast<Notation*>(static_cast<JSNotation*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->publicId());
 }
 
-JSValue* JSNotation::getConstructor(ExecState* exec)
+JSValuePtr jsNotationSystemId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSNotationConstructor>(exec, "[[Notation.constructor]]");
+    Notation* imp = static_cast<Notation*>(static_cast<JSNotation*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->systemId());
 }
+
+JSValuePtr jsNotationConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSNotation*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSNotation::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSNotationConstructor>(exec);
+}
+
 
 }

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -63,10 +67,36 @@
 #include <private/qunicodetables_p.h>
 
 #include <private/qt_x11_p.h>
+#include <private/qpixmap_x11_p.h>
 #include "qx11info_x11.h"
 #include "qfontengine_x11_p.h"
 
 #include <limits.h>
+
+#include <ft2build.h>
+#if defined(FT_LCD_FILTER_H)
+#include FT_LCD_FILTER_H
+#endif
+
+#if defined(FC_LCD_FILTER)
+
+#ifndef FC_LCD_FILTER_NONE
+#define FC_LCD_FILTER_NONE FC_LCD_NONE
+#endif
+
+#ifndef FC_LCD_FILTER_DEFAULT
+#define FC_LCD_FILTER_DEFAULT FC_LCD_DEFAULT
+#endif
+
+#ifndef FC_LCD_FILTER_LIGHT
+#define FC_LCD_FILTER_LIGHT FC_LCD_LIGHT
+#endif
+
+#ifndef FC_LCD_FILTER_LEGACY
+#define FC_LCD_FILTER_LEGACY FC_LCD_LEGACY
+#endif
+
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -368,79 +398,80 @@ bool QFontEngineXLFD::stringToCMap(const QChar *s, int len, QGlyphLayout *glyphs
             // double byte encoding
             const uchar *data = (const uchar *)ba.constData();
             for (int i = 0; i < len; i++) {
-                glyphs[i].glyph = ((ushort)data[0] << 8) + data[1];
+                glyphs->glyphs[i] = ((ushort)data[0] << 8) + data[1];
                 data += 2;
             }
         } else {
             const uchar *data = (const uchar *)ba.constData();
             for (int i = 0; i < len; i++)
-                glyphs[i].glyph = (ushort)data[i];
+                glyphs->glyphs[i] = (ushort)data[i];
         }
     } else {
-        QGlyphLayout *g = glyphs + len;
+        int i = len;
         const QChar *c = str + len;
         if (mirrored) {
             while (c != str)
-                (--g)->glyph = (--c)->unicode() == 0xa0 ? 0x20 : QChar::mirroredChar(c->unicode());
+                glyphs->glyphs[--i] = (--c)->unicode() == 0xa0 ? 0x20 : QChar::mirroredChar(c->unicode());
         } else {
             while (c != str)
-                (--g)->glyph = (--c)->unicode() == 0xa0 ? 0x20 : c->unicode();
+                glyphs->glyphs[--i] = (--c)->unicode() == 0xa0 ? 0x20 : c->unicode();
         }
     }
     *nglyphs = len;
+    glyphs->numGlyphs = len;
 
     if (!(flags & QTextEngine::GlyphIndicesOnly))
-        recalcAdvances(len, glyphs, flags);
+        recalcAdvances(glyphs, flags);
     return true;
 }
 
-void QFontEngineXLFD::recalcAdvances(int len, QGlyphLayout *glyphs, QTextEngine::ShaperFlags /*flags*/) const
+void QFontEngineXLFD::recalcAdvances(QGlyphLayout *glyphs, QTextEngine::ShaperFlags /*flags*/) const
 {
-    QGlyphLayout *g = glyphs + len;
+    int i = glyphs->numGlyphs;
     XCharStruct *xcs;
     // inlined for better perfomance
     if (!_fs->per_char) {
         xcs = &_fs->min_bounds;
-        while (g != glyphs) {
-            --g;
-            const unsigned char r = g->glyph >> 8;
-            const unsigned char c = g->glyph & 0xff;
+        while (i != 0) {
+            --i;
+            const unsigned char r = glyphs->glyphs[i] >> 8;
+            const unsigned char c = glyphs->glyphs[i] & 0xff;
             if (r >= _fs->min_byte1 &&
                 r <= _fs->max_byte1 &&
                 c >= _fs->min_char_or_byte2 &&
                 c <= _fs->max_char_or_byte2) {
-                g->advance.x = xcs->width;
+                glyphs->advances_x[i] = xcs->width;
             } else {
-                g->glyph = 0;
+                glyphs->glyphs[i] = 0;
             }
         }
     }
     else if (!_fs->max_byte1) {
         XCharStruct *base = _fs->per_char - _fs->min_char_or_byte2;
-        while (g != glyphs) {
-            unsigned int gl = (--g)->glyph;
+        while (i != 0) {
+            unsigned int gl = glyphs->glyphs[--i];
             xcs = (gl >= _fs->min_char_or_byte2 && gl <= _fs->max_char_or_byte2) ?
                   base + gl : 0;
             if (!xcs || (!xcs->width && !xcs->ascent && !xcs->descent)) {
-                g->glyph = 0;
+                glyphs->glyphs[i] = 0;
             } else {
-                g->advance.x = xcs->width;
+                glyphs->advances_x[i] = xcs->width;
             }
         }
     }
     else {
-        while (g != glyphs) {
-            xcs = charStruct(_fs, (--g)->glyph);
+        while (i != 0) {
+            xcs = charStruct(_fs, glyphs->glyphs[--i]);
             if (!xcs) {
-                g->glyph = 0;
+                glyphs->glyphs[i] = 0;
             } else {
-                g->advance.x = xcs->width;
+                glyphs->advances_x[i] = xcs->width;
             }
         }
     }
 }
 
-glyph_metrics_t QFontEngineXLFD::boundingBox(const QGlyphLayout *glyphs, int numGlyphs)
+glyph_metrics_t QFontEngineXLFD::boundingBox(const QGlyphLayout &glyphs)
 {
     int i;
 
@@ -450,16 +481,16 @@ glyph_metrics_t QFontEngineXLFD::boundingBox(const QGlyphLayout *glyphs, int num
     overall.height = ascent() + descent() + 1;
     QFixed ymax;
     QFixed xmax;
-    for (i = 0; i < numGlyphs; i++) {
-        XCharStruct *xcs = charStruct(_fs, glyphs[i].glyph);
+    for (i = 0; i < glyphs.numGlyphs; i++) {
+        XCharStruct *xcs = charStruct(_fs, glyphs.glyphs[i]);
         if (xcs) {
-            QFixed x = overall.xoff + glyphs[i].offset.x + xcs->lbearing;
-            QFixed y = overall.yoff + glyphs[i].offset.y - xcs->ascent;
+            QFixed x = overall.xoff + glyphs.offsets[i].x + xcs->lbearing;
+            QFixed y = overall.yoff + glyphs.offsets[i].y - xcs->ascent;
             overall.x = qMin(overall.x, x);
             overall.y = qMin(overall.y, y);
-            xmax = qMax(xmax, overall.xoff + glyphs[i].offset.x + xcs->rbearing);
+            xmax = qMax(xmax, overall.xoff + glyphs.offsets[i].x + xcs->rbearing);
             ymax = qMax(ymax, y + xcs->ascent + xcs->descent);
-            overall.xoff += glyphs[i].advance.x;
+            overall.xoff += glyphs.advances_x[i];
         } else {
             QFixed size = _fs->ascent;
             overall.x = qMin(overall.x, overall.xoff);
@@ -582,16 +613,16 @@ const char *QFontEngineXLFD::name() const
 
 bool QFontEngineXLFD::canRender(const QChar *string, int len)
 {
-    QVarLengthArray<QGlyphLayout, 256> glyphs(len);
+    QVarLengthGlyphLayoutArray glyphs(len);
     int nglyphs = len;
-    if (stringToCMap(string, len, glyphs.data(), &nglyphs, 0) == false) {
+    if (stringToCMap(string, len, &glyphs, &nglyphs, 0) == false) {
         glyphs.resize(nglyphs);
-        stringToCMap(string, len, glyphs.data(), &nglyphs, 0);
+        stringToCMap(string, len, &glyphs, &nglyphs, 0);
     }
 
     bool allExist = true;
     for (int i = 0; i < nglyphs; i++) {
-        if (!glyphs[i].glyph || !charStruct(_fs, glyphs[i].glyph)) {
+        if (!glyphs.glyphs[i] || !charStruct(_fs, glyphs.glyphs[i])) {
             allExist = false;
             break;
         }
@@ -600,17 +631,16 @@ bool QFontEngineXLFD::canRender(const QChar *string, int len)
     return allExist;
 }
 
-void QFontEngineXLFD::addOutlineToPath(qreal x, qreal y, const QGlyphLayout *glyphs, int numGlyphs, QPainterPath *path, QTextItem::RenderFlags flags)
+QBitmap QFontEngineXLFD::bitmapForGlyphs(const QGlyphLayout &glyphs, const glyph_metrics_t &metrics, QTextItem::RenderFlags flags)
 {
-    // cannot use QFontEngine::addBitmapFontToPath(), since we don't
-    // have direct access to the glyph bitmaps, so we have to draw
-    // onto a QBitmap, then convert to QImage, then to path
-    glyph_metrics_t metrics = boundingBox(glyphs, numGlyphs);
     int w = metrics.width.toInt();
     int h = metrics.height.toInt();
     if (w <= 0 || h <= 0)
-        return;
-    QBitmap bm(w, h);
+        return QBitmap();
+
+    QPixmapData *data = new QX11PixmapData(QPixmapData::BitmapType);
+    data->resize(w, h);
+    QPixmap bm(data);
     QPainter p(&bm);
     p.fillRect(0, 0, w, h, Qt::color0);
     p.setPen(Qt::color1);
@@ -623,22 +653,34 @@ void QFontEngineXLFD::addOutlineToPath(qreal x, qreal y, const QGlyphLayout *gly
     item.chars = 0;
     item.num_chars = 0;
     item.logClusters = 0;
-    item.glyphs = const_cast<QGlyphLayout *>(glyphs);
-    item.num_glyphs = numGlyphs;
+    item.glyphs = glyphs;
     item.fontEngine = this;
     item.f = 0;
 
     p.drawTextItem(QPointF(-metrics.x.toReal(), item.ascent.toReal()), item);
     p.end();
 
-    QImage image = bm.toImage();
+    return QBitmap(bm);
+}
+
+void QFontEngineXLFD::addOutlineToPath(qreal x, qreal y, const QGlyphLayout &glyphs, QPainterPath *path, QTextItem::RenderFlags flags)
+{
+    // cannot use QFontEngine::addBitmapFontToPath(), since we don't
+    // have direct access to the glyph bitmaps, so we have to draw
+    // onto a QBitmap, then convert to QImage, then to path
+    glyph_metrics_t metrics = boundingBox(glyphs);
+
+    QImage image = bitmapForGlyphs(glyphs, metrics, flags).toImage();
+    if (image.isNull())
+        return;
+
     image = image.convertToFormat(QImage::Format_Mono);
     const uchar *image_data = image.bits();
     uint bpl = image.bytesPerLine();
     // from qfontengine.cpp
     extern void qt_addBitmapToPath(qreal x0, qreal y0, const uchar *image_data,
                                    int bpl, int w, int h, QPainterPath *path);
-    qt_addBitmapToPath(x, y - item.ascent.toReal(), image_data, bpl, w, h, path);
+    qt_addBitmapToPath(x, y + metrics.y.toReal(), image_data, bpl, image.width(), image.height(), path);
 }
 
 QFontEngine::FaceId QFontEngineXLFD::faceId() const
@@ -742,6 +784,43 @@ int QFontEngineXLFD::synthesized() const
     return synth;
 }
 
+QImage QFontEngineXLFD::alphaMapForGlyph(glyph_t glyph)
+{
+    glyph_metrics_t metrics = boundingBox(glyph);
+
+/*
+    printf("a) w=%.2f, h=%.2f, xoff=%.2f, yoff=%.2f, x=%.2f, y=%.2f\n",
+           metrics.width.toReal(),
+           metrics.height.toReal(),
+           metrics.xoff.toReal(),
+           metrics.yoff.toReal(),
+           metrics.x.toReal(),
+           metrics.y.toReal());
+*/
+
+    QGlyphLayoutArray<1> glyphs;
+    glyphs.glyphs[0] = glyph;
+
+    QImage image = bitmapForGlyphs(glyphs, metrics).toImage();
+//image.save(QString::fromLatin1("x11cache-%1.png").arg((int)glyph));
+
+    image = image.convertToFormat(QImage::Format_Indexed8);
+    QVector<QRgb> colors(256);
+    for (int i = 0; i < 256; ++i)
+        colors[i] = qRgba(0, 0, 0, i);
+    image.setColorTable(colors);
+
+    int width = image.width();
+    int height = image.height();
+    for (int y = 0; y < height; ++y) {
+        uchar *bits = image.scanLine(y);
+        for (int x = 0; x < width; ++x)
+            bits[x] = ~(bits[x]-1);
+    }
+
+    return image;
+}
+
 #ifndef QT_NO_FREETYPE
 
 FT_Face QFontEngineXLFD::non_locked_face() const
@@ -797,14 +876,15 @@ static QFontEngine *engineForPattern(FcPattern *pattern, const QFontDef &request
     return fe;
 }
 
-QFontEngineMultiFT::QFontEngineMultiFT(QFontEngine *fe, FcPattern *p, int s, const QFontDef &req)
-    : QFontEngineMulti(2), request(req), pattern(p), fontSet(0), screen(s)
+QFontEngineMultiFT::QFontEngineMultiFT(QFontEngine *fe, FcPattern *matchedPattern, FcPattern *p, int s, const QFontDef &req)
+    : QFontEngineMulti(2), request(req), pattern(p), firstEnginePattern(matchedPattern), fontSet(0), screen(s)
 {
 
     engines[0] = fe;
     engines.at(0)->ref.ref();
     fontDef = engines[0]->fontDef;
     cache_cost = 100;
+    firstFontIndex = 1;
 }
 
 QFontEngineMultiFT::~QFontEngineMultiFT()
@@ -813,6 +893,8 @@ QFontEngineMultiFT::~QFontEngineMultiFT()
     QMutexLocker locker(qt_fontdatabase_mutex());
 
     FcPatternDestroy(pattern);
+    if (firstEnginePattern)
+        FcPatternDestroy(firstEnginePattern);
     if (fontSet)
         FcFontSetDestroy(fontSet);
 }
@@ -841,12 +923,22 @@ void QFontEngineMultiFT::loadEngine(int at)
             engines[at] = fe;
             return;
         }
-        engines.resize(fontSet->nfont);
+
+        if (firstEnginePattern) {
+
+            if (!FcPatternEqual(firstEnginePattern, fontSet->fonts[0]))
+                firstFontIndex = 0;
+
+            FcPatternDestroy(firstEnginePattern);
+            firstEnginePattern = 0;
+        }
+
+        engines.resize(fontSet->nfont + 1 - firstFontIndex);
     }
     Q_ASSERT(at < engines.size());
     Q_ASSERT(engines.at(at) == 0);
 
-    FcPattern *pattern = FcPatternDuplicate(fontSet->fonts[at]);
+    FcPattern *pattern = FcPatternDuplicate(fontSet->fonts[at + firstFontIndex - 1]);
     qt_addPatternProps(pattern, screen, QUnicodeTables::Common, request);
 
     QFontDef fontDef = qt_FcPatternToQFontDef(pattern, this->request);
@@ -859,9 +951,9 @@ void QFontEngineMultiFT::loadEngine(int at)
         FcConfigSubstitute(0, pattern, FcMatchPattern);
         FcDefaultSubstitute(pattern);
         fontEngine = engineForPattern(pattern, request, screen);
-        FcPatternDestroy(pattern);
         QFontCache::instance()->insertEngine(key, fontEngine);
     }
+    FcPatternDestroy(pattern);
     fontEngine->ref.ref();
     engines[at] = fontEngine;
 }
@@ -902,10 +994,9 @@ QFontEngineX11FT::QFontEngineX11FT(FcPattern *pattern, const QFontDef &fd, int s
 
     subpixelType = Subpixel_None;
     if (antialias) {
-        int subpixel = 0;
-        if (FcPatternGetInteger(pattern, FC_RGBA, 0, &subpixel) == FcResultNoMatch
-            && X11->display)
-            subpixel = X11->screens[screen].subpixel;
+        int subpixel = X11->display ? X11->screens[screen].subpixel : FC_RGBA_UNKNOWN;
+        if (subpixel == FC_RGBA_UNKNOWN)
+            (void) FcPatternGetInteger(pattern, FC_RGBA, 0, &subpixel);
         if (!antialias || subpixel == FC_RGBA_UNKNOWN)
             subpixel = FC_RGBA_NONE;
 
@@ -924,10 +1015,21 @@ QFontEngineX11FT::QFontEngineX11FT(FcPattern *pattern, const QFontDef &fd, int s
         int hint_style = 0;
         if (FcPatternGetInteger (pattern, FC_HINT_STYLE, 0, &hint_style) == FcResultNoMatch)
             hint_style = X11->fc_hint_style;
-        if (hint_style == FC_HINT_NONE)
-            default_load_flags |= FT_LOAD_NO_HINTING;
-        else if (hint_style < FC_HINT_FULL)
-            default_load_flags |= FT_LOAD_TARGET_LIGHT;
+
+        switch (hint_style) {
+        case FC_HINT_NONE:
+            default_hint_style = HintNone;
+            break;
+        case FC_HINT_SLIGHT:
+            default_hint_style = HintLight;
+            break;
+        case FC_HINT_MEDIUM:
+            default_hint_style = HintMedium;
+            break;
+        default:
+            default_hint_style = HintFull;
+            break;
+        }
     }
 #endif
 
@@ -941,6 +1043,39 @@ QFontEngineX11FT::QFontEngineX11FT(FcPattern *pattern, const QFontDef &fd, int s
 
         if (autohint)
             default_load_flags |= FT_LOAD_FORCE_AUTOHINT;
+    }
+#endif
+
+#if defined(FC_LCD_FILTER) && defined(FT_LCD_FILTER_H)
+    {
+        int filter = FC_LCD_FILTER_NONE;
+        if (FcPatternGetInteger(pattern, FC_LCD_FILTER, 0, &filter) == FcResultMatch) {
+            switch (filter) {
+            case FC_LCD_FILTER_NONE:
+                lcdFilterType = FT_LCD_FILTER_NONE;
+                break;
+            case FC_LCD_FILTER_DEFAULT:
+                lcdFilterType = FT_LCD_FILTER_DEFAULT;
+                break;
+            case FC_LCD_FILTER_LIGHT:
+                lcdFilterType = FT_LCD_FILTER_LIGHT;
+                break;
+            case FC_LCD_FILTER_LEGACY:
+                lcdFilterType = FT_LCD_FILTER_LEGACY;
+                break;
+            default:
+                // new unknown lcd filter type?!
+                break;
+            }
+        }
+    }
+#endif
+
+#ifdef FC_EMBEDDED_BITMAP
+    {
+        FcBool b;
+        if (FcPatternGetBool(pattern, FC_EMBEDDED_BITMAP, 0, &b) == FcResultMatch)
+            embeddedbitmap = b;
     }
 #endif
 

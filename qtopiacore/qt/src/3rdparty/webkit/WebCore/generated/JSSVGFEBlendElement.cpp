@@ -21,289 +21,275 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEBlendElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEBlendElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEBlendElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEBlendElementTableEntries[] =
+static const HashTableValue JSSVGFEBlendElementTableValues[12] =
 {
-    { "in2", JSSVGFEBlendElement::In2AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFEBlendElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "mode", JSSVGFEBlendElement::ModeAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEBlendElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementTableEntries[11] },
-    { "height", JSSVGFEBlendElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEBlendElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEBlendElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFEBlendElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementTableEntries[12] },
-    { "className", JSSVGFEBlendElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementTableEntries[13] },
-    { "style", JSSVGFEBlendElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementIn1, (intptr_t)0 },
+    { "in2", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementIn2, (intptr_t)0 },
+    { "mode", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementMode, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGFEBlendElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEBlendElementTable = 
+static const HashTable JSSVGFEBlendElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEBlendElementTableValues, 0 };
+#else
+    { 35, 31, JSSVGFEBlendElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGFEBlendElementConstructorTableValues[7] =
 {
-    2, 14, JSSVGFEBlendElementTableEntries, 10
+    { "SVG_FEBLEND_MODE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_NORMAL", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_NORMAL, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_MULTIPLY", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_MULTIPLY, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_SCREEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_SCREEN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_DARKEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_DARKEN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_LIGHTEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_LIGHTEN, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGFEBlendElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFEBlendElementConstructorTableValues, 0 };
+#else
+    { 16, 15, JSSVGFEBlendElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGFEBlendElementConstructor : public DOMObject {
+public:
+    JSSVGFEBlendElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGFEBlendElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGFEBlendElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGFEBlendElementConstructor::s_info = { "SVGFEBlendElementConstructor", 0, &JSSVGFEBlendElementConstructorTable, 0 };
+
+bool JSSVGFEBlendElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGFEBlendElementConstructor, DOMObject>(exec, &JSSVGFEBlendElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEBlendElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEBlendElementPrototypeTableValues[8] =
 {
-    { "SVG_FEBLEND_MODE_NORMAL", WebCore::SVG_FEBLEND_MODE_NORMAL, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementPrototypeTableEntries[6] },
-    { "SVG_FEBLEND_MODE_UNKNOWN", WebCore::SVG_FEBLEND_MODE_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_FEBLEND_MODE_MULTIPLY", WebCore::SVG_FEBLEND_MODE_MULTIPLY, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementPrototypeTableEntries[7] },
-    { "SVG_FEBLEND_MODE_SCREEN", WebCore::SVG_FEBLEND_MODE_SCREEN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FEBLEND_MODE_DARKEN", WebCore::SVG_FEBLEND_MODE_DARKEN, DontDelete|ReadOnly, 0, &JSSVGFEBlendElementPrototypeTableEntries[8] },
-    { "SVG_FEBLEND_MODE_LIGHTEN", WebCore::SVG_FEBLEND_MODE_LIGHTEN, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_FEBLEND_MODE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_UNKNOWN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_NORMAL", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_NORMAL, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_MULTIPLY", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_MULTIPLY, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_SCREEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_SCREEN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_DARKEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_DARKEN, (intptr_t)0 },
+    { "SVG_FEBLEND_MODE_LIGHTEN", DontDelete|ReadOnly, (intptr_t)jsSVGFEBlendElementSVG_FEBLEND_MODE_LIGHTEN, (intptr_t)0 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEBlendElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEBlendElementPrototypeTable = 
-{
-    2, 9, JSSVGFEBlendElementPrototypeTableEntries, 6
-};
+static const HashTable JSSVGFEBlendElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFEBlendElementPrototypeTableValues, 0 };
+#else
+    { 16, 15, JSSVGFEBlendElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEBlendElementPrototype::info = { "SVGFEBlendElementPrototype", 0, &JSSVGFEBlendElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEBlendElementPrototype::s_info = { "SVGFEBlendElementPrototype", 0, &JSSVGFEBlendElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEBlendElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEBlendElementPrototype>(exec, "[[JSSVGFEBlendElement.prototype]]");
+    return getDOMPrototype<JSSVGFEBlendElement>(exec);
 }
 
 bool JSSVGFEBlendElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEBlendElementPrototype, JSObject>(exec, &JSSVGFEBlendElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGFEBlendElementPrototype, JSObject>(exec, &JSSVGFEBlendElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEBlendElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGFEBlendElement::s_info = { "SVGFEBlendElement", &JSSVGElement::s_info, &JSSVGFEBlendElementTable, 0 };
+
+JSSVGFEBlendElement::JSSVGFEBlendElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEBlendElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGFEBlendElement::info = { "SVGFEBlendElement", &JSSVGElement::info, &JSSVGFEBlendElementTable, 0 };
-
-JSSVGFEBlendElement::JSSVGFEBlendElement(ExecState* exec, SVGFEBlendElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGFEBlendElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGFEBlendElementPrototype::self(exec));
+    return new (exec) JSSVGFEBlendElementPrototype(JSSVGFEBlendElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEBlendElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEBlendElement, JSSVGElement>(exec, &JSSVGFEBlendElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEBlendElement, Base>(exec, &JSSVGFEBlendElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEBlendElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEBlendElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementIn2(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in2Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEBlendElementMode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->modeAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case In2AttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+JSValuePtr jsSVGFEBlendElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in2Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEBlendElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case ModeAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+JSValuePtr jsSVGFEBlendElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->modeAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEBlendElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+JSValuePtr jsSVGFEBlendElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGFEBlendElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGFEBlendElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGFEBlendElementConstructor>(exec);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEBlendElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEBlendElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEBlendElement* castedThisObj = static_cast<JSSVGFEBlendElement*>(asObject(thisValue));
+    SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+// Constant getters
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_NORMAL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_MULTIPLY(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_SCREEN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_DARKEN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEBlendElement* imp = static_cast<SVGFEBlendElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFEBlendElementSVG_FEBLEND_MODE_LIGHTEN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

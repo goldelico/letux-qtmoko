@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -69,6 +73,7 @@ namespace QPatternist
 {
     class DayTimeDuration;
     class Expression;
+    class TemplateMode;
 
     /**
      * @short Carries information and facilities used at runtime, and hence
@@ -83,6 +88,13 @@ namespace QPatternist
     class DynamicContext : public ReportContext
     {
     public:
+        /**
+         * @short Carries template parameters at runtime.
+         *
+         * The key is the name of the parameter, and the value the Expression
+         * which supplies the value.
+         */
+        typedef QHash<QXmlName, QExplicitlySharedDataPointer<Expression> > TemplateParameterHash;
         typedef QExplicitlySharedDataPointer<DynamicContext> Ptr;
 
         virtual ~DynamicContext()
@@ -131,6 +143,16 @@ namespace QPatternist
         virtual ExternalVariableLoader::Ptr externalVariableLoader() const = 0;
         virtual NamePool::Ptr namePool() const = 0;
 
+        /**
+         * @short Returns the item that @c fn:current() returns.
+         *
+         * Hence, this is not the focus, and very different from the focus.
+         *
+         * @see CurrentItemStore
+         * @see CurrentFN
+         */
+        virtual Item currentItem() const = 0;
+
         DynamicContext::Ptr createFocus();
         DynamicContext::Ptr createStack();
         DynamicContext::Ptr createReceiverContext(QAbstractXmlReceiver *const receiver);
@@ -139,6 +161,9 @@ namespace QPatternist
          * Whenever a tree gets built, this function is called. DynamicContext
          * has the responsibility of keeping a copy of @p nm, such that it
          * doesn't go out of scope, since no one else will reference @p nm.
+         *
+         * I think this is currently only used for temporary node trees. In
+         * other cases they are stored in the ExternalResourceLoader.
          *
          * The caller guarantees that @p nm is not @c null.
          */
@@ -158,10 +183,22 @@ namespace QPatternist
          * time a user function is called, think recursive functions, it's done
          * only once.
          * - Query stability, hence affects things like node identity and
-         * therfore conformance. Hence affects for instance what nodes a query
+         * therefore conformance. Hence affects for instance what nodes a query
          * returns, since node identity affect node deduplication.
          */
         virtual ItemCacheCell &globalItemCacheCell(const VariableSlotID slot) = 0;
+
+        /**
+         * @short When a template is called, this member carries the template
+         * parameters.
+         *
+         * Hence this is similar to the other variable stack functions such as
+         * rangeVariable() and expressionVariable(), the difference being that
+         * the order of template parameters as well as its arguments can appear
+         * in arbitrary order. Hence the name is used to make the order
+         * insignificant.
+         */
+        virtual TemplateParameterHash &templateParameterStore() = 0;
 
         /**
          * Same as itemSequenceCacheCells() but applies only for global
@@ -170,6 +207,20 @@ namespace QPatternist
          * @see globalItemCacheCell()
          */
         virtual ItemSequenceCacheCell::Vector &globalItemSequenceCacheCells(const VariableSlotID slot) = 0;
+
+        /**
+         * @short Returns the previous DynamicContext. If this context is the
+         * top-level one, @c null is returned.
+         */
+        virtual DynamicContext::Ptr previousContext() const = 0;
+
+        /**
+         * @short Returns the current template mode that is in effect.
+         *
+         * If @c null is returned, it means that the default mode should be
+         * used as the current mode.
+         */
+        virtual QExplicitlySharedDataPointer<TemplateMode> currentTemplateMode() const = 0;
     };
 }
 

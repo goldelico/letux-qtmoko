@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -48,10 +52,15 @@
 #include "qpair.h"
 #include "qcolor.h"
 #include "qdebug.h"
-
-#include <math.h>
+#include "qmath.h"
+#include "qnumeric.h"
 
 QT_BEGIN_NAMESPACE
+
+QSvgExtraStates::QSvgExtraStates()
+    : fillOpacity(1.0)
+{
+}
 
 QSvgStyleProperty::~QSvgStyleProperty()
 {
@@ -62,17 +71,22 @@ QSvgQualityStyle::QSvgQualityStyle(int color)
 {
 
 }
-void QSvgQualityStyle::apply(QPainter *, const QRectF &, QSvgNode *)
+void QSvgQualityStyle::apply(QPainter *, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
 
 }
-void QSvgQualityStyle::revert(QPainter *)
+void QSvgQualityStyle::revert(QPainter *, QSvgExtraStates &)
 {
 
 }
 
-QSvgFillStyle::QSvgFillStyle(const QBrush &brush, bool fromColor)
-    : m_fill(brush), m_fromColor(fromColor), m_fillRuleSet(false)
+QSvgFillStyle::QSvgFillStyle(const QBrush &brush)
+    : m_fill(brush), m_style(0), m_fillRuleSet(false), m_fillOpacitySet(false)
+{
+}
+
+QSvgFillStyle::QSvgFillStyle(QSvgStyleProperty *style)
+    : m_style(style), m_fillRuleSet(false), m_fillOpacitySet(false)
 {
 }
 
@@ -80,6 +94,12 @@ void QSvgFillStyle::setFillRule(Qt::FillRule f)
 {
     m_fillRuleSet = true;
     m_fillRule = f;
+}
+
+void QSvgFillStyle::setFillOpacity(qreal opacity)
+{
+    m_fillOpacitySet = true;
+    m_fillOpacity = opacity;
 }
 
 static void recursivelySetFill(QSvgNode *node, Qt::FillRule f)
@@ -94,20 +114,29 @@ static void recursivelySetFill(QSvgNode *node, Qt::FillRule f)
         }
     }
 }
-void QSvgFillStyle::apply(QPainter *p, const QRectF &, QSvgNode *node)
+void QSvgFillStyle::apply(QPainter *p, const QRectF &rect, QSvgNode *node, QSvgExtraStates &states)
 {
     m_oldFill = p->brush();
+    m_oldOpacity = states.fillOpacity;
 
     if (m_fillRuleSet) {
         recursivelySetFill(node, m_fillRule);
         m_fillRuleSet = false;//set it only on the first run
     }
     p->setBrush(m_fill);
+    if (m_fillOpacitySet)
+        states.fillOpacity = m_fillOpacity;
+    if (m_style)
+        m_style->apply(p, rect, node, states);
 }
 
-void QSvgFillStyle::revert(QPainter *p)
+void QSvgFillStyle::revert(QPainter *p, QSvgExtraStates &states)
 {
+    if (m_style)
+        m_style->revert(p, states);
     p->setBrush(m_oldFill);
+    if (m_fillOpacitySet)
+        states.fillOpacity = m_oldOpacity;
 }
 
 QSvgViewportFillStyle::QSvgViewportFillStyle(const QBrush &brush)
@@ -115,13 +144,13 @@ QSvgViewportFillStyle::QSvgViewportFillStyle(const QBrush &brush)
 {
 }
 
-void QSvgViewportFillStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgViewportFillStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     m_oldFill = p->brush();
     p->setBrush(m_viewportFill);
 }
 
-void QSvgViewportFillStyle::revert(QPainter *p)
+void QSvgViewportFillStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setBrush(m_oldFill);
 }
@@ -147,7 +176,7 @@ qreal QSvgFontStyle::pointSize() const
     return m_pointSize;
 }
 
-void QSvgFontStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgFontStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     if (!m_font) {
         m_oldFont = p->font();
@@ -155,7 +184,7 @@ void QSvgFontStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
     }
 }
 
-void QSvgFontStyle::revert(QPainter *p)
+void QSvgFontStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     if (!m_font) {
         p->setFont(m_oldFont);
@@ -167,13 +196,13 @@ QSvgStrokeStyle::QSvgStrokeStyle(const QPen &pen)
 {
 }
 
-void QSvgStrokeStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgStrokeStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     m_oldStroke = p->pen();
     p->setPen(m_stroke);
 }
 
-void QSvgStrokeStyle::revert(QPainter *p)
+void QSvgStrokeStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setPen(m_oldStroke);
 }
@@ -183,7 +212,7 @@ QSvgSolidColorStyle::QSvgSolidColorStyle(const QColor &color)
 {
 }
 
-void QSvgSolidColorStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgSolidColorStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     m_oldFill = p->brush();
     m_oldStroke = p->pen();
@@ -195,7 +224,7 @@ void QSvgSolidColorStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
     p->setPen(pen);
 }
 
-void QSvgSolidColorStyle::revert(QPainter *p)
+void QSvgSolidColorStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setBrush(m_oldFill);
     p->setPen(m_oldStroke);
@@ -206,7 +235,7 @@ QSvgGradientStyle::QSvgGradientStyle(QGradient *grad)
 {
 }
 
-void QSvgGradientStyle::apply(QPainter *p, const QRectF &/*rect*/, QSvgNode *)
+void QSvgGradientStyle::apply(QPainter *p, const QRectF &/*rect*/, QSvgNode *, QSvgExtraStates &)
 {
     if (!m_link.isEmpty()) {
         resolveStops();
@@ -226,6 +255,11 @@ void QSvgGradientStyle::apply(QPainter *p, const QRectF &/*rect*/, QSvgNode *)
         }
     }
 
+    // If the gradient is marked as empty, insert transparent black
+    QGradientStops stops = m_gradient->stops();
+    if (stops.size() == 1 && qIsNaN(stops.at(0).first))
+        m_gradient->setStops(QGradientStops() << QGradientStop(0.0, QColor(0, 0, 0, 0)));
+
     QGradient gradient = *m_gradient;
 
     QBrush brush;
@@ -237,7 +271,7 @@ void QSvgGradientStyle::apply(QPainter *p, const QRectF &/*rect*/, QSvgNode *)
     p->setBrush(brush);
 }
 
-void QSvgGradientStyle::revert(QPainter *p)
+void QSvgGradientStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setBrush(m_oldFill);
 }
@@ -253,20 +287,20 @@ void QSvgGradientStyle::addResolve(qreal offset)
     m_resolvePoints.append(offset);
 }
 
-QSvgTransformStyle::QSvgTransformStyle(const QMatrix &trans)
+QSvgTransformStyle::QSvgTransformStyle(const QTransform &trans)
     : m_transform(trans)
 {
 }
 
-void QSvgTransformStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgTransformStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
-    m_oldWorldMatrix = p->matrix();
-    p->setMatrix(m_transform, true);
+    m_oldWorldTransform = p->worldTransform();
+    p->setWorldTransform(m_transform, true);
 }
 
-void QSvgTransformStyle::revert(QPainter *p)
+void QSvgTransformStyle::revert(QPainter *p, QSvgExtraStates &)
 {
-    p->setMatrix(m_oldWorldMatrix, false);//don't combine
+    p->setWorldTransform(m_oldWorldTransform, false /* don't combine */);
 }
 
 QSvgStyleProperty::Type QSvgQualityStyle::type() const
@@ -316,13 +350,13 @@ QSvgCompOpStyle::QSvgCompOpStyle(QPainter::CompositionMode mode)
 
 }
 
-void QSvgCompOpStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgCompOpStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     m_oldMode = p->compositionMode();
     p->setCompositionMode(m_mode);
 }
 
-void QSvgCompOpStyle::revert(QPainter *p)
+void QSvgCompOpStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setCompositionMode(m_oldMode);
 }
@@ -336,42 +370,42 @@ QSvgStyle::~QSvgStyle()
 {
 }
 
-void QSvgStyle::apply(QPainter *p, const QRectF &rect, QSvgNode *node)
+void QSvgStyle::apply(QPainter *p, const QRectF &rect, QSvgNode *node, QSvgExtraStates &states)
 {
     if (quality) {
-        quality->apply(p, rect, node);
+        quality->apply(p, rect, node, states);
     }
 
     if (fill) {
-        fill->apply(p, rect, node);
+        fill->apply(p, rect, node, states);
     }
 
     if (viewportFill) {
-        viewportFill->apply(p, rect, node);
+        viewportFill->apply(p, rect, node, states);
     }
 
     if (font) {
-        font->apply(p, rect, node);
+        font->apply(p, rect, node, states);
     }
 
     if (stroke) {
-        stroke->apply(p, rect, node);
+        stroke->apply(p, rect, node, states);
     }
 
     if (solidColor) {
-        solidColor->apply(p, rect, node);
+        solidColor->apply(p, rect, node, states);
     }
 
     if (gradient) {
-        gradient->apply(p, rect, node);
+        gradient->apply(p, rect, node, states);
     }
 
     if (transform) {
-        transform->apply(p, rect, node);
+        transform->apply(p, rect, node, states);
     }
 
     if (animateColor) {
-        animateColor->apply(p, rect, node);
+        animateColor->apply(p, rect, node, states);
     }
 
     //animated transforms have to be applied
@@ -380,47 +414,47 @@ void QSvgStyle::apply(QPainter *p, const QRectF &rect, QSvgNode *node)
         QList<QSvgRefCounter<QSvgAnimateTransform> >::const_iterator itr;
         for (itr = animateTransforms.constBegin(); itr != animateTransforms.constEnd();
              ++itr) {
-            (*itr)->apply(p, rect, node);
+            (*itr)->apply(p, rect, node, states);
         }
     }
 
     if (opacity) {
-        opacity->apply(p, rect, node);
+        opacity->apply(p, rect, node, states);
     }
 
     if (compop) {
-        compop->apply(p, rect, node);
+        compop->apply(p, rect, node, states);
     }
 }
 
-void QSvgStyle::revert(QPainter *p)
+void QSvgStyle::revert(QPainter *p, QSvgExtraStates &states)
 {
     if (quality) {
-        quality->revert(p);
+        quality->revert(p, states);
     }
 
     if (fill) {
-        fill->revert(p);
+        fill->revert(p, states);
     }
 
     if (viewportFill) {
-        viewportFill->revert(p);
+        viewportFill->revert(p, states);
     }
 
     if (font) {
-        font->revert(p);
+        font->revert(p, states);
     }
 
     if (stroke) {
-        stroke->revert(p);
+        stroke->revert(p, states);
     }
 
     if (solidColor) {
-        solidColor->revert(p);
+        solidColor->revert(p, states);
     }
 
     if (gradient) {
-        gradient->revert(p);
+        gradient->revert(p, states);
     }
 
     //animated transforms need to be reverted _before_
@@ -431,24 +465,24 @@ void QSvgStyle::revert(QPainter *p)
         //only need to rever the first one because that
         //one has the original world matrix for the primitve
         if (itr != animateTransforms.constEnd()) {
-            (*itr)->revert(p);
+            (*itr)->revert(p, states);
         }
     }
 
     if (transform) {
-        transform->revert(p);
+        transform->revert(p, states);
     }
 
     if (animateColor) {
-        animateColor->revert(p);
+        animateColor->revert(p, states);
     }
 
     if (opacity) {
-        opacity->revert(p);
+        opacity->revert(p, states);
     }
 
     if (compop) {
-        compop->revert(p);
+        compop->revert(p, states);
     }
 }
 
@@ -468,18 +502,18 @@ void QSvgAnimateTransform::setArgs(TransformType type, const QVector<qreal> &arg
     m_count = args.count() / 3;
 }
 
-void QSvgAnimateTransform::apply(QPainter *p, const QRectF &, QSvgNode *node)
+void QSvgAnimateTransform::apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &)
 {
-    m_oldWorldMatrix = p->matrix();
+    m_oldWorldTransform = p->worldTransform();
     resolveMatrix(node);
     if (!m_finished || m_freeze)
-        p->setMatrix(m_transform, true);
+        p->setWorldTransform(m_transform, true);
 }
 
-void QSvgAnimateTransform::revert(QPainter *p)
+void QSvgAnimateTransform::revert(QPainter *p, QSvgExtraStates &)
 {
     if (!m_finished || m_freeze) {
-        p->setMatrix(m_oldWorldMatrix, false);//don't combine
+        p->setWorldTransform(m_oldWorldTransform, false /* don't combine */);
     }
 }
 
@@ -503,8 +537,8 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
     }
 
     qreal currentPosition = percentOfAnimation * (m_count - 1);
-    int startElem = static_cast<int>(floor(currentPosition));
-    int endElem   = static_cast<int>(ceil(currentPosition));
+    int startElem = qFloor(currentPosition);
+    int endElem   = qCeil(currentPosition);
 
     switch(m_type)
     {
@@ -524,7 +558,7 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
         qreal transX = from1 + transXDiff;
         qreal transYDiff = (to2-from2) * percentOfAnimation;
         qreal transY = from2 + transYDiff;
-        m_transform = QMatrix();
+        m_transform = QTransform();
         m_transform.translate(transX, transY);
         break;
     }
@@ -546,7 +580,7 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
         qreal transY = from2 + transYDiff;
         if (transY == 0)
             transY = transX;
-        m_transform = QMatrix();
+        m_transform = QTransform();
         m_transform.scale(transX, transY);
         break;
     }
@@ -569,7 +603,7 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
         qreal transX = from2 + transXDiff;
         qreal transYDiff = (to3-from3) * percentOfAnimation;
         qreal transY = from3 + transYDiff;
-        m_transform = QMatrix();
+        m_transform = QTransform();
         m_transform.translate(transX, transY);
         m_transform.rotate(rotationDiff);
         m_transform.translate(-transX, -transY);
@@ -589,7 +623,7 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
 
         qreal transXDiff = (to1-from1) * percentOfAnimation;
         qreal transX = from1 + transXDiff;
-        m_transform = QMatrix();
+        m_transform = QTransform();
         m_transform.shear(tan(transX * deg2rad), 0);
         break;
     }
@@ -608,7 +642,7 @@ void QSvgAnimateTransform::resolveMatrix(QSvgNode *node)
 
         qreal transYDiff = (to1 - from1) * percentOfAnimation;
         qreal transY = from1 + transYDiff;
-        m_transform = QMatrix();
+        m_transform = QTransform();
         m_transform.shear(0, tan(transY * deg2rad));
         break;
     }
@@ -657,7 +691,7 @@ void QSvgAnimateColor::setRepeatCount(qreal repeatCount)
     m_repeatCount = repeatCount;
 }
 
-void QSvgAnimateColor::apply(QPainter *p, const QRectF &, QSvgNode *node)
+void QSvgAnimateColor::apply(QPainter *p, const QRectF &, QSvgNode *node, QSvgExtraStates &)
 {
     qreal totalTimeElapsed = node->document()->currentElapsed();
     if (totalTimeElapsed < m_from || m_finished)
@@ -677,8 +711,8 @@ void QSvgAnimateColor::apply(QPainter *p, const QRectF &, QSvgNode *node)
 
     qreal currentPosition = percentOfAnimation * (m_colors.count() - 1);
 
-    int startElem = static_cast<int>(floor(currentPosition));
-    int endElem   = static_cast<int>(ceil(currentPosition));
+    int startElem = qFloor(currentPosition);
+    int endElem   = qCeil(currentPosition);
     QColor start = m_colors[startElem];
     QColor end = m_colors[endElem];
 
@@ -713,7 +747,7 @@ void QSvgAnimateColor::apply(QPainter *p, const QRectF &, QSvgNode *node)
     }
 }
 
-void QSvgAnimateColor::revert(QPainter *p)
+void QSvgAnimateColor::revert(QPainter *p, QSvgExtraStates &)
 {
     if (m_fill) {
         p->setBrush(m_oldBrush);
@@ -743,13 +777,13 @@ QSvgOpacityStyle::QSvgOpacityStyle(qreal opacity)
 
 }
 
-void QSvgOpacityStyle::apply(QPainter *p, const QRectF &, QSvgNode *)
+void QSvgOpacityStyle::apply(QPainter *p, const QRectF &, QSvgNode *, QSvgExtraStates &)
 {
     m_oldOpacity = p->opacity();
-    p->setOpacity(m_opacity);
+    p->setOpacity(m_opacity * m_oldOpacity);
 }
 
-void QSvgOpacityStyle::revert(QPainter *p)
+void QSvgOpacityStyle::revert(QPainter *p, QSvgExtraStates &)
 {
     p->setOpacity(m_oldOpacity);
 }

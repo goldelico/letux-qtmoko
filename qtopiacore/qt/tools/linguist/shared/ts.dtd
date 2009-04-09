@@ -19,12 +19,15 @@
           version CDATA #IMPLIED
           language CDATA #IMPLIED>
 <!ELEMENT defaultcodec (#PCDATA) >
-<!ELEMENT context (name, comment?, message+) > 
+<!ELEMENT context (name, comment?, extracomment?, message+) > 
 <!ATTLIST context
           encoding CDATA #IMPLIED>
 <!ELEMENT name %evilstring; >
 <!ELEMENT comment %evilstring; >
-<!ELEMENT message (location?, source, comment?, translation, userdata?) >
+<!ELEMENT oldcomment %evilstring; >
+<!ELEMENT translatorcomment %evilstring; >
+<!ELEMENT extracomment %evilstring; >
+<!ELEMENT message (location*, source, oldsource?, comment?, oldcomment?, extracomment?, translatorcomment?, translation, userdata?) >
 <!ATTLIST message
           encoding CDATA #IMPLIED
           numerus (yes|no) "no">

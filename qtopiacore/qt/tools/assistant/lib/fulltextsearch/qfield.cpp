@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QCLucene library and is distributable under
@@ -137,7 +137,7 @@ qreal QCLuceneField::getBoost() const
 
 void QCLuceneField::setBoost(qreal value)
 {
-    d->field->setBoost(float_t(value));
+    d->field->setBoost(qreal(value));
 }
 
 bool QCLuceneField::isBinary() const

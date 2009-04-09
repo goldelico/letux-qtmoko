@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #ifndef QFONTENGINE_FT_P_H
@@ -70,6 +74,10 @@
 
 QT_BEGIN_NAMESPACE
 
+/*
+ * This struct represents one font file on disk (like Arial.ttf) and is shared between all the font engines
+ * that show this font file (at different pixel sizes).
+ */
 struct QFreetypeFace
 {
     void computeSize(const QFontDef &fontDef, int *xsize, int *ysize, bool *outline_drawing);
@@ -79,6 +87,7 @@ struct QFreetypeFace
     static QFreetypeFace *getFace(const QFontEngine::FaceId &face_id);
     void release(const QFontEngine::FaceId &face_id);
 
+    // locks the struct for usage. Any read/write operations require locking.
     void lock()
     {
         _lock.lock();
@@ -169,53 +178,53 @@ public:
         ~QGlyphSet();
         FT_Matrix transformationMatrix;
         unsigned long id; // server sided id, GlyphSet for X11
+        bool outline_drawing;
         mutable QHash<int, Glyph *> glyph_data; // maps from glyph index to glyph data
     };
 
-    QFontEngine::FaceId faceId() const;
-    QFontEngine::Properties properties() const;
-    QFixed emSquareSize() const;
+    virtual QFontEngine::FaceId faceId() const;
+    virtual QFontEngine::Properties properties() const;
+    virtual QFixed emSquareSize() const;
 
-    bool getSfntTableData(uint tag, uchar *buffer, uint *length) const;
-    int synthesized() const;
+    virtual bool getSfntTableData(uint tag, uchar *buffer, uint *length) const;
+    virtual int synthesized() const;
 
-    QFixed ascent() const;
-    QFixed descent() const;
-    QFixed leading() const;
-    QFixed xHeight() const;
-    QFixed averageCharWidth() const;
+    virtual QFixed ascent() const;
+    virtual QFixed descent() const;
+    virtual QFixed leading() const;
+    virtual QFixed xHeight() const;
+    virtual QFixed averageCharWidth() const;
 
-    qreal maxCharWidth() const;
-    qreal minLeftBearing() const;
-    qreal minRightBearing() const;
-    QFixed lineThickness() const;
-    QFixed underlinePosition() const;
+    virtual qreal maxCharWidth() const;
+    virtual qreal minLeftBearing() const;
+    virtual qreal minRightBearing() const;
+    virtual QFixed lineThickness() const;
+    virtual QFixed underlinePosition() const;
 
-    void doKerning(int , QGlyphLayout *, QTextEngine::ShaperFlags) const;
+    void doKerning(QGlyphLayout *, QTextEngine::ShaperFlags) const;
 
-    inline Type type() const
+    inline virtual Type type() const
     { return QFontEngine::Freetype; }
-    inline const char *name() const
+    inline virtual const char *name() const
     { return "freetype"; }
 
-    void getUnscaledGlyph(glyph_t glyph, QPainterPath *path, glyph_metrics_t *metrics);
+    virtual void getUnscaledGlyph(glyph_t glyph, QPainterPath *path, glyph_metrics_t *metrics);
 
-    bool canRender(const QChar *string, int len);
+    virtual bool canRender(const QChar *string, int len);
 
-    void addGlyphsToPath(glyph_t *glyphs, QFixedPoint *positions, int nglyphs,
+    virtual void addGlyphsToPath(glyph_t *glyphs, QFixedPoint *positions, int nglyphs,
                          QPainterPath *path, QTextItem::RenderFlags flags);
-    void addOutlineToPath(qreal x, qreal y, const QGlyphLayout *glyphs, int numGlyphs,
+    virtual void addOutlineToPath(qreal x, qreal y, const QGlyphLayout &glyphs,
                           QPainterPath *path, QTextItem::RenderFlags flags);
 
-    bool stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs,
-                      QTextEngine::ShaperFlags flags) const;
-    bool stringToCMap(const QChar *str, int len, HB_Glyph *glyphs, int *nglyphs,
+    virtual bool stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs,
                       QTextEngine::ShaperFlags flags) const;
 
-    glyph_metrics_t boundingBox(const QGlyphLayout *glyphs, int numGlyphs);
-    glyph_metrics_t boundingBox(glyph_t glyph);
+    virtual glyph_metrics_t boundingBox(const QGlyphLayout &glyphs);
+    virtual glyph_metrics_t boundingBox(glyph_t glyph);
+    virtual glyph_metrics_t boundingBox(glyph_t glyph, const QTransform &matrix);
 
-    void recalcAdvances(int len, QGlyphLayout *glyphs, QTextEngine::ShaperFlags flags) const;
+    virtual void recalcAdvances(QGlyphLayout *glyphs, QTextEngine::ShaperFlags flags) const;
     virtual QImage alphaMapForGlyph(glyph_t);
     virtual void removeGlyphFromCache(glyph_t glyph);
 
@@ -230,21 +239,21 @@ public:
 
     FT_Face non_locked_face() const;
 
-    inline bool drawAsOutline() const { return outline_drawing; }
     inline bool drawAntialiased() const { return antialias; }
     inline bool invalid() const { return xsize == 0 && ysize == 0; }
-    inline bool isBitmapFont() const { return defaultGlyphFormat == Format_Mono; }
+    inline bool isBitmapFont() const { return defaultFormat == Format_Mono; }
 
-    inline Glyph *loadGlyph(uint glyph, GlyphFormat format = Format_None) const
-    { return loadGlyph(&defaultGlyphSet, glyph, format); }
-    Glyph *loadGlyph(QGlyphSet *set, uint glyph, GlyphFormat = Format_None) const;
+    inline Glyph *loadGlyph(uint glyph, GlyphFormat format = Format_None, bool fetchMetricsOnly = false) const
+    { return loadGlyph(&defaultGlyphSet, glyph, format, fetchMetricsOnly); }
+    Glyph *loadGlyph(QGlyphSet *set, uint glyph, GlyphFormat = Format_None, bool fetchMetricsOnly = false) const;
 
     QGlyphSet *defaultGlyphs() { return &defaultGlyphSet; }
+    GlyphFormat defaultGlyphFormat() const { return defaultFormat; }
 
     inline Glyph *cachedGlyph(glyph_t g) const { return defaultGlyphSet.glyph_data.value(g); }
 
-    QGlyphSet *loadTransformedGlyphSet(glyph_t *glyphs, int num_glyphs, const QTransform &matrix,
-                                       GlyphFormat format = Format_Render);
+    QGlyphSet *loadTransformedGlyphSet(const QTransform &matrix);
+    bool loadGlyphs(QGlyphSet *gs, glyph_t *glyphs, int num_glyphs, GlyphFormat format = Format_Render);
 
 #if defined(Q_WS_QWS)
     virtual void draw(QPaintEngine * /*p*/, qreal /*x*/, qreal /*y*/, const QTextItemInt & /*si*/) {}
@@ -268,14 +277,26 @@ protected:
     QFreetypeFace *freetype;
     int default_load_flags;
 
+    enum HintStyle {
+        HintNone,
+        HintLight,
+        HintMedium,
+        HintFull
+    };
+
+    HintStyle default_hint_style;
+
     bool antialias;
-    bool outline_drawing;
     bool transform;
     SubpixelAntialiasingType subpixelType;
+    int lcdFilterType;
     bool canUploadGlyphsToServer;
+    bool embeddedbitmap;
 
 private:
-    GlyphFormat defaultGlyphFormat;
+    QFontEngineFT::Glyph *loadGlyphMetrics(QGlyphSet *set, uint glyph) const;
+
+    GlyphFormat defaultFormat;
     FT_Matrix matrix;
 
     QList<QGlyphSet> transformedGlyphSets;

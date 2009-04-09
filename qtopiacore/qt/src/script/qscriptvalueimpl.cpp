@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -89,49 +93,65 @@ bool QScriptValueImpl::detectedCycle() const
 
 bool QScriptValueImpl::instanceOf(const QScriptValueImpl &value) const
 {
-    if (! isObject() || ! value.isObject())
+    if (! isObject() || ! value.isObject() || !value.implementsHasInstance())
         return false;
-    if (value.isFunction()) {
-        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
-        QScriptValueImpl proto = value.property(eng_p->idTable()->id_prototype);
-        if (proto.isObject())
-            return instanceOf_helper(proto);
-    }
-    return instanceOf_helper(value);
+    return value.hasInstance(*this);
 }
 
-bool QScriptValueImpl::instanceOf_helper(const QScriptValueImpl &value) const
+bool QScriptValueImpl::implementsHasInstance() const
 {
     Q_ASSERT(isObject());
-    Q_ASSERT(value.isObject());
+    if (isFunction())
+        return true;
+    if (QScriptClassData *odata = classInfo()->data()) {
+        return odata->implementsHasInstance(*this);
+    }
+    return false;
+}
 
-    QScriptObject *instance = m_object_value;
-    QScriptObject *target = value.m_object_value;
+bool QScriptValueImpl::hasInstance(const QScriptValueImpl &value) const
+{
+    Q_ASSERT(isObject());
 
-    if (instance == target)
+    if (QScriptClassData *odata = classInfo()->data()) {
+        if (odata->implementsHasInstance(*this))
+            return odata->hasInstance(*this, value);
+    }
+    if (!isFunction())
         return false;
 
-    while (instance != 0) {
-        if (instance == target)
-            return true;
+    // [[HasInstance] for function objects
 
-        const QScriptValueImpl &proto = instance->m_prototype;
+    if (!value.isObject())
+        return false;
 
-        if (! proto.isObject())
-            break;
-
-        instance = proto.m_object_value;
+    QScriptEnginePrivate *eng = engine();
+    QScriptValueImpl proto = property(eng->idTable()->id_prototype);
+    if (!proto.isObject()) {
+        QScriptContextPrivate *ctx = eng->currentContext();
+        ctx->throwTypeError(QLatin1String("instanceof: 'prototype' property is not an object"));
+        return false;
     }
 
+    QScriptObject *target = proto.m_object_value;
+    QScriptValueImpl v = value;
+    while (true) {
+        v = v.prototype();
+        if (!v.isObject())
+            break;
+        if (target == v.m_object_value)
+            return true;
+    }
     return false;
 }
 
 bool QScriptValueImpl::resolve_helper(QScriptNameIdImpl *nameId, QScript::Member *member,
-                                      QScriptValueImpl *object, QScriptValue::ResolveFlags mode) const
+                                      QScriptValueImpl *object, QScriptValue::ResolveFlags mode,
+                                      QScript::AccessMode access) const
 {
     QScriptObject *object_data = m_object_value;
 
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+    QScriptEnginePrivate *eng_p = engine();
 
     if (nameId == eng_p->idTable()->id___proto__) {
         member->native(nameId, /*id=*/0, QScriptValue::Undeletable);
@@ -140,10 +160,10 @@ bool QScriptValueImpl::resolve_helper(QScriptNameIdImpl *nameId, QScript::Member
     }
 
     // If not found anywhere else, search in the extra members.
-    if (QScriptClassData *odata = classInfo()->data().data()) {
+    if (QScriptClassData *odata = classInfo()->data()) {
         *object = *this;
 
-        if (odata->resolve(*this, nameId, member, object))
+        if (odata->resolve(*this, nameId, member, object, access))
             return true;
     }
 
@@ -152,13 +172,13 @@ bool QScriptValueImpl::resolve_helper(QScriptNameIdImpl *nameId, QScript::Member
         const QScriptValueImpl &proto = object_data->m_prototype;
 
         if (proto.isObject()
-            && proto.resolve(nameId, member, object, mode)) {
+            && proto.resolve(nameId, member, object, mode, access)) {
             return true;
         }
     }
 
     if ((mode & QScriptValue::ResolveScope) && object_data->m_scope.isValid())
-        return object_data->m_scope.resolve(nameId, member, object, mode);
+        return object_data->m_scope.resolve(nameId, member, object, mode, access);
 
     return false;
 }
@@ -178,7 +198,7 @@ void QScriptValueImpl::setProperty(QScriptNameIdImpl *nameId,
     if (!(flags & (QScriptValue::PropertyGetter | QScriptValue::PropertySetter)))
         mode |= QScriptValue::ResolvePrototype;
 
-    if (resolve(nameId, &member, &base, mode)) {
+    if (resolve(nameId, &member, &base, mode, QScript::ReadWrite)) {
         // we resolved an existing property with that name
         if (flags & (QScriptValue::PropertyGetter | QScriptValue::PropertySetter)) {
             // setting the getter or setter of a property in this object
@@ -279,9 +299,9 @@ void QScriptValueImpl::setProperty(QScriptNameIdImpl *nameId,
 
 QVariant QScriptValueImpl::toVariant() const
 {
-    if (!isValid())
+    switch (m_type) {
+    case QScript::InvalidType:
         return QVariant();
-    switch (m_type->type()) {
 
     case QScript::UndefinedType:
     case QScript::NullType:
@@ -301,6 +321,9 @@ QVariant QScriptValueImpl::toVariant() const
     case QScript::StringType:
         return QVariant(m_string_value->s);
 
+    case QScript::LazyStringType:
+        return QVariant(*m_lazy_string_value);
+
     case QScript::ObjectType:
         if (isDate())
             return QVariant(toDateTime());
@@ -317,7 +340,7 @@ QVariant QScriptValueImpl::toVariant() const
             return qVariantFromValue(toQObject());
 #endif
 
-        QScriptValue v = toPrimitive();
+        QScriptValueImpl v = engine()->toPrimitive(*this);
         if (!v.isObject())
             return v.toVariant();
         break;
@@ -329,12 +352,11 @@ QDebug &operator<<(QDebug &d, const QScriptValueImpl &object)
 {
     d.nospace() << "QScriptValue(";
 
-    if (!object.isValid()) {
+    switch (object.type()) {
+    case QScript::InvalidType:
         d.nospace() << "Invalid)";
         return d;
-    }
 
-    switch (object.type()) {
     case QScript::BooleanType:
         d.nospace() << "bool=" << object.toBoolean();
         break;
@@ -347,6 +369,7 @@ QDebug &operator<<(QDebug &d, const QScriptValueImpl &object)
         d.nospace() << "qsreal=" << object.toNumber();
         break;
 
+    case QScript::LazyStringType:
     case QScript::StringType:
         d.nospace() << "string=" << object.toString();
         break;
@@ -378,7 +401,7 @@ QDebug &operator<<(QDebug &d, const QScriptValueImpl &object)
             od->member(i, &m);
 
             if (m.isValid() && m.isObjectProperty()) {
-                d << QScriptEnginePrivate::get(object.engine())->toString(m.nameId());
+                d << object.engine()->toString(m.nameId());
                 QScriptValueImpl o;
                 od->get(m, &o);
                 d.nospace() << QLatin1String(":")
@@ -406,7 +429,7 @@ QDebug &operator<<(QDebug &d, const QScriptValueImpl &object)
 void QScriptValueImpl::destroyObjectData()
 {
     Q_ASSERT(isObject());
-    m_object_value->finalizeData(engine());
+    m_object_value->finalizeData();
 }
 
 bool QScriptValueImpl::isMarked(int generation) const

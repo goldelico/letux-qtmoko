@@ -26,106 +26,113 @@
 
 #include "CDATASection.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCDATASection)
+
 /* Hash table */
 
-static const HashEntry JSCDATASectionTableEntries[] =
+static const HashTableValue JSCDATASectionTableValues[2] =
 {
-    { "constructor", JSCDATASection::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCDATASectionConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCDATASectionTable = 
-{
-    2, 1, JSCDATASectionTableEntries, 1
-};
+static const HashTable JSCDATASectionTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCDATASectionTableValues, 0 };
+#else
+    { 2, 1, JSCDATASectionTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCDATASectionConstructorTableEntries[] =
+static const HashTableValue JSCDATASectionConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCDATASectionConstructorTable = 
-{
-    2, 1, JSCDATASectionConstructorTableEntries, 1
-};
+static const HashTable JSCDATASectionConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCDATASectionConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCDATASectionConstructorTableValues, 0 };
+#endif
 
 class JSCDATASectionConstructor : public DOMObject {
 public:
     JSCDATASectionConstructor(ExecState* exec)
+        : DOMObject(JSCDATASectionConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCDATASectionPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCDATASectionConstructor::info = { "CDATASectionConstructor", 0, &JSCDATASectionConstructorTable, 0 };
+const ClassInfo JSCDATASectionConstructor::s_info = { "CDATASectionConstructor", 0, &JSCDATASectionConstructorTable, 0 };
 
 bool JSCDATASectionConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCDATASectionConstructor, DOMObject>(exec, &JSCDATASectionConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCDATASectionConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCDATASectionPrototypeTableEntries[] =
+static const HashTableValue JSCDATASectionPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCDATASectionPrototypeTable = 
-{
-    2, 1, JSCDATASectionPrototypeTableEntries, 1
-};
+static const HashTable JSCDATASectionPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCDATASectionPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSCDATASectionPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCDATASectionPrototype::info = { "CDATASectionPrototype", 0, &JSCDATASectionPrototypeTable, 0 };
+const ClassInfo JSCDATASectionPrototype::s_info = { "CDATASectionPrototype", 0, &JSCDATASectionPrototypeTable, 0 };
 
 JSObject* JSCDATASectionPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCDATASectionPrototype>(exec, "[[JSCDATASection.prototype]]");
+    return getDOMPrototype<JSCDATASection>(exec);
 }
 
-const ClassInfo JSCDATASection::info = { "CDATASection", &JSText::info, &JSCDATASectionTable, 0 };
+const ClassInfo JSCDATASection::s_info = { "CDATASection", &JSText::s_info, &JSCDATASectionTable, 0 };
 
-JSCDATASection::JSCDATASection(ExecState* exec, CDATASection* impl)
-    : JSText(exec, impl)
+JSCDATASection::JSCDATASection(PassRefPtr<Structure> structure, PassRefPtr<CDATASection> impl)
+    : JSText(structure, impl)
 {
-    setPrototype(JSCDATASectionPrototype::self(exec));
+}
+
+JSObject* JSCDATASection::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCDATASectionPrototype(JSCDATASectionPrototype::createStructure(JSTextPrototype::self(exec)));
 }
 
 bool JSCDATASection::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSCDATASection, JSText>(exec, &JSCDATASectionTable, this, propertyName, slot);
+    return getStaticValueSlot<JSCDATASection, Base>(exec, &JSCDATASectionTable, this, propertyName, slot);
 }
 
-JSValue* JSCDATASection::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsCDATASectionConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSCDATASection*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSCDATASection::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSCDATASectionConstructor>(exec);
 }
 
-JSValue* JSCDATASection::getConstructor(ExecState* exec)
-{
-    return KJS::cacheGlobalObject<JSCDATASectionConstructor>(exec, "[[CDATASection.constructor]]");
-}
 
 }

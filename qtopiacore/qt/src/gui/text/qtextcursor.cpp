@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -406,16 +410,18 @@ bool QTextCursorPrivate::movePosition(QTextCursor::MoveOperation op, QTextCursor
         newPosition = priv->previousCursorPosition(position, QTextLayout::SkipCharacters);
         break;
     case QTextCursor::StartOfWord: {
-        QTextEngine *engine = layout->engine();
-        const HB_CharAttributes *attributes = engine->attributes();
-
         if (relativePos == 0)
-            return false;
+            break;
 
         // skip if already at word start
-        if (attributes[relativePos - 1].whiteSpace
-            && !attributes[relativePos].whiteSpace)
+        QTextEngine *engine = layout->engine();
+        engine->attributes();
+        if ((relativePos == blockIt.length() - 1)
+            && (engine->atSpace(relativePos - 1) || engine->atWordSeparator(relativePos - 1)))
             return false;
+
+        if (relativePos < blockIt.length()-1)
+            ++position;
 
         // FALL THROUGH!
     }
@@ -482,18 +488,18 @@ bool QTextCursorPrivate::movePosition(QTextCursor::MoveOperation op, QTextCursor
     }
     case QTextCursor::EndOfWord: {
         QTextEngine *engine = layout->engine();
-        const HB_CharAttributes *attributes = engine->attributes();
-        const QString string = engine->layoutData->string;
-
-        const int len = layout->engine()->layoutData->string.length();
+        engine->attributes();
+        const int len = blockIt.length() - 1;
         if (relativePos >= len)
             return false;
-        relativePos++;
-        while (relativePos < len
-               && !attributes[relativePos].whiteSpace
-               && !engine->atWordSeparator(relativePos))
-            relativePos++;
-
+        if (engine->atWordSeparator(relativePos)) {
+            ++relativePos;
+            while (relativePos < len && engine->atWordSeparator(relativePos))
+                ++relativePos;
+        } else {
+            while (relativePos < len && !engine->atSpace(relativePos) && !engine->atWordSeparator(relativePos))
+                ++relativePos;
+        }
         newPosition = blockIt.position() + relativePos;
         break;
     }
@@ -555,6 +561,49 @@ bool QTextCursorPrivate::movePosition(QTextCursor::MoveOperation op, QTextCursor
             newPosition = blockIt.position();
         }
         adjustX = false;
+        break;
+    }
+    case QTextCursor::NextCell: // fall through
+    case QTextCursor::PreviousCell: // fall through
+    case QTextCursor::NextRow: // fall through
+    case QTextCursor::PreviousRow: {
+        QTextTable *table = qobject_cast<QTextTable *>(priv->frameAt(position));
+        if (!table)
+            return false;
+
+        QTextTableCell cell = table->cellAt(position);
+        Q_ASSERT(cell.isValid());
+        int column = cell.column();
+        int row = cell.row();
+        const int currentRow = row;
+        if (op == QTextCursor::NextCell || op == QTextCursor::NextRow) {
+            do {
+                column += cell.columnSpan();
+                if (column >= table->columns()) {
+                    column = 0;
+                    ++row;
+                }
+                cell = table->cellAt(row, column);
+                // note we also continue while we have not reached a cell thats not merged with one above us
+            } while (cell.isValid()
+                    && ((op == QTextCursor::NextRow && currentRow == cell.row())
+                        || cell.row() < row));
+        }
+        else if (op == QTextCursor::PreviousCell || op == QTextCursor::PreviousRow) {
+            do {
+                --column;
+                if (column < 0) {
+                    column = table->columns()-1;
+                    --row;
+                }
+                cell = table->cellAt(row, column);
+                // note we also continue while we have not reached a cell thats not merged with one above us
+            } while (cell.isValid()
+                    && ((op == QTextCursor::PreviousRow && currentRow == cell.row())
+                        || cell.row() < row));
+        }
+        if (cell.isValid())
+            newPosition = cell.firstPosition();
         break;
     }
     }
@@ -922,6 +971,17 @@ QTextLayout *QTextCursorPrivate::blockLayout(QTextBlock &block) const{
     \value Right Move right one character.
     \value WordRight Move right one word.
 
+    \value NextCell  Move to the beginning of the next table cell inside the
+           current table. If the current cell is the last cell in the row, the
+           cursor will move to the first cell in the next row.
+    \value PreviousCell  Move to the beginning of the previous table cell
+           inside the current table. If the current cell is the first cell in
+           the row, the cursor will move to the last cell in the previous row.
+    \value NextRow  Move to the first new cell of the next row in the current
+           table.
+    \value PreviousRow  Move to the last cell of the previous row in the
+           current table.
+
     \sa movePosition()
 */
 
@@ -1147,6 +1207,8 @@ bool QTextCursor::movePosition(MoveOperation op, MoveMode mode, int n)
                 b = b.previous();
             d->setPosition(b.position());
         }
+        if (mode == QTextCursor::MoveAnchor)
+            d->anchor = d->position;
         while (d->movePosition(op, mode)
                && !d->block().isVisible())
             ;
@@ -1236,11 +1298,16 @@ void QTextCursor::insertText(const QString &text, const QTextCharFormat &_format
 
         QTextBlockFormat blockFmt = blockFormat();
 
-        int textStart = 0;
+
+        int textStart = d->priv->text.length();
+        int blockStart = 0;
+        d->priv->text += text;
+        int textEnd = d->priv->text.length();
+
         for (int i = 0; i < text.length(); ++i) {
             QChar ch = text.at(i);
 
-            const int textEnd = i;
+            const int blockEnd = i;
 
             if (ch == QLatin1Char('\r')
                 && (i + 1) < text.length()
@@ -1253,15 +1320,15 @@ void QTextCursor::insertText(const QString &text, const QTextCharFormat &_format
                 || ch == QChar::ParagraphSeparator
                 || ch == QLatin1Char('\r')) {
 
-                if (textEnd > textStart)
-                    d->priv->insert(d->position, QString(text.unicode() + textStart, textEnd - textStart), formatIdx);
+                if (blockEnd > blockStart)
+                    d->priv->insert(d->position, textStart + blockStart, blockEnd - blockStart, formatIdx);
 
-                textStart = i + 1;
                 d->insertBlock(blockFmt, format);
+                blockStart = i + 1;
             }
         }
-        if (textStart < text.length())
-            d->priv->insert(d->position, QString(text.unicode() + textStart, text.length() - textStart), formatIdx);
+        if (textStart + blockStart < textEnd)
+            d->priv->insert(d->position, textStart + blockStart, textEnd - textStart - blockStart, formatIdx);
     }
     d->priv->endEditBlock();
     d->setX();
@@ -1471,7 +1538,7 @@ static void getText(QString &text, QTextDocumentPrivate *priv, const QString &do
         const QTextFragmentData * const frag = fragIt.value();
 
         const int offsetInFragment = qMax(0, pos - fragIt.position());
-        const int len = qMin(int(frag->size - offsetInFragment), end - pos);
+        const int len = qMin(int(frag->size_array[0] - offsetInFragment), end - pos);
 
         text += QString(docText.constData() + frag->stringPosition + offsetInFragment, len);
         pos += len;
@@ -2096,6 +2163,28 @@ void QTextCursor::insertImage(const QString &name)
 }
 
 /*!
+    \since 4.5
+    \overload
+
+    Convenience function for inserting the given \a image with an optional
+    \a name at the current position().
+*/
+void QTextCursor::insertImage(const QImage &image, const QString &name)
+{
+    if (image.isNull()) {
+        qWarning("QTextCursor::insertImage: attempt to add an invalid image");
+        return;
+    }
+    QString imageName = name;
+    if (name.isEmpty())
+        imageName = QString::number(image.serialNumber());
+    d->priv->document()->addResource(QTextDocument::ImageResource, QUrl(imageName), image);
+    QTextImageFormat format;
+    format.setName(imageName);
+    insertImage(format);
+}
+
+/*!
     \fn bool QTextCursor::operator!=(const QTextCursor &other) const
 
     Returns true if the \a other cursor is at a different position in
@@ -2315,6 +2404,17 @@ int QTextCursor::columnNumber() const
     if (!line.isValid())
         return 0;
     return relativePos - line.textStart();
+}
+
+/*!
+    \since 4.5
+    Returns the document this cursor is associated with.
+*/
+QTextDocument *QTextCursor::document() const
+{
+    if (d->priv)
+        return d->priv->document();
+    return 0; // document went away
 }
 
 QT_END_NAMESPACE

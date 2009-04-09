@@ -6,12 +6,14 @@ HEADERS += \
 	dialogs/qabstractpagesetupdialog.h \
 	dialogs/qabstractpagesetupdialog_p.h \
 	dialogs/qcolordialog.h \
+	dialogs/qcolordialog_p.h \
 	dialogs/qdialog.h \
 	dialogs/qdialog_p.h \
 	dialogs/qerrormessage.h \
 	dialogs/qfiledialog.h \
 	dialogs/qfiledialog_p.h \
 	dialogs/qfontdialog.h \
+	dialogs/qfontdialog_p.h \
 	dialogs/qinputdialog.h \
 	dialogs/qmessagebox.h \
 	dialogs/qpagesetupdialog.h \
@@ -25,14 +27,17 @@ HEADERS += \
         dialogs/qprintpreviewdialog.h
 
 !embedded:mac {
-    SOURCES	+= dialogs/qfiledialog_mac.cpp \
-                   dialogs/qprintdialog_mac.cpp \
-                   dialogs/qpagesetupdialog_mac.cpp
-    OBJECTIVE_SOURCES += dialogs/qcolordialog_mac.mm
+    OBJECTIVE_SOURCES += dialogs/qcolordialog_mac.mm \
+                         dialogs/qfiledialog_mac.mm \
+                         dialogs/qfontdialog_mac.mm \
+                         dialogs/qnspanelproxy_mac.mm \
+                         dialogs/qpagesetupdialog_mac.mm \
+                         dialogs/qprintdialog_mac.mm
 }
 win32 {
     HEADERS += dialogs/qwizard_win_p.h
-    SOURCES += dialogs/qfiledialog_win.cpp \
+    SOURCES += dialogs/qdialogsbinarycompat_win.cpp \
+               dialogs/qfiledialog_win.cpp \
                dialogs/qpagesetupdialog_win.cpp \
                dialogs/qprintdialog_win.cpp \
                dialogs/qwizard_win.cpp
@@ -89,3 +94,4 @@ SOURCES += \
 
 FORMS += dialogs/qpagesetupwidget.ui
 RESOURCES += dialogs/qprintdialog.qrc
+RESOURCES += dialogs/qmessagebox.qrc

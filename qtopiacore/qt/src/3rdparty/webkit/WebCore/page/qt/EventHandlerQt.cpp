@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 Zack Rusin <zack@kde.org>
- * Copyright (C) 2006, 2007 Apple Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,6 @@
 #include "config.h"
 #include "EventHandler.h"
 
-#include <QApplication>
-
 #include "ClipboardQt.h"
 #include "Cursor.h"
 #include "Document.h"
@@ -47,9 +45,9 @@
 #include "MouseEventWithHitTestResults.h"
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
-#include "PlatformScrollBar.h"
 #include "PlatformWheelEvent.h"
 #include "RenderWidget.h"
+#include "Scrollbar.h"
 #include "NotImplemented.h"
 
 QT_BEGIN_NAMESPACE
@@ -58,12 +56,12 @@ QT_END_NAMESPACE
 
 namespace WebCore {
 
-using namespace EventNames;
+const double EventHandler::TextDragDelay = 0.0;
 
 static bool isKeyboardOptionTab(KeyboardEvent* event)
 {
     return event
-        && (event->type() == keydownEvent || event->type() == keypressEvent)
+        && (event->type() == eventNames().keydownEvent || event->type() == eventNames().keypressEvent)
         && event->altKey()
         && event->keyIdentifier() == "U+0009";
 }
@@ -109,9 +107,9 @@ bool EventHandler::passWheelEventToWidget(PlatformWheelEvent& event, Widget* wid
     return static_cast<FrameView*>(widget)->frame()->eventHandler()->handleWheelEvent(event);
 }
 
-Clipboard* EventHandler::createDraggingClipboard() const
+PassRefPtr<Clipboard> EventHandler::createDraggingClipboard() const
 {
-    return new ClipboardQt(ClipboardWritable, true);
+    return ClipboardQt::create(ClipboardWritable, true);
 }
 
 bool EventHandler::passMousePressEventToSubframe(MouseEventWithHitTestResults& mev, Frame* subframe)
@@ -132,31 +130,9 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return true;
 }
 
-bool EventHandler::passMousePressEventToScrollbar(MouseEventWithHitTestResults& mev, PlatformScrollbar* scrollbar)
+unsigned EventHandler::accessKeyModifiers()
 {
-    if (!scrollbar || !scrollbar->isEnabled())
-        return false;
-    return scrollbar->handleMousePressEvent(mev.event());
-}
-
-double EventHandler::textDragDelay() const
-{
-    // Returning zero here is a way of faking the Qt behavior
-    // of always allowing a drag to start immediately after a
-    // mouse press event inside a text selection. Currently we
-    // do not have any way to *enforce* a drag after a given
-    // delay (as defined by QApplication::startDragTime).
-    return 0.0;
-}
-
-int EventHandler::textDragHysteresis() const
-{
-    return QApplication::startDragDistance();
-}
-
-int EventHandler::generalDragHysteresis() const
-{
-    return QApplication::startDragDistance();
+    return PlatformKeyboardEvent::CtrlKey;
 }
 
 }

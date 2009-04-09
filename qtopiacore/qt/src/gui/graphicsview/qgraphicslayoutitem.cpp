@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -104,7 +108,7 @@ static void normalizeHints(qreal &minimum, qreal &preferred, qreal &maximum, qre
     \internal
 */
 QGraphicsLayoutItemPrivate::QGraphicsLayoutItemPrivate(QGraphicsLayoutItem *par, bool layout)
-    : parent(par), isLayout(layout)
+    : parent(par), isLayout(layout), ownedByLayout(false), graphicsItem(0)
 {
 }
 
@@ -163,6 +167,34 @@ QSizeF *QGraphicsLayoutItemPrivate::effectiveSizeHints(const QSizeF &constraint)
     cachedConstraint = constraint;
     sizeHintCacheDirty = false;
     return cachedSizeHints;
+}
+
+
+/*!
+    \internal
+
+    Returns the parent item of this layout, or 0 if this layout is
+    not installed on any widget.
+    
+    If this is the item that the layout is installed on, it will return "itself".
+
+    If the layout is a sub-layout, this function returns the parent
+    widget of the parent layout.
+    
+    Note that it will traverse up the layout item hierarchy instead of just calling
+    QGraphicsItem::parentItem(). This is on purpose.
+
+    \sa parent()
+*/
+QGraphicsItem *QGraphicsLayoutItemPrivate::parentItem() const
+{
+    Q_Q(const QGraphicsLayoutItem);
+
+    const QGraphicsLayoutItem *parent = q;
+    while (parent && parent->isLayout()) {
+        parent = parent->parentLayoutItem();
+    }
+    return parent ? parent->graphicsItem() : 0;
 }
 
 /*!
@@ -264,6 +296,17 @@ QGraphicsLayoutItem::QGraphicsLayoutItem(QGraphicsLayoutItemPrivate &dd)
 */
 QGraphicsLayoutItem::~QGraphicsLayoutItem()
 {
+    QGraphicsLayoutItem *parentLI = parentLayoutItem();
+    if (parentLI && parentLI->isLayout()) {
+        QGraphicsLayout *lay = static_cast<QGraphicsLayout*>(parentLI);
+        // this is not optimal
+        for (int i = lay->count() - 1; i >= 0; --i) {
+            if (lay->itemAt(i) == this) {
+                lay->removeAt(i);
+                break;
+            }
+        }
+    }
     delete d_ptr;
 }
 
@@ -739,6 +782,69 @@ void QGraphicsLayoutItem::setParentLayoutItem(QGraphicsLayoutItem *parent)
 bool QGraphicsLayoutItem::isLayout() const
 {
     return d_func()->isLayout;
+}
+
+/*!
+    Returns whether a layout should delete this item in its destructor.
+    If its true, then the layout will delete it. If its false, then it is
+    assumed that another object has the ownership of it, and the layout won't
+    delete this item.
+    
+    If the item inherits both QGraphicsItem and QGraphicsLayoutItem (such 
+    as QGraphicsWidget does) the item is really part of two ownership 
+    hierarchies. This property informs what the layout should do with its
+    child items when it is destructed. In the case of QGraphicsWidget, it
+    is preferred that when the layout is deleted it won't delete its children 
+    (since they are also part of the graphics item hierarchy).
+
+    By default this value is initialized to false in QGraphicsLayoutItem,
+    but it is overridden by QGraphicsLayout to return true. This is because
+    QGraphicsLayout is not normally part of the QGraphicsItem hierarchy, so the
+    parent layout should delete it.
+    Subclasses might override this default behaviour by calling
+    setOwnedByLayout(true).
+
+    \sa setOwnedByLayout()
+*/
+bool QGraphicsLayoutItem::ownedByLayout() const
+{
+    return d_func()->ownedByLayout;
+}
+/*!
+    Sets whether a layout should delete this item in its destructor or not.
+    \a ownership must be true to in order for the layout to delete it.
+    \sa ownedByLayout()
+*/
+void QGraphicsLayoutItem::setOwnedByLayout(bool ownership)
+{
+    d_func()->ownedByLayout = ownership;
+}
+
+/*!
+ * Returns the QGraphicsItem that this layout item represents.
+ * For QGraphicsWidget it will return itself. For custom items it can return an 
+ * aggregated value. 
+ * 
+ * \sa setGraphicsItem()
+ */
+QGraphicsItem *QGraphicsLayoutItem::graphicsItem() const
+{
+    return d_func()->graphicsItem;
+}
+
+/*!
+ * If the QGraphicsLayoutItem represents a QGraphicsItem, and it wants to take
+ * advantage of the automatic reparenting capabilities of QGraphicsLayout it
+ * should set this value.
+ * Note that if you delete \a item and not delete the layout item, you are 
+ * responsible of calling setGraphicsItem(0) in order to avoid having a 
+ * dangling pointer.
+ * 
+ * \sa graphicsItem()
+ */
+void QGraphicsLayoutItem::setGraphicsItem(QGraphicsItem *item)
+{
+    d_func()->graphicsItem = item;
 }
 
 QT_END_NAMESPACE

@@ -18,72 +18,82 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAngle_H
-#define JSSVGAngle_H
+#ifndef JSSVGAngle_h
+#define JSSVGAngle_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class SVGAngle;
 
-class JSSVGAngle : public KJS::DOMObject {
+class JSSVGAngle : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGAngle(KJS::ExecState*, SVGAngle*);
+    JSSVGAngle(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAngle>, SVGElement* context);
     virtual ~JSSVGAngle();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        UnitTypeAttrNum, ValueAttrNum, ValueInSpecifiedUnitsAttrNum, ValueAsStringAttrNum, 
-
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        NewValueSpecifiedUnitsFuncNum, ConvertToSpecifiedUnitsFuncNum
-    };
-    SVGAngle* impl() const { return m_impl.get(); }
-private:
-    RefPtr<SVGAngle> m_impl;
-};
-
-KJS::JSValue* toJS(KJS::ExecState*, SVGAngle*);
-SVGAngle* toSVGAngle(KJS::JSValue*);
-
-class JSSVGAnglePrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGAnglePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSSVGAnglePrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGAnglePrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
+    SVGAngle* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
 
 private:
-    int id;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGAngle > m_impl;
 };
+
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGAngle*, SVGElement* context);
+SVGAngle* toSVGAngle(JSC::JSValuePtr);
+
+class JSSVGAnglePrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGAnglePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGAnglePrototypeFunctionNewValueSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGAnglePrototypeFunctionConvertToSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGAngleUnitType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAngleValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGAngleValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGAngleValueInSpecifiedUnits(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGAngleValueInSpecifiedUnits(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGAngleValueAsString(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGAngleValueAsString(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGAngleConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGAngleSVG_ANGLETYPE_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAngleSVG_ANGLETYPE_UNSPECIFIED(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAngleSVG_ANGLETYPE_DEG(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAngleSVG_ANGLETYPE_RAD(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAngleSVG_ANGLETYPE_GRAD(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

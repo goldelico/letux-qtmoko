@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2008 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,13 +30,20 @@
 #include "config.h"
 #include "MainResourceLoader.h"
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+#include "ApplicationCache.h"
+#include "ApplicationCacheGroup.h"
+#include "ApplicationCacheResource.h"
+#endif
 #include "DocumentLoader.h"
 #include "Frame.h"
 #include "FrameLoader.h"
 #include "FrameLoaderClient.h"
 #include "HTMLFormElement.h"
+#include "Page.h"
 #include "ResourceError.h"
 #include "ResourceHandle.h"
+#include "Settings.h"
 
 // FIXME: More that is in common with SubresourceLoader should move up into ResourceLoader.
 
@@ -55,7 +63,7 @@ MainResourceLoader::~MainResourceLoader()
 
 PassRefPtr<MainResourceLoader> MainResourceLoader::create(Frame* frame)
 {
-    return new MainResourceLoader(frame);
+    return adoptRef(new MainResourceLoader(frame));
 }
 
 void MainResourceLoader::receivedError(const ResourceError& error)
@@ -64,15 +72,16 @@ void MainResourceLoader::receivedError(const ResourceError& error)
     RefPtr<MainResourceLoader> protect(this);
     RefPtr<Frame> protectFrame(m_frame);
 
+    // It is important that we call FrameLoader::receivedMainResourceError before calling 
+    // FrameLoader::didFailToLoad because receivedMainResourceError clears out the relevant
+    // document loaders. Also, receivedMainResourceError ends up calling a FrameLoadDelegate method
+    // and didFailToLoad calls a ResourceLoadDelegate method and they need to be in the correct order.
+    frameLoader()->receivedMainResourceError(error, true);
+
     if (!cancelled()) {
         ASSERT(!reachedTerminalState());
         frameLoader()->didFailToLoad(this, error);
-    }
-    
-    if (frameLoader())
-        frameLoader()->receivedMainResourceError(error, true);
-
-    if (!cancelled()) {
+        
         releaseResources();
     }
 
@@ -111,7 +120,7 @@ void MainResourceLoader::callContinueAfterNavigationPolicy(void* argument, const
     static_cast<MainResourceLoader*>(argument)->continueAfterNavigationPolicy(request, shouldContinue);
 }
 
-void MainResourceLoader::continueAfterNavigationPolicy(const ResourceRequest& request, bool shouldContinue)
+void MainResourceLoader::continueAfterNavigationPolicy(const ResourceRequest&, bool shouldContinue)
 {
     if (!shouldContinue)
         stopLoadingForPolicyChange();
@@ -161,21 +170,23 @@ void MainResourceLoader::willSendRequest(ResourceRequest& newRequest, const Reso
     if (newRequest.cachePolicy() == UseProtocolCachePolicy && isPostOrRedirectAfterPost(newRequest, redirectResponse))
         newRequest.setCachePolicy(ReloadIgnoringCacheData);
 
-    if (!newRequest.isNull()) {
-        ResourceLoader::willSendRequest(newRequest, redirectResponse);
-        setRequest(newRequest);
-    }
+    ResourceLoader::willSendRequest(newRequest, redirectResponse);
     
     // Don't set this on the first request. It is set when the main load was started.
     m_documentLoader->setRequest(newRequest);
-    
+
+    // FIXME: Ideally we'd stop the I/O until we hear back from the navigation policy delegate
+    // listener. But there's no way to do that in practice. So instead we cancel later if the
+    // listener tells us to. In practice that means the navigation policy needs to be decided
+    // synchronously for these redirect cases.
+
     ref(); // balanced by deref in continueAfterNavigationPolicy
     frameLoader()->checkNavigationPolicy(newRequest, callContinueAfterNavigationPolicy, this);
 }
 
-static bool shouldLoadAsEmptyDocument(const KURL& URL)
+static bool shouldLoadAsEmptyDocument(const KURL& url)
 {
-    return URL.isEmpty() || equalIgnoringCase(String(URL.protocol()), "about");
+    return url.isEmpty() || equalIgnoringCase(String(url.protocol()), "about");
 }
 
 void MainResourceLoader::continueAfterContentPolicy(PolicyAction contentPolicy, const ResourceResponse& r)
@@ -198,6 +209,11 @@ void MainResourceLoader::continueAfterContentPolicy(PolicyAction contentPolicy, 
     }
 
     case PolicyDownload:
+        // m_handle can be null, e.g. when loading a substitute resource from application cache.
+        if (!m_handle) {
+            receivedError(cannotShowURLError());
+            return;
+        }
         frameLoader()->client()->download(m_handle.get(), request(), m_handle.get()->request(), r);
         // It might have gone missing
         if (frameLoader())
@@ -258,7 +274,23 @@ void MainResourceLoader::continueAfterContentPolicy(PolicyAction policy)
 
 void MainResourceLoader::didReceiveResponse(const ResourceResponse& r)
 {
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    if (r.httpStatusCode() / 100 == 4 || r.httpStatusCode() / 100 == 5) {
+        ASSERT(!m_applicationCache);
+        if (m_frame->settings() && m_frame->settings()->offlineWebApplicationCacheEnabled()) {
+            m_applicationCache = ApplicationCacheGroup::fallbackCacheForMainRequest(request(), documentLoader());
+
+            if (scheduleLoadFallbackResourceFromApplicationCache(m_applicationCache.get()))
+                return;
+        }
+    }
+#endif
+
+    // There is a bug in CFNetwork where callbacks can be dispatched even when loads are deferred.
+    // See <rdar://problem/6304600> for more details.
+#if !PLATFORM(CF)
     ASSERT(shouldLoadAsEmptyDocument(r.url()) || !defersLoading());
+#endif
 
     if (m_loadingMultipartContent) {
         frameLoader()->setupForReplaceByMIMEType(r.mimeType());
@@ -286,7 +318,12 @@ void MainResourceLoader::didReceiveData(const char* data, int length, long long 
 {
     ASSERT(data);
     ASSERT(length != 0);
+
+    // There is a bug in CFNetwork where callbacks can be dispatched even when loads are deferred.
+    // See <rdar://problem/6304600> for more details.
+#if !PLATFORM(CF)
     ASSERT(!defersLoading());
+#endif
  
     // The additional processing can do anything including possibly removing the last
     // reference to this object; one example of this is 3266216.
@@ -297,20 +334,53 @@ void MainResourceLoader::didReceiveData(const char* data, int length, long long 
 
 void MainResourceLoader::didFinishLoading()
 {
-    ASSERT(shouldLoadAsEmptyDocument(frameLoader()->URL()) || !defersLoading());
-
+    // There is a bug in CFNetwork where callbacks can be dispatched even when loads are deferred.
+    // See <rdar://problem/6304600> for more details.
+#if !PLATFORM(CF)
+    ASSERT(shouldLoadAsEmptyDocument(frameLoader()->activeDocumentLoader()->url()) || !defersLoading());
+#endif
+    
     // The additional processing can do anything including possibly removing the last
     // reference to this object.
     RefPtr<MainResourceLoader> protect(this);
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    RefPtr<DocumentLoader> dl = documentLoader();
+#endif
+
     frameLoader()->finishedLoading();
     ResourceLoader::didFinishLoading();
+    
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    ApplicationCacheGroup* group = dl->candidateApplicationCacheGroup();
+    if (!group && dl->applicationCache() && !dl->mainResourceApplicationCache())
+        group = dl->applicationCache()->group();
+    
+    if (group)
+        group->finishedLoadingMainResource(dl.get());
+#endif
 }
 
 void MainResourceLoader::didFail(const ResourceError& error)
 {
-    ASSERT(!defersLoading());
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    if (!error.isCancellation()) {
+        ASSERT(!m_applicationCache);
+        if (m_frame->settings() && m_frame->settings()->offlineWebApplicationCacheEnabled()) {
+            m_applicationCache = ApplicationCacheGroup::fallbackCacheForMainRequest(request(), documentLoader());
 
+            if (scheduleLoadFallbackResourceFromApplicationCache(m_applicationCache.get()))
+                return;
+        }
+    }
+#endif
+
+    // There is a bug in CFNetwork where callbacks can be dispatched even when loads are deferred.
+    // See <rdar://problem/6304600> for more details.
+#if !PLATFORM(CF)
+    ASSERT(!defersLoading());
+#endif
+    
     receivedError(error);
 }
 
@@ -381,11 +451,28 @@ bool MainResourceLoader::loadNow(ResourceRequest& r)
     return false;
 }
 
-bool MainResourceLoader::load(const ResourceRequest& r, const SubstituteData&  substituteData)
+bool MainResourceLoader::load(const ResourceRequest& r, const SubstituteData& substituteData)
 {
     ASSERT(!m_handle);
 
     m_substituteData = substituteData;
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    // Check if this request should be loaded from the application cache
+    if (!m_substituteData.isValid() && frameLoader()->frame()->settings() && frameLoader()->frame()->settings()->offlineWebApplicationCacheEnabled()) {
+        ASSERT(!m_applicationCache);
+
+        m_applicationCache = ApplicationCacheGroup::cacheForMainRequest(r, m_documentLoader.get());
+
+        if (m_applicationCache) {
+            // Get the resource from the application cache. By definition, cacheForMainRequest() returns a cache that contains the resource.
+            ApplicationCacheResource* resource = m_applicationCache->resourceForRequest(r);
+            m_substituteData = SubstituteData(resource->data(), 
+                                              resource->response().mimeType(),
+                                              resource->response().textEncodingName(), KURL());
+        }
+    }
+#endif
 
     ResourceRequest request(r);
     bool defer = defersLoading();

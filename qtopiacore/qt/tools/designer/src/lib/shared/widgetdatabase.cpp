@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,12 +53,13 @@
 #include <QtDesigner/QExtensionManager>
 #include <QtDesigner/QDesignerFormEditorInterface>
 
-#include <QtXml/QDomDocument>
+#include <QtXml/QXmlStreamWriter>
 #include <QtCore/QtAlgorithms>
 #include <QtCore/qdebug.h>
 #include <QtCore/QMetaProperty>
 #include <QtCore/QTextStream>
 #include <QtCore/QRegExp>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -285,6 +290,7 @@ WidgetDataBase::WidgetDataBase(QDesignerFormEditorInterface *core, QObject *pare
     append(new WidgetDataBaseItem(QString::fromUtf8("QDesignerDockWidget")));
     append(new WidgetDataBaseItem(QString::fromUtf8("QDesignerQ3WidgetStack")));
     append(new WidgetDataBaseItem(QString::fromUtf8("QAction")));
+    append(new WidgetDataBaseItem(QString::fromUtf8("QButtonGroup")));
 
     // ### remove me
     // ### check the casts
@@ -341,6 +347,22 @@ int WidgetDataBase::indexOfObject(QObject *object, bool /*resolveName*/) const
     return QDesignerWidgetDataBaseInterface::indexOfClassName(id);
 }
 
+static WidgetDataBaseItem *createCustomWidgetItem(const QDesignerCustomWidgetInterface *c,
+                                                  const QDesignerCustomWidgetData &data)
+{
+    WidgetDataBaseItem *item = new WidgetDataBaseItem(c->name(), c->group());
+    item->setContainer(c->isContainer());
+    item->setCustom(true);
+    item->setIcon(c->icon());
+    item->setIncludeFile(c->includeFile());
+    item->setToolTip(c->toolTip());
+    item->setWhatsThis(c->whatsThis());
+    item->setPluginPath(data.pluginPath());
+    item->setAddPageMethod(data.xmlAddPageMethod());
+    item->setExtends(data.xmlExtends());
+    return item;
+}
+
 void WidgetDataBase::loadPlugins()
 {
     typedef QMap<QString, int> NameIndexMap;
@@ -358,23 +380,12 @@ void WidgetDataBase::loadPlugins()
         else
             nonCustomClasses.insert(item->name());
     }
-    // 2) create a list map of plugins and the map for the factory
+    // 2) create a list plugins
     ItemList pluginList;
-    QDesignerPluginManager *pluginManager = m_core->pluginManager();
-    const QStringList plugins = pluginManager->registeredPlugins();
-    pluginManager->ensureInitialized();
-    foreach (QString plugin, plugins) {
-        QObject *o = pluginManager->instance(plugin);
-        if (QDesignerCustomWidgetInterface *c = qobject_cast<QDesignerCustomWidgetInterface*>(o)) {
-            pluginList += createCustomWidgetItem(c, plugin);
-        } else {
-            if (QDesignerCustomWidgetCollectionInterface *coll = qobject_cast<QDesignerCustomWidgetCollectionInterface*>(o)) {
-                foreach (QDesignerCustomWidgetInterface *c, coll->customWidgets()) {
-                    pluginList += createCustomWidgetItem(c, plugin);
-                }
-            }
-        }
-    }
+    const QDesignerPluginManager *pm = m_core->pluginManager();
+    foreach(QDesignerCustomWidgetInterface* c, pm->registeredCustomWidgets())
+        pluginList += createCustomWidgetItem(c, pm->customWidgetData(c));
+
     // 3) replace custom classes or add new ones, remove them from existingCustomClasses,
     // leaving behind deleted items
     unsigned replacedPlugins = 0;
@@ -389,7 +400,7 @@ void WidgetDataBase::loadPlugins()
             if (existingIt == existingCustomClasses.end()) {
                 // Add new class.
                 if (nonCustomClasses.contains(pluginName)) {
-                    designerWarning(QObject::tr("A custom widget plugin whose class name (%1) matches that of an existing class has been found.").arg(pluginName));
+                    designerWarning(tr("A custom widget plugin whose class name (%1) matches that of an existing class has been found.").arg(pluginName));
                 } else {
                     append(pluginItem);
                     addedPlugins++;
@@ -418,54 +429,6 @@ void WidgetDataBase::loadPlugins()
     }
     if (debugWidgetDataBase)
         qDebug() << "WidgetDataBase::loadPlugins(): " << addedPlugins << " added, " << replacedPlugins << " replaced, " << removedPlugins << "deleted.";
-}
-
-// Starting from 4.4, it possible to specify a complete <ui> tag containing
-// some custom info.
-static bool readCustomDomXML(const QString &xml, WidgetDataBaseItem *item)
-{
-    if (xml.indexOf(QLatin1String("<customwidget")) == -1) // pre 4.4 or incomplete tag
-        return false;
-    QString errorMessage;
-    int line, col;
-    QDomDocument doc;
-    if (!doc.setContent(xml, &errorMessage, &line, &col)) {
-        const QString msg = QObject::tr("The xml code specified for the custom widget %1 could not be parsed. An error occurred at line %2: %3").arg(item->name()).arg(line).arg(errorMessage);
-        qdesigner_internal::designerWarning(msg);
-        return false;
-    }
-    QDomElement rootElement = doc.firstChildElement();
-    if (rootElement.nodeName() != QLatin1String("ui"))
-        return false;
-    // Parse out the <customwidget> element
-    const QDomElement customWidgetsElement = rootElement.firstChildElement(QLatin1String("customwidgets"));
-    if (customWidgetsElement.isNull())
-        return false;
-    const QDomElement customWidgetElement = customWidgetsElement.firstChildElement(QLatin1String("customwidget"));
-    if (customWidgetElement.isNull())
-        return false;
-    DomCustomWidget customWidget;
-    customWidget.read(customWidgetElement);
-    if (customWidget.hasElementExtends())
-        item->setExtends(customWidget.elementExtends());
-    if (customWidget.hasElementAddPageMethod())
-        item->setAddPageMethod(customWidget.elementAddPageMethod());
-    return true;
-}
-
-WidgetDataBaseItem *WidgetDataBase::createCustomWidgetItem(const QDesignerCustomWidgetInterface *c, const QString &plugin)
-{
-    WidgetDataBaseItem *item = new WidgetDataBaseItem(c->name(), c->group());
-    item->setContainer(c->isContainer());
-    item->setCustom(true);
-    item->setIcon(c->icon());
-    item->setIncludeFile(c->includeFile());
-    item->setToolTip(c->toolTip());
-    item->setWhatsThis(c->whatsThis());
-    item->setPluginPath(plugin);
-    // Check for an 'ui' tag that might contain extends and addPageMethod
-    readCustomDomXML(c->domXml(), item);
-    return item;
 }
 
 void WidgetDataBase::remove(int index)
@@ -505,7 +468,29 @@ void WidgetDataBase::grabDefaultPropertyValues()
         QDesignerWidgetDataBaseItemInterface *dbItem = item(i);
         const QList<QVariant> default_prop_values = defaultPropertyValues(dbItem->name());
         dbItem->setDefaultPropertyValues(default_prop_values);
+    }
+}
 
+void WidgetDataBase::grabStandardWidgetBoxIcons()
+{
+    // At this point, grab the default icons for the non-custom widgets from
+    // the widget box. They will show up in the object inspector.
+    if (const QDesignerWidgetBox *wb = qobject_cast<const QDesignerWidgetBox *>(m_core->widgetBox())) {
+        const QString qWidgetClass = QLatin1String("QWidget");
+        const int itemCount = count();
+        for (int i = 0; i < itemCount; ++i) {
+            QDesignerWidgetDataBaseItemInterface *dbItem = item(i);
+            if (!dbItem->isCustom() && dbItem->icon().isNull()) {
+                // Careful not to catch the layout icons when looking for
+                // QWidget
+                const QString name = dbItem->name();
+                if (name == qWidgetClass) {
+                    dbItem->setIcon(wb->iconForWidget(name, QLatin1String("Containers")));
+                } else {
+                    dbItem->setIcon(wb->iconForWidget(name));
+                }
+            }
+        }
     }
 }
 
@@ -526,9 +511,7 @@ static inline bool suitableForNewForm(const QString &className)
         return false;
     if (className == QLatin1String("QWorkspace"))
          return false;
-    if (className == QLatin1String("QWizard")) // TODO: Remove
-         return false;
-    if (className == QLatin1String("QSplitter") || className == QLatin1String("QWizardPage"))
+    if (className == QLatin1String("QSplitter"))
          return false;
     if (className.startsWith(QLatin1String("QDesigner")) || className.startsWith(QLatin1String("Q3")) ||  className.startsWith(QLatin1String("QLayout")))
         return false;
@@ -579,9 +562,11 @@ static QString xmlFromWidgetBox(const QDesignerFormEditorInterface *core, const 
     typedef QList<DomProperty*> PropertyList;
 
     QDesignerWidgetBoxInterface::Widget widget;
-    if (!QDesignerWidgetBox::findWidget(core->widgetBox(), className, &widget))
+    const bool found = QDesignerWidgetBox::findWidget(core->widgetBox(), className, QString(), &widget);
+    if (!found)
         return QString();
     DomUI *domUI = QDesignerWidgetBox::xmlToUi(className, widget.domXml(), false);
+    domUI->setAttributeVersion(QLatin1String("4.0"));
     if (!domUI)
         return QString();
     DomWidget *domWidget = domUI->elementWidget();
@@ -620,9 +605,16 @@ static QString xmlFromWidgetBox(const QDesignerFormEditorInterface *core, const 
     domWidget->setElementProperty(properties);
     // Embed in in DomUI and get string. Omit the version number.
     domUI->setElementClass(objectName);
-    QDomDocument doc;
-    doc.appendChild(domUI->write(doc));
-    const QString rc =  doc.toString();
+
+    QString rc;
+    { // Serialize domUI
+        QXmlStreamWriter writer(&rc);
+        writer.setAutoFormatting(true);
+        writer.setAutoFormattingIndent(1);
+        writer.writeStartDocument();
+        domUI->write(writer);
+        writer.writeEndDocument();
+    }
     delete domUI;
     return rc;
 }
@@ -642,7 +634,7 @@ static QString generateNewFormXML(const QString &className, const QString &simil
             str << QLatin1String("<widget class=\"QWidget\" name=\"centralwidget\" />\n");
         } else {
             if (similarClassName == QLatin1String("QWizard"))
-                str << QLatin1String("<widget class=\"QWizardPage\" name=\"wizardPage\" />\n");
+                str << QLatin1String("<widget class=\"QWizardPage\" name=\"wizardPage1\" /><widget class=\"QWizardPage\" name=\"wizardPage2\" />\n");
         }
         str << QLatin1String("</widget>\n</ui>\n");
     }
@@ -668,6 +660,93 @@ QString WidgetDataBase::formTemplate(const QDesignerFormEditorInterface *core, c
     }
     // Generate standard ui based on the class passed on as baseClassName.
     const QString rc = generateNewFormXML(className, similarClass, objectName);
+    return rc;
+}
+
+// Set a fixed size on a XML template
+QString WidgetDataBase::scaleFormTemplate(const QString &xml, const QSize &size, bool fixed)
+{
+    typedef QList<DomProperty*> PropertyList;
+    DomUI *domUI = QDesignerWidgetBox::xmlToUi(QLatin1String("Form"), xml, false);
+    if (!domUI)
+        return QString();
+    DomWidget *domWidget = domUI->elementWidget();
+    if (!domWidget)
+        return QString();
+    // Properties: Find/Ensure the geometry, minimum and maximum sizes properties
+    const QString geometryPropertyName = QLatin1String("geometry");
+    const QString minimumSizePropertyName = QLatin1String("minimumSize");
+    const QString maximumSizePropertyName = QLatin1String("maximumSize");
+    DomProperty *geomProperty = 0;
+    DomProperty *minimumSizeProperty = 0;
+    DomProperty *maximumSizeProperty = 0;
+
+    PropertyList properties = domWidget->elementProperty();
+    const PropertyList::const_iterator cend = properties.constEnd();
+    for (PropertyList::const_iterator it = properties.constBegin(); it != cend; ++it) {
+        const QString name = (*it)->attributeName();
+        if (name == geometryPropertyName) {
+            geomProperty = *it;
+        } else {
+            if (name == minimumSizePropertyName) {
+                minimumSizeProperty = *it;
+            } else {
+                if (name == maximumSizePropertyName)
+                    maximumSizeProperty = *it;
+            }
+        }
+    }
+    if (!geomProperty) {
+        geomProperty = new DomProperty;
+        geomProperty->setAttributeName(geometryPropertyName);
+        geomProperty->setElementRect(new DomRect);
+        properties.push_front(geomProperty);
+    }
+    if (fixed) {
+        if (!minimumSizeProperty) {
+            minimumSizeProperty = new DomProperty;
+            minimumSizeProperty->setAttributeName(minimumSizePropertyName);
+            minimumSizeProperty->setElementSize(new DomSize);
+            properties.push_back(minimumSizeProperty);
+        }
+        if (!maximumSizeProperty) {
+            maximumSizeProperty = new DomProperty;
+            maximumSizeProperty->setAttributeName(maximumSizePropertyName);
+            maximumSizeProperty->setElementSize(new DomSize);
+            properties.push_back(maximumSizeProperty);
+        }
+    }
+    // Set values of geometry, minimum and maximum sizes properties
+    const int width = size.width();
+    const int height = size.height();
+    if (DomRect *geom = geomProperty->elementRect()) {
+        geom->setElementWidth(width);
+        geom->setElementHeight(height);
+    }
+    if (fixed) {
+        if (DomSize *s = minimumSizeProperty->elementSize()) {
+            s->setElementWidth(width);
+            s->setElementHeight(height);
+        }
+        if (DomSize *s = maximumSizeProperty->elementSize()) {
+            s->setElementWidth(width);
+            s->setElementHeight(height);
+        }
+    }
+    // write back
+    domWidget->setElementProperty(properties);
+
+    QString rc;
+    { // serialize domUI
+        QXmlStreamWriter writer(&rc);
+        writer.setAutoFormatting(true);
+        writer.setAutoFormattingIndent(1);
+        writer.writeStartDocument();
+        domUI->write(writer);
+        writer.writeEndDocument();
+    }
+
+    delete domUI;
     return rc;
 }
 
@@ -705,9 +784,15 @@ QDESIGNER_SHARED_EXPORT QDesignerWidgetDataBaseItemInterface *
                       const QString &baseClassName,
                       const QString &includeFile,
                       bool promoted, bool custom)
-        {
+{
     if (debugWidgetDataBase)
         qDebug() << "appendDerived " << className << " derived from " << baseClassName;
+    // Check.
+    if (className.isEmpty() || baseClassName.isEmpty()) {
+        qWarning("** WARNING %s called with an empty class names: '%s' extends '%s'.",
+                 Q_FUNC_INFO, className.toUtf8().constData(), baseClassName.toUtf8().constData());
+        return 0;
+    }
     // Check whether item already exists.
     QDesignerWidgetDataBaseItemInterface *derivedItem = 0;
     const int existingIndex = db->indexOfClassName(className);
@@ -726,10 +811,11 @@ QDESIGNER_SHARED_EXPORT QDesignerWidgetDataBaseItemInterface *
             return derivedItem;
 
         // Warn about mismatches
-        const char *baseWarning = "The file contains a custom widget '%1' whose base class (%2)"
+        designerWarning(QCoreApplication::translate("WidgetDataBase",
+          "The file contains a custom widget '%1' whose base class (%2)"
           " differs from the current entry in the widget database (%3)."
-           " The widget database is left unchanged.";
-        designerWarning(QObject::tr(baseWarning).arg(className).arg(baseClassName).arg(existingBaseClass));
+          " The widget database is left unchanged.").
+                        arg(className, baseClassName, existingBaseClass));
         return derivedItem;
     }
     // Create this item, inheriting its base properties

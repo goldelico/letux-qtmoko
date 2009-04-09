@@ -1,43 +1,48 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include "qplatformdefs.h"
 #include <qdebug.h>
 #include "qpdf_p.h"
 #include <qfile.h>
+#include <qtemporaryfile.h>
 #include <private/qmath_p.h>
 #include "private/qcups_p.h"
 #include "qprinterinfo.h"
@@ -117,6 +122,137 @@ const char *qt_int_to_string(int val, char *buf) {
     *(buf++) = ' ';
     *buf = 0;
     return ret;
+}
+
+
+namespace QPdf {
+    ByteStream::ByteStream(QByteArray *byteArray, bool fileBacking)
+            : dev(new QBuffer(byteArray)),
+            fileBackingEnabled(fileBacking),
+            fileBackingActive(false),
+            handleDirty(false)
+    {
+        dev->open(QIODevice::ReadWrite);
+    }
+
+    ByteStream::ByteStream(bool fileBacking)
+            : dev(new QBuffer(&ba)),
+            fileBackingEnabled(fileBacking),
+            fileBackingActive(false),
+            handleDirty(false)
+    {
+        dev->open(QIODevice::ReadWrite);
+    }
+
+    ByteStream::~ByteStream()
+    {
+        delete dev;
+    }
+
+    ByteStream &ByteStream::operator <<(char chr)
+    {
+        if (handleDirty) prepareBuffer();
+        dev->write(&chr, 1);
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(const char *str)
+    {
+        if (handleDirty) prepareBuffer();
+        dev->write(str, strlen(str));
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(const QByteArray &str)
+    {
+        if (handleDirty) prepareBuffer();
+        dev->write(str);
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(const ByteStream &src)
+    {
+        Q_ASSERT(!src.dev->isSequential());
+        if (handleDirty) prepareBuffer();
+        // We do play nice here, even though it looks ugly.
+        // We save the position and restore it afterwards.
+        ByteStream &s = const_cast<ByteStream&>(src);
+        qint64 pos = s.dev->pos();
+        s.dev->reset();
+        while (!s.dev->atEnd()) {
+            QByteArray buf = s.dev->read(chunkSize());
+            dev->write(buf);
+        }
+        s.dev->seek(pos);
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(qreal val) {
+        char buf[256];
+        qt_real_to_string(val, buf);
+        *this << buf;
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(int val) {
+        char buf[256];
+        qt_int_to_string(val, buf);
+        *this << buf;
+        return *this;
+    }
+
+    ByteStream &ByteStream::operator <<(const QPointF &p) {
+        char buf[256];
+        qt_real_to_string(p.x(), buf);
+        *this << buf;
+        qt_real_to_string(p.y(), buf);
+        *this << buf;
+        return *this;
+    }
+
+    QIODevice *ByteStream::stream()
+    {
+        dev->reset();
+        handleDirty = true;
+        return dev;
+    }
+
+    void ByteStream::clear()
+    {
+        dev->open(QIODevice::ReadWrite | QIODevice::Truncate);
+    }
+
+    void ByteStream::constructor_helper(QByteArray *ba)
+    {
+        delete dev;
+        dev = new QBuffer(ba);
+        dev->open(QIODevice::ReadWrite);
+    }
+
+    void ByteStream::prepareBuffer()
+    {
+        Q_ASSERT(!dev->isSequential());
+        qint64 size = dev->size();
+        if (fileBackingEnabled && !fileBackingActive
+                && size > maxMemorySize()) {
+            // Switch to file backing.
+            QTemporaryFile *newFile = new QTemporaryFile;
+            newFile->open();
+            dev->reset();
+            while (!dev->atEnd()) {
+                QByteArray buf = dev->read(chunkSize());
+                newFile->write(buf);
+            }
+            delete dev;
+            dev = newFile;
+            ba.clear();
+            fileBackingActive = true;
+        }
+        if (dev->pos() != size) {
+            dev->seek(size);
+            handleDirty = false;
+        }
+    }
 }
 
 #define QT_PATH_ELEMENT(elm)
@@ -786,7 +922,7 @@ QByteArray QPdf::stripSpecialCharacters(const QByteArray &string)
 // -------------------------- base engine, shared code between PS and PDF -----------------------
 
 QPdfBaseEngine::QPdfBaseEngine(QPdfBaseEnginePrivate &dd, PaintEngineFeatures f)
-    : QPaintEngine(dd, f)
+    : QAlphaPaintEngine(dd, f)
 {
     Q_D(QPdfBaseEngine);
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
@@ -873,26 +1009,33 @@ void QPdfBaseEngine::drawRects (const QRectF *rects, int rectCount)
 
 void QPdfBaseEngine::drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode)
 {
+    Q_D(QPdfBaseEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawPolygon(points, pointCount, mode);
+        if (!continueCall())
+            return;
+    }
+
     if (!points || !pointCount)
         return;
-    Q_D(QPdfBaseEngine);
 
     bool hb = d->hasBrush;
     QPainterPath p;
 
     switch(mode) {
-    case OddEvenMode:
-        p.setFillRule(Qt::OddEvenFill);
-        break;
-    case ConvexMode:
-    case WindingMode:
-        p.setFillRule(Qt::WindingFill);
-        break;
-    case PolylineMode:
-        d->hasBrush = false;
-        break;
-    default:
-        break;
+        case OddEvenMode:
+            p.setFillRule(Qt::OddEvenFill);
+            break;
+        case ConvexMode:
+        case WindingMode:
+            p.setFillRule(Qt::WindingFill);
+            break;
+        case PolylineMode:
+            d->hasBrush = false;
+            break;
+        default:
+            break;
     }
 
     p.moveTo(points[0]);
@@ -909,6 +1052,13 @@ void QPdfBaseEngine::drawPolygon(const QPointF *points, int pointCount, PolygonD
 void QPdfBaseEngine::drawPath (const QPainterPath &p)
 {
     Q_D(QPdfBaseEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawPath(p);
+        if (!continueCall())
+            return;
+    }
+
     if (d->clipEnabled && d->allClipped)
         return;
     if (!d->hasPen && !d->hasBrush)
@@ -936,6 +1086,12 @@ void QPdfBaseEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
 {
     Q_D(QPdfBaseEngine);
 
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawTextItem(p, textItem);
+        if (!continueCall())
+            return;
+    }
+
     if (!d->hasPen || (d->clipEnabled && d->allClipped))
         return;
 
@@ -961,6 +1117,13 @@ void QPdfBaseEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
 void QPdfBaseEngine::updateState(const QPaintEngineState &state)
 {
     Q_D(QPdfBaseEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::updateState(state);
+        if (!continueCall())
+            return;
+    }
+
     QPaintEngine::DirtyFlags flags = state.state();
 
     if (flags & DirtyTransform)
@@ -1072,6 +1235,32 @@ void QPdfBaseEngine::updateClipPath(const QPainterPath &p, Qt::ClipOperation op)
         path = d->stroker.matrix.map(path);
         d->clips.clear();
         d->clips.append(path);
+    }
+
+    if (d->useAlphaEngine) {
+        // if we have an alpha region, we have to subtract that from the
+        // any existing clip region since that region will be filled in
+        // later with images
+        QPainterPath alphaClip;
+        alphaClip.addRegion(alphaClipping());
+        if (!alphaClip.isEmpty()) {
+            if (!d->clipEnabled) {
+                QRect r = d->fullPage ? d->paperRect() : d->pageRect();
+                QPainterPath dev;
+                dev.addRect(QRect(0, 0, r.width(), r.height()));
+                if (path.isEmpty())
+                    path = dev;
+                else
+                    path = path.intersected(dev);
+                d->clipEnabled = true;
+            } else {
+                path = painter()->clipPath();
+                path = d->stroker.matrix.map(path);
+            }
+            path = path.subtracted(alphaClip);
+            d->clips.clear();
+            d->clips.append(path);
+        }
     }
 }
 
@@ -1376,6 +1565,7 @@ QVariant QPdfBaseEngine::property(PrintEnginePropertyKey key) const
 
 QPdfBaseEnginePrivate::QPdfBaseEnginePrivate(QPrinter::PrinterMode m)
     : clipEnabled(false), allClipped(false), hasPen(true), hasBrush(false), simplePen(false),
+      useAlphaEngine(false),
       outDevice(0), fd(-1),
       duplex(QPrinter::DuplexNone), collate(false), fullPage(false), embedFonts(true), copies(1),
       pageOrder(QPrinter::FirstPageFirst), orientation(QPrinter::Portrait),
@@ -1450,8 +1640,10 @@ bool QPdfBaseEnginePrivate::openPrintDevice()
 
     if (!outputFileName.isEmpty()) {
         QFile *file = new QFile(outputFileName);
-        if (! file->open(QFile::WriteOnly|QFile::Truncate))
+        if (! file->open(QFile::WriteOnly|QFile::Truncate)) {
+            delete file;
             return false;
+        }
         outDevice = file;
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
     } else if (QCUPSSupport::isAvailable()) {
@@ -1721,7 +1913,7 @@ void QPdfBaseEnginePrivate::drawTextItem(const QPointF &p, const QTextItemInt &t
     QVarLengthArray<QFixedPoint> positions;
     QTransform m;
     m.translate(p.x(), p.y());
-    ti.fontEngine->getGlyphPositions(ti.glyphs, ti.num_glyphs, m, ti.flags,
+    ti.fontEngine->getGlyphPositions(ti.glyphs, m, ti.flags,
                                      glyphs, positions);
     if (glyphs.size() == 0)
         return;
@@ -1837,9 +2029,9 @@ QRect QPdfBaseEnginePrivate::pageRect() const
     QRect r;
 
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
-    if (QCUPSSupport::isAvailable() && !cupsPageRect.isNull()) {
+    if (!hasCustomPageMargins && QCUPSSupport::isAvailable() && !cupsPageRect.isNull()) {
         r = cupsPageRect;
-        if (!hasCustomPageMargins && r == cupsPaperRect) {
+        if (r == cupsPaperRect) {
             // if cups doesn't define any margins, give it at least approx 3.5 mm
             r = QRect(10, 10, r.width() - 20, r.height() - 20);
         }

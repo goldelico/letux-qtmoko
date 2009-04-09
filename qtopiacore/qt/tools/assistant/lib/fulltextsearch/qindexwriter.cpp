@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QCLucene library and is distributable under
@@ -42,8 +42,7 @@ QCLuceneIndexWriter::QCLuceneIndexWriter(const QString &path,
     : d(new QCLuceneIndexWriterPrivate())
     , analyzer(analyzer)
 {
-    const QByteArray tmpPath = path.toLocal8Bit();
-    d->writer = new lucene::index::IndexWriter(tmpPath.constData(), 
+    d->writer = new lucene::index::IndexWriter(path, 
         analyzer.d->analyzer, create, closeDir);
 }
 

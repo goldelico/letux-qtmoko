@@ -35,18 +35,18 @@ class RenderTableRow : public RenderContainer {
 public:
     RenderTableRow(Node*);
 
-    virtual const char* renderName() const { return "RenderTableRow"; }
+    RenderTableSection* section() const { return static_cast<RenderTableSection*>(parent()); }
+    RenderTable* table() const { return static_cast<RenderTable*>(parent()->parent()); }
+
+private:
+    virtual const char* renderName() const { return isAnonymous() ? "RenderTableRow (anonymous)" : "RenderTableRow"; }
 
     virtual bool isTableRow() const { return true; }
 
     virtual void destroy();
 
-    RenderTableSection* section() const { return static_cast<RenderTableSection*>(parent()); }
-    RenderTable* table() const { return static_cast<RenderTable*>(parent()->parent()); }
-
-    virtual void setStyle(RenderStyle*);
     virtual void addChild(RenderObject* child, RenderObject* beforeChild = 0);
-    virtual short lineHeight(bool firstLine, bool isRootLineBox = false) const { return 0; }
+    virtual int lineHeight(bool, bool) const { return 0; }
     virtual void position(InlineBox*) { }
     virtual void layout();
     virtual IntRect absoluteClippedOverflowRect();
@@ -56,7 +56,10 @@ public:
     virtual bool requiresLayer() { return isTransparent() || hasOverflowClip(); }
 
     virtual void paint(PaintInfo&, int tx, int ty);
-    virtual void imageChanged(CachedImage*);
+    virtual void imageChanged(WrappedImagePtr, const IntRect* = 0);
+
+    virtual void styleWillChange(RenderStyle::Diff, const RenderStyle* newStyle);
+
 };
 
 } // namespace WebCore

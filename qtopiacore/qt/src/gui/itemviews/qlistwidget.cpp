@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -73,7 +77,7 @@ void QListModel::clear()
 {
     for (int i = 0; i < items.count(); ++i) {
         if (items.at(i)) {
-            items.at(i)->d->id = -1;
+            items.at(i)->d->theid = -1;
             items.at(i)->view = 0;
             delete items.at(i);
         }
@@ -94,7 +98,7 @@ void QListModel::remove(QListWidgetItem *item)
     int row = items.indexOf(item); // ### use index(item) - it's faster
     Q_ASSERT(row != -1);
     beginRemoveRows(QModelIndex(), row, row);
-    items.at(row)->d->id = -1;
+    items.at(row)->d->theid = -1;
     items.at(row)->view = 0;
     items.removeAt(row);
     endRemoveRows();
@@ -120,7 +124,7 @@ void QListModel::insert(int row, QListWidgetItem *item)
     }
     beginInsertRows(QModelIndex(), row, row);
     items.insert(row, item);
-    item->d->id = row;
+    item->d->theid = row;
     endInsertRows();
 }
 
@@ -144,7 +148,7 @@ void QListModel::insert(int row, const QStringList &labels)
         beginInsertRows(QModelIndex(), row, row + count - 1);
         for (int i = 0; i < count; ++i) {
             QListWidgetItem *item = new QListWidgetItem(labels.at(i));
-            item->d->id = row;
+            item->d->theid = row;
             item->view = qobject_cast<QListWidget*>(QObject::parent());
             items.insert(row++, item);
         }
@@ -158,7 +162,7 @@ QListWidgetItem *QListModel::take(int row)
         return 0;
 
     beginRemoveRows(QModelIndex(), row, row);
-    items.at(row)->d->id = -1;
+    items.at(row)->d->theid = -1;
     items.at(row)->view = 0;
     QListWidgetItem *item = items.takeAt(row);
     endRemoveRows();
@@ -176,14 +180,14 @@ QModelIndex QListModel::index(QListWidgetItem *item) const
         || items.isEmpty())
         return QModelIndex();
     int row;
-    const int id = item->d->id;
-    if (id >= 0 && id < items.count() && items.at(id) == item) {
-        row = id;
+    const int theid = item->d->theid;
+    if (theid >= 0 && theid < items.count() && items.at(theid) == item) {
+        row = theid;
     } else { // we need to search for the item
         row = items.lastIndexOf(item);  // lastIndexOf is an optimization in favor of indexOf
         if (row == -1) // not found
             return QModelIndex();
-        item->d->id = row;
+        item->d->theid = row;
     }
     return createIndex(row, 0, item);
 }
@@ -235,7 +239,7 @@ bool QListModel::insertRows(int row, int count, const QModelIndex &parent)
     for (int r = row; r < row + count; ++r) {
         itm = new QListWidgetItem;
         itm->view = view;
-        itm->d->id = r;
+        itm->d->theid = r;
         items.insert(r, itm);
     }
 
@@ -253,7 +257,7 @@ bool QListModel::removeRows(int row, int count, const QModelIndex &parent)
     for (int r = row; r < row + count; ++r) {
         itm = items.takeAt(row);
         itm->view = 0;
-        itm->d->id = -1;
+        itm->d->theid = -1;
         delete itm;
     }
     endRemoveRows();
@@ -274,23 +278,22 @@ void QListModel::sort(int column, Qt::SortOrder order)
 
     emit layoutAboutToBeChanged();
 
-    QModelIndexList fromIndexes;
     QVector < QPair<QListWidgetItem*,int> > sorting(items.count());
     for (int i = 0; i < items.count(); ++i) {
         QListWidgetItem *item = items.at(i);
         sorting[i].first = item;
         sorting[i].second = i;
-        fromIndexes.append(createIndex(i, 0, item));
     }
 
     LessThan compare = (order == Qt::AscendingOrder ? &itemLessThan : &itemGreaterThan);
     qSort(sorting.begin(), sorting.end(), compare);
-
+    QModelIndexList fromIndexes;
     QModelIndexList toIndexes;
     for (int r = 0; r < sorting.count(); ++r) {
         QListWidgetItem *item = sorting.at(r).first;
-        items[r] = item;
-        toIndexes.append(createIndex(sorting.at(r).second, 0, item));
+        toIndexes.append(createIndex(r, 0, item));
+        fromIndexes.append(createIndex(sorting.at(r).second, 0, sorting.at(r).first));
+        items[r] = sorting.at(r).first;
     }
     changePersistentIndexList(fromIndexes, toIndexes);
 
@@ -1752,7 +1755,7 @@ void QListWidget::dropEvent(QDropEvent *event) {
         return;
     }
 
-    if (event->source() == this && (event->proposedAction() == Qt::MoveAction ||
+    if (event->source() == this && (event->dropAction() == Qt::MoveAction ||
                                     dragDropMode() == QAbstractItemView::InternalMove)) {
         QModelIndex topIndex;
         int col = -1;
@@ -1760,7 +1763,7 @@ void QListWidget::dropEvent(QDropEvent *event) {
         if (d->dropOn(event, &row, &col, &topIndex)) {
             QList<QModelIndex> selIndexes = selectedIndexes();
             QList<QPersistentModelIndex> persIndexes;
-            for(int i = 0; i < selIndexes.count(); i++)
+            for (int i = 0; i < selIndexes.count(); i++)
                 persIndexes.append(selIndexes.at(i));
 
             if (persIndexes.contains(topIndex))

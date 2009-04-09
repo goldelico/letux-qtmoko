@@ -22,7 +22,7 @@ CL_NS_DEF(search)
      * @param prefixLength Length of required common prefix. Default value is 0.
      * @throws IOException
      */
-	 FuzzyTermEnum::FuzzyTermEnum(const IndexReader* reader, Term* term, float_t minSimilarity, size_t prefixLength): 
+	 FuzzyTermEnum::FuzzyTermEnum(const IndexReader* reader, Term* term, qreal minSimilarity, size_t prefixLength): 
         distance(0),
         _endEnum(false),
 		prefix(LUCENE_BLANK_STRING),
@@ -125,20 +125,20 @@ CL_NS_DEF(search)
 
 		    //Calculate the Levenshtein distance
 			int32_t dist = editDistance(text, target, textLen, targetLen);
-			distance = 1 - ((float_t)dist / (float_t)min(textLen, targetLen));
+			distance = 1 - ((qreal)dist / (qreal)min(textLen, targetLen));
 			return (distance > minimumSimilarity);
       }
 		_endEnum = true;
 		return false;
   }
 
-  float_t FuzzyTermEnum::difference() {
+  qreal FuzzyTermEnum::difference() {
   //Func - Returns the difference between the distance and the fuzzy threshold
   //       multiplied by the scale factor
   //Pre  - true
   //Post - The difference is returned
 
-     return (float_t)((distance - minimumSimilarity) * scale_factor );
+     return (qreal)((distance - minimumSimilarity) * scale_factor );
   }
   
   
@@ -229,7 +229,7 @@ CL_NS_DEF(search)
    * @throws IllegalArgumentException if minimumSimilarity is &gt; 1 or &lt; 0
    * or if prefixLength &lt; 0 or &gt; <code>term.text().length()</code>.
    */
-  FuzzyQuery::FuzzyQuery(Term* term, float_t minimumSimilarity, size_t prefixLength):
+  FuzzyQuery::FuzzyQuery(Term* term, qreal minimumSimilarity, size_t prefixLength):
 	MultiTermQuery(term)
   {
   //Func - Constructor
@@ -252,7 +252,7 @@ CL_NS_DEF(search)
     }
   
   
-    float_t FuzzyQuery::defaultMinSimilarity = 0.5f;
+    qreal FuzzyQuery::defaultMinSimilarity = 0.5f;
 
     FuzzyQuery::~FuzzyQuery(){
     //Func - Destructor
@@ -299,7 +299,7 @@ CL_NS_DEF(search)
    * Returns the minimum similarity that is required for this query to match.
    * @return float value between 0.0 and 1.0
    */
-  float_t FuzzyQuery::getMinSimilarity() const {
+  qreal FuzzyQuery::getMinSimilarity() const {
     return minimumSimilarity;
   }
 

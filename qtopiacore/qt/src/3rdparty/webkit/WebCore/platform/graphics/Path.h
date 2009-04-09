@@ -35,22 +35,30 @@ QT_BEGIN_NAMESPACE
 class QPainterPath;
 QT_END_NAMESPACE
 typedef QPainterPath PlatformPath;
+#elif PLATFORM(WX) && USE(WXGC)
+class wxGraphicsPath;
+typedef wxGraphicsPath PlatformPath;
 #elif PLATFORM(CAIRO)
 namespace WebCore {
     struct CairoPath;
 }
 typedef WebCore::CairoPath PlatformPath;
+#elif PLATFORM(SKIA)
+class SkPath;
+typedef SkPath PlatformPath;
 #else
 typedef void PlatformPath;
 #endif
 
 namespace WebCore {
 
-    class AffineTransform;
+    class TransformationMatrix;
     class FloatPoint;
     class FloatSize;
     class FloatRect;
+    class GraphicsContext;
     class String;
+    class StrokeStyleApplier;
 
     enum WindRule {
         RULE_NONZERO = 0,
@@ -82,6 +90,7 @@ namespace WebCore {
 
         bool contains(const FloatPoint&, WindRule rule = RULE_NONZERO) const;
         FloatRect boundingRect() const;
+        FloatRect strokeBoundingRect(StrokeStyleApplier* applier = 0);
         
         float length();
         FloatPoint pointAtLength(float length, bool& ok);
@@ -92,19 +101,16 @@ namespace WebCore {
 
         void moveTo(const FloatPoint&);
         void addLineTo(const FloatPoint&);
-        void addQuadCurveTo(const FloatPoint& controlPoint, const FloatPoint& point);
-        void addBezierCurveTo(const FloatPoint& controlPoint1, const FloatPoint& controlPoint2, const FloatPoint&);
+        void addQuadCurveTo(const FloatPoint& controlPoint, const FloatPoint& endPoint);
+        void addBezierCurveTo(const FloatPoint& controlPoint1, const FloatPoint& controlPoint2, const FloatPoint& endPoint);
         void addArcTo(const FloatPoint&, const FloatPoint&, float radius);
         void closeSubpath();
 
-        void addArc(const FloatPoint&, float radius, float startAngle, float endAngle, bool clockwise);
+        void addArc(const FloatPoint&, float radius, float startAngle, float endAngle, bool anticlockwise);
         void addRect(const FloatRect&);
         void addEllipse(const FloatRect&);
 
         void translate(const FloatSize&);
-
-        void setWindingRule(WindRule rule) { m_rule = rule; }
-        WindRule windingRule() const { return m_rule; }
 
         String debugString() const;
 
@@ -118,11 +124,10 @@ namespace WebCore {
         static Path createLine(const FloatPoint&, const FloatPoint&);
 
         void apply(void* info, PathApplierFunction) const;
-        void transform(const AffineTransform&);
+        void transform(const TransformationMatrix&);
 
     private:
         PlatformPath* m_path;
-        WindRule m_rule;
     };
 
 }

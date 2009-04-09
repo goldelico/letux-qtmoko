@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,7 @@
 #include "qbrush.h"
 #include "qgl.h"
 #include <private/qgl_p.h>
+#include <private/qpainter_p.h>
 #include "qmap.h"
 #include <private/qpaintengine_opengl_p.h>
 #include <private/qdatabuffer_p.h>
@@ -58,6 +63,7 @@
 #include <qglframebufferobject.h>
 
 #include "private/qtessellator_p.h"
+#include "private/qwindowsurface_gl_p.h"
 
 #include "util/fragmentprograms_p.h"
 
@@ -68,7 +74,7 @@
 #include "private/qwsmanager_p.h"
 #endif
 
-#ifdef QT_OPENGL_ES_CL
+#ifdef QT_OPENGL_ES_1_CL
 #include "qgl_cl_p.h"
 #endif
 
@@ -80,6 +86,9 @@
 QT_BEGIN_NAMESPACE
 
 extern QImage qt_imageForBrush(int brushStyle, bool invert); //in qbrush.cpp
+#ifdef QT_MAC_USE_COCOA
+extern void *qt_current_nsopengl_context(); // qgl_mac.mm
+#endif
 
 #define QREAL_MAX 9e100
 #define QREAL_MIN -9e100
@@ -111,6 +120,11 @@ static inline void qt_glColor4ubv(unsigned char *col)
 #endif
 }
 
+struct QT_PointF {
+    qreal x;
+    qreal y;
+};
+
 void qt_add_rect_to_array(const QRectF &r, q_vertexType *array)
 {
     qreal left = r.left();
@@ -128,7 +142,7 @@ void qt_add_rect_to_array(const QRectF &r, q_vertexType *array)
     array[7] = f2vt(bottom);
 }
 
-static void qt_add_texcoords_to_array(qreal x1, qreal y1, qreal x2, qreal y2, q_vertexType *array)
+void qt_add_texcoords_to_array(qreal x1, qreal y1, qreal x2, qreal y2, q_vertexType *array)
 {
     array[0] = f2vt(x1);
     array[1] = f2vt(y1);
@@ -179,9 +193,7 @@ const QGLTrapezoid QGLTrapezoid::translated(const QPointF &delta) const
 class QGLDrawable {
 public:
     QGLDrawable() : widget(0), buffer(0), fbo(0)
-#ifdef Q_WS_QWS
                   , wsurf(0)
-#endif
         {}
     inline void setDevice(QPaintDevice *pdev);
     inline void swapBuffers();
@@ -196,16 +208,20 @@ public:
     inline bool autoFillBackground() const;
 
 private:
+    bool wasBound;
     QGLWidget *widget;
     QGLPixelBuffer *buffer;
     QGLFramebufferObject *fbo;
 #ifdef Q_WS_QWS
     QWSGLWindowSurface *wsurf;
+#else
+    QGLWindowSurface *wsurf;
 #endif
 };
 
 void QGLDrawable::setDevice(QPaintDevice *pdev)
 {
+    wasBound = false;
     widget = 0;
     buffer = 0;
     fbo = 0;
@@ -218,9 +234,11 @@ void QGLDrawable::setDevice(QPaintDevice *pdev)
         buffer = static_cast<QGLPixelBuffer *>(pdev);
     else if (pdev->devType() == QInternal::FramebufferObject)
         fbo = static_cast<QGLFramebufferObject *>(pdev);
-#ifdef Q_WS_QWS
     else if (pdev->devType() == QInternal::UnknownDevice)
+#ifdef Q_WS_QWS
         wsurf = static_cast<QWSGLPaintDevice*>(pdev)->windowSurface();
+#else
+        wsurf = static_cast<QGLWindowSurface *>(pdev);
 #endif
 }
 
@@ -240,13 +258,18 @@ inline void QGLDrawable::makeCurrent()
         widget->makeCurrent();
     else if (buffer)
         buffer->makeCurrent();
-    else if (fbo)
-        fbo->bind();
+    else if (wsurf)
+        wsurf->context()->makeCurrent();
+    else if (fbo) {
+        wasBound = fbo->isBound();
+        if (!wasBound)
+            fbo->bind();
+    }
 }
 
 inline void QGLDrawable::doneCurrent()
 {
-    if (fbo)
+    if (fbo && !wasBound)
         fbo->release();
 }
 
@@ -259,9 +282,11 @@ inline QSize QGLDrawable::size() const
         return buffer->size();
     } else if (fbo) {
         return fbo->size();
-#ifdef Q_WS_QWS
     } else if (wsurf) {
+#ifdef Q_WS_QWS
         return wsurf->window()->frameSize();
+#else
+        return QSize(wsurf->width(), wsurf->height());
 #endif
     }
     return QSize();
@@ -273,16 +298,15 @@ inline QGLFormat QGLDrawable::format() const
         return widget->format();
     else if (buffer)
         return buffer->format();
+    else if (wsurf)
+        return wsurf->context()->format();
     else if (fbo && QGLContext::currentContext()) {
         QGLFormat fmt = QGLContext::currentContext()->format();
         fmt.setStencil(fbo->attachment() == QGLFramebufferObject::CombinedDepthStencil);
         fmt.setDepth(fbo->attachment() != QGLFramebufferObject::NoAttachment);
         return fmt;
     }
-#ifdef Q_WS_QWS
-    else if (wsurf)
-        return wsurf->context()->format();
-#endif
+
     return QGLFormat();
 }
 
@@ -294,10 +318,8 @@ inline GLuint QGLDrawable::bindTexture(const QImage &image, GLenum target, GLint
         return buffer->d_func()->qctx->d_func()->bindTexture(image, target, format, true);
     else if (fbo && QGLContext::currentContext())
         return const_cast<QGLContext *>(QGLContext::currentContext())->d_func()->bindTexture(image, target, format, true);
-#ifdef Q_WS_QWS
     else if (wsurf)
         return wsurf->context()->d_func()->bindTexture(image, target, format, true);
-#endif
     return 0;
 }
 
@@ -309,10 +331,8 @@ inline GLuint QGLDrawable::bindTexture(const QPixmap &pixmap, GLenum target, GLi
         return buffer->d_func()->qctx->d_func()->bindTexture(pixmap, target, format, true);
     else if (fbo && QGLContext::currentContext())
         return const_cast<QGLContext *>(QGLContext::currentContext())->d_func()->bindTexture(pixmap, target, format, true);
-#ifdef Q_WS_QWS
     else if (wsurf)
         return wsurf->context()->d_func()->bindTexture(pixmap, target, format, true);
-#endif
     return 0;
 }
 
@@ -331,10 +351,8 @@ inline QGLContext *QGLDrawable::context() const
         return buffer->d_func()->qctx;
     else if (fbo)
         return const_cast<QGLContext *>(QGLContext::currentContext());
-#ifdef Q_WS_QWS
     else if (wsurf)
         return wsurf->context();
-#endif
     return 0;
 }
 
@@ -738,8 +756,8 @@ public:
             const QGLContext *cx = contexts.at(i);
             if (cx != ctx && qgl_share_reg()->checkSharing(cx, ctx)) {
                 QList<GLProgram> progs = programs.values(cx);
-                for (int k=0; k<progs.size(); ++i) {
-                    const GLProgram &prg = progs.at(i);
+                for (int k=0; k<progs.size(); ++k) {
+                    const GLProgram &prg = progs.at(k);
                     if (mask_mode) {
                         if (prg.mask && prg.brush == brush) {
                             programs.insert(ctx, prg);
@@ -832,7 +850,7 @@ private:
     QOpenGLPaintEnginePrivate *p;
 };
 
-class QOpenGLPaintEnginePrivate : public QPaintEnginePrivate
+class QOpenGLPaintEnginePrivate : public QPaintEngineExPrivate
 {
     Q_DECLARE_PUBLIC(QOpenGLPaintEngine)
 public:
@@ -841,10 +859,12 @@ public:
         , composition_mode(QPainter::CompositionMode_SourceOver)
         , has_fast_pen(false)
         , use_stencil_method(false)
+        , dirty_drawable_texture(false)
         , has_stencil_face_ext(false)
         , use_fragment_programs(false)
         , high_quality_antialiasing(false)
         , use_smooth_pixmap_transform(false)
+        , use_emulation(false)
         , txop(QTransform::TxNone)
         , inverseScale(1)
         , moveToCount(0)
@@ -856,17 +876,17 @@ public:
 
     inline void setGLPen(const QColor &c) {
         uint alpha = qRound(c.alpha() * opacity);
-        pen_color[0] = (c.red() * alpha + 128) >> 8;
-        pen_color[1] = (c.green() * alpha + 128) >> 8;
-        pen_color[2] = (c.blue() * alpha + 128) >> 8;
+        pen_color[0] = qt_div_255(c.red() * alpha);
+        pen_color[1] = qt_div_255(c.green() * alpha);
+        pen_color[2] = qt_div_255(c.blue() * alpha);
         pen_color[3] = alpha;
     }
 
     inline void setGLBrush(const QColor &c) {
         uint alpha = qRound(c.alpha() * opacity);
-        brush_color[0] = (c.red() * alpha + 128) >> 8;
-        brush_color[1] = (c.green() * alpha + 128) >> 8;
-        brush_color[2] = (c.blue() * alpha + 128) >> 8;
+        brush_color[0] = qt_div_255(c.red() * alpha);
+        brush_color[1] = qt_div_255(c.green() * alpha);
+        brush_color[2] = qt_div_255(c.blue() * alpha);
         brush_color[3] = alpha;
     }
 
@@ -889,14 +909,30 @@ public:
     void strokePathFastPen(const QPainterPath &path, bool needsResolving);
     void strokeLines(const QPainterPath &path);
 
+    void updateDepthClip();
+    void systemStateChanged();
+
     void cleanupGLContextRefs(const QGLContext *context) {
         if (context == shader_ctx)
             shader_ctx = 0;
     }
 
+    inline void updateFastPen() {
+        qreal pen_width = cpen.widthF();
+        has_fast_pen =
+            ((pen_width == 0 || (pen_width <= 1 && matrix.type() <= QTransform::TxTranslate))
+             || cpen.isCosmetic())
+            && cpen.style() == Qt::SolidLine
+            && cpen.isSolid();
+
+    }
+
+    void disableClipping();
+    void enableClipping();
+    void ensureDrawableTexture();
+
     QPen cpen;
     QBrush cbrush;
-    QRegion crgn;
     Qt::BrushStyle brush_style;
     QPointF brush_origin;
     Qt::BrushStyle pen_brush_style;
@@ -905,17 +941,22 @@ public:
 
     Qt::BrushStyle current_style;
 
-    uint has_clipping : 1;
     uint has_pen : 1;
     uint has_brush : 1;
     uint has_fast_pen : 1;
     uint use_stencil_method : 1;
+    uint dirty_stencil : 1;
+    uint dirty_drawable_texture : 1;
     uint has_stencil_face_ext : 1;
     uint use_fragment_programs : 1;
     uint high_quality_antialiasing : 1;
     uint has_antialiasing : 1;
     uint has_fast_composition_mode : 1;
     uint use_smooth_pixmap_transform : 1;
+    uint use_system_clip : 1;
+    uint use_emulation : 1;
+
+    void updateUseEmulation();
 
     QTransform matrix;
     GLubyte pen_color[4];
@@ -985,13 +1026,12 @@ public:
     QDataBuffer<QPointF> tess_points;
     QVector<int> tess_points_stops;
 
-    QImage pattern_image;
     GLdouble projection_matrix[4][4];
 
-#ifndef Q_WS_QWS
-    GLdouble mv_matrix[4][4];
-#else
+#if defined(QT_OPENGL_ES_1) || defined(QT_OPENGL_ES_2)
     GLfloat mv_matrix[4][4];
+#else
+    GLdouble mv_matrix[4][4];
 #endif
 
     QList<QDrawQueueItem> drawQueue;
@@ -1151,12 +1191,13 @@ class QGLGradientCache : public QObject
     Q_OBJECT
     struct CacheInfo
     {
-        inline CacheInfo(QGradientStops s, qreal op) :
-            stops(s), opacity(op) {}
+        inline CacheInfo(QGradientStops s, qreal op, QGradient::InterpolationMode mode) :
+            stops(s), opacity(op), interpolationMode(mode) {}
 
         GLuint texId;
         QGradientStops stops;
         qreal opacity;
+        QGradient::InterpolationMode interpolationMode;
     };
 
     typedef QMultiHash<quint64, CacheInfo> QGLGradientColorTableHash;
@@ -1169,7 +1210,7 @@ public:
                 SLOT(cleanupGLContextRefs(const QGLContext *)));
     }
 
-    inline GLuint getBuffer(const QGradientStops &stops, qreal opacity, QGLContext *ctx) {
+    inline GLuint getBuffer(const QGradient &gradient, qreal opacity, QGLContext *ctx) {
         if (buffer_ctx && !qgl_share_reg()->checkSharing(buffer_ctx, ctx))
             cleanCache();
 
@@ -1177,23 +1218,24 @@ public:
 
         quint64 hash_val = 0;
 
+        QGradientStops stops = gradient.stops();
         for (int i = 0; i < stops.size() && i <= 2; i++)
             hash_val += stops[i].second.rgba();
 
         QGLGradientColorTableHash::const_iterator it = cache.constFind(hash_val);
 
         if (it == cache.constEnd())
-            return addCacheElement(hash_val, stops, opacity);
+            return addCacheElement(hash_val, gradient, opacity);
         else {
             do {
                 const CacheInfo &cache_info = it.value();
-                if (cache_info.stops == stops && cache_info.opacity == opacity) {
+                if (cache_info.stops == stops && cache_info.opacity == opacity && cache_info.interpolationMode == gradient.interpolationMode()) {
                     return cache_info.texId;
                 }
                 ++it;
             } while (it != cache.constEnd() && it.key() == hash_val);
             // an exact match for these stops and opacity was not found, create new cache
-            return addCacheElement(hash_val, stops, opacity);
+            return addCacheElement(hash_val, gradient, opacity);
         }
     }
 
@@ -1201,10 +1243,10 @@ public:
 
 protected:
     inline int maxCacheSize() const { return 60; }
-    inline void generateGradientColorTable(const QGradientStops& s,
+    inline void generateGradientColorTable(const QGradient& g,
                                            uint *colorTable,
                                            int size, qreal opacity) const;
-    GLuint addCacheElement(quint64 hash_val, const QGradientStops &stops, qreal opacity) {
+    GLuint addCacheElement(quint64 hash_val, const QGradient &gradient, qreal opacity) {
         if (cache.size() == maxCacheSize()) {
             int elem_to_remove = qrand() % maxCacheSize();
             quint64 key = cache.keys()[elem_to_remove];
@@ -1216,9 +1258,9 @@ protected:
             } while (++it != cache.constEnd() && it.key() == key);
             cache.remove(key); // may remove more than 1, but OK
         }
-        CacheInfo cache_entry(stops, opacity);
+        CacheInfo cache_entry(gradient.stops(), opacity, gradient.interpolationMode());
         uint buffer[1024];
-        generateGradientColorTable(stops, buffer, paletteSize(), opacity);
+        generateGradientColorTable(gradient, buffer, paletteSize(), opacity);
         glGenTextures(1, &cache_entry.texId);
 #ifndef QT_OPENGL_ES
         glBindTexture(GL_TEXTURE_1D, cache_entry.texId);
@@ -1264,34 +1306,49 @@ static inline uint endianColor(uint c)
 #endif // Q_BYTE_ORDER
 }
 
-void QGLGradientCache::generateGradientColorTable(const QGradientStops& s, uint *colorTable, int size, qreal opacity) const
+void QGLGradientCache::generateGradientColorTable(const QGradient& gradient, uint *colorTable, int size, qreal opacity) const
 {
     int pos = 0;
-    qreal fpos = 0.0;
-    qreal incr = 1.0 / qreal(size);
+    QGradientStops s = gradient.stops();
     QVector<uint> colors(s.size());
 
     for (int i = 0; i < s.size(); ++i)
         colors[i] = s[i].second.rgba();
 
+    bool colorInterpolation = (gradient.interpolationMode() == QGradient::ColorInterpolation);
+
     uint alpha = qRound(opacity * 256);
-    while (fpos < s.first().first) {
-        colorTable[pos] = endianColor(PREMUL(ARGB_COMBINE_ALPHA(colors[0], alpha)));
+    uint current_color = ARGB_COMBINE_ALPHA(colors[0], alpha);
+    qreal incr = 1.0 / qreal(size);
+    qreal fpos = 1.5 * incr;
+    colorTable[pos++] = endianColor(PREMUL(current_color));
+
+    while (fpos <= s.first().first) {
+        colorTable[pos] = colorTable[pos - 1];
         pos++;
         fpos += incr;
     }
 
+    if (colorInterpolation)
+        current_color = PREMUL(current_color);
+
     for (int i = 0; i < s.size() - 1; ++i) {
         qreal delta = 1/(s[i+1].first - s[i].first);
+        uint next_color = ARGB_COMBINE_ALPHA(colors[i+1], alpha);
+        if (colorInterpolation)
+            next_color = PREMUL(next_color);
+
         while (fpos < s[i+1].first && pos < size) {
             int dist = int(256 * ((fpos - s[i].first) * delta));
             int idist = 256 - dist;
-            uint current_color = PREMUL(ARGB_COMBINE_ALPHA(colors[i], alpha));
-            uint next_color = PREMUL(ARGB_COMBINE_ALPHA(colors[i+1], alpha));
-            colorTable[pos] = endianColor(INTERPOLATE_PIXEL_256(current_color, idist, next_color, dist));
+            if (colorInterpolation)
+                colorTable[pos] = endianColor(INTERPOLATE_PIXEL_256(current_color, idist, next_color, dist));
+            else
+                colorTable[pos] = endianColor(PREMUL(INTERPOLATE_PIXEL_256(current_color, idist, next_color, dist)));
             ++pos;
             fpos += incr;
         }
+        current_color = next_color;
     }
 
     Q_ASSERT(s.size() > 0);
@@ -1313,7 +1370,7 @@ void QOpenGLPaintEnginePrivate::createGradientPaletteTexture(const QGradient& g)
 #ifdef QT_OPENGL_ES //###
     Q_UNUSED(g);
 #else
-    GLuint texId = qt_opengl_gradient_cache()->getBuffer(g.stops(), opacity, drawable.context());
+    GLuint texId = qt_opengl_gradient_cache()->getBuffer(g, opacity, drawable.context());
     glBindTexture(GL_TEXTURE_1D, texId);
     grad_palette = texId;
     if (g.spread() == QGradient::RepeatSpread || g.type() == QGradient::ConicalGradient)
@@ -1370,13 +1427,7 @@ inline void QOpenGLPaintEnginePrivate::setGradientOps(const QBrush &brush, const
 }
 
 QOpenGLPaintEngine::QOpenGLPaintEngine()
-    : QPaintEngine(*(new QOpenGLPaintEnginePrivate),
-                   PaintEngineFeatures(AllFeatures
-                                       & ~(LinearGradientFill
-                                           | RadialGradientFill
-                                           | ConicalGradientFill
-                                           | PatternBrush
-                                           | BlendModes)))
+    : QPaintEngineEx(*(new QOpenGLPaintEnginePrivate))
 {
 }
 
@@ -1390,7 +1441,6 @@ bool QOpenGLPaintEngine::begin(QPaintDevice *pdev)
 
     d->drawable.setDevice(pdev);
     d->offscreen.setDevice(pdev);
-    d->has_clipping = false;
     d->has_fast_pen = false;
     d->inverseScale = 1;
     d->opacity = 1;
@@ -1398,6 +1448,9 @@ bool QOpenGLPaintEngine::begin(QPaintDevice *pdev)
     d->matrix = QTransform();
     d->has_antialiasing = false;
     d->high_quality_antialiasing = false;
+    d->dirty_stencil = true;
+
+    d->use_emulation = false;
 
     for (int i = 0; i < 4; ++i)
         for (int j = 0; j < 4; ++j)
@@ -1415,81 +1468,82 @@ bool QOpenGLPaintEngine::begin(QPaintDevice *pdev)
     if (has_frag_program)
         has_frag_program = qt_resolve_frag_program_extensions(ctx) && qt_resolve_version_1_3_functions(ctx);
 
-    d->use_stencil_method = d->drawable.format().stencil() &&
-                            QGLExtensions::glExtensions & QGLExtensions::StencilWrap;
-    if (d->use_stencil_method && QGLExtensions::glExtensions & QGLExtensions::StencilTwoSide)
+    d->use_stencil_method = d->drawable.format().stencil()
+                            && (QGLExtensions::glExtensions & QGLExtensions::StencilWrap);
+    if (d->drawable.format().directRendering()
+        && (d->use_stencil_method && QGLExtensions::glExtensions & QGLExtensions::StencilTwoSide))
         d->has_stencil_face_ext = qt_resolve_stencil_face_extension(ctx);
 
 #ifndef QT_OPENGL_ES
-    glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
-    glGetDoublev(GL_PROJECTION_MATRIX, &d->projection_matrix[0][0]);
-    glDisableClientState(GL_EDGE_FLAG_ARRAY);
-    glDisableClientState(GL_INDEX_ARRAY);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_TEXTURE_1D);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glPixelTransferi(GL_MAP_COLOR, false);
-    glPixelTransferi(GL_MAP_STENCIL, false);
-    glDisable(GL_TEXTURE_GEN_S);
+    if (!ctx->d_ptr->internal_context) {
+        glGetDoublev(GL_PROJECTION_MATRIX, &d->projection_matrix[0][0]);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-    glPixelStorei(GL_PACK_SWAP_BYTES, false);
-    glPixelStorei(GL_PACK_LSB_FIRST, false);
-    glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
-    glPixelStorei(GL_PACK_SKIP_ROWS, 0);
-    glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
-    glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
-    glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        glDisableClientState(GL_EDGE_FLAG_ARRAY);
+        glDisableClientState(GL_INDEX_ARRAY);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_TEXTURE_1D);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glPixelTransferi(GL_MAP_COLOR, false);
+        glPixelTransferi(GL_MAP_STENCIL, false);
+        glDisable(GL_TEXTURE_GEN_S);
 
-    glPixelStorei(GL_UNPACK_SWAP_BYTES, false);
-    glPixelStorei(GL_UNPACK_LSB_FIRST, false);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    glPixelStorei(GL_UNPACK_SKIP_IMAGES, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glPixelStorei(GL_PACK_SWAP_BYTES, false);
+        glPixelStorei(GL_PACK_LSB_FIRST, false);
+        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+        glPixelStorei(GL_UNPACK_SWAP_BYTES, false);
+        glPixelStorei(GL_UNPACK_LSB_FIRST, false);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+        if (QGLFormat::openGLVersionFlags() & QGLFormat::OpenGL_Version_1_2) {
+            glPixelStorei(GL_PACK_IMAGE_HEIGHT, 0);
+            glPixelStorei(GL_PACK_SKIP_IMAGES, 0);
+            glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+            glPixelStorei(GL_UNPACK_SKIP_IMAGES, 0);
+        }
+    }
 #endif
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glMatrixMode(GL_TEXTURE);
-    glPushMatrix();
-    glLoadIdentity();
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
+    if (!ctx->d_ptr->internal_context) {
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glMatrixMode(GL_TEXTURE);
+        glPushMatrix();
+        glLoadIdentity();
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY);
 
-    if (QGLExtensions::glExtensions & QGLExtensions::SampleBuffers)
-        glDisable(GL_MULTISAMPLE);
-    glDisable(GL_TEXTURE_2D);
-    if (QGLExtensions::glExtensions & QGLExtensions::TextureRectangle)
-        glDisable(GL_TEXTURE_RECTANGLE_NV);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glShadeModel(GL_FLAT);
-    if (d->use_stencil_method) {
-        glStencilFunc(GL_ALWAYS, 0, ~0);
-        glClearStencil(0);
+        if (QGLExtensions::glExtensions & QGLExtensions::SampleBuffers)
+            glDisable(GL_MULTISAMPLE);
+        glDisable(GL_TEXTURE_2D);
+        if (QGLExtensions::glExtensions & QGLExtensions::TextureRectangle)
+            glDisable(GL_TEXTURE_RECTANGLE_NV);
+        glDisable(GL_STENCIL_TEST);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     d->offscreen.begin();
 
     const QColor &c = d->drawable.backgroundColor();
     glClearColor(c.redF(), c.greenF(), c.blueF(), 1.0);
     if (d->drawable.context()->d_func()->clear_on_painter_begin && d->drawable.autoFillBackground()) {
-        GLbitfield clearBits = GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+        GLbitfield clearBits = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 #ifndef QT_OPENGL_ES
         clearBits |= GL_ACCUM_BUFFER_BIT;
 #endif
         glClear(clearBits);
-    } else if (d->use_stencil_method) {
-        glClear(GL_STENCIL_BUFFER_BIT);
     }
 
     QSize sz(d->drawable.size());
@@ -1523,57 +1577,35 @@ bool QOpenGLPaintEngine::begin(QPaintDevice *pdev)
 
             if (has_frag_program && d->use_fragment_programs)
                 glDeleteTextures(1, &d->drawable_texture);
-
-            d->drawable.makeCurrent();
+            ctx->makeCurrent();
         }
         d->shader_ctx = d->drawable.context();
         glGenTextures(1, &d->grad_palette);
 
         qt_mask_texture_cache()->clearCache();
         d->use_fragment_programs = has_frag_program;
-        gccaps &= ~(RadialGradientFill | ConicalGradientFill | LinearGradientFill | PatternBrush | BlendModes);
-
-        if (d->use_fragment_programs)
-            gccaps |= (RadialGradientFill | ConicalGradientFill | LinearGradientFill | PatternBrush | BlendModes);
-        else if (QGLExtensions::glExtensions & QGLExtensions::MirroredRepeat)
-            gccaps |= LinearGradientFill;
     }
 
     if (d->use_fragment_programs && (!shared_ctx || sz.width() > d->drawable_texture_size.width()
-                                                 || sz.height() > d->drawable_texture_size.height()))
+                                     || sz.height() > d->drawable_texture_size.height()))
     {
         // delete old texture if size has increased, otherwise it was deleted earlier
         if (shared_ctx)
             glDeleteTextures(1, &d->drawable_texture);
 
-        glGenTextures(1, &d->drawable_texture);
-        glBindTexture(GL_TEXTURE_2D, d->drawable_texture);
-        QSize adjusted_size(qt_next_power_of_two(sz.width()),
-                            qt_next_power_of_two(sz.height()));
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-                     adjusted_size.width(),
-                     adjusted_size.height(), 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-        d->drawable_texture_size = adjusted_size;
+        d->dirty_drawable_texture = true;
+        d->drawable_texture_size = QSize(qt_next_power_of_two(sz.width()),
+                                         qt_next_power_of_two(sz.height()));
     }
 #endif
 
-    setDirty(QPaintEngine::DirtyPen);
-    setDirty(QPaintEngine::DirtyBrush);
-    setDirty(QPaintEngine::DirtyCompositionMode);
-
-#ifdef Q_WS_QWS
-    // XXX: needed only if painting on a widget?
     updateClipRegion(QRegion(), Qt::NoClip);
-#endif
-
+    penChanged();
+    brushChanged();
+    opacityChanged();
+    compositionModeChanged();
+    renderHintsChanged();
+    transformChanged();
     return true;
 }
 
@@ -1582,17 +1614,24 @@ bool QOpenGLPaintEngine::end()
     Q_D(QOpenGLPaintEngine);
     d->flushDrawQueue();
     d->offscreen.end();
-    glMatrixMode(GL_TEXTURE);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    QGLContext *ctx = const_cast<QGLContext *>(d->drawable.context());
+    if (!ctx->d_ptr->internal_context) {
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+    }
 #ifndef QT_OPENGL_ES
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixd(&d->projection_matrix[0][0]);
-    glPopAttrib();
-    glPopClientAttrib();
-    d->drawable.swapBuffers();
+    if (ctx->d_ptr->internal_context) {
+        glDisable(GL_SCISSOR_TEST);
+    } else {
+        glMatrixMode(GL_PROJECTION);
+        glLoadMatrixd(&d->projection_matrix[0][0]);
+        glPopAttrib();
+        glPopClientAttrib();
+    }
 #endif
+    d->drawable.swapBuffers();
     d->drawable.doneCurrent();
     qt_mask_texture_cache()->maintainCache();
 
@@ -1692,21 +1731,19 @@ void QOpenGLPaintEnginePrivate::setInvMatrixData(const QTransform &inv_matrix)
 }
 
 
-void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF &bounds)
+void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF &)
 {
 #ifdef QT_OPENGL_ES
     Q_UNUSED(brush);
-    Q_UNUSED(bounds);
 #else
     bool has_mirrored_repeat = QGLExtensions::glExtensions & QGLExtensions::MirroredRepeat;
     Qt::BrushStyle style = brush.style();
 
     QTransform m = brush.transform();
-    if (brush.gradient() && brush.gradient()->coordinateMode() == QGradient::ObjectBoundingMode)
-        m = QTransform(bounds.width(), 0, 0, bounds.height(), bounds.left(), bounds.top()) * m;
 
     if (has_mirrored_repeat && style == Qt::LinearGradientPattern) {
         const QLinearGradient *g = static_cast<const QLinearGradient *>(brush.gradient());
+        QTransform m = brush.transform();
         QPointF realStart = g->start();
         QPointF realFinal = g->finalStop();
         QPointF start = m.map(realStart);
@@ -1729,11 +1766,11 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
             qreal dx = m.m11()*odx + m.m21()*ody;
             qreal dy = m.m12()*odx + m.m22()*ody;
 
-            qreal lx = 1.0/(dx - dy*nx/ny);
-            qreal ly = 1.0/(dy - dx*ny/nx);
-            qreal l = 1.0/sqrt(lx*lx+ly*ly);
+            qreal lx = 1 / (dx - dy*nx/ny);
+            qreal ly = 1 / (dy - dx*ny/nx);
+            qreal l = 1 / qSqrt(lx*lx+ly*ly);
 
-            stop = start + QPointF(-ny, nx) * l/sqrt(nx*nx+ny*ny);
+            stop = start + QPointF(-ny, nx) * l/qSqrt(nx*nx+ny*ny);
         }
 
         float tr[4], f;
@@ -1744,7 +1781,7 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
         tr[1] *= f;
         tr[2] = 0;
         tr[3] = -(start.x()*tr[0] + start.y()*tr[1]);
-        setGLBrush(Qt::white);
+        brush_color[0] = brush_color[1] = brush_color[2] = brush_color[3] = 255;
         qt_glColor4ubv(brush_color);
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
         glTexGenfv(GL_S, GL_OBJECT_PLANE, tr);
@@ -1758,7 +1795,7 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
             qreal   realRadius = g->radius();
             QTransform translate(1, 0, 0, 1, -realFocal.x(), -realFocal.y());
             QTransform gl_to_qt(1, 0, 0, -1, 0, pdev->height());
-            QTransform inv_matrix = gl_to_qt * (m * matrix).inverted() * translate;
+            QTransform inv_matrix = gl_to_qt * matrix.inverted() * brush.transform().inverted() * translate;
 
             setInvMatrixData(inv_matrix);
 
@@ -1771,7 +1808,7 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
             QPointF realCenter = g->center();
             QTransform translate(1, 0, 0, 1, -realCenter.x(), -realCenter.y());
             QTransform gl_to_qt(1, 0, 0, -1, 0, pdev->height());
-            QTransform inv_matrix = gl_to_qt * (m * matrix).inverted() * translate;
+            QTransform inv_matrix = gl_to_qt * matrix.inverted() * brush.transform().inverted() * translate;
 
             setInvMatrixData(inv_matrix);
 
@@ -1781,11 +1818,10 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
 
             QPointF realStart = g->start();
             QPointF realFinal = g->finalStop();
-
             QTransform translate(1, 0, 0, 1, -realStart.x(), -realStart.y());
             QTransform gl_to_qt(1, 0, 0, -1, 0, pdev->height());
 
-            QTransform inv_matrix = gl_to_qt * (m * matrix).inverted() * translate;
+            QTransform inv_matrix = gl_to_qt * matrix.inverted() * brush.transform().inverted() * translate;
 
             setInvMatrixData(inv_matrix);
 
@@ -1799,7 +1835,7 @@ void QOpenGLPaintEnginePrivate::updateGradient(const QBrush &brush, const QRectF
             QTransform translate(1, 0, 0, 1, brush_origin.x(), brush_origin.y());
             QTransform gl_to_qt(1, 0, 0, -1, 0, pdev->height());
 
-            QTransform inv_matrix = gl_to_qt * (m * matrix).inverted() * translate;
+            QTransform inv_matrix = gl_to_qt * matrix.inverted() * brush.transform().inverted() * translate;
 
             setInvMatrixData(inv_matrix);
         }
@@ -1911,9 +1947,9 @@ static void drawTrapezoid(const QGLTrapezoid &trap, const qreal offscreenHeight,
     qreal bounds_topRightX = rightA * (offscreenHeight - topY) + rightB;
 
     QPointF leftNormal(1, -leftA);
-    leftNormal /= sqrt(leftNormal.x() * leftNormal.x() + leftNormal.y() * leftNormal.y());
+    leftNormal /= qSqrt(leftNormal.x() * leftNormal.x() + leftNormal.y() * leftNormal.y());
     QPointF rightNormal(1, -rightA);
-    rightNormal /= sqrt(rightNormal.x() * rightNormal.x() + rightNormal.y() * rightNormal.y());
+    rightNormal /= qSqrt(rightNormal.x() * rightNormal.x() + rightNormal.y() * rightNormal.y());
 
     qreal left_padding = xpadding / qAbs(leftNormal.x());
     qreal right_padding = xpadding / qAbs(rightNormal.x());
@@ -1946,7 +1982,8 @@ public:
 
 void QOpenGLTrapezoidToArrayTessellator::addTrap(const Trapezoid &trap)
 {
-#ifndef Q_WS_QWS
+    // On OpenGL ES we convert the trap to 2 triangles
+#ifndef QT_OPENGL_ES_1
     if (size > allocated - 8) {
 #else
     if (size > allocated - 12) {
@@ -1957,7 +1994,7 @@ void QOpenGLTrapezoidToArrayTessellator::addTrap(const Trapezoid &trap)
 
     QGLTrapezoid t = toGLTrapezoid(trap);
 
-#ifndef Q_WS_QWS
+#ifndef QT_OPENGL_ES_1
     vertices[size++] = t.topLeftX;
     vertices[size++] = t.top;
     vertices[size++] = t.topRightX;
@@ -1967,6 +2004,7 @@ void QOpenGLTrapezoidToArrayTessellator::addTrap(const Trapezoid &trap)
     vertices[size++] = t.bottomLeftX;
     vertices[size++] = t.bottom;
 #else
+    // First triangle
     vertices[size++] = t.topLeftX;
     vertices[size++] = t.top;
     vertices[size++] = t.topRightX;
@@ -1974,6 +2012,7 @@ void QOpenGLTrapezoidToArrayTessellator::addTrap(const Trapezoid &trap)
     vertices[size++] = t.bottomRightX;
     vertices[size++] = t.bottom;
 
+    // Second triangle
     vertices[size++] = t.bottomLeftX;
     vertices[size++] = t.bottom;
     vertices[size++] = t.topLeftX;
@@ -2062,20 +2101,18 @@ inline void QOpenGLPaintEnginePrivate::curveToStencil(const QPointF &cp1, const 
 
 void QOpenGLPaintEnginePrivate::pathToVertexArrays(const QPainterPath &path)
 {
-    QPointF first = path.elementAt(0);
-    min_x = max_x = first.x();
-    min_y = max_y = first.y();
+    const QPainterPath::Element &first = path.elementAt(0);
+    min_x = max_x = first.x;
+    min_y = max_y = first.y;
 
     tess_points.reset();
     tess_points_stops.clear();
-    lineToStencil(first.x(), first.y());
+    lineToStencil(first.x, first.y);
 
     for (int i=1; i<path.elementCount(); ++i) {
         const QPainterPath::Element &e = path.elementAt(i);
         switch (e.type) {
         case QPainterPath::MoveToElement:
-            lineToStencil(first.x(), first.y());
-            first = e;
             tess_points_stops.append(tess_points.size());
             lineToStencil(e.x, e.y);
             break;
@@ -2090,7 +2127,7 @@ void QOpenGLPaintEnginePrivate::pathToVertexArrays(const QPainterPath &path)
             break;
         }
     }
-    lineToStencil(first.x(), first.y());
+    lineToStencil(first.x, first.y);
     tess_points_stops.append(tess_points.size());
 }
 
@@ -2109,6 +2146,34 @@ void QOpenGLPaintEnginePrivate::drawVertexArrays()
 
 void QOpenGLPaintEnginePrivate::fillVertexArray(Qt::FillRule fillRule)
 {
+    Q_Q(QOpenGLPaintEngine);
+
+    if (dirty_stencil) {
+        disableClipping();
+
+        if (use_system_clip) {
+            glEnable(GL_SCISSOR_TEST);
+
+            QRect rect = q->systemClip().boundingRect();
+
+            const int left = rect.left();
+            const int width = rect.width();
+            const int bottom = drawable.size().height() - (rect.bottom() + 1);
+            const int height = rect.height();
+
+            glScissor(left, bottom, width, height);
+        }
+
+        glClearStencil(0);
+        glClear(GL_STENCIL_BUFFER_BIT);
+        dirty_stencil = false;
+
+        if (use_system_clip)
+            glDisable(GL_SCISSOR_TEST);
+
+        enableClipping();
+    }
+
     glStencilMask(~0);
 
     // Enable stencil.
@@ -2245,6 +2310,21 @@ void QOpenGLPaintEnginePrivate::fillPath(const QPainterPath &path)
     updateGLMatrix();
 }
 
+
+static inline bool needsEmulation(Qt::BrushStyle style)
+{
+    return !(style == Qt::SolidPattern
+             || (style == Qt::LinearGradientPattern
+                 && (QGLExtensions::glExtensions & QGLExtensions::MirroredRepeat)));
+}
+
+void QOpenGLPaintEnginePrivate::updateUseEmulation()
+{
+    use_emulation = !use_fragment_programs
+                    && ((has_pen && needsEmulation(pen_brush_style))
+                        || (has_brush && needsEmulation(brush_style)));
+}
+
 void QOpenGLPaintEngine::updatePen(const QPen &pen)
 {
     Q_D(QOpenGLPaintEngine);
@@ -2252,6 +2332,7 @@ void QOpenGLPaintEngine::updatePen(const QPen &pen)
     d->pen_brush_style = pen.brush().style();
     d->cpen = pen;
     d->has_pen = (pen_style != Qt::NoPen);
+    d->updateUseEmulation();
 
     if (pen.isCosmetic()) {
         GLfloat width = pen.widthF() == 0.0f ? 1.0f : pen.widthF();
@@ -2266,6 +2347,8 @@ void QOpenGLPaintEngine::updatePen(const QPen &pen)
     } else {
         d->setGLPen(pen.color());
     }
+
+    d->updateFastPen();
 }
 
 void QOpenGLPaintEngine::updateBrush(const QBrush &brush, const QPointF &origin)
@@ -2275,6 +2358,7 @@ void QOpenGLPaintEngine::updateBrush(const QBrush &brush, const QPointF &origin)
     d->brush_style = brush.style();
     d->brush_origin = origin;
     d->has_brush = (d->brush_style != Qt::NoBrush);
+    d->updateUseEmulation();
 }
 
 void QOpenGLPaintEngine::updateFont(const QFont &)
@@ -2316,6 +2400,7 @@ void QOpenGLPaintEngine::updateMatrix(const QTransform &mtx)
                            qreal(0.0001));
 
     d->updateGLMatrix();
+    d->updateFastPen();
 }
 
 void QOpenGLPaintEnginePrivate::updateGLMatrix() const
@@ -2326,123 +2411,215 @@ void QOpenGLPaintEnginePrivate::updateGLMatrix() const
 #else
     glLoadMatrixf(&mv_matrix[0][0]);
 #endif
+}
 
+void QOpenGLPaintEnginePrivate::disableClipping()
+{
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void QOpenGLPaintEnginePrivate::enableClipping()
+{
+    Q_Q(QOpenGLPaintEngine);
+    if (!q->state()->hasClipping)
+        return;
+
+    if (q->state()->fastClip.isEmpty())
+        glEnable(GL_DEPTH_TEST);
+    else
+        updateDepthClip(); // this will enable the scissor test
+}
+
+void QOpenGLPaintEnginePrivate::updateDepthClip()
+{
+    Q_Q(QOpenGLPaintEngine);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_SCISSOR_TEST);
+
+    if (!q->state()->hasClipping)
+        return;
+
+    QRect fastClip;
+    if (q->state()->clipEnabled) {
+        fastClip = q->state()->fastClip;
+    } else if (use_system_clip && q->systemClip().rects().count() == 1) {
+        fastClip = q->systemClip().rects().at(0);
+    }
+
+    if (!fastClip.isEmpty()) {
+        glEnable(GL_SCISSOR_TEST);
+
+        const int left = fastClip.left();
+        const int width = fastClip.width();
+        const int bottom = drawable.size().height() - (fastClip.bottom() + 1);
+        const int height = fastClip.height();
+
+        glScissor(left, bottom, width, height);
+        return;
+    }
+
+#ifndef QT_OPENGL_ES
+    glClearDepth(0.0f);
+#else
+    glClearDepthf(0.0f);
+#endif
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    glDepthFunc(GL_ALWAYS);
+
+    const QVector<QRect> rects = q->state()->clipEnabled ? q->state()->clipRegion.rects() : q->systemClip().rects();
+
+    // rectangle count * 2 (triangles) * vertex count * component count (Z omitted)
+    QDataBuffer<q_vertexType> clipVertex(rects.size()*2*3*2);
+    for (int i = 0; i < rects.size(); ++i) {
+        q_vertexType x = i2vt(rects.at(i).left());
+        q_vertexType w = i2vt(rects.at(i).width());
+        q_vertexType h = i2vt(rects.at(i).height());
+        q_vertexType y = i2vt(rects.at(i).top());
+
+        // First triangle
+        clipVertex.add(x);
+        clipVertex.add(y);
+
+        clipVertex.add(x);
+        clipVertex.add(y + h);
+
+        clipVertex.add(x + w);
+        clipVertex.add(y);
+
+        // Second triangle
+        clipVertex.add(x);
+        clipVertex.add(y + h);
+
+        clipVertex.add(x + w);
+        clipVertex.add(y + h);
+
+        clipVertex.add (x + w);
+        clipVertex.add(y);
+    }
+
+    if (rects.size()) {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(2, q_vertexTypeEnum, 0, clipVertex.data());
+
+        glDrawArrays(GL_TRIANGLES, 0, rects.size()*2*3);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        updateGLMatrix();
+    }
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+}
+
+void QOpenGLPaintEnginePrivate::systemStateChanged()
+{
+    Q_Q(QOpenGLPaintEngine);
+    if (q->state()->hasClipping)
+        q->updateClipRegion(q->painter()->clipRegion(), Qt::ReplaceClip);
+    else
+        q->updateClipRegion(QRegion(), Qt::NoClip);
 }
 
 void QOpenGLPaintEngine::updateClipRegion(const QRegion &clipRegion, Qt::ClipOperation op)
 {
     Q_D(QOpenGLPaintEngine);
-    QGLFormat f = d->drawable.format();
-    bool useDepthBuffer = f.depth();
 
     // clipping is only supported when a stencil or depth buffer is
     // available
-    if (!useDepthBuffer)
+    if (!d->drawable.format().depth())
         return;
+
+    d->use_system_clip = false;
+    QRegion sysClip = systemClip();
+    if (!sysClip.isEmpty()) {
+        if (d->pdev->devType() != QInternal::Widget) {
+            d->use_system_clip = true;
+        } else {
+#ifndef Q_WS_QWS
+            // Only use the system clip if we're currently rendering a widget with a GL painter.
+            if (d->currentClipWidget) {
+                QWidgetPrivate *widgetPrivate = qt_widget_private(d->currentClipWidget->window());
+                d->use_system_clip = widgetPrivate->extra && widgetPrivate->extra->inRenderWithPainter;
+            }
+#endif
+        }
+    }
 
     d->flushDrawQueue();
 
-    bool useSystemClip = false;
-#ifdef Q_WS_QWS
-    useSystemClip = true;
-#else
-    // Only use the system clip if we're currently rendering a widget with a GL painter.
-    if (d->currentClipWidget) {
-        QWidgetPrivate *widgetPrivate = qt_widget_private(d->currentClipWidget->window());
-        QTLWExtra *extra = widgetPrivate ? widgetPrivate->maybeTopData() : 0;
-        useSystemClip = extra && extra->inRenderWithPainter;
-    }
-#endif
-
-    QRegion sysClip = systemClip();
-    if (op == Qt::NoClip && ((useSystemClip && sysClip.isEmpty()) || !useSystemClip)) {
-        d->has_clipping = false;
-        d->crgn = QRegion();
-        glDisable(GL_DEPTH_TEST);
+    if (op == Qt::NoClip && !d->use_system_clip) {
+        state()->hasClipping = false;
+        state()->clipRegion = QRegion();
+        d->updateDepthClip();
         return;
     }
 
     bool isScreenClip = false;
-    QVector<QRect> untransformedRects = clipRegion.rects();
+    if (!d->use_system_clip) {
+        QVector<QRect> untransformedRects = clipRegion.rects();
 
-    if (untransformedRects.size() == 1) {
-        QPainterPath path;
-        path.addRect(untransformedRects[0]);
-        path = d->matrix.map(path);
+        if (untransformedRects.size() == 1) {
+            QPainterPath path;
+            path.addRect(untransformedRects[0]);
+            path = d->matrix.map(path);
 
-        if (path.contains(QRectF(QPointF(), d->drawable.size())))
-            isScreenClip = true;
+            if (path.contains(QRectF(QPointF(), d->drawable.size())))
+                isScreenClip = true;
+        }
     }
 
     QRegion region = isScreenClip ? QRegion() : clipRegion * d->matrix;
     switch (op) {
     case Qt::NoClip:
-        if (!useSystemClip)
+        if (!d->use_system_clip)
             break;
-        d->has_clipping = false;
-        d->crgn = sysClip;
+        state()->clipRegion = sysClip;
         break;
     case Qt::IntersectClip:
         if (isScreenClip)
             return;
-        if (d->has_clipping) {
-            d->crgn &= region;
+        if (state()->hasClipping) {
+            state()->clipRegion &= region;
             break;
         }
         // fall through
     case Qt::ReplaceClip:
-        if (useSystemClip && !sysClip.isEmpty())
-            d->crgn = region.intersected(sysClip);
+        if (d->use_system_clip)
+            state()->clipRegion = region & sysClip;
         else
-            d->crgn = region;
+            state()->clipRegion = region;
         break;
     case Qt::UniteClip:
-        d->crgn |= region;
-        if (useSystemClip && !sysClip.isEmpty())
-            d->crgn = d->crgn.intersected(sysClip);
+        state()->clipRegion |= region;
+        if (d->use_system_clip)
+            state()->clipRegion &= sysClip;
         break;
     default:
         break;
     }
 
     if (isScreenClip) {
-        d->has_clipping = false;
-        d->crgn = QRegion();
-        glDisable(GL_DEPTH_TEST);
-        return;
+        state()->hasClipping = false;
+        state()->clipRegion = QRegion();
+    } else {
+        state()->hasClipping = op != Qt::NoClip || d->use_system_clip;
     }
 
-#ifndef QT_OPENGL_ES
-    glClearDepth(0x0);
-#else
-    glClearDepthf(0x0);
-#endif
-    glDepthMask(true);
-    glClear(GL_DEPTH_BUFFER_BIT);
-#ifndef QT_OPENGL_ES
-    glClearDepth(0x1);
-#else
-    glClearDepthf(0x1);
-#endif
+    if (state()->hasClipping && state()->clipRegion.rects().size() == 1)
+        state()->fastClip = state()->clipRegion.rects().at(0);
+    else
+        state()->fastClip = QRect();
 
-    const QVector<QRect> rects = d->crgn.rects();
-    glEnable(GL_SCISSOR_TEST);
-    for (int i = 0; i < rects.size(); ++i) {
-        const int left = rects.at(i).left();
-        const int width = rects.at(i).width();
-        const int bottom = d->drawable.size().height() - (rects.at(i).bottom() + 1);
-        const int height = rects.at(i).height();
-
-        glScissor(left, bottom, width, height);
-
-        glClear(GL_DEPTH_BUFFER_BIT);
-    }
-    glDisable(GL_SCISSOR_TEST);
-
-    glDepthMask(false);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_DEPTH_TEST);
-    d->has_clipping = true;
+    d->updateDepthClip();
 }
 
 void QOpenGLPaintEngine::updateRenderHints(QPainter::RenderHints hints)
@@ -2451,10 +2628,11 @@ void QOpenGLPaintEngine::updateRenderHints(QPainter::RenderHints hints)
 
     d->flushDrawQueue();
     d->use_smooth_pixmap_transform = bool(hints & QPainter::SmoothPixmapTransform);
-    if (hints & QPainter::Antialiasing) {
-        if (d->use_fragment_programs && QGLOffscreen::isSupported() && hints & QPainter::HighQualityAntialiasing)
+    if ((hints & QPainter::Antialiasing) || (hints & QPainter::HighQualityAntialiasing)) {
+        if (d->use_fragment_programs && QGLOffscreen::isSupported()
+            && (hints & QPainter::HighQualityAntialiasing)) {
             d->high_quality_antialiasing = true;
-        else {
+        } else {
             d->high_quality_antialiasing = false;
             if (QGLExtensions::glExtensions & QGLExtensions::SampleBuffers)
                 glEnable(GL_MULTISAMPLE);
@@ -2477,8 +2655,8 @@ void QOpenGLPaintEngine::updateRenderHints(QPainter::RenderHints hints)
     }
 
     d->has_antialiasing = d->high_quality_antialiasing
-        || ((hints & QPainter::Antialiasing)
-           && (QGLExtensions::glExtensions & QGLExtensions::SampleBuffers));
+                          || ((hints & QPainter::Antialiasing)
+                              && (QGLExtensions::glExtensions & QGLExtensions::SampleBuffers));
 }
 
 
@@ -2496,6 +2674,10 @@ void QOpenGLPaintEnginePrivate::setPorterDuffData(float a, float b, float x, flo
 void QOpenGLPaintEngine::updateCompositionMode(QPainter::CompositionMode composition_mode)
 {
     Q_D(QOpenGLPaintEngine);
+
+    if (!d->use_fragment_programs && composition_mode > QPainter::CompositionMode_Plus)
+        composition_mode = QPainter::CompositionMode_SourceOver;
+
     d->composition_mode = composition_mode;
 
     d->has_fast_composition_mode = (!d->high_quality_antialiasing && composition_mode <= QPainter::CompositionMode_Plus)
@@ -3311,13 +3493,13 @@ QRect QGLEllipseMaskGenerator::screenRect()
         QPointF delta = points[i] - center;
 
         // normalize
-        delta /= sqrt(delta.x() * delta.x() + delta.y() * delta.y());
+        delta /= qSqrt(delta.x() * delta.x() + delta.y() * delta.y());
 
         QPointF screen_delta(matrix().m11() * delta.x() + matrix().m21() * delta.y(),
                              matrix().m12() * delta.x() + matrix().m22() * delta.y());
 
         min_screen_delta_len = qMin(min_screen_delta_len,
-                                    qreal(sqrt(screen_delta.x() * screen_delta.x() + screen_delta.y() * screen_delta.y())));
+                                    qreal(qSqrt(screen_delta.x() * screen_delta.x() + screen_delta.y() * screen_delta.y())));
     }
 
     const qreal padding = 2.0f;
@@ -3393,16 +3575,14 @@ void QOpenGLPaintEnginePrivate::drawOffscreenPath(const QPainterPath &path)
 #else
     DEBUG_ONCE_STR("QOpenGLPaintEnginePrivate::drawOffscreenPath()");
 
-    if (has_clipping)
-        glDisable(GL_DEPTH_TEST);
+    disableClipping();
 
     GLuint program = qt_gl_program_cache()->getProgram(drawable.context(),
                                                        FRAGMENT_PROGRAM_MASK_TRAPEZOID_AA, 0, true);
     QGLPathMaskGenerator maskGenerator(path, matrix, offscreen, program);
     addItem(qt_mask_texture_cache()->getMask(maskGenerator, this));
 
-    if (has_clipping)
-        glEnable(GL_DEPTH_TEST);
+    enableClipping();
 #endif
 }
 
@@ -3488,9 +3668,39 @@ bool QOpenGLPaintEnginePrivate::isFastRect(const QRectF &rect)
     return false;
 }
 
+void QOpenGLPaintEngine::drawRects(const QRect *rects, int rectCount)
+{
+    struct RectF {
+        qreal x;
+        qreal y;
+        qreal w;
+        qreal h;
+    };
+    Q_ASSERT(sizeof(RectF) == sizeof(QRectF));
+    RectF fr[256];
+    while (rectCount) {
+        int i = 0;
+        while (i < rectCount && i < 256) {
+            fr[i].x = rects[i].x();
+            fr[i].y = rects[i].y();
+            fr[i].w = rects[i].width();
+            fr[i].h = rects[i].height();
+            ++i;
+        }
+        drawRects((QRectF *)(void *)fr, i);
+        rects += i;
+        rectCount -= i;
+    }
+}
+
 void QOpenGLPaintEngine::drawRects(const QRectF *rects, int rectCount)
 {
     Q_D(QOpenGLPaintEngine);
+
+    if (d->use_emulation) {
+        QPaintEngineEx::drawRects(rects, rectCount);
+        return;
+    }
 
     for (int i=0; i<rectCount; ++i) {
         const QRectF &r = rects[i];
@@ -3503,15 +3713,13 @@ void QOpenGLPaintEngine::drawRects(const QRectF *rects, int rectCount)
             path.addRect(r);
 
             if (d->has_brush) {
-                if (d->has_clipping)
-                    glDisable(GL_DEPTH_TEST);
+                d->disableClipping();
                 GLuint program = qt_gl_program_cache()->getProgram(d->drawable.context(),
                                                                    FRAGMENT_PROGRAM_MASK_TRAPEZOID_AA, 0, true);
                 QGLRectMaskGenerator maskGenerator(path, d->matrix, d->offscreen, program);
                 d->addItem(qt_mask_texture_cache()->getMask(maskGenerator, d));
 
-                if (d->has_clipping)
-                    glEnable(GL_DEPTH_TEST);
+                d->enableClipping();
             }
 
             if (d->has_pen) {
@@ -3524,9 +3732,53 @@ void QOpenGLPaintEngine::drawRects(const QRectF *rects, int rectCount)
     }
 }
 
+static void addQuadAsTriangle(q_vertexType *quad, q_vertexType *triangle)
+{
+    triangle[0] = quad[0];
+    triangle[1] = quad[1];
+
+    triangle[2] = quad[2];
+    triangle[3] = quad[3];
+
+    triangle[4] = quad[4];
+    triangle[5] = quad[5];
+
+    triangle[6] = quad[4];
+    triangle[7] = quad[5];
+
+    triangle[8] = quad[6];
+    triangle[9] = quad[7];
+
+    triangle[10] = quad[0];
+    triangle[11] = quad[1];
+}
+
+void QOpenGLPaintEngine::drawPoints(const QPoint *points, int pointCount)
+{
+    Q_ASSERT(sizeof(QT_PointF) == sizeof(QPointF));
+    QT_PointF fp[256];
+    while (pointCount) {
+        int i = 0;
+        while (i < pointCount && i < 256) {
+            fp[i].x = points[i].x();
+            fp[i].y = points[i].y();
+            ++i;
+        }
+        drawPoints((QPointF *)(void *)fp, i);
+        points += i;
+        pointCount -= i;
+    }
+}
+
 void QOpenGLPaintEngine::drawPoints(const QPointF *points, int pointCount)
 {
     Q_D(QOpenGLPaintEngine);
+
+    if (d->use_emulation) {
+        QPaintEngineEx::drawPoints(points, pointCount);
+        return;
+    }
+
     d->setGradientOps(d->cpen.brush(), QRectF());
 
     if (!d->cpen.isCosmetic() || d->high_quality_antialiasing) {
@@ -3539,6 +3791,44 @@ void QOpenGLPaintEngine::drawPoints(const QPointF *points, int pointCount)
     }
 
     d->flushDrawQueue();
+
+    if (d->has_fast_pen) {
+        QVarLengthArray<q_vertexType> vertexArray(6 * pointCount);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        int j = 0;
+        for (int i = 0; i < pointCount; ++i) {
+            QPointF mapped = d->matrix.map(points[i]);
+
+            qreal xf = qRound(mapped.x());
+            qreal yf = qRound(mapped.y());
+
+            q_vertexType x = f2vt(xf);
+            q_vertexType y = f2vt(yf);
+
+            vertexArray[j++] = x;
+            vertexArray[j++] = y - f2vt(0.5);
+
+            vertexArray[j++] = x + f2vt(1.5);
+            vertexArray[j++] = y + f2vt(1.0);
+
+            vertexArray[j++] = x;
+            vertexArray[j++] = y + f2vt(1.0);
+        }
+
+        glEnableClientState(GL_VERTEX_ARRAY);
+
+        glVertexPointer(2, q_vertexTypeEnum, 0, vertexArray.constData());
+        glDrawArrays(GL_TRIANGLES, 0, pointCount*3);
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+
+        glPopMatrix();
+        return;
+    }
 
     const qreal *vertexArray = reinterpret_cast<const qreal*>(&points[0]);
 
@@ -3556,33 +3846,138 @@ void QOpenGLPaintEngine::drawPoints(const QPointF *points, int pointCount)
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
+void QOpenGLPaintEngine::drawLines(const QLine *lines, int lineCount)
+{
+    struct PointF {
+        qreal x;
+        qreal y;
+    };
+    struct LineF {
+        PointF p1;
+        PointF p2;
+    };
+    Q_ASSERT(sizeof(PointF) == sizeof(QPointF));
+    Q_ASSERT(sizeof(LineF) == sizeof(QLineF));
+    LineF fl[256];
+    while (lineCount) {
+        int i = 0;
+        while (i < lineCount && i < 256) {
+            fl[i].p1.x = lines[i].x1();
+            fl[i].p1.y = lines[i].y1();
+            fl[i].p2.x = lines[i].x2();
+            fl[i].p2.y = lines[i].y2();
+            ++i;
+        }
+        drawLines((QLineF *)(void *)fl, i);
+        lines += i;
+        lineCount -= i;
+    }
+}
+
 void QOpenGLPaintEngine::drawLines(const QLineF *lines, int lineCount)
 {
     Q_D(QOpenGLPaintEngine);
+
+    if (d->use_emulation) {
+        QPaintEngineEx::drawLines(lines, lineCount);
+        return;
+    }
+
     if (d->has_pen) {
         QOpenGLCoordinateOffset offset(d);
         if (d->has_fast_pen && !d->high_quality_antialiasing) {
             //### gradient resolving on lines isn't correct
             d->setGradientOps(d->cpen.brush(), QRectF());
 
-            QVarLengthArray<q_vertexType> vertexArray(4 * lineCount);
-            for (int i = 0; i < lineCount; ++i) {
-                const QPointF a = lines[i].p1();
-                vertexArray[4*i]   = f2vt(lines[i].x1());
-                vertexArray[4*i+1] = f2vt(lines[i].y1());
-                vertexArray[4*i+2] = f2vt(lines[i].x2());
-                vertexArray[4*i+3] = f2vt(lines[i].y2());
+            bool useRects = false;
+            // scale or 90 degree rotation?
+            if (d->matrix.type() <= QTransform::TxTranslate
+                || !d->cpen.isCosmetic()
+                   && (d->matrix.type() <= QTransform::TxScale
+                       || (d->matrix.type() == QTransform::TxRotate
+                           && d->matrix.m11() == 0 && d->matrix.m22() == 0))) {
+                useRects = true;
+                for (int i = 0; i < lineCount; ++i) {
+                    if (lines[i].p1().x() != lines[i].p2().x()
+                        && lines[i].p1().y() != lines[i].p2().y()) {
+                        useRects = false;
+                        break;
+                    }
+                }
             }
 
-            glEnableClientState(GL_VERTEX_ARRAY);
+            q_vertexType endCap = f2vt(d->cpen.capStyle() == Qt::FlatCap ? 0 : 0.5);
+            if (useRects) {
+                QVarLengthArray<q_vertexType> vertexArray(12 * lineCount);
 
-            glVertexPointer(2, q_vertexTypeEnum, 0, vertexArray.constData());
-            glDrawArrays(GL_LINES, 0, lineCount*2);
+                q_vertexType quad[8];
+                for (int i = 0; i < lineCount; ++i) {
+                    q_vertexType x1 = f2vt(lines[i].x1());
+                    q_vertexType x2 = f2vt(lines[i].x2());
+                    q_vertexType y1 = f2vt(lines[i].y1());
+                    q_vertexType y2 = f2vt(lines[i].y2());
 
-            glVertexPointer(2, q_vertexTypeEnum, 4*sizeof(q_vertexType), vertexArray.constData() + 2);
-            glDrawArrays(GL_POINTS, 0, lineCount);
+                    if (x1 == x2) {
+                        if (y1 > y2)
+                            qSwap(y1, y2);
 
-            glDisableClientState(GL_VERTEX_ARRAY);
+                        quad[0] = x1 - f2vt(0.5);
+                        quad[1] = y1 - endCap;
+
+                        quad[2] = x1 + f2vt(0.5);
+                        quad[3] = y1 - endCap;
+
+                        quad[4] = x1 + f2vt(0.5);
+                        quad[5] = y2 + endCap;
+
+                        quad[6] = x1 - f2vt(0.5);
+                        quad[7] = y2 + endCap;
+                    } else {
+                        if (x1 > x2)
+                            qSwap(x1, x2);
+
+                        quad[0] = x1 - endCap;
+                        quad[1] = y1 + f2vt(0.5);
+
+                        quad[2] = x1 - endCap;
+                        quad[3] = y1 - f2vt(0.5);
+
+                        quad[4] = x2 + endCap;
+                        quad[5] = y1 - f2vt(0.5);
+
+                        quad[6] = x2 + endCap;
+                        quad[7] = y1 + f2vt(0.5);
+                    }
+
+                    addQuadAsTriangle(quad, &vertexArray[12*i]);
+                }
+
+                glEnableClientState(GL_VERTEX_ARRAY);
+
+                glVertexPointer(2, q_vertexTypeEnum, 0, vertexArray.constData());
+                glDrawArrays(GL_TRIANGLES, 0, lineCount*6);
+
+                glDisableClientState(GL_VERTEX_ARRAY);
+            } else {
+                QVarLengthArray<q_vertexType> vertexArray(4 * lineCount);
+                for (int i = 0; i < lineCount; ++i) {
+                    const QPointF a = lines[i].p1();
+                    vertexArray[4*i]   = f2vt(lines[i].x1());
+                    vertexArray[4*i+1] = f2vt(lines[i].y1());
+                    vertexArray[4*i+2] = f2vt(lines[i].x2());
+                    vertexArray[4*i+3] = f2vt(lines[i].y2());
+                }
+
+                glEnableClientState(GL_VERTEX_ARRAY);
+
+                glVertexPointer(2, q_vertexTypeEnum, 0, vertexArray.constData());
+                glDrawArrays(GL_LINES, 0, lineCount*2);
+
+                glVertexPointer(2, q_vertexTypeEnum, 4*sizeof(q_vertexType), vertexArray.constData() + 2);
+                glDrawArrays(GL_POINTS, 0, lineCount);
+
+                glDisableClientState(GL_VERTEX_ARRAY);
+            }
         } else {
             QPainterPath path;
             path.setFillRule(Qt::WindingFill);
@@ -3609,6 +4004,16 @@ void QOpenGLPaintEngine::drawLines(const QLineF *lines, int lineCount)
     }
 }
 
+void QOpenGLPaintEngine::drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode)
+{
+    Q_ASSERT(sizeof(QT_PointF) == sizeof(QPointF));
+    QVarLengthArray<QT_PointF> p(pointCount);
+    for (int i=0; i<pointCount; ++i) {
+        p[i].x = points[i].x();
+        p[i].y = points[i].y();
+    }
+    drawPolygon((QPointF *)p.data(), pointCount, mode);
+}
 
 void QOpenGLPaintEngine::drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode)
 {
@@ -3616,9 +4021,14 @@ void QOpenGLPaintEngine::drawPolygon(const QPointF *points, int pointCount, Poly
     if(pointCount < 2)
         return;
 
+    if (d->use_emulation) {
+        QPaintEngineEx::drawPolygon(points, pointCount, mode);
+        return;
+    }
+
     QRectF bounds;
-    if ((mode == ConvexMode && !d->high_quality_antialiasing && state->brushNeedsResolving()) ||
-        ((d->has_fast_pen && !d->high_quality_antialiasing) && state->penNeedsResolving())) {
+    if ((mode == ConvexMode && !d->high_quality_antialiasing && state()->brushNeedsResolving()) ||
+        ((d->has_fast_pen && !d->high_quality_antialiasing) && state()->penNeedsResolving())) {
         qreal minx = points[0].x(), miny = points[0].y(),
               maxx = points[0].x(), maxy = points[0].y();
         for (int i = 1; i < pointCount; ++i) {
@@ -3713,8 +4123,7 @@ void QOpenGLPaintEnginePrivate::strokeLines(const QPainterPath &path)
     QGLLineMaskGenerator maskGenerator(path, matrix, penWidth == 0 ? 1.0 : penWidth,
                                        offscreen, program);
 
-    if (has_clipping)
-        glDisable(GL_DEPTH_TEST);
+    disableClipping();
 
     QBrush temp = cbrush;
     QPointF origin = brush_origin;
@@ -3727,8 +4136,7 @@ void QOpenGLPaintEnginePrivate::strokeLines(const QPainterPath &path)
     cbrush = temp;
     brush_origin = origin;
 
-    if (has_clipping)
-        glEnable(GL_DEPTH_TEST);
+    enableClipping();
 }
 
 void QOpenGLPaintEnginePrivate::strokePath(const QPainterPath &path, bool use_cache)
@@ -3736,16 +4144,31 @@ void QOpenGLPaintEnginePrivate::strokePath(const QPainterPath &path, bool use_ca
     QBrush old_brush = cbrush;
     cbrush = cpen.brush();
 
-    if (cpen.isCosmetic()) {
+    extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
+    qreal txscale = 1;
+    if (cpen.isCosmetic() || (qt_scaleForTransform(matrix, &txscale) && txscale != 1)) {
         QTransform temp = matrix;
         matrix = QTransform();
         glPushMatrix();
-        glLoadIdentity();
 
+        if (has_antialiasing) {
+            glLoadIdentity();
+        } else {
+            float offs_matrix[] =
+              { 1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0.5, 0.5, 0, 1 };
+            glLoadMatrixf(offs_matrix);
+        }
+
+        QPen pen = cpen;
+        if (txscale != 1)
+            pen.setWidthF(pen.width() * txscale);
         if (use_cache)
-            fillPath(qt_opengl_stroke_cache()->getStrokedPath(temp.map(path), cpen));
+            fillPath(qt_opengl_stroke_cache()->getStrokedPath(temp.map(path), pen));
         else
-            fillPath(strokeForPath(temp.map(path), cpen));
+            fillPath(strokeForPath(temp.map(path), pen));
 
         glPopMatrix();
         matrix = temp;
@@ -3927,6 +4350,11 @@ void QOpenGLPaintEngine::drawPath(const QPainterPath &path)
     if (path.isEmpty())
         return;
 
+    if (d->use_emulation) {
+        QPaintEngineEx::drawPath(path);
+        return;
+    }
+
     QOpenGLCoordinateOffset offset(d);
 
     if (d->has_brush) {
@@ -3939,10 +4367,10 @@ void QOpenGLPaintEngine::drawPath(const QPainterPath &path)
             && d->cpen.isSolid()
             && d->cpen.color().alpha() == 255
             && d->txop < QTransform::TxProject
-            && d->cpen.widthF() >= 2.0 / sqrt(qMin(d->matrix.m11() * d->matrix.m11()
-                                                   + d->matrix.m21() * d->matrix.m21(),
-                                                   d->matrix.m12() * d->matrix.m12()
-                                                   + d->matrix.m22() * d->matrix.m22()));
+            && d->cpen.widthF() >= 2 / qSqrt(qMin(d->matrix.m11() * d->matrix.m11()
+                                                  + d->matrix.m21() * d->matrix.m21(),
+                                                  d->matrix.m12() * d->matrix.m12()
+                                                  + d->matrix.m22() * d->matrix.m22()));
 
         if (has_thick_pen) {
             DEBUG_ONCE qDebug() << "QOpenGLPaintEngine::drawPath(): Using thick pen optimization, style:" << d->cbrush.style();
@@ -3965,7 +4393,7 @@ void QOpenGLPaintEngine::drawPath(const QPainterPath &path)
 
     if (d->has_pen) {
         if (d->has_fast_pen && !d->high_quality_antialiasing)
-            d->strokePathFastPen(path, state->penNeedsResolving());
+            d->strokePathFastPen(path, state()->penNeedsResolving());
         else
             d->strokePath(path, true);
     }
@@ -4073,11 +4501,7 @@ void QOpenGLPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QR
     if (d->composition_mode > QPainter::CompositionMode_Plus || (d->high_quality_antialiasing && !d->isFastRect(r)))
         d->drawImageAsPath(r, pm.toImage(), sr);
     else {
-        GLenum target = (QGLExtensions::glExtensions & QGLExtensions::TextureRectangle)
-                        ? GL_TEXTURE_RECTANGLE_NV
-                        : GL_TEXTURE_2D;
-        if (r.size() != pm.size())
-            target = GL_TEXTURE_2D;
+        GLenum target = qt_gl_preferredTextureTarget();
         d->flushDrawQueue();
         d->drawable.bindTexture(pm, target);
         drawTextureRect(pm.width(), pm.height(), r, sr, target);
@@ -4183,11 +4607,7 @@ void QOpenGLPaintEngine::drawImage(const QRectF &r, const QImage &image, const Q
     if (d->composition_mode > QPainter::CompositionMode_Plus || (d->high_quality_antialiasing && !d->isFastRect(r)))
         d->drawImageAsPath(r, image, sr);
     else {
-        GLenum target = (QGLExtensions::glExtensions & QGLExtensions::TextureRectangle)
-                        ? GL_TEXTURE_RECTANGLE_NV
-                        : GL_TEXTURE_2D;
-        if (r.size() != image.size())
-            target = GL_TEXTURE_2D;
+        GLenum target = qt_gl_preferredTextureTarget();
         d->flushDrawQueue();
         d->drawable.bindTexture(image, target);
         drawTextureRect(image.width(), image.height(), r, sr, target);
@@ -4210,13 +4630,13 @@ void QOpenGLPaintEngine::drawTextureRect(int tx_width, int tx_height, const QRec
     if (target == GL_TEXTURE_2D) {
         x1 = sr.x() / tx_width;
         x2 = x1 + sr.width() / tx_width;
-        y1 = 1.0 - ((sr.y() / tx_height) + (sr.height() / tx_height));
+        y1 = 1.0 - (sr.bottom() / tx_height);
         y2 = 1.0 - (sr.y() / tx_height);
     } else {
         x1 = sr.x();
-        x2 = sr.width();
-        y1 = sr.y();
-        y2 = sr.height();
+        x2 = sr.right();
+        y1 = tx_height - sr.bottom();
+        y2 = tx_height - sr.y();
     }
 
     q_vertexType vertexArray[4*2];
@@ -4327,7 +4747,13 @@ void QGLGlyphCache::fontEngineDestroyed(QObject *o)
     QGLFontTexture *tex = qt_font_textures.take(font_key);
     if (tex) {
 #ifdef Q_WS_MAC
-        if (aglGetCurrentContext() == 0)
+        if (
+#  ifndef QT_MAC_USE_COCOA
+            aglGetCurrentContext() != 0
+#  else
+            qt_current_nsopengl_context() != 0
+#  endif
+           )
 #endif
             glDeleteTextures(1, &tex->texture);
         delete tex;
@@ -4354,7 +4780,13 @@ void QGLGlyphCache::cleanupContext(const QGLContext *ctx)
             QGLFontTexture *font_tex = qt_font_textures.take(font_key);
             if (font_tex) {
 #ifdef Q_WS_MAC
-                if (aglGetCurrentContext() != 0)
+                if (
+#  ifndef QT_MAC_USE_COCOA
+            aglGetCurrentContext() == 0
+#  else
+            qt_current_nsopengl_context() != 0
+#  endif
+                   )
 #endif
                     glDeleteTextures(1, &font_tex->texture);
                 delete font_tex;
@@ -4368,9 +4800,12 @@ void QGLGlyphCache::cleanupContext(const QGLContext *ctx)
 void QGLGlyphCache::cleanCache()
 {
     QGLFontTexHash::const_iterator it = qt_font_textures.constBegin();
-
     if (QGLContext::currentContext()) {
         while (it != qt_font_textures.constEnd()) {
+#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
+            if (qt_current_nsopengl_context() == 0)
+                break;
+#endif
             glDeleteTextures(1, &it.value()->texture);
             ++it;
         }
@@ -4479,6 +4914,7 @@ void QGLGlyphCache::cacheGlyphs(QGLContext *context, const QTextItemInt &ti,
         GLint tex_width = qt_next_power_of_two(tex_height*30); // ###
         GLint max_tex_size;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);
+        Q_ASSERT(max_tex_size > 0);
         if (tex_width > max_tex_size)
             tex_width = max_tex_size;
         allocTexture(tex_width, tex_height, font_texture);
@@ -4540,6 +4976,7 @@ void QGLGlyphCache::cacheGlyphs(QGLContext *context, const QTextItemInt &ti,
 
             QImage glyph_im(ti.fontEngine->alphaMapForGlyph(glyphs[i]).convertToFormat(QImage::Format_Indexed8));
             glyph_width = glyph_im.width();
+            Q_ASSERT(glyph_width >= 0);
             // pad the glyph width to an even number
             if (glyph_width%2 != 0)
                 ++glyph_width;
@@ -4551,7 +4988,7 @@ void QGLGlyphCache::cacheGlyphs(QGLContext *context, const QTextItemInt &ti,
             qgl_glyph->height = qreal(glyph_height) / font_tex->height;
             qgl_glyph->log_width = qreal(glyph_width);
             qgl_glyph->log_height = qgl_glyph->height * font_tex->height;
-#ifdef Q_WS_MAC            
+#ifdef Q_WS_MAC
             qgl_glyph->x_offset = -metrics.x + 1;
             qgl_glyph->y_offset = metrics.y - 2;
 #else
@@ -4620,10 +5057,13 @@ void QOpenGLPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
 {
     Q_D(QOpenGLPaintEngine);
 
+    const QTextItemInt &ti = static_cast<const QTextItemInt &>(textItem);
+
     // fall back to drawing a polygon if the scale factor is large, or
     // we use a gradient pen
-    if ((d->matrix.det() > 1) || (d->pen_brush_style >= Qt::LinearGradientPattern
-                                  && d->pen_brush_style <= Qt::ConicalGradientPattern)) {
+    if (ti.fontEngine->fontDef.pixelSize >= 64
+        || (d->matrix.det() > 1) || (d->pen_brush_style >= Qt::LinearGradientPattern
+                                     && d->pen_brush_style <= Qt::ConicalGradientPattern)) {
         QPaintEngine::drawTextItem(p, textItem);
         return;
     }
@@ -4631,12 +5071,11 @@ void QOpenGLPaintEngine::drawTextItem(const QPointF &p, const QTextItem &textIte
     d->flushDrawQueue();
 
     // add the glyphs used to the glyph texture cache
-    const QTextItemInt &ti = static_cast<const QTextItemInt &>(textItem);
     QVarLengthArray<QFixedPoint> positions;
     QVarLengthArray<glyph_t> glyphs;
     QTransform matrix;
     matrix.translate(qRound(p.x()), qRound(p.y()));
-    ti.fontEngine->getGlyphPositions(ti.glyphs, ti.num_glyphs, matrix, ti.flags, glyphs, positions);
+    ti.fontEngine->getGlyphPositions(ti.glyphs, matrix, ti.flags, glyphs, positions);
 
     // make sure the glyphs we want to draw are in the cache
     qt_glyph_cache()->cacheGlyphs(d->drawable.context(), ti, glyphs);
@@ -4704,10 +5143,14 @@ void QOpenGLPaintEngine::drawEllipse(const QRectF &rect)
 #ifndef Q_WS_QWS
     Q_D(QOpenGLPaintEngine);
 
+    if (d->use_emulation) {
+        QPaintEngineEx::drawEllipse(rect);
+        return;
+    }
+
     if (d->high_quality_antialiasing) {
         if (d->has_brush) {
-            if (d->has_clipping)
-                glDisable(GL_DEPTH_TEST);
+            d->disableClipping();
 
             glMatrixMode(GL_MODELVIEW);
             glPushMatrix();
@@ -4723,8 +5166,7 @@ void QOpenGLPaintEngine::drawEllipse(const QRectF &rect)
 
             d->addItem(qt_mask_texture_cache()->getMask(maskGenerator, d));
 
-            if (d->has_clipping)
-                glEnable(GL_DEPTH_TEST);
+            d->enableClipping();
 
             glMatrixMode(GL_MODELVIEW);
             glPopMatrix();
@@ -4744,7 +5186,7 @@ void QOpenGLPaintEngine::drawEllipse(const QRectF &rect)
         drawPath(path);
     }
 #else
-    QPaintEngine::drawEllipse(rect);
+    QPaintEngineEx::drawEllipse(rect);
 #endif
 }
 
@@ -4843,6 +5285,8 @@ void QOpenGLPaintEnginePrivate::copyDrawable(const QRectF &rect)
 #ifdef Q_WS_QWS
     Q_UNUSED(rect);
 #else
+    ensureDrawableTexture();
+
     DEBUG_ONCE qDebug() << "Refreshing drawable_texture for rectangle" << rect;
     QRectF screen_rect = rect.adjusted(-1, -1, 1, 1);
 
@@ -4940,12 +5384,11 @@ void QOpenGLPaintEnginePrivate::composite(GLuint primitive, const q_vertexType *
     if (brush_texture_location >= 0) {
         glActiveTexture(GL_TEXTURE0 + brush_texture_location);
 
-        if (current_style == Qt::TexturePattern) {
+        if (current_style == Qt::TexturePattern)
             drawable.bindTexture(cbrush.textureImage());
-        } else {
-            pattern_image = qt_imageForBrush(current_style, true);
-            drawable.bindTexture(pattern_image);
-        }
+        else
+            drawable.bindTexture(qt_imageForBrush(current_style, true));
+
         updateTextureFilter(GL_TEXTURE_2D, GL_REPEAT, use_smooth_pixmap_transform);
     }
 
@@ -5070,6 +5513,273 @@ void QOpenGLPaintEnginePrivate::flushDrawQueue()
     }
 #endif
 }
+
+void QOpenGLPaintEngine::clipEnabledChanged()
+{
+    Q_D(QOpenGLPaintEngine);
+
+    d->updateDepthClip();
+}
+
+void QOpenGLPaintEngine::penChanged()
+{
+    updatePen(state()->pen);
+}
+
+void QOpenGLPaintEngine::brushChanged()
+{
+    updateBrush(state()->brush, state()->brushOrigin);
+}
+
+void QOpenGLPaintEngine::brushOriginChanged()
+{
+    updateBrush(state()->brush, state()->brushOrigin);
+}
+
+void QOpenGLPaintEngine::opacityChanged()
+{
+    Q_D(QOpenGLPaintEngine);
+    QPainterState *s = state();
+    d->opacity = s->opacity;
+    updateBrush(s->brush, s->brushOrigin);
+    updatePen(s->pen);
+}
+
+void QOpenGLPaintEngine::compositionModeChanged()
+{
+    updateCompositionMode(state()->composition_mode);
+}
+
+void QOpenGLPaintEngine::renderHintsChanged()
+{
+    updateRenderHints(state()->renderHints);
+}
+
+void QOpenGLPaintEngine::transformChanged()
+{
+    updateMatrix(state()->matrix);
+}
+
+static QPainterPath painterPathFromVectorPath(const QVectorPath &path)
+{
+    const qreal *points = path.points();
+    const QPainterPath::ElementType *types = path.elements();
+
+    QPainterPath p;
+    if (types) {
+        int id = 0;
+        for (int i=0; i<path.elementCount(); ++i) {
+            switch(types[i]) {
+            case QPainterPath::MoveToElement:
+                p.moveTo(QPointF(points[id], points[id+1]));
+                id+=2;
+                break;
+            case QPainterPath::LineToElement:
+                p.lineTo(QPointF(points[id], points[id+1]));
+                id+=2;
+                break;
+            case QPainterPath::CurveToElement: {
+                QPointF p1(points[id], points[id+1]);
+                QPointF p2(points[id+2], points[id+3]);
+                QPointF p3(points[id+4], points[id+5]);
+                p.cubicTo(p1, p2, p3);
+                id+=6;
+                break;
+            }
+            case QPainterPath::CurveToDataElement:
+                ;
+                break;
+            }
+        }
+    } else {
+        p.moveTo(QPointF(points[0], points[1]));
+        int id = 2;
+        for (int i=1; i<path.elementCount(); ++i) {
+            p.lineTo(QPointF(points[id], points[id+1]));
+            id+=2;
+        }
+    }
+    if (path.hints() & QVectorPath::WindingFill)
+        p.setFillRule(Qt::WindingFill);
+
+    return p;
+}
+
+void QOpenGLPaintEngine::fill(const QVectorPath &path, const QBrush &brush)
+{
+    Q_D(QOpenGLPaintEngine);
+
+    if (brush.style() == Qt::NoBrush)
+        return;
+
+    if (!d->use_fragment_programs && needsEmulation(brush.style())) {
+        QPainter *p = painter();
+        QBrush oldBrush = p->brush();
+        p->setBrush(brush);
+        qt_draw_helper(p->d_ptr, painterPathFromVectorPath(path), QPainterPrivate::FillDraw);
+        p->setBrush(oldBrush);
+        return;
+    }
+
+    QBrush old_brush = state()->brush;
+    updateBrush(brush, state()->brushOrigin);
+
+    const qreal *points = path.points();
+    const QPainterPath::ElementType *types = path.elements();
+    if (!types && path.shape() == QVectorPath::RectangleHint) {
+        QRectF r(points[0], points[1], points[4]-points[0], points[5]-points[1]);
+        QPen old_pen = state()->pen;
+        updatePen(Qt::NoPen);
+        drawRects(&r, 1);
+        updatePen(old_pen);
+    } else {
+        d->fillPath(painterPathFromVectorPath(path));
+    }
+
+    updateBrush(old_brush, state()->brushOrigin);
+}
+
+template <typename T> static inline bool isRect(const T *pts, int elementCount) {
+    return (elementCount == 5 // 5-point polygon, check for closed rect
+            && pts[0] == pts[8] && pts[1] == pts[9] // last point == first point
+            && pts[0] == pts[6] && pts[2] == pts[4] // x values equal
+            && pts[1] == pts[3] && pts[5] == pts[7] // y values equal...
+            ) ||
+           (elementCount == 4 // 4-point polygon, check for unclosed rect
+            && pts[0] == pts[6] && pts[2] == pts[4] // x values equal
+            && pts[1] == pts[3] && pts[5] == pts[7] // y values equal...
+            );
+}
+
+void QOpenGLPaintEngine::clip(const QVectorPath &path, Qt::ClipOperation op)
+{
+    const qreal *points = path.points();
+    const QPainterPath::ElementType *types = path.elements();
+    if (!types && path.shape() == QVectorPath::RectangleHint) {
+        QRectF r(points[0], points[1], points[4]-points[0], points[5]-points[1]);
+        updateClipRegion(QRegion(r.toRect()), op);
+        return;
+    }
+
+    QPainterPath p;
+    if (types) {
+        int id = 0;
+        for (int i=0; i<path.elementCount(); ++i) {
+            switch(types[i]) {
+            case QPainterPath::MoveToElement:
+                p.moveTo(QPointF(points[id], points[id+1]));
+                id+=2;
+                break;
+            case QPainterPath::LineToElement:
+                p.lineTo(QPointF(points[id], points[id+1]));
+                id+=2;
+                break;
+            case QPainterPath::CurveToElement: {
+                QPointF p1(points[id], points[id+1]);
+                QPointF p2(points[id+2], points[id+3]);
+                QPointF p3(points[id+4], points[id+5]);
+                p.cubicTo(p1, p2, p3);
+                id+=6;
+                break;
+            }
+            case QPainterPath::CurveToDataElement:
+                ;
+                break;
+            }
+        }
+    } else if (!path.isEmpty()) {
+        p.moveTo(QPointF(points[0], points[1]));
+        int id = 2;
+        for (int i=1; i<path.elementCount(); ++i) {
+            p.lineTo(QPointF(points[id], points[id+1]));
+            id+=2;
+        }
+    }
+    if (path.hints() & QVectorPath::WindingFill)
+        p.setFillRule(Qt::WindingFill);
+
+    updateClipRegion(QRegion(p.toFillPolygon().toPolygon(), p.fillRule()), op);
+    return;
+}
+
+void QOpenGLPaintEngine::setState(QPainterState *s)
+{
+    Q_D(QOpenGLPaintEngine);
+    QPaintEngineEx::setState(s);
+    if (isActive()) {
+        d->updateDepthClip();
+        penChanged();
+        brushChanged();
+        opacityChanged();
+        compositionModeChanged();
+        renderHintsChanged();
+        transformChanged();
+    }
+}
+
+QPainterState *QOpenGLPaintEngine::createState(QPainterState *orig) const
+{
+    QOpenGLPaintEngineState *s;
+    if (!orig)
+        s = new QOpenGLPaintEngineState();
+    else
+        s = new QOpenGLPaintEngineState(*static_cast<QOpenGLPaintEngineState *>(orig));
+
+    return s;
+}
+
+//
+//  QOpenGLPaintEngineState
+//
+
+QOpenGLPaintEngineState::QOpenGLPaintEngineState(QOpenGLPaintEngineState &other)
+    : QPainterState(other)
+{
+    clipRegion = other.clipRegion;
+    hasClipping = other.hasClipping;
+    fastClip = other.fastClip;
+}
+
+QOpenGLPaintEngineState::QOpenGLPaintEngineState()
+{
+    hasClipping = false;
+}
+
+QOpenGLPaintEngineState::~QOpenGLPaintEngineState()
+{
+}
+
+void QOpenGLPaintEnginePrivate::ensureDrawableTexture()
+{
+    if (!dirty_drawable_texture)
+        return;
+
+    dirty_drawable_texture = false;
+
+#ifndef QT_OPENGL_ES
+    glGenTextures(1, &drawable_texture);
+    glBindTexture(GL_TEXTURE_2D, drawable_texture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+            drawable_texture_size.width(),
+            drawable_texture_size.height(), 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
+}
+
+QPixmapFilter *QOpenGLPaintEngine::createPixmapFilter(int type) const
+{
+    if (QGLContext::currentContext())
+        return QGLContext::currentContext()->d_func()->createPixmapFilter(type);
+    else
+        return 0;
+}
+
 
 QT_END_NAMESPACE
 

@@ -1,49 +1,52 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qdesigner.h"
-#include "preferences.h"
 #include "qdesigner_settings.h"
+#include "qdesigner_toolwindow.h"
 #include "qdesigner_workbench.h"
-#include "qdesigner_propertyeditor.h"
-#include "qdesigner_objectinspector.h"
 
+#include <abstractformeditor.h>
+#include <abstractsettings_p.h>
 #include <qdesigner_utils_p.h>
-#include <previewconfigurationwidget_p.h>
 #include <previewmanager_p.h>
 
 #include <QtCore/QVariant>
@@ -55,175 +58,129 @@
 
 #include <QtCore/qdebug.h>
 
+enum { debugSettings = 0 };
+
 QT_BEGIN_NAMESPACE
 
-static const char *designerPath = "/.designer";
 static const char *newFormShowKey = "newFormDialog/ShowOnStartup";
-static const char *mainWindowStateKey = "MainWindowState";
-static const char *toolBoxStateKey = "ToolBoxState";
-static const char *toolBarsStateKey = "ToolBarsState";
+
+// Change the version whenever the arrangement changes significantly.
+static const char *mainWindowStateKey = "MainWindowState45";
+static const char *toolBarsStateKey = "ToolBarsState45";
+
 static const char *backupOrgListKey = "backup/fileListOrg";
 static const char *backupBakListKey = "backup/fileListBak";
-static const char *previewKey = "Preview";
-static const char *defaultGridKey = "defaultGrid";
-static const char *formTemplatePathsKey = "FormTemplatePaths";
 static const char *recentFilesListKey = "recentFilesList";
-static const char *actionEditorViewModeKey = "ActionEditorViewMode";
-static const char *formTemplateKey = "FormTemplate";
 
-static bool checkTemplatePath(const QString &path, bool create)
-{
-    QDir current(QDir::current());
-    if (current.exists(path))
-        return true;
-
-    if (!create)
-        return false;
-
-    if (current.mkpath(path))
-        return true;
-
-    qdesigner_internal::designerWarning(QObject::tr("The template path %1 could not be created.").arg(path));
-    return false;
-}
-
-QDesignerSettings::QDesignerSettings()
+QDesignerSettings::QDesignerSettings(QDesignerFormEditorInterface *core) :
+    qdesigner_internal::QDesignerSharedSettings(core)
 {
 }
 
-const QStringList &QDesignerSettings::defaultFormTemplatePaths()
+void QDesignerSettings::setValue(const QString &key, const QVariant &value)
 {
-    static QStringList rc;
-    if (rc.empty()) {
-        // Ensure default form template paths
-        const QString templatePath = QLatin1String("/templates");
-        // home
-        QString path = QDir::homePath();
-        path += QLatin1String(designerPath);
-        path += templatePath;
-        if (checkTemplatePath(path, true))
-            rc += path;
-
-        // designer/bin: Might be owned by root in some installations, do not force it.
-        path = qDesigner->applicationDirPath();
-        path += templatePath;
-        if (checkTemplatePath(path, false))
-            rc += path;
-    }
-    return rc;
+    settings()->setValue(key, value);
 }
 
-QStringList QDesignerSettings::formTemplatePaths() const
+QVariant QDesignerSettings::value(const QString &key, const QVariant &defaultValue) const
 {
-    return value(QLatin1String(formTemplatePathsKey),defaultFormTemplatePaths()).toStringList();
+    return settings()->value(key, defaultValue);
 }
 
-void QDesignerSettings::setFormTemplatePaths(const QStringList &paths)
+static inline QChar modeChar(UIMode mode)
 {
-    setValue(QLatin1String(formTemplatePathsKey), paths);
-}
-
-QString  QDesignerSettings::formTemplate() const
-{
-    return value(QLatin1String(formTemplateKey)).toString();
-}
-
-void QDesignerSettings::setFormTemplate(const QString &t)
-{
-    setValue(QLatin1String(formTemplateKey), t);
+    return QLatin1Char(static_cast<char>(mode) + '0');
 }
 
 void QDesignerSettings::saveGeometryFor(const QWidget *w)
 {
     Q_ASSERT(w && !w->objectName().isEmpty());
-    saveGeometryHelper(w, w->objectName());
+    QDesignerSettingsInterface *s = settings();
+    const bool visible = w->isVisible();
+    if (debugSettings)
+        qDebug() << Q_FUNC_INFO << w << "visible=" << visible;
+    s->beginGroup(w->objectName());
+    s->setValue(QLatin1String("visible"), visible);
+    s->setValue(QLatin1String("geometry"), w->saveGeometry());
+    s->endGroup();
 }
 
-void QDesignerSettings::setGeometryFor(QWidget *w, const QRect &fallBack) const
+void QDesignerSettings::restoreGeometry(QWidget *w, QRect fallBack) const
 {
     Q_ASSERT(w && !w->objectName().isEmpty());
-    setGeometryHelper(w, w->objectName(),
-                      fallBack.isNull() ? QRect(QPoint(0, 0), w->sizeHint()) : fallBack);
-}
+    const QString key = w->objectName();
+    const QByteArray ba(settings()->value(key + QLatin1String("/geometry")).toByteArray());
+    const bool visible = settings()->value(key + QLatin1String("/visible"), true).toBool();
 
-void QDesignerSettings::saveGeometryHelper(const QWidget *w, const QString &key)
-{
-    beginGroup(key);
-    setValue(QLatin1String("visible"), w->isVisible());
-QDesignerSettings::    setValue(QLatin1String("geometry"), w->saveGeometry());
-    endGroup();
-}
-
-void QDesignerSettings::setGeometryHelper(QWidget *w, const QString &key,
-                                          const QRect &fallBack) const
-{
-    QByteArray ba(value(key + QLatin1String("/geometry")).toByteArray());
-
+    if (debugSettings)
+        qDebug() << Q_FUNC_INFO << w << fallBack << "visible=" << visible;
     if (ba.isEmpty()) {
-        w->move(fallBack.topLeft());
-        w->resize(fallBack.size());
+        /// Apply default geometry, check for null and maximal size
+        if (fallBack.isNull())
+            fallBack = QRect(QPoint(0, 0), w->sizeHint());
+        if (fallBack.size() == QSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)) {
+            w->setWindowState(w->windowState() | Qt::WindowMaximized);
+        } else {
+            w->move(fallBack.topLeft());
+            w->resize(fallBack.size());
+        }
     } else {
         w->restoreGeometry(ba);
     }
 
-    if (value(key + QLatin1String("/visible"), true).toBool())
+    if (visible)
         w->show();
 }
 
 QStringList QDesignerSettings::recentFilesList() const
 {
-    return value(QLatin1String(recentFilesListKey)).toStringList();
+    return settings()->value(QLatin1String(recentFilesListKey)).toStringList();
 }
 
 void QDesignerSettings::setRecentFilesList(const QStringList &sl)
 {
-    setValue(QLatin1String(recentFilesListKey), sl);
+    settings()->setValue(QLatin1String(recentFilesListKey), sl);
 }
 
 void QDesignerSettings::setShowNewFormOnStartup(bool showIt)
 {
-    setValue(QLatin1String(newFormShowKey), showIt);
+    settings()->setValue(QLatin1String(newFormShowKey), showIt);
 }
 
 bool QDesignerSettings::showNewFormOnStartup() const
 {
-    return value(QLatin1String(newFormShowKey), true).toBool();
+    return settings()->value(QLatin1String(newFormShowKey), true).toBool();
 }
 
-QByteArray QDesignerSettings::mainWindowState() const
+QByteArray QDesignerSettings::mainWindowState(UIMode mode) const
 {
-    return value(QLatin1String(mainWindowStateKey)).toByteArray();
+    return settings()->value(QLatin1String(mainWindowStateKey) + modeChar(mode)).toByteArray();
 }
 
-void QDesignerSettings::setMainWindowState(const QByteArray &mainWindowState)
+void QDesignerSettings::setMainWindowState(UIMode mode, const QByteArray &mainWindowState)
 {
-    setValue(QLatin1String(mainWindowStateKey), mainWindowState);
+    settings()->setValue(QLatin1String(mainWindowStateKey) + modeChar(mode), mainWindowState);
 }
 
-QByteArray QDesignerSettings::toolBoxState() const
+QByteArray QDesignerSettings::toolBarsState(UIMode mode) const
 {
-    return value(QLatin1String(toolBoxStateKey)).toByteArray();
+    QString key = QLatin1String(toolBarsStateKey);
+    key += modeChar(mode);
+    return settings()->value(key).toByteArray();
 }
 
-void QDesignerSettings::setToolBoxState(const QByteArray &state)
+void QDesignerSettings::setToolBarsState(UIMode mode, const QByteArray &toolBarsState)
 {
-    setValue(QLatin1String(toolBoxStateKey), state);
-}
-
-QByteArray QDesignerSettings::toolBarsState() const
-{
-    return value(QLatin1String(toolBarsStateKey)).toByteArray();
-}
-
-void QDesignerSettings::setToolBarsState(const QByteArray &toolBarsState)
-{
-    setValue(QLatin1String(toolBarsStateKey), toolBarsState);
+    QString key = QLatin1String(toolBarsStateKey);
+    key += modeChar(mode);
+    settings()->setValue(key, toolBarsState);
 }
 
 void QDesignerSettings::clearBackup()
 {
-    remove(QLatin1String(backupOrgListKey));
-    remove(QLatin1String(backupBakListKey));
+    QDesignerSettingsInterface *s = settings();
+    s->remove(QLatin1String(backupOrgListKey));
+    s->remove(QLatin1String(backupBakListKey));
 }
 
 void QDesignerSettings::setBackup(const QMap<QString, QString> &map)
@@ -231,14 +188,15 @@ void QDesignerSettings::setBackup(const QMap<QString, QString> &map)
     const QStringList org = map.keys();
     const QStringList bak = map.values();
 
-    setValue(QLatin1String(backupOrgListKey), org);
-    setValue(QLatin1String(backupBakListKey), bak);
+    QDesignerSettingsInterface *s = settings();
+    s->setValue(QLatin1String(backupOrgListKey), org);
+    s->setValue(QLatin1String(backupBakListKey), bak);
 }
 
 QMap<QString, QString> QDesignerSettings::backup() const
 {
-    const QStringList org = value(QLatin1String(backupOrgListKey), QStringList()).toStringList();
-    const QStringList bak = value(QLatin1String(backupBakListKey), QStringList()).toStringList();
+    const QStringList org = settings()->value(QLatin1String(backupOrgListKey), QStringList()).toStringList();
+    const QStringList bak = settings()->value(QLatin1String(backupBakListKey), QStringList()).toStringList();
 
     QMap<QString, QString> map;
     const int orgCount = org.count();
@@ -248,89 +206,45 @@ QMap<QString, QString> QDesignerSettings::backup() const
     return map;
 }
 
-void QDesignerSettings::setPreviewConfiguration(const qdesigner_internal::PreviewConfiguration &pc)
+void QDesignerSettings::setUiMode(UIMode mode)
 {
-    pc.toSettings(QLatin1String(previewKey), *this);
+    QDesignerSettingsInterface *s = settings();
+    s->beginGroup(QLatin1String("UI"));
+    s->setValue(QLatin1String("currentMode"), mode);
+    s->endGroup();
 }
 
-qdesigner_internal::PreviewConfiguration QDesignerSettings::previewConfiguration() const
+UIMode QDesignerSettings::uiMode() const
 {
-    qdesigner_internal::PreviewConfiguration rc;
-    rc.fromSettings(QLatin1String(previewKey), *this);
-    return rc;
-}
-
-qdesigner_internal::PreviewConfigurationWidgetState QDesignerSettings::previewConfigurationWidgetState() const
-{
-    qdesigner_internal::PreviewConfigurationWidgetState rc;
-    rc.fromSettings(QLatin1String(previewKey), *this);
-    return rc;
-}
-
-void QDesignerSettings::setPreviewConfigurationWidgetState(const qdesigner_internal::PreviewConfigurationWidgetState &pc)
-{
-    pc.toSettings(QLatin1String(previewKey), *this);
-}
-
-void QDesignerSettings::setPreferences(const Preferences& p)
-{
-    beginGroup(QLatin1String("UI"));
-    setValue(QLatin1String("currentMode"), p.m_uiMode);
-    setValue(QLatin1String("font"), p.m_font);
-    setValue(QLatin1String("useFont"), p.m_useFont);
-    setValue(QLatin1String("writingSystem"), p.m_writingSystem);
-    endGroup();
-    // grid
-    setValue(QLatin1String(defaultGridKey), p.m_defaultGrid.toVariantMap());
-    setPreviewConfigurationWidgetState(p.m_previewConfigurationWidgetState);
-    setPreviewConfiguration(p.m_previewConfiguration);
-    // merge template paths
-    QStringList templatePaths = defaultFormTemplatePaths();
-    templatePaths += p.m_additionalTemplatePaths;
-    setFormTemplatePaths(templatePaths);
-}
-
-Preferences QDesignerSettings::preferences() const
-{
-    Preferences rc;
-#ifdef Q_WS_WIN
-    const UIMode defaultMode = DockedMode;
-#else
+#ifdef Q_WS_MAC
     const UIMode defaultMode = TopLevelMode;
+#else
+    const UIMode defaultMode = DockedMode;
 #endif
-    rc.m_uiMode = static_cast<UIMode>(value(QLatin1String("UI/currentMode"), defaultMode).toInt());
-    rc.m_writingSystem = static_cast<QFontDatabase::WritingSystem>(value(QLatin1String("UI/writingSystem"), QFontDatabase::Any).toInt());
-    rc.m_font = qVariantValue<QFont>(value(QLatin1String("UI/font")));
-    rc.m_useFont = value(QLatin1String("UI/useFont"), QVariant(false)).toBool();
-    const QVariantMap defaultGridMap = value(QLatin1String(defaultGridKey), QVariantMap()).toMap();
-    if (!defaultGridMap.empty())
-        rc.m_defaultGrid.fromVariantMap(defaultGridMap);
-    rc.m_additionalTemplatePaths = additionalFormTemplatePaths();
-    rc.m_previewConfigurationWidgetState = previewConfigurationWidgetState();
-    rc.m_previewConfiguration = previewConfiguration();
-    return rc;
+    UIMode uiMode = static_cast<UIMode>(value(QLatin1String("UI/currentMode"), defaultMode).toInt());
+    return uiMode;
 }
 
-QStringList QDesignerSettings::additionalFormTemplatePaths() const
+void QDesignerSettings::setToolWindowFont(const ToolWindowFontSettings &fontSettings)
 {
-    // get template paths excluding internal ones
-    QStringList rc = formTemplatePaths();
-    foreach (QString internalTemplatePath, defaultFormTemplatePaths()) {
-        const int index = rc.indexOf(internalTemplatePath);
-        if (index != -1)
-            rc.removeAt(index);
-    }
-    return rc;
+    QDesignerSettingsInterface *s = settings();
+    s->beginGroup(QLatin1String("UI"));
+    s->setValue(QLatin1String("font"), fontSettings.m_font);
+    s->setValue(QLatin1String("useFont"), fontSettings.m_useFont);
+    s->setValue(QLatin1String("writingSystem"), fontSettings.m_writingSystem);
+    s->endGroup();
 }
 
-int QDesignerSettings::actionEditorViewMode() const
+ToolWindowFontSettings QDesignerSettings::toolWindowFont() const
 {
-    return value(QLatin1String(actionEditorViewModeKey), 0).toInt();
-}
-
-void QDesignerSettings::setActionEditorViewMode(int vm)
-{
-    setValue(QLatin1String(actionEditorViewModeKey), vm);
+    ToolWindowFontSettings fontSettings;
+    fontSettings.m_writingSystem =
+            static_cast<QFontDatabase::WritingSystem>(value(QLatin1String("UI/writingSystem"),
+                                                            QFontDatabase::Any).toInt());
+    fontSettings.m_font = qVariantValue<QFont>(value(QLatin1String("UI/font")));
+    fontSettings.m_useFont =
+            settings()->value(QLatin1String("UI/useFont"), QVariant(false)).toBool();
+    return fontSettings;
 }
 
 QT_END_NAMESPACE

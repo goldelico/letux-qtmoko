@@ -1,37 +1,41 @@
 /****************************************************************************
  **
- ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+ ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
  **
  ** This file is part of the qmake application of the Qt Toolkit.
  **
- ** Commercial Usage
+ ** $QT_BEGIN_LICENSE:LGPL$
+** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
  **
  ** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -142,7 +146,11 @@ UnixMakefileGenerator::init()
         for(int i = 0; i < libdirs.size(); ++i) {
             if(!project->isEmpty("QMAKE_LFLAGS_RPATH") && project->isActiveConfig("rpath_libdirs"))
                 project->values("QMAKE_LFLAGS") += var("QMAKE_LFLAGS_RPATH") + libdirs[i];
-            project->values("QMAKE_LIBDIR_FLAGS") += "-L" + escapeFilePath(libdirs[i]);
+            if (project->isActiveConfig("rvct_linker")) {
+                project->values("QMAKE_LIBDIR_FLAGS") += "--userlibpath " + escapeFilePath(libdirs[i]);
+            } else {
+                project->values("QMAKE_LIBDIR_FLAGS") += "-L" + escapeFilePath(libdirs[i]);
+            }
         }
     }
     if(project->isActiveConfig("macx") && !project->isEmpty("QMAKE_FRAMEWORKPATH")) {
@@ -241,6 +249,7 @@ UnixMakefileGenerator::init()
             if(project->isEmpty("QMAKE_BUNDLE_LOCATION"))
                 project->values("QMAKE_BUNDLE_LOCATION").append("Contents/MacOS");
             project->values("QMAKE_PKGINFO").append(project->first("DESTDIR") + bundle + "/Contents/PkgInfo");
+            project->values("QMAKE_BUNDLE_RESOURCE_FILE").append(project->first("DESTDIR") + bundle + "/Contents/Resources/empty.lproj");
         } else if(project->first("TEMPLATE") == "lib" && !project->isActiveConfig("staticlib") &&
                   ((!project->isActiveConfig("plugin") && project->isActiveConfig("lib_bundle")) ||
                    (project->isActiveConfig("plugin") && project->isActiveConfig("plugin_bundle")))) {
@@ -266,6 +275,7 @@ UnixMakefileGenerator::init()
         if(!bundle.isEmpty()) {
             project->values("QMAKE_BUNDLE") = QStringList(bundle);
             project->values("ALL_DEPS") += project->first("QMAKE_PKGINFO");
+            project->values("ALL_DEPS") += project->first("QMAKE_BUNDLE_RESOURCE_FILE");
         } else {
             project->values("QMAKE_BUNDLE").clear();
             project->values("QMAKE_BUNDLE_LOCATION").clear();
@@ -443,7 +453,11 @@ UnixMakefileGenerator::findLibraries()
                     if(!libdirs.contains(f))
                         libdirs.append(f);
                 } else if(opt.startsWith("-l")) {
-                    stub = opt.mid(2);
+                    if (project->isActiveConfig("rvct_linker")) {
+                        (*it) = "lib" + opt.mid(2) + ".so";
+                    } else {
+                        stub = opt.mid(2);
+                    }
                 } else if(Option::target_mode == Option::TARG_MACX_MODE && opt.startsWith("-F")) {
                     frameworkdirs.append(QMakeLocalFileName(opt.right(opt.length()-2)));
                 } else if(Option::target_mode == Option::TARG_MACX_MODE && opt.startsWith("-framework")) {
@@ -842,7 +856,7 @@ UnixMakefileGenerator::escapeFilePath(const QString &path) const
 {
     QString ret = path;
     if(!ret.isEmpty()) {
-        ret = unescapeFilePath(ret).replace(" ", "\\ ");
+        ret = unescapeFilePath(ret).replace(QLatin1Char(' '), QLatin1String("\\ "));
         debug_msg(2, "EscapeFilePath: %s -> %s", path.toLatin1().constData(), ret.toLatin1().constData());
     }
     return ret;

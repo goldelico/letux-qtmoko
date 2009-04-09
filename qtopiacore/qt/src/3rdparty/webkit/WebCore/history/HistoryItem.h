@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,44 +26,49 @@
 #ifndef HistoryItem_h
 #define HistoryItem_h
 
-#include "CachedPage.h"
-#include "FormData.h"
 #include "IntPoint.h"
-#include "KURL.h"
 #include "PlatformString.h"
-#include "Shared.h"
-#include "StringHash.h"
-#include <wtf/HashMap.h>
-#include <wtf/OwnPtr.h>
-#include <wtf/RefPtr.h>
-#include <wtf/Vector.h>
 
 #if PLATFORM(MAC)
 #import <wtf/RetainPtr.h>
 typedef struct objc_object* id;
 #endif
 
+#if PLATFORM(QT)
+#include <QVariant>
+#endif
+
 namespace WebCore {
 
+class CachedPage;
 class Document;
+class FormData;
+class HistoryItem;
 class Image;
 class KURL;
-struct ResourceRequest;
+class ResourceRequest;
 
-class HistoryItem;
 typedef Vector<RefPtr<HistoryItem> > HistoryItemVector;
 
 extern void (*notifyHistoryItemChanged)();
 
-class HistoryItem : public Shared<HistoryItem> {
+class HistoryItem : public RefCounted<HistoryItem> {
     friend class PageCache;
 
 public: 
-    HistoryItem();
-    HistoryItem(const String& urlString, const String& title, double lastVisited);
-    HistoryItem(const String& urlString, const String& title, const String& alternateTitle, double lastVisited);
-    HistoryItem(const KURL& url, const String& title);
-    HistoryItem(const KURL& url, const String& target, const String& parent, const String& title);
+    static PassRefPtr<HistoryItem> create() { return adoptRef(new HistoryItem); }
+    static PassRefPtr<HistoryItem> create(const String& urlString, const String& title, double lastVisited)
+    {
+        return adoptRef(new HistoryItem(urlString, title, lastVisited));
+    }
+    static PassRefPtr<HistoryItem> create(const String& urlString, const String& title, const String& alternateTitle, double lastVisited)
+    {
+        return adoptRef(new HistoryItem(urlString, title, alternateTitle, lastVisited));
+    }
+    static PassRefPtr<HistoryItem> create(const KURL& url, const String& target, const String& parent, const String& title)
+    {
+        return adoptRef(new HistoryItem(url, target, parent, title));
+    }
     
     ~HistoryItem();
     
@@ -95,6 +100,7 @@ public:
     String rssFeedReferrer() const;
     
     int visitCount() const;
+    bool lastVisitWasFailure() const { return m_lastVisitWasFailure; }
 
     void mergeAutoCompleteHints(HistoryItem* otherItem);
     
@@ -117,6 +123,7 @@ public:
 
     void setRSSFeedReferrer(const String&);
     void setVisitCount(int);
+    void setLastVisitWasFailure(bool wasFailure) { m_lastVisitWasFailure = wasFailure; }
 
     void addChildItem(PassRefPtr<HistoryItem>);
     HistoryItem* childItemWithName(const String&) const;
@@ -128,6 +135,7 @@ public:
     // This should not be called directly for HistoryItems that are already included
     // in GlobalHistory. The WebKit api for this is to use -[WebHistory setLastVisitedTimeInterval:forItem:] instead.
     void setLastVisitedTime(double);
+    void visited(const String& title, double time);
     
     bool isCurrentDocument(Document*) const;
     
@@ -141,14 +149,24 @@ public:
     void setTransientProperty(const String&, id);
 #endif
 
+#if PLATFORM(QT)
+    QVariant userData() const { return m_userData; }
+    void setUserData(const QVariant& userData) { m_userData = userData; }
+#endif
+
 #ifndef NDEBUG
     int showTree() const;
     int showTreeWithIndent(unsigned indentLevel) const;
 #endif
 
 private:
+    HistoryItem();
+    HistoryItem(const String& urlString, const String& title, double lastVisited);
+    HistoryItem(const String& urlString, const String& title, const String& alternateTitle, double lastVisited);
+    HistoryItem(const KURL& url, const String& target, const String& parent, const String& title);
+
     HistoryItem(const HistoryItem&);
-    
+
     String m_urlString;
     String m_originalURLString;
     String m_target;
@@ -163,6 +181,7 @@ private:
     
     HistoryItemVector m_subItems;
     
+    bool m_lastVisitWasFailure;
     bool m_isInPageCache;
     bool m_isTargetItem;
     int m_visitCount;
@@ -183,6 +202,10 @@ private:
 #if PLATFORM(MAC)
     RetainPtr<id> m_viewState;
     OwnPtr<HashMap<String, RetainPtr<id> > > m_transientProperties;
+#endif
+
+#if PLATFORM(QT)
+    QVariant m_userData;
 #endif
 }; //class HistoryItem
 

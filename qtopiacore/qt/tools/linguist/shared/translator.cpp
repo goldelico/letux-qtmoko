@@ -1,576 +1,560 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "translator.h"
-#include <qplatformdefs.h>
 
-#ifndef QT_NO_TRANSLATION
+#include "simtexth.h"
 
-#include <QCoreApplication>
-#include <QDataStream>
-#include <QDebug>
-#include <QFile>
-#include <QFileInfo>
-#include <QMap>
-#include <QString>
-#include <QtAlgorithms>
+#include <stdio.h>
 
-#include <stdlib.h>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QDebug>
+#include <QtCore/QDir>
+#include <QtCore/QFile>
+#include <QtCore/QFileInfo>
+#include <QtCore/QTextCodec>
+#include <QtCore/QTextStream>
+
+#include <private/qtranslator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*
-$ mcookie
-3cb86418caef9c95cd211cbf60a1bddd
-$
-*/
-
-// magic number for the file
-static const int MagicLength = 16;
-static const uchar magic[MagicLength] = {
-    0x3c, 0xb8, 0x64, 0x18, 0xca, 0xef, 0x9c, 0x95,
-    0xcd, 0x21, 0x1c, 0xbf, 0x60, 0xa1, 0xbd, 0xdd
-};
-
-static uint elfHash(const char * name)
+Translator::Translator() :
+    m_codecName("ISO-8859-1"),
+    m_locationsType(AbsoluteLocations)
 {
-    const uchar *k;
-    uint h = 0;
-    uint g;
-
-    if (name) {
-        k = (const uchar *) name;
-        while (*k) {
-            h = (h << 4) + *k++;
-            if ((g = (h & 0xf0000000)) != 0)
-                h ^= g >> 24;
-            h &= ~g;
-        }
-    }
-    if (!h)
-        h = 1;
-    return h;
 }
 
-extern bool qt_detectRTLLanguage();
-
-class TranslatorPrivate
+void Translator::registerFileFormat(const FileFormat &format)
 {
-public:
-    struct Offset {
-        Offset()
-            : h(0), o(0) { }
-        Offset(const TranslatorMessage& m, int offset)
-            : h(m.hash()), o(offset) { }
-
-        bool operator<(const Offset &other) const {
-            return (h != other.h) ? h < other.h : o < other.o;
-        }
-        bool operator==(const Offset &other) const {
-            return h == other.h && o == other.o;
-        }
-        uint h;
-        uint o;
-    };
-
-    enum { Contexts = 0x2f, Hashes = 0x42, Messages = 0x69, NumerusRules = 0x88 };
-
-    TranslatorPrivate(Translator *qq) : q(qq), unmapPointer(0), unmapLength(0) {}
-    // Translator must finalize this before deallocating it
-
-    Translator *q;
-    // for mmap'ed files, this is what needs to be unmapped.
-    char *unmapPointer;
-    unsigned int unmapLength;
-
-    // for squeezed but non-file data, this is what needs to be deleted
-    QByteArray messageArray;
-    QByteArray offsetArray;
-    QByteArray contextArray;
-
-#ifndef QT_NO_TRANSLATION_BUILDER
-    QMap<TranslatorMessage, void *> messages;
-#endif
-
-    QByteArray numerusRules;
-
-#if 0
-    bool do_load(const uchar *data, int len);
-#endif
-
-};
-
-
-Translator::Translator(QObject * parent)
-    : QObject(parent)
-{
-    d = new TranslatorPrivate(this);
-}
-
-Translator::~Translator()
-{
-    clear();
-    delete d;
-}
-
-bool Translator::save(const QString & filename, SaveMode mode)
-{
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly)) return false;
-    return save(&file, mode);
-}
-
-bool Translator::save(QIODevice *iod, SaveMode mode)
-{
-    squeeze(mode);
-
-    QDataStream s(iod);
-    s.writeRawData((const char *)magic, MagicLength);
-    quint8 tag;
-
-    if (!d->offsetArray.isEmpty()) {
-        tag = (quint8)TranslatorPrivate::Hashes;
-        quint32 oas = (quint32)d->offsetArray.size();
-        s << tag << oas;
-        s.writeRawData(d->offsetArray, oas);
-    }
-    if (!d->messageArray.isEmpty()) {
-        tag = (quint8)TranslatorPrivate::Messages;
-        quint32 mas = (quint32)d->messageArray.size();
-        s << tag << mas;
-        s.writeRawData(d->messageArray, mas);
-    }
-    if (!d->contextArray.isEmpty()) {
-        tag = (quint8)TranslatorPrivate::Contexts;
-        quint32 cas = (quint32)d->contextArray.size();
-        s << tag << cas;
-        s.writeRawData(d->contextArray, cas);
-    }
-    if (!d->numerusRules.isEmpty()) {
-        quint32 nrs = d->numerusRules.size();
-        s << quint8(TranslatorPrivate::NumerusRules) << nrs;
-        s.writeRawData(d->numerusRules.constData(), nrs);
-    }
-    return true;
-}
-
-void Translator::clear()
-{
-    if (d->unmapPointer && d->unmapLength) {
-        delete [] d->unmapPointer;
-        d->unmapPointer = 0;
-        d->unmapLength = 0;
-    }
-
-    d->messageArray.clear();
-    d->offsetArray.clear();
-    d->contextArray.clear();
-    d->messages.clear();
-
-    QEvent ev(QEvent::LanguageChange);
-    QCoreApplication::sendEvent(QCoreApplication::instance(), &ev);
-}
-
-void Translator::squeeze(SaveMode mode)
-{
-    if (d->messages.isEmpty()) {
-        if (mode == Stripped)
-            unsqueeze();
-        else
+    //qDebug() << "Translator: Registering format " << format.extension;
+    QList<Translator::FileFormat> &formats = registeredFileFormats();
+    for (int i = 0; i < formats.size(); ++i)
+        if (format.fileType == formats[i].fileType && format.priority < formats[i].priority) {
+            formats.insert(i, format);
             return;
-    }
-
-    QMap<TranslatorMessage, void *> messages = d->messages;
-    clear();
-
-    QMap<TranslatorPrivate::Offset, void *> offsets;
-
-    QDataStream ms(&d->messageArray, QIODevice::WriteOnly);
-    QMap<TranslatorMessage, void *>::const_iterator it, next;
-    int cpPrev = 0, cpNext = 0;
-    for (it = messages.constBegin(); it != messages.constEnd(); ++it) {
-        cpPrev = cpNext;
-        next = it;
-        ++next;
-        if (next == messages.constEnd())
-            cpNext = 0;
-        else
-            cpNext = (int) it.key().commonPrefix(next.key());
-        offsets.insert(TranslatorPrivate::Offset(it.key(), ms.device()->pos()), (void *)0);
-        it.key().write(ms, mode == Stripped, (TranslatorMessage::Prefix)qMax(cpPrev, cpNext + 1));
-    }
-
-    QMap<TranslatorPrivate::Offset, void *>::Iterator offset;
-    offset = offsets.begin();
-    QDataStream ds(&d->offsetArray, QIODevice::WriteOnly);
-    while (offset != offsets.end()) {
-        TranslatorPrivate::Offset k = offset.key();
-        ++offset;
-        ds << (quint32)k.h << (quint32)k.o;
-    }
-
-    if (mode == Stripped) {
-        QMap<QByteArray, int> contextSet;
-        for (it = messages.constBegin(); it != messages.constEnd(); ++it)
-            ++contextSet[it.key().context()];
-
-        quint16 hTableSize;
-        if (contextSet.size() < 200)
-            hTableSize = (contextSet.size() < 60) ? 151 : 503;
-        else if (contextSet.size() < 2500)
-            hTableSize = (contextSet.size() < 750) ? 1511 : 5003;
-        else
-            hTableSize = (contextSet.size() < 10000) ? 15013 : 3 * contextSet.size() / 2;
-
-        QMultiMap<int, const char *> hashMap;
-        QMap<QByteArray, int>::const_iterator c;
-        for (c = contextSet.constBegin(); c != contextSet.constEnd(); ++c)
-            hashMap.insert(elfHash(c.key()) % hTableSize, c.key());
-
-        /*
-          The contexts found in this translator are stored in a hash
-          table to provide fast lookup. The context array has the
-          following format:
-
-              quint16 hTableSize;
-              quint16 hTable[hTableSize];
-              quint8  contextPool[...];
-
-          The context pool stores the contexts as Pascal strings:
-
-              quint8  len;
-              quint8  data[len];
-
-          Let's consider the look-up of context "FunnyDialog".  A
-          hash value between 0 and hTableSize - 1 is computed, say h.
-          If hTable[h] is 0, "FunnyDialog" is not covered by this
-          translator. Else, we check in the contextPool at offset
-          2 * hTable[h] to see if "FunnyDialog" is one of the
-          contexts stored there, until we find it or we meet the
-          empty string.
-        */
-        d->contextArray.resize(2 + (hTableSize << 1));
-        QDataStream t(&d->contextArray, QIODevice::WriteOnly);
-
-        quint16 *hTable = new quint16[hTableSize];
-        memset(hTable, 0, hTableSize * sizeof(quint16));
-
-        t << hTableSize;
-        t.device()->seek(2 + (hTableSize << 1));
-        t << (quint16)0; // the entry at offset 0 cannot be used
-        uint upto = 2;
-
-        QMap<int, const char *>::const_iterator entry = hashMap.constBegin();
-        while (entry != hashMap.constEnd()) {
-            int i = entry.key();
-            hTable[i] = (quint16)(upto >> 1);
-
-            do {
-	            const char *con = entry.value();
-                uint len = (uint)qstrlen(con);
-                len = qMin(len, 255u);
-                t << (quint8)len;
-                t.writeRawData(con, len);
-                upto += 1 + len;
-                ++entry;
-            } while (entry != hashMap.constEnd() && entry.key() == i);
-            do {
-                t << (quint8) 0; // empty string
-                ++upto;
-            } while ((upto & 0x1) != 0); // offsets have to be even
         }
-        t.device()->seek(2);
-        for (int j = 0; j < hTableSize; j++)
-            t << hTable[j];
-        delete [] hTable;
+    formats.append(format);
+}
 
-        if (upto > 131072) {
-            qWarning("Translator::squeeze: Too many contexts");
-            d->contextArray.clear();
+QList<Translator::FileFormat> &Translator::registeredFileFormats()
+{
+    static QList<Translator::FileFormat> theFormats;
+    return theFormats;
+}
+
+void Translator::replace(const TranslatorMessage &msg)
+{
+    int index = m_messages.indexOf(msg);
+    if (index == -1)
+        m_messages.append(msg);
+    else
+        m_messages[index] = msg;
+}
+
+void Translator::replaceSorted(const TranslatorMessage &msg)
+{
+    int index = m_messages.indexOf(msg);
+    if (index == -1)
+        appendSorted(msg);
+    else
+        m_messages[index] = msg;
+}
+
+void Translator::extend(const TranslatorMessage &msg)
+{
+    int index = m_messages.indexOf(msg);
+    if (index == -1) {
+        m_messages.append(msg);
+    } else {
+        m_messages[index].addReferenceUniq(msg.fileName(), msg.lineNumber());
+        if (!msg.extraComment().isEmpty()) {
+            QString cmt = m_messages[index].extraComment();
+            if (!cmt.isEmpty())
+                cmt.append(QLatin1String("\n----------\n"));
+            cmt.append(msg.extraComment());
+            m_messages[index].setExtraComment(cmt);
         }
     }
 }
 
-
-void Translator::unsqueeze()
+void Translator::append(const TranslatorMessage &msg)
 {
-    if (!d->messages.isEmpty() || d->messageArray.isEmpty())
+    m_messages.append(msg);
+}
+
+void Translator::appendSorted(const TranslatorMessage &msg)
+{
+    int msgLine = msg.lineNumber();
+    if (msgLine < 0) {
+        m_messages.append(msg);
         return;
-
-    qFatal("Cannot unsqueeze (bug in Linguist?)");
-}
-
-
-bool Translator::contains(const QByteArray &context, const QByteArray &sourceText,
-    const QByteArray &comment) const
-{
-    return !findMessage(context, sourceText, comment).translation().isNull();
-}
-
-bool Translator::contains(const QByteArray &context, const QByteArray &comment,
-    const QString &fileName, int lineNumber) const
-{
-    return !findMessage(context, 0, comment, fileName, lineNumber).isNull();
-}
-
-void Translator::insert(const TranslatorMessage& message)
-{
-    unsqueeze();
-    d->messages.remove(message); // safer
-    d->messages.insert(message, (void *) 0);
-}
-
-void Translator::remove(const TranslatorMessage& message)
-{
-    unsqueeze();
-    d->messages.remove(message);
-}
-
-
-TranslatorMessage Translator::findMessage(const QByteArray &context,
-    const QByteArray &sourceText, const QByteArray &comment,
-    const QString &fileName, int lineNumber) const
-{
-    QString myFilename = fileName;
-    int myLineNumber = lineNumber;
-
-    if (!d->messages.isEmpty()) {
-        QMap<TranslatorMessage, void *>::const_iterator it;
-
-        // Either we want to find an item that matches context, sourcetext
-        // (and optionally comment) Or we want to find an item that
-        // matches context, filename, linenumber (and optionally comment)
-        it = d->messages.constFind(TranslatorMessage(context, sourceText, comment, "", myFilename, myLineNumber));
-        if (it != d->messages.constEnd())
-            return it.key();
-
-        if (!comment.isEmpty()) {
-            it = d->messages.constFind(TranslatorMessage(context, sourceText, "", "", myFilename, myLineNumber));
-            if (it != d->messages.constEnd())
-                return it.key();
-        }
-
-        it = d->messages.constFind(TranslatorMessage(context, "", comment, "", myFilename, myLineNumber));
-        if (it != d->messages.constEnd())
-            return it.key();
-        if (!comment.isEmpty()) {
-            it = d->messages.constFind(TranslatorMessage(context, "", "", "", myFilename, myLineNumber));
-            if (it != d->messages.constEnd())
-                return it.key();
-        }
-        return TranslatorMessage();
     }
 
+    int bestIdx = 0; // Best insertion point found so far
+    int bestScore = 0; // Its category: 0 = no hit, 1 = pre or post, 2 = middle
+    int bestSize = 0; // The length of the region. Longer is better within one category.
+
+    // The insertion point to use should this region turn out to be the best one so far
+    int thisIdx = 0;
+    int thisScore = 0;
+    int thisSize = 0;
+    // Working vars
+    int prevLine = 0;
+    int curIdx = 0;
+    foreach (const TranslatorMessage &mit, m_messages) {
+        bool sameFile = mit.fileName() == msg.fileName();
+        int curLine;
+        if (sameFile && (curLine = mit.lineNumber()) >= prevLine) {
+            if (msgLine >= prevLine && msgLine < curLine) {
+                thisIdx = curIdx;
+                thisScore = thisSize ? 2 : 1;
+            }
+            ++thisSize;
+            prevLine = curLine;
+        } else {
+            if (thisSize) {
+                if (!thisScore) {
+                    thisIdx = curIdx;
+                    thisScore = 1;
+                }
+                if (thisScore > bestScore || (thisScore == bestScore && thisSize > bestSize)) {
+                    bestIdx = thisIdx;
+                    bestScore = thisScore;
+                    bestSize = thisSize;
+                }
+                thisScore = 0;
+                thisSize = sameFile ? 1 : 0;
+                prevLine = 0;
+            }
+        }
+        ++curIdx;
+    }
+    if (thisSize && !thisScore) {
+        thisIdx = curIdx;
+        thisScore = 1;
+    }
+    if (thisScore > bestScore || (thisScore == bestScore && thisSize > bestSize))
+        m_messages.insert(thisIdx, msg);
+    else if (bestScore)
+        m_messages.insert(bestIdx, msg);
+    else
+        m_messages.append(msg);
+}
+
+static QString guessFormat(const QString &filename, const QString &format)
+{
+    if (format != QLatin1String("auto"))
+        return format;
+
+    foreach (const Translator::FileFormat &fmt, Translator::registeredFileFormats()) {
+        if (filename.endsWith(QLatin1Char('.') + fmt.extension, Qt::CaseInsensitive))
+            return fmt.extension;
+    }
+
+    // the default format.
+    // FIXME: change to something more widely distributed later.
+    return QLatin1String("ts");
+}
+
+bool Translator::load(const QString &filename, ConversionData &cd, const QString &format)
+{
+    cd.m_sourceDir = QFileInfo(filename).absoluteDir();
+    cd.m_sourceFileName = filename;
+
+    QFile file;
+    if (filename.isEmpty() || filename == QLatin1String("-")) {
+        if (!file.open(stdin, QIODevice::ReadOnly)) {
+            cd.appendError(QString::fromLatin1("Cannot open stdin!? (%1)")
+                .arg(file.errorString()));
+            return false;
+        }
+    } else {
+        file.setFileName(filename);
+        if (!file.open(QIODevice::ReadOnly)) {
+            cd.appendError(QString::fromLatin1("Cannot open %1: %2")
+                .arg(filename, file.errorString()));
+            return false;
+        }
+    }
+
+    QString fmt = guessFormat(filename, format);
+
+    foreach (const FileFormat &format, registeredFileFormats()) {
+        if (fmt == format.extension) {
+            if (format.loader)
+                return (*format.loader)(*this, file, cd);
+            cd.appendError(QString(QLatin1String("No loader for format %1 found"))
+                .arg(fmt));
+            return false;
+        }
+    }
+
+    cd.appendError(QString(QLatin1String("Unknown format %1 for file %2"))
+        .arg(format, filename));
+    return false;
+}
+
+
+bool Translator::save(const QString &filename, ConversionData &cd, const QString &format) const
+{
+    QFile file;
+    if (filename.isEmpty() || filename == QLatin1String("-")) {
+        if (!file.open(stdout, QIODevice::WriteOnly)) {
+            cd.appendError(QString::fromLatin1("Cannot open stdout!? (%1)")
+                .arg(file.errorString()));
+            return false;
+        }
+    } else {
+        file.setFileName(filename);
+        if (!file.open(QIODevice::WriteOnly)) {
+            cd.appendError(QString::fromLatin1("Cannot create %1: %2")
+                .arg(filename, file.errorString()));
+            return false;
+        }
+    }
+
+    QString fmt = guessFormat(filename, format);
+    cd.m_targetDir = QFileInfo(filename).absoluteDir();
+
+    foreach (const FileFormat &format, registeredFileFormats()) {
+        if (fmt == format.extension) {
+            if (format.saver)
+                return (*format.saver)(*this, file, cd);
+            cd.appendError(QString(QLatin1String("No saver for format %1 found"))
+                .arg(fmt));
+            return false;
+        }
+    }
+
+    cd.appendError(QString(QLatin1String("Unknown format %1 for file %2"))
+        .arg(format).arg(filename));
+    return false;
+}
+
+QString Translator::makeLanguageCode(QLocale::Language language, QLocale::Country country)
+{
+    QLocale locale(language, country);
+    if (country == QLocale::AnyCountry) {
+        QString languageCode = locale.name().section(QLatin1Char('_'), 0, 0);
+        if (languageCode.length() <= 3)
+            return languageCode;
+        return QString();
+    } else {
+        return locale.name();
+    }
+}
+
+void Translator::languageAndCountry(const QString &languageCode,
+    QLocale::Language *lang, QLocale::Country *country)
+{
+    QLocale locale(languageCode);
+    if (lang)
+        *lang = locale.language();
+
+    if (country) {
+        if (languageCode.indexOf(QLatin1Char('_')) != -1)
+            *country = locale.country();
+        else
+            *country = QLocale::AnyCountry;
+    }
+}
+
+bool Translator::release(QFile *iod, ConversionData &cd) const
+{
+    foreach (const FileFormat &format, registeredFileFormats()) {
+        if (format.extension == QLatin1String("qm"))
+            return (*format.saver)(*this, *iod, cd);
+    }
+    cd.appendError(QLatin1String("No .qm saver available."));
+    return false;
+}
+
+bool Translator::contains(const QString &context,
+    const QString &sourceText, const QString &comment) const
+{
+    return m_messages.contains(TranslatorMessage(context, sourceText, comment,
+        QString(), QString(), 0));
+}
+
+TranslatorMessage Translator::find(const QString &context,
+    const QString &sourceText, const QString &comment) const
+{
+    TranslatorMessage needle(context, sourceText, comment, QString(), QString(), 0);
+    int index = m_messages.indexOf(needle);
+    return index == -1 ? TranslatorMessage() : m_messages.at(index);
+}
+
+TranslatorMessage Translator::find(const QString &context,
+    const QString &comment, const TranslatorMessage::References &refs) const
+{
+    if (!refs.isEmpty()) {
+        for (TMM::ConstIterator it = m_messages.constBegin(); it != m_messages.constEnd(); ++it) {
+            if (it->context() == context && it->comment() == comment)
+                foreach (const TranslatorMessage::Reference &itref, it->allReferences())
+                    foreach (const TranslatorMessage::Reference &ref, refs)
+                        if (itref == ref)
+                            return *it;
+        }
+    }
     return TranslatorMessage();
 }
 
-bool Translator::isEmpty() const
+bool Translator::contains(const QString &context) const
 {
-    return !d->unmapPointer && !d->unmapLength && d->messageArray.isEmpty() &&
-           d->offsetArray.isEmpty() && d->contextArray.isEmpty() && d->messages.isEmpty();
+    foreach (const TranslatorMessage &msg, m_messages)
+        if (msg.context() == context && msg.sourceText().isEmpty())
+            return true;
+    return false;
 }
 
-void Translator::setNumerusRules(const QByteArray &rules)
+TranslatorMessage Translator::find(const QString &context) const
 {
-    d->numerusRules = rules;
+    foreach (const TranslatorMessage &msg, m_messages)
+        if (msg.context() == context && msg.sourceText().isEmpty())
+            return msg;
+    return TranslatorMessage();
+}
+
+void Translator::stripObsoleteMessages()
+{
+    TMM newmm;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it)
+        if (it->type() != TranslatorMessage::Obsolete)
+            newmm.append(*it);
+    m_messages = newmm;
+}
+
+void Translator::stripFinishedMessages()
+{
+    TMM newmm;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it)
+        if (it->type() != TranslatorMessage::Finished)
+            newmm.append(*it);
+    m_messages = newmm;
+}
+
+void Translator::stripEmptyContexts()
+{
+    TMM newmm;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it)
+        if (it->sourceText() != QLatin1String(ContextComment))
+            newmm.append(*it);
+    m_messages = newmm;
+}
+
+void Translator::stripNonPluralForms()
+{
+    TMM newmm;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it)
+        if (it->isPlural())
+            newmm.append(*it);
+    m_messages = newmm;
+}
+
+void Translator::stripIdenticalSourceTranslations()
+{
+    TMM newmm;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+        // we need to have just one translation, and it be equal to the source
+        if (it->translations().count() != 1)
+            newmm.append(*it);
+        else if (it->translation() != it->sourceText())
+            newmm.append(*it);
+    }
+    m_messages = newmm;
+}
+
+void Translator::dropTranslations()
+{
+    for (TMM::Iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+        if (it->type() == TranslatorMessage::Finished)
+            it->setType(TranslatorMessage::Unfinished);
+        it->setTranslation(QString());
+    }
+}
+
+QList<TranslatorMessage> Translator::findDuplicates() const
+{
+    QHash<TranslatorMessage, int> dups;
+    foreach (const TranslatorMessage &msg, m_messages)
+        dups[msg]++;
+    QList<TranslatorMessage> ret;
+    QHash<TranslatorMessage, int>::ConstIterator it = dups.constBegin(), end = dups.constEnd();
+    for (; it != end; ++it)
+        if (it.value() > 1)
+            ret.append(it.key());
+    return ret;
+}
+
+// Used by lupdate to be able to search using absolute paths during merging
+void Translator::makeFileNamesAbsolute(const QDir &originalPath)
+{
+    TMM newmm;
+    for (TMM::iterator it = m_messages.begin(); it != m_messages.end(); ++it) {
+        TranslatorMessage msg = *it;
+        msg.setReferences(TranslatorMessage::References());
+        foreach (const TranslatorMessage::Reference &ref, it->allReferences()) {
+            QString fileName = ref.fileName();
+            QFileInfo fi (fileName);
+            if (fi.isRelative())
+                fileName = originalPath.absoluteFilePath(fileName);
+            msg.addReference(fileName, ref.lineNumber());
+        }
+        newmm.append(msg);
+    }
+    m_messages = newmm;
 }
 
 QList<TranslatorMessage> Translator::messages() const
 {
-    ((Translator *) this)->unsqueeze();
-    return d->messages.keys();
+    return m_messages;
 }
 
-TranslatorMessage::TranslatorMessage()
-  : m_hash(0), m_fileName(), m_lineNumber(-1),
-    utfeight( false ), ty( Unfinished ), m_plural(false)
+QList<TranslatorMessage> Translator::translatedMessages() const
 {
+    TMM result;
+    for (TMM::ConstIterator it = m_messages.begin(); it != m_messages.end(); ++it)
+        if (it->type() == TranslatorMessage::Finished)
+            result.append(*it);
+    return result;
 }
 
-TranslatorMessage::TranslatorMessage(const QByteArray &context,
-    const QByteArray &sourceText, const QByteArray &comment,
-    const QByteArray &userData,
-    const QString &fileName, int lineNumber, const QStringList& translations,
-    bool utf8, Type type, bool plural )
-  : m_context(context), m_sourcetext(sourceText), m_comment(comment),
-    m_userData(userData),
-    m_translations(translations), m_fileName(fileName), m_lineNumber(lineNumber),
-    utfeight(false), ty(type), m_plural(plural)
+QStringList Translator::normalizedTranslations(const TranslatorMessage &msg,
+    QLocale::Language language, QLocale::Country country)
 {
-    m_hash = elfHash(m_sourcetext + m_comment);
-
-    /*
-      Don't use UTF-8 if it makes no difference. UTF-8 should be
-      reserved for the real problematic case: non-ASCII (possibly
-      non-Latin1) characters in .ui files.
-    */
-    if (!utf8)
-        return;
-    for (int i = sourceText.size(); --i >= 0; ) {
-        if ( (uchar) sourceText[i] >= 0x80 ) {
-            utfeight = true;
-            return;
-        }
-    }
-    for (int i = comment.size(); --i >= 0; ) {
-        if ( (uchar) comment[i] >= 0x80 ) {
-            utfeight = true;
-            return;
-        }
-    }
-    for (int i = context.size(); --i >= 0; ) {
-        if ( (uchar) context[i] >= 0x80 ) {
-            utfeight = true;
-            return;
-        }
-    }
-}
-
-void TranslatorMessage::write(QDataStream & stream, bool strip, Prefix prefix) const
-{
-    for (int i = 0; i < m_translations.count(); ++i)
-        stream << quint8(Tag_Translation) << m_translations.at(i);
-
-    if (!strip)
-        prefix = HashContextSourceTextComment;
-
-    // lrelease produces "wrong" .qm files for QByteArrays that are .isNull().
-    switch (prefix) {
-    case HashContextSourceTextComment:
-        stream << quint8(Tag_Comment)
-            << (m_comment.isEmpty() ? QByteArray("") : m_comment);
-        // fall through
-    case HashContextSourceText:
-        stream << quint8(Tag_SourceText)
-            << (m_sourcetext.isEmpty() ? QByteArray("") : m_sourcetext);
-        // fall through
-    case HashContext:
-        stream << quint8(Tag_Context)
-            << (m_context.isEmpty() ? QByteArray("") : m_context);
-    default:
-        ;
+    QStringList translations = msg.translations();
+    int numTranslations = 1;
+    if (msg.isPlural() && language != QLocale::C) {
+        QStringList forms;
+        getNumerusInfo(language, country, 0, &forms);
+        numTranslations = forms.count(); // includes singular
     }
 
-    stream << quint8(Tag_End);
+    // make sure that the stringlist always have the size of the
+    // language's current numerus, or 1 if its not plural
+    if (translations.count() > numTranslations) {
+        for (int i = translations.count(); i > numTranslations; --i)
+            translations.removeLast();
+    } else if (translations.count() < numTranslations) {
+        for (int i = translations.count(); i < numTranslations; ++i)
+            translations.append(QString());
+    }
+    return translations;
 }
 
-
-TranslatorMessage::Prefix TranslatorMessage::commonPrefix(const TranslatorMessage& m) const
+QStringList Translator::normalizedTranslations(const TranslatorMessage &msg,
+    ConversionData &cd, bool *ok) const
 {
-    if (m_hash != m.m_hash)
-        return NoPrefix;
-    if (m_context != m.m_context)
-        return Hash;
-    if (m_sourcetext != m.m_sourcetext)
-        return HashContext;
-    if (m_comment != m.m_comment)
-        return HashContextSourceText;
-    return HashContextSourceTextComment;
+    QLocale::Language l;
+    QLocale::Country c;
+    languageAndCountry(languageCode(), &l, &c);
+    QStringList translns = normalizedTranslations(msg, l, c);
+    if (msg.translations().size() > translns.size() && ok) {
+        cd.appendError(QLatin1String(
+            "Removed plural forms as the target language has less "
+            "forms.\nIf this sounds wrong, possibly the target language is "
+            "not set or recognized.\n"));
+        *ok = false;
+    }
+    return translns;
 }
 
-bool TranslatorMessage::operator==(const TranslatorMessage& m) const
+QString Translator::guessLanguageCodeFromFileName(const QString &filename)
 {
-    // this was in MetaTranslatorMessage::operator==():
-#if 0
-    return context() == m.context()
-        && sourceText() == m.sourceText()
-        && comment() == m.comment();
-#else
-    bool isHashEq = (m_hash == m.m_hash);
-    bool isContextEq = (m_context == m.m_context);
-    bool isSourceEq = (m_sourcetext == m.m_sourcetext);
-    bool isCommentEq = (m_comment == m.m_comment);
-    bool isLocationEq = m_lineNumber == m.m_lineNumber
-        && m_fileName == m.m_fileName;
-
-    return (isHashEq && isContextEq && isSourceEq && isCommentEq)
-        // translation can be different, but treat the equal
-        || (m_sourcetext.isEmpty() && isContextEq && isCommentEq && isLocationEq);
-#endif
-}
-
-
-bool TranslatorMessage::operator<(const TranslatorMessage& m) const
-{
-    // MetaTranslatorMessage::operator<() did not use the 'hash' field
-    // FIXME: Using the hash field first leads to reorderiong of the
-    // message when outputting .ts file, but should be much faster.
-    if (m_context != m.m_context)
-        return m_context < m.m_context;
-    if (m_sourcetext != m.m_sourcetext)
-        return m_sourcetext < m.m_sourcetext;
-    if (m_comment != m.m_comment)
-        return m_comment < m.m_comment;
-    if (m_hash != m.m_hash)
-        return m_hash < m.m_hash;
-    return false;
-}
-
-bool getNumerusInfo(QLocale::Language language, QLocale::Country country,
-                           QByteArray *rules, QStringList *forms)
-{
-    while (true) {
-        for (int i = 0; i < NumerusTableSize; ++i) {
-            const NumerusTableEntry &entry = numerusTable[i];
-            for (int j = 0; entry.languages[j] != EOL; ++j) {
-                if (entry.languages[j] == language
-                        && ((!entry.countries && country == QLocale::AnyCountry)
-                            || (entry.countries && entry.countries[j] == country))) {
-                    if (rules) {
-                        *rules = QByteArray::fromRawData(reinterpret_cast<const char *>(entry.rules),
-                                                    entry.rulesSize);
-                    }
-                    if (forms) {
-                        forms->clear();
-                        for (int k = 0; entry.forms[k]; ++k)
-                            forms->append(QLatin1String(entry.forms[k]));
-                    }
-                    return true;
-                }
-            }
-        }
-
-        if (country == QLocale::AnyCountry)
+    QString str = filename;
+    foreach (const FileFormat &format, registeredFileFormats()) {
+        if (str.endsWith(format.extension)) {
+            str = str.left(str.size() - format.extension.size() - 1);
             break;
-        country = QLocale::AnyCountry;
+        }
     }
-    return false;
+    static QRegExp re(QLatin1String("[\\._]"));
+    while (true) {
+        QLocale locale(str);
+        //qDebug() << "LANGUAGE FROM " << str << "LANG: " << locale.language();
+        if (locale.language() != QLocale::C) {
+            //qDebug() << "FOUND " << locale.name();
+            return locale.name();
+        }
+        int pos = str.indexOf(re);
+        if (pos == -1)
+            break;
+        str = str.mid(pos + 1);
+    }
+    //qDebug() << "LANGUAGE GUESSING UNSUCCESSFUL";
+    return QString();
+}
+
+bool Translator::hasExtra(const QString &key) const
+{
+    return m_extra.contains(key);
+}
+
+QString Translator::extra(const QString &key) const
+{
+    return m_extra[key];
+}
+
+void Translator::setExtra(const QString &key, const QString &value)
+{
+    m_extra[key] = value;
+}
+
+void Translator::setCodecName(const QByteArray &name)
+{
+    QTextCodec *codec = QTextCodec::codecForName(name);
+    if (!codec) {
+        if (!name.isEmpty())
+            qWarning("No QTextCodec for %s available. Using Latin1\n", name.constData());
+        m_codecName.clear();
+    } else {
+        m_codecName = codec->name();
+    }
+}
+
+void Translator::dump() const
+{
+    for (int i = 0; i != messageCount(); ++i)
+        message(i).dump();
 }
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_TRANSLATION

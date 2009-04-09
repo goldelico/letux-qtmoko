@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,22 +26,25 @@
 #include "config.h"
 #include "HistoryItem.h"
 
+#include "CString.h"
+#include "CachedPage.h"
 #include "Document.h"
-#include "FrameLoader.h"
 #include "IconDatabase.h"
-#include "IntSize.h"
-#include "KURL.h"
-#include "Logging.h"
 #include "PageCache.h"
 #include "ResourceRequest.h"
+#include <stdio.h>
 
 namespace WebCore {
 
-static void defaultNotifyHistoryItemChanged() {}
+static void defaultNotifyHistoryItemChanged()
+{
+}
+
 void (*notifyHistoryItemChanged)() = defaultNotifyHistoryItemChanged;
 
 HistoryItem::HistoryItem()
     : m_lastVisitedTime(0)
+    , m_lastVisitWasFailure(false)
     , m_isInPageCache(false)
     , m_isTargetItem(false)
     , m_visitCount(0)
@@ -53,6 +56,7 @@ HistoryItem::HistoryItem(const String& urlString, const String& title, double ti
     , m_originalURLString(urlString)
     , m_title(title)
     , m_lastVisitedTime(time)
+    , m_lastVisitWasFailure(false)
     , m_isInPageCache(false)
     , m_isTargetItem(false)
     , m_visitCount(0)
@@ -66,18 +70,7 @@ HistoryItem::HistoryItem(const String& urlString, const String& title, const Str
     , m_title(title)
     , m_displayTitle(alternateTitle)
     , m_lastVisitedTime(time)
-    , m_isInPageCache(false)
-    , m_isTargetItem(false)
-    , m_visitCount(0)
-{    
-    iconDatabase()->retainIconForPageURL(m_urlString);
-}
-
-HistoryItem::HistoryItem(const KURL& url, const String& title)
-    : m_urlString(url.url())
-    , m_originalURLString(url.url())
-    , m_title(title)
-    , m_lastVisitedTime(0)
+    , m_lastVisitWasFailure(false)
     , m_isInPageCache(false)
     , m_isTargetItem(false)
     , m_visitCount(0)
@@ -86,12 +79,13 @@ HistoryItem::HistoryItem(const KURL& url, const String& title)
 }
 
 HistoryItem::HistoryItem(const KURL& url, const String& target, const String& parent, const String& title)
-    : m_urlString(url.url())
-    , m_originalURLString(url.url())
+    : m_urlString(url.string())
+    , m_originalURLString(url.string())
     , m_target(target)
     , m_parent(parent)
     , m_title(title)
     , m_lastVisitedTime(0)
+    , m_lastVisitWasFailure(false)
     , m_isInPageCache(false)
     , m_isTargetItem(false)
     , m_visitCount(0)
@@ -105,8 +99,8 @@ HistoryItem::~HistoryItem()
     iconDatabase()->releaseIconForPageURL(m_urlString);
 }
 
-HistoryItem::HistoryItem(const HistoryItem& item)
-    : Shared<HistoryItem>()
+inline HistoryItem::HistoryItem(const HistoryItem& item)
+    : RefCounted<HistoryItem>()
     , m_urlString(item.m_urlString)
     , m_originalURLString(item.m_originalURLString)
     , m_target(item.m_target)
@@ -115,6 +109,7 @@ HistoryItem::HistoryItem(const HistoryItem& item)
     , m_displayTitle(item.m_displayTitle)
     , m_lastVisitedTime(item.m_lastVisitedTime)
     , m_scrollPoint(item.m_scrollPoint)
+    , m_lastVisitWasFailure(item.m_lastVisitWasFailure)
     , m_isInPageCache(item.m_isInPageCache)
     , m_isTargetItem(item.m_isTargetItem)
     , m_visitCount(item.m_visitCount)
@@ -133,7 +128,7 @@ HistoryItem::HistoryItem(const HistoryItem& item)
 
 PassRefPtr<HistoryItem> HistoryItem::copy() const
 {
-    return new HistoryItem(*this);
+    return adoptRef(new HistoryItem(*this));
 }
 
 const String& HistoryItem::urlString() const
@@ -160,8 +155,7 @@ const String& HistoryItem::alternateTitle() const
 
 Image* HistoryItem::icon() const
 {
-    Image* result = 0;
-    iconDatabase()->iconForPageURL(m_urlString, IntSize(16,16), &result);
+    Image* result = iconDatabase()->iconForPageURL(m_urlString, IntSize(16,16));
     return result ? result : iconDatabase()->defaultIcon(IntSize(16,16));
 }
 
@@ -172,12 +166,12 @@ double HistoryItem::lastVisitedTime() const
 
 KURL HistoryItem::url() const
 {
-    return KURL(m_urlString.deprecatedString());
+    return KURL(m_urlString);
 }
 
 KURL HistoryItem::originalURL() const
 {
-    return KURL(m_originalURLString.deprecatedString());
+    return KURL(m_originalURLString);
 }
 
 const String& HistoryItem::target() const
@@ -210,7 +204,7 @@ void HistoryItem::setURLString(const String& urlString)
 void HistoryItem::setURL(const KURL& url)
 {
     pageCache()->remove(this);
-    setURLString(url.url());
+    setURLString(url.string());
     clearDocumentState();
 }
 
@@ -243,6 +237,13 @@ void HistoryItem::setLastVisitedTime(double time)
         m_lastVisitedTime = time;
         m_visitCount++;
     }
+}
+
+void HistoryItem::visited(const String& title, double time)
+{
+    m_title = title;
+    m_lastVisitedTime = time;
+    m_visitCount++;
 }
 
 int HistoryItem::visitCount() const
@@ -389,7 +390,7 @@ FormData* HistoryItem::formData()
 bool HistoryItem::isCurrentDocument(Document* doc) const
 {
     // FIXME: We should find a better way to check if this is the current document.
-    return urlString() == doc->URL();
+    return urlString() == doc->url();
 }
 
 void HistoryItem::mergeAutoCompleteHints(HistoryItem* otherItem)
@@ -400,6 +401,7 @@ void HistoryItem::mergeAutoCompleteHints(HistoryItem* otherItem)
 }
 
 #ifndef NDEBUG
+
 int HistoryItem::showTree() const
 {
     return showTreeWithIndent(0);
@@ -407,27 +409,27 @@ int HistoryItem::showTree() const
 
 int HistoryItem::showTreeWithIndent(unsigned indentLevel) const
 {
-    String prefix("");
-    int totalSubItems = 0;
-    unsigned i;
-    for (i = 0; i < indentLevel; ++i)
-        prefix.append("  ");
+    Vector<char> prefix;
+    for (unsigned i = 0; i < indentLevel; ++i)
+        prefix.append("  ", 2);
 
-    fprintf(stderr, "%s+-%s (%p)\n", prefix.ascii().data(), m_urlString.ascii().data(), this);
+    fprintf(stderr, "%s+-%s (%p)\n", prefix.data(), m_urlString.utf8().data(), this);
     
-    for (unsigned int i = 0; i < m_subItems.size(); ++i) {
+    int totalSubItems = 0;
+    for (unsigned i = 0; i < m_subItems.size(); ++i)
         totalSubItems += m_subItems[i]->showTreeWithIndent(indentLevel + 1);
-    }
     return totalSubItems + 1;
 }
+
 #endif
                 
-}; //namespace WebCore
+} // namespace WebCore
 
 #ifndef NDEBUG
+
 int showTree(const WebCore::HistoryItem* item)
 {
     return item->showTree();
 }
-#endif
 
+#endif

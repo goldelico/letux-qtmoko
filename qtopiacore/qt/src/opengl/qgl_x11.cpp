@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -78,7 +82,7 @@ extern const QX11Info *qt_x11Info(const QPaintDevice *pd);
 #endif
 
 /*
-  The choose_cmap function is internal and used by QGLWidget::setContext()
+  The qt_gl_choose_cmap function is internal and used by QGLWidget::setContext()
   and GLX (not Windows).  If the application can't find any sharable
   colormaps, it must at least create as few colormaps as possible.  The
   dictionary solution below ensures only one colormap is created per visual.
@@ -117,36 +121,30 @@ struct QGLCMapCleanupHandler {
     QGLCMapCleanupHandler() {
         cmap_hash = new CMapEntryHash;
         qglcmap_hash = new GLCMapHash;
-        cleaned_up = false;
-        qAddPostRoutine(cleanup_cmaps);
     }
     ~QGLCMapCleanupHandler() {
-        qRemovePostRoutine(cleanup_cmaps);
-        cleanup_cmaps();
         delete cmap_hash;
         delete qglcmap_hash;
     }
     CMapEntryHash *cmap_hash;
     GLCMapHash *qglcmap_hash;
-    bool cleaned_up;
 };
 Q_GLOBAL_STATIC(QGLCMapCleanupHandler, cmap_handler);
 
 static void cleanup_cmaps()
 {
-    if (!cmap_handler()->cleaned_up) {
-        CMapEntryHash *hash = cmap_handler()->cmap_hash;
-        QHash<int, QCMapEntry *>::ConstIterator it = hash->constBegin();
-        while (it != hash->constEnd()) {
-            delete it.value();
-            ++it;
-        }
-        hash->clear();
-        cmap_handler()->cleaned_up = true;
+    CMapEntryHash *hash = cmap_handler()->cmap_hash;
+    QHash<int, QCMapEntry *>::ConstIterator it = hash->constBegin();
+    while (it != hash->constEnd()) {
+        delete it.value();
+        ++it;
     }
+
+    hash->clear();
+    cmap_handler()->qglcmap_hash->clear();
 }
 
-static Colormap choose_cmap(Display *dpy, XVisualInfo *vi)
+Colormap qt_gl_choose_cmap(Display *dpy, XVisualInfo *vi)
 {
     if (first_time) {
         const char *v = glXQueryServerString(dpy, vi->screen, GLX_VERSION);
@@ -218,6 +216,10 @@ static Colormap choose_cmap(Display *dpy, XVisualInfo *vi)
         x->alloc = true;
         // qDebug("Allocating cmap");
     }
+
+    // colormap hash should be cleanup only when the QApplication dtor is called
+    if (hash->isEmpty())
+        qAddPostRoutine(cleanup_cmaps);
 
     // associate cmap with visualid
     hash->insert((long) vi->visualid + (vi->screen * 256), x);
@@ -423,7 +425,7 @@ bool QGLContext::chooseContext(const QGLContext* shareContext)
 #if defined(GLX_MESA_pixmap_colormap) && defined(QGL_USE_MESA_EXT)
         d->gpm = glXCreateGLXPixmapMESA(disp, (XVisualInfo *)d->vi,
                                         qt_x11Handle(d->paintDevice),
-                                        choose_cmap(disp, (XVisualInfo *)d->vi));
+                                        qt_gl_choose_cmap(disp, (XVisualInfo *)d->vi));
 #else
         d->gpm = (quint32)glXCreateGLXPixmap(disp, (XVisualInfo *)d->vi,
                                               qt_x11Handle(d->paintDevice));
@@ -629,6 +631,7 @@ void QGLContext::reset()
     Q_D(QGLContext);
     if (!d->valid)
         return;
+    d->cleanup();
     const QX11Info *xinfo = qt_x11Info(d->paintDevice);
     doneCurrent();
     if (d->gpm)
@@ -853,8 +856,8 @@ static void qgl_use_font(QFontEngineFT *engine, int first, int count, int listBa
             qDebug("failed loading glyph %d from font", i);
             Q_ASSERT(!err);
         }
-        err = FT_Render_Glyph(face->glyph, (antialiased ? ft_render_mode_normal
-                                            : ft_render_mode_mono));
+        err = FT_Render_Glyph(face->glyph, (antialiased ? FT_RENDER_MODE_NORMAL
+                                            : FT_RENDER_MODE_MONO));
         if (err) {
             qDebug("failed rendering glyph %d from font", i);
             Q_ASSERT(!err);
@@ -1067,7 +1070,7 @@ bool QGLWidgetPrivate::renderCxPm(QPixmap* pm)
     glPm = glXCreateGLXPixmapMESA(X11->display,
                                    (XVisualInfo*)glcx->vi,
                                    (Pixmap)pm->handle(),
-                                   choose_cmap(pm->X11->display,
+                                   qt_gl_choose_cmap(pm->X11->display,
                                                 (XVisualInfo*)glcx->vi));
 #else
     glPm = (quint32)glXCreateGLXPixmap(X11->display,
@@ -1213,7 +1216,7 @@ void QGLWidget::setContext(QGLContext *context,
     XSetWindowAttributes a;
 
     QColormap colmap = QColormap::instance(vi->screen);
-    a.colormap = choose_cmap(QX11Info::display(), vi);        // find best colormap
+    a.colormap = qt_gl_choose_cmap(QX11Info::display(), vi);        // find best colormap
     a.background_pixel = colmap.pixel(palette().color(backgroundRole()));
     a.border_pixel = colmap.pixel(Qt::black);
     Window p = RootWindow(X11->display, vi->screen);

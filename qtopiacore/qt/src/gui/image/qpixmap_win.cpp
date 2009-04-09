@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,10 +60,14 @@
 #include "qt_windows.h"
 
 #if defined(Q_OS_WINCE)
-#include "qguifunctions_wince.h"
 #include <winbase.h>
+#include "qguifunctions_wince.h"
 extern bool qt_wince_is_high_dpi();
 extern bool qt_wince_is_pocket_pc();
+#endif
+
+#ifndef CAPTUREBLT
+#define CAPTUREBLT ((DWORD)0x40000000)
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -85,13 +93,18 @@ QPixmap QPixmap::grabWindow(WId winId, int x, int y, int w, int h )
 #endif
 
     // Create and setup bitmap
-    HDC bitmap_dc = CreateCompatibleDC(qt_win_display_dc());
-    HBITMAP bitmap = CreateCompatibleBitmap(qt_win_display_dc(), w, h);
+    HDC display_dc = GetDC(0);
+    HDC bitmap_dc = CreateCompatibleDC(display_dc);
+    HBITMAP bitmap = CreateCompatibleBitmap(display_dc, w, h);
     HGDIOBJ null_bitmap = SelectObject(bitmap_dc, bitmap);
 
     // copy data
     HDC window_dc = GetDC(winId);
-    BitBlt(bitmap_dc, 0, 0, w, h, window_dc, x, y, SRCCOPY);
+    BitBlt(bitmap_dc, 0, 0, w, h, window_dc, x, y, SRCCOPY
+#ifndef Q_OS_WINCE
+                                    | CAPTUREBLT
+#endif
+            );
 
     // clean up all but bitmap
     ReleaseDC(winId, window_dc);
@@ -101,6 +114,7 @@ QPixmap QPixmap::grabWindow(WId winId, int x, int y, int w, int h )
     QPixmap pixmap = QPixmap::fromWinHBITMAP(bitmap);
 
     DeleteObject(bitmap);
+    ReleaseDC(0, display_dc);
 
     return pixmap;
 }
@@ -119,9 +133,13 @@ QPixmap QPixmap::grabWindow(WId winId, int x, int y, int w, int h )
     being set to fully opaque. This is preferred if the \c HBITMAP is
     used with standard GDI calls, such as \c BitBlt().
 
-    \value PremultipliedAlpha The \c HBITMAP is treated as having a
+    \value PremultipliedAlpha The \c HBITMAP is treated as having an
     alpha channel and premultiplied colors. This is preferred if the
     \c HBITMAP is accessed through the \c AlphaBlend() GDI function.
+
+    \value Alpha The \c HBITMAP is treated as having a plain alpha
+    channel. This is the preferred format if the \c HBITMAP is going
+    to be used as an application icon or systray icon.
 
     \sa fromWinHBITMAP(), toWinHBITMAP()
 */
@@ -139,44 +157,55 @@ QPixmap QPixmap::grabWindow(WId winId, int x, int y, int w, int h )
 */
 HBITMAP QPixmap::toWinHBITMAP(HBitmapFormat format) const
 {
-    QRasterPixmapData* d = static_cast<QRasterPixmapData*>(data);
-    int w = d->image.width();
-    int h = d->image.height();
+    HBITMAP bitmap = 0;
+    if (data->classId() == QPixmapData::RasterClass) {
+        QRasterPixmapData* d = static_cast<QRasterPixmapData*>(data);
+        int w = d->image.width();
+        int h = d->image.height();
 
-    HDC display_dc = qt_win_display_dc();
+        HDC display_dc = GetDC(0);
 
-    // Define the header
-    BITMAPINFO bmi;
-    memset(&bmi, 0, sizeof(bmi));
-    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth       = w;
-    bmi.bmiHeader.biHeight      = -h;
-    bmi.bmiHeader.biPlanes      = 1;
-    bmi.bmiHeader.biBitCount    = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage   = w * h * 4;
+        // Define the header
+        BITMAPINFO bmi;
+        memset(&bmi, 0, sizeof(bmi));
+        bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth       = w;
+        bmi.bmiHeader.biHeight      = -h;
+        bmi.bmiHeader.biPlanes      = 1;
+        bmi.bmiHeader.biBitCount    = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        bmi.bmiHeader.biSizeImage   = w * h * 4;
 
-    // Create the pixmap
-    uchar *pixels = 0;
-    HBITMAP bitmap = CreateDIBSection(display_dc, &bmi, DIB_RGB_COLORS, (void **) &pixels, 0, 0);
-    if (!bitmap) {
-        qErrnoWarning("QPixmap::toWinHBITMAP(), failed to create dibsection");
-        return 0;
+        // Create the pixmap
+        uchar *pixels = 0;
+        bitmap = CreateDIBSection(display_dc, &bmi, DIB_RGB_COLORS, (void **) &pixels, 0, 0);
+        ReleaseDC(0, display_dc);
+        if (!bitmap) {
+            qErrnoWarning("QPixmap::toWinHBITMAP(), failed to create dibsection");
+            return 0;
+        }
+        if (!pixels) {
+            qErrnoWarning("QPixmap::toWinHBITMAP(), did not allocate pixel data");
+            return 0;
+        }
+
+        // Copy over the data
+        QImage::Format imageFormat = QImage::Format_ARGB32;
+        if (format == NoAlpha)
+            imageFormat = QImage::Format_RGB32;
+        else if (format == PremultipliedAlpha)
+            imageFormat = QImage::Format_ARGB32_Premultiplied;
+        const QImage image = d->image.convertToFormat(imageFormat);
+        int bytes_per_line = w * 4;
+        for (int y=0; y<h; ++y)
+            memcpy(pixels + y * bytes_per_line, image.scanLine(y), bytes_per_line);
+
+    } else {
+        QPixmapData *data = new QRasterPixmapData(depth() == 1 ?
+                                                  QPixmapData::BitmapType : QPixmapData::PixmapType);
+        data->fromImage(toImage(), Qt::AutoColor);
+        return QPixmap(data).toWinHBITMAP(format);
     }
-    if (!pixels) {
-        qErrnoWarning("QPixmap::toWinHBITMAP(), did not allocate pixel data");
-        return 0;
-    }
-
-    // Copy over the data
-    QImage::Format imageFormat = format == NoAlpha
-                                 ? QImage::Format_RGB32
-                                 : QImage::Format_ARGB32_Premultiplied;
-    const QImage image = d->image.convertToFormat(imageFormat);
-    int bytes_per_line = w * 4;
-    for (int y=0; y<h; ++y)
-        memcpy(pixels + y * bytes_per_line, image.scanLine(y), bytes_per_line);
-
     return bitmap;
 }
 
@@ -222,7 +251,9 @@ QPixmap QPixmap::fromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format)
     QImage result;
     // Get bitmap bits
     uchar *data = (uchar *) qMalloc(bmi.bmiHeader.biSizeImage);
-    if (GetDIBits(qt_win_display_dc(), bitmap, 0, h, data, &bmi, DIB_RGB_COLORS)) {
+
+    HDC display_dc = GetDC(0);
+    if (GetDIBits(display_dc, bitmap, 0, h, data, &bmi, DIB_RGB_COLORS)) {
 
         QImage::Format imageFormat = QImage::Format_ARGB32_Premultiplied;
         uint mask = 0;
@@ -247,27 +278,66 @@ QPixmap QPixmap::fromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format)
     } else {
         qWarning("QPixmap::fromWinHBITMAP(), failed to get bitmap bits");
     }
+    ReleaseDC(0, display_dc);
     qFree(data);
     return fromImage(result);
 }
 
 #ifdef Q_WS_WIN
 #ifndef Q_OS_WINCE
+
+static QImage qt_fromWinHBITMAP(HDC hdc, HBITMAP bitmap, int w, int h)
+{
+    BITMAPINFO bmi;
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth       = w;
+    bmi.bmiHeader.biHeight      = -h;
+    bmi.bmiHeader.biPlanes      = 1;
+    bmi.bmiHeader.biBitCount    = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage   = w * h * 4;
+
+    QImage image(w, h, QImage::Format_ARGB32_Premultiplied);
+    if (image.isNull())
+        return image;
+
+    // Get bitmap bits
+    uchar *data = (uchar *) qMalloc(bmi.bmiHeader.biSizeImage);
+
+    if (GetDIBits(hdc, bitmap, 0, h, data, &bmi, DIB_RGB_COLORS)) {
+        // Create image and copy data into image.
+        for (int y=0; y<h; ++y) {
+            void *dest = (void *) image.scanLine(y);
+            void *src = data + y * image.bytesPerLine();
+            memcpy(dest, src, image.bytesPerLine());
+        }
+    } else {
+        qWarning("qt_fromWinHBITMAP(), failed to get bitmap bits");
+    }
+
+    return image;
+}
+
 QPixmap convertHIconToPixmap( const HICON icon)
 {
     bool foundAlpha = false;
-    HDC screenDevice = qt_win_display_dc();
+    HDC screenDevice = GetDC(0);
     HDC hdc = CreateCompatibleDC(screenDevice);
+    ReleaseDC(0, screenDevice);
 
     ICONINFO iconinfo;
     bool result = GetIconInfo(icon, &iconinfo); //x and y Hotspot describes the icon center
     if (!result)
         qWarning("convertHIconToPixmap(), failed to GetIconInfo()");
 
+    int w = iconinfo.xHotspot * 2;
+    int h = iconinfo.yHotspot * 2;
+
     BITMAPINFOHEADER bitmapInfo;
     bitmapInfo.biSize        = sizeof(BITMAPINFOHEADER);
-    bitmapInfo.biWidth       = iconinfo.xHotspot * 2;
-    bitmapInfo.biHeight      = iconinfo.yHotspot * 2;
+    bitmapInfo.biWidth       = w;
+    bitmapInfo.biHeight      = h;
     bitmapInfo.biPlanes      = 1;
     bitmapInfo.biBitCount    = 32;
     bitmapInfo.biCompression = BI_RGB;
@@ -278,18 +348,14 @@ QPixmap convertHIconToPixmap( const HICON icon)
     bitmapInfo.biClrImportant  = 0;
     DWORD* bits;
 
-
     HBITMAP winBitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bitmapInfo, DIB_RGB_COLORS, (VOID**)&bits, NULL, 0);
     HGDIOBJ oldhdc = (HBITMAP)SelectObject(hdc, winBitmap);
     DrawIconEx( hdc, 0, 0, icon, iconinfo.xHotspot * 2, iconinfo.yHotspot * 2, 0, 0, DI_NORMAL);
+    QImage image = qt_fromWinHBITMAP(hdc, winBitmap, w, h);
 
-    QPixmap::HBitmapFormat alphaType = QPixmap::PremultipliedAlpha;
-    QPixmap iconpixmap = QPixmap::fromWinHBITMAP(winBitmap, alphaType);
-    QImage img = iconpixmap.toImage();
-
-    for (int y = 0 ; y < iconpixmap.height() && !foundAlpha ; y++) {
-        QRgb *scanLine= reinterpret_cast<QRgb *>(img.scanLine(y));
-        for (int x = 0; x < img.width() ; x++) {
+    for (int y = 0 ; y < h && !foundAlpha ; y++) {
+        QRgb *scanLine= reinterpret_cast<QRgb *>(image.scanLine(y));
+        for (int x = 0; x < w ; x++) {
             if (qAlpha(scanLine[x]) != 0) {
                 foundAlpha = true;
                 break;
@@ -298,14 +364,13 @@ QPixmap convertHIconToPixmap( const HICON icon)
     }
     if (!foundAlpha) {
         //If no alpha was found, we use the mask to set alpha values
-        DrawIconEx( hdc, 0, 0, icon, iconinfo.xHotspot * 2, iconinfo.yHotspot * 2, 0, 0, DI_MASK);
-        QPixmap maskPixmap = QPixmap::fromWinHBITMAP(winBitmap, alphaType);
-        QImage mask = maskPixmap.toImage();
+        DrawIconEx( hdc, 0, 0, icon, w, h, 0, 0, DI_MASK);
+        QImage mask = qt_fromWinHBITMAP(hdc, winBitmap, w, h);
 
-        for (int y = 0 ; y< iconpixmap.height() ; y++){
-            QRgb *scanlineImage = reinterpret_cast<QRgb *>(img.scanLine(y));
+        for (int y = 0 ; y < h ; y++){
+            QRgb *scanlineImage = reinterpret_cast<QRgb *>(image.scanLine(y));
             QRgb *scanlineMask = mask.isNull() ? 0 : reinterpret_cast<QRgb *>(mask.scanLine(y));
-            for (int x = 0; x < img.width() ; x++){
+            for (int x = 0; x < w ; x++){
                 if (scanlineMask && qRed(scanlineMask[x]) != 0)
                     scanlineImage[x] = 0; //mask out this pixel
                 else
@@ -320,13 +385,15 @@ QPixmap convertHIconToPixmap( const HICON icon)
     SelectObject(hdc, oldhdc); //restore state
     DeleteObject(winBitmap);
     DeleteDC(hdc);
-    return QPixmap::fromImage(img);
+    return QPixmap::fromImage(image);
 }
 #else //ifndef Q_OS_WINCE
 QPixmap convertHIconToPixmap( const HICON icon, bool large)
 {
-    HDC screenDevice = qt_win_display_dc();
+    HDC screenDevice = GetDC(0);
     HDC hdc = CreateCompatibleDC(screenDevice);
+    ReleaseDC(0, screenDevice);
+
     int size = large ? 64 : 32;
 
     BITMAPINFO bmi;

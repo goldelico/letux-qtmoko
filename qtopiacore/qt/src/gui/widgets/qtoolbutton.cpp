@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -70,7 +74,11 @@ public:
     void _q_updateButtonDown();
     void _q_menuTriggered(QAction *);
 #endif
+    bool updateHoverControl(const QPoint &pos);
     void _q_actionTriggered();
+    QStyle::SubControl newHoverControl(const QPoint &pos);
+    QStyle::SubControl hoverControl;
+    QRect hoverRect;
     QPointer<QAction> menuAction; //the menu set by the user (setMenu)
     QBasicTimer popupTimer;
     int delay;
@@ -142,7 +150,8 @@ bool QToolButtonPrivate::hasMenu() const
     QToolBar in a QMainWindow, the button automatically adjusts to
     QMainWindow's settings (see QMainWindow::setToolButtonStyle() and
     QMainWindow::setIconSize()). Instead of an icon, a tool button can
-    also display an arrow symbol, specified with \l arrowType.
+    also display an arrow symbol, specified with
+    \l{QToolButton::arrowType} {arrowType}.
 
     A tool button can offer additional choices in a popup menu. The
     popup menu can be set using setMenu(). Use setPopupMode() to
@@ -280,6 +289,7 @@ void QToolButtonPrivate::init()
     buttonPressed = QToolButtonPrivate::NoButtonPressed;
 
     toolButtonStyle = Qt::ToolButtonIconOnly;
+    hoverControl = QStyle::SC_None;
 
     q->setFocusPolicy(Qt::TabFocus);
     q->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed,
@@ -308,25 +318,22 @@ void QToolButton::initStyleOption(QStyleOptionToolButton *option) const
     Q_D(const QToolButton);
     option->initFrom(this);
     bool forceNoText = false;
+    option->iconSize = iconSize(); //default value
 
 #ifndef QT_NO_TOOLBAR
     if (parentWidget()) {
+        if (QToolBar *toolBar = qobject_cast<QToolBar *>(parentWidget())) {
+            option->iconSize = toolBar->iconSize();
+        }
 #ifdef QT3_SUPPORT
-        if (parentWidget()->inherits("Q3ToolBar")) {
-            if ( iconSize().isValid()) {
-                option->iconSize = this->iconSize();
-            } else {
+        else if (parentWidget()->inherits("Q3ToolBar")) {
+            if (!option->iconSize.isValid()) {
                 int iconSize = style()->pixelMetric(QStyle::PM_ToolBarIconSize, option, this);
                 option->iconSize = d->icon.actualSize(QSize(iconSize, iconSize));
             }
             forceNoText = d->toolButtonStyle == Qt::ToolButtonIconOnly;
-        } else
+        }
 #endif
-            if (QToolBar *toolBar = qobject_cast<QToolBar *>(parentWidget())) {
-                option->iconSize = toolBar->iconSize();
-            } else {
-                option->iconSize = iconSize();
-            }
     }
 #endif // QT_NO_TOOLBAR
 
@@ -345,21 +352,25 @@ void QToolButton::initStyleOption(QStyleOptionToolButton *option) const
 
     option->subControls = QStyle::SC_ToolButton;
     option->activeSubControls = QStyle::SC_None;
-//     if (d->down && !d->menuButtonDown)
-//         option->activeSubControls |= QStyle::SC_ToolButton;
 
     option->features = QStyleOptionToolButton::None;
     if (d->popupMode == QToolButton::MenuButtonPopup) {
         option->subControls |= QStyle::SC_ToolButtonMenu;
         option->features |= QStyleOptionToolButton::MenuButtonPopup;
-        if (d->menuButtonDown || d->down) {
-            option->state |= QStyle::State_MouseOver;
-            option->activeSubControls |= QStyle::SC_ToolButtonMenu;
-        }
-    } else {
-        if (d->menuButtonDown)
-            option->state  |= QStyle::State_Sunken;
     }
+    if (option->state & QStyle::State_MouseOver) {
+        option->activeSubControls = d->hoverControl;
+    }
+    if (d->menuButtonDown) {
+        option->state |= QStyle::State_Sunken;
+        option->activeSubControls |= QStyle::SC_ToolButtonMenu;
+    }
+    if (d->down) {
+        option->state |= QStyle::State_Sunken;
+        option->activeSubControls |= QStyle::SC_ToolButton;
+    }
+
+
     if (d->arrowType != Qt::NoArrow)
         option->features |= QStyleOptionToolButton::Arrow;
     if (d->popupMode == QToolButton::DelayedPopup)
@@ -429,7 +440,7 @@ QSize QToolButton::sizeHint() const
         }
     }
 
-    opt.rect.setHeight(h); // PM_MenuButtonIndicator depends on the height
+    opt.rect.setSize(QSize(w, h)); // PM_MenuButtonIndicator depends on the height
     if (d->popupMode == MenuButtonPopup)
         w += style()->pixelMetric(QStyle::PM_MenuButtonIndicator, &opt, this);
 
@@ -563,13 +574,40 @@ void QToolButton::actionEvent(QActionEvent *event)
     QAbstractButton::actionEvent(event);
 }
 
+QStyle::SubControl QToolButtonPrivate::newHoverControl(const QPoint &pos)
+{
+    Q_Q(QToolButton);
+    QStyleOptionToolButton opt;
+    q->initStyleOption(&opt);
+    opt.subControls = QStyle::SC_All;
+    hoverControl = q->style()->hitTestComplexControl(QStyle::CC_ToolButton, &opt, pos, q);
+    if (hoverControl == QStyle::SC_None)
+        hoverRect = QRect();
+    else
+        hoverRect = q->style()->subControlRect(QStyle::CC_ToolButton, &opt, hoverControl, q);
+    return hoverControl;
+}
+
+bool QToolButtonPrivate::updateHoverControl(const QPoint &pos)
+{
+    Q_Q(QToolButton);
+    QRect lastHoverRect = hoverRect;
+    QStyle::SubControl lastHoverControl = hoverControl;
+    bool doesHover = q->testAttribute(Qt::WA_Hover);
+    if (lastHoverControl != newHoverControl(pos) && doesHover) {
+        q->update(lastHoverRect);
+        q->update(hoverRect);
+        return true;
+    }
+    return !doesHover;
+}
+
 void QToolButtonPrivate::_q_actionTriggered()
 {
     Q_Q(QToolButton);
     if (QAction *action = qobject_cast<QAction *>(q->sender()))
         emit q->triggered(action);
 }
-
 
 /*!
     \reimp
@@ -729,9 +767,9 @@ void QToolButton::setOffIconSet(const QIcon& set)
   Since Qt 3.0, QIcon contains both the On and Off icons.
 
   For ease of porting, this function ignores the \a on parameter and
-  sets the \l icon property. If you relied on the \a on parameter,
-  you probably want to update your code to use the QIcon On/Off
-  mechanism.
+  sets the \l{QAbstractButton::icon} {icon} property. If you relied on
+  the \a on parameter, you probably want to update your code to use
+  the QIcon On/Off mechanism.
 
   \sa icon QIcon::State
 */
@@ -747,9 +785,9 @@ void QToolButton::setIconSet(const QIcon & set, bool /* on */)
   Since Qt 3.0, QIcon contains both the On and Off icons.
 
   For ease of porting, this function ignores the \a on parameter and
-  returns the \l icon property. If you relied on the \a on
-  parameter, you probably want to update your code to use the QIcon
-  On/Off mechanism.
+  returns the \l{QAbstractButton::icon} {icon} property. If you relied
+  on the \a on parameter, you probably want to update your code to use
+  the QIcon On/Off mechanism.
 */
 QIcon QToolButton::iconSet(bool /* on */) const
 {
@@ -824,7 +862,7 @@ void QToolButtonPrivate::_q_buttonPressed()
 
     if (delay > 0 && popupMode == QToolButton::DelayedPopup)
         popupTimer.start(delay, q);
-    else if (popupMode == QToolButton::InstantPopup)
+    else if (delay == 0 || popupMode == QToolButton::InstantPopup)
         q->showMenu();
 }
 
@@ -1098,9 +1136,19 @@ void QToolButton::nextCheckState()
 }
 
 /*! \reimp */
-bool QToolButton::event(QEvent *e)
+bool QToolButton::event(QEvent *event)
 {
-    return QAbstractButton::event(e);
+    switch(event->type()) {
+    case QEvent::HoverEnter:
+    case QEvent::HoverLeave:
+    case QEvent::HoverMove:
+    if (const QHoverEvent *he = static_cast<const QHoverEvent *>(event))
+        d_func()->updateHoverControl(he->pos());
+        break;
+    default:
+        break;
+    }
+    return QAbstractButton::event(event);
 }
 
 /*! \internal

@@ -28,7 +28,7 @@ CL_NS_DEF(search)
 
 	}
 
-	float_t ExactPhraseScorer::phraseFreq(){
+	qreal ExactPhraseScorer::phraseFreq(){
 	//Func - Returns the freqency of the phrase
 	//Pre  - first != NULL
 	//       last  != NULL
@@ -70,7 +70,7 @@ CL_NS_DEF(search)
 			while (first->position < last->position){
 				do{
 					if (!first->nextPosition()){
-						return (float_t)freq;
+						return (qreal)freq;
 					}
 				} while (first->position < last->position);
 				//Make the current first node the last node in the list
@@ -80,6 +80,6 @@ CL_NS_DEF(search)
 			freq++;
 		} while (last->nextPosition());
 
-		return (float_t)freq;
+		return (qreal)freq;
 	}
 CL_NS_END

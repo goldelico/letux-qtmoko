@@ -26,239 +26,246 @@
 
 #include "HTMLLinkElement.h"
 #include "JSStyleSheet.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "StyleSheet.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLLinkElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLLinkElementTableEntries[] =
+static const HashTableValue JSHTMLLinkElementTableValues[12] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLLinkElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "charset", JSHTMLLinkElement::CharsetAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "disabled", JSHTMLLinkElement::DisabledAttrNum, DontDelete, 0, &JSHTMLLinkElementTableEntries[11] },
-    { 0, 0, 0, 0, 0 },
-    { "media", JSHTMLLinkElement::MediaAttrNum, DontDelete, 0, &JSHTMLLinkElementTableEntries[12] },
-    { "hreflang", JSHTMLLinkElement::HreflangAttrNum, DontDelete, 0, &JSHTMLLinkElementTableEntries[13] },
-    { "rel", JSHTMLLinkElement::RelAttrNum, DontDelete, 0, 0 },
-    { "href", JSHTMLLinkElement::HrefAttrNum, DontDelete, 0, &JSHTMLLinkElementTableEntries[14] },
-    { "rev", JSHTMLLinkElement::RevAttrNum, DontDelete, 0, 0 },
-    { "target", JSHTMLLinkElement::TargetAttrNum, DontDelete, 0, 0 },
-    { "type", JSHTMLLinkElement::TypeAttrNum, DontDelete, 0, &JSHTMLLinkElementTableEntries[15] },
-    { "sheet", JSHTMLLinkElement::SheetAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "disabled", DontDelete, (intptr_t)jsHTMLLinkElementDisabled, (intptr_t)setJSHTMLLinkElementDisabled },
+    { "charset", DontDelete, (intptr_t)jsHTMLLinkElementCharset, (intptr_t)setJSHTMLLinkElementCharset },
+    { "href", DontDelete, (intptr_t)jsHTMLLinkElementHref, (intptr_t)setJSHTMLLinkElementHref },
+    { "hreflang", DontDelete, (intptr_t)jsHTMLLinkElementHreflang, (intptr_t)setJSHTMLLinkElementHreflang },
+    { "media", DontDelete, (intptr_t)jsHTMLLinkElementMedia, (intptr_t)setJSHTMLLinkElementMedia },
+    { "rel", DontDelete, (intptr_t)jsHTMLLinkElementRel, (intptr_t)setJSHTMLLinkElementRel },
+    { "rev", DontDelete, (intptr_t)jsHTMLLinkElementRev, (intptr_t)setJSHTMLLinkElementRev },
+    { "target", DontDelete, (intptr_t)jsHTMLLinkElementTarget, (intptr_t)setJSHTMLLinkElementTarget },
+    { "type", DontDelete, (intptr_t)jsHTMLLinkElementType, (intptr_t)setJSHTMLLinkElementType },
+    { "sheet", DontDelete|ReadOnly, (intptr_t)jsHTMLLinkElementSheet, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLLinkElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLinkElementTable = 
-{
-    2, 16, JSHTMLLinkElementTableEntries, 11
-};
+static const HashTable JSHTMLLinkElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSHTMLLinkElementTableValues, 0 };
+#else
+    { 33, 31, JSHTMLLinkElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLLinkElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLLinkElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLinkElementConstructorTable = 
-{
-    2, 1, JSHTMLLinkElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLLinkElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLLinkElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLLinkElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLLinkElementConstructor : public DOMObject {
 public:
     JSHTMLLinkElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLLinkElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLLinkElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLLinkElementConstructor::info = { "HTMLLinkElementConstructor", 0, &JSHTMLLinkElementConstructorTable, 0 };
+const ClassInfo JSHTMLLinkElementConstructor::s_info = { "HTMLLinkElementConstructor", 0, &JSHTMLLinkElementConstructorTable, 0 };
 
 bool JSHTMLLinkElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLLinkElementConstructor, DOMObject>(exec, &JSHTMLLinkElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLLinkElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLLinkElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLLinkElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLLinkElementPrototypeTable = 
-{
-    2, 1, JSHTMLLinkElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLLinkElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLLinkElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLLinkElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLLinkElementPrototype::info = { "HTMLLinkElementPrototype", 0, &JSHTMLLinkElementPrototypeTable, 0 };
+const ClassInfo JSHTMLLinkElementPrototype::s_info = { "HTMLLinkElementPrototype", 0, &JSHTMLLinkElementPrototypeTable, 0 };
 
 JSObject* JSHTMLLinkElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLLinkElementPrototype>(exec, "[[JSHTMLLinkElement.prototype]]");
+    return getDOMPrototype<JSHTMLLinkElement>(exec);
 }
 
-const ClassInfo JSHTMLLinkElement::info = { "HTMLLinkElement", &JSHTMLElement::info, &JSHTMLLinkElementTable, 0 };
+const ClassInfo JSHTMLLinkElement::s_info = { "HTMLLinkElement", &JSHTMLElement::s_info, &JSHTMLLinkElementTable, 0 };
 
-JSHTMLLinkElement::JSHTMLLinkElement(ExecState* exec, HTMLLinkElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLLinkElement::JSHTMLLinkElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLLinkElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLLinkElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLLinkElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLLinkElementPrototype(JSHTMLLinkElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLLinkElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLLinkElement, JSHTMLElement>(exec, &JSHTMLLinkElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLLinkElement, Base>(exec, &JSHTMLLinkElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLLinkElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLLinkElementDisabled(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DisabledAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsBoolean(imp->disabled());
-    }
-    case CharsetAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->charset());
-    }
-    case HrefAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->href());
-    }
-    case HreflangAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->hreflang());
-    }
-    case MediaAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->media());
-    }
-    case RelAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->rel());
-    }
-    case RevAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->rev());
-    }
-    case TargetAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->target());
-    }
-    case TypeAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case SheetAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->sheet()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->disabled());
 }
 
-void JSHTMLLinkElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLLinkElementCharset(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLLinkElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLLinkElementTable, this);
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->charset());
 }
 
-void JSHTMLLinkElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLLinkElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DisabledAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setDisabled(value->toBoolean(exec));
-        break;
-    }
-    case CharsetAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setCharset(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case HrefAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setHref(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case HreflangAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setHreflang(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case MediaAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setMedia(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case RelAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setRel(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case RevAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setRev(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TargetAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setTarget(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TypeAttrNum: {
-        HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(impl());
-
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->href());
 }
 
-JSValue* JSHTMLLinkElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLLinkElementHreflang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLLinkElementConstructor>(exec, "[[HTMLLinkElement.constructor]]");
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->hreflang());
 }
+
+JSValuePtr jsHTMLLinkElementMedia(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->media());
+}
+
+JSValuePtr jsHTMLLinkElementRel(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->rel());
+}
+
+JSValuePtr jsHTMLLinkElementRev(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->rev());
+}
+
+JSValuePtr jsHTMLLinkElementTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->target());
+}
+
+JSValuePtr jsHTMLLinkElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
+}
+
+JSValuePtr jsHTMLLinkElementSheet(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->sheet()));
+}
+
+JSValuePtr jsHTMLLinkElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLLinkElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLLinkElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLLinkElement, Base>(exec, propertyName, value, &JSHTMLLinkElementTable, this, slot);
+}
+
+void setJSHTMLLinkElementDisabled(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setDisabled(value->toBoolean(exec));
+}
+
+void setJSHTMLLinkElementCharset(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setCharset(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementHref(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setHref(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementHreflang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setHreflang(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementMedia(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setMedia(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementRel(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setRel(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementRev(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setRev(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementTarget(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setTarget(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLLinkElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLLinkElement* imp = static_cast<HTMLLinkElement*>(static_cast<JSHTMLLinkElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLLinkElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLLinkElementConstructor>(exec);
+}
+
 
 }

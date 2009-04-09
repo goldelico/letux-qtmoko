@@ -56,7 +56,7 @@
      DOTDOT = 272,
      SLASHSLASH = 273,
      NAMETEST = 274,
-     ERROR = 275
+     XPATH_ERROR = 275
    };
 #endif
 /* Tokens.  */
@@ -77,7 +77,7 @@
 #define DOTDOT 272
 #define SLASHSLASH 273
 #define NAMETEST 274
-#define ERROR 275
+#define XPATH_ERROR 275
 
 
 

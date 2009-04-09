@@ -21,290 +21,190 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFESpecularLightingElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFESpecularLightingElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFESpecularLightingElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFESpecularLightingElementTableEntries[] =
+static const HashTableValue JSSVGFESpecularLightingElementTableValues[12] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFESpecularLightingElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "specularConstant", JSSVGFESpecularLightingElement::SpecularConstantAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFESpecularLightingElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSSVGFESpecularLightingElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "surfaceScale", JSSVGFESpecularLightingElement::SurfaceScaleAttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpecularLightingElementTableEntries[11] },
-    { "in1", JSSVGFESpecularLightingElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpecularLightingElementTableEntries[13] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "result", JSSVGFESpecularLightingElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "specularExponent", JSSVGFESpecularLightingElement::SpecularExponentAttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpecularLightingElementTableEntries[12] },
-    { "y", JSSVGFESpecularLightingElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFESpecularLightingElement::WidthAttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpecularLightingElementTableEntries[14] },
-    { "style", JSSVGFESpecularLightingElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementIn1, (intptr_t)0 },
+    { "surfaceScale", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementSurfaceScale, (intptr_t)0 },
+    { "specularConstant", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementSpecularConstant, (intptr_t)0 },
+    { "specularExponent", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementSpecularExponent, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFESpecularLightingElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFESpecularLightingElementTable = 
-{
-    2, 15, JSSVGFESpecularLightingElementTableEntries, 11
-};
+static const HashTable JSSVGFESpecularLightingElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1023, JSSVGFESpecularLightingElementTableValues, 0 };
+#else
+    { 36, 31, JSSVGFESpecularLightingElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFESpecularLightingElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFESpecularLightingElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFESpecularLightingElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFESpecularLightingElementPrototypeTable = 
-{
-    2, 1, JSSVGFESpecularLightingElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFESpecularLightingElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFESpecularLightingElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFESpecularLightingElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFESpecularLightingElementPrototype::info = { "SVGFESpecularLightingElementPrototype", 0, &JSSVGFESpecularLightingElementPrototypeTable, 0 };
+const ClassInfo JSSVGFESpecularLightingElementPrototype::s_info = { "SVGFESpecularLightingElementPrototype", 0, &JSSVGFESpecularLightingElementPrototypeTable, 0 };
 
 JSObject* JSSVGFESpecularLightingElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFESpecularLightingElementPrototype>(exec, "[[JSSVGFESpecularLightingElement.prototype]]");
+    return getDOMPrototype<JSSVGFESpecularLightingElement>(exec);
 }
 
-const ClassInfo JSSVGFESpecularLightingElement::info = { "SVGFESpecularLightingElement", &JSSVGElement::info, &JSSVGFESpecularLightingElementTable, 0 };
-
-JSSVGFESpecularLightingElement::JSSVGFESpecularLightingElement(ExecState* exec, SVGFESpecularLightingElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFESpecularLightingElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFESpecularLightingElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFESpecularLightingElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFESpecularLightingElement::s_info = { "SVGFESpecularLightingElement", &JSSVGElement::s_info, &JSSVGFESpecularLightingElementTable, 0 };
+
+JSSVGFESpecularLightingElement::JSSVGFESpecularLightingElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFESpecularLightingElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFESpecularLightingElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFESpecularLightingElementPrototype(JSSVGFESpecularLightingElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFESpecularLightingElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFESpecularLightingElement, JSSVGElement>(exec, &JSSVGFESpecularLightingElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFESpecularLightingElement, Base>(exec, &JSSVGFESpecularLightingElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFESpecularLightingElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFESpecularLightingElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpecularLightingElementSurfaceScale(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->surfaceScaleAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpecularLightingElementSpecularConstant(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->specularConstantAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SurfaceScaleAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
+JSValuePtr jsSVGFESpecularLightingElementSpecularExponent(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->specularExponentAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpecularLightingElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->surfaceScaleAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpecularLightingElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SpecularConstantAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
+JSValuePtr jsSVGFESpecularLightingElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpecularLightingElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->specularConstantAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpecularLightingElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SpecularExponentAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
+JSValuePtr jsSVGFESpecularLightingElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpecularLightingElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(static_cast<JSSVGFESpecularLightingElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->specularExponentAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpecularLightingElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFESpecularLightingElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFESpecularLightingElement* castedThisObj = static_cast<JSSVGFESpecularLightingElement*>(asObject(thisValue));
+    SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFESpecularLightingElement* imp = static_cast<SVGFESpecularLightingElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

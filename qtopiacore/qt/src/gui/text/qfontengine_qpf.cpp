@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -59,7 +63,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_QWS_QPF
+#ifndef QT_NO_QWS_QPF2
 
 QT_BEGIN_INCLUDE_NAMESPACE
 #include "qpfutil.cpp"
@@ -71,33 +75,6 @@ QT_BEGIN_INCLUDE_NAMESPACE
 #endif
 #include "qplatformdefs.h"
 QT_END_INCLUDE_NAMESPACE
-
-#ifdef QT_LSB
-
-QT_BEGIN_INCLUDE_NAMESPACE
-#   include <dlfcn.h>
-QT_END_INCLUDE_NAMESPACE
-
-#  ifdef QT_NO_MREMAP
-#    undef QT_NO_MREMAP
-#  endif
-#  define MREMAP_MAYMOVE 1
-#  define RTLD_DEFAULT   ((void *) 0)
-
-// LSB doesn't standardize mremap - resolve it dynamically at runtime
-static void *mremap (void *__addr, size_t __old_len, size_t __new_len, int __flags)
-{
-    typedef void *(*RemapAddress)(void*, size_t, size_t, int, ...);
-    static RemapAddress remapAddr = 0;
-    if (!remapAddr) {
-        *(void **)(&remapAddr) = ::dlsym(RTLD_DEFAULT, "mremap");
-        if (!remapAddr)
-            qFatal("Unable to call mremap");
-    }
-
-    return remapAddr(__addr, __old_len, __new_len, __flags);
-}
-#endif
 
 //#define DEBUG_HEADER
 //#define DEBUG_FONTENGINE
@@ -182,7 +159,7 @@ const QFontEngineQPF::Glyph *QFontEngineQPF::findGlyph(glyph_t g) const
 #if defined(DEBUG_FONTENGINE)
         qDebug() << "glyph" << g << "outside of glyphData, remapping font file";
 #endif
-#ifndef QT_NO_FREETYPE
+#if !defined(QT_NO_FREETYPE) && !defined(QT_FONTS_ARE_RESOURCES)
         const_cast<QFontEngineQPF *>(this)->remapFontData();
 #endif
         if (glyphPos > glyphDataSize)
@@ -247,7 +224,7 @@ QVariant QFontEngineQPF::extractHeaderField(const uchar *data, HeaderTag request
     return QVariant();
 }
 
-#endif // QT_NO_QWS_QPF
+#endif // QT_NO_QWS_QPF2
 
 QString qws_fontCacheDir()
 {
@@ -265,8 +242,9 @@ QString qws_fontCacheDir()
     return dir;
 }
 
-#ifndef QT_NO_QWS_QPF
+#ifndef QT_NO_QWS_QPF2
 
+#ifndef QT_FONTS_ARE_RESOURCES
 QList<QByteArray> QFontEngineQPF::cleanUpAfterClientCrash(const QList<int> &crashedClientIds)
 {
     QList<QByteArray> removedFonts;
@@ -294,6 +272,7 @@ QList<QByteArray> QFontEngineQPF::cleanUpAfterClientCrash(const QList<int> &cras
         qDebug() << "list of corrupted and removed fonts:" << removedFonts;
     return removedFonts;
 }
+#endif
 
 static inline unsigned int getChar(const QChar *str, int &i, const int len)
 {
@@ -307,12 +286,14 @@ static inline unsigned int getChar(const QChar *str, int &i, const int len)
     }
     return uc;
 }
-
+#ifdef QT_FONTS_ARE_RESOURCES
+QFontEngineQPF::QFontEngineQPF(const QFontDef &def, const uchar *bytes, int size)
+    : fd(-1), fontData(bytes), dataSize(size), renderingFontEngine(0)
+#else
 QFontEngineQPF::QFontEngineQPF(const QFontDef &def, int fileDescriptor, QFontEngine *fontEngine)
-    : fd(fileDescriptor), renderingFontEngine(fontEngine)
+    : fd(fileDescriptor), fontData(0), dataSize(0), renderingFontEngine(fontEngine)
+#endif
 {
-    fontData = 0;
-    dataSize = 0;
     fontDef = def;
     cache_cost = 100;
     freetype = 0;
@@ -330,6 +311,7 @@ QFontEngineQPF::QFontEngineQPF(const QFontDef &def, int fileDescriptor, QFontEng
     qDebug() << "QFontEngineQPF::QFontEngineQPF( fd =" << fd << ", renderingFontEngine =" << renderingFontEngine << ")";
 #endif
 
+#ifndef QT_FONTS_ARE_RESOURCES
     if (fd < 0) {
         if (!renderingFontEngine)
             return;
@@ -388,8 +370,9 @@ QFontEngineQPF::QFontEngineQPF(const QFontDef &def, int fileDescriptor, QFontEng
         fontData = 0;
         return;
     }
+#endif //QT_FONTS_ARE_RESOURCES
 
-    if (!verifyHeader(fontData, st.st_size)) {
+    if (!verifyHeader(fontData, dataSize)) {
 #if defined(DEBUG_FONTENGINE)
         qDebug() << "verifyHeader failed!";
 #endif
@@ -423,7 +406,7 @@ QFontEngineQPF::QFontEngineQPF(const QFontDef &def, int fileDescriptor, QFontEng
 
     face_id.filename = QFile::encodeName(extractHeaderField(fontData, Tag_FileName).toString());
     face_id.index = extractHeaderField(fontData, Tag_FileIndex).toInt();
-#if !defined(QT_NO_FREETYPE)
+#if !defined(QT_NO_FREETYPE) && !defined(QT_FONTS_ARE_RESOURCES)
     freetype = QFreetypeFace::getFace(face_id);
     if (!freetype) {
         QString newPath =
@@ -524,63 +507,13 @@ bool QFontEngineQPF::getSfntTableData(uint tag, uchar *buffer, uint *length) con
     return false;
 }
 
-bool QFontEngineQPF::stringToCMap(const QChar *str, int len, HB_Glyph *glyphs, int *nglyphs, QTextEngine::ShaperFlags flags) const
-{
-    if (!externalCMap && !cmapOffset && renderingFontEngine) {
-        if (!renderingFontEngine->stringToCMap(str, len, glyphs, nglyphs, flags))
-            return false;
-#ifndef QT_NO_FREETYPE
-        const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(glyphs, *nglyphs);
-#endif
-        return true;
-    }
-
-    if (*nglyphs < len) {
-        *nglyphs = len;
-        return false;
-    }
-
-#if defined(DEBUG_FONTENGINE)
-    QSet<QChar> seenGlyphs;
-#endif
-
-    const uchar *cmap = externalCMap ? externalCMap : (fontData + cmapOffset);
-
-    int glyph_pos = 0;
-    if (symbol) {
-        for (int i = 0; i < len; ++i) {
-            unsigned int uc = getChar(str, i, len);
-            glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc);
-            if(!glyphs[glyph_pos] && uc < 0x100)
-                glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc + 0xf000);
-            ++glyph_pos;
-        }
-    } else {
-        for (int i = 0; i < len; ++i) {
-            unsigned int uc = getChar(str, i, len);
-            glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc);
-#if 0 && defined(DEBUG_FONTENGINE)
-            QChar c(uc);
-            if (!findGlyph(glyphs[glyph_pos].glyph) && !seenGlyphs.contains(c))
-                qDebug() << "glyph for character" << c << "/" << hex << uc << "is" << dec << glyphs[glyph_pos].glyph;
-
-            seenGlyphs.insert(c);
-#endif
-            ++glyph_pos;
-        }
-    }
-
-    *nglyphs = glyph_pos;
-    return true;
-}
-
 bool QFontEngineQPF::stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs, QTextEngine::ShaperFlags flags) const
 {
     if (!externalCMap && !cmapOffset && renderingFontEngine) {
         if (!renderingFontEngine->stringToCMap(str, len, glyphs, nglyphs, flags))
             return false;
 #ifndef QT_NO_FREETYPE
-        const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(glyphs, *nglyphs);
+        const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(*glyphs);
 #endif
         return true;
     }
@@ -596,19 +529,24 @@ bool QFontEngineQPF::stringToCMap(const QChar *str, int len, QGlyphLayout *glyph
 
     const uchar *cmap = externalCMap ? externalCMap : (fontData + cmapOffset);
 
+    bool mirrored = flags & QTextEngine::RightToLeft;
     int glyph_pos = 0;
     if (symbol) {
         for (int i = 0; i < len; ++i) {
             unsigned int uc = getChar(str, i, len);
-            glyphs[glyph_pos].glyph = getTrueTypeGlyphIndex(cmap, uc);
-            if(!glyphs[glyph_pos].glyph && uc < 0x100)
-                glyphs[glyph_pos].glyph = getTrueTypeGlyphIndex(cmap, uc + 0xf000);
+            if (mirrored)
+                uc = QChar::mirroredChar(uc);
+            glyphs->glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc);
+            if(!glyphs->glyphs[glyph_pos] && uc < 0x100)
+                glyphs->glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc + 0xf000);
             ++glyph_pos;
         }
     } else {
         for (int i = 0; i < len; ++i) {
             unsigned int uc = getChar(str, i, len);
-            glyphs[glyph_pos].glyph = getTrueTypeGlyphIndex(cmap, uc);
+            if (mirrored)
+                uc = QChar::mirroredChar(uc);
+            glyphs->glyphs[glyph_pos] = getTrueTypeGlyphIndex(cmap, uc);
 #if 0 && defined(DEBUG_FONTENGINE)
             QChar c(uc);
             if (!findGlyph(glyphs[glyph_pos].glyph) && !seenGlyphs.contains(c))
@@ -621,24 +559,44 @@ bool QFontEngineQPF::stringToCMap(const QChar *str, int len, QGlyphLayout *glyph
     }
 
     *nglyphs = glyph_pos;
-    recalcAdvances(*nglyphs, glyphs, flags);
+    glyphs->numGlyphs = glyph_pos;
+    recalcAdvances(glyphs, flags);
     return true;
 }
 
-void QFontEngineQPF::recalcAdvances(int len, QGlyphLayout *glyphs, QTextEngine::ShaperFlags) const
+void QFontEngineQPF::recalcAdvances(QGlyphLayout *glyphs, QTextEngine::ShaperFlags) const
 {
 #ifndef QT_NO_FREETYPE
-    const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(glyphs, len);
+    const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(*glyphs);
 #endif
-    for (int i = 0; i < len; ++i) {
-        const Glyph *g = findGlyph(glyphs[i].glyph);
+    for (int i = 0; i < glyphs->numGlyphs; ++i) {
+        const Glyph *g = findGlyph(glyphs->glyphs[i]);
         if (!g) {
-            glyphs[i].glyph = 0;
+            glyphs->glyphs[i] = 0;
             continue;
         }
-        glyphs[i].advance.x = g->advance;
-        glyphs[i].advance.y = 0;
+        glyphs->advances_x[i] = g->advance;
+        glyphs->advances_y[i] = 0;
     }
+}
+
+QImage QFontEngineQPF::alphaMapForGlyph(glyph_t g)
+{
+    const Glyph *glyph = findGlyph(g);
+    if (!glyph)
+	QImage();
+
+    const uchar *bits = ((const uchar *) glyph) + sizeof(Glyph);
+
+    QImage image(glyph->width, glyph->height, QImage::Format_Indexed8);
+    for (int j=0; j<256; ++j)
+	image.setColor(j, 0xff000000 | j | (j<<8) | (j<<16));
+
+    for (int i=0; i<glyph->height; ++i) {
+	memcpy(image.scanLine(i), bits, glyph->bytesPerLine);
+	bits += glyph->bytesPerLine;
+    }
+    return image;
 }
 
 void QFontEngineQPF::draw(QPaintEngine *p, qreal _x, qreal _y, const QTextItemInt &si)
@@ -653,7 +611,7 @@ void QFontEngineQPF::draw(QPaintEngine *p, qreal _x, qreal _y, const QTextItemIn
 
     QVarLengthArray<QFixedPoint> positions;
     QVarLengthArray<glyph_t> glyphs;
-    getGlyphPositions(si.glyphs, si.num_glyphs, matrix, si.flags, glyphs, positions);
+    getGlyphPositions(si.glyphs, matrix, si.flags, glyphs, positions);
     if (glyphs.size() == 0)
         return;
 
@@ -662,30 +620,30 @@ void QFontEngineQPF::draw(QPaintEngine *p, qreal _x, qreal _y, const QTextItemIn
         if (!glyph)
             continue;
 
-        const bool mono = false; // ###
+        const int depth = 8; //###
 
-        paintEngine->alphaPenBlt(reinterpret_cast<const uchar *>(glyph) + sizeof(Glyph), glyph->bytesPerLine, mono,
+        paintEngine->alphaPenBlt(reinterpret_cast<const uchar *>(glyph) + sizeof(Glyph), glyph->bytesPerLine, depth,
                                      qRound(positions[i].x) + glyph->x,
                                      qRound(positions[i].y) + glyph->y,
                                      glyph->width, glyph->height);
     }
 }
 
-void QFontEngineQPF::addOutlineToPath(qreal x, qreal y, const QGlyphLayout *glyphs, int numGlyphs, QPainterPath *path, QTextItem::RenderFlags flags)
+void QFontEngineQPF::addOutlineToPath(qreal x, qreal y, const QGlyphLayout &glyphs, QPainterPath *path, QTextItem::RenderFlags flags)
 {
     if (renderingFontEngine &&
         (renderingFontEngine->type() != QFontEngine::Proxy
          || static_cast<QProxyFontEngine *>(renderingFontEngine)->capabilities() & QAbstractFontEngine::CanOutlineGlyphs)) {
-        renderingFontEngine->addOutlineToPath(x, y, glyphs, numGlyphs, path, flags);
+        renderingFontEngine->addOutlineToPath(x, y, glyphs, path, flags);
         return;
     }
-    addBitmapFontToPath(x, y, glyphs, numGlyphs, path, flags);
+    addBitmapFontToPath(x, y, glyphs, path, flags);
 }
 
-glyph_metrics_t QFontEngineQPF::boundingBox(const QGlyphLayout *glyphs, int numGlyphs)
+glyph_metrics_t QFontEngineQPF::boundingBox(const QGlyphLayout &glyphs)
 {
 #ifndef QT_NO_FREETYPE
-    const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(glyphs, numGlyphs);
+    const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(glyphs);
 #endif
 
     glyph_metrics_t overall;
@@ -695,13 +653,13 @@ glyph_metrics_t QFontEngineQPF::boundingBox(const QGlyphLayout *glyphs, int numG
 
     QFixed ymax = 0;
     QFixed xmax = 0;
-    for (int i = 0; i < numGlyphs; i++) {
-        const Glyph *g = findGlyph(glyphs[i].glyph);
+    for (int i = 0; i < glyphs.numGlyphs; i++) {
+        const Glyph *g = findGlyph(glyphs.glyphs[i]);
         if (!g)
             continue;
 
-        QFixed x = overall.xoff + glyphs[i].offset.x + g->x;
-        QFixed y = overall.yoff + glyphs[i].offset.y + g->y;
+        QFixed x = overall.xoff + glyphs.offsets[i].x + g->x;
+        QFixed y = overall.yoff + glyphs.offsets[i].y + g->y;
         overall.x = qMin(overall.x, x);
         overall.y = qMin(overall.y, y);
         xmax = qMax(xmax, x + g->width);
@@ -718,9 +676,9 @@ glyph_metrics_t QFontEngineQPF::boundingBox(glyph_t glyph)
 {
 #ifndef QT_NO_FREETYPE
     {
-        QGlyphLayout tmp;
-        tmp.glyph = glyph;
-        const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(&tmp, 1);
+        QGlyphLayoutArray<1> tmp;
+        tmp.glyphs[0] = glyph;
+        const_cast<QFontEngineQPF *>(this)->ensureGlyphsLoaded(tmp);
     }
 #endif
     glyph_metrics_t overall;
@@ -845,7 +803,7 @@ void QFontEngineQPF::unlockFace() const
     freetype->unlock();
 }
 
-void QFontEngineQPF::doKerning(int num_glyphs, QGlyphLayout *g, QTextEngine::ShaperFlags flags) const
+void QFontEngineQPF::doKerning(QGlyphLayout *g, QTextEngine::ShaperFlags flags) const
 {
     if (!kerning_pairs_loaded) {
         kerning_pairs_loaded = true;
@@ -860,7 +818,7 @@ void QFontEngineQPF::doKerning(int num_glyphs, QGlyphLayout *g, QTextEngine::Sha
             }
         }
     }
-    QFontEngine::doKerning(num_glyphs, g, flags);
+    QFontEngine::doKerning(g, flags);
 }
 
 HB_Error QFontEngineQPF::getPointInOutline(HB_Glyph glyph, int flags, hb_uint32 point, HB_Fixed *xpos, HB_Fixed *ypos, hb_uint32 *nPoints)
@@ -883,55 +841,26 @@ QFixed QFontEngineQPF::emSquareSize() const
         return freetype->face->size->metrics.y_ppem;
 }
 
-void QFontEngineQPF::ensureGlyphsLoaded(const HB_Glyph *glyphs, int len)
+void QFontEngineQPF::ensureGlyphsLoaded(const QGlyphLayout &glyphs)
 {
     if (readOnly)
         return;
     bool locked = false;
-    for (int i = 0; i < len; ++i) {
-        if (!glyphs[i])
+    for (int i = 0; i < glyphs.numGlyphs; ++i) {
+        if (!glyphs.glyphs[i])
             continue;
-        const Glyph *g = findGlyph(glyphs[i]);
+        const Glyph *g = findGlyph(glyphs.glyphs[i]);
         if (g)
             continue;
         if (!locked) {
             if (!lockFile())
                 return;
             locked = true;
-            g = findGlyph(glyphs[i]);
+            g = findGlyph(glyphs.glyphs[i]);
             if (g)
                 continue;
         }
-        loadGlyph(glyphs[i]);
-    }
-    if (locked) {
-        unlockFile();
-#if defined(DEBUG_FONTENGINE)
-        qDebug() << "Finished rendering glyphs\n";
-#endif
-    }
-}
-
-void QFontEngineQPF::ensureGlyphsLoaded(const QGlyphLayout *glyphs, int len)
-{
-    if (readOnly)
-        return;
-    bool locked = false;
-    for (int i = 0; i < len; ++i) {
-        if (!glyphs[i].glyph)
-            continue;
-        const Glyph *g = findGlyph(glyphs[i].glyph);
-        if (g)
-            continue;
-        if (!locked) {
-            if (!lockFile())
-                return;
-            locked = true;
-            g = findGlyph(glyphs[i].glyph);
-            if (g)
-                continue;
-        }
-        loadGlyph(glyphs[i].glyph);
+        loadGlyph(glyphs.glyphs[i]);
     }
     if (locked) {
         unlockFile();
@@ -1197,7 +1126,7 @@ void QPFGenerator::writeTaggedQFixed(QFontEngineQPF::HeaderTag tag, QFixed value
     writeUInt32(value.value());
 }
 
-#endif // QT_NO_QWS_QPF
+#endif // QT_NO_QWS_QPF2
 
 QFontEngineMultiQWS::QFontEngineMultiQWS(QFontEngine *fe, int _script, const QStringList &fallbacks)
     : QFontEngineMulti(fallbacks.size() + 1),

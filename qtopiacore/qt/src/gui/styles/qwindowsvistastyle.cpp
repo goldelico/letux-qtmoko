@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -650,33 +654,58 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
         if (Animation *anim = d->widgetAnimation(widget)) {
             anim->paint(painter, option);
         } else {
-            int stateId = ETS_NORMAL;
-            if (!(state & State_Enabled))
-                stateId = ETS_DISABLED;
-            else if (state & State_ReadOnly)
-                stateId = ETS_READONLY;
-            else if (state & State_MouseOver)
-                stateId = ETS_HOT;
-            else if (state & State_HasFocus)
-                stateId = ETS_SELECTED;
-
-            XPThemeData theme(widget, painter, QLatin1String("EDIT"), EP_EDITBORDER_NOSCROLL, stateId, option->rect);
-            painter->save();
-            QRegion clipRegion = option->rect;
-            clipRegion -= option->rect.adjusted(2, 2, -2, -2);
-            painter->setClipRegion(clipRegion);
-            d->drawBackground(theme);
-            painter->restore();
+            QPainter *p = painter;
+            QWidget *parentWidget = 0;
+            if (widget) {
+                parentWidget = widget->parentWidget();
+                if (parentWidget)
+                    parentWidget = parentWidget->parentWidget();
+            }
+            if (widget && widget->inherits("QLineEdit")
+                && parentWidget && parentWidget->inherits("QAbstractItemView")) {
+                // we try to check if this lineedit is a delegate on a QAbstractItemView-derived class.
+                QPen oldPen = p->pen();
+                // Inner white border
+                p->setPen(QPen(option->palette.base().color(), 1));
+                p->drawRect(option->rect.adjusted(1, 1, -2, -2));
+                // Outer dark border
+                p->setPen(QPen(option->palette.shadow().color(), 1));
+                p->drawRect(option->rect.adjusted(0, 0, -1, -1));
+                p->setPen(oldPen);
+                return;
+            } else {
+                int stateId = ETS_NORMAL;
+                if (!(state & State_Enabled))
+                    stateId = ETS_DISABLED;
+                else if (state & State_ReadOnly)
+                    stateId = ETS_READONLY;
+                else if (state & State_MouseOver)
+                    stateId = ETS_HOT;
+                else if (state & State_HasFocus)
+                    stateId = ETS_SELECTED;
+                XPThemeData theme(widget, painter, QLatin1String("EDIT"), EP_EDITBORDER_NOSCROLL, stateId, option->rect);
+                painter->save();
+                QRegion clipRegion = option->rect;
+                clipRegion -= option->rect.adjusted(2, 2, -2, -2);
+                painter->setClipRegion(clipRegion);
+                d->drawBackground(theme);
+                painter->restore();
+            }
         }
         break;
 
     case PE_IndicatorToolBarSeparator:
         {
             QPen pen = painter->pen();
-            int x1 = option->rect.center().x();
             int margin = 3;
             painter->setPen(option->palette.background().color().darker(114));
-            painter->drawLine(QPoint(x1, option->rect.top() + margin), QPoint(x1, option->rect.bottom() - margin));
+            if (option->state & State_Horizontal) {
+                int x1 = option->rect.center().x();
+                painter->drawLine(QPoint(x1, option->rect.top() + margin), QPoint(x1, option->rect.bottom() - margin));
+            } else {
+                int y1 = option->rect.center().y();
+                painter->drawLine(QPoint(option->rect.left() + margin, y1), QPoint(option->rect.right() - margin, y1));
+            }
             painter->setPen(pen);
         }
         break;
@@ -703,7 +732,7 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                 bool selected = vopt->state & QStyle::State_Selected;
                 bool hover = vopt->state & QStyle::State_MouseOver;
                 bool active = vopt->state & QStyle::State_Active;
-                
+
                 if (vopt->features & QStyleOptionViewItemV2::Alternate)
                     painter->fillRect(vopt->rect, vopt->palette.alternateBase());
 
@@ -726,6 +755,13 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                 if (view->selectionMode() == QAbstractItemView::NoSelection)
                     hover = false;
                 QPixmap pixmap;
+
+                if (vopt->backgroundBrush.style() != Qt::NoBrush) {
+                    QPointF oldBO = painter->brushOrigin();
+                    painter->setBrushOrigin(vopt->rect.topLeft());
+                    painter->fillRect(vopt->rect, qvariant_cast<QBrush>(vopt->backgroundBrush));
+                }
+
                 if (hover || selected) {
                     QString key = QString::fromLatin1("qvdelegate-%1-%2-%3-%4-%5").arg(sectionSize.width())
                                                         .arg(sectionSize.height()).arg(selected).arg(active).arg(hover);
@@ -736,7 +772,7 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                         int state;
                         if (selected && hover)
                             state = LISS_HOTSELECTED;
-                        else if (selected && !active) 
+                        else if (selected && !active)
                             state = LISS_SELECTEDNOTFOCUS;
                         else if (selected)
                             state = LISS_SELECTED;
@@ -744,10 +780,10 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                             state = LISS_HOT;
 
                         QPainter pixmapPainter(&pixmap);
-                        XPThemeData theme(d->treeViewHelper(), &pixmapPainter, QLatin1String("TREEVIEW"), 
+                        XPThemeData theme(d->treeViewHelper(), &pixmapPainter, QLatin1String("TREEVIEW"),
                             LVP_LISTITEM, state, QRect(0, 0, sectionSize.width(), sectionSize.height()));
                         if (theme.isValid()) {
-                            d->drawBackground(theme); 
+                            d->drawBackground(theme);
                         } else {
                             QWindowsXPStyle::drawPrimitive(PE_PanelItemViewItem, option, painter, widget);
                             break;;
@@ -759,29 +795,20 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                         const int frame = 2; //Assumes a 2 pixel pixmap border
                         QRect srcRect = QRect(0, 0, sectionSize.width(), sectionSize.height());
                         QRect pixmapRect = vopt->rect;
-
-                        if (vopt->backgroundBrush.style() != Qt::NoBrush) {
-                            QPointF oldBO = painter->brushOrigin();
-                            painter->setBrushOrigin(vopt->rect.topLeft());
-                            painter->fillRect(vopt->rect, qvariant_cast<QBrush>(vopt->backgroundBrush));
-                            painter->setBrushOrigin(oldBO);
-                            painter->drawPixmap(vopt->rect, pixmap);
-                        } else {
-                            bool reverse = vopt->direction == Qt::RightToLeft;
-                            bool leftSection = vopt->viewItemPosition == QStyleOptionViewItemV4::Beginning;
-                            bool rightSection = vopt->viewItemPosition == QStyleOptionViewItemV4::End;                        
-                            if (vopt->viewItemPosition == QStyleOptionViewItemV4::OnlyOne 
-                                || vopt->viewItemPosition == QStyleOptionViewItemV4::Invalid)
-                                painter->drawPixmap(pixmapRect.topLeft(), pixmap);
-                            else if (reverse ? rightSection : leftSection)
-                                painter->drawPixmap(pixmapRect, pixmap, srcRect.adjusted(0, 0, -frame, 0));
-                            else if (reverse ? leftSection : rightSection)
-                                painter->drawPixmap(pixmapRect, pixmap, 
-                                                    srcRect.adjusted(frame, 0, 0, 0));
-                            else if (vopt->viewItemPosition == QStyleOptionViewItemV4::Middle)
-                                painter->drawPixmap(pixmapRect, pixmap, 
-                                                    srcRect.adjusted(frame, 0, -frame, 0));
-                        }
+                        bool reverse = vopt->direction == Qt::RightToLeft;
+                        bool leftSection = vopt->viewItemPosition == QStyleOptionViewItemV4::Beginning;
+                        bool rightSection = vopt->viewItemPosition == QStyleOptionViewItemV4::End;
+                        if (vopt->viewItemPosition == QStyleOptionViewItemV4::OnlyOne
+                            || vopt->viewItemPosition == QStyleOptionViewItemV4::Invalid)
+                            painter->drawPixmap(pixmapRect.topLeft(), pixmap);
+                        else if (reverse ? rightSection : leftSection)
+                            painter->drawPixmap(pixmapRect, pixmap, srcRect.adjusted(0, 0, -frame, 0));
+                        else if (reverse ? leftSection : rightSection)
+                            painter->drawPixmap(pixmapRect, pixmap,
+                                                srcRect.adjusted(frame, 0, 0, 0));
+                        else if (vopt->viewItemPosition == QStyleOptionViewItemV4::Middle)
+                            painter->drawPixmap(pixmapRect, pixmap,
+                                                srcRect.adjusted(frame, 0, -frame, 0));
                     } else {
                         if (vopt->text.isEmpty() && vopt->icon.isNull())
                             break;
@@ -793,7 +820,7 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
             }
             break;
         }
-    case PE_Widget: 
+    case PE_Widget:
         {
             const QDialogButtonBox *buttonBox = 0;
 
@@ -954,7 +981,7 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
 
                 if (!justFlat) {
 
-                    if (widget && (btn->features & QStyleOptionButton::DefaultButton)      &&
+                    if (widget && d->transitionsEnabled() && (btn->features & QStyleOptionButton::DefaultButton) &&
                         !(state & (State_Sunken | State_On)) && !(state & State_MouseOver) &&
                          (state & State_Enabled) && (state & State_Active))
                         {
@@ -1035,7 +1062,7 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
             }
 
             if (const QProgressBar *progressbar = qobject_cast<const QProgressBar *>(widget)) {
-                if ((progressbar->value() > 0 || isIndeterminate) && d->transitionsEnabled()) {
+                if (((progressbar->value() > 0  && d->transitionsEnabled()) || isIndeterminate)) {
                     if (!d->widgetAnimation(progressbar) && progressbar->value() < progressbar->maximum()) {
                         Animation *a = new Animation;
                         a->setWidget(const_cast<QWidget*>(widget));
@@ -1070,9 +1097,10 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                                          rect.width(), glowSize);
                          pixmapSize.setHeight(animRect.height());
                     } else {
-                        animRect = QRect(reverse ? rect.right() + glowSize - animOffset:
-                                                   rect.left() - glowSize + animOffset,
+                        animRect = QRect(rect.left() - glowSize + animOffset,
                                          rect.top(), glowSize, rect.height());
+                        animRect = QStyle::visualRect(reverse ? Qt::RightToLeft : Qt::LeftToRight, 
+                                                                option->rect, animRect);
                         pixmapSize.setWidth(animRect.width());
                     }
                     QString name = QString::fromLatin1("qiprogress-%1-%2").arg(pixmapSize.width()).arg(pixmapSize.height());
@@ -1117,10 +1145,8 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                     double vc6_workaround = ((progress - qint64(bar->minimum)) / qMax(double(1.0), double(qint64(bar->maximum) - qint64(bar->minimum))) * maxWidth);
                     int width = isIndeterminate ? maxWidth : qMax(int(vc6_workaround), minWidth);
                     theme.rect.setWidth(width);
-                    if (reverse) {
-                        theme.rect = QStyle::visualRect(bar->direction, option->rect, theme.rect);
-                        theme.rect.moveLeft(rect.width() - theme.rect.width());
-                    }
+                    theme.rect = QStyle::visualRect(reverse ? Qt::RightToLeft : Qt::LeftToRight, 
+                                                              option->rect, theme.rect);
                 }
                 d->drawBackground(theme);
 
@@ -1144,9 +1170,8 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                                                       rect.bottom() + glowSize - animOffset,
                                            rect.width(), glowSize);
                     } else {
-                        theme.rect = QRect(reverse ? rect.right() + glowSize - animOffset:
-                                                     rect.left() - glowSize + animOffset,
-                                           rect.top(), glowSize, rect.height());
+                        theme.rect = QRect(rect.left() - glowSize + animOffset,rect.top(), glowSize, rect.height());
+                        theme.rect = QStyle::visualRect(reverse ? Qt::RightToLeft : Qt::LeftToRight, option->rect, theme.rect);
                     }
                     d->drawBackground(theme);
                     painter->restore();
@@ -1242,13 +1267,15 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                 XPThemeData theme(widget, painter, QLatin1String("MENU"), MENU_POPUPCHECKBACKGROUND,
                                   menuitem->icon.isNull() ? MBI_HOT : MBI_PUSHED, vCheckRect);
                 d->drawBackground(theme);
-                theme.partId = MENU_POPUPCHECK;
-                bool bullet = menuitem->checkType & QStyleOptionMenuItem::Exclusive;
-                if (dis)
-                    theme.stateId = bullet ? MC_BULLETDISABLED: MC_CHECKMARKDISABLED;
-                else
-                    theme.stateId = bullet ? MC_BULLETNORMAL: MC_CHECKMARKNORMAL;
-                d->drawBackground(theme);
+                if (menuitem->icon.isNull()) {
+                    theme.partId = MENU_POPUPCHECK;
+                    bool bullet = menuitem->checkType & QStyleOptionMenuItem::Exclusive;
+                    if (dis)
+                        theme.stateId = bullet ? MC_BULLETDISABLED: MC_CHECKMARKDISABLED;
+                    else
+                        theme.stateId = bullet ? MC_BULLETNORMAL: MC_CHECKMARKNORMAL;
+                    d->drawBackground(theme);
+                }
             }
 
             if (!menuitem->icon.isNull()) {
@@ -1390,13 +1417,13 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
             QRect titleRect = r;
 
             if (dwOpt->closable) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarCloseButton, dwOpt, widget).pixmap(10, 10);
-                titleRect.adjust(0, 0, -pm.size().width() - mw - buttonMargin, 0);
+                QSize sz = standardIcon(QStyle::SP_TitleBarCloseButton, dwOpt, widget).actualSize(QSize(10, 10));
+                titleRect.adjust(0, 0, -sz.width() - mw - buttonMargin, 0);
             }
 
             if (dwOpt->floatable) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarMaxButton, dwOpt, widget).pixmap(10, 10);
-                titleRect.adjust(0, 0, -pm.size().width() - mw - buttonMargin, 0);
+                QSize sz = standardIcon(QStyle::SP_TitleBarMaxButton, dwOpt, widget).actualSize(QSize(10, 10));
+                titleRect.adjust(0, 0, -sz.width() - mw - buttonMargin, 0);
             }
 
             if (isFloating) {
@@ -1437,12 +1464,12 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                 newStyle = true;
             }
             if (newStyle && view && (vopt = qstyleoption_cast<const QStyleOptionViewItemV4 *>(option))) {
-                /*  
+                /*
                 // We cannot currently get the correct selection color for "explorer style" views
                 COLORREF cref = 0;
                 XPThemeData theme(d->treeViewHelper(), 0, QLatin1String("LISTVIEW"), 0, 0);
                 unsigned int res = pGetThemeColor(theme.handle(), LVP_LISTITEM, LISS_SELECTED, TMT_TEXTCOLOR, &cref);
-                QColor textColor(GetRValue(cref), GetGValue(cref), GetBValue(cref)); 
+                QColor textColor(GetRValue(cref), GetGValue(cref), GetBValue(cref));
                 */
                 QPalette palette = vopt->palette;
                 palette.setColor(QPalette::All, QPalette::HighlightedText, palette.color(QPalette::Active, QPalette::Text));
@@ -1450,8 +1477,10 @@ void QWindowsVistaStyle::drawControl(ControlElement element, const QStyleOption 
                 palette.setColor(QPalette::All, QPalette::Highlight, palette.base().color().darker(108));
                 QStyleOptionViewItemV4 adjustedOption = *vopt;
                 adjustedOption.palette = palette;
-                if (!(vopt->state & State_KeyboardFocusChange))
-                    adjustedOption.state &= ~State_HasFocus;
+                // We hide the  focusrect in singleselection as it is not required
+                if ((view->selectionMode() == QAbstractItemView::SingleSelection) 
+                    && !(vopt->state & State_KeyboardFocusChange))
+                adjustedOption.state &= ~State_HasFocus;
                 QWindowsXPStyle::drawControl(element, &adjustedOption, painter, widget);
             } else {
                 QWindowsXPStyle::drawControl(element, option, painter, widget);
@@ -1638,9 +1667,8 @@ void QWindowsVistaStyle::drawComplexControl(ComplexControl control, const QStyle
             } else {
                 if (sub & SC_ComboBoxFrame) {
                     QStyleOptionButton btn;
-                    btn.palette = option->palette;
+                    btn.QStyleOption::operator=(*option);
                     btn.rect = option->rect.adjusted(-1, -1, 1, 1);
-                    btn.state = option->state;
                     if (sub & SC_ComboBoxArrow)
                         btn.features = QStyleOptionButton::HasMenu;
                     drawControl(QStyle::CE_PushButton, &btn, painter, widget);
@@ -2100,6 +2128,9 @@ int QWindowsVistaStyle::styleHint(StyleHint hint, const QStyleOption *option, co
     QWindowsVistaStylePrivate *d = const_cast<QWindowsVistaStylePrivate*>(d_func());
     int ret = 0;
     switch (hint) {
+    case SH_MessageBox_CenterButtons:
+        ret = false;
+        break;
     case SH_ToolTip_Mask:
         if (option) {
             if (QStyleHintReturnMask *mask = qstyleoption_cast<QStyleHintReturnMask*>(returnData)) {
@@ -2212,7 +2243,8 @@ QRect QWindowsVistaStyle::subControlRect(ComplexControl control, const QStyleOpt
                 {
                     const int controlTop = 6;
                     const int controlHeight = height - controlTop - 3;
-                    QSize iconSize = tb->icon.pixmap(pixelMetric(PM_SmallIconSize), QIcon::Normal).size();
+                    int iconExtent = pixelMetric(PM_SmallIconSize);
+                    QSize iconSize = tb->icon.actualSize(QSize(iconExtent, iconExtent));
                     if (tb->icon.isNull())
                         iconSize = QSize(controlHeight, controlHeight);
                     int hPad = (controlHeight - iconSize.height())/2;
@@ -2436,7 +2468,7 @@ QWindowsVistaStylePrivate::QWindowsVistaStylePrivate() :
 }
 
 QWindowsVistaStylePrivate::~QWindowsVistaStylePrivate()
-{   
+{
     delete m_treeViewHelper;
 }
 
@@ -2452,7 +2484,6 @@ void QWindowsVistaStylePrivate::timerEvent()
             !animations[i]->widget()->isVisible() ||
             animations[i]->widget()->window()->isMinimized() ||
             !animations[i]->running() ||
-            !transitionsEnabled() ||
             !QWindowsVistaStylePrivate::useVista())
         {
             Animation *a = animations.takeAt(i);

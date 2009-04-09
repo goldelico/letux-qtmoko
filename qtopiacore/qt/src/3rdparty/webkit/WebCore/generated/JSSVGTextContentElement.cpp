@@ -23,20 +23,17 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGTextContentElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
-#include "ExceptionCode.h"
+#include "CSSValue.h"
 #include "FloatPoint.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
@@ -44,364 +41,404 @@
 #include "JSSVGPoint.h"
 #include "JSSVGRect.h"
 #include "JSSVGStringList.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGStringList.h"
 #include "SVGTextContentElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGTextContentElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGTextContentElementTableEntries[] =
+static const HashTableValue JSSVGTextContentElementTableValues[12] =
 {
-    { "xmllang", JSSVGTextContentElement::XmllangAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "xmlspace", JSSVGTextContentElement::XmlspaceAttrNum, DontDelete, 0, 0 },
-    { "requiredExtensions", JSSVGTextContentElement::RequiredExtensionsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "systemLanguage", JSSVGTextContentElement::SystemLanguageAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "lengthAdjust", JSSVGTextContentElement::LengthAdjustAttrNum, DontDelete|ReadOnly, 0, &JSSVGTextContentElementTableEntries[10] },
-    { "className", JSSVGTextContentElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, &JSSVGTextContentElementTableEntries[11] },
-    { 0, 0, 0, 0, 0 },
-    { "textLength", JSSVGTextContentElement::TextLengthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "requiredFeatures", JSSVGTextContentElement::RequiredFeaturesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "externalResourcesRequired", JSSVGTextContentElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGTextContentElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "textLength", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementTextLength, (intptr_t)0 },
+    { "lengthAdjust", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLengthAdjust, (intptr_t)0 },
+    { "requiredFeatures", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementRequiredFeatures, (intptr_t)0 },
+    { "requiredExtensions", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementRequiredExtensions, (intptr_t)0 },
+    { "systemLanguage", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementSystemLanguage, (intptr_t)0 },
+    { "xmllang", DontDelete, (intptr_t)jsSVGTextContentElementXmllang, (intptr_t)setJSSVGTextContentElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGTextContentElementXmlspace, (intptr_t)setJSSVGTextContentElementXmlspace },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementExternalResourcesRequired, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGTextContentElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTextContentElementTable = 
+static const HashTable JSSVGTextContentElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGTextContentElementTableValues, 0 };
+#else
+    { 34, 31, JSSVGTextContentElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGTextContentElementConstructorTableValues[4] =
 {
-    2, 12, JSSVGTextContentElementTableEntries, 10
+    { "LENGTHADJUST_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_UNKNOWN, (intptr_t)0 },
+    { "LENGTHADJUST_SPACING", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_SPACING, (intptr_t)0 },
+    { "LENGTHADJUST_SPACINGANDGLYPHS", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_SPACINGANDGLYPHS, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGTextContentElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSSVGTextContentElementConstructorTableValues, 0 };
+#else
+    { 8, 7, JSSVGTextContentElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGTextContentElementConstructor : public DOMObject {
+public:
+    JSSVGTextContentElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGTextContentElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGTextContentElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGTextContentElementConstructor::s_info = { "SVGTextContentElementConstructor", 0, &JSSVGTextContentElementConstructorTable, 0 };
+
+bool JSSVGTextContentElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGTextContentElementConstructor, DOMObject>(exec, &JSSVGTextContentElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGTextContentElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGTextContentElementPrototypeTableValues[15] =
 {
-    { "getNumberOfChars", JSSVGTextContentElement::GetNumberOfCharsFuncNum, DontDelete|Function, 0, &JSSVGTextContentElementPrototypeTableEntries[15] },
-    { "getExtentOfChar", JSSVGTextContentElement::GetExtentOfCharFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "getRotationOfChar", JSSVGTextContentElement::GetRotationOfCharFuncNum, DontDelete|Function, 1, 0 },
-    { "getStartPositionOfChar", JSSVGTextContentElement::GetStartPositionOfCharFuncNum, DontDelete|Function, 1, 0 },
-    { "getComputedTextLength", JSSVGTextContentElement::GetComputedTextLengthFuncNum, DontDelete|Function, 0, &JSSVGTextContentElementPrototypeTableEntries[14] },
-    { 0, 0, 0, 0, 0 },
-    { "getEndPositionOfChar", JSSVGTextContentElement::GetEndPositionOfCharFuncNum, DontDelete|Function, 1, 0 },
-    { "hasExtension", JSSVGTextContentElement::HasExtensionFuncNum, DontDelete|Function, 1, 0 },
-    { "LENGTHADJUST_SPACING", SVGTextContentElement::LENGTHADJUST_SPACING, DontDelete|ReadOnly, 0, &JSSVGTextContentElementPrototypeTableEntries[13] },
-    { 0, 0, 0, 0, 0 },
-    { "LENGTHADJUST_UNKNOWN", SVGTextContentElement::LENGTHADJUST_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "LENGTHADJUST_SPACINGANDGLYPHS", SVGTextContentElement::LENGTHADJUST_SPACINGANDGLYPHS, DontDelete|ReadOnly, 0, &JSSVGTextContentElementPrototypeTableEntries[16] },
-    { "getSubStringLength", JSSVGTextContentElement::GetSubStringLengthFuncNum, DontDelete|Function, 2, 0 },
-    { "getCharNumAtPosition", JSSVGTextContentElement::GetCharNumAtPositionFuncNum, DontDelete|Function, 1, 0 },
-    { "selectSubString", JSSVGTextContentElement::SelectSubStringFuncNum, DontDelete|Function, 2, 0 }
+    { "LENGTHADJUST_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_UNKNOWN, (intptr_t)0 },
+    { "LENGTHADJUST_SPACING", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_SPACING, (intptr_t)0 },
+    { "LENGTHADJUST_SPACINGANDGLYPHS", DontDelete|ReadOnly, (intptr_t)jsSVGTextContentElementLENGTHADJUST_SPACINGANDGLYPHS, (intptr_t)0 },
+    { "getNumberOfChars", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetNumberOfChars, (intptr_t)0 },
+    { "getComputedTextLength", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetComputedTextLength, (intptr_t)0 },
+    { "getSubStringLength", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetSubStringLength, (intptr_t)2 },
+    { "getStartPositionOfChar", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetStartPositionOfChar, (intptr_t)1 },
+    { "getEndPositionOfChar", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetEndPositionOfChar, (intptr_t)1 },
+    { "getExtentOfChar", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetExtentOfChar, (intptr_t)1 },
+    { "getRotationOfChar", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetRotationOfChar, (intptr_t)1 },
+    { "getCharNumAtPosition", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetCharNumAtPosition, (intptr_t)1 },
+    { "selectSubString", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionSelectSubString, (intptr_t)2 },
+    { "hasExtension", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionHasExtension, (intptr_t)1 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGTextContentElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTextContentElementPrototypeTable = 
-{
-    2, 17, JSSVGTextContentElementPrototypeTableEntries, 13
-};
+static const HashTable JSSVGTextContentElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGTextContentElementPrototypeTableValues, 0 };
+#else
+    { 34, 31, JSSVGTextContentElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGTextContentElementPrototype::info = { "SVGTextContentElementPrototype", 0, &JSSVGTextContentElementPrototypeTable, 0 };
+const ClassInfo JSSVGTextContentElementPrototype::s_info = { "SVGTextContentElementPrototype", 0, &JSSVGTextContentElementPrototypeTable, 0 };
 
 JSObject* JSSVGTextContentElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGTextContentElementPrototype>(exec, "[[JSSVGTextContentElement.prototype]]");
+    return getDOMPrototype<JSSVGTextContentElement>(exec);
 }
 
 bool JSSVGTextContentElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticPropertySlot<JSSVGTextContentElementPrototypeFunction, JSSVGTextContentElementPrototype, JSObject>(exec, &JSSVGTextContentElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGTextContentElementPrototype, JSObject>(exec, &JSSVGTextContentElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGTextContentElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGTextContentElement::s_info = { "SVGTextContentElement", &JSSVGElement::s_info, &JSSVGTextContentElementTable, 0 };
+
+JSSVGTextContentElement::JSSVGTextContentElement(PassRefPtr<Structure> structure, PassRefPtr<SVGTextContentElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGTextContentElement::info = { "SVGTextContentElement", &JSSVGElement::info, &JSSVGTextContentElementTable, 0 };
-
-JSSVGTextContentElement::JSSVGTextContentElement(ExecState* exec, SVGTextContentElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGTextContentElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGTextContentElementPrototype::self(exec));
+    return new (exec) JSSVGTextContentElementPrototype(JSSVGTextContentElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGTextContentElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGTextContentElement, JSSVGElement>(exec, &JSSVGTextContentElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGTextContentElement, Base>(exec, &JSSVGTextContentElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGTextContentElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGTextContentElementTextLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TextLengthAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->textLengthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case LengthAdjustAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedEnumeration> obj = imp->lengthAdjustAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case RequiredFeaturesAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredFeatures()));
-    }
-    case RequiredExtensionsAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredExtensions()));
-    }
-    case SystemLanguageAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->systemLanguage()));
-    }
-    case XmllangAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->textLengthAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGTextContentElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGTextContentElementLengthAdjust(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGTextContentElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGTextContentElementTable, this);
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->lengthAdjustAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGTextContentElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGTextContentElementRequiredFeatures(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(impl());
-
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredFeatures()), imp);
 }
 
-JSValue* JSSVGTextContentElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGTextContentElementRequiredExtensions(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSSVGTextContentElement::info))
-      return throwError(exec, TypeError);
-
-    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGTextContentElement::GetNumberOfCharsFuncNum: {
-
-
-        KJS::JSValue* result = jsNumber(imp->getNumberOfChars());
-        return result;
-    }
-    case JSSVGTextContentElement::GetComputedTextLengthFuncNum: {
-
-
-        KJS::JSValue* result = jsNumber(imp->getComputedTextLength());
-        return result;
-    }
-    case JSSVGTextContentElement::GetSubStringLengthFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool lengthOk;
-        unsigned length = args[1]->toInt32(exec, lengthOk);
-        if (!lengthOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsNumber(imp->getSubStringLength(offset, length, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGTextContentElement::GetStartPositionOfCharFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<FloatPoint>(imp->getStartPositionOfChar(offset, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGTextContentElement::GetEndPositionOfCharFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<FloatPoint>(imp->getEndPositionOfChar(offset, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGTextContentElement::GetExtentOfCharFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<FloatRect>(imp->getExtentOfChar(offset, ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGTextContentElement::GetRotationOfCharFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsNumber(imp->getRotationOfChar(offset, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSSVGTextContentElement::GetCharNumAtPositionFuncNum: {
-        FloatPoint point = toSVGPoint(args[0]);
-
-
-        KJS::JSValue* result = jsNumber(imp->getCharNumAtPosition(point));
-        return result;
-    }
-    case JSSVGTextContentElement::SelectSubStringFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        unsigned offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool lengthOk;
-        unsigned length = args[1]->toInt32(exec, lengthOk);
-        if (!lengthOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->selectSubString(offset, length, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSSVGTextContentElement::HasExtensionFuncNum: {
-        String extension = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasExtension(extension));
-        return result;
-    }
-    }
-    return 0;
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredExtensions()), imp);
 }
+
+JSValuePtr jsSVGTextContentElementSystemLanguage(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->systemLanguage()), imp);
+}
+
+JSValuePtr jsSVGTextContentElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
+}
+
+JSValuePtr jsSVGTextContentElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
+}
+
+JSValuePtr jsSVGTextContentElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGTextContentElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGTextContentElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
+
+JSValuePtr jsSVGTextContentElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGTextContentElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSSVGTextContentElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGTextContentElement, Base>(exec, propertyName, value, &JSSVGTextContentElementTable, this, slot);
+}
+
+void setJSSVGTextContentElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGTextContentElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(static_cast<JSSVGTextContentElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr JSSVGTextContentElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGTextContentElementConstructor>(exec);
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetNumberOfChars(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->getNumberOfChars());
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetComputedTextLength(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->getComputedTextLength());
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetSubStringLength(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+    unsigned length = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->getSubStringLength(offset, length, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetStartPositionOfChar(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<FloatPoint>::create(imp->getStartPositionOfChar(offset, ec)).get(), imp);
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetEndPositionOfChar(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<FloatPoint>::create(imp->getEndPositionOfChar(offset, ec)).get(), imp);
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetExtentOfChar(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<FloatRect>::create(imp->getExtentOfChar(offset, ec)).get(), imp);
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetRotationOfChar(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->getRotationOfChar(offset, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetCharNumAtPosition(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    FloatPoint point = toSVGPoint(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->getCharNumAtPosition(point));
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionSelectSubString(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned offset = args.at(exec, 0)->toInt32(exec);
+    unsigned length = args.at(exec, 1)->toInt32(exec);
+
+    imp->selectSubString(offset, length, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionHasExtension(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    const UString& extension = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasExtension(extension));
+    return result;
+}
+
+JSValuePtr jsSVGTextContentElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGTextContentElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGTextContentElement* castedThisObj = static_cast<JSSVGTextContentElement*>(asObject(thisValue));
+    SVGTextContentElement* imp = static_cast<SVGTextContentElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
+
+// Constant getters
+
+JSValuePtr jsSVGTextContentElementLENGTHADJUST_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
+
+JSValuePtr jsSVGTextContentElementLENGTHADJUST_SPACING(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsSVGTextContentElementLENGTHADJUST_SPACINGANDGLYPHS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
 
 }
 

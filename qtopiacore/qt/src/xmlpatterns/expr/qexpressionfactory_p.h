@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -48,7 +52,10 @@
 #ifndef Patternist_ExpressionFactory_H
 #define Patternist_ExpressionFactory_H
 
+#include <QXmlQuery>
+
 #include "qexpression_p.h"
+#include "qtokenizer_p.h"
 
 #include <QSharedData>
 #include <QUrl>
@@ -84,58 +91,14 @@ namespace QPatternist
         {
         }
 
-        /**
-         * The XPath implementation, emphazing the parser, support
-         * different types of languages which all are sub-sets or very
-         * close to the XPath 2.0 syntax. This enum is used for communicating
-         * what particular language "accent" an expression is of, and should be compiled
-         * for.
-         *
-         * @author Frans Englich <fenglich@trolltech.com>
-         */
-        enum LanguageAccent
-        {
-            /**
-             * Signifies the XPath 2.0 language.
-             *
-             * @see <a href="http://www.w3.org/TR/xpath20">XML Path Language (XPath) 2.0</a>
-             */
-            XPath10     = 1,
-
-            /**
-             * Signifies the XPath 1.0 language.
-             *
-             * @see <a href="http://www.w3.org/TR/xpath">XML Path
-             * Language (XPath) Version 1.0</a>
-             */
-            XPath20     = 2,
-
-            /*
-             * Signifies the XSL-T 2.0 Attribute Value Template. That is,
-             * a plain attribute value template that contains
-             * embedded XPath 2.0 expressions.
-             *
-             * @see <a href="http://www.w3.org/TR/xslt20/#attribute-value-templates">XSL
-             * Transformations (XSLT) Version 2.0, 5.6 Attribute Value Templates</a>
-             *
-            AVT20
-             */
-
-            /**
-             * Signifies the XQuery 1.0 language.
-             * @see <a href="http://www.w3.org/TR/xquery/">XQuery 1.0: An XML Query Language</a>
-             */
-            XQuery10    = 4
-        };
-
         enum CompilationStage
         {
             QueryBodyInitial        = 1,
-            QueryBodyTypeCheck      = 2,
-            QueryBodyCompression    = 4,
-            UserFunctionTypeCheck   = 8,
-            UserFunctionCompression = 16,
-            GlobalVariableTypeCheck = 32
+            QueryBodyTypeCheck      = 1 << 1,
+            QueryBodyCompression    = 1 << 2,
+            UserFunctionTypeCheck   = 1 << 3,
+            UserFunctionCompression = 1 << 4,
+            GlobalVariableTypeCheck = 1 << 5
         };
 
         /**
@@ -154,15 +117,17 @@ namespace QPatternist
          */
         virtual Expression::Ptr createExpression(const QString &expr,
                                                  const StaticContext::Ptr &context,
-                                                 const LanguageAccent lang,
+                                                 const QXmlQuery::QueryLanguage lang,
                                                  const SequenceType::Ptr &requiredType,
-                                                 const QUrl &queryURI);
+                                                 const QUrl &queryURI,
+                                                 const QXmlName &initialTemplateName);
 
-        Expression::Ptr createExpression(QIODevice *const device,
-                                         const StaticContext::Ptr &context,
-                                         const LanguageAccent lang,
-                                         const SequenceType::Ptr &requiredType,
-                                         const QUrl &queryURI);
+        virtual Expression::Ptr createExpression(QIODevice *const device,
+                                                 const StaticContext::Ptr &context,
+                                                 const QXmlQuery::QueryLanguage lang,
+                                                 const SequenceType::Ptr &requiredType,
+                                                 const QUrl &queryURI,
+                                                 const QXmlName &initialTemplateName);
 
         /**
          * Finds the last paths of a set of paths(if any) and tells the Path
@@ -174,6 +139,13 @@ namespace QPatternist
         static void registerLastPath(const Expression::Ptr &operand);
 
     protected:
+        enum TemplateCompilationStage
+        {
+            TemplateInitial         = 1,
+            TemplateTypeCheck       = 1 << 1,
+            TemplateCompress        = 1 << 2
+        };
+
         /**
          * This function is called by createExpression() each time
          * after a pass on the AST has been completed. Under a typical
@@ -188,6 +160,21 @@ namespace QPatternist
         virtual void processTreePass(const Expression::Ptr &tree,
                                      const CompilationStage stage);
 
+        virtual void processTemplateRule(const Expression::Ptr &body,
+                                         const TemplatePattern::Ptr &pattern,
+                                         const QXmlName &mode,
+                                         const TemplateCompilationStage stage);
+
+        virtual void processNamedTemplate(const QXmlName &name,
+                                          const Expression::Ptr &tree,
+                                          const TemplateCompilationStage stage);
+
+        Expression::Ptr createExpression(const Tokenizer::Ptr &tokenizer,
+                                         const StaticContext::Ptr &context,
+                                         const QXmlQuery::QueryLanguage lang,
+                                         const SequenceType::Ptr &requiredType,
+                                         const QUrl &queryURI,
+                                         const QXmlName &initialTemplateName);
     private:
         Q_DISABLE_COPY(ExpressionFactory)
     };

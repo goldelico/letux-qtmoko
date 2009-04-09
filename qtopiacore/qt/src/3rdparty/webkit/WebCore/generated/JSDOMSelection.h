@@ -18,66 +18,84 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDOMSelection_H
-#define JSDOMSelection_H
+#ifndef JSDOMSelection_h
+#define JSDOMSelection_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class DOMSelection;
 
-class JSDOMSelection : public KJS::DOMObject {
+class JSDOMSelection : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSDOMSelection(KJS::ExecState*, DOMSelection*);
+    JSDOMSelection(PassRefPtr<JSC::Structure>, PassRefPtr<DOMSelection>);
     virtual ~JSDOMSelection();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        AnchorNodeAttrNum, AnchorOffsetAttrNum, FocusNodeAttrNum, FocusOffsetAttrNum, 
-        BaseNodeAttrNum, BaseOffsetAttrNum, ExtentNodeAttrNum, ExtentOffsetAttrNum, 
-        IsCollapsedAttrNum, TypeAttrNum, RangeCountAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // Functions
-        CollapseFuncNum, CollapseToEndFuncNum, CollapseToStartFuncNum, EmptyFuncNum, 
-        SetBaseAndExtentFuncNum, SetPositionFuncNum, ModifyFuncNum, GetRangeAtFuncNum, 
-        RemoveAllRangesFuncNum, AddRangeFuncNum, ToStringFuncNum
-    };
     DOMSelection* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<DOMSelection> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, DOMSelection*);
-DOMSelection* toDOMSelection(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, DOMSelection*);
+DOMSelection* toDOMSelection(JSC::JSValuePtr);
 
-class JSDOMSelectionPrototype : public KJS::JSObject {
+class JSDOMSelectionPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSDOMSelectionPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSDOMSelectionPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSDOMSelectionPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSDOMSelectionPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionCollapse(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionCollapseToEnd(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionCollapseToStart(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionDeleteFromDocument(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionContainsNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionSelectAllChildren(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionEmpty(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionSetBaseAndExtent(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionSetPosition(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionModify(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionExtend(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionGetRangeAt(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionRemoveAllRanges(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionAddRange(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDOMSelectionPrototypeFunctionToString(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsDOMSelectionAnchorNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionAnchorOffset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionFocusNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionFocusOffset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionBaseNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionBaseOffset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionExtentNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionExtentOffset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionIsCollapsed(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDOMSelectionRangeCount(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

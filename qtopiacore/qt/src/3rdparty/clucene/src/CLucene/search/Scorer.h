@@ -51,7 +51,7 @@ class Scorer: LUCENE_BASE {
 
       /** Returns the score of the current document.  Initially invalid, until
          * {@link #next()} is called the first time. */
-      virtual float_t score() = 0;
+      virtual qreal score() = 0;
 
       /** Skips to the first match beyond the current whose document number is
          * greater than or equal to <i>target</i>. <p>Returns true iff there is such

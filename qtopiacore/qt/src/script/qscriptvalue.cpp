@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,9 +76,9 @@ QT_BEGIN_NAMESPACE
   to create a QScriptValue of the desired type. For the primitive types,
   use one of the QScriptValue constructor overloads.
 
-  The methods named isT() (e.g. isBoolean(), isUndefined()) can be
+  The methods named isT() (e.g. isBool(), isUndefined()) can be
   used to test if a value is of a certain type. The methods named
-  toT() (e.g. toBoolean(), toString()) can be used to convert a
+  toT() (e.g. toBool(), toString()) can be used to convert a
   QScriptValue to another type. You can also use the generic
   qscriptvalue_cast() function.
 
@@ -191,10 +195,9 @@ QScriptValue::QScriptValue()
 QScriptValue::~QScriptValue()
 {
     if (d_ptr && !d_ptr->ref.deref()) {
-        if (isValid()) {
+        if (engine()) {
             QScriptEnginePrivate::get(engine())->unregisterValue(d_ptr);
         } else {
-            // the engine has already been deleted
             delete d_ptr;
         }
         d_ptr = 0;
@@ -216,22 +219,25 @@ QScriptValue::QScriptValue(const QScriptValue &other)
 }
 
 /*!
+  \obsolete 
+
   Constructs a new QScriptValue with the special \a value and
   registers it with the script \a engine.
 */
 QScriptValue::QScriptValue(QScriptEngine *engine, QScriptValue::SpecialValue value)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    if (value == NullValue)
-        eng_p->newNull(&v);
-    else if (value == UndefinedValue)
-        eng_p->newUndefined(&v);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        d_ptr = eng_p->registerValue(QScriptValueImpl(value));
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
+  \obsolete
+
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, bool value)
 
   Constructs a new QScriptValue with the boolean \a value and
@@ -239,75 +245,92 @@ QScriptValue::QScriptValue(QScriptEngine *engine, QScriptValue::SpecialValue val
 */
 QScriptValue::QScriptValue(QScriptEngine *engine, bool val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newBoolean(&v, val);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        d_ptr = eng_p->registerValue(QScriptValueImpl(val));
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, int value)
+  \obsolete
 
   Constructs a new QScriptValue with the integer \a value and
   registers it with the script \a engine.
 */
 QScriptValue::QScriptValue(QScriptEngine *engine, int val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newNumber(&v, val);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        d_ptr = eng_p->registerValue(QScriptValueImpl(val));
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, uint value)
+  \obsolete
 
   Constructs a new QScriptValue with the unsigned integer \a value and
   registers it with the script \a engine.
  */
 QScriptValue::QScriptValue(QScriptEngine *engine, uint val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newNumber(&v, val);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        d_ptr = eng_p->registerValue(QScriptValueImpl(val));
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, qsreal value)
+  \obsolete
 
   Constructs a new QScriptValue with the qsreal \a value and
   registers it with the script \a engine.
 */
 QScriptValue::QScriptValue(QScriptEngine *engine, qsreal val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newNumber(&v, val);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        d_ptr = eng_p->registerValue(QScriptValueImpl(val));
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, const QString &value)
+  \obsolete
 
   Constructs a new QScriptValue with the string \a value and
   registers it with the script \a engine.
 */
 QScriptValue::QScriptValue(QScriptEngine *engine, const QString &val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newString(&v, val);
-    d_ptr = eng_p->registerValue(v);
-    d_ptr->ref.ref();
+    if (engine) {
+        QScriptValueImpl v;
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        eng_p->newString(&v, val);
+        d_ptr = eng_p->registerValue(v);
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
 }
 
 /*!
   \fn QScriptValue::QScriptValue(QScriptEngine *engine, const char *value)
+  \obsolete
 
   Constructs a new QScriptValue with the string \a value and
   registers it with the script \a engine.
@@ -316,10 +339,116 @@ QScriptValue::QScriptValue(QScriptEngine *engine, const QString &val)
 #ifndef QT_NO_CAST_FROM_ASCII
 QScriptValue::QScriptValue(QScriptEngine *engine, const char *val)
 {
-    QScriptValueImpl v;
-    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
-    eng_p->newString(&v, QString::fromAscii(val));
-    d_ptr = eng_p->registerValue(v);
+    if (engine) {
+        QScriptValueImpl v;
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
+        eng_p->newString(&v, QString::fromAscii(val));
+        d_ptr = eng_p->registerValue(v);
+        d_ptr->ref.ref();
+    } else {
+        d_ptr = 0;
+    }
+}
+#endif
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a special \a value.
+*/
+QScriptValue::QScriptValue(SpecialValue value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value = QScriptValueImpl(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a boolean \a value.
+*/
+QScriptValue::QScriptValue(bool value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value = QScriptValueImpl(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a number \a value.
+*/
+QScriptValue::QScriptValue(int value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value = QScriptValueImpl(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a number \a value.
+*/
+QScriptValue::QScriptValue(uint value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value = QScriptValueImpl(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a number \a value.
+*/
+QScriptValue::QScriptValue(qsreal value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value = QScriptValueImpl(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a string \a value.
+*/
+QScriptValue::QScriptValue(const QString &value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value.m_type = QScript::LazyStringType;
+    d_ptr->value.m_lazy_string_value = new QString(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a string \a value.
+*/
+QScriptValue::QScriptValue(const QLatin1String &value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value.m_type = QScript::LazyStringType;
+    d_ptr->value.m_lazy_string_value = new QString(value);
+    d_ptr->ref.ref();
+}
+
+/*!
+  \since 4.5
+
+  Constructs a new QScriptValue with a string \a value.
+*/
+
+#ifndef QT_NO_CAST_FROM_ASCII
+QScriptValue::QScriptValue(const char *value)
+    : d_ptr(new QScriptValuePrivate)
+{
+    d_ptr->value.m_type = QScript::LazyStringType;
+    d_ptr->value.m_lazy_string_value = new QString(QString::fromAscii(value));
     d_ptr->ref.ref();
 }
 #endif
@@ -336,10 +465,9 @@ QScriptValue &QScriptValue::operator=(const QScriptValue &other)
     if (d_ptr == other.d_ptr)
         return *this;
     if (d_ptr && !d_ptr->ref.deref()) {
-        if (isValid()) {
+        if (engine()) {
             QScriptEnginePrivate::get(engine())->unregisterValue(d_ptr);
         } else {
-            // the engine has already been deleted
             delete d_ptr;
         }
     }
@@ -357,7 +485,8 @@ QScriptValue &QScriptValue::operator=(const QScriptValue &other)
 */
 bool QScriptValue::isError() const
 {
-    return QScriptValuePrivate::valueOf(*this).isError();
+    Q_D(const QScriptValue);
+    return d && d->value.isError();
 }
 
 /*!
@@ -368,7 +497,8 @@ bool QScriptValue::isError() const
 */
 bool QScriptValue::isArray() const
 {
-    return QScriptValuePrivate::valueOf(*this).isArray();
+    Q_D(const QScriptValue);
+    return d && d->value.isArray();
 }
 
 /*!
@@ -379,7 +509,8 @@ bool QScriptValue::isArray() const
 */
 bool QScriptValue::isDate() const
 {
-    return QScriptValuePrivate::valueOf(*this).isDate();
+    Q_D(const QScriptValue);
+    return d && d->value.isDate();
 }
 
 /*!
@@ -390,7 +521,8 @@ bool QScriptValue::isDate() const
 */
 bool QScriptValue::isRegExp() const
 {
-    return QScriptValuePrivate::valueOf(*this).isRegExp();
+    Q_D(const QScriptValue);
+    return d && d->value.isRegExp();
 }
 
 /*!
@@ -402,7 +534,11 @@ bool QScriptValue::isRegExp() const
 */
 QScriptValue QScriptValue::prototype() const
 {
-    return QScriptValuePrivate::valueOf(*this).prototype();
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.prototype());
 }
 
 /*!
@@ -418,48 +554,57 @@ QScriptValue QScriptValue::prototype() const
 */
 void QScriptValue::setPrototype(const QScriptValue &prototype)
 {
-    if (!isObject())
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
         return;
-    if (prototype.isValid() && (prototype.engine() != engine())) {
+    if (prototype.isValid() && prototype.engine()
+        && (prototype.engine() != engine())) {
         qWarning("QScriptValue::setPrototype() failed: "
                  "cannot set a prototype created in "
                  "a different engine");
         return;
     }
-    QScriptValueImpl self = QScriptValuePrivate::valueOf(*this);
-    QScriptValueImpl was = self.prototype();
-    self.setPrototype(QScriptValuePrivate::valueOf(prototype));
-    if (self.detectedCycle()) {
+    QScriptValueImpl was = d->value.prototype();
+    d->value.setPrototype(d->value.engine()->toImpl(prototype));
+    if (d->value.detectedCycle()) {
         qWarning("QScriptValue::setPrototype() failed: "
                  "cyclic prototype value");
-        self.setPrototype(was);
+        d->value.setPrototype(was);
     }
 }
 
 /*!
-  \internal
+  Returns the scope object of this QScriptValue. This function is only
+  relevant for function objects. The scope determines how variables are
+  resolved when the function is invoked.
 */
 QScriptValue QScriptValue::scope() const
 {
-    if (!isObject())
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
         return QScriptValue();
-    return QScriptValuePrivate::valueOf(*this).scope();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.scope());
 }
 
 /*!
-  \internal
+  Sets the \a scope object of this QScriptValue. This function is only
+  relevant for function objects. Changing the scope is useful when creating
+  closures; see \l{Nested Functions and the Scope Chain}.
 */
 void QScriptValue::setScope(const QScriptValue &scope)
 {
-    if (!isObject())
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
         return;
-    if (scope.isValid() && (scope.engine() != engine())) {
+    if (scope.isValid() && scope.engine()
+        && (scope.engine() != engine())) {
         qWarning("QScriptValue::setScope() failed: "
                  "cannot set a scope object created in "
                  "a different engine");
         return;
     }
-    QScriptValuePrivate::valueOf(*this).setScope(QScriptValuePrivate::valueOf(scope));
+    d->value.setScope(d->value.engine()->toImpl(scope));
 }
 
 /*!
@@ -473,7 +618,8 @@ void QScriptValue::setScope(const QScriptValue &scope)
 */
 bool QScriptValue::instanceOf(const QScriptValue &other) const
 {
-    if (!isValid() || !other.isValid())
+    Q_D(const QScriptValue);
+    if (!isObject() || !other.isObject())
         return false;
     if (other.engine() != engine()) {
         qWarning("QScriptValue::instanceof: "
@@ -481,8 +627,8 @@ bool QScriptValue::instanceOf(const QScriptValue &other) const
                  "a different engine");
         return false;
     }
-    return QScriptValuePrivate::valueOf(*this)
-        .instanceOf(QScriptValuePrivate::valueOf(other));
+    return d->value.engine()->toImpl(*this)
+        .instanceOf(d->value.engine()->toImpl(other));
 }
 
 /*!
@@ -501,13 +647,16 @@ bool QScriptValue::instanceOf(const QScriptValue &other) const
 */
 bool QScriptValue::lessThan(const QScriptValue &other) const
 {
-    if (isValid() && other.isValid() && (other.engine() != engine())) {
+    if (!isValid() || !other.isValid())
+        return false;
+    if (other.engine() && engine() && (other.engine() != engine())) {
         qWarning("QScriptValue::lessThan: "
                  "cannot compare to a value created in "
                  "a different engine");
         return false;
     }
-    return QScriptValuePrivate::valueOf(*this).lessThan(QScriptValuePrivate::valueOf(other));
+    return QScriptEnginePrivate::lessThan(QScriptValuePrivate::valueOf(*this),
+                                          QScriptValuePrivate::valueOf(other));
 }
 
 /*!
@@ -536,13 +685,16 @@ bool QScriptValue::lessThan(const QScriptValue &other) const
 */
 bool QScriptValue::equals(const QScriptValue &other) const
 {
-    if (isValid() && other.isValid() && (other.engine() != engine())) {
+    if (!isValid() || !other.isValid())
+        return isValid() == other.isValid();
+    if (other.engine() && engine() && (other.engine() != engine())) {
         qWarning("QScriptValue::equals: "
                  "cannot compare to a value created in "
                  "a different engine");
         return false;
     }
-    return QScriptValuePrivate::valueOf(*this).equals(QScriptValuePrivate::valueOf(other));
+    return QScriptEnginePrivate::equals(QScriptValuePrivate::valueOf(*this),
+                                        QScriptValuePrivate::valueOf(other));
 }
 
 /*!
@@ -569,13 +721,16 @@ bool QScriptValue::equals(const QScriptValue &other) const
 */
 bool QScriptValue::strictlyEquals(const QScriptValue &other) const
 {
-    if (isValid() && other.isValid() && (other.engine() != engine())) {
+    if (!isValid() || !other.isValid())
+        return isValid() == other.isValid();
+    if (other.engine() && engine() && (other.engine() != engine())) {
         qWarning("QScriptValue::strictlyEquals: "
                  "cannot compare to a value created in "
                  "a different engine");
         return false;
     }
-    return QScriptValuePrivate::valueOf(*this).strictlyEquals(QScriptValuePrivate::valueOf(other));
+    return QScriptEnginePrivate::strictlyEquals(QScriptValuePrivate::valueOf(*this),
+                                                QScriptValuePrivate::valueOf(other));
 }
 
 /*!
@@ -592,7 +747,10 @@ bool QScriptValue::strictlyEquals(const QScriptValue &other) const
 */
 QString QScriptValue::toString() const
 {
-    return QScriptValuePrivate::valueOf(*this).toString();
+    Q_D(const QScriptValue);
+    if (!d)
+        return QString();
+    return d->value.toString();
 }
 
 /*!
@@ -609,10 +767,28 @@ QString QScriptValue::toString() const
 */
 qsreal QScriptValue::toNumber() const
 {
-    return QScriptValuePrivate::valueOf(*this).toNumber();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toNumber();
 }
 
 /*!
+  \obsolete
+
+  Use toBool() instead.
+*/
+bool QScriptValue::toBoolean() const
+{
+    Q_D(const QScriptValue);
+    if (!d)
+        return false;
+    return d->value.toBoolean();
+}
+
+/*!
+  \since 4.5
+
   Returns the boolean value of this QScriptValue, using the conversion
   rules described in \l{ECMA-262} section 9.2, "ToBoolean".
 
@@ -622,11 +798,14 @@ qsreal QScriptValue::toNumber() const
   attempt to convert the object to a primitive value (possibly
   resulting in an uncaught script exception).
 
-  \sa isBoolean()
+  \sa isBool()
 */
-bool QScriptValue::toBoolean() const
+bool QScriptValue::toBool() const
 {
-    return QScriptValuePrivate::valueOf(*this).toBoolean();
+    Q_D(const QScriptValue);
+    if (!d)
+        return false;
+    return d->value.toBoolean();
 }
 
 /*!
@@ -643,7 +822,10 @@ bool QScriptValue::toBoolean() const
 */
 qint32 QScriptValue::toInt32() const
 {
-    return QScriptValuePrivate::valueOf(*this).toInt32();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toInt32();
 }
 
 /*!
@@ -660,7 +842,10 @@ qint32 QScriptValue::toInt32() const
 */
 quint32 QScriptValue::toUInt32() const
 {
-    return QScriptValuePrivate::valueOf(*this).toUInt32();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toUInt32();
 }
 
 /*!
@@ -677,7 +862,10 @@ quint32 QScriptValue::toUInt32() const
 */
 quint16 QScriptValue::toUInt16() const
 {
-    return QScriptValuePrivate::valueOf(*this).toUInt16();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toUInt16();
 }
 
 /*!
@@ -694,7 +882,10 @@ quint16 QScriptValue::toUInt16() const
 */
 qsreal QScriptValue::toInteger() const
 {
-    return QScriptValuePrivate::valueOf(*this).toInteger();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toInteger();
 }
 
 /*!
@@ -720,30 +911,26 @@ qsreal QScriptValue::toInteger() const
 */
 QVariant QScriptValue::toVariant() const
 {
-    return QScriptValuePrivate::valueOf(*this).toVariant();
+    Q_D(const QScriptValue);
+    if (!d)
+        return QVariant();
+    return d->value.toVariant();
 }
 
 /*!
-  Returns the object value of this QScriptValue, if it can be
-  converted to an object; otherwise returns an invalid
-  QScriptValue. The conversion is performed according to the following
-  table:
+  \obsolete
 
-    \table
-    \header \o Input Type \o Result
-    \row    \o Undefined  \o An invalid QScriptValue.
-    \row    \o Null       \o An invalid QScriptValue.
-    \row    \o Boolean    \o A new Boolean object whose internal value is set to the value of the boolean.
-    \row    \o Number     \o A new Number object whose internal value is set to the value of the number.
-    \row    \o String     \o A new String object whose internal value is set to the value of the string.
-    \row    \o Object     \o The result is the object itself (no conversion).
-    \endtable
-
-    \sa isObject(), QScriptEngine::newObject()
+  This function is obsolete; use QScriptEngine::toObject() instead.
 */
 QScriptValue QScriptValue::toObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).toObject();
+    Q_D(const QScriptValue);
+    if (!d)
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    if (!eng)
+        return QScriptValue();
+    return eng->toPublic(eng->toObject(d->value));
 }
 
 /*!
@@ -755,7 +942,10 @@ QScriptValue QScriptValue::toObject() const
 */
 QDateTime QScriptValue::toDateTime() const
 {
-    return QScriptValuePrivate::valueOf(*this).toDateTime();
+    Q_D(const QScriptValue);
+    if (!d)
+        return QDateTime();
+    return d->value.toDateTime();
 }
 
 #ifndef QT_NO_REGEXP
@@ -768,7 +958,10 @@ QDateTime QScriptValue::toDateTime() const
 */
 QRegExp QScriptValue::toRegExp() const
 {
-    return QScriptValuePrivate::valueOf(*this).toRegExp();
+    Q_D(const QScriptValue);
+    if (!d)
+        return QRegExp();
+    return d->value.toRegExp();
 }
 #endif // QT_NO_REGEXP
 
@@ -784,7 +977,10 @@ QRegExp QScriptValue::toRegExp() const
 */
 QObject *QScriptValue::toQObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).toQObject();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toQObject();
 }
 
 /*!
@@ -795,7 +991,10 @@ QObject *QScriptValue::toQObject() const
 */
 const QMetaObject *QScriptValue::toQMetaObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).toQMetaObject();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.toQMetaObject();
 }
 
 /*!
@@ -825,14 +1024,16 @@ const QMetaObject *QScriptValue::toQMetaObject() const
 void QScriptValue::setProperty(const QString &name, const QScriptValue &value,
                                const PropertyFlags &flags)
 {
-    if (isValid() && value.isValid() && (value.engine() != engine())) {
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return;
+    if (value.engine() && (value.engine() != engine())) {
         qWarning("QScriptValue::setProperty(%s) failed: "
                  "cannot set value created in a different engine",
                  qPrintable(name));
         return;
     }
-    QScriptValuePrivate::valueOf(*this).setProperty(
-        name, QScriptValuePrivate::valueOf(value), flags);
+    d->value.setProperty(name, d->value.engine()->toImpl(value), flags);
 }
 
 /*!
@@ -853,7 +1054,11 @@ void QScriptValue::setProperty(const QString &name, const QScriptValue &value,
 QScriptValue QScriptValue::property(const QString &name,
                                     const ResolveFlags &mode) const
 {
-    return QScriptValuePrivate::valueOf(*this).property(name, mode);
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.property(name, mode));
 }
 
 /*!
@@ -872,7 +1077,11 @@ QScriptValue QScriptValue::property(const QString &name,
 QScriptValue QScriptValue::property(quint32 arrayIndex,
                                     const ResolveFlags &mode) const
 {
-    return QScriptValuePrivate::valueOf(*this).property(arrayIndex, mode);
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.property(arrayIndex, mode));
 }
 
 /*!
@@ -890,13 +1099,15 @@ QScriptValue QScriptValue::property(quint32 arrayIndex,
 void QScriptValue::setProperty(quint32 arrayIndex, const QScriptValue &value,
                                const PropertyFlags &flags)
 {
-    if (isValid() && value.isValid() && (value.engine() != engine())) {
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return;
+    if (value.engine() && (value.engine() != engine())) {
         qWarning("QScriptValue::setProperty() failed: "
                  "cannot set value created in a different engine");
         return;
     }
-    QScriptValuePrivate::valueOf(*this).setProperty(
-        arrayIndex, QScriptValuePrivate::valueOf(value), flags);
+    d->value.setProperty(arrayIndex, d->value.engine()->toImpl(value), flags);
 }
 
 /*! 
@@ -914,10 +1125,14 @@ void QScriptValue::setProperty(quint32 arrayIndex, const QScriptValue &value,
 QScriptValue QScriptValue::property(const QScriptString &name,
                                     const ResolveFlags &mode) const
 {
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
     if (!name.isValid())
         return QScriptValue();
     QScriptStringPrivate *s = QScriptStringPrivate::get(name);
-    return QScriptValuePrivate::valueOf(*this).property(s->nameId, mode);
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.property(s->nameId, mode));
 }
 
 /*!
@@ -937,16 +1152,16 @@ void QScriptValue::setProperty(const QScriptString &name,
                                const QScriptValue &value,
                                const PropertyFlags &flags)
 {
-    if (!name.isValid())
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject() || !name.isValid())
         return;
-    if (isValid() && value.isValid() && (value.engine() != engine())) {
+    if (value.engine() && (value.engine() != engine())) {
         qWarning("QScriptValue::setProperty() failed: "
                  "cannot set value created in a different engine");
         return;
     }
     QScriptStringPrivate *s = QScriptStringPrivate::get(name);
-    QScriptValuePrivate::valueOf(*this).setProperty(
-        s->nameId, QScriptValuePrivate::valueOf(value), flags);
+    d->value.setProperty(s->nameId, d->value.engine()->toImpl(value), flags);
 }
 
 /*!
@@ -958,7 +1173,10 @@ void QScriptValue::setProperty(const QScriptString &name,
 QScriptValue::PropertyFlags QScriptValue::propertyFlags(const QString &name,
                                                         const ResolveFlags &mode) const
 {
-    return QScriptValuePrivate::valueOf(*this).propertyFlags(name, mode);
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->value.propertyFlags(name, mode);
 }
 
 /*!
@@ -972,10 +1190,13 @@ QScriptValue::PropertyFlags QScriptValue::propertyFlags(const QString &name,
 QScriptValue::PropertyFlags QScriptValue::propertyFlags(const QScriptString &name,
                                                         const ResolveFlags &mode) const
 {
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
     if (!name.isValid())
         return 0;
     QScriptStringPrivate *s = QScriptStringPrivate::get(name);
-    return QScriptValuePrivate::valueOf(*this).propertyFlags(s->nameId, mode);
+    return d->value.propertyFlags(s->nameId, mode);
 }
 
 /*!
@@ -1004,14 +1225,19 @@ QScriptValue::PropertyFlags QScriptValue::propertyFlags(const QScriptString &nam
 QScriptValue QScriptValue::call(const QScriptValue &thisObject,
                                 const QScriptValueList &args)
 {
-    if (isFunction() && thisObject.isValid() && (thisObject.engine() != engine())) {
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    if (isFunction() && thisObject.isValid() && thisObject.engine() &&
+        engine() && (thisObject.engine() != engine())) {
         qWarning("QScriptValue::call() failed: "
                  "cannot call function with thisObject created in "
                  "a different engine");
         return QScriptValue();
     }
-    return QScriptValuePrivate::valueOf(*this).call(QScriptValuePrivate::valueOf(thisObject),
-                                                    QScriptValuePrivate::toImplList(args));
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.call(eng->toImpl(thisObject),
+                                       eng->toImplList(args)));
 }
 
 /*!
@@ -1040,14 +1266,19 @@ QScriptValue QScriptValue::call(const QScriptValue &thisObject,
 QScriptValue QScriptValue::call(const QScriptValue &thisObject,
                                 const QScriptValue &arguments)
 {
-    if (isFunction() && thisObject.isValid() && (thisObject.engine() != engine())) {
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    if (isFunction() && thisObject.isValid() && thisObject.engine()
+        && (thisObject.engine() != engine())) {
         qWarning("QScriptValue::call() failed: "
                  "cannot call function with thisObject created in "
                  "a different engine");
         return QScriptValue();
     }
-    return QScriptValuePrivate::valueOf(*this).call(QScriptValuePrivate::valueOf(thisObject),
-                                                    QScriptValuePrivate::valueOf(arguments));
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.call(eng->toImpl(thisObject),
+                                       eng->toImpl(arguments)));
 }
 
 /*!
@@ -1070,7 +1301,11 @@ QScriptValue QScriptValue::call(const QScriptValue &thisObject,
 */
 QScriptValue QScriptValue::construct(const QScriptValueList &args)
 {
-    return QScriptValuePrivate::valueOf(*this).construct(QScriptValuePrivate::toImplList(args));
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.construct(eng->toImplList(args)));
 }
 
 /*!
@@ -1090,27 +1325,49 @@ QScriptValue QScriptValue::construct(const QScriptValueList &args)
 */
 QScriptValue QScriptValue::construct(const QScriptValue &arguments)
 {
-    return QScriptValuePrivate::valueOf(*this).construct(QScriptValuePrivate::valueOf(arguments));
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
+        return QScriptValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.construct(eng->toImpl(arguments)));
 }
 
 /*!
   Returns the QScriptEngine that created this QScriptValue,
-  or 0 if this QScriptValue is invalid.
+  or 0 if this QScriptValue is invalid or the value is not
+  associated with a particular engine.
 */
 QScriptEngine *QScriptValue::engine() const
 {
-    return QScriptValuePrivate::valueOf(*this).engine();
+    Q_D(const QScriptValue);
+    if (!d)
+        return 0;
+    return d->engine;
 }
 
 /*!
-  Returns true if this QScriptValue is of the primitive type Boolean;
-  otherwise returns false.
+  \obsolete
 
-  \sa toBoolean()
+  Use isBool() instead.
 */
 bool QScriptValue::isBoolean() const
 {
-    return QScriptValuePrivate::valueOf(*this).isBoolean();
+    Q_D(const QScriptValue);
+    return d && d->value.isBoolean();
+}
+
+/*!
+  \since 4.5
+
+  Returns true if this QScriptValue is of the primitive type Boolean;
+  otherwise returns false.
+
+  \sa toBool()
+*/
+bool QScriptValue::isBool() const
+{
+    Q_D(const QScriptValue);
+    return d && d->value.isBoolean();
 }
 
 /*!
@@ -1121,7 +1378,8 @@ bool QScriptValue::isBoolean() const
 */
 bool QScriptValue::isNumber() const
 {
-    return QScriptValuePrivate::valueOf(*this).isNumber();
+    Q_D(const QScriptValue);
+    return d && d->value.isNumber();
 }
 
 /*!
@@ -1132,7 +1390,8 @@ bool QScriptValue::isNumber() const
 */
 bool QScriptValue::isString() const
 {
-    return QScriptValuePrivate::valueOf(*this).isString();
+    Q_D(const QScriptValue);
+    return d && d->value.isString();
 }
 
 /*!
@@ -1143,7 +1402,8 @@ bool QScriptValue::isString() const
 */
 bool QScriptValue::isFunction() const
 {
-    return QScriptValuePrivate::valueOf(*this).isFunction();
+    Q_D(const QScriptValue);
+    return d && d->value.isFunction();
 }
 
 /*!
@@ -1154,7 +1414,8 @@ bool QScriptValue::isFunction() const
 */
 bool QScriptValue::isNull() const
 {
-    return QScriptValuePrivate::valueOf(*this).isNull();
+    Q_D(const QScriptValue);
+    return d && d->value.isNull();
 }
 
 /*!
@@ -1165,7 +1426,8 @@ bool QScriptValue::isNull() const
 */
 bool QScriptValue::isUndefined() const
 {
-    return QScriptValuePrivate::valueOf(*this).isUndefined();
+    Q_D(const QScriptValue);
+    return d && d->value.isUndefined();
 }
 
 /*!
@@ -1179,7 +1441,8 @@ bool QScriptValue::isUndefined() const
 */
 bool QScriptValue::isObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).isObject();
+    Q_D(const QScriptValue);
+    return d && d->value.isObject();
 }
 
 /*!
@@ -1190,7 +1453,8 @@ bool QScriptValue::isObject() const
 */
 bool QScriptValue::isVariant() const
 {
-    return QScriptValuePrivate::valueOf(*this).isVariant();
+    Q_D(const QScriptValue);
+    return d && d->value.isVariant();
 }
 
 /*!
@@ -1204,7 +1468,8 @@ bool QScriptValue::isVariant() const
 */
 bool QScriptValue::isQObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).isQObject();
+    Q_D(const QScriptValue);
+    return d && d->value.isQObject();
 }
 
 /*!
@@ -1215,7 +1480,8 @@ bool QScriptValue::isQObject() const
 */
 bool QScriptValue::isQMetaObject() const
 {
-    return QScriptValuePrivate::valueOf(*this).isQMetaObject();
+    Q_D(const QScriptValue);
+    return d && d->value.isQMetaObject();
 }
 
 /*!
@@ -1224,7 +1490,8 @@ bool QScriptValue::isQMetaObject() const
 */
 bool QScriptValue::isValid() const
 {
-    return QScriptValuePrivate::valueOf(*this).isValid();
+    Q_D(const QScriptValue);
+    return d && d->value.isValid();
 }
 
 /*!
@@ -1237,9 +1504,11 @@ bool QScriptValue::isValid() const
 */
 QScriptValue QScriptValue::data() const
 {
-    if (!isObject())
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
         return QScriptValue();
-    return QScriptValuePrivate::valueOf(*this).internalValue();
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    return eng->toPublic(d->value.internalValue());
 }
 
 /*!
@@ -1252,11 +1521,11 @@ QScriptValue QScriptValue::data() const
 */
 void QScriptValue::setData(const QScriptValue &data)
 {
-    if (!isObject())
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
         return;
-    QScriptValueImpl self = QScriptValuePrivate::valueOf(*this);
-    QScriptValueImpl data_p = QScriptValuePrivate::valueOf(data);
-    self.setInternalValue(data_p);
+    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(engine());
+    d->value.setInternalValue(eng->toImpl(data));
 }
 
 /*!
@@ -1269,10 +1538,10 @@ void QScriptValue::setData(const QScriptValue &data)
 */
 QScriptClass *QScriptValue::scriptClass() const
 {
-    if (!isObject())
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
         return 0;
-    QScriptValueImpl self = QScriptValuePrivate::valueOf(*this);
-    QScriptClassInfo *info = self.classInfo();
+    QScriptClassInfo *info = d->value.classInfo();
     if ((info->type() & QScriptClassInfo::TypeMask) < QScriptClassInfo::CustomType)
         return 0;
     return QScriptClassPrivate::classFromInfo(info);
@@ -1286,18 +1555,23 @@ QScriptClass *QScriptValue::scriptClass() const
   by the "new" operator in a script, or by QScriptEngine::newObject() in C++)
   to an object of a custom type.
 
+  If \a scriptClass is 0, the object will be demoted to a plain
+  script object.
+
   \sa scriptClass(), setData()
 */
 void QScriptValue::setScriptClass(QScriptClass *scriptClass)
 {
-    if (!isObject() || !scriptClass)
+    Q_D(QScriptValue);
+    if (!d || !d->value.isObject())
         return;
-    QScriptClassPrivate *cls_p = QScriptClassPrivate::get(scriptClass);
-    QScriptClassInfo *info = cls_p->classInfo();
-    if ((info->type() & QScriptClassInfo::TypeMask) < QScriptClassInfo::CustomType)
-        return;
-    QScriptValueImpl self = QScriptValuePrivate::valueOf(*this);
-    self.setClassInfo(info);
+    if (!scriptClass) {
+        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+        d->value.setClassInfo(eng_p->m_class_object);
+    } else {
+        QScriptClassPrivate *cls_p = QScriptClassPrivate::get(scriptClass);
+        d->value.setClassInfo(cls_p->classInfo());
+    }
 }
 
 /*!
@@ -1310,10 +1584,10 @@ void QScriptValue::setScriptClass(QScriptClass *scriptClass)
 */
 qint64 QScriptValue::objectId() const
 {
-    if (!isObject())
+    Q_D(const QScriptValue);
+    if (!d || !d->value.isObject())
         return -1;
-    QScriptValueImpl self = QScriptValuePrivate::valueOf(*this);
-    return self.m_object_value->m_id;
+    return d->value.m_object_value->m_id;
 }
 
 QT_END_NAMESPACE

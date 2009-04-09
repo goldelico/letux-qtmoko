@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -47,6 +51,7 @@
 #include <QtGui/qtabbar.h>
 #include <QtGui/qtabwidget.h>
 #include <QtGui/qrubberband.h>
+#include <QtGui/qframe.h>
 #ifndef QT_NO_ITEMVIEWS
 #   include <QtCore/qabstractitemmodel.h>
 #endif
@@ -148,6 +153,24 @@ protected:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionFrameV2::FrameFeatures)
 
+
+class Q_GUI_EXPORT QStyleOptionFrameV3 : public QStyleOptionFrameV2
+{
+public:
+    enum StyleOptionVersion { Version = 3 };
+    QFrame::Shape frameShape : 4;
+    uint unused : 28;
+
+    QStyleOptionFrameV3();
+    QStyleOptionFrameV3(const QStyleOptionFrameV3 &other) : QStyleOptionFrameV2(Version) { *this = other; }
+    QStyleOptionFrameV3(const QStyleOptionFrame &other);
+    QStyleOptionFrameV3 &operator=(const QStyleOptionFrame &other);
+
+protected:
+    QStyleOptionFrameV3(int version);
+};
+
+
 #ifndef QT_NO_TABWIDGET
 class Q_GUI_EXPORT QStyleOptionTabWidgetFrame : public QStyleOption
 {
@@ -188,6 +211,21 @@ public:
 protected:
     QStyleOptionTabBarBase(int version);
 };
+
+class Q_GUI_EXPORT QStyleOptionTabBarBaseV2 : public QStyleOptionTabBarBase
+{
+public:
+    enum StyleOptionVersion { Version = 2 };
+    bool documentMode;
+    QStyleOptionTabBarBaseV2();
+    QStyleOptionTabBarBaseV2(const QStyleOptionTabBarBaseV2 &other) : QStyleOptionTabBarBase(Version) { *this = other; }
+    QStyleOptionTabBarBaseV2(const QStyleOptionTabBarBase &other);
+    QStyleOptionTabBarBaseV2 &operator=(const QStyleOptionTabBarBase &other);
+
+protected:
+    QStyleOptionTabBarBaseV2(int version);
+};
+
 #endif
 
 class Q_GUI_EXPORT QStyleOptionHeader : public QStyleOption
@@ -284,6 +322,23 @@ public:
 
 protected:
     QStyleOptionTabV2(int version);
+};
+
+class Q_GUI_EXPORT QStyleOptionTabV3 : public QStyleOptionTabV2
+{
+public:
+    enum StyleOptionVersion { Version = 3 };
+    bool documentMode;
+    QSize leftButtonSize;
+    QSize rightButtonSize;
+    QStyleOptionTabV3();
+    QStyleOptionTabV3(const QStyleOptionTabV3 &other) : QStyleOptionTabV2(Version) { *this = other; }
+    QStyleOptionTabV3(const QStyleOptionTabV2 &other) : QStyleOptionTabV2(Version) { *this = other; }
+    QStyleOptionTabV3(const QStyleOptionTab &other);
+    QStyleOptionTabV3 &operator=(const QStyleOptionTab &other);
+
+protected:
+    QStyleOptionTabV3(int version);
 };
 
 #endif

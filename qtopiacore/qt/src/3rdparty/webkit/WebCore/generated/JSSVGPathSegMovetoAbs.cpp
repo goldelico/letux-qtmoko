@@ -23,119 +23,106 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegMovetoAbs.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPathSegMoveto.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegMovetoAbs)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegMovetoAbsTableEntries[] =
+static const HashTableValue JSSVGPathSegMovetoAbsTableValues[3] =
 {
-    { "y", JSSVGPathSegMovetoAbs::YAttrNum, DontDelete, 0, 0 },
-    { "x", JSSVGPathSegMovetoAbs::XAttrNum, DontDelete, 0, 0 }
+    { "x", DontDelete, (intptr_t)jsSVGPathSegMovetoAbsX, (intptr_t)setJSSVGPathSegMovetoAbsX },
+    { "y", DontDelete, (intptr_t)jsSVGPathSegMovetoAbsY, (intptr_t)setJSSVGPathSegMovetoAbsY },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegMovetoAbsTable = 
-{
-    2, 2, JSSVGPathSegMovetoAbsTableEntries, 2
-};
+static const HashTable JSSVGPathSegMovetoAbsTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGPathSegMovetoAbsTableValues, 0 };
+#else
+    { 4, 3, JSSVGPathSegMovetoAbsTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegMovetoAbsPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegMovetoAbsPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegMovetoAbsPrototypeTable = 
-{
-    2, 1, JSSVGPathSegMovetoAbsPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPathSegMovetoAbsPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegMovetoAbsPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGPathSegMovetoAbsPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegMovetoAbsPrototype::info = { "SVGPathSegMovetoAbsPrototype", 0, &JSSVGPathSegMovetoAbsPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegMovetoAbsPrototype::s_info = { "SVGPathSegMovetoAbsPrototype", 0, &JSSVGPathSegMovetoAbsPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegMovetoAbsPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegMovetoAbsPrototype>(exec, "[[JSSVGPathSegMovetoAbs.prototype]]");
+    return getDOMPrototype<JSSVGPathSegMovetoAbs>(exec);
 }
 
-const ClassInfo JSSVGPathSegMovetoAbs::info = { "SVGPathSegMovetoAbs", &JSSVGPathSeg::info, &JSSVGPathSegMovetoAbsTable, 0 };
+const ClassInfo JSSVGPathSegMovetoAbs::s_info = { "SVGPathSegMovetoAbs", &JSSVGPathSeg::s_info, &JSSVGPathSegMovetoAbsTable, 0 };
 
-JSSVGPathSegMovetoAbs::JSSVGPathSegMovetoAbs(ExecState* exec, SVGPathSegMovetoAbs* impl)
-    : JSSVGPathSeg(exec, impl)
+JSSVGPathSegMovetoAbs::JSSVGPathSegMovetoAbs(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegMovetoAbs> impl, SVGElement* context)
+    : JSSVGPathSeg(structure, impl, context)
 {
-    setPrototype(JSSVGPathSegMovetoAbsPrototype::self(exec));
+}
+
+JSObject* JSSVGPathSegMovetoAbs::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegMovetoAbsPrototype(JSSVGPathSegMovetoAbsPrototype::createStructure(JSSVGPathSegPrototype::self(exec)));
 }
 
 bool JSSVGPathSegMovetoAbs::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSegMovetoAbs, JSSVGPathSeg>(exec, &JSSVGPathSegMovetoAbsTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSegMovetoAbs, Base>(exec, &JSSVGPathSegMovetoAbsTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegMovetoAbs::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegMovetoAbsX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(impl());
-
-        return jsNumber(imp->x());
-    }
-    case YAttrNum: {
-        SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(impl());
-
-        return jsNumber(imp->y());
-    }
-    }
-    return 0;
+    SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(static_cast<JSSVGPathSegMovetoAbs*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->x());
 }
 
-void JSSVGPathSegMovetoAbs::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPathSegMovetoAbsY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPathSegMovetoAbs, JSSVGPathSeg>(exec, propertyName, value, attr, &JSSVGPathSegMovetoAbsTable, this);
+    SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(static_cast<JSSVGPathSegMovetoAbs*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->y());
 }
 
-void JSSVGPathSegMovetoAbs::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGPathSegMovetoAbs::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(impl());
+    lookupPut<JSSVGPathSegMovetoAbs, Base>(exec, propertyName, value, &JSSVGPathSegMovetoAbsTable, this, slot);
+}
 
-        imp->setX(value->toFloat(exec));
-        break;
-    }
-    case YAttrNum: {
-        SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(impl());
+void setJSSVGPathSegMovetoAbsX(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->impl());
+    imp->setX(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->context())
+        static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->impl()->associatedAttributeName());
+}
 
-        imp->setY(value->toFloat(exec));
-        break;
-    }
-    }
-    SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGPathSeg>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGPathSeg>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+void setJSSVGPathSegMovetoAbsY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegMovetoAbs* imp = static_cast<SVGPathSegMovetoAbs*>(static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->impl());
+    imp->setY(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->context())
+        static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegMovetoAbs*>(thisObject)->impl()->associatedAttributeName());
 }
 
 

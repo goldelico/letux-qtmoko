@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,7 +45,9 @@
 #include "qdesigner_server.h"
 #include "qdesigner_settings.h"
 #include "qdesigner_workbench.h"
-#include "qdesigner_toolwindow.h"
+#include "mainwindow.h"
+
+#include <qdesigner_propertysheet_p.h>
 
 #include <QtGui/QFileOpenEvent>
 #include <QtGui/QCloseEvent>
@@ -54,6 +60,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QTimer>
 #include <QtCore/QTranslator>
+#include <QtCore/QFileInfo>
 #include <QtCore/qdebug.h>
 
 #include <QtDesigner/QDesignerComponents>
@@ -131,7 +138,7 @@ void QDesigner::showErrorMessageBox(const QString &msg)
     if (!m_errorMessageDialog) {
         m_lastErrorMessage.clear();
         m_errorMessageDialog = new QErrorMessage(m_mainWindow);
-        const QString title = QObject::tr("%1 - warning").arg(QLatin1String(designerApplicationName));
+        const QString title = QCoreApplication::translate("QDesigner", "%1 - warning").arg(QLatin1String(designerApplicationName));
         m_errorMessageDialog->setWindowTitle(title);
         m_errorMessageDialog->setMinimumSize(QSize(600, 250));
         m_errorMessageDialog->setWindowFlags(m_errorMessageDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -150,39 +157,67 @@ QDesignerServer *QDesigner::server() const
     return m_server;
 }
 
+bool QDesigner::parseCommandLineArgs(QStringList &fileNames, QString &resourceDir)
+{
+    const QStringList args = arguments();
+    const QStringList::const_iterator acend = args.constEnd();
+    QStringList::const_iterator it = args.constBegin();
+    for (++it; it != acend; ++it) {
+        const QString &argument = *it;
+        do {
+            // Arguments
+            if (!argument.startsWith(QLatin1Char('-'))) {
+                if (!fileNames.contains(argument))
+                    fileNames.append(argument);
+                break;
+            }
+            // Options
+            if (argument == QLatin1String("-server")) {
+                m_server = new QDesignerServer();
+                printf("%d\n", m_server->serverPort());
+                fflush(stdout);
+                break;
+            }
+            if (argument == QLatin1String("-client")) {
+                bool ok = true;
+                if (++it == acend) {
+                    qWarning("** WARNING The option -client requires an argument");
+                    return false;
+                }
+                const quint16 port = it->toUShort(&ok);
+                if (ok) {
+                    m_client = new QDesignerClient(port, this);
+                } else {
+                    qWarning("** WARNING Non-numeric argument specified for -client");
+                    return false;
+                }
+                break;
+            }
+            if (argument == QLatin1String("-resourcedir")) {
+                if (++it == acend) {
+                    qWarning("** WARNING The option -resourcedir requires an argument");
+                    return false;
+                }
+                resourceDir = QFile::decodeName(it->toLocal8Bit());
+                break;
+            }
+            if (argument == QLatin1String("-enableinternaldynamicproperties")) {
+                QDesignerPropertySheet::setInternalDynamicPropertiesEnabled(true);
+                break;
+            }
+            const QString msg = QString::fromUtf8("** WARNING Unknown option %1").arg(argument);
+            qWarning("%s", qPrintable(msg));
+        } while (false);
+    }
+    return true;
+}
+
 void QDesigner::initialize()
 {
     // initialize the sub components
     QStringList files;
-
     QString resourceDir = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
-
-    const QStringList args = arguments();
-
-    for (int i = 1; i < args.count(); ++i)
-    {
-        const QString argument = args.at(i);
-        if (argument == QLatin1String("-server")) {
-            m_server = new QDesignerServer();
-            printf("%d\n", m_server->serverPort());
-            fflush(stdout);
-        } else if (argument == QLatin1String("-client")) {
-            bool ok = true;
-            if (i + 1 < args.count()) {
-                const quint16 port = args.at(++i).toUShort(&ok);
-                if (ok)
-                    m_client = new QDesignerClient(port, this);
-            }
-        } else if (argument == QLatin1String("-resourcedir")) {
-            if (i + 1 < args.count()) {
-                resourceDir = QFile::decodeName(args.at(++i).toLocal8Bit());
-            } else {
-                // issue a warning
-            }
-        } else if (!files.contains(argument)) {
-            files.append(argument);
-        }
-    }
+    parseCommandLineArgs(files, resourceDir);
 
     QTranslator *translator = new QTranslator(this);
     QTranslator *qtTranslator = new QTranslator(this);
@@ -212,15 +247,23 @@ void QDesigner::initialize()
 
     m_suppressNewFormShow = m_workbench->readInBackup();
 
-    foreach (QString file, files) {
-        m_workbench->readInForm(file);
+    if (!files.empty()) {
+        const QStringList::const_iterator cend = files.constEnd();
+        for (QStringList::const_iterator it = files.constBegin(); it != cend; ++it) {
+            // Ensure absolute paths for recent file list to be unique
+            QString fileName = *it;
+            const QFileInfo fi(fileName);
+            if (fi.exists() && fi.isRelative())
+                fileName = fi.absoluteFilePath();
+            m_workbench->readInForm(fileName);
+        }
     }
     if ( m_workbench->formWindowCount())
         m_suppressNewFormShow = true;
 
     // Show up error box with parent now if something went wrong
     if (m_initializationErrors.isEmpty()) {
-        if (!m_suppressNewFormShow && QDesignerSettings().showNewFormOnStartup())
+        if (!m_suppressNewFormShow && QDesignerSettings(m_workbench->core()).showNewFormOnStartup())
             QTimer::singleShot(100, this, SLOT(callCreateForm())); // won't show anything if suppressed
     } else {
         showErrorMessageBox(m_initializationErrors);
@@ -245,7 +288,7 @@ bool QDesigner::event(QEvent *ev)
         if (closeEvent->isAccepted()) {
             // We're going down, make sure that we don't get our settings saved twice.
             if (m_mainWindow)
-                m_mainWindow->setSaveSettingsOnClose(false);
+                m_mainWindow->setCloseEventPolicy(MainWindowBase::AcceptCloseEvents);
             eaten = QApplication::event(ev);
         }
         eaten = true;
@@ -258,12 +301,12 @@ bool QDesigner::event(QEvent *ev)
     return eaten;
 }
 
-void QDesigner::setMainWindow(QDesignerToolWindow *tw)
+void QDesigner::setMainWindow(MainWindowBase *tw)
 {
     m_mainWindow = tw;
 }
 
-QDesignerToolWindow *QDesigner::mainWindow() const
+MainWindowBase *QDesigner::mainWindow() const
 {
     return m_mainWindow;
 }

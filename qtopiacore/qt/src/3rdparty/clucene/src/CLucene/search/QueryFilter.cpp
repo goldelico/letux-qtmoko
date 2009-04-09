@@ -65,7 +65,7 @@ QueryFilter::QFHitCollector::QFHitCollector(CL_NS(util)::BitSet* bits){
 	this->bits = bits;
 }
 
-void QueryFilter::QFHitCollector::collect(const int32_t doc, const float_t score) {
+void QueryFilter::QFHitCollector::collect(const int32_t doc, const qreal score) {
 	bits->set(doc);  // set bit for hit
 }
 

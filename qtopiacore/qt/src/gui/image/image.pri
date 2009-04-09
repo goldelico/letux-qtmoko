@@ -6,22 +6,25 @@
 HEADERS += \
         image/qbitmap.h \
         image/qicon.h \
+        image/qiconengine.h \
+        image/qiconengineplugin.h \
         image/qimage.h \
         image/qimage_p.h \
         image/qimageiohandler.h \
         image/qimagereader.h \
         image/qimagewriter.h \
+        image/qmovie.h \
+        image/qnativeimage_p.h \
         image/qpaintengine_pic_p.h \
         image/qpicture.h \
         image/qpicture_p.h \
         image/qpictureformatplugin.h \
         image/qpixmap.h \
+        image/qpixmap_raster_p.h \
         image/qpixmapcache.h \
         image/qpixmapdata_p.h \
         image/qpixmapdatafactory_p.h \
-        image/qiconengine.h \
-        image/qiconengineplugin.h \
-        image/qmovie.h
+        image/qpixmapfilter_p.h
 
 SOURCES += \
         image/qbitmap.cpp \
@@ -37,21 +40,18 @@ SOURCES += \
         image/qpixmapcache.cpp \
         image/qpixmapdata.cpp \
         image/qpixmapdatafactory.cpp \
+        image/qpixmapfilter.cpp \
         image/qiconengine.cpp \
         image/qiconengineplugin.cpp \
-        image/qmovie.cpp
+        image/qmovie.cpp \
+        image/qpixmap_raster.cpp \
+        image/qnativeimage.cpp \
 
 win32 {
-    HEADERS += image/qpixmap_raster_p.h
-    SOURCES += \
-            image/qpixmap_win.cpp \
-            image/qpixmap_raster.cpp
+    SOURCES += image/qpixmap_win.cpp
 }
 embedded {
-    HEADERS += image/qpixmap_raster_p.h
-    SOURCES += \
-	image/qpixmap_raster.cpp \
-	image/qpixmap_qws.cpp
+    SOURCES += image/qpixmap_qws.cpp
 }
 x11 {
     HEADERS += image/qpixmap_x11_p.h

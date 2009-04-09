@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,11 @@
 #include <QScrollArea>
 #include <QFile>
 #include <QDebug>
+
+#ifdef Q_WS_X11
+#include <QX11EmbedContainer>
+#include <QHBoxLayout>
+#endif
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -85,6 +94,9 @@ QVFbView::QVFbView(int id, int w, int h, int d, Rotation r, QWidget *parent)
         gammatable(0), refreshRate(30), animation(0),
         hzm(0.0), vzm(0.0), mView(0),
         emulateTouchscreen(false), emulateLcdScreen(false), rotation(r)
+#ifdef Q_WS_X11
+        , embedContainer(0)
+#endif
 {
     switch(qvfb_protocol) {
     default:
@@ -98,6 +110,10 @@ QVFbView::QVFbView(int id, int w, int h, int d, Rotation r, QWidget *parent)
 
     connect(mView, SIGNAL(displayDataChanged(const QRect &)),
             SLOT(refreshDisplay(const QRect &)));
+#ifdef Q_WS_X11
+    connect(mView, SIGNAL(displayEmbedRequested(WId)),
+            this, SLOT(embedDisplay(WId)));
+#endif
 
     setAttribute(Qt::WA_PaintOnScreen, viewFormat != ARGBFormat);
     setMouseTracking(true);
@@ -114,6 +130,9 @@ QVFbView::~QVFbView()
 {
     stopAnimation();
     sendKeyboardData(0, 0, 0, true, false); // magic die key
+#ifdef Q_WS_X11
+    delete embedContainer;
+#endif
 }
 
 QSize QVFbView::sizeHint() const
@@ -645,7 +664,7 @@ void QVFbView::drawScreen(const QRect &rect)
 
     QPainter p(this);
     if (viewFormat == ARGBFormat) {
-        QPixmap bg(":/res/images/logo.png");
+        QPixmap bg(":/res/images/logo-nt.png");
         p.fillRect(x1,y1,pm.width(), pm.height(), QBrush(bg));
     }
     p.drawPixmap(x1, y1, pm, leadingX, leadingY, pm.width(), pm.height());
@@ -721,6 +740,23 @@ void QVFbView::setViewFormat(PixelFormat f)
     setAttribute(Qt::WA_PaintOnScreen, viewFormat != ARGBFormat);
 }
 
+#ifdef Q_WS_X11
+void QVFbView::embedDisplay(WId windowId)
+{
+    if (windowId == 0) {
+        delete embedContainer;
+        embedContainer = 0;
+        return;
+    }
+
+    if (!embedContainer) {
+        embedContainer = new QX11EmbedContainer(this);
+        embedContainer->setGeometry(rect());
+        embedContainer->show();
+    }
+    embedContainer->embedClient(windowId);
+}
+#endif
 
 bool QVFbView::event(QEvent *e)
 {

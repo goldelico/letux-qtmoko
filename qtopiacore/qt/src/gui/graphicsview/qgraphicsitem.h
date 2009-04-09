@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -87,7 +91,10 @@ public:
         ItemIsFocusable = 0x4,
         ItemClipsToShape = 0x8,
         ItemClipsChildrenToShape = 0x10,
-        ItemIgnoresTransformations = 0x20
+        ItemIgnoresTransformations = 0x20,
+        ItemIgnoresParentOpacity = 0x40,
+        ItemDoesntPropagateOpacityToChildren = 0x80,
+        ItemStacksBehindParent = 0x100
     };
     Q_DECLARE_FLAGS(GraphicsItemFlags, GraphicsItemFlag)
 
@@ -116,7 +123,9 @@ public:
         ItemFlagsChange,
         ItemFlagsHaveChanged,
         ItemZValueChange,
-        ItemZValueHasChanged
+        ItemZValueHasChanged,
+        ItemOpacityChange,
+        ItemOpacityHasChanged
     };
 
     enum CacheMode {
@@ -183,6 +192,10 @@ public:
     bool acceptDrops() const;
     void setAcceptDrops(bool on);
 
+    qreal opacity() const;
+    qreal effectiveOpacity() const;
+    void setOpacity(qreal opacity);
+
     Qt::MouseButtons acceptedMouseButtons() const;
     void setAcceptedMouseButtons(Qt::MouseButtons buttons);
 
@@ -223,6 +236,7 @@ public:
     QTransform transform() const;
     QTransform sceneTransform() const;
     QTransform deviceTransform(const QTransform &viewportTransform) const;
+    QTransform itemTransform(const QGraphicsItem *other, bool *ok = 0) const;
     void setTransform(const QTransform &matrix, bool combine = false);
     void resetTransform();
     
@@ -241,6 +255,8 @@ public:
     QRectF childrenBoundingRect() const;
     QRectF sceneBoundingRect() const;
     virtual QPainterPath shape() const;
+    bool isClipped() const;
+    QPainterPath clipPath() const;
     virtual bool contains(const QPointF &point) const;
     virtual bool collidesWithItem(const QGraphicsItem *other, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
     virtual bool collidesWithPath(const QPainterPath &path, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const;
@@ -268,6 +284,9 @@ public:
     QPolygonF mapToItem(const QGraphicsItem *item, const QRectF &rect) const;
     QPolygonF mapToParent(const QRectF &rect) const;
     QPolygonF mapToScene(const QRectF &rect) const;
+    QRectF mapRectToItem(const QGraphicsItem *item, const QRectF &rect) const;
+    QRectF mapRectToParent(const QRectF &rect) const;
+    QRectF mapRectToScene(const QRectF &rect) const;
     QPolygonF mapToItem(const QGraphicsItem *item, const QPolygonF &polygon) const;
     QPolygonF mapToParent(const QPolygonF &polygon) const;
     QPolygonF mapToScene(const QPolygonF &polygon) const;
@@ -280,6 +299,9 @@ public:
     QPolygonF mapFromItem(const QGraphicsItem *item, const QRectF &rect) const;
     QPolygonF mapFromParent(const QRectF &rect) const;
     QPolygonF mapFromScene(const QRectF &rect) const;
+    QRectF mapRectFromItem(const QGraphicsItem *item, const QRectF &rect) const;
+    QRectF mapRectFromParent(const QRectF &rect) const;
+    QRectF mapRectFromScene(const QRectF &rect) const;
     QPolygonF mapFromItem(const QGraphicsItem *item, const QPolygonF &polygon) const;
     QPolygonF mapFromParent(const QPolygonF &polygon) const;
     QPolygonF mapFromScene(const QPolygonF &polygon) const;
@@ -293,12 +315,18 @@ public:
     inline QPolygonF mapToItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
     inline QPolygonF mapToParent(qreal x, qreal y, qreal w, qreal h) const;
     inline QPolygonF mapToScene(qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectToItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectToParent(qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectToScene(qreal x, qreal y, qreal w, qreal h) const;
     inline QPointF mapFromItem(const QGraphicsItem *item, qreal x, qreal y) const;
     inline QPointF mapFromParent(qreal x, qreal y) const;
     inline QPointF mapFromScene(qreal x, qreal y) const;
     inline QPolygonF mapFromItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
     inline QPolygonF mapFromParent(qreal x, qreal y, qreal w, qreal h) const;
     inline QPolygonF mapFromScene(qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectFromItem(const QGraphicsItem *item, qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectFromParent(qreal x, qreal y, qreal w, qreal h) const;
+    inline QRectF mapRectFromScene(qreal x, qreal y, qreal w, qreal h) const;
 
     bool isAncestorOf(const QGraphicsItem *child) const;
     QGraphicsItem *commonAncestorItem(const QGraphicsItem *other) const;
@@ -368,12 +396,15 @@ private:
     friend class QGraphicsView;
     friend class QGraphicsViewPrivate;
     friend class QGraphicsWidget;
+    friend class QGraphicsWidgetPrivate;
+    friend class QGraphicsProxyWidgetPrivate;
     friend class ::tst_QGraphicsItem;
     friend bool qt_closestLeaf(const QGraphicsItem *, const QGraphicsItem *);
     friend bool qt_closestItemFirst(const QGraphicsItem *, const QGraphicsItem *);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QGraphicsItem::GraphicsItemFlags)
+
 inline void QGraphicsItem::setPos(qreal ax, qreal ay)
 { setPos(QPointF(ax, ay)); }
 inline void QGraphicsItem::ensureVisible(qreal ax, qreal ay, qreal w, qreal h, int xmargin, int ymargin)
@@ -400,12 +431,24 @@ inline QPolygonF QGraphicsItem::mapToParent(qreal ax, qreal ay, qreal w, qreal h
 { return mapToParent(QRectF(ax, ay, w, h)); }
 inline QPolygonF QGraphicsItem::mapToScene(qreal ax, qreal ay, qreal w, qreal h) const
 { return mapToScene(QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectToItem(const QGraphicsItem *item, qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectToItem(item, QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectToParent(qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectToParent(QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectToScene(qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectToScene(QRectF(ax, ay, w, h)); }
 inline QPolygonF QGraphicsItem::mapFromItem(const QGraphicsItem *item, qreal ax, qreal ay, qreal w, qreal h) const
 { return mapFromItem(item, QRectF(ax, ay, w, h)); }
 inline QPolygonF QGraphicsItem::mapFromParent(qreal ax, qreal ay, qreal w, qreal h) const
 { return mapFromParent(QRectF(ax, ay, w, h)); }
 inline QPolygonF QGraphicsItem::mapFromScene(qreal ax, qreal ay, qreal w, qreal h) const
 { return mapFromScene(QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectFromItem(const QGraphicsItem *item, qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectFromItem(item, QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectFromParent(qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectFromParent(QRectF(ax, ay, w, h)); }
+inline QRectF QGraphicsItem::mapRectFromScene(qreal ax, qreal ay, qreal w, qreal h) const
+{ return mapRectFromScene(QRectF(ax, ay, w, h)); }
 
 class QAbstractGraphicsShapeItemPrivate;
 class Q_GUI_EXPORT QAbstractGraphicsShapeItem : public QGraphicsItem
@@ -814,6 +857,9 @@ public:
     void setTextInteractionFlags(Qt::TextInteractionFlags flags);
     Qt::TextInteractionFlags textInteractionFlags() const;
 
+    void setTabChangesFocus(bool b);
+    bool tabChangesFocus() const;
+
     void setOpenExternalLinks(bool open);
     bool openExternalLinks() const;
 
@@ -949,6 +995,8 @@ template <class T> inline T qgraphicsitem_cast(const QGraphicsItem *item)
 #ifndef QT_NO_DEBUG_STREAM
 Q_GUI_EXPORT QDebug operator<<(QDebug debug, QGraphicsItem *item);
 Q_GUI_EXPORT QDebug operator<<(QDebug debug, QGraphicsItem::GraphicsItemChange change);
+Q_GUI_EXPORT QDebug operator<<(QDebug debug, QGraphicsItem::GraphicsItemFlag flag);
+Q_GUI_EXPORT QDebug operator<<(QDebug debug, QGraphicsItem::GraphicsItemFlags flags);
 #endif
 
 QT_END_NAMESPACE
@@ -956,8 +1004,13 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QGraphicsItem *)
 Q_DECLARE_METATYPE(QGraphicsScene *)
 
-QT_END_HEADER
-
-#endif
+QT_BEGIN_NAMESPACE
 
 #endif // QT_NO_GRAPHICSVIEW
+
+QT_END_NAMESPACE
+
+QT_END_HEADER
+
+#endif // QGRAPHICSITEM_H
+

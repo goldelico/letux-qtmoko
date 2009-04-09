@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGRadialGradientElement.h"
 
 #include <wtf/GetPtr.h>
@@ -35,160 +31,103 @@
 #include "JSSVGAnimatedLength.h"
 #include "SVGRadialGradientElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGRadialGradientElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGRadialGradientElementTableEntries[] =
+static const HashTableValue JSSVGRadialGradientElementTableValues[6] =
 {
-    { "fx", JSSVGRadialGradientElement::FxAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "cy", JSSVGRadialGradientElement::CyAttrNum, DontDelete|ReadOnly, 0, &JSSVGRadialGradientElementTableEntries[6] },
-    { "cx", JSSVGRadialGradientElement::CxAttrNum, DontDelete|ReadOnly, 0, &JSSVGRadialGradientElementTableEntries[5] },
-    { "r", JSSVGRadialGradientElement::RAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "fy", JSSVGRadialGradientElement::FyAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "cx", DontDelete|ReadOnly, (intptr_t)jsSVGRadialGradientElementCx, (intptr_t)0 },
+    { "cy", DontDelete|ReadOnly, (intptr_t)jsSVGRadialGradientElementCy, (intptr_t)0 },
+    { "r", DontDelete|ReadOnly, (intptr_t)jsSVGRadialGradientElementR, (intptr_t)0 },
+    { "fx", DontDelete|ReadOnly, (intptr_t)jsSVGRadialGradientElementFx, (intptr_t)0 },
+    { "fy", DontDelete|ReadOnly, (intptr_t)jsSVGRadialGradientElementFy, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGRadialGradientElementTable = 
-{
-    2, 7, JSSVGRadialGradientElementTableEntries, 5
-};
+static const HashTable JSSVGRadialGradientElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGRadialGradientElementTableValues, 0 };
+#else
+    { 18, 15, JSSVGRadialGradientElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGRadialGradientElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGRadialGradientElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGRadialGradientElementPrototypeTable = 
-{
-    2, 1, JSSVGRadialGradientElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGRadialGradientElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGRadialGradientElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGRadialGradientElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGRadialGradientElementPrototype::info = { "SVGRadialGradientElementPrototype", 0, &JSSVGRadialGradientElementPrototypeTable, 0 };
+const ClassInfo JSSVGRadialGradientElementPrototype::s_info = { "SVGRadialGradientElementPrototype", 0, &JSSVGRadialGradientElementPrototypeTable, 0 };
 
 JSObject* JSSVGRadialGradientElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGRadialGradientElementPrototype>(exec, "[[JSSVGRadialGradientElement.prototype]]");
+    return getDOMPrototype<JSSVGRadialGradientElement>(exec);
 }
 
-const ClassInfo JSSVGRadialGradientElement::info = { "SVGRadialGradientElement", &JSSVGGradientElement::info, &JSSVGRadialGradientElementTable, 0 };
+const ClassInfo JSSVGRadialGradientElement::s_info = { "SVGRadialGradientElement", &JSSVGGradientElement::s_info, &JSSVGRadialGradientElementTable, 0 };
 
-JSSVGRadialGradientElement::JSSVGRadialGradientElement(ExecState* exec, SVGRadialGradientElement* impl)
-    : JSSVGGradientElement(exec, impl)
+JSSVGRadialGradientElement::JSSVGRadialGradientElement(PassRefPtr<Structure> structure, PassRefPtr<SVGRadialGradientElement> impl)
+    : JSSVGGradientElement(structure, impl)
 {
-    setPrototype(JSSVGRadialGradientElementPrototype::self(exec));
+}
+
+JSObject* JSSVGRadialGradientElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGRadialGradientElementPrototype(JSSVGRadialGradientElementPrototype::createStructure(JSSVGGradientElementPrototype::self(exec)));
 }
 
 bool JSSVGRadialGradientElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGRadialGradientElement, JSSVGGradientElement>(exec, &JSSVGRadialGradientElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGRadialGradientElement, Base>(exec, &JSSVGRadialGradientElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGRadialGradientElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGRadialGradientElementCx(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CxAttrNum: {
-        SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(impl());
+    SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(static_cast<JSSVGRadialGradientElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->cxAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGRadialGradientElementCy(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(static_cast<JSSVGRadialGradientElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->cyAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->cxAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGRadialGradientElementR(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(static_cast<JSSVGRadialGradientElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->rAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case CyAttrNum: {
-        SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(impl());
+JSValuePtr jsSVGRadialGradientElementFx(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(static_cast<JSSVGRadialGradientElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->fxAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->cyAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case RAttrNum: {
-        SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->rAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case FxAttrNum: {
-        SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->fxAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case FyAttrNum: {
-        SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->fyAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+JSValuePtr jsSVGRadialGradientElementFy(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGRadialGradientElement* imp = static_cast<SVGRadialGradientElement*>(static_cast<JSSVGRadialGradientElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->fyAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
 

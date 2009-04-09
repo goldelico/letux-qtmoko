@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,7 @@
 
 #include <private/qabstractprintdialog_p.h>
 #include <private/qprintengine_win_p.h>
+#include <private/qprinter_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,6 +72,7 @@ public:
     inline void _q_paperSizeChanged(int) {}
     inline void _q_btnBrowseClicked() {}
     inline void _q_btnPropertiesClicked() {}
+    int openWindowsPrintDialogModally();
 
     QWin32PrintEnginePrivate *ep;
 };
@@ -129,7 +135,7 @@ static PrintDialog *qt_win_make_PRINTDLG(QWidget *parent,
     Q_ASSERT(!parent ||parent->testAttribute(Qt::WA_WState_Created));
     pd->hwndOwner = parent ? parent->winId() : 0;
     pd->nFromPage = qMax(pdlg->fromPage(), pdlg->minPage());
-    pd->nToPage   = qMin(pdlg->toPage(), pdlg->maxPage());
+    pd->nToPage   = (pdlg->toPage() > 0) ? qMin(pdlg->toPage(), pdlg->maxPage()) : 1;
     pd->nCopies = d->ep->num_copies;
 
     return pd;
@@ -164,6 +170,7 @@ static void qt_win_read_back_PRINTDLG(T *pd, QPrintDialog *pdlg, QPrintDialogPri
 
     d->ep->readDevnames(pd->hDevNames);
     d->ep->readDevmode(pd->hDevMode);
+    d->ep->updateCustomPaperSize();
 
     if (d->ep->printToFile && d->ep->fileName.isEmpty())
         d->ep->fileName = d->ep->port;
@@ -171,30 +178,50 @@ static void qt_win_read_back_PRINTDLG(T *pd, QPrintDialog *pdlg, QPrintDialogPri
         d->ep->fileName.clear();
 }
 
+static bool warnIfNotNative(QPrinter *printer)
+{
+    if (printer->outputFormat() != QPrinter::NativeFormat) {
+        qWarning("QPrintDialog: Cannot be used on non-native printers");
+        return false;
+    }
+    return true;
+}
+
 QPrintDialog::QPrintDialog(QPrinter *printer, QWidget *parent)
     : QAbstractPrintDialog( *(new QPrintDialogPrivate), printer, parent)
 {
-    if (printer->outputFormat() == QPrinter::NativeFormat)
-        d_func()->ep = static_cast<QWin32PrintEngine *>(printer->paintEngine())->d_func();
+    Q_D(QPrintDialog);
+    if (!warnIfNotNative(d->printer))
+        return;
+    d->ep = static_cast<QWin32PrintEngine *>(d->printer->paintEngine())->d_func();
+}
 
-    else
-        qWarning("QPrintDialog, Only native format supported");
+QPrintDialog::QPrintDialog(QWidget *parent)
+    : QAbstractPrintDialog( *(new QPrintDialogPrivate), 0, parent)
+{
+    Q_D(QPrintDialog);
+    if (!warnIfNotNative(d->printer))
+        return;
+    d->ep = static_cast<QWin32PrintEngine *>(d->printer->paintEngine())->d_func();
 }
 
 QPrintDialog::~QPrintDialog()
 {
-    //nothing
 }
 
 int QPrintDialog::exec()
 {
-    if (printer()->outputFormat() != QPrinter::NativeFormat) {
-        return false;
-    }
+    if (!warnIfNotNative(printer()))
+        return 0;
 
     Q_D(QPrintDialog);
+    return d->openWindowsPrintDialogModally();
+}
 
-    QWidget *parent = parentWidget();
+int QPrintDialogPrivate::openWindowsPrintDialogModally()
+{
+    Q_Q(QPrintDialog);
+    QWidget *parent = q->parentWidget();
     if (parent)
         parent = parent->window();
     else
@@ -205,18 +232,14 @@ int QPrintDialog::exec()
     modal_widget.setParent(parent, Qt::Window);
     QApplicationPrivate::enterModal(&modal_widget);
 
-    HGLOBAL *tempDevNames = d->ep->createDevNames();
+    HGLOBAL *tempDevNames = ep->createDevNames();
 
     bool result;
     bool done;
-    void *pd = 0;
-
-
-    if (!(QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based)) {
-        pd = qt_win_make_PRINTDLG<PRINTDLGW, DEVMODEW>(parent, this, d, tempDevNames);
-    } else {
-        pd = qt_win_make_PRINTDLG<PRINTDLGA, DEVMODEA>(parent, this, d, tempDevNames);
-    }
+    void *pd = QT_WA_INLINE(
+        (void*)(qt_win_make_PRINTDLG<PRINTDLGW, DEVMODEW>(parent, q, this, tempDevNames)),
+        (void*)(qt_win_make_PRINTDLG<PRINTDLGA, DEVMODEA>(parent, q, this, tempDevNames))
+        );
 
     do {
         done = true;
@@ -225,7 +248,7 @@ int QPrintDialog::exec()
             result = PrintDlgW(pdw);
             if ((pdw->Flags & PD_PAGENUMS) && (pdw->nFromPage > pdw->nToPage))
                 done = false;
-            if (result && pdw == 0)
+            if (result && pdw->hDC == 0)
                 result = false;
             else if (!result)
                 done = true;
@@ -240,9 +263,9 @@ int QPrintDialog::exec()
                 done = true;
         });
         if (!done) {
-            QMessageBox::warning(0, tr("Print"),
-                                 tr("The 'From' value cannot be greater than the 'To' value."),
-                                 tr("OK"));
+            QMessageBox::warning(0, QPrintDialog::tr("Print"),
+                                 QPrintDialog::tr("The 'From' value cannot be greater than the 'To' value."),
+                                 QPrintDialog::tr("OK"));
         }
     } while (!done);
 
@@ -254,19 +277,38 @@ int QPrintDialog::exec()
     if (result) {
         QT_WA({
             PRINTDLGW *pdw = reinterpret_cast<PRINTDLGW *>(pd);
-            qt_win_read_back_PRINTDLG(pdw, this, d);
+            qt_win_read_back_PRINTDLG(pdw, q, this);
             qt_win_clean_up_PRINTDLG(&pdw);
         }, {
             PRINTDLGA *pda = reinterpret_cast<PRINTDLGA *>(pd);
-            qt_win_read_back_PRINTDLG(pda, this, d);
+            qt_win_read_back_PRINTDLG(pda, q, this);
             qt_win_clean_up_PRINTDLG(&pda);
         });
+        // update printer validity
+        printer->d_func()->validPrinter = !ep->name.isEmpty();
     }
 
     // Cleanup...
     GlobalFree(tempDevNames);
 
+    q->done(result);
+
     return result;
+}
+
+void QPrintDialog::setVisible(bool visible)
+{
+    Q_D(QPrintDialog);
+
+    // its always modal, so we cannot hide a native print dialog
+    if (!visible)
+        return;
+
+    if (!warnIfNotNative(d->printer))
+        return;
+
+    (void)d->openWindowsPrintDialogModally();
+    return;
 }
 
 QT_END_NAMESPACE

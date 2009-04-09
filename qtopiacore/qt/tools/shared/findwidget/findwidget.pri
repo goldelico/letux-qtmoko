@@ -1,4 +1,4 @@
 INCLUDEPATH += $$PWD
-HEADERS += $$PWD/findwidget.h
-SOURCES += $$PWD/findwidget.cpp
+HEADERS += $$PWD/abstractfindwidget.h $$PWD/texteditfindwidget.h $$PWD/itemviewfindwidget.h
+SOURCES += $$PWD/abstractfindwidget.cpp $$PWD/texteditfindwidget.cpp $$PWD/itemviewfindwidget.cpp
 RESOURCES += $$PWD/findwidget.qrc

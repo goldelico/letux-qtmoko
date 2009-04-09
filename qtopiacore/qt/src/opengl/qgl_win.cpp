@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -414,15 +418,15 @@ bool QGLFormat::hasOpenGLOverlays()
 
     if (!checkDone) {
         checkDone = true;
-        HDC dc = qt_win_display_dc();
-        int pfiMax = DescribePixelFormat(dc, 0, 0, NULL);
+        HDC display_dc = GetDC(0);
+        int pfiMax = DescribePixelFormat(display_dc, 0, 0, NULL);
         PIXELFORMATDESCRIPTOR pfd;
         for (int pfi = 1; pfi <= pfiMax; pfi++) {
-            DescribePixelFormat(dc, pfi, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+            DescribePixelFormat(display_dc, pfi, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
             if ((pfd.bReserved & 0x0f) && (pfd.dwFlags & PFD_SUPPORT_OPENGL)) {
                 // This format has overlays/underlays
                 LAYERPLANEDESCRIPTOR lpd;
-                wglDescribeLayerPlane(dc, pfi, 1,
+                wglDescribeLayerPlane(display_dc, pfi, 1,
                                        sizeof(LAYERPLANEDESCRIPTOR), &lpd);
                 if (lpd.dwFlags & LPD_SUPPORT_OPENGL) {
                     hasOl = true;
@@ -430,6 +434,7 @@ bool QGLFormat::hasOpenGLOverlays()
                 }
             }
         }
+        ReleaseDC(0, display_dc);
     }
     return hasOl;
 }
@@ -626,34 +631,52 @@ QGLFormat pfiToQGLFormat(HDC hdc, int pfi)
    Creates a temporary GL context and makes it current
    - cleans up when the object is destructed.
 */
+
+Q_GUI_EXPORT const QString qt_getRegisteredWndClass();
+
 class QGLTempContext
 {
 public:
-    QGLTempContext(QWidget *parent = 0) {
-        if (parent)
-            dmy.setParent(parent);
-        dmy_pdc = GetDC(dmy.winId());
+    QGLTempContext(bool directRendering, QWidget *parent = 0)
+    {
+        QString windowClassName = qt_getRegisteredWndClass();
+        if (parent && !parent->internalWinId())
+            parent = parent->nativeParentWidget();
+        QT_WA({
+            const TCHAR *cname = (TCHAR*)windowClassName.utf16();
+            dmy_id = CreateWindow(cname, 0, 0, 0, 0, 1, 1,
+                                  parent ? parent->winId() : 0, 0, qWinAppInst(), 0);
+        } , {
+            dmy_id = CreateWindowA(windowClassName.toLatin1(), 0, 0, 0, 0, 1, 1,
+                                   parent ? parent->winId() : 0, 0, qWinAppInst(), 0);
+        });
+
+        dmy_pdc = GetDC(dmy_id);
         PIXELFORMATDESCRIPTOR dmy_pfd;
         memset(&dmy_pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
         dmy_pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
         dmy_pfd.nVersion = 1;
         dmy_pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
         dmy_pfd.iPixelType = PFD_TYPE_RGBA;
+        if (!directRendering)
+            dmy_pfd.dwFlags |= PFD_GENERIC_FORMAT;
 
         int dmy_pf = ChoosePixelFormat(dmy_pdc, &dmy_pfd);
         SetPixelFormat(dmy_pdc, dmy_pf, &dmy_pfd);
         dmy_rc = wglCreateContext(dmy_pdc);
         wglMakeCurrent(dmy_pdc, dmy_rc);
     }
+
     ~QGLTempContext() {
         wglMakeCurrent(dmy_pdc, 0);
         wglDeleteContext(dmy_rc);
-        ReleaseDC(dmy.winId(), dmy_pdc);
+        ReleaseDC(dmy_id, dmy_pdc);
+        DestroyWindow(dmy_id);
     }
 
     HDC dmy_pdc;
     HGLRC dmy_rc;
-    QWidget dmy;
+    WId dmy_id;
 };
 
 bool QGLContext::chooseContext(const QGLContext* shareContext)
@@ -675,7 +698,8 @@ bool QGLContext::chooseContext(const QGLContext* shareContext)
         if (d->glFormat.plane())
             return false;                // Pixmaps can't have overlay
         d->win = 0;
-        myDc = d->hbitmap_hdc = CreateCompatibleDC(qt_win_display_dc());
+        HDC display_dc = GetDC(0);
+        myDc = d->hbitmap_hdc = CreateCompatibleDC(display_dc);
         QPixmap *px = static_cast<QPixmap *>(d->paintDevice);
 
         BITMAPINFO bmi;
@@ -686,8 +710,9 @@ bool QGLContext::chooseContext(const QGLContext* shareContext)
         bmi.bmiHeader.biPlanes      = 1;
         bmi.bmiHeader.biBitCount    = 32;
         bmi.bmiHeader.biCompression = BI_RGB;
-        d->hbitmap = CreateDIBSection(qt_win_display_dc(), &bmi, DIB_RGB_COLORS, 0, 0, 0);
+        d->hbitmap = CreateDIBSection(display_dc, &bmi, DIB_RGB_COLORS, 0, 0, 0);
         SelectObject(myDc, d->hbitmap);
+        ReleaseDC(0, display_dc);
     } else {
         widget = static_cast<QWidget *>(d->paintDevice);
         d->win = widget->winId();
@@ -697,7 +722,7 @@ bool QGLContext::chooseContext(const QGLContext* shareContext)
     // NB! the QGLTempContext object is needed for the
     // wglGetProcAddress() calls to succeed and are absolutely
     // necessary - don't remove!
-    QGLTempContext tmp_ctx(widget);
+    QGLTempContext tmp_ctx(d->glFormat.directRendering(), widget);
 
     if (!myDc) {
         qWarning("QGLContext::chooseContext(): Paint device cannot be null");
@@ -786,7 +811,7 @@ bool QGLContext::chooseContext(const QGLContext* shareContext)
         bool overlayRequested = d->glFormat.hasOverlay();
         DescribePixelFormat(myDc, d->pixelFormatId, sizeof(PIXELFORMATDESCRIPTOR), &realPfd);
 
-        if (wglGetProcAddress("wglGetPixelFormatAttribivARB"))
+        if (!deviceIsPixmap() && wglGetProcAddress("wglGetPixelFormatAttribivARB"))
             d->glFormat = pfiToQGLFormat(myDc, d->pixelFormatId);
         else
             d->glFormat = pfdToQGLFormat(&realPfd);
@@ -986,7 +1011,7 @@ int QGLContext::choosePixelFormat(void* dummyPfd, HDC pdc)
             p->dwFlags |= PFD_DOUBLEBUFFER;
         if (d->glFormat.stereo())
             p->dwFlags |= PFD_STEREO;
-        if (d->glFormat.depth() && !deviceIsPixmap())
+        if (d->glFormat.depth())
             p->cDepthBits = d->glFormat.depthBufferSize() == -1 ? 32 : d->glFormat.depthBufferSize();
         else
             p->dwFlags |= PFD_DEPTH_DONTCARE;
@@ -1106,6 +1131,7 @@ void QGLContext::reset()
 
     if (!d->valid)
         return;
+    d->cleanup();
     doneCurrent();
     if (d->rc)
         wglDeleteContext(d->rc);
@@ -1129,8 +1155,6 @@ void QGLContext::reset()
     d->initDone = false;
     qgl_share_reg()->removeShare(this);
 }
-
-
 
 //
 // NOTE: In a multi-threaded environment, each thread has a current
@@ -1242,8 +1266,11 @@ void QGLContext::generateFontDisplayLists(const QFont & fnt, int listBase)
     if (!isValid())
         return;
 
-    HDC tmp_dc = CreateCompatibleDC(qt_win_display_dc());
+    HDC display_dc = GetDC(0);
+    HDC tmp_dc = CreateCompatibleDC(display_dc);
     HGDIOBJ old_font = SelectObject(tmp_dc, fnt.handle());
+
+    ReleaseDC(0, display_dc);
 
     if (!wglUseFontBitmaps(tmp_dc, 0, 256, listBase))
         qWarning("QGLContext::generateFontDisplayLists: Could not generate display lists for font '%s'", fnt.family().toLatin1().data());
@@ -1465,7 +1492,7 @@ void QGLExtensions::init()
     if (init_done)
         return;
     init_done = true;
-    QGLTempContext temp_ctx;
+    QGLTempContext temp_ctx(QGLFormat::defaultFormat().directRendering());
     init_extensions();
 }
 

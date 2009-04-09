@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedPreserveAspectRatio.h"
 
 #include <wtf/GetPtr.h>
@@ -35,85 +31,94 @@
 #include "JSSVGPreserveAspectRatio.h"
 #include "SVGPreserveAspectRatio.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedPreserveAspectRatio)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedPreserveAspectRatioTableEntries[] =
+static const HashTableValue JSSVGAnimatedPreserveAspectRatioTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedPreserveAspectRatio::BaseValAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "animVal", JSSVGAnimatedPreserveAspectRatio::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedPreserveAspectRatioBaseVal, (intptr_t)0 },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedPreserveAspectRatioAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedPreserveAspectRatioTable = 
-{
-    2, 2, JSSVGAnimatedPreserveAspectRatioTableEntries, 2
-};
+static const HashTable JSSVGAnimatedPreserveAspectRatioTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedPreserveAspectRatioTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedPreserveAspectRatioTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedPreserveAspectRatioPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedPreserveAspectRatioPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedPreserveAspectRatioPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedPreserveAspectRatioPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedPreserveAspectRatioPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedPreserveAspectRatioPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedPreserveAspectRatioPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedPreserveAspectRatioPrototype::info = { "SVGAnimatedPreserveAspectRatioPrototype", 0, &JSSVGAnimatedPreserveAspectRatioPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedPreserveAspectRatioPrototype::s_info = { "SVGAnimatedPreserveAspectRatioPrototype", 0, &JSSVGAnimatedPreserveAspectRatioPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedPreserveAspectRatioPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedPreserveAspectRatioPrototype>(exec, "[[JSSVGAnimatedPreserveAspectRatio.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedPreserveAspectRatio>(exec);
 }
 
-const ClassInfo JSSVGAnimatedPreserveAspectRatio::info = { "SVGAnimatedPreserveAspectRatio", 0, &JSSVGAnimatedPreserveAspectRatioTable, 0 };
+const ClassInfo JSSVGAnimatedPreserveAspectRatio::s_info = { "SVGAnimatedPreserveAspectRatio", 0, &JSSVGAnimatedPreserveAspectRatioTable, 0 };
 
-JSSVGAnimatedPreserveAspectRatio::JSSVGAnimatedPreserveAspectRatio(ExecState* exec, SVGAnimatedPreserveAspectRatio* impl)
-    : m_impl(impl)
+JSSVGAnimatedPreserveAspectRatio::JSSVGAnimatedPreserveAspectRatio(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedPreserveAspectRatio> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedPreserveAspectRatioPrototype::self(exec));
 }
 
 JSSVGAnimatedPreserveAspectRatio::~JSSVGAnimatedPreserveAspectRatio()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedPreserveAspectRatio>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedPreserveAspectRatio::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedPreserveAspectRatioPrototype(JSSVGAnimatedPreserveAspectRatioPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedPreserveAspectRatio::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedPreserveAspectRatio, KJS::DOMObject>(exec, &JSSVGAnimatedPreserveAspectRatioTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedPreserveAspectRatio, Base>(exec, &JSSVGAnimatedPreserveAspectRatioTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedPreserveAspectRatio::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedPreserveAspectRatioBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedPreserveAspectRatio* imp = static_cast<SVGAnimatedPreserveAspectRatio*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->baseVal()));
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedPreserveAspectRatio* imp = static_cast<SVGAnimatedPreserveAspectRatio*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->animVal()));
-    }
-    }
-    return 0;
+    SVGAnimatedPreserveAspectRatio* imp = static_cast<SVGAnimatedPreserveAspectRatio*>(static_cast<JSSVGAnimatedPreserveAspectRatio*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->baseVal()), static_cast<JSSVGAnimatedPreserveAspectRatio*>(asObject(slot.slotBase()))->context());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedPreserveAspectRatio* obj)
+JSValuePtr jsSVGAnimatedPreserveAspectRatioAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<SVGAnimatedPreserveAspectRatio, JSSVGAnimatedPreserveAspectRatio>(exec, obj);
+    SVGAnimatedPreserveAspectRatio* imp = static_cast<SVGAnimatedPreserveAspectRatio*>(static_cast<JSSVGAnimatedPreserveAspectRatio*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->animVal()), static_cast<JSSVGAnimatedPreserveAspectRatio*>(asObject(slot.slotBase()))->context());
 }
-SVGAnimatedPreserveAspectRatio* toSVGAnimatedPreserveAspectRatio(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedPreserveAspectRatio* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedPreserveAspectRatio::info) ? static_cast<JSSVGAnimatedPreserveAspectRatio*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedPreserveAspectRatio>(exec, object, context);
+}
+SVGAnimatedPreserveAspectRatio* toSVGAnimatedPreserveAspectRatio(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedPreserveAspectRatio::s_info) ? static_cast<JSSVGAnimatedPreserveAspectRatio*>(asObject(value))->impl() : 0;
 }
 
 }

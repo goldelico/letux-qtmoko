@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -65,8 +69,34 @@ QT_BEGIN_NAMESPACE
     on a QTextDocument object with the
     \l{QTextDocument::}{setDocumentLayout()} function.
 
-    You can insert custom objects into a QTextDocument using the following
-    steps:
+    You can insert custom objects into a QTextDocument; see the
+    QTextObjectInterface class description for details.
+
+    \sa QTextObjectInterface
+*/
+
+/*!
+    \class QTextObjectInterface
+    \brief The QTextObjectInterface class allows drawing of
+           custom text objects in \l{QTextDocument}s.
+
+    A text object describes the structure of one or more elements in a
+    text document; for instance, images imported from HTML are
+    implemented using text objects. A text object knows how to lay out
+    and draw its elements when a document is being rendered.
+
+    Qt allows custom text objects to be inserted into a document by
+    registering a custom \l{QTextCharFormat::objectType()}{object
+    type} with QTextCharFormat. A QTextObjectInterface must also be
+    implemented for this type and be
+    \l{QAbstractTextDocumentLayout::registerHandler()}{registered}
+    with the QAbstractTextDocumentLayout of the document. When the
+    object type is encountered while rendering a QTextDocument, the
+    intrinsicSize() and drawObject() functions of the interface are
+    called.
+
+    The following list explains the required steps of inserting a
+    custom text object into a document:
 
     \list
         \o Choose an \a objectType. The \a objectType is an integer with a
@@ -74,16 +104,64 @@ QT_BEGIN_NAMESPACE
          \o Create a QTextCharFormat object and set the object type to the
             chosen type using the setObjectType() function.
          \o Implement the QTextObjectInterface class.
-         \o Call registerHandler() with an instance of your
+         \o Call QAbstractTextDocumentLayout::registerHandler() with an instance of your
             QTextObjectInterface subclass to register your object type.
          \o Insert QChar::ObjectReplacementCharacter with the aforementioned
             QTextCharFormat of the chosen object type into the document.
-            As a result, the functions of QTextObjectInterface:
+            As mentioned, the functions of QTextObjectInterface
             \l{QTextObjectInterface::}{intrinsicSize()} and
-            \l{QTextObjectInterface::}{drawObject()} will be called with the
+            \l{QTextObjectInterface::}{drawObject()} will then be called with the
             QTextFormat as parameter whenever the replacement character is
             encountered.
     \endlist
+
+    A class implementing a text object needs to inherit both QObject
+    and QTextObjectInterface. QObject must be the first class
+    inherited. For instance:
+
+    \snippet examples/richtext/textobject/svgtextobject.h 1
+
+    The data of a text object is usually stored in the QTextCharFormat
+    using QTextCharFormat::setProperty(), and then retrieved with
+    QTextCharFormat::property().
+
+    \warning Copy and Paste operations ignore custom text objects.
+
+    \sa {Text Object Example}, QTextCharFormat, QTextLayout
+*/
+
+/*!
+    \fn QTextObjectInterface::~QTextObjectInterface()
+
+    Destroys this QTextObjectInterface.
+*/
+
+/*!
+    \fn virtual QSizeF QTextObjectInterface::intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format) = 0
+
+    The intrinsicSize() function returns the size of the text object
+    represented by \a format in the given document (\a doc) at the
+    given position (\a posInDocument).
+
+    The size calculated will be used for subsequent calls to
+    drawObject() for this \a format.
+
+    \sa drawObject()
+*/
+
+/*!
+    \fn virtual void QTextObjectInterface::drawObject(QPainter *painter, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format) = 0
+
+    Draws this text object using the specified \a painter.
+
+    The size of the rectangle, \a rect, to draw in is the size
+    previously calculated by intrinsicSize(). The rectangles position
+    is relative to the \a painter.
+
+    You also get the document (\a doc) and the position (\a
+    posInDocument) of the \a format in that document.
+
+    \sa intrinsicSize()
 */
 
 /*!
@@ -390,7 +468,7 @@ void QAbstractTextDocumentLayout::resizeInlineObject(QTextInlineObject item, int
 
     QSizeF s = handler.iface->intrinsicSize(document(), posInDocument, format);
     item.setWidth(s.width());
-    item.setAscent(s.height());
+    item.setAscent(s.height() - 1);
     item.setDescent(0);
 }
 

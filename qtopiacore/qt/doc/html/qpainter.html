@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/painting/qpainter.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qpainter.cpp -->
 <head>
-  <title>Qt 4.4: QPainter Class Reference</title>
+  <title>Qt 4.5: QPainter Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QPainter Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -25,214 +25,223 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qpainter.html#CompositionMode-enum">CompositionMode</a></b> { CompositionMode_SourceOver, CompositionMode_DestinationOver, CompositionMode_Clear, CompositionMode_Source, ..., CompositionMode_Exclusion }</li>
-<li><div class="fn"/>enum <b><a href="qpainter.html#RenderHint-enum">RenderHint</a></b> { Antialiasing, TextAntialiasing, SmoothPixmapTransform, HighQualityAntialiasing, NonCosmeticDefaultPen }</li>
-<li><div class="fn"/>flags <b><a href="qpainter.html#RenderHint-enum">RenderHints</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qpainter.html#CompositionMode-enum">CompositionMode</a></b> { CompositionMode_SourceOver, CompositionMode_DestinationOver, CompositionMode_Clear, CompositionMode_Source, ..., RasterOp_SourceAndNotDestination }</li>
+<li><div class="fn"></div>enum <b><a href="qpainter.html#RenderHint-enum">RenderHint</a></b> { Antialiasing, TextAntialiasing, SmoothPixmapTransform, HighQualityAntialiasing, NonCosmeticDefaultPen }</li>
+<li><div class="fn"></div>flags <b><a href="qpainter.html#RenderHint-enum">RenderHints</a></b></li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qpainter.html#QPainter">QPainter</a></b> ()</li>
-<li><div class="fn"/><b><a href="qpainter.html#QPainter-2">QPainter</a></b> ( QPaintDevice * <i>device</i> )</li>
-<li><div class="fn"/><b><a href="qpainter.html#dtor.QPainter">~QPainter</a></b> ()</li>
-<li><div class="fn"/>const QBrush &amp; <b><a href="qpainter.html#background">background</a></b> () const</li>
-<li><div class="fn"/>Qt::BGMode <b><a href="qpainter.html#backgroundMode">backgroundMode</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#begin">begin</a></b> ( QPaintDevice * <i>device</i> )</li>
-<li><div class="fn"/>QRectF <b><a href="qpainter.html#boundingRect">boundingRect</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qpainter.html#boundingRect-4">boundingRect</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qpainter.html#boundingRect-5">boundingRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>QRectF <b><a href="qpainter.html#boundingRect-6">boundingRect</a></b> ( const QRectF &amp; <i>rectangle</i>, const QString &amp; <i>text</i>, const QTextOption &amp; <i>option</i> = QTextOption() )</li>
-<li><div class="fn"/>const QBrush &amp; <b><a href="qpainter.html#brush">brush</a></b> () const</li>
-<li><div class="fn"/>QPoint <b><a href="qpainter.html#brushOrigin">brushOrigin</a></b> () const</li>
-<li><div class="fn"/>QPainterPath <b><a href="qpainter.html#clipPath">clipPath</a></b> () const</li>
-<li><div class="fn"/>QRegion <b><a href="qpainter.html#clipRegion">clipRegion</a></b> () const</li>
-<li><div class="fn"/>QMatrix <b><a href="qpainter.html#combinedMatrix">combinedMatrix</a></b> () const</li>
-<li><div class="fn"/>QTransform <b><a href="qpainter.html#combinedTransform">combinedTransform</a></b> () const</li>
-<li><div class="fn"/>CompositionMode <b><a href="qpainter.html#compositionMode">compositionMode</a></b> () const</li>
-<li><div class="fn"/>QPaintDevice * <b><a href="qpainter.html#device">device</a></b> () const</li>
-<li><div class="fn"/>const QMatrix &amp; <b><a href="qpainter.html#deviceMatrix">deviceMatrix</a></b> () const</li>
-<li><div class="fn"/>const QTransform &amp; <b><a href="qpainter.html#deviceTransform">deviceTransform</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawArc">drawArc</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawArc-2">drawArc</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawArc-3">drawArc</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawChord">drawChord</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawChord-2">drawChord</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawChord-3">drawChord</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawConvexPolygon">drawConvexPolygon</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawConvexPolygon-2">drawConvexPolygon</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawConvexPolygon-3">drawConvexPolygon</a></b> ( const QPolygonF &amp; <i>polygon</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawConvexPolygon-4">drawConvexPolygon</a></b> ( const QPolygon &amp; <i>polygon</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawEllipse">drawEllipse</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawEllipse-2">drawEllipse</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawEllipse-3">drawEllipse</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawEllipse-4">drawEllipse</a></b> ( const QPointF &amp; <i>center</i>, qreal <i>rx</i>, qreal <i>ry</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawEllipse-5">drawEllipse</a></b> ( const QPoint &amp; <i>center</i>, int <i>rx</i>, int <i>ry</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage">drawImage</a></b> ( const QRectF &amp; <i>target</i>, const QImage &amp; <i>image</i>, const QRectF &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-2">drawImage</a></b> ( const QRect &amp; <i>target</i>, const QImage &amp; <i>image</i>, const QRect &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-3">drawImage</a></b> ( const QPointF &amp; <i>point</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-4">drawImage</a></b> ( const QPoint &amp; <i>point</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-5">drawImage</a></b> ( const QPointF &amp; <i>point</i>, const QImage &amp; <i>image</i>, const QRectF &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-6">drawImage</a></b> ( const QPoint &amp; <i>point</i>, const QImage &amp; <i>image</i>, const QRect &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-7">drawImage</a></b> ( const QRectF &amp; <i>rectangle</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-8">drawImage</a></b> ( const QRect &amp; <i>rectangle</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawImage-9">drawImage</a></b> ( int <i>x</i>, int <i>y</i>, const QImage &amp; <i>image</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLine">drawLine</a></b> ( const QLineF &amp; <i>line</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLine-2">drawLine</a></b> ( const QLine &amp; <i>line</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLine-3">drawLine</a></b> ( const QPoint &amp; <i>p1</i>, const QPoint &amp; <i>p2</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLine-4">drawLine</a></b> ( const QPointF &amp; <i>p1</i>, const QPointF &amp; <i>p2</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLine-5">drawLine</a></b> ( int <i>x1</i>, int <i>y1</i>, int <i>x2</i>, int <i>y2</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines">drawLines</a></b> ( const QLineF * <i>lines</i>, int <i>lineCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-2">drawLines</a></b> ( const QLine * <i>lines</i>, int <i>lineCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-3">drawLines</a></b> ( const QPointF * <i>pointPairs</i>, int <i>lineCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-4">drawLines</a></b> ( const QPoint * <i>pointPairs</i>, int <i>lineCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-5">drawLines</a></b> ( const QVector&lt;QPointF&gt; &amp; <i>pointPairs</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-6">drawLines</a></b> ( const QVector&lt;QPoint&gt; &amp; <i>pointPairs</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-7">drawLines</a></b> ( const QVector&lt;QLineF&gt; &amp; <i>lines</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawLines-8">drawLines</a></b> ( const QVector&lt;QLine&gt; &amp; <i>lines</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPath">drawPath</a></b> ( const QPainterPath &amp; <i>path</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPicture">drawPicture</a></b> ( const QPointF &amp; <i>point</i>, const QPicture &amp; <i>picture</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPicture-2">drawPicture</a></b> ( const QPoint &amp; <i>point</i>, const QPicture &amp; <i>picture</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPicture-3">drawPicture</a></b> ( int <i>x</i>, int <i>y</i>, const QPicture &amp; <i>picture</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPie">drawPie</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPie-2">drawPie</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPie-3">drawPie</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap">drawPixmap</a></b> ( const QRectF &amp; <i>target</i>, const QPixmap &amp; <i>pixmap</i>, const QRectF &amp; <i>source</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-2">drawPixmap</a></b> ( const QRect &amp; <i>target</i>, const QPixmap &amp; <i>pixmap</i>, const QRect &amp; <i>source</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-3">drawPixmap</a></b> ( const QPointF &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i>, const QRectF &amp; <i>source</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-4">drawPixmap</a></b> ( const QPoint &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i>, const QRect &amp; <i>source</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-5">drawPixmap</a></b> ( const QPointF &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-6">drawPixmap</a></b> ( const QPoint &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-7">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-8">drawPixmap</a></b> ( const QRect &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-9">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-10">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i>, int <i>sy</i>, int <i>sw</i>, int <i>sh</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPixmap-11">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i>, int <i>sy</i>, int <i>sw</i>, int <i>sh</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoint">drawPoint</a></b> ( const QPointF &amp; <i>position</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoint-2">drawPoint</a></b> ( const QPoint &amp; <i>position</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoint-3">drawPoint</a></b> ( int <i>x</i>, int <i>y</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoints">drawPoints</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoints-2">drawPoints</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoints-3">drawPoints</a></b> ( const QPolygonF &amp; <i>points</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPoints-4">drawPoints</a></b> ( const QPolygon &amp; <i>points</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolygon">drawPolygon</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolygon-2">drawPolygon</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolygon-5">drawPolygon</a></b> ( const QPolygonF &amp; <i>points</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolygon-6">drawPolygon</a></b> ( const QPolygon &amp; <i>points</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolyline">drawPolyline</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolyline-2">drawPolyline</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolyline-4">drawPolyline</a></b> ( const QPolygonF &amp; <i>points</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawPolyline-5">drawPolyline</a></b> ( const QPolygon &amp; <i>points</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRect">drawRect</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRect-2">drawRect</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRect-3">drawRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRects">drawRects</a></b> ( const QRectF * <i>rectangles</i>, int <i>rectCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRects-2">drawRects</a></b> ( const QRect * <i>rectangles</i>, int <i>rectCount</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRects-3">drawRects</a></b> ( const QVector&lt;QRectF&gt; &amp; <i>rectangles</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRects-4">drawRects</a></b> ( const QVector&lt;QRect&gt; &amp; <i>rectangles</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRoundedRect">drawRoundedRect</a></b> ( const QRectF &amp; <i>rect</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRoundedRect-2">drawRoundedRect</a></b> ( const QRect &amp; <i>rect</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawRoundedRect-3">drawRoundedRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText">drawText</a></b> ( const QPointF &amp; <i>position</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-9">drawText</a></b> ( const QPoint &amp; <i>position</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-10">drawText</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRectF * <i>boundingRect</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-11">drawText</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRect * <i>boundingRect</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-12">drawText</a></b> ( int <i>x</i>, int <i>y</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-13">drawText</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRect * <i>boundingRect</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawText-14">drawText</a></b> ( const QRectF &amp; <i>rectangle</i>, const QString &amp; <i>text</i>, const QTextOption &amp; <i>option</i> = QTextOption() )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawTiledPixmap">drawTiledPixmap</a></b> ( const QRectF &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i>, const QPointF &amp; <i>position</i> = QPointF() )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawTiledPixmap-2">drawTiledPixmap</a></b> ( const QRect &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i>, const QPoint &amp; <i>position</i> = QPoint() )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#drawTiledPixmap-3">drawTiledPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i> = 0, int <i>sy</i> = 0 )</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#end">end</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#eraseRect">eraseRect</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#eraseRect-2">eraseRect</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#eraseRect-3">eraseRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#fillPath">fillPath</a></b> ( const QPainterPath &amp; <i>path</i>, const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#fillRect">fillRect</a></b> ( const QRectF &amp; <i>rectangle</i>, const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#fillRect-2">fillRect</a></b> ( const QRect &amp; <i>rectangle</i>, const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#fillRect-3">fillRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>const QFont &amp; <b><a href="qpainter.html#font">font</a></b> () const</li>
-<li><div class="fn"/>QFontInfo <b><a href="qpainter.html#fontInfo">fontInfo</a></b> () const</li>
-<li><div class="fn"/>QFontMetrics <b><a href="qpainter.html#fontMetrics">fontMetrics</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#hasClipping">hasClipping</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#initFrom">initFrom</a></b> ( const QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#isActive">isActive</a></b> () const</li>
-<li><div class="fn"/>Qt::LayoutDirection <b><a href="qpainter.html#layoutDirection">layoutDirection</a></b> () const</li>
-<li><div class="fn"/>qreal <b><a href="qpainter.html#opacity">opacity</a></b> () const</li>
-<li><div class="fn"/>QPaintEngine * <b><a href="qpainter.html#paintEngine">paintEngine</a></b> () const</li>
-<li><div class="fn"/>const QPen &amp; <b><a href="qpainter.html#pen">pen</a></b> () const</li>
-<li><div class="fn"/>RenderHints <b><a href="qpainter.html#renderHints">renderHints</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#resetMatrix">resetMatrix</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#resetTransform">resetTransform</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#restore">restore</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#rotate">rotate</a></b> ( qreal <i>angle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#save">save</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#scale">scale</a></b> ( qreal <i>sx</i>, qreal <i>sy</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBackground">setBackground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBackgroundMode">setBackgroundMode</a></b> ( Qt::BGMode <i>mode</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBrush">setBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBrush-2">setBrush</a></b> ( Qt::BrushStyle <i>style</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBrushOrigin">setBrushOrigin</a></b> ( const QPointF &amp; <i>position</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBrushOrigin-2">setBrushOrigin</a></b> ( const QPoint &amp; <i>position</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setBrushOrigin-3">setBrushOrigin</a></b> ( int <i>x</i>, int <i>y</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipPath">setClipPath</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipRect">setClipRect</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipRect-2">setClipRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipRect-3">setClipRect</a></b> ( const QRect &amp; <i>rectangle</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipRegion">setClipRegion</a></b> ( const QRegion &amp; <i>region</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setClipping">setClipping</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setCompositionMode">setCompositionMode</a></b> ( CompositionMode <i>mode</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setFont">setFont</a></b> ( const QFont &amp; <i>font</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setLayoutDirection">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setOpacity">setOpacity</a></b> ( qreal <i>opacity</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setPen">setPen</a></b> ( const QPen &amp; <i>pen</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setPen-2">setPen</a></b> ( const QColor &amp; <i>color</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setPen-3">setPen</a></b> ( Qt::PenStyle <i>style</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setRenderHint">setRenderHint</a></b> ( RenderHint <i>hint</i>, bool <i>on</i> = true )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setRenderHints">setRenderHints</a></b> ( RenderHints <i>hints</i>, bool <i>on</i> = true )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setTransform">setTransform</a></b> ( const QTransform &amp; <i>transform</i>, bool <i>combine</i> = false )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setViewTransformEnabled">setViewTransformEnabled</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setViewport">setViewport</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setViewport-2">setViewport</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setWindow">setWindow</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setWindow-2">setWindow</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setWorldMatrix">setWorldMatrix</a></b> ( const QMatrix &amp; <i>matrix</i>, bool <i>combine</i> = false )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setWorldMatrixEnabled">setWorldMatrixEnabled</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setWorldTransform">setWorldTransform</a></b> ( const QTransform &amp; <i>matrix</i>, bool <i>combine</i> = false )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#shear">shear</a></b> ( qreal <i>sh</i>, qreal <i>sv</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#strokePath">strokePath</a></b> ( const QPainterPath &amp; <i>path</i>, const QPen &amp; <i>pen</i> )</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#testRenderHint">testRenderHint</a></b> ( RenderHint <i>hint</i> ) const</li>
-<li><div class="fn"/>const QTransform &amp; <b><a href="qpainter.html#transform">transform</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#translate">translate</a></b> ( const QPointF &amp; <i>offset</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#translate-2">translate</a></b> ( const QPoint &amp; <i>offset</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#translate-3">translate</a></b> ( qreal <i>dx</i>, qreal <i>dy</i> )</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#viewTransformEnabled">viewTransformEnabled</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qpainter.html#viewport">viewport</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qpainter.html#window">window</a></b> () const</li>
-<li><div class="fn"/>const QMatrix &amp; <b><a href="qpainter.html#worldMatrix">worldMatrix</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qpainter.html#worldMatrixEnabled">worldMatrixEnabled</a></b> () const</li>
-<li><div class="fn"/>const QTransform &amp; <b><a href="qpainter.html#worldTransform">worldTransform</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qpainter.html#QPainter">QPainter</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qpainter.html#QPainter-2">QPainter</a></b> ( QPaintDevice * <i>device</i> )</li>
+<li><div class="fn"></div><b><a href="qpainter.html#dtor.QPainter">~QPainter</a></b> ()</li>
+<li><div class="fn"></div>const QBrush &amp; <b><a href="qpainter.html#background">background</a></b> () const</li>
+<li><div class="fn"></div>Qt::BGMode <b><a href="qpainter.html#backgroundMode">backgroundMode</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#begin">begin</a></b> ( QPaintDevice * <i>device</i> )</li>
+<li><div class="fn"></div>QRectF <b><a href="qpainter.html#boundingRect">boundingRect</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qpainter.html#boundingRect-4">boundingRect</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qpainter.html#boundingRect-5">boundingRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, int <i>flags</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>QRectF <b><a href="qpainter.html#boundingRect-6">boundingRect</a></b> ( const QRectF &amp; <i>rectangle</i>, const QString &amp; <i>text</i>, const QTextOption &amp; <i>option</i> = QTextOption() )</li>
+<li><div class="fn"></div>const QBrush &amp; <b><a href="qpainter.html#brush">brush</a></b> () const</li>
+<li><div class="fn"></div>QPoint <b><a href="qpainter.html#brushOrigin">brushOrigin</a></b> () const</li>
+<li><div class="fn"></div>QPainterPath <b><a href="qpainter.html#clipPath">clipPath</a></b> () const</li>
+<li><div class="fn"></div>QRegion <b><a href="qpainter.html#clipRegion">clipRegion</a></b> () const</li>
+<li><div class="fn"></div>QMatrix <b><a href="qpainter.html#combinedMatrix">combinedMatrix</a></b> () const</li>
+<li><div class="fn"></div>QTransform <b><a href="qpainter.html#combinedTransform">combinedTransform</a></b> () const</li>
+<li><div class="fn"></div>CompositionMode <b><a href="qpainter.html#compositionMode">compositionMode</a></b> () const</li>
+<li><div class="fn"></div>QPaintDevice * <b><a href="qpainter.html#device">device</a></b> () const</li>
+<li><div class="fn"></div>const QMatrix &amp; <b><a href="qpainter.html#deviceMatrix">deviceMatrix</a></b> () const</li>
+<li><div class="fn"></div>const QTransform &amp; <b><a href="qpainter.html#deviceTransform">deviceTransform</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawArc">drawArc</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawArc-2">drawArc</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawArc-3">drawArc</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawChord">drawChord</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawChord-2">drawChord</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawChord-3">drawChord</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawConvexPolygon">drawConvexPolygon</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawConvexPolygon-2">drawConvexPolygon</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawConvexPolygon-3">drawConvexPolygon</a></b> ( const QPolygonF &amp; <i>polygon</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawConvexPolygon-4">drawConvexPolygon</a></b> ( const QPolygon &amp; <i>polygon</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawEllipse">drawEllipse</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawEllipse-2">drawEllipse</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawEllipse-3">drawEllipse</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawEllipse-4">drawEllipse</a></b> ( const QPointF &amp; <i>center</i>, qreal <i>rx</i>, qreal <i>ry</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawEllipse-5">drawEllipse</a></b> ( const QPoint &amp; <i>center</i>, int <i>rx</i>, int <i>ry</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage">drawImage</a></b> ( const QRectF &amp; <i>target</i>, const QImage &amp; <i>image</i>, const QRectF &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-2">drawImage</a></b> ( const QRect &amp; <i>target</i>, const QImage &amp; <i>image</i>, const QRect &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-3">drawImage</a></b> ( const QPointF &amp; <i>point</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-4">drawImage</a></b> ( const QPoint &amp; <i>point</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-5">drawImage</a></b> ( const QPointF &amp; <i>point</i>, const QImage &amp; <i>image</i>, const QRectF &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-6">drawImage</a></b> ( const QPoint &amp; <i>point</i>, const QImage &amp; <i>image</i>, const QRect &amp; <i>source</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-7">drawImage</a></b> ( const QRectF &amp; <i>rectangle</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-8">drawImage</a></b> ( const QRect &amp; <i>rectangle</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawImage-9">drawImage</a></b> ( int <i>x</i>, int <i>y</i>, const QImage &amp; <i>image</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLine">drawLine</a></b> ( const QLineF &amp; <i>line</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLine-2">drawLine</a></b> ( const QLine &amp; <i>line</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLine-3">drawLine</a></b> ( const QPoint &amp; <i>p1</i>, const QPoint &amp; <i>p2</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLine-4">drawLine</a></b> ( const QPointF &amp; <i>p1</i>, const QPointF &amp; <i>p2</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLine-5">drawLine</a></b> ( int <i>x1</i>, int <i>y1</i>, int <i>x2</i>, int <i>y2</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines">drawLines</a></b> ( const QLineF * <i>lines</i>, int <i>lineCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-2">drawLines</a></b> ( const QLine * <i>lines</i>, int <i>lineCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-3">drawLines</a></b> ( const QPointF * <i>pointPairs</i>, int <i>lineCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-4">drawLines</a></b> ( const QPoint * <i>pointPairs</i>, int <i>lineCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-5">drawLines</a></b> ( const QVector&lt;QPointF&gt; &amp; <i>pointPairs</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-6">drawLines</a></b> ( const QVector&lt;QPoint&gt; &amp; <i>pointPairs</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-7">drawLines</a></b> ( const QVector&lt;QLineF&gt; &amp; <i>lines</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawLines-8">drawLines</a></b> ( const QVector&lt;QLine&gt; &amp; <i>lines</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPath">drawPath</a></b> ( const QPainterPath &amp; <i>path</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPicture">drawPicture</a></b> ( const QPointF &amp; <i>point</i>, const QPicture &amp; <i>picture</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPicture-2">drawPicture</a></b> ( const QPoint &amp; <i>point</i>, const QPicture &amp; <i>picture</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPicture-3">drawPicture</a></b> ( int <i>x</i>, int <i>y</i>, const QPicture &amp; <i>picture</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPie">drawPie</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPie-2">drawPie</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPie-3">drawPie</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>startAngle</i>, int <i>spanAngle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap">drawPixmap</a></b> ( const QRectF &amp; <i>target</i>, const QPixmap &amp; <i>pixmap</i>, const QRectF &amp; <i>source</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-2">drawPixmap</a></b> ( const QRect &amp; <i>target</i>, const QPixmap &amp; <i>pixmap</i>, const QRect &amp; <i>source</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-3">drawPixmap</a></b> ( const QPointF &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i>, const QRectF &amp; <i>source</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-4">drawPixmap</a></b> ( const QPoint &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i>, const QRect &amp; <i>source</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-5">drawPixmap</a></b> ( const QPointF &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-6">drawPixmap</a></b> ( const QPoint &amp; <i>point</i>, const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-7">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-8">drawPixmap</a></b> ( const QRect &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-9">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-10">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i>, int <i>sy</i>, int <i>sw</i>, int <i>sh</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPixmap-11">drawPixmap</a></b> ( int <i>x</i>, int <i>y</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i>, int <i>sy</i>, int <i>sw</i>, int <i>sh</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoint">drawPoint</a></b> ( const QPointF &amp; <i>position</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoint-2">drawPoint</a></b> ( const QPoint &amp; <i>position</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoint-3">drawPoint</a></b> ( int <i>x</i>, int <i>y</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoints">drawPoints</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoints-2">drawPoints</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoints-3">drawPoints</a></b> ( const QPolygonF &amp; <i>points</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPoints-4">drawPoints</a></b> ( const QPolygon &amp; <i>points</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolygon">drawPolygon</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolygon-2">drawPolygon</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolygon-5">drawPolygon</a></b> ( const QPolygonF &amp; <i>points</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolygon-6">drawPolygon</a></b> ( const QPolygon &amp; <i>points</i>, Qt::FillRule <i>fillRule</i> = Qt::OddEvenFill )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolyline">drawPolyline</a></b> ( const QPointF * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolyline-2">drawPolyline</a></b> ( const QPoint * <i>points</i>, int <i>pointCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolyline-4">drawPolyline</a></b> ( const QPolygonF &amp; <i>points</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawPolyline-5">drawPolyline</a></b> ( const QPolygon &amp; <i>points</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRect">drawRect</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRect-2">drawRect</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRect-3">drawRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRects">drawRects</a></b> ( const QRectF * <i>rectangles</i>, int <i>rectCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRects-2">drawRects</a></b> ( const QRect * <i>rectangles</i>, int <i>rectCount</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRects-3">drawRects</a></b> ( const QVector&lt;QRectF&gt; &amp; <i>rectangles</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRects-4">drawRects</a></b> ( const QVector&lt;QRect&gt; &amp; <i>rectangles</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRoundedRect">drawRoundedRect</a></b> ( const QRectF &amp; <i>rect</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRoundedRect-2">drawRoundedRect</a></b> ( const QRect &amp; <i>rect</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawRoundedRect-3">drawRoundedRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i>, qreal <i>xRadius</i>, qreal <i>yRadius</i>, Qt::SizeMode <i>mode</i> = Qt::AbsoluteSize )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText">drawText</a></b> ( const QPointF &amp; <i>position</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-9">drawText</a></b> ( const QPoint &amp; <i>position</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-10">drawText</a></b> ( const QRectF &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRectF * <i>boundingRect</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-11">drawText</a></b> ( const QRect &amp; <i>rectangle</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRect * <i>boundingRect</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-12">drawText</a></b> ( int <i>x</i>, int <i>y</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-13">drawText</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, int <i>flags</i>, const QString &amp; <i>text</i>, QRect * <i>boundingRect</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawText-14">drawText</a></b> ( const QRectF &amp; <i>rectangle</i>, const QString &amp; <i>text</i>, const QTextOption &amp; <i>option</i> = QTextOption() )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawTiledPixmap">drawTiledPixmap</a></b> ( const QRectF &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i>, const QPointF &amp; <i>position</i> = QPointF() )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawTiledPixmap-2">drawTiledPixmap</a></b> ( const QRect &amp; <i>rectangle</i>, const QPixmap &amp; <i>pixmap</i>, const QPoint &amp; <i>position</i> = QPoint() )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#drawTiledPixmap-3">drawTiledPixmap</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPixmap &amp; <i>pixmap</i>, int <i>sx</i> = 0, int <i>sy</i> = 0 )</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#end">end</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#eraseRect">eraseRect</a></b> ( const QRectF &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#eraseRect-2">eraseRect</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#eraseRect-3">eraseRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillPath">fillPath</a></b> ( const QPainterPath &amp; <i>path</i>, const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect">fillRect</a></b> ( const QRectF &amp; <i>rectangle</i>, const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-2">fillRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, Qt::BrushStyle <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-3">fillRect</a></b> ( const QRect &amp; <i>rectangle</i>, Qt::BrushStyle <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-4">fillRect</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::BrushStyle <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-5">fillRect</a></b> ( const QRect &amp; <i>rectangle</i>, const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-6">fillRect</a></b> ( const QRect &amp; <i>rectangle</i>, const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-7">fillRect</a></b> ( const QRectF &amp; <i>rectangle</i>, const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-8">fillRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-9">fillRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-10">fillRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, Qt::GlobalColor <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-11">fillRect</a></b> ( const QRect &amp; <i>rectangle</i>, Qt::GlobalColor <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#fillRect-12">fillRect</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::GlobalColor <i>color</i> )</li>
+<li><div class="fn"></div>const QFont &amp; <b><a href="qpainter.html#font">font</a></b> () const</li>
+<li><div class="fn"></div>QFontInfo <b><a href="qpainter.html#fontInfo">fontInfo</a></b> () const</li>
+<li><div class="fn"></div>QFontMetrics <b><a href="qpainter.html#fontMetrics">fontMetrics</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#hasClipping">hasClipping</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#initFrom">initFrom</a></b> ( const QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#isActive">isActive</a></b> () const</li>
+<li><div class="fn"></div>Qt::LayoutDirection <b><a href="qpainter.html#layoutDirection">layoutDirection</a></b> () const</li>
+<li><div class="fn"></div>qreal <b><a href="qpainter.html#opacity">opacity</a></b> () const</li>
+<li><div class="fn"></div>QPaintEngine * <b><a href="qpainter.html#paintEngine">paintEngine</a></b> () const</li>
+<li><div class="fn"></div>const QPen &amp; <b><a href="qpainter.html#pen">pen</a></b> () const</li>
+<li><div class="fn"></div>RenderHints <b><a href="qpainter.html#renderHints">renderHints</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#resetMatrix">resetMatrix</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#resetTransform">resetTransform</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#restore">restore</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#rotate">rotate</a></b> ( qreal <i>angle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#save">save</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#scale">scale</a></b> ( qreal <i>sx</i>, qreal <i>sy</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBackground">setBackground</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBackgroundMode">setBackgroundMode</a></b> ( Qt::BGMode <i>mode</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBrush">setBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBrush-2">setBrush</a></b> ( Qt::BrushStyle <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBrushOrigin">setBrushOrigin</a></b> ( const QPointF &amp; <i>position</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBrushOrigin-2">setBrushOrigin</a></b> ( const QPoint &amp; <i>position</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setBrushOrigin-3">setBrushOrigin</a></b> ( int <i>x</i>, int <i>y</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipPath">setClipPath</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipRect">setClipRect</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipRect-2">setClipRect</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipRect-3">setClipRect</a></b> ( const QRect &amp; <i>rectangle</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipRegion">setClipRegion</a></b> ( const QRegion &amp; <i>region</i>, Qt::ClipOperation <i>operation</i> = Qt::ReplaceClip )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setClipping">setClipping</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setCompositionMode">setCompositionMode</a></b> ( CompositionMode <i>mode</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setFont">setFont</a></b> ( const QFont &amp; <i>font</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setLayoutDirection">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setOpacity">setOpacity</a></b> ( qreal <i>opacity</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setPen">setPen</a></b> ( const QPen &amp; <i>pen</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setPen-2">setPen</a></b> ( const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setPen-3">setPen</a></b> ( Qt::PenStyle <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setRenderHint">setRenderHint</a></b> ( RenderHint <i>hint</i>, bool <i>on</i> = true )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setRenderHints">setRenderHints</a></b> ( RenderHints <i>hints</i>, bool <i>on</i> = true )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setTransform">setTransform</a></b> ( const QTransform &amp; <i>transform</i>, bool <i>combine</i> = false )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setViewTransformEnabled">setViewTransformEnabled</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setViewport">setViewport</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setViewport-2">setViewport</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setWindow">setWindow</a></b> ( const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setWindow-2">setWindow</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setWorldMatrix">setWorldMatrix</a></b> ( const QMatrix &amp; <i>matrix</i>, bool <i>combine</i> = false )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setWorldMatrixEnabled">setWorldMatrixEnabled</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setWorldTransform">setWorldTransform</a></b> ( const QTransform &amp; <i>matrix</i>, bool <i>combine</i> = false )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#shear">shear</a></b> ( qreal <i>sh</i>, qreal <i>sv</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#strokePath">strokePath</a></b> ( const QPainterPath &amp; <i>path</i>, const QPen &amp; <i>pen</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#testRenderHint">testRenderHint</a></b> ( RenderHint <i>hint</i> ) const</li>
+<li><div class="fn"></div>const QTransform &amp; <b><a href="qpainter.html#transform">transform</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#translate">translate</a></b> ( const QPointF &amp; <i>offset</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#translate-2">translate</a></b> ( const QPoint &amp; <i>offset</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#translate-3">translate</a></b> ( qreal <i>dx</i>, qreal <i>dy</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#viewTransformEnabled">viewTransformEnabled</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qpainter.html#viewport">viewport</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qpainter.html#window">window</a></b> () const</li>
+<li><div class="fn"></div>const QMatrix &amp; <b><a href="qpainter.html#worldMatrix">worldMatrix</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qpainter.html#worldMatrixEnabled">worldMatrixEnabled</a></b> () const</li>
+<li><div class="fn"></div>const QTransform &amp; <b><a href="qpainter.html#worldTransform">worldTransform</a></b> () const</li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QPaintDevice * <b><a href="qpainter.html#redirected">redirected</a></b> ( const QPaintDevice * <i>device</i>, QPoint * <i>offset</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#restoreRedirected">restoreRedirected</a></b> ( const QPaintDevice * <i>device</i> )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#setRedirected">setRedirected</a></b> ( const QPaintDevice * <i>device</i>, QPaintDevice * <i>replacement</i>, const QPoint &amp; <i>offset</i> = QPoint() )</li>
+<li><div class="fn"></div>QPaintDevice * <b><a href="qpainter.html#redirected">redirected</a></b> ( const QPaintDevice * <i>device</i>, QPoint * <i>offset</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#restoreRedirected">restoreRedirected</a></b> ( const QPaintDevice * <i>device</i> )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#setRedirected">setRedirected</a></b> ( const QPaintDevice * <i>device</i>, QPaintDevice * <i>replacement</i>, const QPoint &amp; <i>offset</i> = QPoint() )</li>
 </ul>
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawPlainRect">qDrawPlainRect</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QColor &amp; <i>lineColor</i>, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawPlainRect-2">qDrawPlainRect</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QColor &amp; <i>lineColor</i>, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadeLine">qDrawShadeLine</a></b> ( QPainter * <i>painter</i>, int <i>x1</i>, int <i>y1</i>, int <i>x2</i>, int <i>y2</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = true, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadeLine-2">qDrawShadeLine</a></b> ( QPainter * <i>painter</i>, const QPoint &amp; <i>p1</i>, const QPoint &amp; <i>p2</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = true, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadePanel">qDrawShadePanel</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadePanel-2">qDrawShadePanel</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadeRect">qDrawShadeRect</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawShadeRect-2">qDrawShadeRect</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawWinButton">qDrawWinButton</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawWinButton-2">qDrawWinButton</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qpainter.html#qDrawWinPanel">qDrawWinPanel</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawPlainRect">qDrawPlainRect</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QColor &amp; <i>lineColor</i>, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawPlainRect-2">qDrawPlainRect</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QColor &amp; <i>lineColor</i>, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadeLine">qDrawShadeLine</a></b> ( QPainter * <i>painter</i>, int <i>x1</i>, int <i>y1</i>, int <i>x2</i>, int <i>y2</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = true, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadeLine-2">qDrawShadeLine</a></b> ( QPainter * <i>painter</i>, const QPoint &amp; <i>p1</i>, const QPoint &amp; <i>p2</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = true, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadePanel">qDrawShadePanel</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadePanel-2">qDrawShadePanel</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadeRect">qDrawShadeRect</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawShadeRect-2">qDrawShadeRect</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, int <i>lineWidth</i> = 1, int <i>midLineWidth</i> = 0, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawWinButton">qDrawWinButton</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawWinButton-2">qDrawWinButton</a></b> ( QPainter * <i>painter</i>, const QRect &amp; <i>rect</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qpainter.html#qDrawWinPanel">qDrawWinPanel</a></b> ( QPainter * <i>painter</i>, int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const QPalette &amp; <i>palette</i>, bool <i>sunken</i> = false, const QBrush * <i>fill</i> = 0 )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -345,12 +354,14 @@
 </table></p>
 <a name="limitations"></a>
 <h3>Limitations</h3>
-<a name="limitations"></a><p>If you are using coordinates with Qt's raster-based paint engine, it is important to note that coordinates greater than +/- 2<sup>15</sup> are not valid due to the use of <tt>short int</tt> in the implementation.</p>
+<a name="limitations"></a><p>If you are using coordinates with Qt's raster-based paint engine, it is important to note that, while coordinates greater than +/- 2<sup>15</sup> can be used, any painting performed with coordinates outside this range is not guaranteed to be shown; the drawing may be clipped. This is due to the use of <tt>short int</tt> in the implementation.</p>
+<p>The outlines generated by Qt's stroker are only an approximation when dealing with curved shapes. It is in most cases impossible to represent the outline of a bezier curve segment using another bezier curve segment, and so Qt approximates the curve outlines by using several smaller curves. For performance reasons there is a limit to how many curves Qt uses for these outlines, and thus when using large pen widths or scales the outline error increases. To generate outlines with smaller errors it is possible to use the <a href="qpainterpathstroker.html">QPainterPathStroker</a> class, which has the setCurveThreshold member function which let's the user specify the error tolerance. Another workaround is to convert the paths to polygons first and then draw the polygons instead.</p>
 <p>See also <a href="qpaintdevice.html">QPaintDevice</a>, <a href="qpaintengine.html">QPaintEngine</a>, <a href="qtsvg.html">QtSvg Module</a>, and <a href="painting-basicdrawing.html">Basic Drawing Example</a>.</p>
 <hr />
 <h2>Member Type Documentation</h2>
 <h3 class="fn"><a name="CompositionMode-enum"></a>enum QPainter::CompositionMode</h3>
-<p>Defines the Porter-Duff rules for digital image compositing. Composition modes are used to specify how the pixels in one image, the source, are merged with the pixel in another image, the destination.</p>
+<p>Defines the modes supported for digital image compositing. Composition modes are used to specify how the pixels in one image, the source, are merged with the pixel in another image, the destination.</p>
+<p>Please note that the bitwise raster operation modes, denoted with a RasterOp prefix, are only natively supported in the X11 and raster paint engines. This means that the only way to utilize these modes on the Mac is via a <a href="qimage.html">QImage</a>. The RasterOp denoted blend modes are <i>not</i> supported for pens and brushes with alpha components. Also, turning on the <a href="qpainter.html#RenderHint-enum">QPainter::Antialiasing</a> render hint will effectively disable the RasterOp modes.</p>
 <p align="center"><img src="images/qpainter-compositionmode1.png" /></p><p align="center"><img src="images/qpainter-compositionmode2.png" /></p><p>The most common type is SourceOver (often referred to as just alpha blending) where the source pixel is blended on top of the destination pixel in such a way that the alpha component of the source defines the translucency of the pixel.</p>
 <p>When the paint device is a <a href="qimage.html">QImage</a>, the image format must be set to <a href="qimage.html#Format-enum">Format_ARGB32Premultiplied</a> or <a href="qimage.html#Format-enum">Format_ARGB32</a> for the composition modes to have any effect. For performance the premultiplied version is the preferred format.</p>
 <p>When a composition mode is set it applies to all painting operator, pens, brushes, gradients and pixmap/image drawing.</p>
@@ -380,6 +391,15 @@
 <tr><td valign="top"><tt>QPainter::CompositionMode_SoftLight</tt></td><td align="center" valign="top"><tt>21</tt></td><td valign="top">Darkens or lightens the colors depending on the source color. Similar to CompositionMode_HardLight.</td></tr>
 <tr><td valign="top"><tt>QPainter::CompositionMode_Difference</tt></td><td align="center" valign="top"><tt>22</tt></td><td valign="top">Subtracts the darker of the colors from the lighter. Painting with white inverts the destination color, whereas painting with black leaves the destination color unchanged.</td></tr>
 <tr><td valign="top"><tt>QPainter::CompositionMode_Exclusion</tt></td><td align="center" valign="top"><tt>23</tt></td><td valign="top">Similar to CompositionMode_Difference, but with a lower contrast. Painting with white inverts the destination color, whereas painting with black leaves the destination color unchanged.</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_SourceOrDestination</tt></td><td align="center" valign="top"><tt>24</tt></td><td valign="top">Does a bitwise OR operation on the source and destination pixels (src OR dst).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_SourceAndDestination</tt></td><td align="center" valign="top"><tt>25</tt></td><td valign="top">Does a bitwise AND operation on the source and destination pixels (src AND dst).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_SourceXorDestination</tt></td><td align="center" valign="top"><tt>26</tt></td><td valign="top">Does a bitwise XOR operation on the source and destination pixels (src XOR dst).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_NotSourceAndNotDestination</tt></td><td align="center" valign="top"><tt>27</tt></td><td valign="top">Does a bitwise NOR operation on the source and destination pixels ((NOT src) AND (NOT dst)).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_NotSourceOrNotDestination</tt></td><td align="center" valign="top"><tt>28</tt></td><td valign="top">Does a bitwise NAND operation on the source and destination pixels ((NOT src) OR (NOT dst)).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_NotSourceXorDestination</tt></td><td align="center" valign="top"><tt>29</tt></td><td valign="top">Does a bitwise operation where the source pixels are inverted and then XOR'ed with the destination ((NOT src) XOR dst).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_NotSource</tt></td><td align="center" valign="top"><tt>30</tt></td><td valign="top">Does a bitwise operation where the source pixels are inverted (NOT src).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_NotSourceAndDestination</tt></td><td align="center" valign="top"><tt>31</tt></td><td valign="top">Does a bitwise operation where the source is inverted and then AND'ed with the destination ((NOT src) AND dst).</td></tr>
+<tr><td valign="top"><tt>QPainter::RasterOp_SourceAndNotDestination</tt></td><td align="center" valign="top"><tt>32</tt></td><td valign="top">Does a bitwise operation where the source is AND'ed with the inverted destination pixels (src AND (NOT dst)).</td></tr>
 </table></p>
 <p>See also <a href="qpainter.html#compositionMode">compositionMode</a>(), <a href="qpainter.html#setCompositionMode">setCompositionMode</a>(), <a href="qpainter.html#composition-modes">Composition Modes</a>, and <a href="painting-imagecomposition.html">Image Composition Example</a>.</p>
 <h3 class="flags"><a name="RenderHint-enum"></a>enum QPainter::RenderHint<br />flags QPainter::RenderHints</h3>
@@ -387,7 +407,7 @@
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
 <tr><th width="25%">Constant</th><th width="15%">Value</th><th width="60%">Description</th></tr>
 <tr><td valign="top"><tt>QPainter::Antialiasing</tt></td><td align="center" valign="top"><tt>0x01</tt></td><td valign="top">Indicates that the engine should antialias edges of primitives if possible.</td></tr>
-<tr><td valign="top"><tt>QPainter::TextAntialiasing</tt></td><td align="center" valign="top"><tt>0x02</tt></td><td valign="top">Indicates that the engine should antialias text if possible.</td></tr>
+<tr><td valign="top"><tt>QPainter::TextAntialiasing</tt></td><td align="center" valign="top"><tt>0x02</tt></td><td valign="top">Indicates that the engine should antialias text if possible. To forcibly disable antialiasing for text, do not use this hint. Instead, set <a href="qfont.html#StyleStrategy-enum">QFont::NoAntialias</a> on your font's style strategy.</td></tr>
 <tr><td valign="top"><tt>QPainter::SmoothPixmapTransform</tt></td><td align="center" valign="top"><tt>0x04</tt></td><td valign="top">Indicates that the engine should use a smooth pixmap transformation algorithm (such as bilinear) rather than nearest neighbor.</td></tr>
 <tr><td valign="top"><tt>QPainter::HighQualityAntialiasing</tt></td><td align="center" valign="top"><tt>0x08</tt></td><td valign="top">An OpenGL-specific rendering hint indicating that the engine should use fragment programs and offscreen rendering for antialiasing.</td></tr>
 <tr><td valign="top"><tt>QPainter::NonCosmeticDefaultPen</tt></td><td align="center" valign="top"><tt>0x10</tt></td><td valign="top">The engine should interpret pens with a width of 0 (which otherwise enables <a href="qpen.html#isCosmetic">QPen::isCosmetic</a>()) as being a non-cosmetic pen with a width of 1.</td></tr>
@@ -456,6 +476,7 @@
 <li><a href="qt.html#TextFlag-enum">Qt::TextExpandTabs</a></li>
 <li><a href="qt.html#TextFlag-enum">Qt::TextShowMnemonic</a></li>
 <li><a href="qt.html#TextFlag-enum">Qt::TextWordWrap</a></li>
+<li><a href="qt.html#TextFlag-enum">Qt::TextIncludeTrailingSpaces</a></li>
 </ul>
 <p>If several of the horizontal or several of the vertical alignment flags are set, the resulting alignment is undefined.</p>
 <p>See also <a href="qpainter.html#drawText">drawText</a>(), <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a>, and <a href="qt.html#TextFlag-enum">Qt::TextFlag</a>.</p>
@@ -939,6 +960,7 @@
 <li><a href="qt.html#TextFlag-enum">Qt::TextExpandTabs</a></li>
 <li><a href="qt.html#TextFlag-enum">Qt::TextShowMnemonic</a></li>
 <li><a href="qt.html#TextFlag-enum">Qt::TextWordWrap</a></li>
+<li><a href="qt.html#TextFlag-enum">Qt::TextIncludeTrailingSpaces</a></li>
 </ul>
 <p>By default, <a href="qpainter.html">QPainter</a> draws text anti-aliased.</p>
 <p><b>Note:</b> The y-coordinate of <i>rectangle</i> is used as the top of the font.</p>
@@ -1009,15 +1031,51 @@
 <p>Alternatively, you can specify a <a href="qcolor.html">QColor</a> instead of a <a href="qbrush.html">QBrush</a>; the <a href="qbrush.html">QBrush</a> constructor (taking a <a href="qcolor.html">QColor</a> argument) will automatically create a solid pattern brush.</p>
 <p>See also <a href="qpainter.html#drawPath">drawPath</a>().</p>
 <h3 class="fn"><a name="fillRect"></a>void QPainter::fillRect ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> )</h3>
-<p>Fills the given <i>rectangle</i> with the given <i>brush</i>.</p>
+<p>Fills the given <i>rectangle</i> with the <i>brush</i> specified.</p>
 <p>Alternatively, you can specify a <a href="qcolor.html">QColor</a> instead of a <a href="qbrush.html">QBrush</a>; the <a href="qbrush.html">QBrush</a> constructor (taking a <a href="qcolor.html">QColor</a> argument) will automatically create a solid pattern brush.</p>
 <p>See also <a href="qpainter.html#drawRect">drawRect</a>().</p>
-<h3 class="fn"><a name="fillRect-2"></a>void QPainter::fillRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> )</h3>
+<h3 class="fn"><a name="fillRect-2"></a>void QPainter::fillRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, <a href="qt.html#BrushStyle-enum">Qt::BrushStyle</a> <i>style</i> )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
-<p>Fills the given <i>rectangle</i> with the given <i>brush</i>.</p>
-<h3 class="fn"><a name="fillRect-3"></a>void QPainter::fillRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> )</h3>
+<p>Fills the rectangle beginning at (<i>x</i>, <i>y</i>) with the given <i>width</i> and <i>height</i>, using the brush <i>style</i> specified.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-3"></a>void QPainter::fillRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, <a href="qt.html#BrushStyle-enum">Qt::BrushStyle</a> <i>style</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the brush <i>style</i> specified.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-4"></a>void QPainter::fillRect ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, <a href="qt.html#BrushStyle-enum">Qt::BrushStyle</a> <i>style</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the brush <i>style</i> specified.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-5"></a>void QPainter::fillRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the specified <i>brush</i>.</p>
+<h3 class="fn"><a name="fillRect-6"></a>void QPainter::fillRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, const <a href="qcolor.html">QColor</a> &amp; <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the <i>color</i> specified.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-7"></a>void QPainter::fillRect ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, const <a href="qcolor.html">QColor</a> &amp; <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the <i>color</i> specified.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-8"></a>void QPainter::fillRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
 <p>Fills the rectangle beginning at (<i>x</i>, <i>y</i>) with the given <i>width</i> and <i>height</i>, using the given <i>brush</i>.</p>
+<h3 class="fn"><a name="fillRect-9"></a>void QPainter::fillRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, const <a href="qcolor.html">QColor</a> &amp; <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the rectangle beginning at (<i>x</i>, <i>y</i>) with the given <i>width</i> and <i>height</i>, using the given <i>color</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-10"></a>void QPainter::fillRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the rectangle beginning at (<i>x</i>, <i>y</i>) with the given <i>width</i> and <i>height</i>, using the given <i>color</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-11"></a>void QPainter::fillRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the specified <i>color</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<h3 class="fn"><a name="fillRect-12"></a>void QPainter::fillRect ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
+<p>This is an overloaded member function, provided for convenience.</p>
+<p>Fills the given <i>rectangle</i> with the specified <i>color</i>.</p>
+<p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="font"></a>const <a href="qfont.html">QFont</a> &amp; QPainter::font () const</h3>
 <p>Returns the currently set font used for drawing text.</p>
 <p>See also <a href="qpainter.html#setFont">setFont</a>(), <a href="qpainter.html#drawText">drawText</a>(), and <a href="qpainter.html#settings">Settings</a>.</p>
@@ -1115,7 +1173,6 @@
 <p>Note that the clip rectangle is specified in logical (painter) coordinates.</p>
 <p>See also <a href="qpainter.html#clipRegion">clipRegion</a>(), <a href="qpainter.html#setClipping">setClipping</a>(), and <a href="qpainter.html#clipping">Clipping</a>.</p>
 <h3 class="fn"><a name="setClipRect-2"></a>void QPainter::setClipRect ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i>, <a href="qt.html#ClipOperation-enum">Qt::ClipOperation</a> <i>operation</i> = Qt::ReplaceClip )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Enables clipping, and sets the clip region to the rectangle beginning at (<i>x</i>, <i>y</i>) with the given <i>width</i> and <i>height</i>.</p>
 <h3 class="fn"><a name="setClipRect-3"></a>void QPainter::setClipRect ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, <a href="qt.html#ClipOperation-enum">Qt::ClipOperation</a> <i>operation</i> = Qt::ReplaceClip )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
@@ -1361,8 +1418,8 @@
 <p>See also <a href="qpainter.html#qDrawShadePanel">qDrawShadePanel</a>(), <a href="qpainter.html#qDrawWinButton">qDrawWinButton</a>(), and <a href="qstyle.html">QStyle</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

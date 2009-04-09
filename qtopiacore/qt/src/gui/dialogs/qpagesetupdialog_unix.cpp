@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -47,6 +51,7 @@
 
 #include <QtGui/qprinter.h>
 #include <private/qabstractpagesetupdialog_p.h>
+#include <private/qprinter_p.h>
 
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
 #  include <private/qcups_p.h>
@@ -213,10 +218,49 @@ private:
 class QPageSetupDialogPrivate : public QAbstractPageSetupDialogPrivate
 {
     Q_DECLARE_PUBLIC(QPageSetupDialog)
+
 public:
+    ~QPageSetupDialogPrivate();
+    void init();
+
     QPageSetupWidget *widget;
+#if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
+    QCUPSSupport *cups;
+#endif
 };
 
+QPageSetupDialogPrivate::~QPageSetupDialogPrivate()
+{
+#if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
+    delete cups;
+#endif
+}
+
+void QPageSetupDialogPrivate::init()
+{
+    Q_Q(QPageSetupDialog);
+
+    widget = new QPageSetupWidget(q);
+    widget->setPrinter(printer);
+#if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
+    if (printer->outputFormat() == QPrinter::NativeFormat && QCUPSSupport::isAvailable()) {
+        cups = new QCUPSSupport;
+        widget->selectPrinter(cups);
+    } else {
+        cups = 0;
+    }
+#endif
+
+    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok
+                                                     | QDialogButtonBox::Cancel,
+                                                     Qt::Horizontal, q);
+    QObject::connect(buttons, SIGNAL(accepted()), q, SLOT(accept()));
+    QObject::connect(buttons, SIGNAL(rejected()), q, SLOT(reject()));
+
+    QVBoxLayout *lay = new QVBoxLayout(q);
+    lay->addWidget(widget);
+    lay->addWidget(buttons);
+}
 
 QPageSetupWidget::QPageSetupWidget(QWidget *parent)
     : QWidget(parent),
@@ -226,9 +270,9 @@ QPageSetupWidget::QPageSetupWidget(QWidget *parent)
 {
     widget.setupUi(this);
 
-    QString suffix = (QLocale::system().measurementSystem() == QLocale::ImperialSystem) ?
-        QString::fromLatin1(" in") :
-        QString::fromLatin1(" mm");
+    QString suffix = (QLocale::system().measurementSystem() == QLocale::ImperialSystem)
+                     ? QString::fromLatin1(" in")
+                     : QString::fromLatin1(" mm");
     widget.topMargin->setSuffix(suffix);
     widget.bottomMargin->setSuffix(suffix);
     widget.leftMargin->setSuffix(suffix);
@@ -297,9 +341,9 @@ void QPageSetupWidget::setPrinter(QPrinter *printer)
     _q_paperSizeChanged();
 }
 
+// set gui data on printer
 void QPageSetupWidget::setupPrinter() const
 {
-    // set gui data on printer
     QPrinter::Orientation orientation = widget.portrait->isChecked()
                                         ? QPrinter::Portrait
                                         : QPrinter::Landscape;
@@ -351,22 +395,39 @@ void QPageSetupWidget::selectPrinter(QCUPSSupport *cups)
         const ppd_option_t* pageSizes = m_cups->pageSizes();
         const int numChoices = pageSizes ? pageSizes->num_choices : 0;
 
+        int cupsDefaultSize = 0;
+        QSize qtPreferredSize = m_printer->paperSize(QPrinter::Point).toSize();
+        bool preferredSizeMatched = false;
         for (int i = 0; i < numChoices; ++i) {
             widget.paperSize->addItem(QString::fromLocal8Bit(pageSizes->choices[i].text), QByteArray(pageSizes->choices[i].choice));
             if (static_cast<int>(pageSizes->choices[i].marked) == 1)
-                widget.paperSize->setCurrentIndex(i);
+                cupsDefaultSize = i;
+            if (m_printer->d_func()->hasUserSetPageSize) {
+                QRect cupsPaperSize = m_cups->paperRect(pageSizes->choices[i].choice);
+                QSize diff = cupsPaperSize.size() - qtPreferredSize;
+                if (qAbs(diff.width()) < 5 && qAbs(diff.height()) < 5) {
+                    widget.paperSize->setCurrentIndex(i);
+                    preferredSizeMatched = true;
+                }
+            }
         }
-        QByteArray cupsPageSize = widget.paperSize->itemData(widget.paperSize->currentIndex()).toByteArray();
-        QRect paper = m_cups->paperRect(cupsPageSize);
-        QRect content = m_cups->pageRect(cupsPageSize);
+        if (!preferredSizeMatched)
+            widget.paperSize->setCurrentIndex(cupsDefaultSize);
+        if (m_printer->d_func()->hasCustomPageMargins) {
+            m_printer->getPageMargins(&m_leftMargin, &m_topMargin, &m_rightMargin, &m_bottomMargin, QPrinter::Point);
+        } else {
+            QByteArray cupsPaperSizeChoice = widget.paperSize->itemData(widget.paperSize->currentIndex()).toByteArray();
+            QRect paper = m_cups->paperRect(cupsPaperSizeChoice);
+            QRect content = m_cups->pageRect(cupsPaperSizeChoice);
 
-        m_leftMargin = content.x() - paper.x();
-        m_topMargin = content.y() - paper.y();
-        m_rightMargin = paper.right() - content.right();
-        m_bottomMargin = paper.bottom() - content.bottom();
+            m_leftMargin = content.x() - paper.x();
+            m_topMargin = content.y() - paper.y();
+            m_rightMargin = paper.right() - content.right();
+            m_bottomMargin = paper.bottom() - content.bottom();
+        }
     }
 #endif
-    if ( widget.paperSize->count() == 0) {
+    if (widget.paperSize->count() == 0) {
         populatePaperSizes(widget.paperSize);
         widget.paperSize->setCurrentIndex(widget.paperSize->findData(
             QLocale::system().measurementSystem() == QLocale::ImperialSystem ? QPrinter::Letter : QPrinter::A4));
@@ -391,6 +452,7 @@ void QPageSetupWidget::selectPdfPsPrinter(const QPrinter *p)
     m_pagePreview->setMargins(m_leftMargin, m_topMargin, m_rightMargin, m_bottomMargin);
 }
 
+// Updates size/preview after the combobox has been changed.
 void QPageSetupWidget::_q_paperSizeChanged()
 {
     QVariant val = widget.paperSize->itemData(widget.paperSize->currentIndex());
@@ -407,12 +469,16 @@ void QPageSetupWidget::_q_paperSizeChanged()
                                         ? QPrinter::Portrait
                                         : QPrinter::Landscape;
 
-    const bool custom = size == QPrinter::Custom;
+    bool custom = size == QPrinter::Custom;
+
+#if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
+    custom = custom ? !m_cups : custom;
+#endif
+
     widget.paperWidth->setEnabled(custom);
     widget.paperHeight->setEnabled(custom);
     widget.widthLabel->setEnabled(custom);
     widget.heightLabel->setEnabled(custom);
-
     if (custom) {
         m_paperSize.setWidth( widget.paperWidth->value() * m_currentMultiplier);
         m_paperSize.setHeight( widget.paperHeight->value() * m_currentMultiplier);
@@ -422,7 +488,7 @@ void QPageSetupWidget::_q_paperSizeChanged()
 #if !defined(QT_NO_CUPS) && !defined(QT_NO_LIBRARY)
         if (m_cups) { // combobox is filled with cups based data
             QByteArray cupsPageSize = widget.paperSize->itemData(widget.paperSize->currentIndex()).toByteArray();
-            m_paperSize = m_cups->pageRect(cupsPageSize).size();
+            m_paperSize = m_cups->paperRect(cupsPageSize).size();
             if (orientation == QPrinter::Landscape)
                 m_paperSize = QSizeF(m_paperSize.height(), m_paperSize.width()); // swap
         }
@@ -446,7 +512,6 @@ void QPageSetupWidget::_q_pageOrientationChanged()
     }
     _q_paperSizeChanged();
 }
-
 
 extern double qt_multiplierForUnit(QPrinter::Unit unit, int resolution);
 
@@ -518,41 +583,20 @@ void QPageSetupWidget::setRightMargin(double newValue)
 }
 
 
-/*!
-    \class QPageSetupDialog
 
-    \brief The QPageSetupDialog class provides a configuration dialog
-    for the page-related options on a printer.
-
-    On Windows and Mac OS X the page setup dialog is implemented using
-    the native page setup dialogs.
-
-    Note that on Windows and Mac OS X custom paper sizes won't be
-    reflected in the native page setup dialogs. Additionally, custom
-    page margins set on a QPrinter won't show in the native Mac OS X
-    page setup dialog.
-
-    \sa QPrinter, QPrintDialog
-*/
-
-/*!
-    Constructs a page setup dialog that configures \a printer with \a
-    parent as the parent widget.
-*/
 QPageSetupDialog::QPageSetupDialog(QPrinter *printer, QWidget *parent)
     : QAbstractPageSetupDialog(*(new QPageSetupDialogPrivate), printer, parent)
 {
     Q_D(QPageSetupDialog);
+    d->init();
+}
 
-    d->widget = new QPageSetupWidget(this);
-    d->widget->setPrinter(printer);
-    QVBoxLayout *lay = new QVBoxLayout();
-    setLayout(lay);
-    lay->addWidget(d->widget);
-    QDialogButtonBox *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
-    lay->addWidget(buttons);
-    connect(buttons->button(QDialogButtonBox::Ok), SIGNAL(clicked()), this, SLOT(accept()));
-    connect(buttons->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), this, SLOT(reject()));
+
+QPageSetupDialog::QPageSetupDialog(QWidget *parent)
+    : QAbstractPageSetupDialog(*(new QPageSetupDialogPrivate), 0, parent)
+{
+    Q_D(QPageSetupDialog);
+    d->init();
 }
 
 /*!
@@ -568,12 +612,6 @@ int QPageSetupDialog::exec()
     return ret;
 }
 
-/*!
-    \fn QPrinter *QPageSetupDialog::printer()
-
-    Returns the printer that was passed to the QPageSetupDialog
-    constructor.
-*/
 
 QT_END_NAMESPACE
 

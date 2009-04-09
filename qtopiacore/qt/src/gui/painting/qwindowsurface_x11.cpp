@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,27 +45,45 @@
 #include <QtGui/QWidget>
 
 #include "private/qt_x11_p.h"
+#include "private/qpixmap_x11_p.h"
+#include "private/qwidget_p.h"
 #include "qx11info_x11.h"
 #include "qwindowsurface_x11_p.h"
 
 QT_BEGIN_NAMESPACE
 
+extern void *qt_getClipRects(const QRegion &r, int &num); // in qpaintengine_x11.cpp
+
 struct QX11WindowSurfacePrivate
 {
     QWidget *widget;
     QPixmap device;
+#ifndef QT_NO_XRENDER
+    bool translucentBackground;
+#endif
 };
 
 QX11WindowSurface::QX11WindowSurface(QWidget *widget)
-    : QWindowSurface(widget), d_ptr(new QX11WindowSurfacePrivate)
+    : QWindowSurface(widget), d_ptr(new QX11WindowSurfacePrivate), gc(0)
 {
     d_ptr->widget = widget;
+#ifndef QT_NO_XRENDER
+    d_ptr->translucentBackground = X11->use_xrender
+        && widget->x11Info().depth() == 32;
+    setStaticContentsSupport(!d_ptr->translucentBackground);
+#else
+    setStaticContentsSupport(true);
+#endif
 }
 
 
 QX11WindowSurface::~QX11WindowSurface()
 {
     delete d_ptr;
+    if (gc) {
+        XFreeGC(X11->display, gc);
+        gc = 0;
+    }
 }
 
 QPaintDevice *QX11WindowSurface::paintDevice()
@@ -69,53 +91,47 @@ QPaintDevice *QX11WindowSurface::paintDevice()
     return &d_ptr->device;
 }
 
+void QX11WindowSurface::beginPaint(const QRegion &rgn)
+{
+#ifndef QT_NO_XRENDER
+    if (d_ptr->translucentBackground) {
+        if (d_ptr->device.depth() != 32)
+            static_cast<QX11PixmapData *>(d_ptr->device.data_ptr())->convertToARGB32();
+        ::Picture src = X11->getSolidFill(d_ptr->device.x11Info().screen(), Qt::transparent);
+        ::Picture dst = d_ptr->device.x11PictureHandle();
+        const QVector<QRect> rects = rgn.rects();
+        const int w = d_ptr->device.width();
+        const int h = d_ptr->device.height();
+        for (QVector<QRect>::const_iterator it = rects.begin(); it != rects.end(); ++it)
+            XRenderComposite(X11->display, PictOpSrc, src, 0, dst,
+                             0, 0, w, h, it->x(), it->y(),
+                             it->width(), it->height());
+    }
+#endif
+}
 
 void QX11WindowSurface::flush(QWidget *widget, const QRegion &rgn, const QPoint &offset)
 {
     if (d_ptr->device.isNull())
         return;
 
-#ifndef Q_FLATTEN_EXPOSE
-    extern void *qt_getClipRects(const QRegion &r, int &num); // in qpaintengine_x11.cpp
-    extern QWidgetData* qt_widget_data(QWidget *);
     QPoint wOffset = qt_qwidget_data(widget)->wrect.topLeft();
-    GC gc = XCreateGC(X11->display, d_ptr->device.handle(), 0, 0);
     QRegion wrgn(rgn);
     QRect br = rgn.boundingRect();
     if (!wOffset.isNull())
         wrgn.translate(-wOffset);
     QRect wbr = wrgn.boundingRect();
 
-    // #### why dirty widget here? should be up to date already
-//     if (br.right() + offset.x() >= d_ptr->device.size().width() || br.bottom() + offset.y() >= d_ptr->device.size().height()) {
-// //             QRegion dirty = rgn - QRect(-offset, d_ptr->device.size());
-// //             qDebug() << dirty;
-//         widget->d_func()->dirtyWidget_sys(rgn - QRect(-offset, d_ptr->device.size()));
-//     }
-
     int num;
     XRectangle *rects = (XRectangle *)qt_getClipRects(wrgn, num);
+    if (num <= 0)
+        return;
 //         qDebug() << "XSetClipRectangles";
 //         for  (int i = 0; i < num; ++i)
 //             qDebug() << " " << i << rects[i].x << rects[i].x << rects[i].y << rects[i].width << rects[i].height;
     XSetClipRectangles(X11->display, gc, 0, 0, rects, num, YXBanded);
-#else
-    Q_UNUSED(rgn);
-    XGCValues values;
-    values.subwindow_mode = IncludeInferiors;
-    GC gc = XCreateGC(X11->display, d_ptr->device.handle(), GCSubwindowMode, &values);
-#endif
-    XSetGraphicsExposures(X11->display, gc, False);
-//         XFillRectangle(X11->display, widget->handle(), gc, 0, 0, widget->width(), widget->height());
-#ifndef Q_FLATTEN_EXPOSE
     XCopyArea(X11->display, d_ptr->device.handle(), widget->handle(), gc,
               br.x() + offset.x(), br.y() + offset.y(), br.width(), br.height(), wbr.x(), wbr.y());
-#else
-    Q_ASSERT(widget->isWindow());
-    XCopyArea(X11->display, d_ptr->device.handle(), widget->handle(), gc,
-              offset.x(), offset.y(), widget->width(), widget->height(), 0, 0);
-#endif
-    XFreeGC(X11->display, gc);
 }
 
 void QX11WindowSurface::setGeometry(const QRect &rect)
@@ -125,8 +141,52 @@ void QX11WindowSurface::setGeometry(const QRect &rect)
     const QSize size = rect.size();
     if (d_ptr->device.size() == size)
         return;
-    QPixmap::x11SetDefaultScreen(d_ptr->widget->x11Info().screen());
-    d_ptr->device = QPixmap(size);
+#ifndef QT_NO_XRENDER
+    if (d_ptr->translucentBackground) {
+        QX11PixmapData *data = new QX11PixmapData(QPixmapData::PixmapType);
+        data->xinfo = d_ptr->widget->x11Info();
+        data->resize(size.width(), size.height());
+        d_ptr->device = QPixmap(data);
+    } else
+#endif
+    {
+        QPixmap::x11SetDefaultScreen(d_ptr->widget->x11Info().screen());
+
+        QX11PixmapData *oldData = static_cast<QX11PixmapData *>(d_ptr->device.pixmapData());
+        Q_ASSERT(oldData);
+        if (!oldData->uninit && hasStaticContents()) {
+            // Copy the content of the old pixmap into the new one.
+            QX11PixmapData *newData = new QX11PixmapData(QPixmapData::PixmapType);
+            newData->resize(size.width(), size.height());
+            Q_ASSERT(oldData->d == newData->d);
+
+            QRegion staticRegion(staticContents());
+            // Make sure we're inside the boundaries of the old pixmap.
+            staticRegion &= QRect(0, 0, oldData->w, oldData->h);
+            const QRect boundingRect(staticRegion.boundingRect());
+            const int dx = boundingRect.x();
+            const int dy = boundingRect.y();
+
+            int num;
+            XRectangle *rects = (XRectangle *)qt_getClipRects(staticRegion, num);
+            GC tmpGc = XCreateGC(X11->display, oldData->hd, 0, 0);
+            XSetClipRectangles(X11->display, tmpGc, 0, 0, rects, num, YXBanded);
+            XCopyArea(X11->display, oldData->hd, newData->hd, tmpGc,
+                      dx, dy, qMin(boundingRect.width(), size.width()),
+                      qMin(boundingRect.height(), size.height()), dx, dy);
+            XFreeGC(X11->display, tmpGc);
+            newData->uninit = false;
+
+            d_ptr->device = QPixmap(newData);
+        } else {
+            d_ptr->device = QPixmap(size);
+        }
+    }
+
+    if (gc)
+        XFreeGC(X11->display, gc);
+    gc = XCreateGC(X11->display, d_ptr->device.handle(), 0, 0);
+    XSetGraphicsExposures(X11->display, gc, False);
 }
 
 bool QX11WindowSurface::scroll(const QRegion &area, int dx, int dy)
@@ -148,40 +208,35 @@ bool QX11WindowSurface::scroll(const QRegion &area, int dx, int dy)
 QPixmap QX11WindowSurface::grabWidget(const QWidget *widget,
                                       const QRect& rect) const
 {
-    if (d_ptr->device.isNull())
+    if (!widget || d_ptr->device.isNull())
         return QPixmap();
 
-    QRect br = rect;
-    QRect wbr(widget->geometry());
+    QRect srcRect;
 
-    if (wbr.isNull())
+    // make sure the rect is inside the widget & clip to widget's rect
+    if (!rect.isEmpty())
+        srcRect = rect & widget->rect();
+    else
+        srcRect = widget->rect();
+
+    if (srcRect.isEmpty())
         return QPixmap();
 
-    int w = qMin(rect.size().width(), wbr.size().width());
-    if (!w)
-        w = qMax(rect.size().width(), wbr.size().width());
-
-    int h = qMin(rect.size().height(), wbr.size().height());
-    if (!h)
-        h = qMax(rect.size().height(), wbr.size().height());
-
-    if (br.isNull())
-        br = wbr;
+    // If it's a child widget we have to translate the coordinates
+    if (widget != window())
+        srcRect.translate(widget->mapTo(window(), QPoint(0, 0)));
 
     QPixmap::x11SetDefaultScreen(widget->x11Info().screen());
-    QPixmap px(w, h);
+    QPixmap px(srcRect.width(), srcRect.height());
 
-    GC gc = XCreateGC(X11->display, d_ptr->device.handle(), 0, 0);
-    XRectangle xrect;
-    xrect.x = short(wbr.x());
-    xrect.y = short(wbr.y());
-    xrect.width = ushort(wbr.width());
-    xrect.height = ushort(wbr.height());
-    XSetClipRectangles(X11->display, gc, 0, 0, &xrect, 1, YXBanded);
-    XSetGraphicsExposures(X11->display, gc, False);
-    XCopyArea(X11->display, d_ptr->device.handle(), px.handle(), gc,
-              br.x(), br.y(), br.width(), br.height(), 0, 0);
-    XFreeGC(X11->display, gc);
+    GC tmpGc = XCreateGC(X11->display, d_ptr->device.handle(), 0, 0);
+
+    // Copy srcRect from the backing store to the new pixmap
+    XSetGraphicsExposures(X11->display, tmpGc, False);
+    XCopyArea(X11->display, d_ptr->device.handle(), px.handle(), tmpGc,
+              srcRect.x(), srcRect.y(), srcRect.width(), srcRect.height(), 0, 0);
+
+    XFreeGC(X11->display, tmpGc);
 
     return px;
 }

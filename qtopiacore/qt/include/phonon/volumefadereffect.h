@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/volumefadereffect.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/volumefadereffect.h"

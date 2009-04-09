@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGZoomEvent_H
-#define JSSVGZoomEvent_H
+#ifndef JSSVGZoomEvent_h
+#define JSSVGZoomEvent_h
 
 
 #if ENABLE(SVG)
@@ -31,29 +31,37 @@ namespace WebCore {
 class SVGZoomEvent;
 
 class JSSVGZoomEvent : public JSUIEvent {
+    typedef JSUIEvent Base;
 public:
-    JSSVGZoomEvent(KJS::ExecState*, SVGZoomEvent*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGZoomEvent(PassRefPtr<JSC::Structure>, PassRefPtr<SVGZoomEvent>, SVGElement* context);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        ZoomRectScreenAttrNum, PreviousScaleAttrNum, PreviousTranslateAttrNum, NewScaleAttrNum, 
-        NewTranslateAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGZoomEventPrototype : public KJS::JSObject {
+class JSSVGZoomEventPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGZoomEventPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSUIEventPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGZoomEventPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGZoomEventZoomRectScreen(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGZoomEventPreviousScale(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGZoomEventPreviousTranslate(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGZoomEventNewScale(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGZoomEventNewTranslate(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

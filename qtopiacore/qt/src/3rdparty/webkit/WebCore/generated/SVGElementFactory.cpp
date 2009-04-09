@@ -29,23 +29,66 @@
 
 #include "config.h"
 #include "SVGElementFactory.h"
+
 #include "SVGNames.h"
-#include "Page.h"
+#if ENABLE(DASHBOARD_SUPPORT)
+#include "Document.h"
 #include "Settings.h"
+#endif
+
 #include "SVGAElement.h"
+#include "SVGAltGlyphElement.h"
+#include "SVGAnimateElement.h"
+#include "SVGAnimateColorElement.h"
+#include "SVGAnimateMotionElement.h"
+#include "SVGAnimateTransformElement.h"
 #include "SVGCircleElement.h"
 #include "SVGClipPathElement.h"
 #include "SVGCursorElement.h"
+#include "SVGDefinitionSrcElement.h"
 #include "SVGDefsElement.h"
 #include "SVGDescElement.h"
 #include "SVGEllipseElement.h"
+#include "SVGFEBlendElement.h"
+#include "SVGFEColorMatrixElement.h"
+#include "SVGFEComponentTransferElement.h"
+#include "SVGFECompositeElement.h"
+#include "SVGFEDiffuseLightingElement.h"
+#include "SVGFEDisplacementMapElement.h"
+#include "SVGFEDistantLightElement.h"
+#include "SVGFEFloodElement.h"
+#include "SVGFEFuncAElement.h"
+#include "SVGFEFuncBElement.h"
+#include "SVGFEFuncGElement.h"
+#include "SVGFEFuncRElement.h"
+#include "SVGFEGaussianBlurElement.h"
+#include "SVGFEImageElement.h"
+#include "SVGFEMergeElement.h"
+#include "SVGFEMergeNodeElement.h"
+#include "SVGFEOffsetElement.h"
+#include "SVGFEPointLightElement.h"
+#include "SVGFESpecularLightingElement.h"
+#include "SVGFESpotLightElement.h"
+#include "SVGFETileElement.h"
+#include "SVGFETurbulenceElement.h"
+#include "SVGFilterElement.h"
+#include "SVGFontElement.h"
+#include "SVGFontFaceElement.h"
+#include "SVGFontFaceFormatElement.h"
+#include "SVGFontFaceNameElement.h"
+#include "SVGFontFaceSrcElement.h"
+#include "SVGFontFaceUriElement.h"
+#include "SVGForeignObjectElement.h"
 #include "SVGGElement.h"
+#include "SVGGlyphElement.h"
+#include "SVGHKernElement.h"
 #include "SVGImageElement.h"
 #include "SVGLineElement.h"
 #include "SVGLinearGradientElement.h"
 #include "SVGMarkerElement.h"
 #include "SVGMaskElement.h"
 #include "SVGMetadataElement.h"
+#include "SVGMissingGlyphElement.h"
 #include "SVGMPathElement.h"
 #include "SVGPathElement.h"
 #include "SVGPatternElement.h"
@@ -61,6 +104,7 @@
 #include "SVGSwitchElement.h"
 #include "SVGSymbolElement.h"
 #include "SVGTextElement.h"
+#include "SVGTextPathElement.h"
 #include "SVGTitleElement.h"
 #include "SVGTRefElement.h"
 #include "SVGTSpanElement.h"
@@ -69,184 +113,383 @@
 #include <wtf/HashMap.h>
 
 using namespace WebCore;
-using namespace WebCore::SVGNames;
 
-typedef SVGElement *(*ConstructorFunc)(Document *doc, bool createdByParser);
-typedef WTF::HashMap<AtomicStringImpl*, ConstructorFunc> FunctionMap;
+typedef PassRefPtr<SVGElement> (*ConstructorFunction)(Document*, bool createdByParser);
+typedef WTF::HashMap<AtomicStringImpl*, ConstructorFunction> FunctionMap;
 
-static FunctionMap *gFunctionMap = 0;
+static FunctionMap* gFunctionMap = 0;
 
 namespace WebCore {
 
 #if ENABLE(SVG)
-SVGElement *aConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> aConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGAElement(aTag, doc);
+    return new SVGAElement(SVGNames::aTag, doc);
 }
 
-SVGElement *circleConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> altGlyphConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGCircleElement(circleTag, doc);
+    return new SVGAltGlyphElement(SVGNames::altGlyphTag, doc);
 }
 
-SVGElement *clipPathConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> animateConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGClipPathElement(clipPathTag, doc);
+    return new SVGAnimateElement(SVGNames::animateTag, doc);
 }
 
-SVGElement *cursorConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> animateColorConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGCursorElement(cursorTag, doc);
+    return new SVGAnimateColorElement(SVGNames::animateColorTag, doc);
 }
 
-SVGElement *defsConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> animateMotionConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGDefsElement(defsTag, doc);
+    return new SVGAnimateMotionElement(SVGNames::animateMotionTag, doc);
 }
 
-SVGElement *descConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> animateTransformConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGDescElement(descTag, doc);
+    return new SVGAnimateTransformElement(SVGNames::animateTransformTag, doc);
 }
 
-SVGElement *ellipseConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> circleConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGEllipseElement(ellipseTag, doc);
+    return new SVGCircleElement(SVGNames::circleTag, doc);
 }
 
-SVGElement *gConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> clipPathConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGGElement(gTag, doc);
+    return new SVGClipPathElement(SVGNames::clipPathTag, doc);
 }
 
-SVGElement *imageConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> cursorConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGImageElement(imageTag, doc);
+    return new SVGCursorElement(SVGNames::cursorTag, doc);
 }
 
-SVGElement *lineConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> definition_srcConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGLineElement(lineTag, doc);
+    return new SVGDefinitionSrcElement(SVGNames::definition_srcTag, doc);
 }
 
-SVGElement *linearGradientConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> defsConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGLinearGradientElement(linearGradientTag, doc);
+    return new SVGDefsElement(SVGNames::defsTag, doc);
 }
 
-SVGElement *markerConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> descConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGMarkerElement(markerTag, doc);
+    return new SVGDescElement(SVGNames::descTag, doc);
 }
 
-SVGElement *maskConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> ellipseConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGMaskElement(maskTag, doc);
+    return new SVGEllipseElement(SVGNames::ellipseTag, doc);
 }
 
-SVGElement *metadataConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feBlendConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGMetadataElement(metadataTag, doc);
+    return new SVGFEBlendElement(SVGNames::feBlendTag, doc);
 }
 
-SVGElement *mpathConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feColorMatrixConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGMPathElement(mpathTag, doc);
+    return new SVGFEColorMatrixElement(SVGNames::feColorMatrixTag, doc);
 }
 
-SVGElement *pathConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feComponentTransferConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGPathElement(pathTag, doc);
+    return new SVGFEComponentTransferElement(SVGNames::feComponentTransferTag, doc);
 }
 
-SVGElement *patternConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feCompositeConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGPatternElement(patternTag, doc);
+    return new SVGFECompositeElement(SVGNames::feCompositeTag, doc);
 }
 
-SVGElement *polygonConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feDiffuseLightingConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGPolygonElement(polygonTag, doc);
+    return new SVGFEDiffuseLightingElement(SVGNames::feDiffuseLightingTag, doc);
 }
 
-SVGElement *polylineConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feDisplacementMapConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGPolylineElement(polylineTag, doc);
+    return new SVGFEDisplacementMapElement(SVGNames::feDisplacementMapTag, doc);
 }
 
-SVGElement *radialGradientConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feDistantLightConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGRadialGradientElement(radialGradientTag, doc);
+    return new SVGFEDistantLightElement(SVGNames::feDistantLightTag, doc);
 }
 
-SVGElement *rectConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feFloodConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGRectElement(rectTag, doc);
+    return new SVGFEFloodElement(SVGNames::feFloodTag, doc);
 }
 
-SVGElement *scriptConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feFuncAConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGScriptElement(scriptTag, doc);
+    return new SVGFEFuncAElement(SVGNames::feFuncATag, doc);
 }
 
-SVGElement *setConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feFuncBConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGSetElement(setTag, doc);
+    return new SVGFEFuncBElement(SVGNames::feFuncBTag, doc);
 }
 
-SVGElement *stopConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feFuncGConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGStopElement(stopTag, doc);
+    return new SVGFEFuncGElement(SVGNames::feFuncGTag, doc);
 }
 
-SVGElement *styleConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feFuncRConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGStyleElement(styleTag, doc);
+    return new SVGFEFuncRElement(SVGNames::feFuncRTag, doc);
 }
 
-SVGElement *svgConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feGaussianBlurConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGSVGElement(svgTag, doc);
+    return new SVGFEGaussianBlurElement(SVGNames::feGaussianBlurTag, doc);
 }
 
-SVGElement *switchConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feImageConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGSwitchElement(switchTag, doc);
+    return new SVGFEImageElement(SVGNames::feImageTag, doc);
 }
 
-SVGElement *symbolConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feMergeConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGSymbolElement(symbolTag, doc);
+    return new SVGFEMergeElement(SVGNames::feMergeTag, doc);
 }
 
-SVGElement *textConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feMergeNodeConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGTextElement(textTag, doc);
+    return new SVGFEMergeNodeElement(SVGNames::feMergeNodeTag, doc);
 }
 
-SVGElement *titleConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feOffsetConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGTitleElement(titleTag, doc);
+    return new SVGFEOffsetElement(SVGNames::feOffsetTag, doc);
 }
 
-SVGElement *trefConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> fePointLightConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGTRefElement(trefTag, doc);
+    return new SVGFEPointLightElement(SVGNames::fePointLightTag, doc);
 }
 
-SVGElement *tspanConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feSpecularLightingConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGTSpanElement(tspanTag, doc);
+    return new SVGFESpecularLightingElement(SVGNames::feSpecularLightingTag, doc);
 }
 
-SVGElement *useConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feSpotLightConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGUseElement(useTag, doc);
+    return new SVGFESpotLightElement(SVGNames::feSpotLightTag, doc);
 }
 
-SVGElement *viewConstructor(Document *doc, bool createdByParser)
+static PassRefPtr<SVGElement> feTileConstructor(Document* doc, bool createdByParser)
 {
-    return new SVGViewElement(viewTag, doc);
+    return new SVGFETileElement(SVGNames::feTileTag, doc);
+}
+
+static PassRefPtr<SVGElement> feTurbulenceConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFETurbulenceElement(SVGNames::feTurbulenceTag, doc);
+}
+
+static PassRefPtr<SVGElement> filterConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFilterElement(SVGNames::filterTag, doc);
+}
+
+static PassRefPtr<SVGElement> fontConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontElement(SVGNames::fontTag, doc);
+}
+
+static PassRefPtr<SVGElement> font_faceConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontFaceElement(SVGNames::font_faceTag, doc);
+}
+
+static PassRefPtr<SVGElement> font_face_formatConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontFaceFormatElement(SVGNames::font_face_formatTag, doc);
+}
+
+static PassRefPtr<SVGElement> font_face_nameConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontFaceNameElement(SVGNames::font_face_nameTag, doc);
+}
+
+static PassRefPtr<SVGElement> font_face_srcConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontFaceSrcElement(SVGNames::font_face_srcTag, doc);
+}
+
+static PassRefPtr<SVGElement> font_face_uriConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGFontFaceUriElement(SVGNames::font_face_uriTag, doc);
+}
+
+static PassRefPtr<SVGElement> foreignObjectConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGForeignObjectElement(SVGNames::foreignObjectTag, doc);
+}
+
+static PassRefPtr<SVGElement> gConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGGElement(SVGNames::gTag, doc);
+}
+
+static PassRefPtr<SVGElement> glyphConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGGlyphElement(SVGNames::glyphTag, doc);
+}
+
+static PassRefPtr<SVGElement> hkernConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGHKernElement(SVGNames::hkernTag, doc);
+}
+
+static PassRefPtr<SVGElement> imageConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGImageElement(SVGNames::imageTag, doc);
+}
+
+static PassRefPtr<SVGElement> lineConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGLineElement(SVGNames::lineTag, doc);
+}
+
+static PassRefPtr<SVGElement> linearGradientConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGLinearGradientElement(SVGNames::linearGradientTag, doc);
+}
+
+static PassRefPtr<SVGElement> markerConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGMarkerElement(SVGNames::markerTag, doc);
+}
+
+static PassRefPtr<SVGElement> maskConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGMaskElement(SVGNames::maskTag, doc);
+}
+
+static PassRefPtr<SVGElement> metadataConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGMetadataElement(SVGNames::metadataTag, doc);
+}
+
+static PassRefPtr<SVGElement> missing_glyphConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGMissingGlyphElement(SVGNames::missing_glyphTag, doc);
+}
+
+static PassRefPtr<SVGElement> mpathConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGMPathElement(SVGNames::mpathTag, doc);
+}
+
+static PassRefPtr<SVGElement> pathConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGPathElement(SVGNames::pathTag, doc);
+}
+
+static PassRefPtr<SVGElement> patternConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGPatternElement(SVGNames::patternTag, doc);
+}
+
+static PassRefPtr<SVGElement> polygonConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGPolygonElement(SVGNames::polygonTag, doc);
+}
+
+static PassRefPtr<SVGElement> polylineConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGPolylineElement(SVGNames::polylineTag, doc);
+}
+
+static PassRefPtr<SVGElement> radialGradientConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGRadialGradientElement(SVGNames::radialGradientTag, doc);
+}
+
+static PassRefPtr<SVGElement> rectConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGRectElement(SVGNames::rectTag, doc);
+}
+
+static PassRefPtr<SVGElement> scriptConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGScriptElement(SVGNames::scriptTag, doc, createdByParser);
+}
+
+static PassRefPtr<SVGElement> setConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGSetElement(SVGNames::setTag, doc);
+}
+
+static PassRefPtr<SVGElement> stopConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGStopElement(SVGNames::stopTag, doc);
+}
+
+static PassRefPtr<SVGElement> styleConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGStyleElement(SVGNames::styleTag, doc, createdByParser);
+}
+
+static PassRefPtr<SVGElement> svgConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGSVGElement(SVGNames::svgTag, doc);
+}
+
+static PassRefPtr<SVGElement> switchConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGSwitchElement(SVGNames::switchTag, doc);
+}
+
+static PassRefPtr<SVGElement> symbolConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGSymbolElement(SVGNames::symbolTag, doc);
+}
+
+static PassRefPtr<SVGElement> textConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGTextElement(SVGNames::textTag, doc);
+}
+
+static PassRefPtr<SVGElement> textPathConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGTextPathElement(SVGNames::textPathTag, doc);
+}
+
+static PassRefPtr<SVGElement> titleConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGTitleElement(SVGNames::titleTag, doc);
+}
+
+static PassRefPtr<SVGElement> trefConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGTRefElement(SVGNames::trefTag, doc);
+}
+
+static PassRefPtr<SVGElement> tspanConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGTSpanElement(SVGNames::tspanTag, doc);
+}
+
+static PassRefPtr<SVGElement> useConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGUseElement(SVGNames::useTag, doc);
+}
+
+static PassRefPtr<SVGElement> viewConstructor(Document* doc, bool createdByParser)
+{
+    return new SVGViewElement(SVGNames::viewTag, doc);
 }
 
 #endif
@@ -259,64 +502,106 @@ static inline void createFunctionMapIfNecessary()
     gFunctionMap = new FunctionMap;
     
     // Populate it with constructor functions.
-    gFunctionMap->set(aTag.localName().impl(), aConstructor);
-    gFunctionMap->set(circleTag.localName().impl(), circleConstructor);
-    gFunctionMap->set(clipPathTag.localName().impl(), clipPathConstructor);
-    gFunctionMap->set(cursorTag.localName().impl(), cursorConstructor);
-    gFunctionMap->set(defsTag.localName().impl(), defsConstructor);
-    gFunctionMap->set(descTag.localName().impl(), descConstructor);
-    gFunctionMap->set(ellipseTag.localName().impl(), ellipseConstructor);
-    gFunctionMap->set(gTag.localName().impl(), gConstructor);
-    gFunctionMap->set(imageTag.localName().impl(), imageConstructor);
-    gFunctionMap->set(lineTag.localName().impl(), lineConstructor);
-    gFunctionMap->set(linearGradientTag.localName().impl(), linearGradientConstructor);
-    gFunctionMap->set(markerTag.localName().impl(), markerConstructor);
-    gFunctionMap->set(maskTag.localName().impl(), maskConstructor);
-    gFunctionMap->set(metadataTag.localName().impl(), metadataConstructor);
-    gFunctionMap->set(mpathTag.localName().impl(), mpathConstructor);
-    gFunctionMap->set(pathTag.localName().impl(), pathConstructor);
-    gFunctionMap->set(patternTag.localName().impl(), patternConstructor);
-    gFunctionMap->set(polygonTag.localName().impl(), polygonConstructor);
-    gFunctionMap->set(polylineTag.localName().impl(), polylineConstructor);
-    gFunctionMap->set(radialGradientTag.localName().impl(), radialGradientConstructor);
-    gFunctionMap->set(rectTag.localName().impl(), rectConstructor);
-    gFunctionMap->set(scriptTag.localName().impl(), scriptConstructor);
-    gFunctionMap->set(setTag.localName().impl(), setConstructor);
-    gFunctionMap->set(stopTag.localName().impl(), stopConstructor);
-    gFunctionMap->set(styleTag.localName().impl(), styleConstructor);
-    gFunctionMap->set(svgTag.localName().impl(), svgConstructor);
-    gFunctionMap->set(switchTag.localName().impl(), switchConstructor);
-    gFunctionMap->set(symbolTag.localName().impl(), symbolConstructor);
-    gFunctionMap->set(textTag.localName().impl(), textConstructor);
-    gFunctionMap->set(titleTag.localName().impl(), titleConstructor);
-    gFunctionMap->set(trefTag.localName().impl(), trefConstructor);
-    gFunctionMap->set(tspanTag.localName().impl(), tspanConstructor);
-    gFunctionMap->set(useTag.localName().impl(), useConstructor);
-    gFunctionMap->set(viewTag.localName().impl(), viewConstructor);
+    gFunctionMap->set(SVGNames::aTag.localName().impl(), aConstructor);
+    gFunctionMap->set(SVGNames::altGlyphTag.localName().impl(), altGlyphConstructor);
+    gFunctionMap->set(SVGNames::animateTag.localName().impl(), animateConstructor);
+    gFunctionMap->set(SVGNames::animateColorTag.localName().impl(), animateColorConstructor);
+    gFunctionMap->set(SVGNames::animateMotionTag.localName().impl(), animateMotionConstructor);
+    gFunctionMap->set(SVGNames::animateTransformTag.localName().impl(), animateTransformConstructor);
+    gFunctionMap->set(SVGNames::circleTag.localName().impl(), circleConstructor);
+    gFunctionMap->set(SVGNames::clipPathTag.localName().impl(), clipPathConstructor);
+    gFunctionMap->set(SVGNames::cursorTag.localName().impl(), cursorConstructor);
+    gFunctionMap->set(SVGNames::definition_srcTag.localName().impl(), definition_srcConstructor);
+    gFunctionMap->set(SVGNames::defsTag.localName().impl(), defsConstructor);
+    gFunctionMap->set(SVGNames::descTag.localName().impl(), descConstructor);
+    gFunctionMap->set(SVGNames::ellipseTag.localName().impl(), ellipseConstructor);
+    gFunctionMap->set(SVGNames::feBlendTag.localName().impl(), feBlendConstructor);
+    gFunctionMap->set(SVGNames::feColorMatrixTag.localName().impl(), feColorMatrixConstructor);
+    gFunctionMap->set(SVGNames::feComponentTransferTag.localName().impl(), feComponentTransferConstructor);
+    gFunctionMap->set(SVGNames::feCompositeTag.localName().impl(), feCompositeConstructor);
+    gFunctionMap->set(SVGNames::feDiffuseLightingTag.localName().impl(), feDiffuseLightingConstructor);
+    gFunctionMap->set(SVGNames::feDisplacementMapTag.localName().impl(), feDisplacementMapConstructor);
+    gFunctionMap->set(SVGNames::feDistantLightTag.localName().impl(), feDistantLightConstructor);
+    gFunctionMap->set(SVGNames::feFloodTag.localName().impl(), feFloodConstructor);
+    gFunctionMap->set(SVGNames::feFuncATag.localName().impl(), feFuncAConstructor);
+    gFunctionMap->set(SVGNames::feFuncBTag.localName().impl(), feFuncBConstructor);
+    gFunctionMap->set(SVGNames::feFuncGTag.localName().impl(), feFuncGConstructor);
+    gFunctionMap->set(SVGNames::feFuncRTag.localName().impl(), feFuncRConstructor);
+    gFunctionMap->set(SVGNames::feGaussianBlurTag.localName().impl(), feGaussianBlurConstructor);
+    gFunctionMap->set(SVGNames::feImageTag.localName().impl(), feImageConstructor);
+    gFunctionMap->set(SVGNames::feMergeTag.localName().impl(), feMergeConstructor);
+    gFunctionMap->set(SVGNames::feMergeNodeTag.localName().impl(), feMergeNodeConstructor);
+    gFunctionMap->set(SVGNames::feOffsetTag.localName().impl(), feOffsetConstructor);
+    gFunctionMap->set(SVGNames::fePointLightTag.localName().impl(), fePointLightConstructor);
+    gFunctionMap->set(SVGNames::feSpecularLightingTag.localName().impl(), feSpecularLightingConstructor);
+    gFunctionMap->set(SVGNames::feSpotLightTag.localName().impl(), feSpotLightConstructor);
+    gFunctionMap->set(SVGNames::feTileTag.localName().impl(), feTileConstructor);
+    gFunctionMap->set(SVGNames::feTurbulenceTag.localName().impl(), feTurbulenceConstructor);
+    gFunctionMap->set(SVGNames::filterTag.localName().impl(), filterConstructor);
+    gFunctionMap->set(SVGNames::fontTag.localName().impl(), fontConstructor);
+    gFunctionMap->set(SVGNames::font_faceTag.localName().impl(), font_faceConstructor);
+    gFunctionMap->set(SVGNames::font_face_formatTag.localName().impl(), font_face_formatConstructor);
+    gFunctionMap->set(SVGNames::font_face_nameTag.localName().impl(), font_face_nameConstructor);
+    gFunctionMap->set(SVGNames::font_face_srcTag.localName().impl(), font_face_srcConstructor);
+    gFunctionMap->set(SVGNames::font_face_uriTag.localName().impl(), font_face_uriConstructor);
+    gFunctionMap->set(SVGNames::foreignObjectTag.localName().impl(), foreignObjectConstructor);
+    gFunctionMap->set(SVGNames::gTag.localName().impl(), gConstructor);
+    gFunctionMap->set(SVGNames::glyphTag.localName().impl(), glyphConstructor);
+    gFunctionMap->set(SVGNames::hkernTag.localName().impl(), hkernConstructor);
+    gFunctionMap->set(SVGNames::imageTag.localName().impl(), imageConstructor);
+    gFunctionMap->set(SVGNames::lineTag.localName().impl(), lineConstructor);
+    gFunctionMap->set(SVGNames::linearGradientTag.localName().impl(), linearGradientConstructor);
+    gFunctionMap->set(SVGNames::markerTag.localName().impl(), markerConstructor);
+    gFunctionMap->set(SVGNames::maskTag.localName().impl(), maskConstructor);
+    gFunctionMap->set(SVGNames::metadataTag.localName().impl(), metadataConstructor);
+    gFunctionMap->set(SVGNames::missing_glyphTag.localName().impl(), missing_glyphConstructor);
+    gFunctionMap->set(SVGNames::mpathTag.localName().impl(), mpathConstructor);
+    gFunctionMap->set(SVGNames::pathTag.localName().impl(), pathConstructor);
+    gFunctionMap->set(SVGNames::patternTag.localName().impl(), patternConstructor);
+    gFunctionMap->set(SVGNames::polygonTag.localName().impl(), polygonConstructor);
+    gFunctionMap->set(SVGNames::polylineTag.localName().impl(), polylineConstructor);
+    gFunctionMap->set(SVGNames::radialGradientTag.localName().impl(), radialGradientConstructor);
+    gFunctionMap->set(SVGNames::rectTag.localName().impl(), rectConstructor);
+    gFunctionMap->set(SVGNames::scriptTag.localName().impl(), scriptConstructor);
+    gFunctionMap->set(SVGNames::setTag.localName().impl(), setConstructor);
+    gFunctionMap->set(SVGNames::stopTag.localName().impl(), stopConstructor);
+    gFunctionMap->set(SVGNames::styleTag.localName().impl(), styleConstructor);
+    gFunctionMap->set(SVGNames::svgTag.localName().impl(), svgConstructor);
+    gFunctionMap->set(SVGNames::switchTag.localName().impl(), switchConstructor);
+    gFunctionMap->set(SVGNames::symbolTag.localName().impl(), symbolConstructor);
+    gFunctionMap->set(SVGNames::textTag.localName().impl(), textConstructor);
+    gFunctionMap->set(SVGNames::textPathTag.localName().impl(), textPathConstructor);
+    gFunctionMap->set(SVGNames::titleTag.localName().impl(), titleConstructor);
+    gFunctionMap->set(SVGNames::trefTag.localName().impl(), trefConstructor);
+    gFunctionMap->set(SVGNames::tspanTag.localName().impl(), tspanConstructor);
+    gFunctionMap->set(SVGNames::useTag.localName().impl(), useConstructor);
+    gFunctionMap->set(SVGNames::viewTag.localName().impl(), viewConstructor);
 }
 #endif
 
-SVGElement *SVGElementFactory::createSVGElement(const QualifiedName& qName, Document* doc, bool createdByParser)
+PassRefPtr<SVGElement> SVGElementFactory::createSVGElement(const QualifiedName& qName, Document* doc, bool createdByParser)
 {
 #if ENABLE(SVG)
     // Don't make elements without a document
     if (!doc)
         return 0;
-    
+
+#if ENABLE(DASHBOARD_SUPPORT)
     Settings* settings = doc->settings();
     if (settings && settings->usesDashboardBackwardCompatibilityMode())
         return 0;
+#endif
 
     createFunctionMapIfNecessary();
-    ConstructorFunc func = gFunctionMap->get(qName.localName().impl());
+    ConstructorFunction func = gFunctionMap->get(qName.localName().impl());
     if (func)
         return func(doc, createdByParser);
-    
+
     return new SVGElement(qName, doc);
 #else
     return 0;
 #endif
 }
 
-} // namespace
+} // namespace WebCore
 

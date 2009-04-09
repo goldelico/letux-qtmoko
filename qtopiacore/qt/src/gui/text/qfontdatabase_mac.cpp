@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,7 @@ static void initWritingSystems(QtFontFamily *family, ATSFontRef atsFont)
         || ATSFontGetTable(atsFont, MAKE_TAG('O', 'S', '/', '2'), 0, length, os2Table.data(), &length) != noErr)
         return;
 
+    // See also qfontdatabase_win.cpp, offsets taken from OS/2 table in the TrueType spec
     quint32 unicodeRange[4] = {
         qFromBigEndian<quint32>(os2Table.data() + 42),
         qFromBigEndian<quint32>(os2Table.data() + 46),
@@ -83,7 +88,7 @@ static void initializeDb()
     if(!db || db->count)
         return;
 
-#if ((defined (USE_COOA) || 0) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+#if defined(QT_MAC_USE_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5
 if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
     QCFType<CTFontCollectionRef> collection = CTFontCollectionCreateFromAvailableFonts(0);
     if(!collection)
@@ -144,66 +149,69 @@ if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
     }
 } else 
 #endif
-{ 
-    FMFontIterator it;
-    if (!FMCreateFontIterator(0, 0, kFMUseGlobalScopeOption, &it)) {
-        while (true) {
-            FMFont fmFont;
-            if (FMGetNextFont(&it, &fmFont) != noErr)
-                break;
+    {
+#ifndef Q_WS_MAC64
+        FMFontIterator it;
+        if (!FMCreateFontIterator(0, 0, kFMUseGlobalScopeOption, &it)) {
+            while (true) {
+                FMFont fmFont;
+                if (FMGetNextFont(&it, &fmFont) != noErr)
+                    break;
 
-            FMFontFamily fmFamily;
-            FMFontStyle fmStyle;
-            QString familyName;
+                FMFontFamily fmFamily;
+                FMFontStyle fmStyle;
+                QString familyName;
 
-            QtFontStyle::Key styleKey;
+                QtFontStyle::Key styleKey;
 
-            ATSFontRef atsFont = FMGetATSFontRefFromFont(fmFont);
+                ATSFontRef atsFont = FMGetATSFontRefFromFont(fmFont);
 
-            if (!FMGetFontFamilyInstanceFromFont(fmFont, &fmFamily, &fmStyle)) {
-                { //sanity check the font, and see if we can use it at all! --Sam
-                    ATSUFontID fontID;
-                    if(ATSUFONDtoFontID(fmFamily, 0, &fontID) != noErr)
-                        continue;
+                if (!FMGetFontFamilyInstanceFromFont(fmFont, &fmFamily, &fmStyle)) {
+                    { //sanity check the font, and see if we can use it at all! --Sam
+                        ATSUFontID fontID;
+                        if(ATSUFONDtoFontID(fmFamily, 0, &fontID) != noErr)
+                            continue;
+                    }
+
+                    if (fmStyle & ::italic)
+                        styleKey.style = QFont::StyleItalic;
+                    if (fmStyle & ::bold)
+                        styleKey.weight = QFont::Bold;
+
+                    ATSFontFamilyRef familyRef = FMGetATSFontFamilyRefFromFontFamily(fmFamily);
+                    QCFString cfFamilyName;;
+                    ATSFontFamilyGetName(familyRef, kATSOptionFlagsDefault, &cfFamilyName);
+                    familyName = cfFamilyName;
+                } else {
+                    QCFString cfFontName;
+                    ATSFontGetName(atsFont, kATSOptionFlagsDefault, &cfFontName);
+                    familyName = cfFontName;
+                    quint16 macStyle = 0;
+                    {
+                        uchar data[4];
+                        ByteCount len = 4;
+                        if (ATSFontGetTable(atsFont, MAKE_TAG('h', 'e', 'a', 'd'), 44, 4, &data, &len) == noErr)
+                            macStyle = qFromBigEndian<quint16>(data);
+                    }
+                    if (macStyle & 1)
+                        styleKey.weight = QFont::Bold;
+                    if (macStyle & 2)
+                        styleKey.style = QFont::StyleItalic;
                 }
 
-                if (fmStyle & ::italic)
-                    styleKey.style = QFont::StyleItalic;
-                if (fmStyle & ::bold)
-                    styleKey.weight = QFont::Bold;
+                QtFontFamily *family = db->family(familyName, true);
+                QtFontFoundry *foundry = family->foundry(QString(), true);
+                QtFontStyle *style = foundry->style(styleKey, true);
+                style->pixelSize(0, true);
+                style->smoothScalable = true;
 
-                ATSFontFamilyRef familyRef = FMGetATSFontFamilyRefFromFontFamily(fmFamily);
-                QCFString cfFamilyName;;
-                ATSFontFamilyGetName(familyRef, kATSOptionFlagsDefault, &cfFamilyName);
-                familyName = cfFamilyName;
-            } else {
-                QCFString cfFontName;
-                ATSFontGetName(atsFont, kATSOptionFlagsDefault, &cfFontName);
-                familyName = cfFontName;
-                quint16 macStyle = 0;
-                {
-                    uchar data[4];
-                    ByteCount len = 4;
-                    if (ATSFontGetTable(atsFont, MAKE_TAG('h', 'e', 'a', 'd'), 44, 4, &data, &len) == noErr)
-                        macStyle = qFromBigEndian<quint16>(data);
-                }
-                if (macStyle & 1)
-                    styleKey.weight = QFont::Bold;
-                if (macStyle & 2)
-                    styleKey.style = QFont::StyleItalic;
+                initWritingSystems(family, atsFont);
             }
-
-            QtFontFamily *family = db->family(familyName, true);
-            QtFontFoundry *foundry = family->foundry(QString(), true);
-            QtFontStyle *style = foundry->style(styleKey, true);
-            style->pixelSize(0, true);
-            style->smoothScalable = true;
-
-            initWritingSystems(family, atsFont);
+            FMDisposeFontIterator(&it);
         }
-        FMDisposeFontIterator(&it);
+#endif
     }
-}
+
 }
 
 static inline void load(const QString & = QString(), int = -1)
@@ -334,7 +342,9 @@ FamilyFound:
     }
 #endif
 
-#if 1
+#ifdef QT_MAC_USE_COCOA
+    QFontEngine *engine = new QCoreTextFontEngineMulti(familyRef, fontRef, fontDef, d->kerning);
+#elif 1
     QFontEngine *engine = new QFontEngineMacMulti(familyRef, fontRef, fontDef, d->kerning);
 #else
     ATSFontFamilyRef atsFamily = familyRef;
@@ -416,17 +426,19 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
                 if(qt_mac_create_fsref(fnt->fileName, &ref) != noErr)
                     return;
 
-               e = ATSFontActivateFromFileReference(&ref, kATSFontContextLocal, kATSFontFormatUnspecified, 0, kATSOptionFlagsDefault, &handle);
-        } else
+                ATSFontActivateFromFileReference(&ref, kATSFontContextLocal, kATSFontFormatUnspecified, 0, kATSOptionFlagsDefault, &handle);
+        } else 
 #endif
         {
-            extern Q_CORE_EXPORT OSErr qt_mac_create_fsspec(const QString &, FSSpec *); // global.cpp
-            FSSpec spec;
-            if(qt_mac_create_fsspec(fnt->fileName, &spec) != noErr)
-                return;
+#ifndef Q_WS_MAC64
+                extern Q_CORE_EXPORT OSErr qt_mac_create_fsspec(const QString &, FSSpec *); // global.cpp
+                FSSpec spec;
+                if(qt_mac_create_fsspec(fnt->fileName, &spec) != noErr)
+                    return;
 
-            e = ATSFontActivateFromFileSpecification(&spec, kATSFontContextLocal, kATSFontFormatUnspecified,
-                                               0, kATSOptionFlagsDefault, &handle);
+                e = ATSFontActivateFromFileSpecification(&spec, kATSFontContextLocal, kATSFontFormatUnspecified,
+                                                   0, kATSOptionFlagsDefault, &handle);
+#endif
         }
     } else {
         e = ATSFontActivateFromMemory((void *)fnt->data.constData(), fnt->data.size(), kATSFontContextLocal,

@@ -3,6 +3,8 @@
 * 
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
+*
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "QueryParserBase.h"
@@ -50,7 +52,7 @@ void QueryParserBase::discardEscapeChar(TCHAR* source) const{
 	}
 }
 
-void QueryParserBase::AddClause(vector<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
+void QueryParserBase::AddClause(CL_NS_STD(vector)<BooleanClause*>& clauses, int32_t conj, int32_t mods, Query* q){
 //Func - Adds the next parsed clause.
 //Pre  -
 //Post -
@@ -325,7 +327,7 @@ Query* QueryParserBase::GetWildcardQuery(const TCHAR* field, TCHAR* termStr){
 	return q;
 }
 
-Query* QueryParserBase::GetBooleanQuery(std::vector<CL_NS(search)::BooleanClause*>& clauses){
+Query* QueryParserBase::GetBooleanQuery(CL_NS_STD(vector)<CL_NS(search)::BooleanClause*>& clauses){
 	if ( clauses.size() == 0 )
 		return NULL;
 

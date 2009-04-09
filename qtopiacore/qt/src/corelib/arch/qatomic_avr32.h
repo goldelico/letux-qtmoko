@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -99,64 +103,19 @@ template <typename T>
 Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::isFetchAndAddWaitFree()
 { return false; }
 
-#if defined(QT_BUILD_QREGION_CPP)
-#warning "workaround!"
-__attribute__((noinline))
-#else
-inline
-#endif
-bool QBasicAtomicInt::ref()
+inline bool QBasicAtomicInt::ref()
 {
-    register int newValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[newValue], %[_q_value]\n"
-                 "add %[newValue], %[ONE]\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 : [newValue] "=&r"(newValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [ONE] "r"(1)
-                 : "cc", "memory");
-    return newValue;
+    return __sync_add_and_fetch(&_q_value, 1);
 }
 
 inline bool QBasicAtomicInt::deref()
 {
-    register int newValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[newValue], %[_q_value]\n"
-                 "sub %[newValue], %[ONE]\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 : [newValue] "=&r"(newValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [ONE] "i"(1)
-                 : "cc", "memory");
-    return newValue;
+    return __sync_sub_and_fetch(&_q_value, 1);
 }
 
 inline bool QBasicAtomicInt::testAndSetOrdered(int expectedValue, int newValue)
 {
-    register int originalValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[originalValue], %[_q_value]\n"
-                 "cp.w %[originalValue], %[expectedValue]\n"
-                 "brne 0f\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 "0:\n"
-                 : [originalValue] "=&r"(originalValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [expectedValue] "r"(expectedValue),
-                   [newValue] "r"(newValue)
-                 : "cc", "memory");
-    return originalValue == expectedValue;
+    return __sync_bool_compare_and_swap(&_q_value, expectedValue, newValue);
 }
 
 inline bool QBasicAtomicInt::testAndSetRelaxed(int expectedValue, int newValue)
@@ -176,14 +135,7 @@ inline bool QBasicAtomicInt::testAndSetRelease(int expectedValue, int newValue)
 
 inline int QBasicAtomicInt::fetchAndStoreOrdered(int newValue)
 {
-    register int originalValue;
-    asm volatile("xchg %[originalValue], %[_q_value], %[newValue]"
-                 : [originalValue] "=&r"(originalValue),
-                   "+m" (_q_value)
-                 : [_q_value] "r"(&_q_value),
-                   [newValue] "r"(newValue)
-                 : "cc", "memory");
-    return originalValue;
+    return __sync_lock_test_and_set(&_q_value, newValue);
 }
 
 inline int QBasicAtomicInt::fetchAndStoreRelaxed(int newValue)
@@ -203,20 +155,7 @@ inline int QBasicAtomicInt::fetchAndStoreRelease(int newValue)
 
 inline int QBasicAtomicInt::fetchAndAddOrdered(int valueToAdd)
 {
-    register int originalValue, newValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[originalValue], %[_q_value]\n"
-                 "add %[newValue], %[originalValue], %[valueToAdd]\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 : [originalValue] "=&r"(originalValue),
-                   [newValue] "=&r"(newValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [valueToAdd] "r"(valueToAdd)
-                 : "cc", "memory");
-    return originalValue;
+    return __sync_fetch_and_add(&_q_value, valueToAdd);
 }
 
 inline int QBasicAtomicInt::fetchAndAddRelaxed(int valueToAdd)
@@ -237,22 +176,7 @@ inline int QBasicAtomicInt::fetchAndAddRelease(int valueToAdd)
 template <typename T>
 Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::testAndSetOrdered(T *expectedValue, T *newValue)
 {
-    register T *originalValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[originalValue], %[_q_value]\n"
-                 "cp.w %[originalValue], %[expectedValue]\n"
-                 "brne 0f\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 "0:\n"
-                 : [originalValue] "=&r"(originalValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [expectedValue] "r"(expectedValue),
-                   [newValue] "r"(newValue)
-                 : "cc", "memory");
-    return originalValue == expectedValue;
+    return __sync_bool_compare_and_swap(&_q_value, expectedValue, newValue);
 }
 
 template <typename T>
@@ -276,14 +200,7 @@ Q_INLINE_TEMPLATE bool QBasicAtomicPointer<T>::testAndSetRelease(T *expectedValu
 template <typename T>
 Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndStoreOrdered(T *newValue)
 {
-    register T *originalValue;
-    asm volatile("xchg %[originalValue], %[_q_value], %[newValue]"
-                 : [originalValue] "=&r"(originalValue),
-                   "+m" (_q_value)
-                 : [_q_value] "r"(&_q_value),
-                   [newValue] "r"(newValue)
-                 : "cc", "memory");
-    return originalValue;
+    return __sync_lock_test_and_set(&_q_value, newValue);
 }
 
 template <typename T>
@@ -307,20 +224,7 @@ Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndStoreRelease(T *newValue)
 template <typename T>
 Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndAddOrdered(qptrdiff valueToAdd)
 {
-    register T *originalValue, *newValue;
-    asm volatile("0:\n"
-                 "ssrf %[LOCK]\n"
-                 "ld.w %[originalValue], %[_q_value]\n"
-                 "add %[newValue], %[originalValue], %[valueToAdd]\n"
-                 "stcond %[_q_value], %[newValue]\n"
-                 "brne 0b\n"
-                 : [originalValue] "=&r"(originalValue),
-                   [newValue] "=&r"(newValue),
-                   [_q_value] "+RKs16"(_q_value)
-                 : [LOCK] "i"(0x5),
-                   [valueToAdd] "r"(valueToAdd * sizeof(T))
-                 : "cc", "memory");
-    return originalValue;
+    return __sync_fetch_and_add(&_q_value, valueToAdd * sizeof(T));
 }
 
 template <typename T>

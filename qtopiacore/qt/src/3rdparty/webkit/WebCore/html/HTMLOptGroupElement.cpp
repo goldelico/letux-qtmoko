@@ -1,10 +1,8 @@
 /*
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *           (C) 2006 Alexey Proskuryakov (ap@nypop.com)
  *
  * This library is free software; you can redistribute it and/or
@@ -32,39 +30,42 @@
 #include "HTMLNames.h"
 #include "HTMLSelectElement.h"
 #include "RenderMenuList.h"
+#include "NodeRenderStyle.h"
+#include <wtf/StdLibExtras.h>
 
 namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLOptGroupElement::HTMLOptGroupElement(Document* doc, HTMLFormElement* f)
-    : HTMLGenericFormElement(optgroupTag, doc, f)
+HTMLOptGroupElement::HTMLOptGroupElement(const QualifiedName& tagName, Document* doc, HTMLFormElement* f)
+    : HTMLFormControlElement(tagName, doc, f)
     , m_style(0)
 {
+    ASSERT(hasTagName(optgroupTag));
 }
 
 bool HTMLOptGroupElement::isFocusable() const
 {
-    return false;
+    return HTMLElement::isFocusable();
 }
 
 const AtomicString& HTMLOptGroupElement::type() const
 {
-    static const AtomicString optgroup("optgroup");
+    DEFINE_STATIC_LOCAL(const AtomicString, optgroup, ("optgroup"));
     return optgroup;
 }
 
-bool HTMLOptGroupElement::insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode& ec)
+bool HTMLOptGroupElement::insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode& ec, bool shouldLazyAttach)
 {
-    bool result = HTMLGenericFormElement::insertBefore(newChild, refChild, ec);
+    bool result = HTMLFormControlElement::insertBefore(newChild, refChild, ec, shouldLazyAttach);
     if (result)
         recalcSelectOptions();
     return result;
 }
 
-bool HTMLOptGroupElement::replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode& ec)
+bool HTMLOptGroupElement::replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode& ec, bool shouldLazyAttach)
 {
-    bool result = HTMLGenericFormElement::replaceChild(newChild, oldChild, ec);
+    bool result = HTMLFormControlElement::replaceChild(newChild, oldChild, ec, shouldLazyAttach);
     if (result)
         recalcSelectOptions();
     return result;
@@ -72,37 +73,43 @@ bool HTMLOptGroupElement::replaceChild(PassRefPtr<Node> newChild, Node* oldChild
 
 bool HTMLOptGroupElement::removeChild(Node* oldChild, ExceptionCode& ec)
 {
-    bool result = HTMLGenericFormElement::removeChild(oldChild, ec);
+    bool result = HTMLFormControlElement::removeChild(oldChild, ec);
     if (result)
         recalcSelectOptions();
     return result;
 }
 
-bool HTMLOptGroupElement::appendChild(PassRefPtr<Node> newChild, ExceptionCode& ec)
+bool HTMLOptGroupElement::appendChild(PassRefPtr<Node> newChild, ExceptionCode& ec, bool shouldLazyAttach)
 {
-    bool result = HTMLGenericFormElement::appendChild(newChild, ec);
+    bool result = HTMLFormControlElement::appendChild(newChild, ec, shouldLazyAttach);
     if (result)
         recalcSelectOptions();
     return result;
 }
 
-ContainerNode* HTMLOptGroupElement::addChild(PassRefPtr<Node> newChild)
+bool HTMLOptGroupElement::removeChildren()
 {
-    ContainerNode* result = HTMLGenericFormElement::addChild(newChild);
+    bool result = HTMLFormControlElement::removeChildren();
     if (result)
         recalcSelectOptions();
     return result;
 }
 
-void HTMLOptGroupElement::parseMappedAttribute(MappedAttribute *attr)
+void HTMLOptGroupElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
 {
-    HTMLGenericFormElement::parseMappedAttribute(attr);
+    recalcSelectOptions();
+    HTMLFormControlElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+}
+
+void HTMLOptGroupElement::parseMappedAttribute(MappedAttribute* attr)
+{
+    HTMLFormControlElement::parseMappedAttribute(attr);
     recalcSelectOptions();
 }
 
 void HTMLOptGroupElement::recalcSelectOptions()
 {
-    Node *select = parentNode();
+    Node* select = parentNode();
     while (select && !select->hasTagName(selectTag))
         select = select->parentNode();
     if (select)
@@ -127,36 +134,30 @@ bool HTMLOptGroupElement::checkDTD(const Node* newChild)
 
 void HTMLOptGroupElement::attach()
 {
-    if (parentNode()->renderStyle()) {
-        RenderStyle* style = styleForRenderer(0);
-        setRenderStyle(style);
-        style->deref(document()->renderArena());
-    }
-    HTMLGenericFormElement::attach();
+    if (parentNode()->renderStyle())
+        setRenderStyle(styleForRenderer());
+    HTMLFormControlElement::attach();
 }
 
 void HTMLOptGroupElement::detach()
 {
-    if (m_style) {
-        m_style->deref(document()->renderArena());
-        m_style = 0;
-    }
-    HTMLGenericFormElement::detach();
+    m_style.clear();
+    HTMLFormControlElement::detach();
 }
 
-void HTMLOptGroupElement::setRenderStyle(RenderStyle* newStyle)
+void HTMLOptGroupElement::setRenderStyle(PassRefPtr<RenderStyle> newStyle)
 {
-    RenderStyle* oldStyle = m_style;
     m_style = newStyle;
-    if (newStyle)
-        newStyle->ref();
-    if (oldStyle)
-        oldStyle->deref(document()->renderArena());
+}
+    
+RenderStyle* HTMLOptGroupElement::nonRendererRenderStyle() const 
+{ 
+    return m_style.get(); 
 }
 
-String HTMLOptGroupElement::groupLabelText()
+String HTMLOptGroupElement::groupLabelText() const
 {
-    DeprecatedString itemText = getAttribute(labelAttr).deprecatedString();
+    String itemText = getAttribute(labelAttr);
     
     itemText.replace('\\', document()->backslashAsCurrencySymbol());
     // In WinIE, leading and trailing whitespace is ignored in options and optgroups. We match this behavior.
@@ -166,5 +167,25 @@ String HTMLOptGroupElement::groupLabelText()
         
     return itemText;
 }
- 
+    
+HTMLSelectElement* HTMLOptGroupElement::ownerSelectElement() const
+{
+    Node* select = parentNode();
+    while (select && !select->hasTagName(selectTag))
+        select = select->parentNode();
+    
+    if (!select)
+       return 0;
+    
+    return static_cast<HTMLSelectElement*>(select);
+}
+
+void HTMLOptGroupElement::accessKeyAction(bool)
+{
+    HTMLSelectElement* select = ownerSelectElement();
+    // send to the parent to bring focus to the list box
+    if (select && !select->focused())
+        select->accessKeyAction(false);
+}
+    
 } // namespace

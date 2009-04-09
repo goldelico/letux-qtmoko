@@ -26,270 +26,258 @@
 
 #include "CharacterData.h"
 #include "ExceptionCode.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCharacterData)
+
 /* Hash table */
 
-static const HashEntry JSCharacterDataTableEntries[] =
+static const HashTableValue JSCharacterDataTableValues[4] =
 {
-    { "data", JSCharacterData::DataAttrNum, DontDelete, 0, &JSCharacterDataTableEntries[3] },
-    { "length", JSCharacterData::LengthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSCharacterData::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "data", DontDelete, (intptr_t)jsCharacterDataData, (intptr_t)setJSCharacterDataData },
+    { "length", DontDelete|ReadOnly, (intptr_t)jsCharacterDataLength, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCharacterDataConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCharacterDataTable = 
-{
-    2, 4, JSCharacterDataTableEntries, 3
-};
+static const HashTable JSCharacterDataTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSCharacterDataTableValues, 0 };
+#else
+    { 9, 7, JSCharacterDataTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCharacterDataConstructorTableEntries[] =
+static const HashTableValue JSCharacterDataConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCharacterDataConstructorTable = 
-{
-    2, 1, JSCharacterDataConstructorTableEntries, 1
-};
+static const HashTable JSCharacterDataConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCharacterDataConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCharacterDataConstructorTableValues, 0 };
+#endif
 
 class JSCharacterDataConstructor : public DOMObject {
 public:
     JSCharacterDataConstructor(ExecState* exec)
+        : DOMObject(JSCharacterDataConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCharacterDataPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCharacterDataConstructor::info = { "CharacterDataConstructor", 0, &JSCharacterDataConstructorTable, 0 };
+const ClassInfo JSCharacterDataConstructor::s_info = { "CharacterDataConstructor", 0, &JSCharacterDataConstructorTable, 0 };
 
 bool JSCharacterDataConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCharacterDataConstructor, DOMObject>(exec, &JSCharacterDataConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCharacterDataConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCharacterDataPrototypeTableEntries[] =
+static const HashTableValue JSCharacterDataPrototypeTableValues[6] =
 {
-    { "appendData", JSCharacterData::AppendDataFuncNum, DontDelete|Function, 1, &JSCharacterDataPrototypeTableEntries[5] },
-    { "insertData", JSCharacterData::InsertDataFuncNum, DontDelete|Function, 2, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "substringData", JSCharacterData::SubstringDataFuncNum, DontDelete|Function, 2, 0 },
-    { "deleteData", JSCharacterData::DeleteDataFuncNum, DontDelete|Function, 2, 0 },
-    { "replaceData", JSCharacterData::ReplaceDataFuncNum, DontDelete|Function, 3, 0 }
+    { "substringData", DontDelete|Function, (intptr_t)jsCharacterDataPrototypeFunctionSubstringData, (intptr_t)2 },
+    { "appendData", DontDelete|Function, (intptr_t)jsCharacterDataPrototypeFunctionAppendData, (intptr_t)1 },
+    { "insertData", DontDelete|Function, (intptr_t)jsCharacterDataPrototypeFunctionInsertData, (intptr_t)2 },
+    { "deleteData", DontDelete|Function, (intptr_t)jsCharacterDataPrototypeFunctionDeleteData, (intptr_t)2 },
+    { "replaceData", DontDelete|Function, (intptr_t)jsCharacterDataPrototypeFunctionReplaceData, (intptr_t)3 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCharacterDataPrototypeTable = 
-{
-    2, 6, JSCharacterDataPrototypeTableEntries, 5
-};
+static const HashTable JSCharacterDataPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSCharacterDataPrototypeTableValues, 0 };
+#else
+    { 16, 15, JSCharacterDataPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCharacterDataPrototype::info = { "CharacterDataPrototype", 0, &JSCharacterDataPrototypeTable, 0 };
+const ClassInfo JSCharacterDataPrototype::s_info = { "CharacterDataPrototype", 0, &JSCharacterDataPrototypeTable, 0 };
 
 JSObject* JSCharacterDataPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCharacterDataPrototype>(exec, "[[JSCharacterData.prototype]]");
+    return getDOMPrototype<JSCharacterData>(exec);
 }
 
 bool JSCharacterDataPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSCharacterDataPrototypeFunction, JSObject>(exec, &JSCharacterDataPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSCharacterDataPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSCharacterData::info = { "CharacterData", &JSEventTargetNode::info, &JSCharacterDataTable, 0 };
+const ClassInfo JSCharacterData::s_info = { "CharacterData", &JSEventTargetNode::s_info, &JSCharacterDataTable, 0 };
 
-JSCharacterData::JSCharacterData(ExecState* exec, CharacterData* impl)
-    : JSEventTargetNode(exec, impl)
+JSCharacterData::JSCharacterData(PassRefPtr<Structure> structure, PassRefPtr<CharacterData> impl)
+    : JSEventTargetNode(structure, impl)
 {
-    setPrototype(JSCharacterDataPrototype::self(exec));
+}
+
+JSObject* JSCharacterData::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCharacterDataPrototype(JSCharacterDataPrototype::createStructure(JSEventTargetNodePrototype::self(exec)));
 }
 
 bool JSCharacterData::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSCharacterData, JSEventTargetNode>(exec, &JSCharacterDataTable, this, propertyName, slot);
+    return getStaticValueSlot<JSCharacterData, Base>(exec, &JSCharacterDataTable, this, propertyName, slot);
 }
 
-JSValue* JSCharacterData::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsCharacterDataData(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DataAttrNum: {
-        CharacterData* imp = static_cast<CharacterData*>(impl());
-
-        return jsString(imp->data());
-    }
-    case LengthAttrNum: {
-        CharacterData* imp = static_cast<CharacterData*>(impl());
-
-        return jsNumber(imp->length());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    CharacterData* imp = static_cast<CharacterData*>(static_cast<JSCharacterData*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->data());
 }
 
-void JSCharacterData::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsCharacterDataLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSCharacterData, JSEventTargetNode>(exec, propertyName, value, attr, &JSCharacterDataTable, this);
+    CharacterData* imp = static_cast<CharacterData*>(static_cast<JSCharacterData*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-void JSCharacterData::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsCharacterDataConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case DataAttrNum: {
-        CharacterData* imp = static_cast<CharacterData*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setData(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    return static_cast<JSCharacterData*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSCharacterData::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSCharacterData, Base>(exec, propertyName, value, &JSCharacterDataTable, this, slot);
 }
 
-JSValue* JSCharacterData::getConstructor(ExecState* exec)
+void setJSCharacterDataData(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSCharacterDataConstructor>(exec, "[[CharacterData.constructor]]");
+    CharacterData* imp = static_cast<CharacterData*>(static_cast<JSCharacterData*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setData(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
 }
-JSValue* JSCharacterDataPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr JSCharacterData::getConstructor(ExecState* exec)
 {
-    if (!thisObj->inherits(&JSCharacterData::info))
-      return throwError(exec, TypeError);
+    return getDOMConstructor<JSCharacterDataConstructor>(exec);
+}
 
-    CharacterData* imp = static_cast<CharacterData*>(static_cast<JSCharacterData*>(thisObj)->impl());
-
-    switch (id) {
-    case JSCharacterData::SubstringDataFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        int offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (offset < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-        bool lengthOk;
-        int length = args[1]->toInt32(exec, lengthOk);
-        if (!lengthOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (length < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsStringOrNull(imp->substringData(offset, length, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSCharacterData::AppendDataFuncNum: {
-        ExceptionCode ec = 0;
-        String data = args[0]->toString(exec);
-
-        imp->appendData(data, ec);
-        setDOMException(exec, ec);
+JSValuePtr jsCharacterDataPrototypeFunctionSubstringData(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCharacterData::s_info))
+        return throwError(exec, TypeError);
+    JSCharacterData* castedThisObj = static_cast<JSCharacterData*>(asObject(thisValue));
+    CharacterData* imp = static_cast<CharacterData*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int offset = args.at(exec, 0)->toInt32(exec);
+    if (offset < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
         return jsUndefined();
     }
-    case JSCharacterData::InsertDataFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        int offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (offset < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-        String data = args[1]->toString(exec);
-
-        imp->insertData(offset, data, ec);
-        setDOMException(exec, ec);
+    int length = args.at(exec, 1)->toInt32(exec);
+    if (length < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
         return jsUndefined();
     }
-    case JSCharacterData::DeleteDataFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        int offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (offset < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-        bool lengthOk;
-        int length = args[1]->toInt32(exec, lengthOk);
-        if (!lengthOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (length < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
 
-        imp->deleteData(offset, length, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    case JSCharacterData::ReplaceDataFuncNum: {
-        ExceptionCode ec = 0;
-        bool offsetOk;
-        int offset = args[0]->toInt32(exec, offsetOk);
-        if (!offsetOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (offset < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-        bool lengthOk;
-        int length = args[1]->toInt32(exec, lengthOk);
-        if (!lengthOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        if (length < 0) {
-            setDOMException(exec, INDEX_SIZE_ERR);
-            return jsUndefined();
-        }
-        String data = args[2]->toString(exec);
 
-        imp->replaceData(offset, length, data, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = jsStringOrNull(exec, imp->substringData(offset, length, ec));
+    setDOMException(exec, ec);
+    return result;
 }
+
+JSValuePtr jsCharacterDataPrototypeFunctionAppendData(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCharacterData::s_info))
+        return throwError(exec, TypeError);
+    JSCharacterData* castedThisObj = static_cast<JSCharacterData*>(asObject(thisValue));
+    CharacterData* imp = static_cast<CharacterData*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& data = args.at(exec, 0)->toString(exec);
+
+    imp->appendData(data, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsCharacterDataPrototypeFunctionInsertData(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCharacterData::s_info))
+        return throwError(exec, TypeError);
+    JSCharacterData* castedThisObj = static_cast<JSCharacterData*>(asObject(thisValue));
+    CharacterData* imp = static_cast<CharacterData*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int offset = args.at(exec, 0)->toInt32(exec);
+    if (offset < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+    const UString& data = args.at(exec, 1)->toString(exec);
+
+    imp->insertData(offset, data, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsCharacterDataPrototypeFunctionDeleteData(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCharacterData::s_info))
+        return throwError(exec, TypeError);
+    JSCharacterData* castedThisObj = static_cast<JSCharacterData*>(asObject(thisValue));
+    CharacterData* imp = static_cast<CharacterData*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int offset = args.at(exec, 0)->toInt32(exec);
+    if (offset < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+    int length = args.at(exec, 1)->toInt32(exec);
+    if (length < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+
+    imp->deleteData(offset, length, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsCharacterDataPrototypeFunctionReplaceData(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCharacterData::s_info))
+        return throwError(exec, TypeError);
+    JSCharacterData* castedThisObj = static_cast<JSCharacterData*>(asObject(thisValue));
+    CharacterData* imp = static_cast<CharacterData*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    int offset = args.at(exec, 0)->toInt32(exec);
+    if (offset < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+    int length = args.at(exec, 1)->toInt32(exec);
+    if (length < 0) {
+        setDOMException(exec, INDEX_SIZE_ERR);
+        return jsUndefined();
+    }
+    const UString& data = args.at(exec, 2)->toString(exec);
+
+    imp->replaceData(offset, length, data, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
 
 }

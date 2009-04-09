@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -164,6 +168,9 @@ public:
         FontCapitalization = FirstFontProperty,
         FontLetterSpacing = 0x1FE1,
         FontWordSpacing = 0x1FE2,
+        FontStyleHint = 0x1FE3,
+        FontStyleStrategy = 0x1FE4,
+        FontKerning = 0x1FE5,
         FontFamily = 0x2000,
         FontPointSize = 0x2001,
         FontSizeAdjustment = 0x2002,
@@ -186,7 +193,6 @@ public:
         IsAnchor = 0x2030,
         AnchorHref = 0x2031,
         AnchorName = 0x2032,
-
         ObjectType = 0x2f00,
 
         // list properties
@@ -431,6 +437,20 @@ public:
     inline bool fontFixedPitch() const
     { return boolProperty(FontFixedPitch); }
 
+    inline void setFontStyleHint(QFont::StyleHint hint, QFont::StyleStrategy strategy = QFont::PreferDefault)
+    { setProperty(FontStyleHint, hint); setProperty(FontStyleStrategy, strategy); }
+    inline void setFontStyleStrategy(QFont::StyleStrategy strategy)
+    { setProperty(FontStyleStrategy, strategy); }
+    QFont::StyleHint fontStyleHint() const
+    { return static_cast<QFont::StyleHint>(intProperty(FontStyleHint)); }
+    QFont::StyleStrategy fontStyleStrategy() const
+    { return static_cast<QFont::StyleStrategy>(intProperty(FontStyleStrategy)); }
+
+    inline void setFontKerning(bool enable)
+    { setProperty(FontKerning, enable); }
+    inline bool fontKerning() const
+    { return boolProperty(FontKerning); }
+
     void setUnderlineStyle(UnderlineStyle style);
     inline UnderlineStyle underlineStyle() const
     { return static_cast<UnderlineStyle>(intProperty(TextUnderlineStyle)); }
@@ -480,18 +500,20 @@ protected:
     friend class QTextFormat;
 };
 
-inline void QTextCharFormat::setTableCellRowSpan(int atableCellRowSpan)
+inline void QTextCharFormat::setTableCellRowSpan(int _tableCellRowSpan)
 {
-    if (atableCellRowSpan == 1)
-	atableCellRowSpan = 0;
-    setProperty(TableCellRowSpan, atableCellRowSpan);
+    if (_tableCellRowSpan <= 1)
+        clearProperty(TableCellRowSpan); // the getter will return 1 here.
+    else
+        setProperty(TableCellRowSpan, _tableCellRowSpan);
 }
 
-inline void QTextCharFormat::setTableCellColumnSpan(int atableCellColumnSpan)
+inline void QTextCharFormat::setTableCellColumnSpan(int _tableCellColumnSpan)
 {
-    if (atableCellColumnSpan == 1)
-	atableCellColumnSpan = 0;
-    setProperty(TableCellColumnSpan, atableCellColumnSpan);
+    if (_tableCellColumnSpan <= 1)
+        clearProperty(TableCellColumnSpan); // the getter will return 1 here.
+    else
+        setProperty(TableCellColumnSpan, _tableCellColumnSpan);
 }
 
 class Q_GUI_EXPORT QTextBlockFormat : public QTextFormat
@@ -525,8 +547,8 @@ public:
     inline qreal rightMargin() const
     { return doubleProperty(BlockRightMargin); }
 
-    inline void setTextIndent(qreal margin)
-    { setProperty(TextIndent, margin); }
+    inline void setTextIndent(qreal aindent)
+    { setProperty(TextIndent, aindent); }
     inline qreal textIndent() const
     { return doubleProperty(TextIndent); }
 

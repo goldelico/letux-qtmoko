@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -73,7 +77,7 @@ extern QHash<QByteArray, QFont> *qt_app_fonts_hash();
 
 enum Button { Old_Ok = 1, Old_Cancel = 2, Old_Yes = 3, Old_No = 4, Old_Abort = 5, Old_Retry = 6,
               Old_Ignore = 7, Old_YesAll = 8, Old_NoAll = 9, Old_ButtonMask = 0xFF,
-              NewButtonFlag = 0xFFFFFC00 };
+              NewButtonMask = 0xFFFFFC00 };
 
 enum DetailButtonLabel { ShowLabel = 0, HideLabel = 1 };
 #ifndef QT_NO_TEXTEDIT
@@ -90,7 +94,7 @@ public:
             QMenu *menu = createStandardContextMenu();
             menu->exec(e->globalPos());
             delete menu;
-#else 
+#else
             Q_UNUSED(e);
 #endif
         }
@@ -121,416 +125,6 @@ private:
     TextEdit *textEdit;
 };
 #endif // QT_NO_TEXTEDIT
-
-#ifndef QT_NO_IMAGEFORMAT_XPM
-/* XPM */
-static const char * const qtlogo_xpm[] = {
-/* width height ncolors chars_per_pixel */
-"64 64 337 2",
-/* colors */
-"  	c None",
-". 	c #0C481E",
-"+ 	c #0F4C1F",
-"@ 	c #387B2A",
-"# 	c #509730",
-"$ 	c #549B31",
-"% 	c #58A032",
-"& 	c #59A133",
-"* 	c #519730",
-"= 	c #498F2E",
-"- 	c #43872D",
-"; 	c #2B6C26",
-"> 	c #5BA333",
-", 	c #66B036",
-"' 	c #5CA433",
-") 	c #529931",
-"! 	c #4A8F2E",
-"~ 	c #44882D",
-"{ 	c #296926",
-"] 	c #5DA634",
-"^ 	c #539A31",
-"/ 	c #4B902F",
-"( 	c #44892D",
-"_ 	c #175521",
-": 	c #60A934",
-"< 	c #5EA734",
-"[ 	c #4B912F",
-"} 	c #458A2D",
-"| 	c #4C922F",
-"1 	c #559C31",
-"2 	c #0D491E",
-"3 	c #62AB35",
-"4 	c #61AA35",
-"5 	c #569D32",
-"6 	c #4D932F",
-"7 	c #468B2D",
-"8 	c #1A5822",
-"9 	c #579E32",
-"0 	c #4E9430",
-"a 	c #478C2E",
-"b 	c #347629",
-"c 	c #58A033",
-"d 	c #69AC43",
-"e 	c #7BBA52",
-"f 	c #72B646",
-"g 	c #65AF35",
-"h 	c #468B2E",
-"i 	c #296927",
-"j 	c #497F48",
-"k 	c #9FBE9B",
-"l 	c #F5F9F5",
-"m 	c #FFFFFF",
-"n 	c #F4F9F0",
-"o 	c #D4E9C6",
-"p 	c #ABD491",
-"q 	c #6EB440",
-"r 	c #1F5F23",
-"s 	c #245F2A",
-"t 	c #BCD3B8",
-"u 	c #F5FAF2",
-"v 	c #ADD594",
-"w 	c #67B037",
-"x 	c #59A032",
-"y 	c #135020",
-"z 	c #EDF2EB",
-"A 	c #CFE6C0",
-"B 	c #6DB43F",
-"C 	c #66AF36",
-"D 	c #124F20",
-"E 	c #155221",
-"F 	c #F7FBF5",
-"G 	c #E7F3DF",
-"H 	c #D7EACA",
-"I 	c #9BCB7B",
-"J 	c #175621",
-"K 	c #145122",
-"L 	c #DBE8D9",
-"M 	c #D3E8C5",
-"N 	c #39733B",
-"O 	c #B8DAA1",
-"P 	c #377A2A",
-"Q 	c #749F70",
-"R 	c #DAE8D5",
-"S 	c #729D6F",
-"T 	c #C7DAC3",
-"U 	c #ACD491",
-"V 	c #42862C",
-"W 	c #6E9B6B",
-"X 	c #5CA533",
-"Y 	c #104B1F",
-"Z 	c #1D5927",
-"` 	c #F9FBF8",
-" .	c #B1D799",
-"..	c #4B902E",
-"+.	c #104D1F",
-"@.	c #3F773F",
-"#.	c #FDFEFD",
-"$.	c #F9FCF7",
-"%.	c #2C6D26",
-"&.	c #B5CDB2",
-"*.	c #397C2A",
-"=.	c #6F9C6C",
-"-.	c #D7EBCB",
-";.	c #67B138",
-">.	c #3C7E2A",
-",.	c #7CA477",
-"'.	c #9ECD80",
-").	c #175520",
-"!.	c #114D1F",
-"~.	c #FAFCFA",
-"{.	c #1C5A23",
-"].	c #D4E2D1",
-"^.	c #98CA78",
-"/.	c #63AD36",
-"(.	c #155220",
-"_.	c #135021",
-":.	c #F1F6F0",
-"<.	c #D5E9C8",
-"[.	c #5BA433",
-"}.	c #316A34",
-"|.	c #5AA132",
-"1.	c #25602B",
-"2.	c #76B84A",
-"3.	c #286925",
-"4.	c #ACC7A7",
-"5.	c #45823C",
-"6.	c #0F4B1E",
-"7.	c #9FBF9A",
-"8.	c #D9E6D7",
-"9.	c #D6EAC9",
-"0.	c #94C872",
-"a.	c #89C264",
-"b.	c #73B747",
-"c.	c #45892D",
-"d.	c #51854F",
-"e.	c #EDF6E7",
-"f.	c #3B7E2A",
-"g.	c #6D9B69",
-"h.	c #91B688",
-"i.	c #A6C2A2",
-"j.	c #B3D89B",
-"k.	c #699665",
-"l.	c #CBE4BB",
-"m.	c #4D942F",
-"n.	c #3D753E",
-"o.	c #D1E3C9",
-"p.	c #337428",
-"q.	c #82AA7F",
-"r.	c #BCDDA8",
-"s.	c #5DA533",
-"t.	c #1F5B27",
-"u.	c #E6F1E0",
-"v.	c #2A6A26",
-"w.	c #A0BF9B",
-"x.	c #B6D99F",
-"y.	c #63AB35",
-"z.	c #185423",
-"A.	c #377533",
-"B.	c #2C6631",
-"C.	c #D5E3D2",
-"D.	c #D8E9CF",
-"E.	c #B1D39F",
-"F.	c #B7D6A6",
-"G.	c #C1DDB2",
-"H.	c #99CA7A",
-"I.	c #216024",
-"J.	c #BFD3BB",
-"K.	c #AFD696",
-"L.	c #0C491E",
-"M.	c #69B23A",
-"N.	c #286926",
-"O.	c #C6D8C2",
-"P.	c #185621",
-"Q.	c #E3EBE0",
-"R.	c #A9D28D",
-"S.	c #104D20",
-"T.	c #0F4B1F",
-"U.	c #76B84B",
-"V.	c #0F4D1F",
-"W.	c #0E4A1E",
-"X.	c #A2CF85",
-"Y.	c #83BF5D",
-"Z.	c #195524",
-"`.	c #9BCC7C",
-" +	c #EBF2EB",
-".+	c #91C66E",
-"++	c #1E5A27",
-"@+	c #97C977",
-"#+	c #DFEADC",
-"$+	c #9CCC7D",
-"%+	c #165222",
-"&+	c #9DCD7F",
-"*+	c #195822",
-"=+	c #EAF1E9",
-"-+	c #96C975",
-";+	c #A4D087",
-">+	c #165321",
-",+	c #F7F9F7",
-"'+	c #8BC367",
-")+	c #AAD390",
-"!+	c #114E1F",
-"~+	c #0E4A1F",
-"{+	c #80BE59",
-"]+	c #1F5D23",
-"^+	c #D0E0CF",
-"/+	c #266625",
-"(+	c #B7CFB4",
-"_+	c #B7DAA0",
-":+	c #64AE36",
-"<+	c #155321",
-"[+	c #6BB33D",
-"}+	c #2D6D26",
-"|+	c #BEDDA9",
-"1+	c #195624",
-"2+	c #FAFDF9",
-"3+	c #347529",
-"4+	c #88AE84",
-"5+	c #D1E7C2",
-"6+	c #E9F4E3",
-"7+	c #468C2D",
-"8+	c #EFF7EA",
-"9+	c #488D2E",
-"0+	c #487D47",
-"a+	c #C3E0B0",
-"b+	c #367929",
-"c+	c #77A172",
-"d+	c #9ACB7A",
-"e+	c #B9DBA3",
-"f+	c #256525",
-"g+	c #B9D1B6",
-"h+	c #91C66F",
-"i+	c #B3CCAF",
-"j+	c #FEFFFE",
-"k+	c #286826",
-"l+	c #C5D8C1",
-"m+	c #CDE5BE",
-"n+	c #40842C",
-"o+	c #5E8E5B",
-"p+	c #BFDEAB",
-"q+	c #F4F8F3",
-"r+	c #E2F0D8",
-"s+	c #2D6F27",
-"t+	c #AFCAAC",
-"u+	c #E8F3E0",
-"v+	c #559D32",
-"w+	c #68AD40",
-"x+	c #215D29",
-"y+	c #FDFEFC",
-"z+	c #80BD58",
-"A+	c #357829",
-"B+	c #8BAF86",
-"C+	c #B2D79A",
-"D+	c #8AAF85",
-"E+	c #C0D7B6",
-"F+	c #7AA475",
-"G+	c #C7D9C3",
-"H+	c #DDEED3",
-"I+	c #246324",
-"J+	c #DDEDD2",
-"K+	c #7CBB52",
-"L+	c #41852C",
-"M+	c #114F20",
-"N+	c #538651",
-"O+	c #EAF4E3",
-"P+	c #62915F",
-"Q+	c #DEEED4",
-"R+	c #145120",
-"S+	c #1B5825",
-"T+	c #E9EFE7",
-"U+	c #F6F9F7",
-"V+	c #9FBD9D",
-"W+	c #E4ECE2",
-"X+	c #8CC468",
-"Y+	c #165322",
-"Z+	c #4F9530",
-"`+	c #0D491F",
-" @	c #367039",
-".@	c #C1DFAE",
-"+@	c #4C9330",
-"@@	c #497F49",
-"#@	c #F7FBF4",
-"$@	c #D0E7C1",
-"%@	c #3C7F2B",
-"&@	c #689664",
-"*@	c #4F8C3F",
-"=@	c #8EBB7C",
-"-@	c #BCDCAB",
-";@	c #89C265",
-">@	c #68B139",
-",@	c #EFF5EE",
-"'@	c #E6F2DE",
-")@	c #8AC365",
-"!@	c #5FA834",
-"~@	c #3F842C",
-"{@	c #2D6B2D",
-"]@	c #558853",
-"^@	c #C3D7C0",
-"/@	c #EEF6E8",
-"(@	c #5BA233",
-"_@	c #26622D",
-":@	c #468A2D",
-"<@	c #1D5B22",
-"[@	c #729E6E",
-"}@	c #FEFEFD",
-"|@	c #D9EBCD",
-"1@	c #ABD393",
-"2@	c #8BC368",
-"3@	c #589F33",
-"4@	c #26612C",
-"5@	c #FCFDFB",
-"6@	c #C6E2B4",
-"7@	c #63AC35",
-"8@	c #3D802B",
-"9@	c #669562",
-"0@	c #276725",
-"a@	c #A9C5A4",
-"b@	c #65AE36",
-"c@	c #2A6B26",
-"d@	c #5A9052",
-"e@	c #91B48D",
-"f@	c #CADCC6",
-"g@	c #F2F8EE",
-"h@	c #A3CF86",
-"i@	c #64AE35",
-"j@	c #569E32",
-"k@	c #62AC35",
-"l@	c #579F32",
-"m@	c #63AD35",
-"n@	c #64AD35",
-"o@	c #41862C",
-"p@	c #59A132",
-"q@	c #4F9630",
-"r@	c #509630",
-"s@	c #367829",
-"t@	c #5AA233",
-"u@	c #488E2E",
-"v@	c #42872C",
-/* pixels */
-"                      . . + @ # $ % & * = -                                                                                     ",
-"                  . . . ; > , , , , , , , , , , ' ) ! ~                                                                         ",
-"              . . . . { , , , , , , , , , , , , , , , , , , ] ^ / (                                                             ",
-"              . . . _ : , , , , , , , , , , , , , , , , , , , , , , , , < $ [ }                                                 ",
-"            . . . . | , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , : 1 | }                                     ",
-"            . . . 2 3 , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 4 5 6 7                         ",
-"            . . . 8 , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 3 9 0 a             ",
-"          . . . . ; , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , , , , : c d e f , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , g h i j k l m m m n o p q , , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , c r s t m m m m m m m m m u v w , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , x y s z m m m m m m m m m m m m A B , , , , , C D E F G H I , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , 3 J K L m m m m m m m m m m m m m m M w , , , , 9 . N m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , P . Q m m m m m m m R S T m m m m m m U , , , , V . W m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , X Y Z ` m m m m m m  ., ..+.@.#.m m m m $.B , , , %.. &.m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , *.. =.m m m m m m -.;., , >.. ,.m m m m m '., , , ).!.~.m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , {.. ].m m m m m m ^., , , /.(._.:.m m m m <., , [.. }.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , |.. 1.m m m m m m m 2., , , , 3.. 4.m m m m #.5.6.7.].8.m m m m 9.'.0.a.b., , , , , 7           ",
-"          . . . . b , , , , , , c.. d.m m m m m m e., , , , , f.. g.m m m m m h.. i.m m m m m m m m m m j., , , , , 7           ",
-"          . . . . b , , , , , , >.. k.m m m m m m l., , , , , m.. n.m m m m m o.. i.m m m m m m m m m m j., , , , , 7           ",
-"          . . . . b , , , , , , p.. q.m m m m m m r., , , , , s.. t.m m m m m u.. i.m m m m m m m m m m j., , , , , 7           ",
-"          . . . . b , , , , , , v.. w.m m m m m m x., , , , , y.. z.m m m m m u * A.B.C.m m m m D.E.F.G.H., , , , , 7           ",
-"          . . . . b , , , , , , I.. J.m m m m m m K., , , , , C L._.m m m m m m M.N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , P.. Q.m m m m m m R., , , , , , S.T.m m m m m m U.N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , V.W.#.m m m m m m X., , , , , , (.. ~.m m m m m Y.N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , 3 . Z.m m m m m m m `., , , , , , P..  +m m m m m .+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , ] . ++m m m m m m m @+, , , , , , {.. #+m m m m m $+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , /.. %+m m m m m m m &+, , , , , , *+. =+m m m m m -+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , S.W.m m m m m m m ;+, , , , , , >+. ,+m m m m m '+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , _ .  +m m m m m m )+, , , , , , !+~+m m m m m m {+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , ]+. ^+m m m m m m  ., , , , , , W.!.m m m m m m U.N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , /+. (+m m m m m m _+, , , , , :+. <+m m m m m m [+N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , }+. k m m m m m m |+, , , , , 4 . 1+m m m m m 2+, N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , 3+. 4+m m m m m m 5+, , , , , |.. 1.m m m m m 6+, N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , 7+. d.m m m m m m 8+, , , , , 9+. 0+m m m m m a+, N.. O.m m m m O , , , , , , , , , 7           ",
-"          . . . . b , , , , , , 4 W.1+m m m m m m m b., , , , b+. c+m m m m m d+, N.. O.m m m m e+, , , , , , , , , 7           ",
-"          . . . . b , , , , , , , f+. g+m m m m m m h+, , , , f+. i+m m m m j+f , k+. l+m m m m m+, , , , , , , , , 7           ",
-"          . . . . b , , , , , , , n+. o+m m m m m m p+, , , 3 !+<+q+m m m m r+, , s+. t+m m m m u+, 4 v+w+, , , , , 7           ",
-"          . . . . b , , , , , , , [.. x+m m m m m m y+z+, , A+. B+m m m m m C+, , *.. D+m m m m m E+F+G+H+, , , , , 7           ",
-"          . . . . b , , , , , , , , I+. &.m m m m m m J+K+L+M+N+m m m m m O+[+, , h . P+m m m m m m m m Q+, , , , , 7           ",
-"          . . . . b , , , , , , , , s.R+S+T+m m m m m m U+V+W+m m m m m j+X+, , , :+).Y+:.m m m m m m m Q+, , , , , 7           ",
-"          . . . . b , , , , , , , , , Z+`+ @#.m m m m m m m m m m m m m .@, , , , , +@!+@@l m m m m #@$@`., , , , , 7           ",
-"          . . . . b , , , , , , , , , , %@. &@m m m m m m m m m m m j+a+B , , , , , , X n+*@=@-@C+;@>@, , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , - D d.,@m m m m m m m m '@)@, , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , !@~@{@]@^@m m m m m /@M., , , , , , , , , , , , , , , , , , , , , , , , 7           ",
-"          . . . . b , , , , , , , , , , , , , , (@. _@m m m m m m ;@, , , , , , , , , , , , , , , , , , , , , , , , :@          ",
-"          . . . . b , , , , , , , , , , , , , , , <@L.C.m m m m m m+, , , , , , , , , , , , , , , , , , , , , , , , V           ",
-"          . . . . b , , , , , , , , , , , , , , , *.. [@m m m m m }@|@1@2@, , , , , , , , , , , , , , , , , , , , ,             ",
-"          . . . . b , , , , , , , , , , , , , , , 3@W.4@5@m m m m m m m 6@, , , , , , , , , , , , , , , , , , , , 7@            ",
-"          . . . . b , , , , , , , , , , , , , , , , 8@. 9@m m m m m m m 6@, , , , , , , , , , , , , , , , , , , , [             ",
-"          . . . . b , , , , , , , , , , , , , , , , C 0@~+a@m m m m m m 6@, , , , , , , , , , , , , , , , , , , b@              ",
-"          . . . . b , , , , , , , , , , , , , , , , , , ..c@d@e@f@g@O+|@h@, , , , , , , , , , , , , , , , , , , (               ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , i@}                 ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 3 j@9+                    ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , k@9 m.h                               ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , , , , , , , 7@l@0 a L+                                        ",
-"          . . . . b , , , , , , , , , , , , , , , , , , , , , , , m@l@0 a L+                                                    ",
-"            . . . b , , , , , , , , , , , , , , , , , n@% Z+a o@                                                                ",
-"              . . b , , , , , , , , , , , i@p@q@9+V                                                                             ",
-"                . b , , , , , :+& r@9+V                                                                                         ",
-"                  s@t@r@u@v@                                                                                                    "};
-#endif // QT_NO_IMAGEFORMAT_XPM
 
 class QMessageBoxPrivate : public QDialogPrivate
 {
@@ -595,17 +189,14 @@ public:
     bool autoAddOkButton;
     QAbstractButton *detectedEscapeButton;
     QLabel *informativeLabel;
+    QPointer<QObject> receiverToDisconnectOnClose;
+    QByteArray memberToDisconnectOnClose;
+    QByteArray signalToDisconnectOnClose;
 };
-
-static QString *translatedTextAboutQt = 0;
 
 void QMessageBoxPrivate::init(const QString &title, const QString &text)
 {
     Q_Q(QMessageBox);
-
-    if (!translatedTextAboutQt) {
-        translatedTextAboutQt = new QString;
-    }
 
     label = new QLabel;
     label->setObjectName(QLatin1String("qt_msgbox_label"));
@@ -613,7 +204,7 @@ void QMessageBoxPrivate::init(const QString &title, const QString &text)
     label->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
     label->setOpenExternalLinks(true);
 #if defined(Q_WS_MAC)
-    label->setContentsMargins(16, 0, 0, 8);
+    label->setContentsMargins(16, 0, 0, 0);
 #elif !defined(Q_WS_QWS)
     label->setContentsMargins(2, 0, 0, 0);
     label->setIndent(9);
@@ -637,13 +228,14 @@ void QMessageBoxPrivate::init(const QString &title, const QString &text)
     grid->addWidget(buttonBox, 2, 0, 1, 2);
 #else
     grid->setMargin(0);
-    grid->setSpacing(0);
+    grid->setVerticalSpacing(8);
+    grid->setHorizontalSpacing(0);
     q->setContentsMargins(24, 15, 24, 20);
     grid->addWidget(iconLabel, 0, 0, 2, 1, Qt::AlignTop | Qt::AlignLeft);
     grid->addWidget(label, 0, 1, 1, 1);
     // -- leave space for information label --
     grid->setRowStretch(1, 100);
-    grid->setRowMinimumHeight(2, 10);
+    grid->setRowMinimumHeight(2, 6);
     grid->addWidget(buttonBox, 3, 1, 1, 1);
 #endif
 
@@ -770,7 +362,7 @@ void QMessageBoxPrivate::hideSpecial()
         for (int i=0; i<list.size(); ++i) {
             QPushButton *pb = list.at(i);
             QString text = pb->text();
-            text.remove(QChar::fromLatin1('&'));          
+            text.remove(QChar::fromLatin1('&'));
             if (text == qApp->translate("QMessageBox", "OK" ))
                 pb->setFixedSize(0,0);
         }
@@ -827,12 +419,21 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
     {
         clickedButton = button;
         q->done(execReturnCode(button)); // does not trigger closeEvent
+        emit q->buttonClicked(button);
+
+        if (receiverToDisconnectOnClose) {
+            QObject::disconnect(q, signalToDisconnectOnClose, receiverToDisconnectOnClose,
+                                memberToDisconnectOnClose);
+            receiverToDisconnectOnClose = 0;
+        }
+        signalToDisconnectOnClose.clear();
+        memberToDisconnectOnClose.clear();
     }
 }
 
 /*!
     \class QMessageBox
-    
+
     \brief The QMessageBox class provides a modal dialog for informing
     the user or for asking the user a question and receiving an answer.
 
@@ -866,7 +467,7 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
     The user must click the \gui{OK} button to dismiss the message
     box. The rest of the GUI is blocked until the message box is
     dismissed.
-    
+
     \image msgbox1.png
 
     A better approach than just alerting the user to an event is to
@@ -891,12 +492,12 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
     platforms, but note the different ways the
     \l{QMessageBox::informativeText} {informative text} is handled for
     different platforms.
-    
+
     \image msgbox2.png
 
     The exec() slot returns the StandardButtons value of the button
-    that was clicked. 
-    
+    that was clicked.
+
     \snippet doc/src/snippets/code/src_gui_dialogs_qmessagebox.cpp 7
 
     To give the user more information to help him answer the question,
@@ -1092,6 +693,13 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
 */
 
 /*!
+    \fn void QMessageBox::buttonClicked(QAbstractButton *button)
+
+    This signal is emitted whenever a button is clicked inside the QMessageBox.
+    The button that was clicked in returned in \a button.
+*/
+
+/*!
     Constructs a message box with no text and no buttons. \a parent is
     passed to the QDialog constructor.
 
@@ -1107,7 +715,7 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
 
 */
 QMessageBox::QMessageBox(QWidget *parent)
-: QDialog(*new QMessageBoxPrivate, parent, Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint)
+    : QDialog(*new QMessageBoxPrivate, parent, Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
 {
     Q_D(QMessageBox);
     d->init();
@@ -1134,7 +742,7 @@ QMessageBox::QMessageBox(QWidget *parent)
 QMessageBox::QMessageBox(Icon icon, const QString &title, const QString &text,
                          StandardButtons buttons, QWidget *parent,
                          Qt::WindowFlags f)
-: QDialog(*new QMessageBoxPrivate, parent, f | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint)
+: QDialog(*new QMessageBoxPrivate, parent, f | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
 {
     Q_D(QMessageBox);
     d->init(title, text);
@@ -1503,7 +1111,7 @@ void QMessageBox::setText(const QString &text)
 
     The icon of the message box can be specified with one of the
     values:
-    
+
     \list
     \o QMessageBox::NoIcon
     \o QMessageBox::Question
@@ -1617,7 +1225,7 @@ bool QMessageBox::event(QEvent *e)
                       pb->click();
                   return pb->isEnabled();
               }
-          } 
+          }
         }
 #endif
         default:
@@ -1758,6 +1366,54 @@ void QMessageBox::setVisible(bool visible)
 }
 #endif
 
+
+/*!
+    \overload
+
+    Opens the dialog and connects its accepted() signal to the slot specified
+    by \a receiver and \a member.
+
+    The signal will be disconnected from the slot when the dialog is closed.
+*/
+void QMessageBox::open(QObject *receiver, const char *member)
+{
+    Q_D(QMessageBox);
+    const char *signal = member && strchr(member, '*') ? SIGNAL(buttonClicked(QAbstractButton*))
+                                                       : SIGNAL(finished(int));
+    connect(this, signal, receiver, member);
+    d->signalToDisconnectOnClose = signal;
+    d->receiverToDisconnectOnClose = receiver;
+    d->memberToDisconnectOnClose = member;
+    QDialog::open();
+}
+
+/*!
+    \since 4.5
+
+    Returns a list of all the buttons that have been added to the message box.
+
+    \sa buttonRole(), addButton(), removeButton()
+*/
+QList<QAbstractButton *> QMessageBox::buttons() const
+{
+    Q_D(const QMessageBox);
+    return d->buttonBox->buttons();
+}
+
+/*!
+    \since 4.5
+
+    Returns the button role for the specified \a button. This function returns
+    \l InvalidRole if \a button is 0 or has not been added to the message box.
+
+    \sa buttons(), addButton()
+*/
+QMessageBox::ButtonRole QMessageBox::buttonRole(QAbstractButton *button) const
+{
+    Q_D(const QMessageBox);
+    return QMessageBox::ButtonRole(d->buttonBox->buttonRole(button));
+}
+
 /*!
     \reimp
 */
@@ -1834,7 +1490,8 @@ static QMessageBox::StandardButton showNewMessageBox(QWidget *parent,
     Opens an information message box with the specified \a title and
     \a text. The standard \a buttons are added to the message box. \a
     defaultButton specifies the button used when \key Enter is
-    pressed. If \a defaultButton is QMessageBox::NoButton, QMessageBox
+    pressed. \a defaultButton must refer to a button that was given in \a buttons.
+    If \a defaultButton is QMessageBox::NoButton, QMessageBox
     chooses a suitable default automatically.
 
     Returns the identity of the standard button that was clicked. If
@@ -1863,7 +1520,8 @@ QMessageBox::StandardButton QMessageBox::information(QWidget *parent, const QStr
     Opens a question message box with the specified \a title and \a
     text. The standard \a buttons are added to the message box. \a
     defaultButton specifies the button used when \key Enter is
-    pressed. If \a defaultButton is QMessageBox::NoButton, QMessageBox
+    pressed. \a defaultButton must refer to a button that was given in \a buttons.
+    If \a defaultButton is QMessageBox::NoButton, QMessageBox
     chooses a suitable default automatically.
 
     Returns the identity of the standard button that was clicked. If
@@ -1890,13 +1548,14 @@ QMessageBox::StandardButton QMessageBox::question(QWidget *parent, const QString
     Opens a warning message box with the specified \a title and \a
     text. The standard \a buttons are added to the message box. \a
     defaultButton specifies the button used when \key Enter is
-    pressed. If \a defaultButton is QMessageBox::NoButton, QMessageBox
+    pressed. \a defaultButton must refer to a button that was given in \a buttons.
+    If \a defaultButton is QMessageBox::NoButton, QMessageBox
     chooses a suitable default automatically.
 
     Returns the identity of the standard button that was clicked. If
     \key Esc was pressed instead, the \l{Default and Escape Keys}
     {escape button} is returned.
-    
+
     If \a parent is 0, the message box is an \l{Qt::ApplicationModal}
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
@@ -1917,7 +1576,8 @@ QMessageBox::StandardButton QMessageBox::warning(QWidget *parent, const QString 
     Opens a critical message box with the specified \a title and \a
     text. The standard \a buttons are added to the message box. \a
     defaultButton specifies the button used when \key Enter is
-    pressed. If \a defaultButton is QMessageBox::NoButton, QMessageBox
+    pressed. \a defaultButton must refer to a button that was given in \a buttons.
+    If \a defaultButton is QMessageBox::NoButton, QMessageBox
     chooses a suitable default automatically.
 
     Returns the identity of the standard button that was clicked. If
@@ -1928,6 +1588,10 @@ QMessageBox::StandardButton QMessageBox::warning(QWidget *parent, const QString 
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
+
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
 
     \sa question(), warning(), information()
 */
@@ -1953,18 +1617,48 @@ QMessageBox::StandardButton QMessageBox::critical(QWidget *parent, const QString
     \o As a last resort it uses the Information icon.
     \endlist
 
-    The about box has a single button labelled "OK".
+    The about box has a single button labelled "OK". On Mac OS X, the
+    about box is popped up as a modeless window; on other platforms,
+    it is currently a window modal.
 
-    \sa QWidget::windowIcon() QApplication::activeWindow()
+    \sa QWidget::windowIcon(), QApplication::activeWindow()
 */
-void QMessageBox::about(QWidget *parent, const QString &title,
-                        const QString &text)
+void QMessageBox::about(QWidget *parent, const QString &title, const QString &text)
 {
-    QMessageBox mb(title, text, Information, Ok + Default, 0, 0, parent);
-    QIcon icon = mb.windowIcon();
+#ifdef Q_WS_MAC
+    static QPointer<QMessageBox> oldMsgBox;
+
+    if (oldMsgBox && oldMsgBox->text() == text) {
+        oldMsgBox->show();
+        oldMsgBox->raise();
+        oldMsgBox->activateWindow();
+        return;
+    }
+#endif
+
+    QMessageBox *msgBox = new QMessageBox(title, text, Information, 0, 0, 0, parent
+#ifdef Q_WS_MAC
+                                          , Qt::WindowTitleHint | Qt::WindowSystemMenuHint
+#endif
+    );
+    msgBox->setAttribute(Qt::WA_DeleteOnClose);
+    QIcon icon = msgBox->windowIcon();
     QSize size = icon.actualSize(QSize(64, 64));
-    mb.setIconPixmap(icon.pixmap(size));
-    mb.exec();
+    msgBox->setIconPixmap(icon.pixmap(size));
+
+    // should perhaps be a style hint
+#ifdef Q_WS_MAC
+    oldMsgBox = msgBox;
+#if 0
+    // ### doesn't work until close button is enabled in title bar
+    msgBox->d_func()->autoAddOkButton = false;
+#else
+    msgBox->d_func()->buttonBox->setCenterButtons(true);
+#endif
+    msgBox->show();
+#else
+    msgBox->exec();
+#endif
 }
 
 /*!
@@ -1977,46 +1671,76 @@ void QMessageBox::about(QWidget *parent, const QString &title,
 
     QApplication provides this functionality as a slot.
 
+    On Mac OS X, the about box is popped up as a modeless window; on
+    other platforms, it is currently window modal.
+
     \sa QApplication::aboutQt()
 */
 void QMessageBox::aboutQt(QWidget *parent, const QString &title)
 {
-    QMessageBox mb(parent);
-
-    QString c = title;
-    if (c.isEmpty())
-        c = tr("About Qt");
-    mb.setWindowTitle(c);
-    mb.setText(*translatedTextAboutQt);
-#ifndef QT_NO_IMAGEFORMAT_XPM
-    QImage logo(qtlogo_xpm);
-#else
-    QImage logo;
-#endif
-
-    if (qGray(mb.palette().color(QPalette::Active, QPalette::Text).rgb()) >
-        qGray(mb.palette().color(QPalette::Active, QPalette::Base).rgb()))
-    {
-        // light on dark, adjust some colors
-        logo.setColor(0, 0xffffffff);
-        logo.setColor(1, 0xff666666);
-        logo.setColor(2, 0xffcccc66);
-        logo.setColor(4, 0xffcccccc);
-        logo.setColor(6, 0xffffff66);
-        logo.setColor(7, 0xff999999);
-        logo.setColor(8, 0xff3333ff);
-        logo.setColor(9, 0xffffff33);
-        logo.setColor(11, 0xffcccc99);
+#ifdef Q_WS_MAC
+    static QPointer<QMessageBox> oldMsgBox;
+  
+    if (oldMsgBox) {
+        oldMsgBox->show();
+        oldMsgBox->raise();
+        oldMsgBox->activateWindow();
+        return;
     }
-    QPixmap pm = QPixmap::fromImage(logo);
-    if (!pm.isNull())
-        mb.setIconPixmap(pm);
-#if defined(Q_OS_WINCE)
-    mb.setDefaultButton(mb.addButton(QMessageBox::Ok));
-#else
-    mb.addButton(QMessageBox::Ok);
 #endif
-    mb.exec();
+
+    QString translatedTextAboutQt;
+    translatedTextAboutQt = QMessageBox::tr(
+        "<h3>About Qt</h3>"
+        "%1<p>Qt is a C++ toolkit for cross-platform "
+        "application development.</p>"
+        "<p>Qt provides single-source "
+        "portability across MS&nbsp;Windows, Mac&nbsp;OS&nbsp;X, "
+        "Linux, and all major commercial Unix variants. Qt is also"
+        " available for embedded devices as Qt for Embedded Linux"
+        " and Qt for Windows CE.</p>"
+        "<p>Qt is a Nokia product. See "
+        "<a href=\"http://qtsoftware.com/qt/\">qtsoftware.com/qt/</a> for more information.</p>"
+       )
+#if QT_EDITION != QT_EDITION_OPENSOURCE
+       .arg(QMessageBox::tr("<p>This program uses Qt version %1.</p>"))
+#else
+       .arg(QMessageBox::tr("<p>This program uses Qt Open Source Edition version %1.</p>"
+               "<p>Qt Open Source Edition is intended for the development "
+               "of Open Source applications. You need a commercial Qt "
+               "license for development of proprietary (closed source) "
+               "applications.</p>"
+               "<p>Please see <a href=\"http://qtsoftware.com/company/model/\">qtsoftware.com/company/model/</a> "
+               "for an overview of Qt licensing.</p>"))
+#endif
+
+    .arg(QLatin1String(QT_VERSION_STR));
+
+    QMessageBox *msgBox = new QMessageBox(parent);
+    msgBox->setAttribute(Qt::WA_DeleteOnClose);
+    msgBox->setWindowTitle(title.isEmpty() ? tr("About Qt") : title);
+    msgBox->setText(translatedTextAboutQt);
+
+    QPixmap pm(QLatin1String(":/trolltech/qmessagebox/images/qtlogo-64.png"));
+    if (!pm.isNull())
+        msgBox->setIconPixmap(pm);
+#if defined(Q_OS_WINCE)
+    msgBox->setDefaultButton(msgBox->addButton(QMessageBox::Ok));
+#endif
+
+    // should perhaps be a style hint
+#ifdef Q_WS_MAC
+    oldMsgBox = msgBox;
+#if 0
+    // ### doesn't work until close button is enabled in title bar
+    msgBox->d_func()->autoAddOkButton = false;
+#else
+    msgBox->d_func()->buttonBox->setCenterButtons(true);
+#endif
+    msgBox->show();
+#else
+    msgBox->exec();
+#endif
 }
 
 /*!
@@ -2034,7 +1758,7 @@ QSize QMessageBox::sizeHint() const
 static QMessageBox::StandardButton newButton(int button)
 {
     // this is needed for source compatibility with Qt 4.0 and 4.1
-    if (button == QMessageBox::NoButton || (button & NewButtonFlag))
+    if (button == QMessageBox::NoButton || (button & NewButtonMask))
         return QMessageBox::StandardButton(button & QMessageBox::ButtonMask);
 
 #if QT_VERSION < 0x050000
@@ -2066,11 +1790,11 @@ static QMessageBox::StandardButton newButton(int button)
 
 static bool detectedCompat(int button0, int button1, int button2)
 {
-    if (button0 != 0 && !(button0 & NewButtonFlag))
+    if (button0 != 0 && !(button0 & NewButtonMask))
         return true;
-    if (button1 != 0 && !(button1 & NewButtonFlag))
+    if (button1 != 0 && !(button1 & NewButtonMask))
         return true;
-    if (button2 != 0 && !(button2 & NewButtonFlag))
+    if (button2 != 0 && !(button2 & NewButtonMask))
         return true;
     return false;
 }
@@ -2153,35 +1877,6 @@ void QMessageBoxPrivate::retranslateStrings()
     if (detailsButton)
         detailsButton->setText(detailsText->isHidden() ? detailsText->label(HideLabel) : detailsText->label(ShowLabel));
 #endif
-
-#if defined(QT_NON_COMMERCIAL)
-    QT_NC_MSGBOX
-#else
-    *translatedTextAboutQt = QMessageBox::tr(
-        "<h3>About Qt</h3>"
-        "%1<p>Qt is a C++ toolkit for cross-platform "
-        "application development.</p>"
-        "<p>Qt provides single-source "
-        "portability across MS&nbsp;Windows, Mac&nbsp;OS&nbsp;X, "
-        "Linux, and all major commercial Unix variants. Qt is also"
-        " available for embedded devices as Qt Embedded.</p>"
-        "<p>Qt is a Trolltech product. See "
-        "<a href=\"http://www.trolltech.com/qt/\">www.trolltech.com/qt/</a> for more information.</p>"
-       )
-#if QT_EDITION != QT_EDITION_OPENSOURCE
-       .arg(QMessageBox::tr("<p>This program uses Qt version %1.</p>"))
-#else
-       .arg(QMessageBox::tr("<p>This program uses Qt Open Source Edition version %1.</p>"
-               "<p>Qt Open Source Edition is intended for the development "
-               "of Open Source applications. You need a commercial Qt "
-               "license for development of proprietary (closed source) "
-               "applications.</p>"
-               "<p>Please see <a href=\"http://www.trolltech.com/company/model/\">www.trolltech.com/company/model/</a> "
-               "for an overview of Qt licensing.</p>"))
-#endif
-       .arg(QLatin1String(QT_VERSION_STR));
-#endif
-
 }
 
 /*!
@@ -2239,10 +1934,10 @@ void QMessageBoxPrivate::retranslateStrings()
     \sa setWindowTitle(), setText(), setIcon()
 */
 QMessageBox::QMessageBox(const QString &title, const QString &text, Icon icon,
-                             int button0, int button1, int button2, QWidget *parent,
-                             Qt::WindowFlags f)
+                         int button0, int button1, int button2, QWidget *parent,
+                         Qt::WindowFlags f)
     : QDialog(*new QMessageBoxPrivate, parent,
-              f /*| Qt::MSWindowsFixedSizeDialogHint #### */| Qt::WindowTitleHint | Qt::WindowSystemMenuHint)
+              f /*| Qt::MSWindowsFixedSizeDialogHint #### */| Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
 {
     Q_D(QMessageBox);
     d->init(title, text);
@@ -2285,6 +1980,10 @@ QMessageBox::QMessageBox(const QString &title, const QString &text, Icon icon,
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
+
     \sa question(), warning(), critical()
 */
 int QMessageBox::information(QWidget *parent, const QString &title, const QString& text,
@@ -2318,6 +2017,10 @@ int QMessageBox::information(QWidget *parent, const QString &title, const QStrin
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
+
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
 
     \sa question(), warning(), critical()
 */
@@ -2367,6 +2070,10 @@ int QMessageBox::information(QWidget *parent, const QString &title, const QStrin
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
+
     \sa information(), warning(), critical()
 */
 int QMessageBox::question(QWidget *parent, const QString &title, const QString& text,
@@ -2400,6 +2107,10 @@ int QMessageBox::question(QWidget *parent, const QString &title, const QString& 
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
+
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
 
     \sa information(), warning(), critical()
 */
@@ -2449,6 +2160,10 @@ int QMessageBox::question(QWidget *parent, const QString &title, const QString& 
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
+
     \sa information(), question(), critical()
 */
 int QMessageBox::warning(QWidget *parent, const QString &title, const QString& text,
@@ -2482,6 +2197,10 @@ int QMessageBox::warning(QWidget *parent, const QString &title, const QString& t
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
+
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
 
     \sa information(), question(), critical()
 */
@@ -2530,6 +2249,10 @@ int QMessageBox::warning(QWidget *parent, const QString &title, const QString& t
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
 
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
+
     \sa information(), question(), warning()
 */
 
@@ -2564,6 +2287,10 @@ int QMessageBox::critical(QWidget *parent, const QString &title, const QString& 
     {application modal} dialog box. If \a parent is a widget, the
     message box is \l{Qt::WindowModal} {window modal} relative to \a
     parent.
+
+  \warning Do not delete \a parent during the execution of the dialog.
+           If you want to do this, you should create the dialog
+           yourself using one of the QMessageBox constructors.
 
     \sa information(), question(), warning()
 */
@@ -2787,7 +2514,7 @@ QMessageBox::QMessageBox(const QString& title,
                          QWidget *parent, const char *name,
                          bool modal, Qt::WindowFlags f)
     : QDialog(*new QMessageBoxPrivate, parent,
-              f | Qt::WStyle_Customize | Qt::WStyle_DialogBorder | Qt::WStyle_Title | Qt::WStyle_SysMenu)
+              f | Qt::WStyle_Customize | Qt::WStyle_DialogBorder | Qt::WStyle_Title | Qt::WStyle_SysMenu | Qt::WindowCloseButtonHint)
 {
     Q_D(QMessageBox);
     setObjectName(QString::fromAscii(name));
@@ -2803,7 +2530,7 @@ QMessageBox::QMessageBox(const QString& title,
 */
 QMessageBox::QMessageBox(QWidget *parent, const char *name)
     : QDialog(*new QMessageBoxPrivate, parent,
-              Qt::WStyle_Customize | Qt::WStyle_DialogBorder | Qt::WStyle_Title | Qt::WStyle_SysMenu)
+              Qt::WStyle_Customize | Qt::WStyle_DialogBorder | Qt::WStyle_Title | Qt::WStyle_SysMenu | Qt::WindowCloseButtonHint)
 {
     Q_D(QMessageBox);
     setObjectName(QString::fromAscii(name));

@@ -1,12 +1,10 @@
-/* This file is part of the KDE project
- *
- * Copyright (C) 1998, 1999 Torben Weis <weis@kde.org>
+/* Copyright (C) 1998, 1999 Torben Weis <weis@kde.org>
  *                     1999-2001 Lars Knoll <knoll@kde.org>
  *                     1999-2001 Antti Koivisto <koivisto@kde.org>
  *                     2000-2001 Simon Hausmann <hausmann@kde.org>
  *                     2000-2001 Dirk Mueller <mueller@kde.org>
  *                     2000 Stefan Schimanski <1Stein@gmx.de>
- * Copyright (C) 2004, 2005, 2006 Apple Computer, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  *
  * This library is free software; you can redistribute it and/or
@@ -28,32 +26,15 @@
 #ifndef FramePrivate_h
 #define FramePrivate_h
 
-#include "CommandByName.h"
+#include "AnimationController.h"
 #include "Editor.h"
 #include "EventHandler.h"
+#include "FrameLoader.h"
 #include "FrameTree.h"
 #include "Range.h"
 #include "SelectionController.h"
 #include "StringHash.h"
-
-namespace KJS {
-    class Interpreter;
-        
-    namespace Bindings {
-        class Instance;
-        class RootObject;
-    }
-}
-
-#if PLATFORM(MAC)
-#ifdef __OBJC__
-@class WebCoreFrameBridge;
-@class WebScriptObject;
-#else
-class WebCoreFrameBridge;
-class WebScriptObject;
-#endif
-#endif
+#include "ScriptController.h"
 
 #if PLATFORM(WIN)
 #include "FrameWin.h"
@@ -61,9 +42,9 @@ class WebScriptObject;
 
 namespace WebCore {
 
+#if FRAME_LOADS_USER_STYLESHEET
     class UserStyleSheetLoader;
-
-    typedef HashMap<void*, RefPtr<KJS::Bindings::RootObject> > RootObjectMap;
+#endif
     
     class FramePrivate {
     public:
@@ -72,18 +53,20 @@ namespace WebCore {
 
         Page* m_page;
         FrameTree m_treeNode;
+        FrameLoader m_loader;
         RefPtr<DOMWindow> m_domWindow;
+        HashSet<DOMWindow*> m_liveFormerWindows;
 
         HTMLFrameOwnerElement* m_ownerElement;
         RefPtr<FrameView> m_view;
         RefPtr<Document> m_doc;
 
-        KJSProxy* m_jscript;
+        ScriptController m_script;
 
         String m_kjsStatusBarText;
         String m_kjsDefaultStatusBarText;
 
-        int m_zoomFactor;
+        float m_zoomFactor;
 
         TextGranularity m_selectionGranularity;
 
@@ -91,41 +74,24 @@ namespace WebCore {
         Selection m_mark;
         Timer<Frame> m_caretBlinkTimer;
         Editor m_editor;
-        CommandByName m_command;
         EventHandler m_eventHandler;
-
-        bool m_caretVisible : 1;
-        bool m_caretPaint : 1;
-        bool m_isActive : 1;
-        bool m_isPainting : 1;
+        AnimationController m_animationController;
 
         RefPtr<CSSMutableStyleDeclaration> m_typingStyle;
 
         Timer<Frame> m_lifeSupportTimer;
 
-        FrameLoader* m_loader;
-        
-        UserStyleSheetLoader* m_userStyleSheetLoader;
-        
-        RefPtr<Node> m_elementToDraw;
-        PaintRestriction m_paintRestriction;
+        bool m_caretVisible;
+        bool m_caretPaint;
         
         bool m_highlightTextMatches;
-        bool m_windowHasFocus;
-        
         bool m_inViewSourceMode;
+        bool m_needsReapplyStyles;
+        bool m_isDisconnected;
+        bool m_excludeFromTextSearch;
 
-        unsigned frameCount;
-
-        bool m_prohibitsScrolling;
-
-        // The root object used for objects bound outside the context of a plugin.
-        RefPtr<KJS::Bindings::RootObject> m_bindingRootObject; 
-        RootObjectMap m_rootObjects;
-        NPObject* m_windowScriptNPObject;
-#if PLATFORM(MAC)
-        RetainPtr<WebScriptObject> m_windowScriptObject;
-        WebCoreFrameBridge* m_bridge;
+#if FRAME_LOADS_USER_STYLESHEET
+        UserStyleSheetLoader* m_userStyleSheetLoader;
 #endif
     };
 }

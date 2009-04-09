@@ -4,7 +4,7 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>linguist.icns</string>
-	<key>CFBundleIndentifier</key>
+	<key>CFBundleIdentifier</key>
 	<string>com.trolltech.Linguist</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>

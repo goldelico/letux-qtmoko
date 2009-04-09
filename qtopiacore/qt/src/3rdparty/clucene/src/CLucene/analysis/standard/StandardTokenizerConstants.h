@@ -24,19 +24,7 @@ CL_NS_DEF2(analysis,standard)
     NUM,
     CJK
   };
+  extern const TCHAR** tokenImage;
 
-  const static TCHAR* tokenImage[] = {
-    _T("<EOF>"),
-    _T("<UNKNOWN>"),
-    _T("<ALPHANUM>"),
-    _T("<APOSTROPHE>"),
-    _T("<ACRONYM>"),
-    _T("<COMPANY>"),
-    _T("<EMAIL>"),
-    _T("<HOST>"),
-    _T("<NUM>"),
-    _T("<CJK>")
-  };
-
-CL_NS_END2
+  CL_NS_END2
 #endif

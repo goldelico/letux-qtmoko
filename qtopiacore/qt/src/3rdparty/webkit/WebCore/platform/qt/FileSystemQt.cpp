@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2007 Staikos Computing Services Inc.
  * Copyright (C) 2007 Holger Hans Peter Freyther
+ * Copyright (C) 2008 Apple, Inc. All rights reserved.
+ * Copyright (C) 2008 Collabora, Ltd. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,8 +29,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <PlatformString.h>
+#include "config.h"
+#include "FileSystem.h"
+
+#include "CString.h"
+#include "NotImplemented.h"
+#include "PlatformString.h"
+
+#include <QDateTime>
+#include <QFile>
+#include <QTemporaryFile>
 #include <QFileInfo>
+#include <QDateTime>
+#include <QDir>
 
 namespace WebCore {
 
@@ -43,12 +56,119 @@ bool deleteFile(const String& path)
     return QFile::remove(path);
 }
 
-bool fileSize(const String& path, long long& result)
+bool deleteEmptyDirectory(const String& path)
+{
+    return QDir::root().rmdir(path);
+}
+
+bool getFileSize(const String& path, long long& result)
 {
     QFileInfo info(path);
     result = info.size();
     return info.exists(); 
 }
+
+bool getFileModificationTime(const String& path, time_t& result)
+{
+    QFileInfo info(path);
+    result = info.lastModified().toTime_t();
+    return info.exists();
+}
+
+bool makeAllDirectories(const String& path)
+{
+    return QDir::root().mkpath(path);
+}
+
+String pathByAppendingComponent(const String& path, const String& component)
+{
+    return QDir(path).filePath(component);
+}
+
+String homeDirectoryPath()
+{
+    return QDir::homePath();
+}
+
+String pathGetFileName(const String& path)
+{
+    return QFileInfo(path).fileName();
+}
+
+String directoryName(const String& path)
+{
+    return String(QFileInfo(path).baseName());
+}
+
+Vector<String> listDirectory(const String& path, const String& filter)
+{
+    Vector<String> entries;
+
+    QStringList nameFilters;
+    if (!filter.isEmpty())
+        nameFilters.append(filter);
+    QFileInfoList fileInfoList = QDir(path).entryInfoList(nameFilters, QDir::AllEntries | QDir::NoDotAndDotDot);
+    foreach (const QFileInfo fileInfo, fileInfoList) {
+        String entry = String(fileInfo.canonicalFilePath());
+        entries.append(entry);
+    }
+
+    return entries;
+}
+
+CString openTemporaryFile(const char* prefix, PlatformFileHandle& handle)
+{
+    QFile *temp = new QTemporaryFile(QLatin1String(prefix));
+    if (temp->open(QIODevice::ReadWrite)) {
+        handle = temp;
+        return String(temp->fileName()).utf8();
+    }
+    handle = invalidPlatformFileHandle;
+    return 0;
+}
+
+void closeFile(PlatformFileHandle& handle)
+{
+    if (handle) {
+        handle->close();
+        delete handle;
+    }
+}
+
+int writeToFile(PlatformFileHandle handle, const char* data, int length)
+{
+    if (handle && handle->exists() && handle->isWritable())
+        return handle->write(data, length);
+
+    return 0;
+}
+
+#if defined(Q_WS_X11) || defined(Q_WS_QWS)
+bool unloadModule(PlatformModule module)
+{
+    if (module->unload()) {
+        delete module;
+        return true;
+    }
+
+    return false;
+}
+#endif
+
+#if defined(Q_WS_MAC)
+bool unloadModule(PlatformModule module)
+{
+    CFRelease(module);
+    return true;
+}
+#endif
+
+#if defined(Q_OS_WIN)
+bool unloadModule(PlatformModule module)
+{
+    return ::FreeLibrary(module);
+}
+#endif
 
 }
 

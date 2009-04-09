@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -42,7 +46,7 @@
 #include "qgenericsequencetype_p.h"
 #include "qliteral_p.h"
 #include "qpatternistlocale_p.h"
-#include "qnumeric_p.h"
+#include "qschemanumeric_p.h"
 #include "quntypedatomicconverter_p.h"
 
 #include "qarithmeticexpression_p.h"
@@ -53,8 +57,9 @@ using namespace QPatternist;
 
 ArithmeticExpression::ArithmeticExpression(const Expression::Ptr &op1,
                                            const AtomicMathematician::Operator op,
-                                           const Expression::Ptr &op2) : PairContainer(op1, op2),
-                                                                         m_op(op)
+                                           const Expression::Ptr &op2) : PairContainer(op1, op2)
+                                                                       , m_op(op)
+                                                                       , m_isCompat(false)
 {
 }
 
@@ -68,8 +73,41 @@ Item ArithmeticExpression::evaluateSingleton(const DynamicContext::Ptr &context)
     if(!op2)
         return Item();
 
-    return flexiblyCalculate(op1, m_op, op2, m_mather, context, this);
+    return flexiblyCalculate(op1, m_op, op2, m_mather, context, this,
+                             ReportContext::XPTY0004, m_isCompat);
 }
+
+/**
+ * Since ArithmeticExpression::flexiblyCalculate() creates Expression instances
+ * at runtime, we have the problem of having SourceLocationReflections for them
+ * in the case that we run into a runtime error, since the locations are always
+ * located at compile time.
+ *
+ * This class simply delegates the reflection over to an existing expression.
+ *
+ * I only managed to trigger this with "current() + 1", where current()
+ * evaluates to an invalid representation for @c xs:double.
+ *
+ * @since 4.5
+ * @author Frans Englich <fenglich@trolltech.com>
+ */
+class DelegatingReflectionExpression : public Literal
+{
+public:
+    DelegatingReflectionExpression(const Item &item,
+                                   const SourceLocationReflection *const reflection) : Literal(item)
+                                                                                     , m_reflection(reflection)
+    {
+    }
+
+    virtual const SourceLocationReflection *actualReflection() const
+    {
+        return m_reflection;
+    }
+
+private:
+    const SourceLocationReflection *const m_reflection;
+};
 
 Item ArithmeticExpression::flexiblyCalculate(const Item &op1,
                                              const AtomicMathematician::Operator op,
@@ -77,15 +115,17 @@ Item ArithmeticExpression::flexiblyCalculate(const Item &op1,
                                              const AtomicMathematician::Ptr &mather,
                                              const DynamicContext::Ptr &context,
                                              const SourceLocationReflection *const reflection,
-                                             const ReportContext::ErrorCode code)
+                                             const ReportContext::ErrorCode code,
+                                             const bool isCompat)
 {
     if(mather)
         return mather->calculate(op1, op, op2, context);
 
-    Expression::Ptr a1(new Literal(op1));
-    Expression::Ptr a2(new Literal(op2));
+    /* This is a very heavy code path. */
+    Expression::Ptr a1(new DelegatingReflectionExpression(op1, reflection));
+    Expression::Ptr a2(new DelegatingReflectionExpression(op2, reflection));
 
-    const AtomicMathematician::Ptr ingela(fetchMathematician(a1, a2, op, true, context, reflection, code));
+    const AtomicMathematician::Ptr ingela(fetchMathematician(a1, a2, op, true, context, reflection, code, isCompat));
 
     return ingela->calculate(a1->evaluateSingleton(context),
                              op,
@@ -96,6 +136,8 @@ Item ArithmeticExpression::flexiblyCalculate(const Item &op1,
 Expression::Ptr ArithmeticExpression::typeCheck(const StaticContext::Ptr &context,
                                                 const SequenceType::Ptr &reqType)
 {
+    m_isCompat = context->compatModeEnabled();
+
     const Expression::Ptr me(PairContainer::typeCheck(context, reqType));
     const ItemType::Ptr t1(m_operand1->staticType()->itemType());
     const ItemType::Ptr t2(m_operand2->staticType()->itemType());
@@ -117,7 +159,8 @@ Expression::Ptr ArithmeticExpression::typeCheck(const StaticContext::Ptr &contex
         return me;
     }
 
-    m_mather = fetchMathematician(m_operand1, m_operand2, m_op, true, context, this);
+    m_mather = fetchMathematician(m_operand1, m_operand2, m_op, true, context, this,
+                                  ReportContext::XPTY0004, m_isCompat);
 
     return me;
 }
@@ -129,19 +172,24 @@ ArithmeticExpression::fetchMathematician(Expression::Ptr &op1,
                                          const bool issueError,
                                          const ReportContext::Ptr &context,
                                          const SourceLocationReflection *const reflection,
-                                         const ReportContext::ErrorCode code)
+                                         const ReportContext::ErrorCode code,
+                                         const bool isCompat)
 {
     ItemType::Ptr t1(op1->staticType()->itemType());
     ItemType::Ptr t2(op2->staticType()->itemType());
 
-    if(BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t1))
+    if(BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t1)
+       || (isCompat && (BuiltinTypes::xsString->xdtTypeMatches(t1)
+                        || BuiltinTypes::xsDecimal->xdtTypeMatches(t1))))
     {
         op1 = Expression::Ptr(new UntypedAtomicConverter(op1, BuiltinTypes::xsDouble));
         /* The types might have changed, reload. */
         t1 = op1->staticType()->itemType();
     }
 
-    if(BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t2))
+    if(BuiltinTypes::xsUntypedAtomic->xdtTypeMatches(t2)
+       || (isCompat && (BuiltinTypes::xsString->xdtTypeMatches(t1)
+                        || BuiltinTypes::xsDecimal->xdtTypeMatches(t1))))
     {
         op2 = Expression::Ptr(new UntypedAtomicConverter(op2, BuiltinTypes::xsDouble));
         /* The types might have changed, reload. */
@@ -257,17 +305,30 @@ SequenceType::Ptr ArithmeticExpression::staticType() const
     else if(BuiltinTypes::xsFloat->xdtTypeMatches(t1) ||
             BuiltinTypes::xsFloat->xdtTypeMatches(t2))
     {
-        returnType = BuiltinTypes::xsFloat;
+        if(m_isCompat)
+            returnType = BuiltinTypes::xsFloat;
+        else
+            returnType = BuiltinTypes::xsDouble;
     }
     else if(BuiltinTypes::xsInteger->xdtTypeMatches(t1) &&
             BuiltinTypes::xsInteger->xdtTypeMatches(t2))
     {
-        /* "A div B  numeric  numeric  op:numeric-divide(A, B)
-         * numeric; but xs:decimal if both operands are xs:integer" */
-        if(m_op == AtomicMathematician::Div)
-            returnType = BuiltinTypes::xsDecimal;
+        if(m_isCompat)
+            returnType = BuiltinTypes::xsDouble;
         else
-            returnType = BuiltinTypes::xsInteger;
+        {
+            /* "A div B  numeric  numeric  op:numeric-divide(A, B)
+             * numeric; but xs:decimal if both operands are xs:integer" */
+            if(m_op == AtomicMathematician::Div)
+                returnType = BuiltinTypes::xsDecimal;
+            else
+                returnType = BuiltinTypes::xsInteger;
+        }
+    }
+    else if(m_isCompat && (BuiltinTypes::xsInteger->xdtTypeMatches(t1) &&
+                           BuiltinTypes::xsInteger->xdtTypeMatches(t2)))
+    {
+        returnType = BuiltinTypes::xsDouble;
     }
     else
     {

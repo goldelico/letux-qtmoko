@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@ TRANSLATOR qdesigner_internal::ObjectInspector
 #include <layout_p.h>
 #include <qdesigner_propertycommand_p.h>
 #include <qdesigner_utils_p.h>
+#include <iconloader_p.h>
 
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerFormWindowInterface>
@@ -56,8 +61,10 @@ TRANSLATOR qdesigner_internal::ObjectInspector
 #include <QtGui/QAction>
 #include <QtGui/QLayoutItem>
 #include <QtGui/QMenu>
+#include <QtGui/QButtonGroup>
 #include <QtCore/QSet>
 #include <QtCore/QDebug>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
@@ -83,13 +90,6 @@ static bool sameIcon(const QIcon &i1, const QIcon &i2)
     return i1.serialNumber() == i2.serialNumber();
 }
 
-static inline QLayout *layoutOfQLayoutWidget(QObject *o)
-{
-    if (o->isWidgetType() && !qstrcmp(o->metaObject()->className(), "QLayoutWidget"))
-        return static_cast<QWidget*>(o)->layout();
-    return 0;
-}
-
 static inline bool isNameColumnEditable(const QObject *)
 {
     return true;
@@ -110,7 +110,34 @@ static qdesigner_internal::ObjectData::StandardItemList createModelRow(const QOb
     return rc;
 }
 
+static inline bool isQLayoutWidget(const QObject *o)
+{
+    return o->metaObject() == &QLayoutWidget::staticMetaObject;
+}
+
 namespace qdesigner_internal {
+
+    // context kept while building a model, just there to reduce string allocations
+    struct ModelRecursionContext {
+        explicit ModelRecursionContext(QDesignerFormEditorInterface *core, const QString &sepName);
+
+        const QString designerPrefix;
+        const QString separator;
+
+        QDesignerFormEditorInterface *core;
+        const QDesignerWidgetDataBaseInterface *db;
+        const QDesignerMetaDataBaseInterface *mdb;
+    };
+
+    ModelRecursionContext::ModelRecursionContext(QDesignerFormEditorInterface *c, const QString &sepName) :
+        designerPrefix(QLatin1String("QDesigner")),
+        separator(sepName),
+        core(c),
+        db(c->widgetDataBase()),
+        mdb(c->metaDataBase())
+    {
+    }
+
     // ------------  ObjectData/ ObjectModel:
     // Whenever the selection changes, ObjectInspector::setFormWindow is
     // called. To avoid rebuilding the tree every time (loosing expanded state)
@@ -122,10 +149,78 @@ namespace qdesigner_internal {
     // comparing the lists of ObjectData. If it is the same, only the item data (class name [changed by promotion],
     // object name and icon) are checked and the existing items are updated.
 
-    ObjectData::ObjectData(QObject *parent, QObject *object) :
-       m_parent(parent),
-       m_object(object)
+    ObjectData::ObjectData() :
+        m_parent(0),
+        m_object(0),
+        m_type(Object),
+        m_managedLayoutType(LayoutInfo::NoLayout)
     {
+    }
+
+    ObjectData::ObjectData(QObject *parent, QObject *object, const ModelRecursionContext &ctx) :
+       m_parent(parent),
+       m_object(object),
+       m_type(Object),
+       m_className(QLatin1String(object->metaObject()->className())),
+       m_objectName(object->objectName()),
+       m_managedLayoutType(LayoutInfo::NoLayout)
+    {
+
+        // 1) set entry
+        if (object->isWidgetType()) {
+            initWidget(static_cast<QWidget*>(object), ctx);
+        } else {
+            initObject(ctx);
+        }
+        if (m_className.startsWith(ctx.designerPrefix))
+            m_className.remove(1, ctx.designerPrefix.size() - 1);
+    }
+
+    void ObjectData::initObject(const ModelRecursionContext &ctx)
+    {
+        // Check objects: Action?
+        if (const QAction *act = qobject_cast<const QAction*>(m_object)) {
+            if (act->isSeparator()) {  // separator is reserved
+                m_objectName = ctx.separator;
+                m_type = SeparatorAction;
+            } else {
+                m_type = Action;
+            }
+            m_classIcon = act->icon();
+        } else {
+            m_type = Object;
+        }
+    }
+
+    void ObjectData::initWidget(QWidget *w, const ModelRecursionContext &ctx)
+    {
+        // Check for extension container, QLayoutwidget, or normal container
+        bool isContainer = false;
+        if (const QDesignerWidgetDataBaseItemInterface *widgetItem = ctx.db->item(ctx.db->indexOfObject(w, true))) {
+            m_classIcon = widgetItem->icon();
+            m_className = widgetItem->name();
+            isContainer = widgetItem->isContainer();
+        }
+
+        if (isQLayoutWidget(w)) {
+            m_type = LayoutWidget;
+            const QLayout *layout = w->layout();
+            m_managedLayoutType = LayoutInfo::layoutType(ctx.core, layout);
+            m_className = QLatin1String(layout->metaObject()->className());
+            m_objectName = layout->objectName();
+            return;
+        }
+
+        if (qt_extension<QDesignerContainerExtension*>(ctx.core->extensionManager(), w)) {
+            m_type = ExtensionContainer;
+            return;
+        }
+        if (isContainer) {
+            m_type = LayoutableContainer;
+            m_managedLayoutType = LayoutInfo::managedLayoutType(ctx.core, w);
+            return;
+        }
+        m_type = ChildWidget;
     }
 
     bool ObjectData::equals(const ObjectData & me) const
@@ -140,12 +235,16 @@ namespace qdesigner_internal {
             rc |= ClassNameChanged;
         if (m_objectName != rhs.m_objectName)
             rc |= ObjectNameChanged;
-        if (!sameIcon(m_icon, rhs.m_icon))
-            rc |= IconChanged;
+        if (!sameIcon(m_classIcon, rhs.m_classIcon))
+            rc |= ClassIconChanged;
+        if (m_type != rhs.m_type)
+            rc |= TypeChanged;
+        if (m_managedLayoutType != rhs.m_managedLayoutType)
+            rc |= LayoutTypeChanged;
         return rc;
     }
 
-    void ObjectData::setItemsDisplayData(const StandardItemList &row, unsigned mask) const
+    void ObjectData::setItemsDisplayData(const StandardItemList &row, const ObjectInspectorIcons &icons, unsigned mask) const
     {
         if (mask & ObjectNameChanged)
             row[ObjectInspectorModel::ObjectNameColumn]->setText(m_objectName);
@@ -153,88 +252,103 @@ namespace qdesigner_internal {
             row[ObjectInspectorModel::ClassNameColumn]->setText(m_className);
             row[ObjectInspectorModel::ClassNameColumn]->setToolTip(m_className);
         }
-        if (mask & IconChanged)
-            row[ObjectInspectorModel::ObjectNameColumn]->setIcon(m_icon);
+        // Set a layout icon only for containers. Note that QLayoutWidget don't have
+        // real class icons
+        if (mask & (ClassIconChanged|TypeChanged|LayoutTypeChanged)) {
+            switch (m_type) {
+            case LayoutWidget:
+                row[ObjectInspectorModel::ObjectNameColumn]->setIcon(icons.layoutIcons[m_managedLayoutType]);
+                row[ObjectInspectorModel::ClassNameColumn]->setIcon(icons.layoutIcons[m_managedLayoutType]);
+                break;
+            case LayoutableContainer:
+                row[ObjectInspectorModel::ObjectNameColumn]->setIcon(icons.layoutIcons[m_managedLayoutType]);
+                row[ObjectInspectorModel::ClassNameColumn]->setIcon(m_classIcon);
+                break;
+            default:
+                row[ObjectInspectorModel::ObjectNameColumn]->setIcon(QIcon());
+                row[ObjectInspectorModel::ClassNameColumn]->setIcon(m_classIcon);
+                break;
+            }
+        }
     }
 
-    void ObjectData::setItems(const StandardItemList &row) const
+    void ObjectData::setItems(const StandardItemList &row, const ObjectInspectorIcons &icons) const
     {
         const QVariant object = qVariantFromValue(m_object);
         row[ObjectInspectorModel::ObjectNameColumn]->setData(object, DataRole);
         row[ObjectInspectorModel::ClassNameColumn]->setData(object, DataRole);
-        setItemsDisplayData(row, ClassNameChanged|ObjectNameChanged|IconChanged);
+        setItemsDisplayData(row, icons, ClassNameChanged|ObjectNameChanged|ClassIconChanged|TypeChanged|LayoutTypeChanged);
     }
 
     typedef QList<ObjectData> ObjectModel;
 
     // Recursive routine that creates the model by traversing the form window object tree.
-    void createModelRecursion(const QDesignerFormWindowInterface *fwi, QObject *parent, QObject *object, ObjectModel &model)
+    void createModelRecursion(const QDesignerFormWindowInterface *fwi,
+                              QObject *parent,
+                              QObject *object,
+                              ObjectModel &model,
+                              const ModelRecursionContext &ctx)
     {
-        const QString designerPrefix = QLatin1String("QDesigner");
-        static const QString separator =  QObject::tr("separator");
-        const QDesignerWidgetDataBaseInterface *db = fwi->core()->widgetDataBase();
+        typedef QList<QButtonGroup *> ButtonGroupList;
+        typedef QList<QAction *> ActionList;
 
-        // 1) set entry
-        const bool isWidget = object->isWidgetType();
-        ObjectData entry(parent, object);
-
-        entry.m_className = QLatin1String(object->metaObject()->className());
-        // Is this a QLayoutWidget?
-        const QLayout *layoutWidgetLayout = layoutOfQLayoutWidget(object);
-        if (const QDesignerWidgetDataBaseItemInterface *widgetItem = db->item(db->indexOfObject(object, true))) {
-            entry.m_icon = widgetItem->icon();
-            if (layoutWidgetLayout) {
-                entry.m_className = QLatin1String(layoutWidgetLayout->metaObject()->className());
-            } else {
-                entry.m_className = widgetItem->name();
-            }
-        }
-
-        if (entry.m_className.startsWith(designerPrefix))
-            entry.m_className.remove(1, designerPrefix.size() - 1);
-
-        entry.m_objectName = layoutWidgetLayout ? layoutWidgetLayout->objectName() : object->objectName();
-
-        if (const QAction *act = qobject_cast<const QAction*>(object)) { // separator is reserved
-            if (act->isSeparator()) {
-                entry.m_objectName = separator;
-            }
-            entry.m_icon = act->icon();
-        }
-
+        // 1) Create entry
+        const ObjectData entry(parent, object, ctx);
         model.push_back(entry);
-        // 2) recurse over children
-        if (QDesignerContainerExtension *c = qt_extension<QDesignerContainerExtension*>(fwi->core()->extensionManager(), object)) {
-            const int count = c->count();
+
+        // 2) recurse over widget children via container extension or children list
+        const QDesignerContainerExtension *containerExtension = 0;
+        if (entry.type() == ObjectData::ExtensionContainer) {
+            containerExtension = qt_extension<QDesignerContainerExtension*>(fwi->core()->extensionManager(), object);
+            Q_ASSERT(containerExtension);
+            const int count = containerExtension->count();
             for (int i=0; i < count; ++i) {
-                QObject *page = c->widget(i);
+                QObject *page = containerExtension->widget(i);
                 Q_ASSERT(page != 0);
-                createModelRecursion(fwi, object, page, model);
+                createModelRecursion(fwi, object, page, model, ctx);
             }
-        } else {
-            QList<QObject*> children = object->children();
-            if (!children.empty()) {
-                qSort(children.begin(), children.end(), sortEntry);
-                foreach (QObject *child, children)
-                    if (child->isWidgetType()) {
-                        QWidget *widget = qobject_cast<QWidget*>(child);
+        }
+
+        QObjectList children = object->children();
+        if (!children.empty()) {
+            ButtonGroupList buttonGroups;
+            qSort(children.begin(), children.end(), sortEntry);
+            const QObjectList::const_iterator cend = children.constEnd();
+            for (QObjectList::const_iterator it = children.constBegin(); it != cend; ++it) {
+                // Managed child widgets unless we had a container extension
+                if ((*it)->isWidgetType()) {
+                    if (!containerExtension) {
+                        QWidget *widget = qobject_cast<QWidget*>(*it);
                         if (fwi->isManaged(widget))
-                            createModelRecursion(fwi, object, widget, model);
+                            createModelRecursion(fwi, object, widget, model, ctx);
                     }
-            }
-            if (isWidget) {
-                QWidget *widget = qobject_cast<QWidget*>(object);
-                const QList<QAction*> actions = widget->actions();
-                foreach (QAction *action, actions) {
-                    if (!fwi->core()->metaDataBase()->item(action))
-                        continue;
-
-                    QObject *obj = action;
-                    if (action->menu())
-                        obj = action->menu();
-
-                    createModelRecursion(fwi, object, obj, model);
+                } else {
+                    if (ctx.mdb->item(*it)) {
+                        if (QButtonGroup *bg = qobject_cast<QButtonGroup*>(*it))
+                            buttonGroups.push_back(bg);
+                    } // Has MetaDataBase entry
                 }
+            }
+            // Add button groups
+            if (!buttonGroups.empty()) {
+                const ButtonGroupList::const_iterator bgcend = buttonGroups.constEnd();
+                for (ButtonGroupList::const_iterator bgit = buttonGroups.constBegin(); bgit != bgcend; ++bgit)
+                    createModelRecursion(fwi, object, *bgit, model, ctx);
+            }
+        } // has children
+        if (object->isWidgetType()) {
+            // Add actions
+            const ActionList actions = static_cast<QWidget*>(object)->actions();
+            if (!actions.empty()) {
+                const ActionList::const_iterator cend = actions.constEnd();
+                    for (ActionList::const_iterator it = actions.constBegin(); it != cend; ++it)
+                    if (ctx.mdb->item(*it)) {
+                        QAction *action = *it;
+                        QObject *obj = action;
+                            if (action->menu())
+                            obj = action->menu();
+                        createModelRecursion(fwi, object, obj, model, ctx);
+                    }
             }
         }
     }
@@ -244,17 +358,26 @@ namespace qdesigner_internal {
        QStandardItemModel(0, NumColumns, parent)
     {
         QStringList headers;
-        headers += QObject::tr("Object");
-        headers += QObject::tr("Class");
+        headers += QCoreApplication::translate("ObjectInspectorModel", "Object");
+        headers += QCoreApplication::translate("ObjectInspectorModel", "Class");
         Q_ASSERT(headers.size() == NumColumns);
         setColumnCount(NumColumns);
         setHorizontalHeaderLabels(headers);
+        // Icons
+        m_icons.layoutIcons[LayoutInfo::NoLayout] = createIconSet(QLatin1String("editbreaklayout.png"));
+        m_icons.layoutIcons[LayoutInfo::HSplitter] = createIconSet(QLatin1String("edithlayoutsplit.png"));
+        m_icons.layoutIcons[LayoutInfo::VSplitter] = createIconSet(QLatin1String("editvlayoutsplit.png"));
+        m_icons.layoutIcons[LayoutInfo::HBox] = createIconSet(QLatin1String("edithlayout.png"));
+        m_icons.layoutIcons[LayoutInfo::VBox] = createIconSet(QLatin1String("editvlayout.png"));
+        m_icons.layoutIcons[LayoutInfo::Grid] = createIconSet(QLatin1String("editgrid.png"));
+        m_icons.layoutIcons[LayoutInfo::Form] = createIconSet(QLatin1String("editform.png"));
     }
 
     void ObjectInspectorModel::clearItems()
     {
         m_objectIndexMultiMap.clear();
         m_model.clear();
+        reset(); // force editors to be closed in views
         removeRow(0);
     }
 
@@ -270,7 +393,10 @@ namespace qdesigner_internal {
         // Build new model and compare to previous one. If the structure is
         // identical, just update, else rebuild
         ObjectModel newModel;
-        createModelRecursion(fw, 0, mainContainer, newModel);
+
+        static const QString separator = QCoreApplication::translate("ObjectInspectorModel", "separator");
+        const ModelRecursionContext ctx(fw->core(),  separator);
+        createModelRecursion(fw, 0, mainContainer, newModel, ctx);
 
         if (newModel == m_model) {
             updateItemContents(m_model, newModel);
@@ -314,19 +440,19 @@ namespace qdesigner_internal {
         const ObjectModel::const_iterator mcend = newModel.constEnd();
         ObjectModel::const_iterator it = newModel.constBegin();
         // Set up root element
-        StandardItemList rootRow = createModelRow(it->m_object);
-        it->setItems(rootRow);
+        StandardItemList rootRow = createModelRow(it->object());
+        it->setItems(rootRow, m_icons);
         appendRow(rootRow);
-        m_objectIndexMultiMap.insert(it->m_object, indexFromItem(rootRow.front()));
+        m_objectIndexMultiMap.insert(it->object(), indexFromItem(rootRow.front()));
         for (++it; it != mcend; ++it) {
             // Add to parent item, found via map
-            const QModelIndex parentIndex = m_objectIndexMultiMap.value(it->m_parent, QModelIndex());
+            const QModelIndex parentIndex = m_objectIndexMultiMap.value(it->parent(), QModelIndex());
             Q_ASSERT(parentIndex.isValid());
             QStandardItem *parentItem = itemFromIndex(parentIndex);
-            StandardItemList row = createModelRow(it->m_object);
-            it->setItems(row);
+            StandardItemList row = createModelRow(it->object());
+            it->setItems(row, m_icons);
             parentItem->appendRow(row);
-            m_objectIndexMultiMap.insert(it->m_object, indexFromItem(row.front()));
+            m_objectIndexMultiMap.insert(it->object(), indexFromItem(row.front()));
         }
     }
 
@@ -347,11 +473,12 @@ namespace qdesigner_internal {
             // Has some data changed?
             if (const unsigned changedMask = entry.compare(newEntry)) {
                 entry = newEntry;
-                if (!changedObjects.contains(entry.m_object)) {
-                    changedObjects.insert(entry.m_object);
-                    const QModelIndexList indexes =  m_objectIndexMultiMap.values(entry.m_object);
+                QObject * o = entry.object();
+                if (!changedObjects.contains(o)) {
+                    changedObjects.insert(o);
+                    const QModelIndexList indexes =  m_objectIndexMultiMap.values(o);
                     foreach (const QModelIndex &index, indexes)
-                        entry.setItemsDisplayData(rowAt(index), changedMask);
+                        entry.setItemsDisplayData(rowAt(index), m_icons, changedMask);
                 }
             }
         }
@@ -365,7 +492,7 @@ namespace qdesigner_internal {
         if (role == Qt::DisplayRole && rc.type() == QVariant::String) {
             const QString s = rc.toString();
             if (s.isEmpty()) {
-                static const QString noName = QObject::tr("<noname>");
+                static const QString noName = QCoreApplication::translate("ObjectInspectorModel", "<noname>");
                 return  QVariant(noName);
             }
         }
@@ -381,10 +508,10 @@ namespace qdesigner_internal {
         if (!object)
             return false;
         // Is this a layout widget?
-        const QString nameProperty = layoutOfQLayoutWidget(object) ? QLatin1String("layoutName") : QLatin1String("objectName");
+        const QString nameProperty = isQLayoutWidget(object) ? QLatin1String("layoutName") : QLatin1String("objectName");
         m_formWindow->commandHistory()->push(createTextPropertyCommand(nameProperty, value.toString(), object, m_formWindow));
         return true;
-
-QT_END_NAMESPACE
     }
 }
+
+QT_END_NAMESPACE

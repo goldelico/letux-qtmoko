@@ -28,6 +28,8 @@
 #define FloatPoint_h
 
 #include "FloatSize.h"
+#include "IntPoint.h"
+#include <wtf/MathExtras.h>
 #include <wtf/Platform.h>
 
 #if PLATFORM(CG)
@@ -53,9 +55,13 @@ QT_END_NAMESPACE
 class TPoint;
 #endif
 
+#if PLATFORM(SKIA)
+struct SkPoint;
+#endif
+
 namespace WebCore {
 
-class AffineTransform;
+class TransformationMatrix;
 class IntPoint;
 
 class FloatPoint {
@@ -90,10 +96,15 @@ public:
 
 #if PLATFORM(SYMBIAN)
     operator TPoint() const;
-    FloatPoint(const TPoint& );
+    FloatPoint(const TPoint&);
 #endif
 
-    FloatPoint matrixTransform(const AffineTransform&) const;
+#if PLATFORM(SKIA)
+    operator SkPoint() const;
+    FloatPoint(const SkPoint&);
+#endif
+
+    FloatPoint matrixTransform(const TransformationMatrix&) const;
 
 private:
     float m_x, m_y;
@@ -135,6 +146,11 @@ inline bool operator==(const FloatPoint& a, const FloatPoint& b)
 inline bool operator!=(const FloatPoint& a, const FloatPoint& b)
 {
     return a.x() != b.x() || a.y() != b.y();
+}
+
+inline IntPoint roundedIntPoint(const FloatPoint& p)
+{
+    return IntPoint(static_cast<int>(roundf(p.x())), static_cast<int>(roundf(p.y())));
 }
 
 }

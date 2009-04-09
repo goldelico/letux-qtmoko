@@ -1,5 +1,7 @@
 include(../../../../qdoc3/test/qt.qdocconf)
 
+version                 =
+
 sourcedirs = $QTDIR/tools/assistant/tools/assistant/doc
 imagedirs = $QTDIR/tools/assistant/tools/assistant/doc/images
 outputdir = $QTDIR/tools/assistant/tools/assistant/doc/html
@@ -8,7 +10,8 @@ description = "Qt Assistant"
 HTML.{postheader,address} = ""
 HTML.footer = "<p /><address><hr /><div align=\"center\">\n" \
               "<table width=\"100%\" cellspacing=\"0\" border=\"0\"><tr class=\"address\">\n" \
-              "<td width=\"30%\">Copyright &copy; \$THISYEAR\$ <a href=\"http://doc.trolltech.com/trolltech.html\">Trolltech</a></td>\n" \
-              "<td width=\"40%\" align=\"center\"><a href=\"http://doc.trolltech.com/trademarks.html\">Trademarks</a></td>\n" \
-              "<td width=\"30%\" align=\"right\"><div align=\"right\">Qt \\version</div></td>\n" \
+              "<td width=\"30%\" align=\"left\">Copyright &copy; 2008 Nokia Corporation " \
+              "and/or its subsidiary(-ies)</td>\n" \
+              "<td width=\"40%\" align=\"center\">Trademarks</td>\n" \
+              "<td width=\"30%\" align=\"right\"><div align=\"right\">Qt 4.5.0</div></td>\n" \
               "</tr></table></div></address>"

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,22 +62,26 @@
 #include "QtCore/qtranslator.h"
 #include "QtCore/qbasictimer.h"
 #include "QtCore/qhash.h"
+#include "QtCore/qpointer.h"
 #include "private/qcoreapplication_p.h"
 #include "private/qshortcutmap_p.h"
 #include <private/qthread_p.h>
 #ifdef Q_WS_QWS
 #include "QtGui/qscreen_qws.h"
+#include <private/qgraphicssystem_qws_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
-class QWidget;
-class QObject;
 class QClipboard;
+class QGraphicsScene;
+class QGraphicsSystem;
+class QInputContext;
 class QKeyEvent;
 class QMouseEvent;
+class QObject;
 class QWheelEvent;
-class QInputContext;
+class QWidget;
 
 extern bool qt_is_gui_used;
 #ifndef QT_NO_CLIPBOARD
@@ -97,6 +105,7 @@ class QDirectPainter;
 #ifndef QT_NO_TABLET
 struct QTabletDeviceData
 {
+#ifndef Q_WS_MAC
     int minPressure;
     int maxPressure;
     int minTanPressure;
@@ -104,6 +113,12 @@ struct QTabletDeviceData
     int minX, maxX, minY, maxY, minZ, maxZ;
     inline QPointF scaleCoord(int coordX, int coordY, int outOriginX, int outExtentX,
                               int outOriginY, int outExtentY) const;
+#endif
+
+#if defined(Q_WS_X11) || (defined(Q_WS_MAC) && !defined(QT_MAC_USE_COCOA))
+    QPointer<QWidget> widgetToGetPress;
+#endif
+
 #ifdef Q_WS_X11
     int deviceType;
     enum {
@@ -124,6 +139,11 @@ struct QTabletDeviceData
     qint64 llId;
     int currentDevice;
     int currentPointerType;
+#elif defined(Q_WS_MAC)
+    quint64 tabletUniqueID;
+    int tabletDeviceType;
+    int tabletPointerType;
+    int capabilityMask;
 #endif
 };
 
@@ -132,6 +152,7 @@ static inline int sign(int x)
     return x >= 0 ? 1 : -1;
 }
 
+#ifndef Q_WS_MAC
 inline QPointF QTabletDeviceData::scaleCoord(int coordX, int coordY,
                                             int outOriginX, int outExtentX,
                                             int outOriginY, int outExtentY) const
@@ -150,9 +171,14 @@ inline QPointF QTabletDeviceData::scaleCoord(int coordX, int coordY,
                  + outOriginY);
     return ret;
 }
+#endif
 
 typedef QList<QTabletDeviceData> QTabletDeviceDataList;
 QTabletDeviceDataList *qt_tablet_devices();
+# if defined(Q_WS_MAC)
+typedef QHash<int, QTabletDeviceData> QMacTabletHash;
+QMacTabletHash *qt_mac_tablet_hash();
+# endif
 #endif
 
 #ifdef QT3_SUPPORT
@@ -183,6 +209,7 @@ public:
 
 #if defined(Q_WS_X11)
 #ifndef QT_NO_SETTINGS
+    static QString kdeHome();
     static bool x11_apply_settings();
 #endif
     static void reset_instance_pointer();
@@ -194,6 +221,14 @@ public:
     static void emitLastWindowClosed();
 #ifdef Q_OS_WINCE
     static int autoMaximizeThreshold;
+    static bool autoSipEnabled;
+#endif
+
+    static QGraphicsSystem *graphicsSystem()
+#if !defined(Q_WS_QWS)
+    { return graphics_system; }
+#else
+    { return QScreen::instance()->graphicsSystem(); }
 #endif
 
     void createEventDispatcher();
@@ -211,6 +246,7 @@ public:
     static bool tryModalHelper(QWidget *widget, QWidget **rettop = 0);
 #ifdef Q_WS_MAC
     static QWidget *tryModalHelper_sys(QWidget *top);
+	bool canQuit();
 #endif
 
     bool notify_helper(QObject *receiver, QEvent * e);
@@ -254,6 +290,11 @@ public:
 #ifndef QT_NO_CURSOR
     QList<QCursor> cursor_list;
 #endif
+#ifndef QT_NO_GRAPHICSVIEW
+    // Maintain a list of all scenes to ensure font and palette propagation to
+    // all scenes.
+    QList<QGraphicsScene *> scene_list;
+#endif
 
     QBasicTimer toolTipWakeUp, toolTipFallAsleep;
     QPoint toolTipPos, toolTipGlobalPos, hoverGlobalPos;
@@ -287,6 +328,9 @@ public:
     static QPalette *app_pal;
     static QPalette *sys_pal;
     static QPalette *set_pal;
+    static QGraphicsSystem *graphics_system;
+    static QString graphics_system_name;
+
 private:
     static QFont *app_font; // private for a reason! Always use QApplication::font() instead!
 public:
@@ -332,7 +376,7 @@ public:
 #ifdef Q_WS_MAC
     static OSStatus globalEventProcessor(EventHandlerCallRef, EventRef, void *);
     static OSStatus globalAppleEventProcessor(const AppleEvent *, AppleEvent *, long);
-    static void qt_context_timer_callbk(EventLoopTimerRef, void *);
+    static OSStatus tabletProximityCallback(EventHandlerCallRef, EventRef, void *);
     static bool qt_mac_apply_settings();
 #endif
 
@@ -361,6 +405,12 @@ public:
     void _q_alertTimeOut();
     QHash<QWidget *, QTimer *> alertTimerHash;
 #endif
+#if defined(QT_MAC_USE_COCOA)
+    void _q_runAppModalWindow();
+#endif
+#if defined(QT_MAC_USE_COCOA)
+    void _q_runModalWindow();
+#endif
 #ifndef QT_NO_STYLE_STYLESHEET
     static QString styleSheet;
 #endif
@@ -370,6 +420,9 @@ public:
                                       QWidget *buttonDown, QWidget *alienWidget);
     static bool sendMouseEvent(QWidget *receiver, QMouseEvent *event, QWidget *alienWidget,
                                QWidget *native, QWidget **buttonDown, QPointer<QWidget> &lastMouseReceiver);
+#if defined(Q_WS_WIN) || defined(Q_WS_X11)
+    void sendSyntheticEnterLeave(QWidget *widget);
+#endif
 
 private:
 #ifdef Q_WS_QWS
@@ -377,6 +430,7 @@ private:
 #endif
 
     static QApplicationPrivate *self;
+    static bool shouldSetFocus(QWidget *w, Qt::FocusPolicy policy);
 };
 
 QT_END_NAMESPACE

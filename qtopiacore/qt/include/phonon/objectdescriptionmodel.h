@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/objectdescriptionmodel.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/objectdescriptionmodel.h"

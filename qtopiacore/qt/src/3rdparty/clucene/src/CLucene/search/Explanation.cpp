@@ -12,7 +12,7 @@ CL_NS_USE(util)
 CL_NS_DEF(search)
 
 
-Explanation::Explanation(float_t value, const TCHAR* description) {
+Explanation::Explanation(qreal value, const TCHAR* description) {
  this->value = value;
  _tcsncpy(this->description,description,LUCENE_SEARCH_EXPLANATION_DESC_LEN);
 }
@@ -51,11 +51,11 @@ Explanation* Explanation::clone() const{
    return _CLNEW Explanation(*this); 
 }
 
-float_t Explanation::getValue() const{ 
+qreal Explanation::getValue() const{ 
    return value; 
 }
   
-void Explanation::setValue(float_t value) { 
+void Explanation::setValue(qreal value) { 
    this->value = value; 
 }
 

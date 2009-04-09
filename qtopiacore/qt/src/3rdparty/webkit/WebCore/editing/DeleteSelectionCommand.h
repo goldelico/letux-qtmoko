@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,19 +32,27 @@ namespace WebCore {
 
 class DeleteSelectionCommand : public CompositeEditCommand { 
 public:
-    DeleteSelectionCommand(Document*, bool smartDelete = false, bool mergeBlocksAfterDelete = true, bool replace = false, bool expandForSpecialElements = false);
-    DeleteSelectionCommand(const Selection&, bool smartDelete = false, bool mergeBlocksAfterDelete = true, bool replace = false, bool expandForSpecialElements = false);
+    static PassRefPtr<DeleteSelectionCommand> create(Document* document, bool smartDelete = false, bool mergeBlocksAfterDelete = true, bool replace = false, bool expandForSpecialElements = false)
+    {
+        return adoptRef(new DeleteSelectionCommand(document, smartDelete, mergeBlocksAfterDelete, replace, expandForSpecialElements));
+    }
+    static PassRefPtr<DeleteSelectionCommand> create(const Selection& selection, bool smartDelete = false, bool mergeBlocksAfterDelete = true, bool replace = false, bool expandForSpecialElements = false)
+    {
+        return adoptRef(new DeleteSelectionCommand(selection, smartDelete, mergeBlocksAfterDelete, replace, expandForSpecialElements));
+    }
+
+private:
+    DeleteSelectionCommand(Document*, bool smartDelete, bool mergeBlocksAfterDelete, bool replace, bool expandForSpecialElements);
+    DeleteSelectionCommand(const Selection&, bool smartDelete, bool mergeBlocksAfterDelete, bool replace, bool expandForSpecialElements);
 
     virtual void doApply();
     virtual EditAction editingAction() const;
     
-private:
     virtual bool preservesTypingStyle() const;
 
     void initializeStartEnd(Position&, Position&);
     void initializePositionData();
     void saveTypingStyleState();
-    void saveFullySelectedAnchor();
     void insertPlaceholderForAncestorBlockContent();
     bool handleSpecialCaseBRDelete();
     void handleGeneralDelete();
@@ -52,10 +60,10 @@ private:
     void mergeParagraphs();
     void removePreviouslySelectedEmptyTableRows();
     void calculateEndingPosition();
-    void calculateTypingStyleAfterDelete(Node*);
+    void calculateTypingStyleAfterDelete();
     void clearTransientState();
-    virtual void removeNode(Node*);
-    virtual void deleteTextFromNode(Text*, int, int);
+    virtual void removeNode(PassRefPtr<Node>);
+    virtual void deleteTextFromNode(PassRefPtr<Text>, unsigned, unsigned);
 
     bool m_hasSelectionToDelete;
     bool m_smartDelete;
@@ -63,6 +71,7 @@ private:
     bool m_needPlaceholder;
     bool m_replace;
     bool m_expandForSpecialElements;
+    bool m_pruneStartBlockIfNecessary;
 
     // This data is transient and should be cleared at the end of the doApply function.
     Selection m_selectionToDelete;

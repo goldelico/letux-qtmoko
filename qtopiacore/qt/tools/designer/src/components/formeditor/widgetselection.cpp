@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,7 +60,9 @@
 #include <QtGui/QMouseEvent>
 #include <QtGui/QStylePainter>
 #include <QtGui/QGridLayout>
+#include <QtGui/QFormLayout>
 #include <QtGui/QStyleOptionToolButton>
+#include <QtGui/QApplication>
 
 #include <QtCore/QVariant>
 #include <QtCore/qdebug.h>
@@ -66,6 +72,19 @@ QT_BEGIN_NAMESPACE
 namespace qdesigner_internal {
 enum { debugWidgetSelection = 0 };
 
+// Return the layout the widget is in
+template <class Layout>
+static inline Layout *managedLayoutOf(const QDesignerFormEditorInterface *core,
+                                      QWidget *w,
+                                      const Layout * /* vs6dummy */ = 0)
+{
+    if (QWidget *p = w->parentWidget())
+        if (QLayout *l = LayoutInfo::managedLayout(core, p))
+            return qobject_cast<Layout*>(l);
+    return 0;
+}
+
+// ----------- WidgetHandle
 WidgetHandle::WidgetHandle(FormWindow *parent, WidgetHandle::Type t, WidgetSelection *s) :
     InvisibleWidget(parent->mainContainer()),
     m_widget(0),
@@ -341,6 +360,73 @@ void WidgetHandle::mouseReleaseEvent(QMouseEvent *e)
     case WidgetSelection::ManagedGridLayout:
        changeGridLayoutItemSpan();
        break;
+    case WidgetSelection::ManagedFormLayout:
+        changeFormLayoutItemSpan();
+        break;
+    }
+}
+
+// Match the left/right widget handle mouse movements to form layout span-changing operations
+static inline int formLayoutLeftHandleOperation(int dx, unsigned possibleOperations)
+{
+    if (dx < 0) {
+        if (possibleOperations & ChangeFormLayoutItemRoleCommand::FieldToSpanning)
+            return ChangeFormLayoutItemRoleCommand::FieldToSpanning;
+        return 0;
+    }
+    if (possibleOperations & ChangeFormLayoutItemRoleCommand::SpanningToField)
+        return ChangeFormLayoutItemRoleCommand::SpanningToField;
+    return 0;
+}
+
+static inline int formLayoutRightHandleOperation(int dx, unsigned possibleOperations)
+{
+    if (dx < 0) {
+        if (possibleOperations & ChangeFormLayoutItemRoleCommand::SpanningToLabel)
+            return ChangeFormLayoutItemRoleCommand::SpanningToLabel;
+        return 0;
+    }
+    if (possibleOperations & ChangeFormLayoutItemRoleCommand::LabelToSpanning)
+        return ChangeFormLayoutItemRoleCommand::LabelToSpanning;
+    return 0;
+}
+
+// Change form layout item horizontal span
+void WidgetHandle::changeFormLayoutItemSpan()
+{
+    QUndoCommand *cmd = 0;
+    // Figure out command according to the movement
+    const int dx = m_widget->geometry().center().x() - m_origGeom.center().x();
+    if (qAbs(dx) >= QApplication::startDragDistance()) {
+        int operation = 0;
+        if (const unsigned possibleOperations = ChangeFormLayoutItemRoleCommand::possibleOperations(m_formWindow->core(), m_widget)) {
+            switch (m_type) {
+            case WidgetHandle::Left:
+                operation = formLayoutLeftHandleOperation(dx, possibleOperations);
+                break;
+            case WidgetHandle::Right:
+                operation = formLayoutRightHandleOperation(dx, possibleOperations);
+                break;
+            default:
+                break;
+            }
+            if (operation) {
+                ChangeFormLayoutItemRoleCommand *fcmd = new ChangeFormLayoutItemRoleCommand(m_formWindow);
+                fcmd->init(m_widget, static_cast<ChangeFormLayoutItemRoleCommand::Operation>(operation));
+                cmd = fcmd;
+            }
+        }
+    }
+    if (cmd) {
+        m_formWindow->commandHistory()->push(cmd);
+    } else {
+        // Cancelled/Invalid. Restore the size of the widget.
+        if (QFormLayout *form = managedLayoutOf<QFormLayout>(m_formWindow->core(), m_widget)) {
+            form->invalidate();
+            form->activate();
+            m_formWindow->clearSelection(false);
+            m_formWindow->selectWidget(m_widget);
+        }
     }
 }
 
@@ -349,7 +435,7 @@ void WidgetHandle::changeGridLayoutItemSpan()
     QDesignerLayoutDecorationExtension *deco = qt_extension<QDesignerLayoutDecorationExtension*>(core()->extensionManager(), m_widget->parentWidget());
     if (!deco)
        return;
-    QGridLayout *grid = qobject_cast<QGridLayout*>(m_widget->parentWidget()->layout());
+    QGridLayout *grid = managedLayoutOf<QGridLayout>(m_formWindow->core(), m_widget);
     if (!grid)
        return;
 
@@ -460,7 +546,7 @@ void WidgetHandle::tryResize(QWidget *w, int width, int height)
     w->resize(qMax(minw, width), qMax(minh, height));
 }
 
-// ------------------------------------------------------------------------
+// ------------------ WidgetSelection
 
 WidgetSelection::WidgetState WidgetSelection::widgetState(const QDesignerFormEditorInterface *core, QWidget *w)
 {
@@ -468,7 +554,17 @@ WidgetSelection::WidgetState WidgetSelection::widgetState(const QDesignerFormEdi
     const LayoutInfo::Type  lt =  LayoutInfo::laidoutWidgetType(core, w, &isManaged);
     if (lt == LayoutInfo::NoLayout)
        return UnlaidOut;
-    return isManaged && lt == LayoutInfo::Grid ? ManagedGridLayout : LaidOut;
+    if (!isManaged)
+        return LaidOut;
+    switch (lt) {
+    case LayoutInfo::Grid:
+        return ManagedGridLayout;
+    case  LayoutInfo::Form:
+        return ManagedFormLayout;
+    default:
+        break;
+    }
+    return LaidOut;
 }
 
 WidgetSelection::WidgetSelection(FormWindow *parent)   :
@@ -504,16 +600,31 @@ void WidgetSelection::setWidget(QWidget *w)
 void WidgetSelection::updateActive()
 {
     const WidgetState ws = widgetState(m_formWindow->core(), m_widget);
-
-    const bool cornersActive = ws == UnlaidOut;
-    const bool edgesActive = ws == UnlaidOut || ws == ManagedGridLayout;
+    bool active[WidgetHandle::TypeCount];
+    qFill(active, active + WidgetHandle::TypeCount, false);
+    // Determine active handles
+    switch (ws) {
+    case UnlaidOut:
+        qFill(active, active + WidgetHandle::TypeCount, true);
+        break;
+    case ManagedGridLayout: // Grid: Allow changing span
+        active[WidgetHandle::Left] = active[WidgetHandle::Top] = active[WidgetHandle::Right] = active[WidgetHandle::Bottom] = true;
+        break;
+    case ManagedFormLayout:  // Form: Allow changing column span
+        if (const unsigned operation = ChangeFormLayoutItemRoleCommand::possibleOperations(m_formWindow->core(), m_widget)) {
+            active[WidgetHandle::Left]  = operation & (ChangeFormLayoutItemRoleCommand::SpanningToField|ChangeFormLayoutItemRoleCommand::FieldToSpanning);
+            active[WidgetHandle::Right] = operation & (ChangeFormLayoutItemRoleCommand::SpanningToLabel|ChangeFormLayoutItemRoleCommand::LabelToSpanning);
+        }
+        break;
+    default:
+        break;
+    }
 
     for (int i = WidgetHandle::LeftTop; i < WidgetHandle::TypeCount; ++i)
-       if (WidgetHandle *h = m_handles[i]) {
-           h->setWidget(m_widget);
-           const bool isEdge = i == WidgetHandle::Left || i == WidgetHandle::Top || i == WidgetHandle::Right || i == WidgetHandle::Bottom;
-           h->setActive(isEdge ? edgesActive : cornersActive);
-       }
+        if (WidgetHandle *h = m_handles[i]) {
+            h->setWidget(m_widget);
+            h->setActive(active[i]);
+        }
 }
 
 bool WidgetSelection::isUsed() const

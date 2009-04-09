@@ -43,9 +43,9 @@ CL_NS_DEF(search)
 				BooleanQuery* parentQuery);
 			~BooleanWeight();
 			Query* getQuery();
-			float_t getValue();
-			float_t sumOfSquaredWeights();
-			void normalize(float_t norm);
+			qreal getValue();
+			qreal sumOfSquaredWeights();
+			void normalize(qreal norm);
 			Scorer* scorer(CL_NS(index)::IndexReader* reader);
 			void explain(CL_NS(index)::IndexReader* reader, int32_t doc, Explanation* ret);
 		};//booleanweight

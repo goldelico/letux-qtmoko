@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -356,6 +360,8 @@ void QColormap::initialize()
         d->visual = DefaultVisual(display, i);
         d->defaultVisual = true;
 
+        Visual *argbVisual = 0;
+
         if (X11->visual && i == DefaultScreen(display)) {
             // only use the outside colormap on the default screen
             d->visual = find_visual(display, i, X11->visual->c_class,
@@ -378,8 +384,6 @@ void QColormap::initialize()
             XStandardColormap *stdcmap = 0;
             int ncmaps = 0;
 
-            bool foundArgbVisual = false;
-#if 0
 #ifndef QT_NO_XRENDER
             if (X11->use_xrender) {
                 int nvi;
@@ -394,18 +398,14 @@ void QColormap::initialize()
                     XRenderPictFormat *format = XRenderFindVisualFormat(X11->display,
                                                                         xvi[idx].visual);
                     if (format->type == PictTypeDirect && format->direct.alphaMask) {
-                        d->visual = xvi[idx].visual;
-                        d->depth = 32;
-                        d->defaultVisual = false;
-                        foundArgbVisual = true;
+                        argbVisual = xvi[idx].visual;
                         break;
                     }
                 }
+                XFree(xvi);
             }
 #endif
-#endif
-            if (!foundArgbVisual &&
-                XGetRGBColormaps(display, RootWindow(display, i),
+            if (XGetRGBColormaps(display, RootWindow(display, i),
                                  &stdcmap, &ncmaps, XA_RGB_DEFAULT_MAP)) {
                 if (stdcmap) {
                     for (int c = 0; c < ncmaps; ++c) {
@@ -562,6 +562,11 @@ void QColormap::initialize()
         screen->colormap = d->colormap;
         screen->defaultColormap = d->defaultColormap;
         screen->cells = screen->visual->map_entries;
+
+        if (argbVisual) {
+            X11->argbVisuals[i] = argbVisual;
+            X11->argbColormaps[i] = XCreateColormap(display, RootWindow(display, i), argbVisual, AllocNone);
+        }
 
         // ###
         // We assume that 8bpp == pseudocolor, but this is not

@@ -2,16 +2,16 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/deployment.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/deployment.qdoc -->
 <head>
-  <title>Qt 4.4: Deploying an Application on Windows</title>
+  <title>Qt 4.5: Deploying an Application on Windows</title>
   <link rel="contents" href="deployment.html" />
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [<a href="deployment.html">Deploying Qt Applications</a>]
@@ -28,7 +28,7 @@
 <ul><li><a href="#building-qt-as-a-shared-library">Building Qt as a Shared Library</a></li>
 <li><a href="#linking-the-application-to-qt-as-a-shared-library">Linking the Application to Qt as a Shared Library</a></li>
 <li><a href="#creating-the-application-package">Creating the Application Package</a></li>
-<li><a href="#visual-studio-2005">Visual Studio 2005</a></li>
+<li><a href="#visual-studio-2005-onwards">Visual Studio 2005 Onwards</a></li>
 </ul>
 <li><a href="#application-dependencies">Application Dependencies</a></li>
 <ul><li><a href="#additional-libraries">Additional Libraries</a></li>
@@ -108,10 +108,12 @@
 <pre> qApp-&gt;addLibraryPath(&quot;C:\some\other\path&quot;);</pre>
 <p>One benefit of using plugins is that they can easily be made available to a whole family of applications.</p>
 <p>It's often most convenient to add the path in the application's <tt>main()</tt> function, right after the <a href="qapplication.html">QApplication</a> object is created. Once the path is added, the application will search it for plugins, in addition to looking in the <tt>plugins</tt> subdirectory in the application's own directory. Any number of additional paths can be added.</p>
-<a name="visual-studio-2005"></a>
-<h3>Visual Studio 2005</h3>
-<p>When deploying an application compiled with Visual Studio 2005 there are some additional considerations that need to be handled.</p>
-<p>First, we need to copy the manifest file created when linking the application. This manifest file contains information about the application's dependencies on side-by-side assemblies, such as the runtime libraries. The manifest file needs to be copied into the same folder as the application executable. You do not need to copy the manifest files for shared libraries (DLLs), since they are not used. If the shared library has different dependencies than the application using it, the manifest file needs to be embedded into the DLL binary. In Qt 4.1&#x2e;3 and later we have the following <tt>CONFIG</tt> options for embedding manifests:</p>
+<a name="visual-studio-2005-onwards"></a>
+<h3>Visual Studio 2005 Onwards</h3>
+<p>When deploying an application compiled with Visual Studio 2005 onwards, there are some additional steps to be taken.</p>
+<p>First, we need to copy the manifest file created when linking the application. This manifest file contains information about the application's dependencies on side-by-side assemblies, such as the runtime libraries.</p>
+<p>The manifest file needs to be copied into the <b>same</b> folder as the application executable. You do not need to copy the manifest files for shared libraries (DLLs), since they are not used.</p>
+<p>If the shared library has dependencies that are different from the application using it, the manifest file needs to be embedded into the DLL binary. Since Qt 4.1&#x2e;3, the follwoing <tt>CONFIG</tt> options are available for embedding manifests:</p>
 <pre> embed_manifest_dll
  embed_manifest_exe</pre>
 <p>To use the options, add</p>
@@ -121,11 +123,12 @@
 <p>There are two ways to include the run time libraries: by bundling them directly with your application or by installing them on the end-user's system.</p>
 <p>To bundle the run time libraries with your application, copy the directory</p>
 <pre> &lt;Visual Studio Install Path&gt;\VC\redist\&lt;Architecture&gt;\Microsoft.VC80.CRT</pre>
-<p>into the folder where your executable is, so that you are including a <tt>Microsoft.VC80.CRT</tt> directory alongside your application's executable. If you are bundling the runtimes and also need to deploy plugins you have to remove the manifest from the plugins (embedded as a resource) by adding this to the pro file of the plugins you are compiling:</p>
+<p>into the folder where your executable is, so that you are including a <tt>Microsoft.VC80.CRT</tt> directory alongside your application's executable. If you are bundling the runtimes and need to deploy plugins as well, you have to remove the manifest from the plugins (embedded as a resource) by adding the following line to the <tt>.pro</tt> file of the plugins you are compiling:</p>
 <pre> CONFIG-=embed_manifest_dll</pre>
-<p>If this is not done, plugins will not load on some systems.</p>
-<p>To install the run time libraries on the end-user's system, you need to include the appropriate Visual C++ Redistributable Package (VCRedist) executable with your application and ensure that it is executed when the user installs your application.</p>
+<p><b>Warning:</b> If you skip the step above, the plugins will not load on some systems.</p>
+<p>To install the runtime libraries on the end-user's system, you need to include the appropriate Visual C++ Redistributable Package (VCRedist) executable with your application and ensure that it is executed when the user installs your application.</p>
 <p>For example, on an 32-bit x86-based system, you would include the <a href="http://www.microsoft.com/downloads/details.aspx?FamilyId=32BC1BEE-A3F9-4C13-9C99-220B62A191EE">vcredist_x86.exe</a> executable. The <a href="http://www.microsoft.com/downloads/details.aspx?familyid=526BF4A7-44E6-4A91-B328-A4594ADB70E5">vcredist_IA64.exe</a> and <a href="http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B">vcredist_x64.exe</a> executables provide the appropriate libraries for the IA64 and 64-bit x86 architectures, respectively.</p>
+<p><b>Note:</b> The application you ship must be compiled with exactly the same compiler version against the same C runtime version. This prevents deploying errors caused by different versions of the C runtime libraries.</p>
 <a name="application-dependencies"></a>
 <h2>Application Dependencies</h2>
 <a name="additional-libraries"></a>
@@ -161,6 +164,7 @@
 <a name="qt-plugins"></a>
 <h3>Qt Plugins</h3>
 <p>Your application may also depend on one or more Qt plugins, such as the JPEG image format plugin or a SQL driver plugin. Be sure to distribute any Qt plugins that you need with your application, and note that each type of plugin should be located within a specific subdirectory (such as <tt>imageformats</tt> or <tt>sqldrivers</tt>) within your distribution directory, as described below.</p>
+<p><b>Note:</b> If you are deploying an application that uses <a href="qtwebkit.html">QtWebKit</a> to display HTML pages from the World Wide Web, you should include all text codec plugins to support as many HTML encodings possible.</p>
 <p>The search path for Qt plugins (as well as a few other paths) is hard-coded into the <a href="qtcore.html">QtCore</a> library. By default, the first plugin search path will be hard-coded to be a <tt>plugins</tt> subdirectory of the Qt installation:</p>
 <pre> C:&lt;path to Qt&gt;\plugins</pre>
 <p>Pre-determined paths like this one have certain disadvantages. For example, they may not exist on the target machine. For that reason you need to examine various alternatives to make sure that the Qt plugins are found:</p>
@@ -175,8 +179,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

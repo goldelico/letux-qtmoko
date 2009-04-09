@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,7 +55,7 @@ class QHelpContentItemPrivate
 {
 public:
     QHelpContentItemPrivate(const QString &t, const QString &l,
-						    QHelpDBReader *r, QHelpContentItem *p)
+                            QHelpDBReader *r, QHelpContentItem *p)
     {
         parent = p;
         title = t;
@@ -62,7 +66,7 @@ public:
     QList<QHelpContentItem*> childItems;
     QHelpContentItem *parent;
     QString title;
-	QString link;
+    QString link;
     QHelpDBReader *helpDBReader;
 };
 
@@ -82,7 +86,7 @@ private:
     QHelpEnginePrivate *m_helpEngine;
     QHelpContentItem *m_rootItem;
     QStringList m_filterAttributes;
-    QQueue<QHelpContentItem*> m_rootItems; 
+    QQueue<QHelpContentItem*> m_rootItems;
     QMutex m_mutex;
     bool m_abort;
 };
@@ -104,9 +108,9 @@ public:
 */
 
 QHelpContentItem::QHelpContentItem(const QString &name, const QString &link,
-						           QHelpDBReader *reader, QHelpContentItem *parent)
+                                   QHelpDBReader *reader, QHelpContentItem *parent)
 {
-    d = new QHelpContentItemPrivate(name, link, reader, parent);    
+    d = new QHelpContentItemPrivate(name, link, reader, parent);
 }
 
 /*!
@@ -148,7 +152,7 @@ int QHelpContentItem::childCount() const
 */
 int QHelpContentItem::row() const
 {
-	if (d->parent)
+    if (d->parent)
         return d->parent->d->childItems.indexOf(const_cast<QHelpContentItem*>(this));
     return 0;
 }
@@ -182,7 +186,7 @@ QHelpContentItem *QHelpContentItem::parent() const
 */
 int QHelpContentItem::childPosition(QHelpContentItem *child) const
 {
-	return d->childItems.indexOf(child);
+    return d->childItems.indexOf(child);
 }
 
 
@@ -237,9 +241,9 @@ int QHelpContentProvider::nextChildCount() const
 void QHelpContentProvider::run()
 {
     QString title;
-	QString link;
-	int depth;
-	QHelpContentItem *item;
+    QString link;
+    int depth = 0;
+    QHelpContentItem *item = 0;
 
     m_mutex.lock();
     m_rootItem = new QHelpContentItem(QString(), QString(), 0);
@@ -247,7 +251,7 @@ void QHelpContentProvider::run()
     QStringList atts = m_filterAttributes;
     const QStringList fileNames = m_helpEngine->orderedFileNameList;
     m_mutex.unlock();
-    
+
     foreach (QString dbFileName, fileNames) {
         m_mutex.lock();
         if (m_abort) {
@@ -256,10 +260,13 @@ void QHelpContentProvider::run()
             break;
         }
         m_mutex.unlock();
-        QHelpDBReader reader(dbFileName, dbFileName + QLatin1String("FromQHelpContentProvider"), 0);
+        QHelpDBReader reader(dbFileName,
+            QHelpGlobal::uniquifyConnectionName(dbFileName +
+            QLatin1String("FromQHelpContentProvider"),
+            QThread::currentThread()), 0);
         if (!reader.init())
             continue;
-        foreach (QByteArray ba, reader.contentsForFilter(atts)) {
+        foreach (const QByteArray& ba, reader.contentsForFilter(atts)) {
             if (ba.size() < 1)
                 continue;
 
@@ -290,17 +297,17 @@ CHECK_DEPTH:
                         stack.push(item);
                     }
                     if (depth == _depth) {
-                        item = new QHelpContentItem(title, link, 
+                        item = new QHelpContentItem(title, link,
                             m_helpEngine->fileNameReaderMap.value(dbFileName), stack.top());
-                        stack.top()->appendChild(item);					
+                        stack.top()->appendChild(item);
                     } else if (depth < _depth) {
                         stack.pop();
                         --_depth;
                         goto CHECK_DEPTH;
                     }
                 }
-            }            
-        }        
+            }
+        }
     }
     m_mutex.lock();
     m_abort = false;
@@ -339,9 +346,9 @@ QHelpContentModel::QHelpContentModel(QHelpEnginePrivate *helpEngine)
     d->rootItem = 0;
     d->qhelpContentProvider = new QHelpContentProvider(helpEngine);
 
-    connect(d->qhelpContentProvider, SIGNAL(finished()), 
+    connect(d->qhelpContentProvider, SIGNAL(finished()),
         this, SLOT(insertContents()), Qt::QueuedConnection);
-    connect(helpEngine->q, SIGNAL(setupStarted()), this, SLOT(invalidateContents()));    
+    connect(helpEngine->q, SIGNAL(setupStarted()), this, SLOT(invalidateContents()));
 }
 
 /*!
@@ -361,7 +368,7 @@ void QHelpContentModel::invalidateContents(bool onShutDown)
     if (d->rootItem) {
         delete d->rootItem;
         d->rootItem = 0;
-    }    
+    }
     reset();
 }
 
@@ -385,7 +392,7 @@ void QHelpContentModel::insertContents()
         d->rootItem = 0;
         endRemoveRows();
     }
-    
+
     count = d->qhelpContentProvider->nextChildCount() - 1;
     beginInsertRows(QModelIndex(), 0, count > 0 ? count : 0);
     d->rootItem = d->qhelpContentProvider->rootItem();
@@ -409,10 +416,10 @@ bool QHelpContentModel::isCreatingContents() const
 */
 QHelpContentItem *QHelpContentModel::contentItemAt(const QModelIndex &index) const
 {
-	if (index.isValid())
-		return static_cast<QHelpContentItem*>(index.internalPointer());
-	else
-		return d->rootItem;	
+    if (index.isValid())
+        return static_cast<QHelpContentItem*>(index.internalPointer());
+    else
+        return d->rootItem;
 }
 
 /*!
@@ -421,8 +428,8 @@ QHelpContentItem *QHelpContentModel::contentItemAt(const QModelIndex &index) con
 */
 QModelIndex QHelpContentModel::index(int row, int column, const QModelIndex &parent) const
 {
-	if (!d->rootItem)
-		return QModelIndex();
+    if (!d->rootItem)
+        return QModelIndex();
 
     QHelpContentItem *parentItem = contentItemAt(parent);
     QHelpContentItem *item = parentItem->child(row);
@@ -437,20 +444,20 @@ QModelIndex QHelpContentModel::index(int row, int column, const QModelIndex &par
 */
 QModelIndex QHelpContentModel::parent(const QModelIndex &index) const
 {
-	QHelpContentItem *item = contentItemAt(index);
-	if (!item)
-		return QModelIndex();
-	
-	QHelpContentItem *parentItem = static_cast<QHelpContentItem*>(item->parent());
-	if (!parentItem)
-		return QModelIndex();
+    QHelpContentItem *item = contentItemAt(index);
+    if (!item)
+        return QModelIndex();
 
-	QHelpContentItem *grandparentItem = static_cast<QHelpContentItem*>(parentItem->parent());
-	if (!grandparentItem)
-		return QModelIndex();
+    QHelpContentItem *parentItem = static_cast<QHelpContentItem*>(item->parent());
+    if (!parentItem)
+        return QModelIndex();
 
-	int row = grandparentItem->childPosition(parentItem);
-	return createIndex(row, index.column(), parentItem);
+    QHelpContentItem *grandparentItem = static_cast<QHelpContentItem*>(parentItem->parent());
+    if (!grandparentItem)
+        return QModelIndex();
+
+    int row = grandparentItem->childPosition(parentItem);
+    return createIndex(row, index.column(), parentItem);
 }
 
 /*!
@@ -459,9 +466,9 @@ QModelIndex QHelpContentModel::parent(const QModelIndex &index) const
 int QHelpContentModel::rowCount(const QModelIndex &parent) const
 {
     QHelpContentItem *parentItem = contentItemAt(parent);
-	if (!parentItem)
-		return 0;
-	return parentItem->childCount();
+    if (!parentItem)
+        return 0;
+    return parentItem->childCount();
 }
 
 /*!
@@ -480,13 +487,13 @@ int QHelpContentModel::columnCount(const QModelIndex &parent) const
 */
 QVariant QHelpContentModel::data(const QModelIndex &index, int role) const
 {
-	if (role != Qt::DisplayRole)
+    if (role != Qt::DisplayRole)
         return QVariant();
 
     QHelpContentItem *item = contentItemAt(index);
-	if (!item)
-		return QVariant();
-	return item->title();
+    if (!item)
+        return QVariant();
+    return item->title();
 }
 
 
@@ -506,9 +513,9 @@ QVariant QHelpContentModel::data(const QModelIndex &index, int role) const
 */
 
 QHelpContentWidget::QHelpContentWidget()
-	: QTreeView(0)
+    : QTreeView(0)
 {
-	header()->hide();
+    header()->hide();
     setUniformRowHeights(true);
     connect(this, SIGNAL(activated(const QModelIndex&)),
         this, SLOT(showLink(const QModelIndex&)));
@@ -524,10 +531,10 @@ QModelIndex QHelpContentWidget::indexOf(const QUrl &link)
         qobject_cast<QHelpContentModel*>(model());
     if (!contentModel || link.scheme() != QLatin1String("qthelp"))
         return QModelIndex();
-    
+
     m_syncIndex = QModelIndex();
     for (int i=0; i<contentModel->rowCount(); ++i) {
-        QHelpContentItem *itm = 
+        QHelpContentItem *itm =
             contentModel->contentItemAt(contentModel->index(i, 0));
         if (itm && itm->url().host() == link.host()) {
             QString path = link.path();
@@ -566,12 +573,12 @@ void QHelpContentWidget::showLink(const QModelIndex &index)
     if (!contentModel)
         return;
 
-	QHelpContentItem *item = contentModel->contentItemAt(index);
-	if (!item)
-		return;
+    QHelpContentItem *item = contentModel->contentItemAt(index);
+    if (!item)
+        return;
     QUrl url = item->url();
-	if (url.isValid())
-		emit linkActivated(url);
+    if (url.isValid())
+        emit linkActivated(url);
 }
 
 QT_END_NAMESPACE

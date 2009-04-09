@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -40,6 +44,7 @@
 
 #include "qtvariantproperty.h"
 #include "brushpropertymanager.h"
+#include "fontpropertymanager.h"
 
 #include <qdesigner_utils_p.h>
 #include <shared_enums_p.h>
@@ -57,6 +62,7 @@ typedef QList<DesignerIntPair> DesignerFlagList;
 class QDesignerFormEditorInterface;
 class QLineEdit;
 class QUrl;
+class QtKeySequenceEdit;
 
 namespace qdesigner_internal
 {
@@ -97,6 +103,7 @@ class DesignerPropertyManager : public QtVariantPropertyManager
     Q_OBJECT
 public:
     DesignerPropertyManager(QDesignerFormEditorInterface *core, QObject *parent = 0);
+    ~DesignerPropertyManager();
 
     virtual QStringList attributes(int propertyType) const;
     virtual int attributeType(int propertyType, const QString &attribute) const;
@@ -108,7 +115,7 @@ public:
     virtual QString valueText(const QtProperty *property) const;
     virtual QIcon valueIcon(const QtProperty *property) const;
 
-    bool resetFontSubProperty(QtProperty *subProperty);
+    bool resetFontSubProperty(QtProperty *property);
     bool resetIconSubProperty(QtProperty *subProperty);
 
     void reloadResourceProperties();
@@ -118,6 +125,8 @@ public:
     static int designerAlignmentTypeId();
     static int designerPixmapTypeId();
     static int designerIconTypeId();
+    static int designerStringTypeId();
+    static int designerKeySequenceTypeId();
 
     void setObject(QObject *object) { m_object = object; }
 
@@ -137,7 +146,6 @@ private Q_SLOTS:
     void slotPropertyDestroyed(QtProperty *property);
 private:
     void createIconSubProperty(QtProperty *iconProperty, QIcon::Mode mode, QIcon::State state, const QString &subName);
-    void updateFontModifiedState(QtProperty *property, const QVariant &value);
 
     typedef QMap<QtProperty *, bool> PropertyBoolMap;
     PropertyBoolMap m_resetMap;
@@ -169,22 +177,27 @@ private:
     PropertyToPropertyMap m_alignHToProperty;
     PropertyToPropertyMap m_alignVToProperty;
 
-    int antialiasingToIndex(QFont::StyleStrategy antialias) const;
-    QFont::StyleStrategy indexToAntialiasing(int idx) const;
-    QString indexAntialiasingToString(int idx) const;
-    PropertyToPropertyMap m_propertyToAntialiasing;
-    PropertyToPropertyMap m_antialiasingToProperty;
-
-    unsigned fontFlag(int idx) const;
-    QMap<QtProperty *, QMap<int, QtProperty *> > m_propertyToFontSubProperties;
-    QMap<QtProperty *, int> m_fontSubPropertyToFlag;
-    PropertyToPropertyMap m_fontSubPropertyToProperty;
-    QtProperty *m_createdFontProperty;
-    int m_lastSubFontIndex;
-
     QMap<QtProperty *, QMap<QPair<QIcon::Mode, QIcon::State>, QtProperty *> > m_propertyToIconSubProperties;
     QMap<QtProperty *, QPair<QIcon::Mode, QIcon::State> > m_iconSubPropertyToState;
     PropertyToPropertyMap m_iconSubPropertyToProperty;
+
+    QMap<QtProperty *, qdesigner_internal::PropertySheetStringValue> m_stringValues;
+    QMap<QtProperty *, QtProperty *> m_stringToComment;
+    QMap<QtProperty *, QtProperty *> m_stringToTranslatable;
+    QMap<QtProperty *, QtProperty *> m_stringToDisambiguation;
+
+    QMap<QtProperty *, QtProperty *> m_commentToString;
+    QMap<QtProperty *, QtProperty *> m_translatableToString;
+    QMap<QtProperty *, QtProperty *> m_disambiguationToString;
+
+    QMap<QtProperty *, qdesigner_internal::PropertySheetKeySequenceValue> m_keySequenceValues;
+    QMap<QtProperty *, QtProperty *> m_keySequenceToComment;
+    QMap<QtProperty *, QtProperty *> m_keySequenceToTranslatable;
+    QMap<QtProperty *, QtProperty *> m_keySequenceToDisambiguation;
+
+    QMap<QtProperty *, QtProperty *> m_commentToKeySequence;
+    QMap<QtProperty *, QtProperty *> m_translatableToKeySequence;
+    QMap<QtProperty *, QtProperty *> m_disambiguationToKeySequence;
 
     struct PaletteData
     {
@@ -210,6 +223,7 @@ private:
     PropertyFontMap m_stringFontAttributes;
 
     BrushPropertyManager m_brushManager;
+    FontPropertyManager m_fontManager;
 
     QMap<QtProperty *, QPixmap> m_defaultPixmaps;
     QMap<QtProperty *, QIcon> m_defaultIcons;
@@ -243,6 +257,7 @@ private slots:
     void slotPropertyChanged(QtProperty *property);
     void slotValueChanged(QtProperty *property, const QVariant &value);
     void slotStringTextChanged(const QString &value);
+    void slotKeySequenceChanged(const QKeySequence &value);
     void slotPaletteChanged(const QPalette &value);
     void slotPixmapChanged(const QString &value);
     void slotIconChanged(const QString &value);
@@ -264,6 +279,8 @@ private:
 
     QMap<QtProperty *, QList<TextEditor *> >                m_stringPropertyToEditors;
     QMap<TextEditor *, QtProperty *>                        m_editorToStringProperty;
+    QMap<QtProperty *, QList<QtKeySequenceEdit *> >         m_keySequencePropertyToEditors;
+    QMap<QtKeySequenceEdit *, QtProperty *>                 m_editorToKeySequenceProperty;
     QMap<QtProperty *, QList<PaletteEditorButton *> >       m_palettePropertyToEditors;
     QMap<PaletteEditorButton *, QtProperty *>               m_editorToPaletteProperty;
     QMap<QtProperty *, QList<PixmapEditor *> >              m_pixmapPropertyToEditors;

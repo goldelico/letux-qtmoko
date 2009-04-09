@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2008 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,8 +27,8 @@
 #ifndef BackForwardList_h
 #define BackForwardList_h
 
-#include "Shared.h"
-#include <wtf/Forward.h>
+#include <wtf/RefCounted.h>
+#include <wtf/PassRefPtr.h>
 #include <wtf/HashSet.h>
 #include <wtf/Vector.h>
 
@@ -39,18 +40,18 @@ class Page;
 typedef Vector<RefPtr<HistoryItem> > HistoryItemVector;
 typedef HashSet<RefPtr<HistoryItem> > HistoryItemHashSet;
 
-class BackForwardList : public Shared<BackForwardList> {
-public:
-    BackForwardList(Page*);
+class BackForwardList : public RefCounted<BackForwardList> {
+public: 
+    static PassRefPtr<BackForwardList> create(Page* page) { return adoptRef(new BackForwardList(page)); }
     ~BackForwardList();
-
+    
     Page* page() { return m_page; }
-
+    
     void addItem(PassRefPtr<HistoryItem>);
     void goBack();
     void goForward();
     void goToItem(HistoryItem*);
-
+        
     HistoryItem* backItem();
     HistoryItem* currentItem();
     HistoryItem* forwardItem();
@@ -69,11 +70,17 @@ public:
 
     void close();
     bool closed();
-
+    
     void removeItem(HistoryItem*);
     HistoryItemVector& entries();
+    
+#if ENABLE(WML)
+    void clearWmlPageHistory();
+#endif
 
 private:
+    BackForwardList(Page*);
+
     Page* m_page;
     HistoryItemVector m_entries;
     HistoryItemHashSet m_entryHash;
@@ -82,7 +89,7 @@ private:
     bool m_closed;
     bool m_enabled;
 }; //class BackForwardList
-
+    
 }; //namespace WebCore
 
 #endif //BACKFORWARDLIST_H

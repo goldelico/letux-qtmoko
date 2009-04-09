@@ -21,51 +21,56 @@
 #include "config.h"
 
 
-#if ENABLE(SVG)
+#if ENABLE(SVG_ANIMATION)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGSetElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGSetElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGSetElement)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGSetElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGSetElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGSetElementPrototypeTable = 
-{
-    2, 1, JSSVGSetElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGSetElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGSetElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGSetElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGSetElementPrototype::info = { "SVGSetElementPrototype", 0, &JSSVGSetElementPrototypeTable, 0 };
+const ClassInfo JSSVGSetElementPrototype::s_info = { "SVGSetElementPrototype", 0, &JSSVGSetElementPrototypeTable, 0 };
 
 JSObject* JSSVGSetElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGSetElementPrototype>(exec, "[[JSSVGSetElement.prototype]]");
+    return getDOMPrototype<JSSVGSetElement>(exec);
 }
 
-const ClassInfo JSSVGSetElement::info = { "SVGSetElement", &JSSVGAnimationElement::info, 0, 0 };
+const ClassInfo JSSVGSetElement::s_info = { "SVGSetElement", &JSSVGAnimationElement::s_info, 0, 0 };
 
-JSSVGSetElement::JSSVGSetElement(ExecState* exec, SVGSetElement* impl)
-    : JSSVGAnimationElement(exec, impl)
+JSSVGSetElement::JSSVGSetElement(PassRefPtr<Structure> structure, PassRefPtr<SVGSetElement> impl)
+    : JSSVGAnimationElement(structure, impl)
 {
-    setPrototype(JSSVGSetElementPrototype::self(exec));
+}
+
+JSObject* JSSVGSetElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGSetElementPrototype(JSSVGSetElementPrototype::createStructure(JSSVGAnimationElementPrototype::self(exec)));
 }
 
 
 }
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG_ANIMATION)

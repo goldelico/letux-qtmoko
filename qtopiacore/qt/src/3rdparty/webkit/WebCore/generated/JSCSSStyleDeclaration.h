@@ -18,75 +18,80 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSCSSStyleDeclaration_H
-#define JSCSSStyleDeclaration_H
+#ifndef JSCSSStyleDeclaration_h
+#define JSCSSStyleDeclaration_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class CSSStyleDeclaration;
 
-class JSCSSStyleDeclaration : public KJS::DOMObject {
+class JSCSSStyleDeclaration : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSCSSStyleDeclaration(KJS::ExecState*, CSSStyleDeclaration*);
+    JSCSSStyleDeclaration(PassRefPtr<JSC::Structure>, PassRefPtr<CSSStyleDeclaration>);
     virtual ~JSCSSStyleDeclaration();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    bool customPut(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, unsigned propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    bool customPut(JSC::ExecState*, const JSC::Identifier&, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        CssTextAttrNum, LengthAttrNum, ParentRuleAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        GetPropertyValueFuncNum, GetPropertyCSSValueFuncNum, RemovePropertyFuncNum, GetPropertyPriorityFuncNum, 
-        SetPropertyFuncNum, ItemFuncNum, GetPropertyShorthandFuncNum, IsPropertyImplicitFuncNum
-    };
+    virtual void getPropertyNames(JSC::ExecState*, JSC::PropertyNameArray&);
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     CSSStyleDeclaration* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<CSSStyleDeclaration> m_impl;
+    static JSC::JSValuePtr indexGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 private:
-    static KJS::JSValue* indexGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
-private:
-    static bool canGetItemsForName(KJS::ExecState*, CSSStyleDeclaration*, const KJS::Identifier&);
-    static KJS::JSValue* nameGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
+    static bool canGetItemsForName(JSC::ExecState*, CSSStyleDeclaration*, const JSC::Identifier&);
+    static JSC::JSValuePtr nameGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, CSSStyleDeclaration*);
-CSSStyleDeclaration* toCSSStyleDeclaration(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, CSSStyleDeclaration*);
+CSSStyleDeclaration* toCSSStyleDeclaration(JSC::JSValuePtr);
 
-class JSCSSStyleDeclarationPrototype : public KJS::JSObject {
+class JSCSSStyleDeclarationPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSCSSStyleDeclarationPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSCSSStyleDeclarationPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSCSSStyleDeclarationPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSCSSStyleDeclarationPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionGetPropertyValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionGetPropertyCSSValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionRemoveProperty(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionGetPropertyPriority(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionSetProperty(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionItem(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionGetPropertyShorthand(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsCSSStyleDeclarationPrototypeFunctionIsPropertyImplicit(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsCSSStyleDeclarationCssText(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSCSSStyleDeclarationCssText(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsCSSStyleDeclarationLength(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSStyleDeclarationParentRule(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsCSSStyleDeclarationConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

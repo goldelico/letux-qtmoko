@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -168,7 +172,11 @@ public:
                 const QString &a4, const QString &a5, const QString &a6,
                 const QString &a7, const QString &a8, const QString &a9) const Q_REQUIRED_RESULT;
 
-    QString    &vsprintf(const char *format, va_list ap);
+    QString    &vsprintf(const char *format, va_list ap)
+#if defined(Q_CC_GNU) && !defined(__INSURE__)
+        __attribute__ ((format (printf, 2, 0)))
+#endif
+        ;
     QString    &sprintf(const char *format, ...)
 #if defined(Q_CC_GNU) && !defined(__INSURE__)
         __attribute__ ((format (printf, 2, 3)))
@@ -177,8 +185,10 @@ public:
 
     int indexOf(QChar c, int from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
     int indexOf(const QString &s, int from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    int indexOf(const QLatin1String &s, int from = 0, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
     int lastIndexOf(QChar c, int from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
     int lastIndexOf(const QString &s, int from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    int lastIndexOf(const QLatin1String &s, int from = -1, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
 
     inline QBool contains(QChar c, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
     inline QBool contains(const QString &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
@@ -190,6 +200,10 @@ public:
     int lastIndexOf(const QRegExp &, int from = -1) const;
     inline QBool contains(const QRegExp &rx) const { return QBool(indexOf(rx) != -1); }
     int count(const QRegExp &) const;
+
+    int indexOf(QRegExp &, int from = 0) const;
+    int lastIndexOf(QRegExp &, int from = -1) const;
+    inline QBool contains(QRegExp &rx) const { return QBool(indexOf(rx) != -1); }
 #endif
 
     enum SectionFlag {
@@ -263,9 +277,14 @@ public:
     QString &replace(int i, int len, const QChar *s, int slen);
     QString &replace(int i, int len, const QString &after);
     QString &replace(QChar before, QChar after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
-    QString &replace(QChar c, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(const QChar *before, int blen, const QChar *after, int alen, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(const QLatin1String &before, const QLatin1String &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(const QLatin1String &before, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(const QString &before, const QLatin1String &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
     QString &replace(const QString &before, const QString &after,
                      Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(QChar c, const QString &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QString &replace(QChar c, const QLatin1String &after, Qt::CaseSensitivity cs = Qt::CaseSensitive);
 #ifndef QT_NO_REGEXP
     QString &replace(const QRegExp &rx, const QString &after);
     inline QString &remove(const QRegExp &rx)
@@ -290,6 +309,8 @@ public:
     };
     QString normalized(NormalizationForm mode) const Q_REQUIRED_RESULT;
     QString normalized(NormalizationForm mode, QChar::UnicodeVersion version) const Q_REQUIRED_RESULT;
+
+    QString repeated(int times) const;
 
     const ushort *utf16() const;
 
@@ -332,9 +353,16 @@ public:
                               Qt::CaseSensitivity cs = Qt::CaseSensitive)
     { return -s2.compare(s1, cs); }
 
+    int compare(const QStringRef &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    static int compare(const QString &s1, const QStringRef &s2,
+                       Qt::CaseSensitivity = Qt::CaseSensitive);
+
     int localeAwareCompare(const QString& s) const;
     static int localeAwareCompare(const QString& s1, const QString& s2)
     { return s1.localeAwareCompare(s2); }
+
+    int localeAwareCompare(const QStringRef &s) const;
+    static int localeAwareCompare(const QString& s1, const QStringRef& s2);
 
     short  toShort(bool *ok=0, int base=10) const;
     ushort toUShort(bool *ok=0, int base=10) const;
@@ -502,6 +530,10 @@ public:
     { return indexOf(rx, i); }
     inline QT3_SUPPORT int findRev(const QRegExp &rx, int i=-1) const
     { return lastIndexOf(rx, i); }
+    inline QT3_SUPPORT int find(QRegExp &rx, int i=0) const
+    { return indexOf(rx, i); }
+    inline QT3_SUPPORT int findRev(QRegExp &rx, int i=-1) const
+    { return lastIndexOf(rx, i); }
 #endif
     inline QT3_SUPPORT QBool contains(QChar c, bool cs) const
     { return contains(c, cs?Qt::CaseSensitive:Qt::CaseInsensitive); }
@@ -583,8 +615,17 @@ private:
     void expand(int i);
     void updateProperties() const;
     QString multiArg(int numArgs, const QString **args) const;
+    static int compare_helper(const QChar *data1, int length1,
+                              const QChar *data2, int length2,
+                              Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    static int compare_helper(const QChar *data1, int length1,
+                              QLatin1String s2,
+                              Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    static int localeAwareCompare_helper(const QChar *data1, int length1,
+                                         const QChar *data2, int length2);
     static Data *fromLatin1_helper(const char *str, int size = -1);
     static Data *fromAscii_helper(const char *str, int size = -1);
+    void replace_helper(uint *indices, int nIndices, int blen, const QChar *after, int alen);
     friend class QCharRef;
     friend class QTextCodec;
     friend class QStringRef;
@@ -741,7 +782,7 @@ public:
     inline operator QChar() const
         { return i < s.d->size ? s.d->data[i] : 0; }
     inline QCharRef &operator=(const QChar &c)
-        { if (s.d->ref != 1 || i >= s.d->size) s.expand(i);
+        { if (i >= s.d->size) s.expand(i); else s.detach();
           s.d->data[i] = c.unicode();  return *this; }
 
     // An operator= for each QChar cast constructors
@@ -1087,6 +1128,20 @@ public:
     inline const QChar at(int i) const
         { Q_ASSERT(i >= 0 && i < size()); return m_string->at(i + m_position); }
 
+    int compare(const QString &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    int compare(const QStringRef &s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    int compare(QLatin1String s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const;
+    static int compare(const QStringRef &s1, const QString &s2,
+                       Qt::CaseSensitivity = Qt::CaseSensitive);
+    static int compare(const QStringRef &s1, const QStringRef &s2,
+                       Qt::CaseSensitivity = Qt::CaseSensitive);
+    static int compare(const QStringRef &s1, QLatin1String s2,
+                       Qt::CaseSensitivity cs = Qt::CaseSensitive);
+
+    int localeAwareCompare(const QString &s) const;
+    int localeAwareCompare(const QStringRef &s) const;
+    static int localeAwareCompare(const QStringRef &s1, const QString &s2);
+    static int localeAwareCompare(const QStringRef &s1, const QStringRef &s2);
 };
 
 inline QStringRef &QStringRef::operator=(const QString *aString)
@@ -1140,6 +1195,37 @@ inline QT_ASCII_CAST_WARN bool operator!=(const char *s1, const QStringRef &s2)
 { return !qStringComparisonHelper(s2, s1); }
 inline QT_ASCII_CAST_WARN bool operator!=(const QStringRef &s1, const char *s2)
 { return !qStringComparisonHelper(s1, s2); }
+
+inline int QString::compare(const QStringRef &s, Qt::CaseSensitivity cs) const
+{ return QString::compare_helper(constData(), length(), s.constData(), s.length(), cs); }
+inline int QString::compare(const QString &s1, const QStringRef &s2, Qt::CaseSensitivity cs)
+{ return QString::compare_helper(s1.constData(), s1.length(), s2.constData(), s2.length(), cs); }
+inline int QStringRef::compare(const QString &s, Qt::CaseSensitivity cs) const
+{ return QString::compare_helper(constData(), length(), s.constData(), s.length(), cs); }
+inline int QStringRef::compare(const QStringRef &s, Qt::CaseSensitivity cs) const
+{ return QString::compare_helper(constData(), length(), s.constData(), s.length(), cs); }
+inline int QStringRef::compare(QLatin1String s, Qt::CaseSensitivity cs) const
+{ return QString::compare_helper(constData(), length(), s, cs); }
+inline int QStringRef::compare(const QStringRef &s1, const QString &s2, Qt::CaseSensitivity cs)
+{ return QString::compare_helper(s1.constData(), s1.length(), s2.constData(), s2.length(), cs); }
+inline int QStringRef::compare(const QStringRef &s1, const QStringRef &s2, Qt::CaseSensitivity cs)
+{ return QString::compare_helper(s1.constData(), s1.length(), s2.constData(), s2.length(), cs); }
+inline int QStringRef::compare(const QStringRef &s1, QLatin1String s2, Qt::CaseSensitivity cs)
+{ return QString::compare_helper(s1.constData(), s1.length(), s2, cs); }
+
+inline int QString::localeAwareCompare(const QStringRef &s) const
+{ return localeAwareCompare_helper(constData(), length(), s.constData(), s.length()); }
+inline int QString::localeAwareCompare(const QString& s1, const QStringRef& s2)
+{ return localeAwareCompare_helper(s1.constData(), s1.length(), s2.constData(), s2.length()); }
+inline int QStringRef::localeAwareCompare(const QString &s) const
+{ return QString::localeAwareCompare_helper(constData(), length(), s.constData(), s.length()); }
+inline int QStringRef::localeAwareCompare(const QStringRef &s) const
+{ return QString::localeAwareCompare_helper(constData(), length(), s.constData(), s.length()); }
+inline int QStringRef::localeAwareCompare(const QStringRef &s1, const QString &s2)
+{ return QString::localeAwareCompare_helper(s1.constData(), s1.length(), s2.constData(), s2.length()); }
+inline int QStringRef::localeAwareCompare(const QStringRef &s1, const QStringRef &s2)
+{ return QString::localeAwareCompare_helper(s1.constData(), s1.length(), s2.constData(), s2.length()); }
+
 
 QT_END_NAMESPACE
 

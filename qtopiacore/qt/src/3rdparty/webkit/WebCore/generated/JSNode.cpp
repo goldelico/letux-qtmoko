@@ -29,413 +29,595 @@
 #include "JSNamedNodeMap.h"
 #include "JSNode.h"
 #include "JSNodeList.h"
+#include "KURL.h"
 #include "NameNodeList.h"
 #include "NamedAttrMap.h"
 #include "NamedNodeMap.h"
 #include "Node.h"
 #include "NodeList.h"
-#include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSNode)
+
 /* Hash table */
 
-static const HashEntry JSNodeTableEntries[] =
+static const HashTableValue JSNodeTableValues[19] =
 {
-    { "ownerDocument", JSNode::OwnerDocumentAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "firstChild", JSNode::FirstChildAttrNum, DontDelete|ReadOnly, 0, &JSNodeTableEntries[18] },
-    { "previousSibling", JSNode::PreviousSiblingAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSNode::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "nodeName", JSNode::NodeNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "nodeValue", JSNode::NodeValueAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "lastChild", JSNode::LastChildAttrNum, DontDelete|ReadOnly, 0, &JSNodeTableEntries[19] },
-    { "localName", JSNode::LocalNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "nextSibling", JSNode::NextSiblingAttrNum, DontDelete|ReadOnly, 0, &JSNodeTableEntries[20] },
-    { "nodeType", JSNode::NodeTypeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "childNodes", JSNode::ChildNodesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "textContent", JSNode::TextContentAttrNum, DontDelete, 0, 0 },
-    { "baseURI", JSNode::BaseURIAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "parentNode", JSNode::ParentNodeAttrNum, DontDelete|ReadOnly, 0, &JSNodeTableEntries[21] },
-    { "attributes", JSNode::AttributesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "namespaceURI", JSNode::NamespaceURIAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "prefix", JSNode::PrefixAttrNum, DontDelete, 0, 0 },
-    { "parentElement", JSNode::ParentElementAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "nodeName", DontDelete|ReadOnly, (intptr_t)jsNodeNodeName, (intptr_t)0 },
+    { "nodeValue", DontDelete, (intptr_t)jsNodeNodeValue, (intptr_t)setJSNodeNodeValue },
+    { "nodeType", DontDelete|ReadOnly, (intptr_t)jsNodeNodeType, (intptr_t)0 },
+    { "parentNode", DontDelete|ReadOnly, (intptr_t)jsNodeParentNode, (intptr_t)0 },
+    { "childNodes", DontDelete|ReadOnly, (intptr_t)jsNodeChildNodes, (intptr_t)0 },
+    { "firstChild", DontDelete|ReadOnly, (intptr_t)jsNodeFirstChild, (intptr_t)0 },
+    { "lastChild", DontDelete|ReadOnly, (intptr_t)jsNodeLastChild, (intptr_t)0 },
+    { "previousSibling", DontDelete|ReadOnly, (intptr_t)jsNodePreviousSibling, (intptr_t)0 },
+    { "nextSibling", DontDelete|ReadOnly, (intptr_t)jsNodeNextSibling, (intptr_t)0 },
+    { "attributes", DontDelete|ReadOnly, (intptr_t)jsNodeAttributes, (intptr_t)0 },
+    { "ownerDocument", DontDelete|ReadOnly, (intptr_t)jsNodeOwnerDocument, (intptr_t)0 },
+    { "namespaceURI", DontDelete|ReadOnly, (intptr_t)jsNodeNamespaceURI, (intptr_t)0 },
+    { "prefix", DontDelete, (intptr_t)jsNodePrefix, (intptr_t)setJSNodePrefix },
+    { "localName", DontDelete|ReadOnly, (intptr_t)jsNodeLocalName, (intptr_t)0 },
+    { "baseURI", DontDelete|ReadOnly, (intptr_t)jsNodeBaseURI, (intptr_t)0 },
+    { "textContent", DontDelete, (intptr_t)jsNodeTextContent, (intptr_t)setJSNodeTextContent },
+    { "parentElement", DontDelete|ReadOnly, (intptr_t)jsNodeParentElement, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsNodeConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNodeTable = 
-{
-    2, 22, JSNodeTableEntries, 18
-};
+static const HashTable JSNodeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 4095, JSNodeTableValues, 0 };
+#else
+    { 68, 63, JSNodeTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSNodeConstructorTableEntries[] =
+static const HashTableValue JSNodeConstructorTableValues[19] =
 {
-    { "DOCUMENT_FRAGMENT_NODE", Node::DOCUMENT_FRAGMENT_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "ENTITY_REFERENCE_NODE", Node::ENTITY_REFERENCE_NODE, DontDelete|ReadOnly, 0, &JSNodeConstructorTableEntries[14] },
-    { "CDATA_SECTION_NODE", Node::CDATA_SECTION_NODE, DontDelete|ReadOnly, 0, &JSNodeConstructorTableEntries[12] },
-    { 0, 0, 0, 0, 0 },
-    { "TEXT_NODE", Node::TEXT_NODE, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "COMMENT_NODE", Node::COMMENT_NODE, DontDelete|ReadOnly, 0, &JSNodeConstructorTableEntries[13] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "ELEMENT_NODE", Node::ELEMENT_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "ATTRIBUTE_NODE", Node::ATTRIBUTE_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "ENTITY_NODE", Node::ENTITY_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "PROCESSING_INSTRUCTION_NODE", Node::PROCESSING_INSTRUCTION_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "DOCUMENT_NODE", Node::DOCUMENT_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "DOCUMENT_TYPE_NODE", Node::DOCUMENT_TYPE_NODE, DontDelete|ReadOnly, 0, &JSNodeConstructorTableEntries[15] },
-    { "NOTATION_NODE", Node::NOTATION_NODE, DontDelete|ReadOnly, 0, 0 }
+    { "ELEMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeELEMENT_NODE, (intptr_t)0 },
+    { "ATTRIBUTE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeATTRIBUTE_NODE, (intptr_t)0 },
+    { "TEXT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeTEXT_NODE, (intptr_t)0 },
+    { "CDATA_SECTION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeCDATA_SECTION_NODE, (intptr_t)0 },
+    { "ENTITY_REFERENCE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeENTITY_REFERENCE_NODE, (intptr_t)0 },
+    { "ENTITY_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeENTITY_NODE, (intptr_t)0 },
+    { "PROCESSING_INSTRUCTION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodePROCESSING_INSTRUCTION_NODE, (intptr_t)0 },
+    { "COMMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeCOMMENT_NODE, (intptr_t)0 },
+    { "DOCUMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_NODE, (intptr_t)0 },
+    { "DOCUMENT_TYPE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_TYPE_NODE, (intptr_t)0 },
+    { "DOCUMENT_FRAGMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_FRAGMENT_NODE, (intptr_t)0 },
+    { "NOTATION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeNOTATION_NODE, (intptr_t)0 },
+    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_DISCONNECTED, (intptr_t)0 },
+    { "DOCUMENT_POSITION_PRECEDING", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_PRECEDING, (intptr_t)0 },
+    { "DOCUMENT_POSITION_FOLLOWING", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_FOLLOWING, (intptr_t)0 },
+    { "DOCUMENT_POSITION_CONTAINS", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_CONTAINS, (intptr_t)0 },
+    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_CONTAINED_BY, (intptr_t)0 },
+    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNodeConstructorTable = 
-{
-    2, 16, JSNodeConstructorTableEntries, 12
-};
+static const HashTable JSNodeConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 2047, JSNodeConstructorTableValues, 0 };
+#else
+    { 67, 63, JSNodeConstructorTableValues, 0 };
+#endif
 
 class JSNodeConstructor : public DOMObject {
 public:
     JSNodeConstructor(ExecState* exec)
+        : DOMObject(JSNodeConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSNodePrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSNodeConstructor::info = { "NodeConstructor", 0, &JSNodeConstructorTable, 0 };
+const ClassInfo JSNodeConstructor::s_info = { "NodeConstructor", 0, &JSNodeConstructorTable, 0 };
 
 bool JSNodeConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSNodeConstructor, DOMObject>(exec, &JSNodeConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSNodeConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSNodePrototypeTableEntries[] =
+static const HashTableValue JSNodePrototypeTableValues[34] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "cloneNode", JSNode::CloneNodeFuncNum, DontDelete|Function, 1, 0 },
-    { "DOCUMENT_NODE", Node::DOCUMENT_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[28] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "isSameNode", JSNode::IsSameNodeFuncNum, DontDelete|Function, 1, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "hasChildNodes", JSNode::HasChildNodesFuncNum, DontDelete|Function, 0, &JSNodePrototypeTableEntries[32] },
-    { "appendChild", JSNode::AppendChildFuncNum, DontDelete|Function, 1, 0 },
-    { "PROCESSING_INSTRUCTION_NODE", Node::PROCESSING_INSTRUCTION_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[30] },
-    { "NOTATION_NODE", Node::NOTATION_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "CDATA_SECTION_NODE", Node::CDATA_SECTION_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[33] },
-    { "ELEMENT_NODE", Node::ELEMENT_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[34] },
-    { "ATTRIBUTE_NODE", Node::ATTRIBUTE_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[29] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "DOCUMENT_FRAGMENT_NODE", Node::DOCUMENT_FRAGMENT_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[27] },
-    { "ENTITY_NODE", Node::ENTITY_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "TEXT_NODE", Node::TEXT_NODE, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "isEqualNode", JSNode::IsEqualNodeFuncNum, DontDelete|Function, 1, 0 },
-    { "isDefaultNamespace", JSNode::IsDefaultNamespaceFuncNum, DontDelete|Function, 1, 0 },
-    { "COMMENT_NODE", Node::COMMENT_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[31] },
-    { "ENTITY_REFERENCE_NODE", Node::ENTITY_REFERENCE_NODE, DontDelete|ReadOnly, 0, &JSNodePrototypeTableEntries[26] },
-    { "DOCUMENT_TYPE_NODE", Node::DOCUMENT_TYPE_NODE, DontDelete|ReadOnly, 0, 0 },
-    { "insertBefore", JSNode::InsertBeforeFuncNum, DontDelete|Function, 2, 0 },
-    { "replaceChild", JSNode::ReplaceChildFuncNum, DontDelete|Function, 2, 0 },
-    { "removeChild", JSNode::RemoveChildFuncNum, DontDelete|Function, 1, 0 },
-    { "normalize", JSNode::NormalizeFuncNum, DontDelete|Function, 0, 0 },
-    { "isSupported", JSNode::IsSupportedFuncNum, DontDelete|Function, 2, 0 },
-    { "hasAttributes", JSNode::HasAttributesFuncNum, DontDelete|Function, 0, 0 },
-    { "lookupPrefix", JSNode::LookupPrefixFuncNum, DontDelete|Function, 1, 0 },
-    { "lookupNamespaceURI", JSNode::LookupNamespaceURIFuncNum, DontDelete|Function, 1, 0 }
+    { "ELEMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeELEMENT_NODE, (intptr_t)0 },
+    { "ATTRIBUTE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeATTRIBUTE_NODE, (intptr_t)0 },
+    { "TEXT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeTEXT_NODE, (intptr_t)0 },
+    { "CDATA_SECTION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeCDATA_SECTION_NODE, (intptr_t)0 },
+    { "ENTITY_REFERENCE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeENTITY_REFERENCE_NODE, (intptr_t)0 },
+    { "ENTITY_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeENTITY_NODE, (intptr_t)0 },
+    { "PROCESSING_INSTRUCTION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodePROCESSING_INSTRUCTION_NODE, (intptr_t)0 },
+    { "COMMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeCOMMENT_NODE, (intptr_t)0 },
+    { "DOCUMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_NODE, (intptr_t)0 },
+    { "DOCUMENT_TYPE_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_TYPE_NODE, (intptr_t)0 },
+    { "DOCUMENT_FRAGMENT_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_FRAGMENT_NODE, (intptr_t)0 },
+    { "NOTATION_NODE", DontDelete|ReadOnly, (intptr_t)jsNodeNOTATION_NODE, (intptr_t)0 },
+    { "DOCUMENT_POSITION_DISCONNECTED", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_DISCONNECTED, (intptr_t)0 },
+    { "DOCUMENT_POSITION_PRECEDING", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_PRECEDING, (intptr_t)0 },
+    { "DOCUMENT_POSITION_FOLLOWING", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_FOLLOWING, (intptr_t)0 },
+    { "DOCUMENT_POSITION_CONTAINS", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_CONTAINS, (intptr_t)0 },
+    { "DOCUMENT_POSITION_CONTAINED_BY", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_CONTAINED_BY, (intptr_t)0 },
+    { "DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC", DontDelete|ReadOnly, (intptr_t)jsNodeDOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC, (intptr_t)0 },
+    { "insertBefore", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionInsertBefore, (intptr_t)2 },
+    { "replaceChild", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionReplaceChild, (intptr_t)2 },
+    { "removeChild", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionRemoveChild, (intptr_t)1 },
+    { "appendChild", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionAppendChild, (intptr_t)1 },
+    { "hasChildNodes", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionHasChildNodes, (intptr_t)0 },
+    { "cloneNode", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionCloneNode, (intptr_t)1 },
+    { "normalize", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionNormalize, (intptr_t)0 },
+    { "isSupported", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionIsSupported, (intptr_t)2 },
+    { "hasAttributes", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionHasAttributes, (intptr_t)0 },
+    { "isSameNode", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionIsSameNode, (intptr_t)1 },
+    { "isEqualNode", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionIsEqualNode, (intptr_t)1 },
+    { "lookupPrefix", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionLookupPrefix, (intptr_t)1 },
+    { "isDefaultNamespace", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionIsDefaultNamespace, (intptr_t)1 },
+    { "lookupNamespaceURI", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionLookupNamespaceURI, (intptr_t)1 },
+    { "compareDocumentPosition", DontDelete|Function, (intptr_t)jsNodePrototypeFunctionCompareDocumentPosition, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSNodePrototypeTable = 
-{
-    2, 35, JSNodePrototypeTableEntries, 26
-};
+static const HashTable JSNodePrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 4095, JSNodePrototypeTableValues, 0 };
+#else
+    { 134, 127, JSNodePrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSNodePrototype::info = { "NodePrototype", 0, &JSNodePrototypeTable, 0 };
+const ClassInfo JSNodePrototype::s_info = { "NodePrototype", 0, &JSNodePrototypeTable, 0 };
 
 JSObject* JSNodePrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSNodePrototype>(exec, "[[JSNode.prototype]]");
+    return getDOMPrototype<JSNode>(exec);
 }
 
 bool JSNodePrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticPropertySlot<JSNodePrototypeFunction, JSNodePrototype, JSObject>(exec, &JSNodePrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSNodePrototype, JSObject>(exec, &JSNodePrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSNodePrototype::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
+const ClassInfo JSNode::s_info = { "Node", 0, &JSNodeTable, 0 };
 
-const ClassInfo JSNode::info = { "Node", 0, &JSNodeTable, 0 };
-
-JSNode::JSNode(ExecState* exec, Node* impl)
-    : m_impl(impl)
+JSNode::JSNode(PassRefPtr<Structure> structure, PassRefPtr<Node> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSNodePrototype::self(exec));
 }
 
 JSNode::~JSNode()
 {
-    ScriptInterpreter::forgetDOMNodeForDocument(m_impl->document(), m_impl.get());
+    forgetDOMNode(m_impl->document(), m_impl.get());
+
 }
 
-bool JSNode::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+JSObject* JSNode::createPrototype(ExecState* exec)
 {
-    return getStaticValueSlot<JSNode, KJS::DOMObject>(exec, &JSNodeTable, this, propertyName, slot);
+    return new (exec) JSNodePrototype(JSNodePrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
-JSValue* JSNode::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsNodeNodeName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NodeNameAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->nodeName());
-    }
-    case NodeValueAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->nodeValue());
-    }
-    case NodeTypeAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsNumber(imp->nodeType());
-    }
-    case ParentNodeAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->parentNode()));
-    }
-    case ChildNodesAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->childNodes()));
-    }
-    case FirstChildAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->firstChild()));
-    }
-    case LastChildAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->lastChild()));
-    }
-    case PreviousSiblingAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->previousSibling()));
-    }
-    case NextSiblingAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->nextSibling()));
-    }
-    case AttributesAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->attributes()));
-    }
-    case OwnerDocumentAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->ownerDocument()));
-    }
-    case NamespaceURIAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->namespaceURI());
-    }
-    case PrefixAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->prefix());
-    }
-    case LocalNameAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->localName());
-    }
-    case BaseURIAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->baseURI());
-    }
-    case TextContentAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return jsStringOrNull(imp->textContent());
-    }
-    case ParentElementAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->parentElement()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->nodeName());
 }
 
-void JSNode::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsNodeNodeValue(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSNode, KJS::DOMObject>(exec, propertyName, value, attr, &JSNodeTable, this);
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->nodeValue());
 }
 
-void JSNode::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsNodeNodeType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NodeValueAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setNodeValue(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case PrefixAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setPrefix(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case TextContentAttrNum: {
-        Node* imp = static_cast<Node*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setTextContent(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->nodeType());
 }
 
-JSValue* JSNode::getConstructor(ExecState* exec)
+JSValuePtr jsNodeParentNode(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSNodeConstructor>(exec, "[[Node.constructor]]");
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->parentNode()));
 }
-JSValue* JSNodePrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsNodeChildNodes(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSNode::info))
-      return throwError(exec, TypeError);
-
-    Node* imp = static_cast<Node*>(static_cast<JSNode*>(thisObj)->impl());
-
-    switch (id) {
-    case JSNode::InsertBeforeFuncNum: {
-        return static_cast<JSNode*>(thisObj)->insertBefore(exec, args);
-    }
-    case JSNode::ReplaceChildFuncNum: {
-        return static_cast<JSNode*>(thisObj)->replaceChild(exec, args);
-    }
-    case JSNode::RemoveChildFuncNum: {
-        return static_cast<JSNode*>(thisObj)->removeChild(exec, args);
-    }
-    case JSNode::AppendChildFuncNum: {
-        return static_cast<JSNode*>(thisObj)->appendChild(exec, args);
-    }
-    case JSNode::HasChildNodesFuncNum: {
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasChildNodes());
-        return result;
-    }
-    case JSNode::CloneNodeFuncNum: {
-        bool deep = args[0]->toBoolean(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->cloneNode(deep)));
-        return result;
-    }
-    case JSNode::NormalizeFuncNum: {
-
-        imp->normalize();
-        return jsUndefined();
-    }
-    case JSNode::IsSupportedFuncNum: {
-        String feature = args[0]->toString(exec);
-        String version = valueToStringWithNullCheck(exec, args[1]);
-
-
-        KJS::JSValue* result = jsBoolean(imp->isSupported(feature, version));
-        return result;
-    }
-    case JSNode::HasAttributesFuncNum: {
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasAttributes());
-        return result;
-    }
-    case JSNode::IsSameNodeFuncNum: {
-        Node* other = toNode(args[0]);
-
-
-        KJS::JSValue* result = jsBoolean(imp->isSameNode(other));
-        return result;
-    }
-    case JSNode::IsEqualNodeFuncNum: {
-        Node* other = toNode(args[0]);
-
-
-        KJS::JSValue* result = jsBoolean(imp->isEqualNode(other));
-        return result;
-    }
-    case JSNode::LookupPrefixFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-
-
-        KJS::JSValue* result = jsStringOrNull(imp->lookupPrefix(namespaceURI));
-        return result;
-    }
-    case JSNode::IsDefaultNamespaceFuncNum: {
-        String namespaceURI = valueToStringWithNullCheck(exec, args[0]);
-
-
-        KJS::JSValue* result = jsBoolean(imp->isDefaultNamespace(namespaceURI));
-        return result;
-    }
-    case JSNode::LookupNamespaceURIFuncNum: {
-        String prefix = valueToStringWithNullCheck(exec, args[0]);
-
-
-        KJS::JSValue* result = jsStringOrNull(imp->lookupNamespaceURI(prefix));
-        return result;
-    }
-    }
-    return 0;
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->childNodes()));
 }
-Node* toNode(KJS::JSValue* val)
+
+JSValuePtr jsNodeFirstChild(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSNode::info) ? static_cast<JSNode*>(val)->impl() : 0;
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->firstChild()));
+}
+
+JSValuePtr jsNodeLastChild(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->lastChild()));
+}
+
+JSValuePtr jsNodePreviousSibling(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->previousSibling()));
+}
+
+JSValuePtr jsNodeNextSibling(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->nextSibling()));
+}
+
+JSValuePtr jsNodeAttributes(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->attributes()));
+}
+
+JSValuePtr jsNodeOwnerDocument(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->ownerDocument()));
+}
+
+JSValuePtr jsNodeNamespaceURI(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->namespaceURI());
+}
+
+JSValuePtr jsNodePrefix(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->prefix());
+}
+
+JSValuePtr jsNodeLocalName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->localName());
+}
+
+JSValuePtr jsNodeBaseURI(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->baseURI());
+}
+
+JSValuePtr jsNodeTextContent(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->textContent());
+}
+
+JSValuePtr jsNodeParentElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->parentElement()));
+}
+
+JSValuePtr jsNodeConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSNode*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSNode::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSNode, Base>(exec, propertyName, value, &JSNodeTable, this, slot);
+}
+
+void setJSNodeNodeValue(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setNodeValue(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSNodePrefix(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setPrefix(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSNodeTextContent(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Node* imp = static_cast<Node*>(static_cast<JSNode*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setTextContent(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+JSValuePtr JSNode::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSNodeConstructor>(exec);
+}
+
+JSValuePtr jsNodePrototypeFunctionInsertBefore(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    return castedThisObj->insertBefore(exec, args);
+}
+
+JSValuePtr jsNodePrototypeFunctionReplaceChild(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    return castedThisObj->replaceChild(exec, args);
+}
+
+JSValuePtr jsNodePrototypeFunctionRemoveChild(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    return castedThisObj->removeChild(exec, args);
+}
+
+JSValuePtr jsNodePrototypeFunctionAppendChild(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    return castedThisObj->appendChild(exec, args);
+}
+
+JSValuePtr jsNodePrototypeFunctionHasChildNodes(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasChildNodes());
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionCloneNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    bool deep = args.at(exec, 0)->toBoolean(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->cloneNode(deep)));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionNormalize(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+
+    imp->normalize();
+    return jsUndefined();
+}
+
+JSValuePtr jsNodePrototypeFunctionIsSupported(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    const UString& feature = args.at(exec, 0)->toString(exec);
+    const UString& version = valueToStringWithNullCheck(exec, args.at(exec, 1));
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->isSupported(feature, version));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionHasAttributes(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasAttributes());
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionIsSameNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    Node* other = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->isSameNode(other));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionIsEqualNode(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    Node* other = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->isEqualNode(other));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionLookupPrefix(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsStringOrNull(exec, imp->lookupPrefix(namespaceURI));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionIsDefaultNamespace(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    const UString& namespaceURI = valueToStringWithNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->isDefaultNamespace(namespaceURI));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionLookupNamespaceURI(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    const UString& prefix = valueToStringWithNullCheck(exec, args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsStringOrNull(exec, imp->lookupNamespaceURI(prefix));
+    return result;
+}
+
+JSValuePtr jsNodePrototypeFunctionCompareDocumentPosition(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSNode::s_info))
+        return throwError(exec, TypeError);
+    JSNode* castedThisObj = static_cast<JSNode*>(asObject(thisValue));
+    Node* imp = static_cast<Node*>(castedThisObj->impl());
+    Node* other = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->compareDocumentPosition(other));
+    return result;
+}
+
+// Constant getters
+
+JSValuePtr jsNodeELEMENT_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsNodeATTRIBUTE_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSValuePtr jsNodeTEXT_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
+
+JSValuePtr jsNodeCDATA_SECTION_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
+
+JSValuePtr jsNodeENTITY_REFERENCE_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
+}
+
+JSValuePtr jsNodeENTITY_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(6));
+}
+
+JSValuePtr jsNodePROCESSING_INSTRUCTION_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(7));
+}
+
+JSValuePtr jsNodeCOMMENT_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(8));
+}
+
+JSValuePtr jsNodeDOCUMENT_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(9));
+}
+
+JSValuePtr jsNodeDOCUMENT_TYPE_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(10));
+}
+
+JSValuePtr jsNodeDOCUMENT_FRAGMENT_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(11));
+}
+
+JSValuePtr jsNodeNOTATION_NODE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(12));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_DISCONNECTED(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x01));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_PRECEDING(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x02));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_FOLLOWING(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x04));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_CONTAINS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x08));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_CONTAINED_BY(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x10));
+}
+
+JSValuePtr jsNodeDOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0x20));
+}
+
+Node* toNode(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSNode::s_info) ? static_cast<JSNode*>(asObject(value))->impl() : 0;
 }
 
 }

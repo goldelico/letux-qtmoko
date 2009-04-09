@@ -1,15 +1,19 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_search_IndexSearcher_
 #define _lucene_search_IndexSearcher_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
+
+#include <QtCore/QString>
 
 #include "SearchHeader.h"
 #include "CLucene/store/Directory.h"
@@ -32,7 +36,7 @@ class IndexSearcher:public Searcher{
 
 public:
 	/// Creates a searcher searching the index in the named directory.
-	IndexSearcher(const char* path);
+	IndexSearcher(const QString& path);
   
     /// Creates a searcher searching the index in the specified directory.
     IndexSearcher(CL_NS(store)::Directory* directory);
@@ -52,16 +56,18 @@ public:
 	int32_t maxDoc() const;
 
 	TopDocs* _search(Query* query, Filter* filter, const int32_t nDocs);
-	TopFieldDocs* _search(Query* query, Filter* filter, const int32_t nDocs, const Sort* sort);
+	TopFieldDocs* _search(Query* query, Filter* filter, const int32_t nDocs,
+        const Sort* sort);
 
 	void _search(Query* query, Filter* filter, HitCollector* results);
 
-	CL_NS(index)::IndexReader* getReader(){
-		return reader;
-	}
+	CL_NS(index)::IndexReader* getReader() {
+		return reader; }
 
 	Query* rewrite(Query* original);
 	void explain(Query* query, int32_t doc, Explanation* ret);
 };
+
 CL_NS_END
+
 #endif

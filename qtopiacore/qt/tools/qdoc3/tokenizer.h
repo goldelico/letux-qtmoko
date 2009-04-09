@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -59,22 +63,27 @@ QT_BEGIN_NAMESPACE
   tokenizer.cpp as well, and possibly adjust Tok_FirstKeyword and
   Tok_LastKeyword.
 */
-enum { Tok_Eoi, Tok_Ampersand, Tok_Aster, Tok_Caret, Tok_LeftParen, Tok_RightParen, Tok_LeftParenAster,
-       Tok_Equal, Tok_LeftBrace, Tok_RightBrace, Tok_Semicolon, Tok_Colon, Tok_LeftAngle,
-       Tok_RightAngle, Tok_Comma, Tok_Ellipsis, Tok_Gulbrandsen, Tok_LeftBracket, Tok_RightBracket,
-       Tok_Tilde, Tok_SomeOperator, Tok_Number, Tok_String, Tok_Doc, Tok_Comment, Tok_Ident,
-
-       Tok_char, Tok_class, Tok_const, Tok_double, Tok_enum, Tok_explicit, Tok_friend, Tok_inline,
-       Tok_int, Tok_long, Tok_namespace, Tok_operator, Tok_private, Tok_protected, Tok_public,
-       Tok_short, Tok_signals, Tok_signed, Tok_slots, Tok_static, Tok_struct, Tok_template,
-       Tok_typedef, Tok_typename, Tok_union, Tok_unsigned, Tok_using, Tok_virtual, Tok_void, Tok_volatile,
-       Tok_int64, Tok_Q_OBJECT, Tok_Q_OVERRIDE, Tok_Q_PROPERTY, Tok_Q_DECLARE_SEQUENTIAL_ITERATOR,
-       Tok_Q_DECLARE_MUTABLE_SEQUENTIAL_ITERATOR, Tok_Q_DECLARE_ASSOCIATIVE_ITERATOR,
-       Tok_Q_DECLARE_MUTABLE_ASSOCIATIVE_ITERATOR, Tok_Q_DECLARE_FLAGS, Tok_Q_SIGNALS, Tok_Q_SLOTS,
-       Tok_QT_COMPAT, Tok_QT_COMPAT_CONSTRUCTOR, Tok_QT_DEPRECATED, Tok_QT_MOC_COMPAT,
-       Tok_QT_MODULE, Tok_QT3_SUPPORT, Tok_QT3_SUPPORT_CONSTRUCTOR, Tok_QT3_MOC_SUPPORT,
-       Tok_QDOC_PROPERTY,
-
+enum { Tok_Eoi, Tok_Ampersand, Tok_Aster, Tok_Caret, Tok_LeftParen, 
+       Tok_RightParen, Tok_LeftParenAster, Tok_Equal, Tok_LeftBrace, 
+       Tok_RightBrace, Tok_Semicolon, Tok_Colon, Tok_LeftAngle,
+       Tok_RightAngle, Tok_Comma, Tok_Ellipsis, Tok_Gulbrandsen,
+       Tok_LeftBracket, Tok_RightBracket, Tok_Tilde, Tok_SomeOperator,
+       Tok_Number, Tok_String, Tok_Doc, Tok_Comment, Tok_Ident, Tok_At,
+       Tok_char, Tok_class, Tok_const, Tok_double, Tok_enum, 
+       Tok_explicit, Tok_friend, Tok_inline, Tok_int, Tok_long, 
+       Tok_namespace, Tok_operator, Tok_private, Tok_protected,
+       Tok_public, Tok_short, Tok_signals, Tok_signed, Tok_slots,
+       Tok_static, Tok_struct, Tok_template, Tok_typedef, 
+       Tok_typename, Tok_union, Tok_unsigned, Tok_using, Tok_virtual,
+       Tok_void, Tok_volatile, Tok_int64, Tok_Q_OBJECT, Tok_Q_OVERRIDE, 
+       Tok_Q_PROPERTY, Tok_Q_DECLARE_SEQUENTIAL_ITERATOR,
+       Tok_Q_DECLARE_MUTABLE_SEQUENTIAL_ITERATOR, 
+       Tok_Q_DECLARE_ASSOCIATIVE_ITERATOR,
+       Tok_Q_DECLARE_MUTABLE_ASSOCIATIVE_ITERATOR, 
+       Tok_Q_DECLARE_FLAGS, Tok_Q_SIGNALS, Tok_Q_SLOTS, Tok_QT_COMPAT, 
+       Tok_QT_COMPAT_CONSTRUCTOR, Tok_QT_DEPRECATED, Tok_QT_MOC_COMPAT,
+       Tok_QT_MODULE, Tok_QT3_SUPPORT, Tok_QT3_SUPPORT_CONSTRUCTOR, 
+       Tok_QT3_MOC_SUPPORT, Tok_QDOC_PROPERTY,
        Tok_FirstKeyword = Tok_char, Tok_LastKeyword = Tok_QDOC_PROPERTY };
 
 /*

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,7 +76,6 @@ QT_BEGIN_NAMESPACE
 // This value is used to determine the length of control point vectors
 // when approximating arc segments as curves. The factor is multiplied
 // with the radius of the circle.
-#define KAPPA 0.5522847498
 
 // #define QPP_DEBUG
 // #define QPP_STROKE_DEBUG
@@ -1099,10 +1102,10 @@ void QPainterPath::addText(const QPointF &point, const QFont &f, const QString &
         QScriptItem &si = eng->layoutData->items[item];
 
         if (si.analysis.flags < QScriptAnalysis::TabOrObject) {
-            QGlyphLayout *glyphs = eng->glyphs(&si);
+            QGlyphLayout glyphs = eng->shapedGlyphs(&si);
             QFontEngine *fe = f.d->engineForScript(si.analysis.script);
             Q_ASSERT(fe);
-            fe->addOutlineToPath(x, y, glyphs, si.num_glyphs, this,
+            fe->addOutlineToPath(x, y, glyphs, this,
                                  si.analysis.bidiLevel % 2
                                  ? QTextItem::RenderFlags(QTextItem::RightToLeft)
                                  : QTextItem::RenderFlags(0));
@@ -1183,6 +1186,13 @@ void QPainterPath::connectPath(const QPainterPath &other)
     d->elements += other.d_func()->elements;
 
     d->elements[first].type = LineToElement;
+
+    // avoid duplicate points
+    if (first > 0 && QPointF(d->elements[first]) == QPointF(d->elements[first - 1])) {
+        d->elements.remove(first--);
+        --cStart;
+    }
+
     if (cStart != first)
         d->cStart = cStart;
 }
@@ -2127,6 +2137,105 @@ bool QPainterPath::operator!=(const QPainterPath &path) const
     return !(*this==path);
 }
 
+/*!
+    \since 4.5
+
+    Returns the intersection of this path and the \a other path.
+
+    \sa intersected(), operator&=(), united(), operator|()
+*/
+QPainterPath QPainterPath::operator&(const QPainterPath &other) const
+{
+    return intersected(other);
+}
+
+/*!
+    \since 4.5
+
+    Returns the union of this path and the \a other path.
+
+    \sa united(), operator|=(), intersected(), operator&()
+*/
+QPainterPath QPainterPath::operator|(const QPainterPath &other) const
+{
+    return united(other);
+}
+
+/*!
+    \since 4.5
+
+    Returns the union of this path and the \a other path. This function is equivalent
+    to operator|().
+
+    \sa united(), operator+=(), operator-()
+*/
+QPainterPath QPainterPath::operator+(const QPainterPath &other) const
+{
+    return united(other);
+}
+
+/*!
+    \since 4.5
+
+    Subtracts the \a other path from a copy of this path, and returns the copy.
+
+    \sa subtracted(), operator-=(), operator+()
+*/
+QPainterPath QPainterPath::operator-(const QPainterPath &other) const
+{
+    return subtracted(other);
+}
+
+/*!
+    \since 4.5
+
+    Intersects this path with \a other and returns a reference to this path.
+
+    \sa intersected(), operator&(), operator|=()
+*/
+QPainterPath &QPainterPath::operator&=(const QPainterPath &other)
+{
+    return *this = (*this & other);
+}
+
+/*!
+    \since 4.5
+
+    Unites this path with \a other and returns a reference to this path.
+
+    \sa united(), operator|(), operator&=()
+*/
+QPainterPath &QPainterPath::operator|=(const QPainterPath &other)
+{
+    return *this = (*this | other);
+}
+
+/*!
+    \since 4.5
+
+    Unites this path with \a other, and returns a reference to this path. This
+    is equivalent to operator|=().
+
+    \sa united(), operator+(), operator-=()
+*/
+QPainterPath &QPainterPath::operator+=(const QPainterPath &other)
+{
+    return *this = (*this + other);
+}
+
+/*!
+    \since 4.5
+
+    Subtracts \a other from this path, and returns a reference to this
+    path.
+
+    \sa subtracted(), operator-(), operator+=()
+*/
+QPainterPath &QPainterPath::operator-=(const QPainterPath &other)
+{
+    return *this = (*this - other);
+}
+
 #ifndef QT_NO_DATASTREAM
 /*!
     \fn QDataStream &operator<<(QDataStream &stream, const QPainterPath &path)
@@ -2495,6 +2604,9 @@ qreal QPainterPathStroker::dashOffset() const
 
 /*!
   Sets the dash offset for the generated outlines to \a offset.
+
+  See the documentation for QPen::setDashOffset() for a description of the
+  dash offset.
  */
 void QPainterPathStroker::setDashOffset(qreal offset)
 {
@@ -2837,8 +2949,16 @@ void QPainterPath::addRoundedRect(const QRectF &rect, qreal xRadius, qreal yRadi
         qreal w = r.width() / 2;
         qreal h = r.height() / 2;
 
-        xRadius = 100 * qMin(xRadius, w) / w;
-        yRadius = 100 * qMin(yRadius, h) / h;
+        if (w == 0) {
+            xRadius = 0;
+        } else {
+            xRadius = 100 * qMin(xRadius, w) / w;
+        }
+        if (h == 0) {
+            yRadius = 0;
+        } else {
+            yRadius = 100 * qMin(yRadius, h) / h;
+        }
     } else {
         if (xRadius > 100)                          // fix ranges
             xRadius = 100;

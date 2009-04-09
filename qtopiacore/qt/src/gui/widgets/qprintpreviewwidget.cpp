@@ -1,50 +1,53 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qprintpreviewwidget.h"
 #include <private/qprinter_p.h>
 
+#include <QtCore/qmath.h>
 #include <QtGui/qboxlayout.h>
 #include <QtGui/qgraphicsitem.h>
 #include <QtGui/qgraphicsview.h>
 #include <QtGui/qscrollbar.h>
 #include <QtGui/qstyleoption.h>
-
-#include <math.h>
 
 #ifndef QT_NO_PRINTPREVIEWWIDGET
 
@@ -58,7 +61,7 @@ public:
         : pageNum(_pageNum), pagePicture(_pagePicture),
           paperSize(_paperSize), pageRect(_pageRect)
     {
-        qreal border = qMax(paperSize.height(), paperSize.width()) / 25.0;
+        qreal border = qMax(paperSize.height(), paperSize.width()) / 25;
         brect = QRectF(QPointF(-border, -border),
                        QSizeF(paperSize)+QSizeF(2*border, 2*border));
         setCacheMode(DeviceCoordinateCache);
@@ -175,7 +178,7 @@ public:
         : q_ptr(q), scene(0), curPage(1),
           viewMode(QPrintPreviewWidget::SinglePageView),
           zoomMode(QPrintPreviewWidget::FitInView),
-          initialized(false), fitting(true)
+          zoomFactor(1), initialized(false), fitting(true)
     {}
 
     // private slots
@@ -353,16 +356,16 @@ void QPrintPreviewWidgetPrivate::layoutPages()
     int cols = 1; // singleMode and default
     if (viewMode == QPrintPreviewWidget::AllPagesView) {
         if (printer->orientation() == QPrinter::Portrait)
-            cols = static_cast<int>(ceil(sqrt((float) numPages)));
+            cols = qCeil(qSqrt((float) numPages));
         else
-            cols = static_cast<int>(floor(sqrt((float) numPages)));
+            cols = qFloor(qSqrt((float) numPages));
         cols += cols % 2;  // Nicer with an even number of cols
     }
     else if (viewMode == QPrintPreviewWidget::FacingPagesView) {
         cols = 2;
         numPagePlaces += 1;
     }
-    int rows = static_cast<int>(ceil((double)numPagePlaces / cols));
+    int rows = qCeil(qreal(numPagePlaces) / cols);
 
     qreal itemWidth = pages.at(0)->boundingRect().width();
     qreal itemHeight = pages.at(0)->boundingRect().height();

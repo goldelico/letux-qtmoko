@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -60,7 +64,7 @@ struct InheritanceBound
     InnerNode *parent;
 
     InheritanceBound()
-	: access(Node::Public) { }
+        : access(Node::Public) { }
     InheritanceBound(Node::Access access0,
                      const QStringList& basePath0,
                      const QString &dataTypeWithTemplateArgs0,
@@ -140,8 +144,8 @@ const Node *Tree::findNode(const QStringList &path,
         int i;
 
         for (i = 0; i < path.size(); ++i) {
-	    if (node == 0 || !node->isInnerNode())
-	        break;
+            if (node == 0 || !node->isInnerNode())
+                break;
 
             const Node *next =
                 static_cast<const InnerNode*>(node)->findNode(path.at(i));
@@ -193,7 +197,7 @@ const Node *Tree::findNode(const QStringList &path,
 {
     const Node *node = findNode(path, relative, findFlags);
     if (node != 0 && node->type() == type)
-	return node;
+        return node;
     return 0;
 }
 
@@ -220,8 +224,8 @@ const FunctionNode *Tree::findFunctionNode(const QStringList &path,
         int i;
 
         for (i = 0; i < path.size(); ++i) {
-	    if (node == 0 || !node->isInnerNode())
-	        break;
+            if (node == 0 || !node->isInnerNode())
+                break;
 
             const Node *next;
             if (i == path.size() - 1)
@@ -291,9 +295,9 @@ const FunctionNode *Tree::findFunctionNode(const QStringList &parentPath,
 {
     const Node *parent = findNode(parentPath, relative, findFlags);
     if ( parent == 0 || !parent->isInnerNode() ) {
-	return 0;
+        return 0;
     } else {
-	return ((InnerNode *)parent)->findFunctionNode(clone);
+        return ((InnerNode *)parent)->findFunctionNode(clone);
     }
 }
 
@@ -320,7 +324,7 @@ const FakeNode *Tree::findFakeNodeByTitle(const QString &title) const
                 if (internalLocations.size() > 0) {
                     i.value()->doc().location().warning(
                         tr("Page '%1' defined in more than one location:").arg(title));
-                    foreach (Location location, internalLocations)
+                    foreach (const Location &location, internalLocations)
                         location.warning(tr("(defined here)"));
                 }
             }
@@ -402,7 +406,7 @@ void Tree::addBaseClass(ClassNode *subclass, Node::Access access,
  */
 void Tree::addPropertyFunction(PropertyNode *property,
                                const QString &funcName,
-			       PropertyNode::FunctionRole funcRole)
+                               PropertyNode::FunctionRole funcRole)
 {
     priv->unresolvedPropertyMap[property].insert(funcRole, funcName);
 }
@@ -444,18 +448,18 @@ void Tree::resolveInheritance(NamespaceNode *rootNode)
         rootNode = root();
 
     for ( int pass = 0; pass < 2; pass++ ) {
-	NodeList::ConstIterator c = rootNode->childNodes().begin();
-	while ( c != rootNode->childNodes().end() ) {
-	    if ( (*c)->type() == Node::Class )
-		resolveInheritance( pass, (ClassNode *) *c );
+        NodeList::ConstIterator c = rootNode->childNodes().begin();
+        while ( c != rootNode->childNodes().end() ) {
+            if ( (*c)->type() == Node::Class )
+                resolveInheritance( pass, (ClassNode *) *c );
             else if ( (*c)->type() == Node::Namespace ) {
                 NamespaceNode *ns = static_cast<NamespaceNode*>(*c);
                 resolveInheritance( ns );
             }
-	    ++c;
-	}
+            ++c;
+        }
         if (rootNode == root())
-	    priv->unresolvedInheritanceMap.clear();
+            priv->unresolvedInheritanceMap.clear();
     }
 }
 
@@ -467,39 +471,40 @@ void Tree::resolveProperties()
 
     propEntry = priv->unresolvedPropertyMap.begin();
     while (propEntry != priv->unresolvedPropertyMap.end()) {
-	PropertyNode *property = propEntry.key();
+        PropertyNode *property = propEntry.key();
         InnerNode *parent = property->parent();
-	QString getterName = (*propEntry)[PropertyNode::Getter];
-	QString setterName = (*propEntry)[PropertyNode::Setter];
-	QString resetterName = (*propEntry)[PropertyNode::Resetter];
+        QString getterName = (*propEntry)[PropertyNode::Getter];
+        QString setterName = (*propEntry)[PropertyNode::Setter];
+        QString resetterName = (*propEntry)[PropertyNode::Resetter];
 
-	NodeList::ConstIterator c = parent->childNodes().begin();
+        NodeList::ConstIterator c = parent->childNodes().begin();
         while (c != parent->childNodes().end()) {
-	    if ((*c)->type() == Node::Function) {
-		FunctionNode *function = static_cast<FunctionNode *>(*c);
-                if (function->status() == property->status()
-                        && function->access() == property->access()) {
-		    if (function->name() == getterName) {
-	                property->addFunction(function, PropertyNode::Getter);
-	            } else if (function->name() == setterName) {
-	                property->addFunction(function, PropertyNode::Setter);
-	            } else if (function->name() == resetterName) {
-	                property->addFunction(function, PropertyNode::Resetter);
+            if ((*c)->type() == Node::Function) {
+                FunctionNode *function = static_cast<FunctionNode *>(*c);
+                if (function->access() == property->access() &&
+                    (function->status() == property->status() ||
+                     function->doc().isEmpty())) {
+                    if (function->name() == getterName) {
+                        property->addFunction(function, PropertyNode::Getter);
+                    } else if (function->name() == setterName) {
+                        property->addFunction(function, PropertyNode::Setter);
+                    } else if (function->name() == resetterName) {
+                        property->addFunction(function, PropertyNode::Resetter);
                     }
                 }
-	    }
-	    ++c;
+            }
+            ++c;
         }
-	++propEntry;
+        ++propEntry;
     }
 
     propEntry = priv->unresolvedPropertyMap.begin();
     while (propEntry != priv->unresolvedPropertyMap.end()) {
-	PropertyNode *property = propEntry.key();
+        PropertyNode *property = propEntry.key();
         // redo it to set the property functions
         if (property->overriddenFrom())
             property->setOverriddenFrom(property->overriddenFrom());
-	++propEntry;
+        ++propEntry;
     }
 
     priv->unresolvedPropertyMap.clear();
@@ -541,8 +546,8 @@ void Tree::resolveInheritance(int pass, ClassNode *classe)
             else if ((*c)->type() == Node::Property) {
                 fixPropertyUsingBaseClasses(classe, static_cast<PropertyNode *>(*c));
             }
-	    ++c;
-	}
+            ++c;
+        }
     }
 }
 
@@ -631,13 +636,13 @@ void Tree::fixInheritance(NamespaceNode *rootNode)
 
     NodeList::ConstIterator c = rootNode->childNodes().begin();
     while ( c != rootNode->childNodes().end() ) {
-	if ( (*c)->type() == Node::Class )
-	    static_cast<ClassNode *>(*c)->fixBaseClasses();
+        if ( (*c)->type() == Node::Class )
+            static_cast<ClassNode *>(*c)->fixBaseClasses();
         else if ( (*c)->type() == Node::Namespace ) {
             NamespaceNode *ns = static_cast<NamespaceNode*>(*c);
             fixInheritance( ns );
         }
-	++c;
+        ++c;
     }
 }
 
@@ -648,13 +653,13 @@ FunctionNode *Tree::findVirtualFunctionInBaseClasses(ClassNode *classe,
 {
     QList<RelatedClass>::ConstIterator r = classe->baseClasses().begin();
     while ( r != classe->baseClasses().end() ) {
-	FunctionNode *func;
+        FunctionNode *func;
         if (((func = findVirtualFunctionInBaseClasses((*r).node, clone)) != 0 ||
-	      (func = (*r).node->findFunctionNode(clone)) != 0) ) {
-	    if (func->virtualness() != FunctionNode::NonVirtual)
-	        return func;
+              (func = (*r).node->findFunctionNode(clone)) != 0) ) {
+            if (func->virtualness() != FunctionNode::NonVirtual)
+                return func;
         }
- 	++r;
+         ++r;
     }
     return 0;
 }
@@ -676,7 +681,7 @@ void Tree::fixPropertyUsingBaseClasses(ClassNode *classe,
         else {
             fixPropertyUsingBaseClasses(r->node, property);
         }
- 	++r;
+         ++r;
     }
 }
 
@@ -685,7 +690,7 @@ void Tree::fixPropertyUsingBaseClasses(ClassNode *classe,
 NodeList Tree::allBaseClasses(const ClassNode *classe) const
 {
     NodeList result;
-    foreach (RelatedClass r, classe->baseClasses()) {
+    foreach (const RelatedClass &r, classe->baseClasses()) {
         result += r.node;
         result += allBaseClasses(r.node);
     }
@@ -696,7 +701,7 @@ NodeList Tree::allBaseClasses(const ClassNode *classe) const
  */
 void Tree::readIndexes(const QStringList &indexFiles)
 {
-    foreach (QString indexFile, indexFiles)
+    foreach (const QString &indexFile, indexFiles)
         readIndexFile(indexFile);
 }
 
@@ -992,7 +997,7 @@ void Tree::readIndexSection(const QDomElement &element,
     // Create some content for the node.
     QSet<QString> emptySet;
 
-    Doc doc(location, " ", emptySet); // placeholder
+    Doc doc(location, location, " ", emptySet); // placeholder
     section->setDoc(doc);
 
     if (section->isInnerNode()) {
@@ -1038,7 +1043,7 @@ void Tree::resolveIndex()
     QPair<ClassNode*,QString> pair;
 
     foreach (pair, priv->basesList) {
-        foreach (QString base, pair.second.split(",")) {
+        foreach (const QString &base, pair.second.split(",")) {
             Node *baseClass = root()->findNode(base, Node::Class);
             if (baseClass) {
                 pair.first->addBaseClass(Node::Public,
@@ -1197,12 +1202,12 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
 
             const ClassNode *classNode = static_cast<const ClassNode*>(node);
             QList<RelatedClass> bases = classNode->baseClasses();
-            QStringList baseStrings;
-            foreach (RelatedClass related, bases) {
+            QSet<QString> baseStrings;
+            foreach (const RelatedClass &related, bases) {
                 ClassNode *baseClassNode = related.node;
-                baseStrings.append(baseClassNode->name());
+                baseStrings.insert(baseClassNode->name());
             }
-            writer.writeAttribute("bases", baseStrings.join(","));
+            writer.writeAttribute("bases", QStringList(baseStrings.toList()).join(","));
             writer.writeAttribute("module", node->moduleName());
         }
         break;
@@ -1309,15 +1314,15 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
             const PropertyNode *propertyNode = functionNode->associatedProperty();
             if (propertyNode)
                 writer.writeAttribute("associated-property", propertyNode->name());
-	    writer.writeAttribute("type", functionNode->returnType());
+            writer.writeAttribute("type", functionNode->returnType());
         }
         break;
 
     case Node::Property:
         {
             const PropertyNode *propertyNode = static_cast<const PropertyNode*>(node);
-	    writer.writeAttribute("type", propertyNode->dataType());
-            foreach (Node *fnNode, propertyNode->getters()) {
+            writer.writeAttribute("type", propertyNode->dataType());
+            foreach (const Node *fnNode, propertyNode->getters()) {
                 if (fnNode) {
                     const FunctionNode *functionNode = static_cast<const FunctionNode*>(fnNode);
                     writer.writeStartElement("getter");
@@ -1325,7 +1330,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
                     writer.writeEndElement(); // getter
                 }
             }
-            foreach (Node *fnNode, propertyNode->setters()) {
+            foreach (const Node *fnNode, propertyNode->setters()) {
                 if (fnNode) {
                     const FunctionNode *functionNode = static_cast<const FunctionNode*>(fnNode);
                     writer.writeStartElement("setter");
@@ -1333,7 +1338,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
                     writer.writeEndElement(); // getter
                 }
             }
-            foreach (Node *fnNode, propertyNode->resetters()) {
+            foreach (const Node *fnNode, propertyNode->resetters()) {
                 if (fnNode) {
                     const FunctionNode *functionNode = static_cast<const FunctionNode*>(fnNode);
                     writer.writeStartElement("resetter");
@@ -1381,7 +1386,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
                     external = true;
             }
 
-            foreach (Atom *target, inner->doc().targets()) {
+            foreach (const Atom *target, inner->doc().targets()) {
                 QString targetName = target->string();
                 if (!external)
                     targetName = Doc::canonicalTitle(targetName);
@@ -1392,7 +1397,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
             }
         }
         if (inner->doc().hasKeywords()) {
-            foreach (Atom *keyword, inner->doc().keywords()) {
+            foreach (const Atom *keyword, inner->doc().keywords()) {
                 writer.writeStartElement("keyword");
                 writer.writeAttribute("name",
                                       Doc::canonicalTitle(keyword->string()));
@@ -1421,7 +1426,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
         QStringList signatureList;
         QStringList resolvedParameters;
 
-        foreach (Parameter parameter, functionNode->parameters()) {
+        foreach (const Parameter &parameter, functionNode->parameters()) {
             QString leftType = parameter.leftType();
             const Node *leftNode =
                 const_cast<Tree*>(this)->findNode(parameter.leftType().split("::"),
@@ -1469,7 +1474,7 @@ bool Tree::generateIndexSection(QXmlStreamWriter &writer,
             writer.writeAttribute("typedef",
                 fullDocumentName(enumNode->flagsType()));
         }
-        foreach (EnumItem item, enumNode->items()) {
+        foreach (const EnumItem &item, enumNode->items()) {
             writer.writeStartElement("value");
             writer.writeAttribute("name", item.name());
             writer.writeAttribute("value", item.value());
@@ -1501,11 +1506,11 @@ void Tree::generateIndexSections(QXmlStreamWriter &writer,
             const InnerNode *inner = static_cast<const InnerNode *>(node);
 
             // Recurse to write an element for this child node and all its children.
-            foreach (Node *child, inner->childNodes())
+            foreach (const Node *child, inner->childNodes())
                 generateIndexSections(writer, child, generateInternalNodes);
 
 /*
-            foreach (Node *child, inner->relatedNodes()) {
+            foreach (const Node *child, inner->relatedNodes()) {
                 QDomElement childElement = generateIndexSections(document, child);
                 element.appendChild(childElement);
             }
@@ -1605,7 +1610,7 @@ void Tree::generateTagFileCompounds(QXmlStreamWriter &writer,
             // Classes contain information about their base classes.
             const ClassNode *classNode = static_cast<const ClassNode*>(node);
             QList<RelatedClass> bases = classNode->baseClasses();
-            foreach (RelatedClass related, bases) {
+            foreach (const RelatedClass &related, bases) {
                 ClassNode *baseClassNode = related.node;
                 writer.writeTextElement("base", baseClassNode->name());
             }
@@ -1746,7 +1751,7 @@ void Tree::generateTagFileMembers(QXmlStreamWriter &writer,
                 // Write a signature attribute for convenience.
                 QStringList signatureList;
 
-                foreach (Parameter parameter, functionNode->parameters()) {
+                foreach (const Parameter &parameter, functionNode->parameters()) {
                     QString leftType = parameter.leftType();
                     const Node *leftNode = const_cast<Tree *>(this)->findNode(parameter.leftType().split("::"),
                         Node::Typedef, 0, SearchBaseClasses|NonFunction);
@@ -1862,7 +1867,7 @@ void Tree::addExternalLink(const QString &url, const Node *relative)
     // Create some content for the node.
     QSet<QString> emptySet;
     Location location(relative->doc().location());
-    Doc doc(location, " ", emptySet); // placeholder
+    Doc doc(location, location, " ", emptySet); // placeholder
     fakeNode->setDoc(doc);
 }
 
@@ -1876,7 +1881,7 @@ QString Tree::fullDocumentLocation(const Node *node) const
         return "";
     if (!node->url().isEmpty())
         return node->url();
-    
+
     if (node->type() == Node::Namespace) {
 
         // The root namespace has no name - check for this before creating

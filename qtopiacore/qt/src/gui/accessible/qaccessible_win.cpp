@@ -1,45 +1,45 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include "qaccessible.h"
 #ifndef QT_NO_ACCESSIBILITY
-
-#ifdef Q_OS_WINCE
-#include "qguifunctions_wince.h"
-#endif
 
 #include "qapplication.h"
 #include "qlibrary.h"
@@ -48,18 +48,21 @@
 #include "qwidget.h"
 #include "qsettings.h"
 
-#if WINVER >= 0x0600
 #include <winuser.h>
-#else
+#if !defined(WINABLEAPI)
 #  if defined(Q_OS_WINCE)
 #    include <bldver.h>
 #  endif
-#include <winable.h>
+#  include <winable.h>
 #endif
 
 #include <oleacc.h>
 #if !defined(Q_CC_BOR) && !defined (Q_CC_GNU)
 #include <comdef.h>
+#endif
+
+#ifdef Q_OS_WINCE
+#include "qguifunctions_wince.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -70,10 +73,90 @@ QT_BEGIN_INCLUDE_NAMESPACE
 #include <qdebug.h>
 QT_END_INCLUDE_NAMESPACE
 
+static const char *roleString(QAccessible::Role role)
+{
+    static const char *roles[] = {
+       "NoRole"         /*= 0x00000000*/,
+       "TitleBar"       /*= 0x00000001*/,
+       "MenuBar"        /*= 0x00000002*/,
+       "ScrollBar"      /*= 0x00000003*/,
+       "Grip"           /*= 0x00000004*/,
+       "Sound"          /*= 0x00000005*/,
+       "Cursor"         /*= 0x00000006*/,
+       "Caret"          /*= 0x00000007*/,
+       "AlertMessage"   /*= 0x00000008*/,
+       "Window"         /*= 0x00000009*/,
+       "Client"         /*= 0x0000000A*/,
+       "PopupMenu"      /*= 0x0000000B*/,
+       "MenuItem"       /*= 0x0000000C*/,
+       "ToolTip"        /*= 0x0000000D*/,
+       "Application"    /*= 0x0000000E*/,
+       "Document"       /*= 0x0000000F*/,
+       "Pane"           /*= 0x00000010*/,
+       "Chart"          /*= 0x00000011*/,
+       "Dialog"         /*= 0x00000012*/,
+       "Border"         /*= 0x00000013*/,
+       "Grouping"       /*= 0x00000014*/,
+       "Separator"      /*= 0x00000015*/,
+       "ToolBar"        /*= 0x00000016*/,
+       "StatusBar"      /*= 0x00000017*/,
+       "Table"          /*= 0x00000018*/,
+       "ColumnHeader"   /*= 0x00000019*/,
+       "RowHeader"      /*= 0x0000001A*/,
+       "Column"         /*= 0x0000001B*/,
+       "Row"            /*= 0x0000001C*/,
+       "Cell"           /*= 0x0000001D*/,
+       "Link"           /*= 0x0000001E*/,
+       "HelpBalloon"    /*= 0x0000001F*/,
+       "Assistant"      /*= 0x00000020*/,
+       "List"           /*= 0x00000021*/,
+       "ListItem"       /*= 0x00000022*/,
+       "Tree"           /*= 0x00000023*/,
+       "TreeItem"       /*= 0x00000024*/,
+       "PageTab"        /*= 0x00000025*/,
+       "PropertyPage"   /*= 0x00000026*/,
+       "Indicator"      /*= 0x00000027*/,
+       "Graphic"        /*= 0x00000028*/,
+       "StaticText"     /*= 0x00000029*/,
+       "EditableText"   /*= 0x0000002A*/,  // Editable, selectable, etc.
+       "PushButton"     /*= 0x0000002B*/,
+       "CheckBox"       /*= 0x0000002C*/,
+       "RadioButton"    /*= 0x0000002D*/,
+       "ComboBox"       /*= 0x0000002E*/,
+       "DropList"       /*= 0x0000002F*/,    // commented out
+       "ProgressBar"    /*= 0x00000030*/,
+       "Dial"           /*= 0x00000031*/,
+       "HotkeyField"    /*= 0x00000032*/,
+       "Slider"         /*= 0x00000033*/,
+       "SpinBox"        /*= 0x00000034*/,
+       "Canvas"         /*= 0x00000035*/,
+       "Animation"      /*= 0x00000036*/,
+       "Equation"       /*= 0x00000037*/,
+       "ButtonDropDown" /*= 0x00000038*/,
+       "ButtonMenu"     /*= 0x00000039*/,
+       "ButtonDropGrid" /*= 0x0000003A*/,
+       "Whitespace"     /*= 0x0000003B*/,
+       "PageTabList"    /*= 0x0000003C*/,
+       "Clock"          /*= 0x0000003D*/,
+       "Splitter"       /*= 0x0000003E*/,
+       "LayeredPane"    /*= 0x0000003F*/,
+       "UserRole"       /*= 0x0000ffff*/
+   };
+
+   if (role >=0x40)
+        role = QAccessible::UserRole;
+   return roles[int(role)];
+}
+
 void showDebug(const char* funcName, const QAccessibleInterface *iface)
 {
-    qDebug() << "Role:" << iface->role(0) << "Name:" << iface->text(QAccessible::Name, 0) << QLatin1String(funcName);
+    qDebug() << "Role:" << roleString(iface->role(0)) 
+             << "Name:" << iface->text(QAccessible::Name, 0) 
+             << "State:" << QString::number(int(iface->state(0)), 16) 
+             << QLatin1String(funcName);
 }
+#else
+# define showDebug(f, iface)
 #endif
 
 void QAccessible::initialize()
@@ -679,9 +762,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::Invoke(long dispIdMember, const _G
 */
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::accHitTest(long xLeft, long yTop, VARIANT *pvarID)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -716,9 +797,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::accHitTest(long xLeft, long yTop, 
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::accLocation(long *pxLeft, long *pyTop, long *pcxWidth, long *pcyHeight, VARIANT varID)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -739,9 +818,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::accLocation(long *pxLeft, long *py
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::accNavigate(long navDir, VARIANT varStart, VARIANT *pvarEnd)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -816,9 +893,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::accNavigate(long navDir, VARIANT v
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accChild(VARIANT varChildID, IDispatch** ppdispChild)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -841,9 +916,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accChild(VARIANT varChildID, I
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accChildCount(long* pcountChildren)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -853,9 +926,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accChildCount(long* pcountChil
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accParent(IDispatch** ppdispParent)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -878,9 +949,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accParent(IDispatch** ppdispPa
 */
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::accDoDefaultAction(VARIANT varID)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -889,9 +958,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::accDoDefaultAction(VARIANT varID)
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accDefaultAction(VARIANT varID, BSTR* pszDefaultAction)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -907,9 +974,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accDefaultAction(VARIANT varID
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accDescription(VARIANT varID, BSTR* pszDescription)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -925,9 +990,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accDescription(VARIANT varID, 
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accHelp(VARIANT varID, BSTR *pszHelp)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -948,9 +1011,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accHelpTopic(BSTR *, VARIANT, 
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accKeyboardShortcut(VARIANT varID, BSTR *pszKeyboardShortcut)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -966,9 +1027,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accKeyboardShortcut(VARIANT va
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accName(VARIANT varID, BSTR* pszName)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -984,17 +1043,13 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accName(VARIANT varID, BSTR* p
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::put_accName(VARIANT, BSTR)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     return DISP_E_MEMBERNOTFOUND;
 }
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accRole(VARIANT varID, VARIANT *pvarRole)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -1010,9 +1065,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accRole(VARIANT varID, VARIANT
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accState(VARIANT varID, VARIANT *pvarState)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -1023,9 +1076,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accState(VARIANT varID, VARIAN
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accValue(VARIANT varID, BSTR* pszValue)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -1041,17 +1092,13 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accValue(VARIANT varID, BSTR* 
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::put_accValue(VARIANT, BSTR)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     return DISP_E_MEMBERNOTFOUND;
 }
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::accSelect(long flagsSelect, VARIANT varID)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -1075,9 +1122,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::accSelect(long flagsSelect, VARIAN
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accFocus(VARIANT *pvarID)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 
@@ -1110,9 +1155,7 @@ HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accFocus(VARIANT *pvarID)
 
 HRESULT STDMETHODCALLTYPE QWindowsAccessible::get_accSelection(VARIANT *pvarChildren)
 {
-#ifdef DEBUG_SHOW_ATCLIENT_COMMANDS
     showDebug(__FUNCTION__, accessible);
-#endif //DEBUG_SHOW_ATCLIENT_COMMANDS
     if (!accessible->isValid())
         return E_FAIL;
 

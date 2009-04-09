@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+ *  Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -52,7 +53,7 @@ PassRefPtr<Plugin> PluginArray::item(unsigned index)
     const Vector<PluginInfo*>& plugins = data->plugins();
     if (index >= plugins.size())
         return 0;
-    return new Plugin(data, index);
+    return Plugin::create(data, index).get();
 }
 
 bool PluginArray::canGetItemsForName(const AtomicString& propertyName)
@@ -68,7 +69,7 @@ bool PluginArray::canGetItemsForName(const AtomicString& propertyName)
     return false;
 }
 
-PassRefPtr<Plugin> PluginArray::nameGetter(const AtomicString& propertyName)
+PassRefPtr<Plugin> PluginArray::namedItem(const AtomicString& propertyName)
 {
     PluginData* data = getPluginData();
     if (!data)
@@ -76,7 +77,7 @@ PassRefPtr<Plugin> PluginArray::nameGetter(const AtomicString& propertyName)
     const Vector<PluginInfo*>& plugins = data->plugins();
     for (unsigned i = 0; i < plugins.size(); ++i) {
         if (plugins[i]->name == propertyName)
-            return new Plugin(data, i);
+            return Plugin::create(data, i).get();
     }
     return 0;
 }

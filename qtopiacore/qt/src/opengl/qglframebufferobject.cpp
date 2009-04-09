@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,7 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
-// #define DEPTH_BUFFER
+extern QImage qt_gl_read_framebuffer(const QSize&, bool, bool);
+
 #define QGL_FUNC_CONTEXT QGLContext *ctx = d_ptr->ctx;
 
 #define QT_CHECK_GLERROR()                                \
@@ -61,7 +66,7 @@ QT_BEGIN_NAMESPACE
 class QGLFramebufferObjectPrivate
 {
 public:
-    QGLFramebufferObjectPrivate() : depth_stencil_buffer(0), valid(false), ctx(0) {}
+    QGLFramebufferObjectPrivate() : depth_stencil_buffer(0), valid(false), bound(false), ctx(0) {}
     ~QGLFramebufferObjectPrivate() {}
 
     void init(const QSize& sz, QGLFramebufferObject::Attachment attachment,
@@ -73,6 +78,7 @@ public:
     GLenum target;
     QSize size;
     uint valid : 1;
+    uint bound : 1;
     QGLFramebufferObject::Attachment fbo_attachment;
     QGLContext *ctx; // for Windows extension ptrs
 };
@@ -249,7 +255,7 @@ void QGLFramebufferObjectPrivate::init(const QSize &sz, QGLFramebufferObject::At
     without doing a context switch.
 
     \o The OpenGL framebuffer extension is a pure GL extension with no
-    system dependant WGL, AGL or GLX parts. This makes using
+    system dependant WGL, CGL, or GLX parts. This makes using
     framebuffer objects more portable.
     \endlist
 
@@ -471,7 +477,7 @@ bool QGLFramebufferObject::bind()
     Q_D(QGLFramebufferObject);
     QGL_FUNC_CONTEXT;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, d->fbo);
-    d->valid = d->checkFramebufferStatus();
+    d->bound = d->valid = d->checkFramebufferStatus();
     return d->valid;
 }
 
@@ -490,6 +496,7 @@ bool QGLFramebufferObject::release()
     QGL_FUNC_CONTEXT;
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     d->valid = d->checkFramebufferStatus();
+    d->bound = false;
     return d->valid;
 }
 
@@ -530,44 +537,24 @@ QImage QGLFramebufferObject::toImage() const
         return QImage();
 
     const_cast<QGLFramebufferObject *>(this)->bind();
-    QImage::Format image_format = QImage::Format_RGB32;
-    if (d->ctx->format().alpha())
-        image_format = QImage::Format_ARGB32_Premultiplied;
-    QImage img(d->size, image_format);
-    int w = d->size.width();
-    int h = d->size.height();
-    // ### fix the read format so that we don't have to do all the byte swapping
-    glReadPixels(0, 0, d->size.width(), d->size.height(), GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-    if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
-	// OpenGL gives RGBA; Qt wants ARGB
-	uint *p = (uint*)img.bits();
-	uint *end = p + w*h;
-	if (1) {
-	    while (p < end) {
-		uint a = *p << 24;
-		*p = (*p >> 8) | a;
-		p++;
-	    }
-	} else {
-	    while (p < end) {
-		*p = 0xFF000000 | (*p>>8);
-		++p;
-	    }
-	}
-    } else {
-	// OpenGL gives ABGR (i.e. RGBA backwards); Qt wants ARGB
-	img = img.rgbSwapped();
-    }
+    QImage image = qt_gl_read_framebuffer(d->size, d->ctx->format().alpha(), true);
     const_cast<QGLFramebufferObject *>(this)->release();
-    return img.mirrored();
+
+    return image;
 }
 
+#if !defined(QT_OPENGL_ES_2)
 Q_GLOBAL_STATIC(QOpenGLPaintEngine, qt_buffer_paintengine)
+#endif
 
 /*! \reimp */
 QPaintEngine *QGLFramebufferObject::paintEngine() const
 {
+#if !defined(QT_OPENGL_ES_2)
     return qt_buffer_paintengine();
+#else
+    return 0;
+#endif
 }
 
 /*!
@@ -714,6 +701,19 @@ QGLFramebufferObject::Attachment QGLFramebufferObject::attachment() const
     if (d->valid)
         return d->fbo_attachment;
     return NoAttachment;
+}
+
+/*!
+    \since 4.5
+
+    Returns true if the framebuffer object is currently bound to a context,
+    otherwise false is returned.
+*/
+
+bool QGLFramebufferObject::isBound() const
+{
+    Q_D(const QGLFramebufferObject);
+    return d->bound;
 }
 
 QT_END_NAMESPACE

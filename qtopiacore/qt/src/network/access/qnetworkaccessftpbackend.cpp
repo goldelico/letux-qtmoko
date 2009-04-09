@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -130,23 +134,41 @@ public:
 };
 
 QNetworkAccessFtpBackend::QNetworkAccessFtpBackend()
-    : ftp(0), uploadDevice(0), totalBytes(0), sizeId(-1), mdtmId(-1), state(Idle)
+    : ftp(0), uploadDevice(0), totalBytes(0), helpId(-1), sizeId(-1), mdtmId(-1),
+    supportsSize(false), supportsMdtm(false), state(Idle)
 {
 }
 
 QNetworkAccessFtpBackend::~QNetworkAccessFtpBackend()
 {
-    if (ftp) {
-        ftp->close();
-        QByteArray key = url().toEncoded(QUrl::RemovePassword | QUrl::RemovePath |
-                                         QUrl::RemoveQuery | QUrl::RemoveFragment);
-        key.prepend("ftp-connection:");
-        QNetworkAccessManagerPrivate::getCache(this)->removeEntry(key);
-    }
+    disconnectFromFtp();
 }
 
 void QNetworkAccessFtpBackend::open()
 {
+#ifndef QT_NO_NETWORKPROXY
+    QNetworkProxy proxy;
+    foreach (const QNetworkProxy &p, proxyList()) {
+        // use the first FTP proxy
+        // or no proxy at all
+        if (p.type() == QNetworkProxy::FtpCachingProxy
+            || p.type() == QNetworkProxy::NoProxy) {
+            proxy = p;
+            break;
+        }
+    }
+
+    // did we find an FTP proxy or a NoProxy?
+    if (proxy.type() == QNetworkProxy::DefaultProxy) {
+        // unsuitable proxies
+        error(QNetworkReply::ProxyNotFoundError,
+              tr("No suitable proxy found"));
+        finished();
+        return;
+    }
+
+#endif
+
     QUrl url = this->url();
     if (url.path().isEmpty()) {
         url.setPath(QLatin1String("/"));
@@ -166,9 +188,8 @@ void QNetworkAccessFtpBackend::open()
                              SLOT(ftpConnectionReady(QNetworkAccessCache::CacheableObject*)))) {
         ftp = new QNetworkAccessFtpFtp;
 #ifndef QT_NO_NETWORKPROXY
-        QNetworkProxy p = proxy();
-        if (p.type() == QNetworkProxy::FtpCachingProxy)
-            ftp->setProxy(p.hostName(), p.port());
+        if (proxy.type() == QNetworkProxy::FtpCachingProxy)
+            ftp->setProxy(proxy.hostName(), proxy.port());
 #endif
         ftp->connectToHost(url.host(), url.port(DefaultFtpPort));
         ftp->login(url.userName(), url.password());
@@ -254,13 +275,14 @@ void QNetworkAccessFtpBackend::disconnectFromFtp()
 {
     state = Disconnecting;
 
-    if(ftp) {
+    if (ftp) {
         disconnect(ftp, 0, this, 0);
+
+        QByteArray key = makeCacheKey(url());
+        QNetworkAccessManagerPrivate::getCache(this)->releaseEntry(key);
+
         ftp = 0;
     }
-
-    QByteArray key = makeCacheKey(url());
-    QNetworkAccessManagerPrivate::getCache(this)->releaseEntry(key);
 }
 
 void QNetworkAccessFtpBackend::ftpDone()
@@ -340,15 +362,27 @@ void QNetworkAccessFtpBackend::ftpDone()
     }
 
     if (state == LoggingIn) {
-        state = Statting;
-
+        state = CheckingFeatures;
         if (operation() == QNetworkAccessManager::GetOperation) {
-            // logged in successfully, send the stat requests
+            // send help command to find out if server supports "SIZE" and "MDTM"
             QString command = url().path();
             command.prepend(QLatin1String("%1 "));
-
-            sizeId = ftp->rawCommand(command.arg(QLatin1String("SIZE"))); // get size
-            mdtmId = ftp->rawCommand(command.arg(QLatin1String("MDTM"))); // get modified time
+            helpId = ftp->rawCommand(QLatin1String("HELP")); // get supported commands
+        } else {
+            ftpDone();
+        }
+    } else if (state == CheckingFeatures) {
+        state = Statting;
+        if (operation() == QNetworkAccessManager::GetOperation) {
+            // logged in successfully, send the stat requests (if supported)
+            QString command = url().path();
+            command.prepend(QLatin1String("%1 "));
+            if (supportsSize)
+                sizeId = ftp->rawCommand(command.arg(QLatin1String("SIZE"))); // get size
+            if (supportsMdtm)
+                mdtmId = ftp->rawCommand(command.arg(QLatin1String("MDTM"))); // get modified time
+            if (!supportsSize && !supportsMdtm)
+                ftpDone();      // no commands sent, move to the next state
         } else {
             ftpDone();
         }
@@ -380,9 +414,17 @@ void QNetworkAccessFtpBackend::ftpReadyRead()
 void QNetworkAccessFtpBackend::ftpRawCommandReply(int code, const QString &text)
 {
     //qDebug() << "FTP reply:" << code << text;
-    if (code == 213) {          // file status
-        int id = ftp->currentId();
+    int id = ftp->currentId();
 
+    if ((id == helpId) && ((code == 200) || (code == 214))) {     // supported commands
+        // the "FEAT" ftp command would be nice here, but it is not part of the
+        // initial FTP RFC 959, neither ar "SIZE" nor "MDTM" (they are all specified
+        // in RFC 3659)
+        if (text.contains(QLatin1String("SIZE"), Qt::CaseSensitive))
+            supportsSize = true;
+        if (text.contains(QLatin1String("MDTM"), Qt::CaseSensitive))
+            supportsMdtm = true;
+    } else if (code == 213) {          // file status
         if (id == sizeId) {
             // reply to the size command
             setHeader(QNetworkRequest::ContentLengthHeader, text.toLongLong());

@@ -21,51 +21,56 @@
 #include "config.h"
 
 
-#if ENABLE(SVG)
+#if ENABLE(SVG_ANIMATION)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimateColorElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGAnimateColorElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimateColorElement)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimateColorElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimateColorElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimateColorElementPrototypeTable = 
-{
-    2, 1, JSSVGAnimateColorElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimateColorElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimateColorElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimateColorElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimateColorElementPrototype::info = { "SVGAnimateColorElementPrototype", 0, &JSSVGAnimateColorElementPrototypeTable, 0 };
+const ClassInfo JSSVGAnimateColorElementPrototype::s_info = { "SVGAnimateColorElementPrototype", 0, &JSSVGAnimateColorElementPrototypeTable, 0 };
 
 JSObject* JSSVGAnimateColorElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimateColorElementPrototype>(exec, "[[JSSVGAnimateColorElement.prototype]]");
+    return getDOMPrototype<JSSVGAnimateColorElement>(exec);
 }
 
-const ClassInfo JSSVGAnimateColorElement::info = { "SVGAnimateColorElement", &JSSVGAnimationElement::info, 0, 0 };
+const ClassInfo JSSVGAnimateColorElement::s_info = { "SVGAnimateColorElement", &JSSVGAnimationElement::s_info, 0, 0 };
 
-JSSVGAnimateColorElement::JSSVGAnimateColorElement(ExecState* exec, SVGAnimateColorElement* impl)
-    : JSSVGAnimationElement(exec, impl)
+JSSVGAnimateColorElement::JSSVGAnimateColorElement(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimateColorElement> impl)
+    : JSSVGAnimationElement(structure, impl)
 {
-    setPrototype(JSSVGAnimateColorElementPrototype::self(exec));
+}
+
+JSObject* JSSVGAnimateColorElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimateColorElementPrototype(JSSVGAnimateColorElementPrototype::createStructure(JSSVGAnimationElementPrototype::self(exec)));
 }
 
 
 }
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG_ANIMATION)

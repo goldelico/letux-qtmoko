@@ -18,6 +18,14 @@
 
 CL_NS_DEF(queryParser)
 	
+typedef CL_NS(util)::CLHashMap<const TCHAR*,
+                               qreal,
+                               CL_NS(util)::Compare::TChar,
+                               CL_NS(util)::Equals::TChar,
+                               CL_NS(util)::Deletor::tcArray,
+                               CL_NS(util)::Deletor::DummyFloat
+                              > BoostMap;
+
     /**
      * A QueryParser which constructs queries to search multiple fields.
      *
@@ -26,6 +34,7 @@ CL_NS_DEF(queryParser)
     {
 	protected:
 		const TCHAR** fields;
+         BoostMap* boosts;
     public:
     	LUCENE_STATIC_CONSTANT(uint8_t, NORMAL_FIELD=0);
 		LUCENE_STATIC_CONSTANT(uint8_t, REQUIRED_FIELD=1);
@@ -51,7 +60,7 @@ CL_NS_DEF(queryParser)
         * <p>In other words, all the query's terms must appear, but it doesn't matter in
         * what fields they appear.</p>
         */
-		MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysis)::Analyzer* a);
+		MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysis)::Analyzer* a, BoostMap* boosts = NULL);
 		virtual ~MultiFieldQueryParser();
     
         /**

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -131,28 +135,18 @@ extern int qt_defaultDpiY();
 QBasicAtomicInt qimage_serial_number = Q_BASIC_ATOMIC_INITIALIZER(1);
 
 QImageData::QImageData()
-{
-    ser_no = qimage_serial_number.fetchAndAddRelaxed(1);
-    detach_no = 0;
-    ref = 0;
-
-    width = height = depth = 0;
-    nbytes = 0;
-    data = 0;
-    own_data = true;
-    ro_data = false;
-    has_alpha_clut = false;
+    : ref(0), width(0), height(0), depth(0), nbytes(0), data(0),
 #ifdef QT3_SUPPORT
-    jumptable = 0;
+      jumptable(0),
 #endif
-    bytes_per_line = 0;
-    format = QImage::Format_ARGB32;
-
-    dpmx = qt_defaultDpiX() * 100 / qreal(2.54);
-    dpmy = qt_defaultDpiY() * 100 / qreal(2.54);
-    offset = QPoint(0,0);
-
-    paintEngine = 0;
+      format(QImage::Format_ARGB32), bytes_per_line(0),
+      ser_no(qimage_serial_number.fetchAndAddRelaxed(1)),
+      detach_no(0),
+      dpmx(qt_defaultDpiX() * 100 / qreal(2.54)),
+      dpmy(qt_defaultDpiY() * 100 / qreal(2.54)),
+      offset(0, 0), own_data(true), ro_data(false), has_alpha_clut(false),
+      is_cached(false), paintEngine(0)
+{
 }
 
 static int depthForFormat(QImage::Format format)
@@ -204,41 +198,17 @@ QImageData * QImageData::create(const QSize &size, QImage::Format format, int nu
 
     uint width = size.width();
     uint height = size.height();
+    uint depth = depthForFormat(format);
 
-    uint depth = 0;
-    switch(format) {
-    case QImage::NImageFormats:
-    case QImage::Format_Invalid:
-        Q_ASSERT(false);
+    switch (format) {
     case QImage::Format_Mono:
     case QImage::Format_MonoLSB:
-        depth = 1;
         numColors = 2;
         break;
     case QImage::Format_Indexed8:
-        depth = 8;
-        numColors = qMin(numColors, 256);
-        numColors = qMax(0, numColors);
+        numColors = qBound(0, numColors, 256);
         break;
-    case QImage::Format_RGB32:
-    case QImage::Format_ARGB32:
-    case QImage::Format_ARGB32_Premultiplied:
-        depth = 32;
-        numColors = 0;
-        break;
-    case QImage::Format_RGB555:
-    case QImage::Format_RGB16:
-    case QImage::Format_RGB444:
-    case QImage::Format_ARGB4444_Premultiplied:
-        depth = 16;
-        numColors = 0;
-        break;
-    case QImage::Format_ARGB6666_Premultiplied:
-    case QImage::Format_RGB666:
-    case QImage::Format_ARGB8565_Premultiplied:
-    case QImage::Format_ARGB8555_Premultiplied:
-    case QImage::Format_RGB888:
-        depth = 24;
+    default:
         numColors = 0;
         break;
     }
@@ -268,6 +238,7 @@ QImageData * QImageData::create(const QSize &size, QImage::Format format, int nu
     d->depth = depth;
     d->format = format;
     d->has_alpha_clut = false;
+    d->is_cached = false;
 
     d->bytes_per_line = bytes_per_line;
 
@@ -286,7 +257,7 @@ QImageData * QImageData::create(const QSize &size, QImage::Format format, int nu
 
 QImageData::~QImageData()
 {
-    if (qt_image_cleanup_hook_64)
+    if (is_cached && qt_image_cleanup_hook_64)
         qt_image_cleanup_hook_64((((qint64) ser_no) << 32) | ((qint64) detach_no));
     delete paintEngine;
     if (data && own_data)
@@ -297,6 +268,77 @@ QImageData::~QImageData()
     jumptable = 0;
 #endif
     data = 0;
+}
+
+
+bool QImageData::checkForAlphaPixels() const
+{
+    bool has_alpha_pixels = false;
+
+    switch (format) {
+
+    case QImage::Format_Indexed8:
+        has_alpha_pixels = has_alpha_clut;
+        break;
+
+    case QImage::Format_ARGB32:
+    case QImage::Format_ARGB32_Premultiplied: {
+        uchar *bits = data;
+        for (int y=0; y<height && !has_alpha_pixels; ++y) {
+            for (int x=0; x<width; ++x)
+                has_alpha_pixels |= (((uint *)bits)[x] & 0xff000000) != 0xff000000;
+            bits += bytes_per_line;
+        }
+    } break;
+
+    case QImage::Format_ARGB8555_Premultiplied:
+    case QImage::Format_ARGB8565_Premultiplied: {
+        uchar *bits = data;
+        uchar *end_bits = data + bytes_per_line;
+
+        for (int y=0; y<height && !has_alpha_pixels; ++y) {
+            while (bits < end_bits) {
+                has_alpha_pixels |= bits[0] != 0;
+                bits += 3;
+            }
+            bits = end_bits;
+            end_bits += bytes_per_line;
+        }
+    } break;
+
+    case QImage::Format_ARGB6666_Premultiplied: {
+        uchar *bits = data;
+        uchar *end_bits = data + bytes_per_line;
+
+        for (int y=0; y<height && !has_alpha_pixels; ++y) {
+            while (bits < end_bits) {
+                has_alpha_pixels |= (bits[0] & 0xfc) != 0;
+                bits += 3;
+            }
+            bits = end_bits;
+            end_bits += bytes_per_line;
+        }
+    } break;
+
+    case QImage::Format_ARGB4444_Premultiplied: {
+        uchar *bits = data;
+        uchar *end_bits = data + bytes_per_line;
+
+        for (int y=0; y<height && !has_alpha_pixels; ++y) {
+            while (bits < end_bits) {
+                has_alpha_pixels |= (bits[0] & 0xf0) != 0;
+                bits += 2;
+            }
+            bits = end_bits;
+            end_bits += bytes_per_line;
+        }
+    } break;
+
+    default:
+        break;
+    }
+
+    return has_alpha_pixels;
 }
 
 /*!
@@ -376,10 +418,6 @@ QImageData::~QImageData()
     \row    \o XBM    \o X11 Bitmap                       \o Read/write
     \row    \o XPM    \o X11 Pixmap                       \o Read/write
     \endtable
-
-    (To configure Qt with GIF support, pass \c -qt-gif to the \c
-    configure script or check the appropriate option in the graphical
-    installer.)
 
     \section1 Image Information
 
@@ -1308,7 +1346,7 @@ QImage::operator QVariant() const
 void QImage::detach()
 {
     if (d) {
-        if (qt_image_cleanup_hook_64 && d->ref == 1)
+        if (d->is_cached && qt_image_cleanup_hook_64 && d->ref == 1)
             qt_image_cleanup_hook_64(cacheKey());
 
         if (d->ref != 1 || d->ro_data)
@@ -1517,7 +1555,7 @@ int QImage::height() const
 */
 QSize QImage::size() const
 {
-    return d ? QSize(d->width, d->height) : QSize();
+    return d ? QSize(d->width, d->height) : QSize(0, 0);
 }
 
 /*!
@@ -1539,7 +1577,7 @@ QRect QImage::rect() const
     The image depth is the number of bits used to encode a single
     pixel, also called bits per pixel (bpp).
 
-    The supported depths are 1, 8, 16 and 32.
+    The supported depths are 1, 8, 16, 24 and 32.
 
     \sa convertToFormat(), {QImage#Image Formats}{Image Formats},
     {QImage#Image Information}{Image Information}
@@ -1592,6 +1630,10 @@ uchar **QImage::jumpTable()
         return 0;
     detach();
 
+    // in case detach() ran out of memory..
+    if (!d)
+        return 0;
+
     if (!d->jumptable) {
         d->jumptable = (uchar **)malloc(d->height*sizeof(uchar *));
         uchar *data = d->data;
@@ -1642,6 +1684,11 @@ void QImage::setColorTable(const QVector<QRgb> colors)
     if (!d)
         return;
     detach();
+
+    // In case detach() ran out of memory
+    if (!d)
+        return;
+
     d->colortable = colors;
     d->has_alpha_clut = false;
     for (int i = 0; i < d->colortable.size(); ++i)
@@ -1722,6 +1769,11 @@ void QImage::setColor(int i, QRgb c)
         return;
     }
     detach();
+
+    // In case detach() run out of memory
+    if (!d)
+        return;
+
     if (i >= d->colortable.size())
         setNumColors(i+1);
     d->colortable[i] = c;
@@ -1746,8 +1798,15 @@ void QImage::setColor(int i, QRgb c)
 */
 uchar *QImage::scanLine(int i)
 {
+    if (!d)
+        return 0;
+
     detach();
-    Q_ASSERT(i >= 0 && i < height());
+
+    // In case detach() ran out of memory
+    if (!d)
+        return 0;
+
     return d->data + i * d->bytes_per_line;
 }
 
@@ -1756,6 +1815,9 @@ uchar *QImage::scanLine(int i)
 */
 const uchar *QImage::scanLine(int i) const
 {
+    if (!d)
+        return 0;
+
     Q_ASSERT(i >= 0 && i < height());
     return d->data + i * d->bytes_per_line;
 }
@@ -1777,6 +1839,11 @@ uchar *QImage::bits()
     if (!d)
         return 0;
     detach();
+
+    // In case detach ran out of memory...
+    if (!d)
+        return 0;
+
     return d->data;
 }
 
@@ -1836,6 +1903,11 @@ void QImage::fill(uint pixel)
         return;
 
     detach();
+
+    // In case detach() ran out of memory
+    if (!d)
+        return;
+
     if (d->depth == 1 || d->depth == 8) {
         int w = d->width;
         if (d->depth == 1) {
@@ -1889,6 +1961,11 @@ void QImage::invertPixels(InvertMode mode)
         return;
 
     detach();
+
+    // In case detach() ran out of memory
+    if (!d)
+        return;
+
     if (depth() != 32) {
         // number of used bytes pr line
         int bpl = (d->width * d->depth + 7) / 8;
@@ -1957,6 +2034,11 @@ void QImage::setNumColors(int numColors)
     }
 
     detach();
+
+    // In case detach() ran out of memory
+    if (!d)
+        return;
+
     if (numColors == d->colortable.size())
         return;
     if (numColors <= 0) {                        // use no color table
@@ -1967,6 +2049,7 @@ void QImage::setNumColors(int numColors)
     d->colortable.resize(numColors);
     for (int i = nc; i < numColors; ++i)
         d->colortable[i] = 0;
+
 }
 
 /*!
@@ -3354,7 +3437,7 @@ static QImage convertWithPalette(const QImage &src, QImage::Format format,
 #if !defined(QT_NO_IMAGE_TEXT)
     QString textsKeys = src.text();
     QStringList textKeyList = textsKeys.split(QLatin1Char('\n'), QString::SkipEmptyParts);
-    foreach (QString textKey, textKeyList) {
+    foreach (const QString &textKey, textKeyList) {
         QStringList textKeySplitted = textKey.split(QLatin1String(": "));
         dest.setText(textKeySplitted[0], textKeySplitted[1]);
     }
@@ -4128,14 +4211,17 @@ QImage QImage::createHeuristicMask(bool clipTight) const
 
 QImage QImage::createMaskFromColor(QRgb color, Qt::MaskMode mode) const
 {
+    if (!d)
+        return QImage();
     QImage maskImage(size(), QImage::Format_MonoLSB);
-    for (int w = 0; w < width(); w++) {
-        for (int h = 0; h < height(); h++) {
+    maskImage.fill(0);
+    uchar *s = maskImage.bits();
+    for (int h = 0; h < d->height; h++) {
+        for (int w = 0; w < d->width; w++) {
             if ((uint) pixel(w, h) == color)
-                maskImage.setPixel(w, h, Qt::color1);
-            else
-                maskImage.setPixel(w, h, Qt::color0);
+                *(s + (w >> 3)) |= (1 << (w & 7));
         }
+        s += maskImage.bytesPerLine();
     }
     if  (mode == Qt::MaskOutColor)
         maskImage.invertPixels();
@@ -4849,7 +4935,9 @@ void QImage::setDotsPerMeterX(int x)
     if (!d || !x)
         return;
     detach();
-    d->dpmx = x;
+
+    if (d)
+        d->dpmx = x;
 }
 
 /*!
@@ -4867,7 +4955,9 @@ void QImage::setDotsPerMeterY(int y)
     if (!d || !y)
         return;
     detach();
-    d->dpmy = y;
+
+    if (d)
+        d->dpmy = y;
 }
 
 /*!
@@ -4897,7 +4987,9 @@ void QImage::setOffset(const QPoint& p)
     if (!d)
         return;
     detach();
-    d->offset = p;
+
+    if (d)
+        d->offset = p;
 }
 #ifndef QT_NO_IMAGE_TEXT
 
@@ -4930,7 +5022,7 @@ QString QImage::text(const QString &key) const
         return d->text.value(key);
 
     QString tmp;
-    foreach (QString key, d->text.keys()) {
+    foreach (const QString &key, d->text.keys()) {
         if (!tmp.isEmpty())
             tmp += QLatin1String("\n\n");
         tmp += key + QLatin1String(": ") + d->text.value(key).simplified();
@@ -4967,7 +5059,9 @@ void QImage::setText(const QString &key, const QString &value)
     if (!d)
         return;
     detach();
-    d->text.insert(key, value);
+
+    if (d)
+        d->text.insert(key, value);
 }
 
 /*!
@@ -5097,6 +5191,11 @@ void QImage::setText(const char* key, const char* lang, const QString& s)
     if (!d)
         return;
     detach();
+
+    // In case detach() ran out of memory
+    if (!d)
+        return;
+
     QString k = QString::fromAscii(key);
     if (lang && *lang)
         k += QLatin1Char('/') + QString::fromAscii(lang);
@@ -5138,7 +5237,7 @@ QPaintEngine *QImage::paintEngine() const
 
 #ifdef QT_RASTER_IMAGEENGINE
     if (!d->paintEngine) {
-        d->paintEngine = new QRasterPaintEngine();
+        d->paintEngine = new QRasterPaintEngine(const_cast<QImage *>(this));
     }
 #endif
     return d->paintEngine;
@@ -5454,15 +5553,17 @@ bool QImage::isDetached() const
 
 
 /*!
+    \obsolete
     Sets the alpha channel of this image to the given \a alphaChannel.
 
-    If \a alphaChannel is an 8 bit grayscale image, the intensity
-    values are written into this buffer directly. Otherwise, \a
-    alphaChannel is converted to 32 bit and the intensity of the RGB
-    pixel values is used.
+    If \a alphaChannel is an 8 bit grayscale image, the intensity values are
+    written into this buffer directly. Otherwise, \a alphaChannel is converted
+    to 32 bit and the intensity of the RGB pixel values is used.
 
-    Note that the image will be converted to the
-    Format_ARGB32_Premultiplied format if the function succeeds.
+    Note that the image will be converted to the Format_ARGB32_Premultiplied
+    format if the function succeeds.
+
+    Use one of the composition mods in QPainter::CompositionMode instead.
 
     \sa alphaChannel(), {QImage#Image Transformations}{Image
     Transformations}, {QImage#Image Formats}{Image Formats}
@@ -5479,6 +5580,12 @@ void QImage::setAlphaChannel(const QImage &alphaChannel)
     if (w != alphaChannel.d->width || h != alphaChannel.d->height) {
         qWarning("QImage::setAlphaChannel: "
                  "Alpha channel must have same dimensions as the target image");
+        return;
+    }
+
+    if (d->paintEngine && d->paintEngine->isActive()) {
+        qWarning("QImage::setAlphaChannel: "
+                 "Unable to set alpha channel while image is being painted on");
         return;
     }
 
@@ -5560,7 +5667,12 @@ QImage QImage::alphaChannel() const
     for (int i=0; i<256; ++i)
         image.setColor(i, qRgb(i, i, i));
 
-    if (d->format == Format_Indexed8 && hasAlphaChannel()) {
+    if (!hasAlphaChannel()) {
+        image.fill(255);
+        return image;
+    }
+
+    if (d->format == Format_Indexed8) {
         const uchar *src_data = d->data;
         uchar *dest_data = image.d->data;
         for (int y=0; y<h; ++y) {
@@ -5574,8 +5686,12 @@ QImage QImage::alphaChannel() const
             src_data += d->bytes_per_line;
             dest_data += image.d->bytes_per_line;
         }
-    } else if (d->format == Format_ARGB32 || d->format == Format_ARGB32_Premultiplied) {
-        const uchar *src_data = d->data;
+    } else {
+        QImage alpha32 = *this;
+        if (d->format != Format_ARGB32 && d->format != Format_ARGB32_Premultiplied)
+            alpha32 = convertToFormat(Format_ARGB32);
+
+        const uchar *src_data = alpha32.d->data;
         uchar *dest_data = image.d->data;
         for (int y=0; y<h; ++y) {
             const QRgb *src = (const QRgb *) src_data;
@@ -5585,11 +5701,9 @@ QImage QImage::alphaChannel() const
                 ++dest;
                 ++src;
             }
-            src_data += d->bytes_per_line;
+            src_data += alpha32.d->bytes_per_line;
             dest_data += image.d->bytes_per_line;
         }
-    } else {
-        image.fill(255);
     }
 
     return image;
@@ -5874,8 +5988,27 @@ QImage QImage::transformed(const QTransform &matrix, Qt::TransformationMode mode
 
     QImage::Format target_format = d->format;
 
-    if (complex_xform || mode == Qt::SmoothTransformation)
-        target_format = Format_ARGB32_Premultiplied;
+    if (complex_xform || mode == Qt::SmoothTransformation) {
+        if (d->format < QImage::Format_RGB32 || !hasAlphaChannel()) {
+            switch(d->format) {
+            case QImage::Format_RGB16:
+                target_format = Format_ARGB8565_Premultiplied;
+                break;
+            case QImage::Format_RGB555:
+                target_format = Format_ARGB8555_Premultiplied;
+                break;
+            case QImage::Format_RGB666:
+                target_format = Format_ARGB6666_Premultiplied;
+                break;
+            case QImage::Format_RGB444:
+                target_format = Format_ARGB4444_Premultiplied;
+                break;
+            default:
+                target_format = Format_ARGB32_Premultiplied;
+                break;
+            }
+        }
+    }
 
     QImage dImage(wd, hd, target_format);
     QIMAGE_SANITYCHECK_MEMORY(dImage);

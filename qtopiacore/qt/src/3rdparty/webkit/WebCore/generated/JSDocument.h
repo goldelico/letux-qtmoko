@@ -18,77 +18,147 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDocument_H
-#define JSDocument_H
+#ifndef JSDocument_h
+#define JSDocument_h
 
 #include "JSEventTargetNode.h"
-
+#include <runtime/Lookup.h>
+#include <wtf/AlwaysInline.h>
+#include "Document.h"
 namespace WebCore {
 
 class Document;
 
 class JSDocument : public JSEventTargetNode {
+    typedef JSEventTargetNode Base;
 public:
-    JSDocument(KJS::ExecState*, Document*);
+    JSDocument(PassRefPtr<JSC::Structure>, PassRefPtr<Document>);
     virtual ~JSDocument();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
     virtual void mark();
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        DoctypeAttrNum, ImplementationAttrNum, DocumentElementAttrNum, InputEncodingAttrNum, 
-        XMLEncodingAttrNum, XMLVersionAttrNum, XMLStandaloneAttrNum, DocumentURIAttrNum, 
-        DefaultViewAttrNum, StyleSheetsAttrNum, URLAttrNum, CharsetAttrNum, 
-        DefaultCharsetAttrNum, ReadyStateAttrNum, CharacterSetAttrNum, PreferredStylesheetSetAttrNum, 
-        SelectedStylesheetSetAttrNum, 
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        CreateElementFuncNum, CreateDocumentFragmentFuncNum, CreateTextNodeFuncNum, CreateCommentFuncNum, 
-        CreateCDATASectionFuncNum, CreateProcessingInstructionFuncNum, CreateAttributeFuncNum, CreateEntityReferenceFuncNum, 
-        GetElementsByTagNameFuncNum, ImportNodeFuncNum, CreateElementNSFuncNum, CreateAttributeNSFuncNum, 
-        GetElementsByTagNameNSFuncNum, GetElementByIdFuncNum, AdoptNodeFuncNum, CreateEventFuncNum, 
-        CreateRangeFuncNum, CreateNodeIteratorFuncNum, CreateTreeWalkerFuncNum, GetOverrideStyleFuncNum, 
-        CreateExpressionFuncNum, CreateNSResolverFuncNum, EvaluateFuncNum, ExecCommandFuncNum, 
-        QueryCommandEnabledFuncNum, QueryCommandIndetermFuncNum, QueryCommandStateFuncNum, QueryCommandSupportedFuncNum, 
-        QueryCommandValueFuncNum, ElementFromPointFuncNum
-    };
-};
-
-KJS::JSValue* toJS(KJS::ExecState*, Document*);
-
-class JSDocumentPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSDocumentPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSEventTargetNodePrototype::self(exec)) { }
-};
-
-class JSDocumentPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSDocumentPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    // Custom attributes
+    JSC::JSValuePtr location(JSC::ExecState*) const;
+    void setLocation(JSC::ExecState*, JSC::JSValuePtr);
+    Document* impl() const
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return static_cast<Document*>(Base::impl());
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
 };
+
+ALWAYS_INLINE bool JSDocument::getOwnPropertySlot(JSC::ExecState* exec, const JSC::Identifier& propertyName, JSC::PropertySlot& slot)
+{
+    return JSC::getStaticValueSlot<JSDocument, Base>(exec, s_info.staticPropHashTable, this, propertyName, slot);
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState*, Document*);
+Document* toDocument(JSC::JSValuePtr);
+
+class JSDocumentPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSDocumentPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateDocumentFragment(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateTextNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateComment(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateCDATASection(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateProcessingInstruction(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateAttribute(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateEntityReference(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetElementsByTagName(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionImportNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateElementNS(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateAttributeNS(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetElementsByTagNameNS(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetElementById(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionAdoptNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateEvent(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateRange(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateNodeIterator(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateTreeWalker(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetOverrideStyle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateExpression(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionCreateNSResolver(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionEvaluate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionExecCommand(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQueryCommandEnabled(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQueryCommandIndeterm(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQueryCommandState(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQueryCommandSupported(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQueryCommandValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetElementsByName(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionElementFromPoint(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetSelection(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetCSSCanvasContext(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionGetElementsByClassName(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQuerySelector(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsDocumentPrototypeFunctionQuerySelectorAll(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsDocumentDoctype(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentImplementation(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentDocumentElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentInputEncoding(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentXMLEncoding(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentXMLVersion(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentXMLVersion(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentXMLStandalone(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentXMLStandalone(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentDocumentURI(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentDocumentURI(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentDefaultView(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentStyleSheets(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTitle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentTitle(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentReferrer(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentDomain(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentDomain(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentURL(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentCookie(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentCookie(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentBody(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentBody(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentImages(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentApplets(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentLinks(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentForms(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentAnchors(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentLastModified(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentLocation(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentLocation(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentCharset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentCharset(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentDefaultCharset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentReadyState(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentCharacterSet(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentPreferredStylesheetSet(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentSelectedStylesheetSet(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSDocumentSelectedStylesheetSet(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsDocumentConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

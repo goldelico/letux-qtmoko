@@ -4,6 +4,7 @@ HEADERS += \
 	text/qfont.h \
 	text/qfontdatabase.h \
 	text/qfontengine_p.h \
+	text/qfontengineglyphcache_p.h \
 	text/qfontinfo.h \
 	text/qfontmetrics.h \
 	text/qfont_p.h \
@@ -31,8 +32,12 @@ HEADERS += \
 	text/qtexttable.h \
 	text/qtextlist.h \
 	text/qsyntaxhighlighter.h \
+	text/qtextdocumentwriter.h \
 	text/qcssparser_p.h \
-	text/qtexttable_p.h
+	text/qtexttable_p.h \
+	text/qzipreader_p.h \
+	text/qzipwriter_p.h \
+	text/qtextodfwriter_p.h
 
 SOURCES += \
 	text/qfont.cpp \
@@ -57,9 +62,11 @@ SOURCES += \
 	text/qtextimagehandler.cpp \
 	text/qtexttable.cpp \
 	text/qtextlist.cpp \
+	text/qtextdocumentwriter.cpp \
 	text/qsyntaxhighlighter.cpp \
-	text/qcssparser.cpp
-
+	text/qcssparser.cpp \
+	text/qzip.cpp \
+	text/qtextodfwriter.cpp
 
 win32 {
 	SOURCES += \
@@ -80,8 +87,8 @@ unix:x11 {
 
 !embedded:!x11:mac {
 	SOURCES += \
-		text/qfont_mac.cpp \
-		text/qfontengine_mac.cpp
+		text/qfont_mac.cpp
+        OBJECTIVE_SOURCES += text/qfontengine_mac.mm
 }
 
 embedded {

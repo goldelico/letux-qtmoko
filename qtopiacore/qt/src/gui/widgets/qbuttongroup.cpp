@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,14 +56,15 @@
     (see QGroupBox for a container widget), but instead manages the states of
     each of the buttons in the group.
 
-    An \l exclusive button group switches off all checkable (toggle)
-    buttons except the one that was clicked. By default, a button
-    group is exclusive. The buttons in a button group are usually
-    checkable QPushButton's, \l{QCheckBox}es (normally for
-    non-exclusive button groups), or \l{QRadioButton}s. If you create
-    an exclusive button group, you should ensure that one of the
-    buttons in the group is initially checked; otherwise, the group
-    will initially be in a state where no buttons are checked.
+    An \l {QButtonGroup::exclusive} {exclusive} button group switches
+    off all checkable (toggle) buttons except the one that was
+    clicked. By default, a button group is exclusive. The buttons in a
+    button group are usually checkable QPushButton's, \l{QCheckBox}es
+    (normally for non-exclusive button groups), or \l{QRadioButton}s.
+    If you create an exclusive button group, you should ensure that
+    one of the buttons in the group is initially checked; otherwise,
+    the group will initially be in a state where no buttons are
+    checked.
 
     A button is added to the group with addButton(). It can be removed
     from the group with removeButton(). If the group is exclusive, the
@@ -69,12 +74,13 @@
     was checked. The list of buttons in the group is returned by
     buttons().
 
-    In addition, QButtonGroup can map between integers and
-    buttons. You can assign an integer id to a button with setId(),
-    and retrieve it with id(). The id of the currently checked button
-    is available with checkedId(), and there is an overloaded signal
-    buttonClicked() which emits the id of the button. The purpose of
-    the mapping mechanism is to simplify the representation of enum
+    In addition, QButtonGroup can map between integers and buttons.
+    You can assign an integer id to a button with setId(), and
+    retrieve it with id(). The id of the currently checked button is
+    available with checkedId(), and there is an overloaded signal
+    buttonClicked() which emits the id of the button. The id \c {-1}
+    is reserved by QButtonGroup to mean "no such button". The purpose
+    of the mapping mechanism is to simplify the representation of enum
     values in a user interface.
 
     \sa QGroupBox QPushButton, QCheckBox, QRadioButton
@@ -172,7 +178,9 @@
 /*!
     \fn void QButtonGroup::addButton(QAbstractButton *button, int id = -1);
 
-    Adds the given \a button to the button group, with the given \a id.
+    Adds the given \a button to the button group, with the given \a
+    id. If \a id is -1 (the default), an id will be assigned to the
+    button by this QButtonGroup.
 
     \sa removeButton() buttons()
 */
@@ -214,7 +222,8 @@
     \fn void QButtonGroup::setId(QAbstractButton *button, int id)
     \since 4.1
 
-    Sets the \a id for the specified \a button.
+    Sets the \a id for the specified \a button. Note that \a id can
+    not be -1.
 
     \sa id()
 */
@@ -225,6 +234,7 @@
 
     Returns the id for the specified \a button, or -1 if no such button
     exists.
+
 
     \sa setId()
 */

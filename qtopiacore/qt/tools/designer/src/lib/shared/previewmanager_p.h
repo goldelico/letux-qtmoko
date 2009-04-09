@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,7 +68,7 @@ class QAction;
 class QActionGroup;
 class QMenu;
 class QWidget;
-class QSettings;
+class QDesignerSettingsInterface;
 
 namespace qdesigner_internal {
 
@@ -75,7 +79,9 @@ class PreviewConfigurationData;
 class QDESIGNER_SHARED_EXPORT PreviewConfiguration {
 public:
     PreviewConfiguration();
-    explicit PreviewConfiguration(const QString &style, const QString &applicationStyleSheet = QString(), const QString &deviceSkin = QString());
+    explicit PreviewConfiguration(const QString &style,
+                                  const QString &applicationStyleSheet = QString(),
+                                  const QString &deviceSkin = QString());
 
     PreviewConfiguration(const PreviewConfiguration&);
     PreviewConfiguration& operator=(const PreviewConfiguration&);
@@ -92,8 +98,8 @@ public:
     void setDeviceSkin(const QString &);
 
     void clear();
-    void toSettings(const QString &prefix, QSettings &settings) const;
-    void fromSettings(const QString &prefix, const QSettings &settings);
+    void toSettings(const QString &prefix, QDesignerSettingsInterface *settings) const;
+    void fromSettings(const QString &prefix, const QDesignerSettingsInterface *settings);
 
 private:
     QSharedDataPointer<PreviewConfigurationData> m_d;
@@ -112,6 +118,7 @@ class QDESIGNER_SHARED_EXPORT PreviewManager : public QObject
 {
     Q_OBJECT
 public:
+
     enum PreviewMode {
         // Modal preview. Do not use on Macs as dialogs would have no close button
         ApplicationModalPreview,
@@ -125,15 +132,18 @@ public:
 
     // Show preview. Raise existing preview window if there is one with a matching
     // configuration, else create a new preview.
-    QWidget *showPreview(const QDesignerFormWindowInterface *, const PreviewConfiguration &pc, QString *errorMessage);
+    QWidget *showPreview(const QDesignerFormWindowInterface *, const PreviewConfiguration &pc, int deviceProfileIndex /*=-1*/, QString *errorMessage);
+    // Convenience that creates a preview using a configuration taken from the settings.
+    QWidget *showPreview(const QDesignerFormWindowInterface *, const QString &style, int deviceProfileIndex /*=-1*/, QString *errorMessage);
+    QWidget *showPreview(const QDesignerFormWindowInterface *, const QString &style, QString *errorMessage);
 
     int previewCount() const;
 
     // Create a pixmap for printing.
-    QPixmap createPreviewPixmap(const QDesignerFormWindowInterface *fw, const PreviewConfiguration &pc, QString *errorMessage);
-
-    // convenience function to create a style action group and add it to a menu. Style names will be set as Data on the actions.
-    static QActionGroup *createStyleActionGroup(QObject *parent, QMenu *subMenu = 0);
+    QPixmap createPreviewPixmap(const QDesignerFormWindowInterface *fw, const PreviewConfiguration &pc, int deviceProfileIndex /*=-1*/, QString *errorMessage);
+    // Convenience that creates a pixmap using a configuration taken from the settings.
+    QPixmap createPreviewPixmap(const QDesignerFormWindowInterface *fw, const QString &style, int deviceProfileIndex /*=-1*/, QString *errorMessage);
+    QPixmap createPreviewPixmap(const QDesignerFormWindowInterface *fw, const QString &style, QString *errorMessage);
 
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
@@ -144,13 +154,21 @@ signals:
     void firstPreviewOpened();
     void lastPreviewClosed();
 
+private slots:
+    void slotZoomChanged(int);
+
 private:
 
     virtual Qt::WindowFlags previewWindowFlags(const QWidget *widget) const;
     virtual QWidget *createDeviceSkinContainer(const QDesignerFormWindowInterface *) const;
 
     QWidget *raise(const QDesignerFormWindowInterface *, const PreviewConfiguration &pc);
-    QWidget *createPreview(const QDesignerFormWindowInterface *, const PreviewConfiguration &pc, QString *errorMessage);
+    QWidget *createPreview(const QDesignerFormWindowInterface *,
+                           const PreviewConfiguration &pc,
+                           int deviceProfileIndex /* = -1 */,
+                           QString *errorMessage,
+                           /*Disabled by default, <0 */
+                           int initialZoom = -1);
 
     void updatePreviewClosed(QWidget *w);
 

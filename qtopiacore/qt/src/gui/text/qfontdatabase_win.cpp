@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,6 +47,10 @@
 #include "qlibrary.h"
 #include "qabstractfileengine.h"
 #include "qendian.h"
+
+#ifdef Q_OS_WINCE
+#   include <QTemporaryFile>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -266,7 +274,7 @@ static void getFontSignature(const QString &familyName,
 static
 void addFontToDatabase(QString familyName, const QString &scriptName,
                        TEXTMETRIC *textmetric,
-                       FONTSIGNATURE *signature,
+                       const FONTSIGNATURE *signature,
                        int type)
 {
     const int script = -1;
@@ -352,21 +360,21 @@ void addFontToDatabase(QString familyName, const QString &scriptName,
         family->fixedPitch = fixed;
 
         if (!family->writingSystemCheck && type & TRUETYPE_FONTTYPE) {
+            quint32 unicodeRange[4] = {
+                signature->fsUsb[0], signature->fsUsb[1],
+                signature->fsUsb[2], signature->fsUsb[3]
+            };
 #ifdef Q_OS_WINCE
             if (signature->fsUsb[0] == 0) {
                 // If the unicode ranges bit mask is zero then
                 // EnumFontFamiliesEx failed to determine it properly.
                 // In this case we just pretend that the font supports all languages.
-                signature->fsUsb[0] = 0xbfff;   // second most significant bit must be zero
-                signature->fsUsb[1] = 0xffff;
-                signature->fsUsb[2] = 0xffff;
-                signature->fsUsb[3] = 0xffff;
+                unicodeRange[0] = 0xbfffffff;   // second most significant bit must be zero
+                unicodeRange[1] = 0xffffffff;
+                unicodeRange[2] = 0xffffffff;
+                unicodeRange[3] = 0xffffffff;
             }
 #endif
-            quint32 unicodeRange[4] = {
-                signature->fsUsb[0], signature->fsUsb[1],
-                signature->fsUsb[2], signature->fsUsb[3]
-            };
             quint32 codePageRange[2] = {
                 signature->fsCsb[0], signature->fsCsb[1]
             };
@@ -504,17 +512,13 @@ void populate_database(const QString& fam)
                 hfont = CreateFontIndirectA(&lf);
             });
             HGDIOBJ oldobj = SelectObject(hdc, hfont);
-            FONTSIGNATURE signature;
-#if !defined(Q_OS_WINCE)
-            GetTextCharsetInfo(hdc, &signature, 0);
-#endif
 
             TEXTMETRIC textMetrics;
             GetTextMetrics(hdc, &textMetrics);
 
             addFontToDatabase(familyName, QString(),
                               &textMetrics,
-                              &signature,
+                              &fnt.signatures.at(j),
                               TRUETYPE_FONTTYPE);
 
             SelectObject(hdc, oldobj);
@@ -879,6 +883,20 @@ QFontEngine *loadEngine(int script, const QFontPrivate *fp, const QFontDef &requ
 
     }
     QFontEngineWin *few = new QFontEngineWin(font_name, hfont, stockFont, lf);
+
+    // Also check for OpenType tables when using complex scripts
+    // ### TODO: This only works for scripts that require OpenType. More generally
+    // for scripts that do not require OpenType we should just look at the list of
+    // supported writing systems in the font's OS/2 table.
+    if (scriptRequiresOpenType(script)) {
+        HB_Face hbFace = few->harfbuzzFace();
+        if (!hbFace || !hbFace->supported_scripts[script]) {
+            FM_DEBUG("  OpenType support missing for script\n");
+            delete few;
+            return 0;
+        }
+    }
+
     QFontEngine *fe = few;
     initFontInfo(few, request, fp);
     if(script == QUnicodeTables::Common
@@ -971,15 +989,24 @@ static QFontEngine *loadWin(const QFontPrivate *d, int script, const QFontDef &r
     family_list << QString();
 
     QtFontDesc desc;
-    for (int i = 0; i < family_list.size(); ++i) {
-        QString family, foundry;
-        parseFontName(family_list.at(i), foundry, family);
-        FM_DEBUG("loadWin: >>>>>>>>>>>>>>trying to match '%s'", family.toLatin1().data());
-        QT_PREPEND_NAMESPACE(match)(script, req, family, foundry, -1, &desc);
-        if (desc.family)
+    QFontEngine *fe = 0;
+    QList<int> blacklistedFamilies;
+
+    while (!fe) {
+        for (int i = 0; i < family_list.size(); ++i) {
+            QString family, foundry;
+            parseFontName(family_list.at(i), foundry, family);
+            FM_DEBUG("loadWin: >>>>>>>>>>>>>>trying to match '%s'", family.toLatin1().data());
+            QT_PREPEND_NAMESPACE(match)(script, req, family, foundry, -1, &desc, blacklistedFamilies);
+            if (desc.family)
+                break;
+        }
+        if (!desc.family)
             break;
+        fe = loadEngine(script, d, req, &desc, family_list);
+        if (!fe)
+            blacklistedFamilies.append(desc.familyIndex);
     }
-    QFontEngine *fe = desc.family ? loadEngine(script, d, req, &desc, family_list) : 0;
     return fe;
 }
 
@@ -1079,15 +1106,14 @@ static void getFontTable(const uchar *fileBegin, const uchar *data, quint32 tag,
     return;
 }
 
-static QStringList getFamilies(const QByteArray &fontData)
+static void getFamiliesAndSignatures(const QByteArray &fontData, QFontDatabasePrivate::ApplicationFont *appFont)
 {
     const uchar *data = reinterpret_cast<const uchar *>(fontData.constData());
 
     QList<quint32> offsets = getTrueTypeFontOffsets(data);
     if (offsets.isEmpty())
-        return QStringList();
+        return;
 
-    QStringList families;
     for (int i = 0; i < offsets.count(); ++i) {
         const uchar *font = data + offsets.at(i);
         const uchar *table;
@@ -1096,23 +1122,68 @@ static QStringList getFamilies(const QByteArray &fontData)
         if (!table)
             continue;
         QString name = getEnglishName(table, length);
-        if (!name.isEmpty())
-            families << name;
+        if (name.isEmpty())
+            continue;
+
+        appFont->families << name;
+        FONTSIGNATURE signature;
+        getFontTable(data, font, MAKE_TAG('O', 'S', '/', '2'), &table, &length);
+        if (table && length >= 86) {
+            // See also qfontdatabase_mac.cpp, offsets taken from OS/2 table in the TrueType spec
+            signature.fsUsb[0] = qFromBigEndian<quint32>(table + 42);
+            signature.fsUsb[1] = qFromBigEndian<quint32>(table + 46);
+            signature.fsUsb[2] = qFromBigEndian<quint32>(table + 50);
+            signature.fsUsb[3] = qFromBigEndian<quint32>(table + 54);
+    
+            signature.fsCsb[0] = qFromBigEndian<quint32>(table + 78);
+            signature.fsCsb[1] = qFromBigEndian<quint32>(table + 82);
+        }
+        appFont->signatures << signature;
     }
-    return families;
 }
 
 static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
 {
     if(!fnt->data.isEmpty()) {
+#ifndef Q_OS_WINCE
         PtrAddFontMemResourceEx ptrAddFontMemResourceEx = (PtrAddFontMemResourceEx)QLibrary::resolve(QLatin1String("gdi32"),
                                                                                                      "AddFontMemResourceEx");
         if (!ptrAddFontMemResourceEx)
             return;
-        QStringList families = getFamilies(fnt->data);
-        if (families.isEmpty())
+#endif
+        getFamiliesAndSignatures(fnt->data, fnt);
+        if (fnt->families.isEmpty())
             return;
 
+#ifdef Q_OS_WINCE
+        HANDLE handle = 0;
+
+        {
+#ifdef  QT_NO_TEMPORARYFILE
+           TCHAR lpBuffer[MAX_PATH];
+           GetTempPath(MAX_PATH, lpBuffer);
+           QString s = QString::fromUtf16((const ushort *) lpBuffer);
+           QFile tempfile(s + QLatin1String("/font") + QString::number(GetTickCount()) + QLatin1String(".ttf"));
+           if (!tempfile.open(QIODevice::ReadWrite))
+#else
+            QTemporaryFile tempfile(QLatin1String("XXXXXXXX.ttf"));
+            if (!tempfile.open())
+#endif
+                return;
+            if (tempfile.write(fnt->data) == -1)
+                return;
+
+#ifndef  QT_NO_TEMPORARYFILE
+            tempfile.setAutoRemove(false);
+#endif
+            fnt->fileName = QFileInfo(tempfile.fileName()).absoluteFilePath();
+        }
+
+        if (AddFontResource((LPCWSTR)fnt->fileName.utf16()) == 0) {
+            QFile(fnt->fileName).remove();
+            return;
+        }
+#else
         DWORD dummy = 0;
         HANDLE handle = ptrAddFontMemResourceEx((void *)fnt->data.constData(),
                                     fnt->data.size(),
@@ -1120,8 +1191,8 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
                                     &dummy);
         if (handle == 0)
             return;
+#endif
 
-        fnt->families = families;
         fnt->handle = handle;
         fnt->data = QByteArray();
         fnt->memoryFont = true;
@@ -1131,8 +1202,14 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
             return;
         QByteArray data = f.readAll();
         f.close();
-        QStringList families = getFamilies(data);
+        getFamiliesAndSignatures(data, fnt);
 
+#ifdef Q_OS_WINCE
+        QFileInfo fileinfo(fnt->fileName);
+        fnt->fileName = fileinfo.absoluteFilePath();
+        if (AddFontResource((LPCWSTR)fnt->fileName.utf16()) == 0)
+            return;
+#else
         // supported from 2000 on, so no need to deal with the *A variant
         PtrAddFontResourceExW ptrAddFontResourceExW = (PtrAddFontResourceExW)QLibrary::resolve(QLatin1String("gdi32"),
                                                                                                "AddFontResourceExW");
@@ -1141,8 +1218,8 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
 
         if (ptrAddFontResourceExW((LPCWSTR)fnt->fileName.utf16(), FR_PRIVATE, 0) == 0)
             return;
+#endif
 
-        fnt->families = families;
         fnt->memoryFont = false;
     }
 }
@@ -1158,6 +1235,13 @@ bool QFontDatabase::removeApplicationFont(int handle)
     const QFontDatabasePrivate::ApplicationFont font = db->applicationFonts.at(handle);
     db->applicationFonts[handle] = QFontDatabasePrivate::ApplicationFont();
     if (font.memoryFont) {
+#ifdef Q_OS_WINCE
+        bool removeSucceeded = RemoveFontResource((LPCWSTR)font.fileName.utf16());
+        QFile tempfile(font.fileName);
+        tempfile.remove();
+        if (!removeSucceeded)
+            return false;
+#else
         PtrRemoveFontMemResourceEx ptrRemoveFontMemResourceEx = (PtrRemoveFontMemResourceEx)QLibrary::resolve(QLatin1String("gdi32"),
                                                                                                               "RemoveFontMemResourceEx");
         if (!ptrRemoveFontMemResourceEx)
@@ -1165,7 +1249,12 @@ bool QFontDatabase::removeApplicationFont(int handle)
 
         if (!ptrRemoveFontMemResourceEx(font.handle))
             return false;
+#endif
     } else {
+#ifdef Q_OS_WINCE
+        if (!RemoveFontResource((LPCWSTR)font.fileName.utf16()))
+            return false;
+#else
         PtrRemoveFontResourceExW ptrRemoveFontResourceExW = (PtrRemoveFontResourceExW)QLibrary::resolve(QLatin1String("gdi32"),
                                                                                                         "RemoveFontResourceExW");
         if (!ptrRemoveFontResourceExW)
@@ -1173,6 +1262,7 @@ bool QFontDatabase::removeApplicationFont(int handle)
 
         if (!ptrRemoveFontResourceExW((LPCWSTR)font.fileName.utf16(), FR_PRIVATE, 0))
             return false;
+#endif
     }
 
     db->invalidate();

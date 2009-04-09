@@ -18,84 +18,134 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSNode_H
-#define JSNode_H
+#ifndef JSNode_h
+#define JSNode_h
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
+#include "EventTargetNode.h"
+#include <runtime/Lookup.h>
+#include <wtf/AlwaysInline.h>
 
 namespace WebCore {
 
 class Node;
 
-class JSNode : public KJS::DOMObject {
+class JSNode : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSNode(KJS::ExecState*, Node*);
+    JSNode(PassRefPtr<JSC::Structure>, PassRefPtr<Node>);
     virtual ~JSNode();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
     virtual void mark();
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        NodeNameAttrNum, NodeValueAttrNum, NodeTypeAttrNum, ParentNodeAttrNum, 
-        ChildNodesAttrNum, FirstChildAttrNum, LastChildAttrNum, PreviousSiblingAttrNum, 
-        NextSiblingAttrNum, AttributesAttrNum, OwnerDocumentAttrNum, NamespaceURIAttrNum, 
-        PrefixAttrNum, LocalNameAttrNum, BaseURIAttrNum, TextContentAttrNum, 
-        ParentElementAttrNum, 
-
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        InsertBeforeFuncNum, ReplaceChildFuncNum, RemoveChildFuncNum, AppendChildFuncNum, 
-        HasChildNodesFuncNum, CloneNodeFuncNum, NormalizeFuncNum, IsSupportedFuncNum, 
-        HasAttributesFuncNum, IsSameNodeFuncNum, IsEqualNodeFuncNum, LookupPrefixFuncNum, 
-        IsDefaultNamespaceFuncNum, LookupNamespaceURIFuncNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
     // Custom functions
-    KJS::JSValue* insertBefore(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* replaceChild(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* removeChild(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* appendChild(KJS::ExecState*, const KJS::List&);
+    JSC::JSValuePtr insertBefore(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr replaceChild(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr removeChild(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr appendChild(JSC::ExecState*, const JSC::ArgList&);
     Node* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<Node> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, PassRefPtr<Node>);
-Node* toNode(KJS::JSValue*);
+ALWAYS_INLINE bool JSNode::getOwnPropertySlot(JSC::ExecState* exec, const JSC::Identifier& propertyName, JSC::PropertySlot& slot)
+{
+    return JSC::getStaticValueSlot<JSNode, Base>(exec, s_info.staticPropHashTable, this, propertyName, slot);
+}
 
-class JSNodePrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSNodePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
+JSC::JSValuePtr toJS(JSC::ExecState*, Node*);
+inline JSC::JSValuePtr toJS(JSC::ExecState* exec, EventTargetNode* node) { return toJS(exec, static_cast<Node*>(node)); }
+Node* toNode(JSC::JSValuePtr);
+JSC::JSValuePtr toJSNewlyCreated(JSC::ExecState*, Node*);
 
-class JSNodePrototypeFunction : public KJS::InternalFunctionImp {
+class JSNodePrototype : public JSC::JSObject {
 public:
-    JSNodePrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSNodePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsNodePrototypeFunctionInsertBefore(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionReplaceChild(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionRemoveChild(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionAppendChild(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionHasChildNodes(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionCloneNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionNormalize(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionIsSupported(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionHasAttributes(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionIsSameNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionIsEqualNode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionLookupPrefix(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionIsDefaultNamespace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionLookupNamespaceURI(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsNodePrototypeFunctionCompareDocumentPosition(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsNodeNodeName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeNodeValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSNodeNodeValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsNodeNodeType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeParentNode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeChildNodes(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeFirstChild(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeLastChild(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodePreviousSibling(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeNextSibling(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeAttributes(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeOwnerDocument(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeNamespaceURI(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodePrefix(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSNodePrefix(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsNodeLocalName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeBaseURI(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeTextContent(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSNodeTextContent(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsNodeParentElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsNodeELEMENT_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeATTRIBUTE_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeTEXT_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeCDATA_SECTION_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeENTITY_REFERENCE_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeENTITY_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodePROCESSING_INSTRUCTION_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeCOMMENT_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_TYPE_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_FRAGMENT_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeNOTATION_NODE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_DISCONNECTED(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_PRECEDING(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_FOLLOWING(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_CONTAINS(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_CONTAINED_BY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsNodeDOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

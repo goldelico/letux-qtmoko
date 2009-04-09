@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -82,9 +86,6 @@ static const int blueFrameWidth =  2;  // with of line edit focus frame
 #include <qtoolbutton.h>
 #include <qworkspace.h>
 #include <qprocess.h>
-#include <qfileinfo.h>
-#include <qsettings.h>
-#include <qdir.h>
 #include <qvarlengtharray.h>
 #include <limits.h>
 
@@ -985,7 +986,6 @@ class QPlastiqueStylePrivate : public QWindowsStylePrivate
 public:
     QPlastiqueStylePrivate();
     virtual ~QPlastiqueStylePrivate();
-    void lookupIconTheme() const;
     void drawPartialFrame(QPainter *painter, const QStyleOptionComplex *option,
                           const QRect &rect, const QWidget *widget) const;
 
@@ -1047,13 +1047,13 @@ QPlastiqueStyle::~QPlastiqueStyle()
 
 /*
     Used by spin- and combo box.
-    Draws a rounded frame around rect but omits the right hand edge 
+    Draws a rounded frame around rect but omits the right hand edge
 */
-void QPlastiqueStylePrivate::drawPartialFrame(QPainter *painter, const QStyleOptionComplex *option, 
+void QPlastiqueStylePrivate::drawPartialFrame(QPainter *painter, const QStyleOptionComplex *option,
                                               const QRect &rect, const QWidget *widget) const
 {
     Q_Q(const QPlastiqueStyle);
-    bool reverse = option->direction == Qt::RightToLeft;    
+    bool reverse = option->direction == Qt::RightToLeft;
     QStyleOptionFrame frameOpt;
 #ifndef QT_NO_LINEEDIT
     if (QLineEdit *lineedit = qFindChild<QLineEdit *>(widget))
@@ -1064,14 +1064,14 @@ void QPlastiqueStylePrivate::drawPartialFrame(QPainter *painter, const QStyleOpt
 
     frameOpt.rect = rect;
     painter->save();
-    frameOpt.rect.adjust(-blueFrameWidth + (reverse ? 1 : 0), -blueFrameWidth, 
+    frameOpt.rect.adjust(-blueFrameWidth + (reverse ? 1 : 0), -blueFrameWidth,
                           blueFrameWidth + (reverse ? 0 : -1), blueFrameWidth);
     painter->setClipRect(frameOpt.rect);
     frameOpt.rect.adjust(reverse ? -2 : 0, 0, reverse ? 0 : 2, 0);
     frameOpt.lineWidth = q->pixelMetric(QStyle::PM_DefaultFrameWidth);
     frameOpt.midLineWidth = 0;
     frameOpt.state |= QStyle::State_Sunken;
-    q->drawPrimitive(QStyle::PE_PanelLineEdit, &frameOpt, painter);
+    q->drawPrimitive(QStyle::PE_PanelLineEdit, &frameOpt, painter, widget);
     painter->restore();
 
     // Draw a two pixel highlight on the flat edge
@@ -1502,7 +1502,7 @@ void QPlastiqueStyle::drawPrimitive(PrimitiveElement element, const QStyleOption
     }
     case PE_PanelButtonTool:
         // Draws a tool button (f.ex., in QToolBar and QTabBar)
-        if ((option->state & State_Enabled) || !(option->state & State_AutoRaise))
+        if ((option->state & State_Enabled || option->state & State_On) || !(option->state & State_AutoRaise))
             qt_plastique_drawShadedPanel(painter, option, true, widget);
         break;
 #ifndef QT_NO_TOOLBAR
@@ -1618,7 +1618,7 @@ void QPlastiqueStyle::drawPrimitive(PrimitiveElement element, const QStyleOption
                 if (hover) {
                     buttonGradient.setColorAt(0.0, mergedColors(option->palette.highlight().color(),
                                                                 buttonBrush.color().lighter(104), 6));
-                    buttonGradient.setColorAt(1.0, mergedColors(option->palette.highlight().color(), 
+                    buttonGradient.setColorAt(1.0, mergedColors(option->palette.highlight().color(),
                                                                 buttonBrush.color().darker(110), 6));
                 } else {
                     buttonGradient.setColorAt(0.0, buttonBrush.color().lighter(104));
@@ -2059,7 +2059,7 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
             // Set up some convenience variables
             bool disabled = !(tab->state & State_Enabled);
             bool onlyTab = tab->position == QStyleOptionTab::OnlyOneTab;
-            bool selected = (tab->state & State_Selected) || onlyTab;
+            bool selected = tab->state & State_Selected;
             bool mouseOver = (tab->state & State_MouseOver) && !selected && !disabled;
             bool previousSelected = tab->selectedPosition == QStyleOptionTab::PreviousIsSelected;
             bool nextSelected = tab->selectedPosition == QStyleOptionTab::NextIsSelected;
@@ -2610,10 +2610,13 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
                 }
             }
 
+            QRegion rightRect = rect;
+            rightRect = rightRect.subtracted(leftRect);
+            painter->setClipRegion(rightRect);
             painter->drawText(rect, bar->text, QTextOption(Qt::AlignAbsolute | Qt::AlignHCenter | Qt::AlignVCenter));
             if (!leftRect.isNull()) {
                 painter->setPen(flip ? bar->palette.text().color() : bar->palette.base().color());
-                painter->setClipRect(leftRect, Qt::IntersectClip);
+                painter->setClipRect(leftRect);
                 painter->drawText(rect, bar->text, QTextOption(Qt::AlignAbsolute | Qt::AlignHCenter | Qt::AlignVCenter));
             }
 
@@ -2901,7 +2904,7 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
         if (const QStyleOptionMenuItem *menuItem = qstyleoption_cast<const QStyleOptionMenuItem *>(option)) {
             painter->save();
             QBrush textBrush;
-            if (option->palette.resolve() & (1 << QPalette::ButtonText)) 
+            if (option->palette.resolve() & (1 << QPalette::ButtonText))
                 textBrush = option->palette.buttonText();
             else
                 textBrush = option->palette.windowText(); // KDE uses windowText rather than buttonText for menus
@@ -2930,9 +2933,8 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
             bool selected = menuItem->state & State_Selected;
             bool checkable = menuItem->checkType != QStyleOptionMenuItem::NotCheckable;
             bool checked = menuItem->checked;
-            bool enabled = menuItem->state & State_Enabled;
 
-            if (selected && enabled) {
+            if (selected) {
                 qt_plastique_draw_gradient(painter, menuItem->rect,
                                            option->palette.highlight().color().lighter(105),
                                            option->palette.highlight().color().darker(110));
@@ -3087,7 +3089,7 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
 #ifndef QT_NO_MENUBAR
     case CE_MenuBarItem:
         // Draws a menu bar item; File, Edit, Help etc..
-        if ((option->state & State_Selected) && (option->state & State_Enabled)) {
+        if ((option->state & State_Selected)) {
             QPixmap cache;
             QString pixmapName = uniqueName(QLatin1String("menubaritem"), option, option->rect.size());
             if (!UsePixmapCache || !QPixmapCache::find(pixmapName, cache)) {
@@ -3099,16 +3101,14 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
                 QRect rect = pixmapRect;
 
                 // gradient fill
-                if (option->state & QStyle::State_Enabled) {
-                    if ((option->state & QStyle::State_Sunken) || (option->state & QStyle::State_On)) {
-                        qt_plastique_draw_gradient(&cachePainter, rect.adjusted(1, 1, -1, -1),
-                                                   option->palette.button().color().darker(114),
-                                                   option->palette.button().color().darker(106));
-                    } else {
-                        qt_plastique_draw_gradient(&cachePainter, rect.adjusted(1, 1, -1, -1),
-                                                   option->palette.background().color().lighter(105),
-                                                   option->palette.background().color().darker(102));
-                    }
+                if ((option->state & QStyle::State_Sunken) || (option->state & QStyle::State_On)) {
+                    qt_plastique_draw_gradient(&cachePainter, rect.adjusted(1, 1, -1, -1),
+                                               option->palette.button().color().darker(114),
+                                               option->palette.button().color().darker(106));
+                } else {
+                    qt_plastique_draw_gradient(&cachePainter, rect.adjusted(1, 1, -1, -1),
+                                               option->palette.background().color().lighter(105),
+                                               option->palette.background().color().darker(102));
                 }
 
                 // outer border and corners
@@ -3531,6 +3531,8 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
             QString groovePixmapName = uniqueName(QLatin1String("scrollbar_groove"), option, option->rect.size());
             if (sunken)
                 groovePixmapName += QLatin1String("-sunken");
+            if (element == CE_ScrollBarAddPage)
+                groovePixmapName += QLatin1String("-addpage");
 
             QPixmap cache;
             if (!UsePixmapCache || !QPixmapCache::find(groovePixmapName, cache)) {
@@ -3539,17 +3541,19 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
                 QPainter groovePainter(&cache);
                 QRect pixmapRect = QRect(0, 0, option->rect.width(), option->rect.height());
                 QColor color = scrollBar->palette.base().color().darker(sunken ? 125 : 100);
+                groovePainter.setBrushOrigin((element == CE_ScrollBarAddPage) ? pixmapRect.width() : 0,
+                                             (element == CE_ScrollBarAddPage) ? pixmapRect.height() : 0);
                 groovePainter.fillRect(pixmapRect, QBrush(color, Qt::Dense4Pattern));
 
                 QColor edgeColor = scrollBar->palette.base().color().darker(125);
                 if (horizontal) {
-                    groovePainter.setBrushOrigin(1, 0);
+                    groovePainter.setBrushOrigin((element == CE_ScrollBarAddPage) ? pixmapRect.width() : 1, 0);
                     groovePainter.fillRect(QRect(pixmapRect.topLeft(), QSize(pixmapRect.width(), 1)),
                                            QBrush(edgeColor, Qt::Dense4Pattern));
                     groovePainter.fillRect(QRect(pixmapRect.bottomLeft(), QSize(pixmapRect.width(), 1)),
                                            QBrush(edgeColor, Qt::Dense4Pattern));
                 } else {
-                    groovePainter.setBrushOrigin(0, 1);
+                    groovePainter.setBrushOrigin(0, (element == CE_ScrollBarAddPage) ? pixmapRect.height() : 1);
                     groovePainter.fillRect(QRect(pixmapRect.topLeft(), QSize(1, pixmapRect.height())),
                                            QBrush(edgeColor, Qt::Dense4Pattern));
                     groovePainter.fillRect(QRect(pixmapRect.topRight(), QSize(1, pixmapRect.height())),
@@ -3673,8 +3677,12 @@ void QPlastiqueStyle::drawControl(ControlElement element, const QStyleOption *op
                     bool sunken = (scrollBar->state & State_Sunken);
 
                     if (isEnabled) {
-                        QLinearGradient gradient(pixmapRect.center().x(), pixmapRect.top(),
+                        QLinearGradient gradient(pixmapRect.left(), pixmapRect.center().y(),
+                                                 pixmapRect.right(), pixmapRect.center().y());
+                        if (horizontal)
+                            gradient = QLinearGradient(pixmapRect.center().x(), pixmapRect.top(),
                                                  pixmapRect.center().x(), pixmapRect.bottom());
+
                         if (sunken) {
                             gradient.setColorAt(0, gradientStartColor.lighter(110));
                             gradient.setColorAt(1, gradientStopColor.lighter(105));
@@ -5040,7 +5048,7 @@ QSize QPlastiqueStyle::sizeFromContents(ContentsType type, const QStyleOption *o
         }
         break;
     case CT_MenuBarItem:
-        newSize.setHeight(newSize.height() + 2);
+        newSize.setHeight(newSize.height());
         break;
     default:
         break;
@@ -5066,15 +5074,6 @@ QRect QPlastiqueStyle::subElementRect(SubElement element, const QStyleOption *op
     case SE_ProgressBarGroove:
         return option->rect;
 #endif // QT_NO_PROGRESSBAR
-    case SE_GroupBoxLayoutItem:
-        rect = option->rect;
-        if (const QStyleOptionGroupBox *groupBoxOpt =
-                qstyleoption_cast<const QStyleOptionGroupBox *>(option)) {
-            if (groupBoxOpt->subControls & (QStyle::SC_GroupBoxCheckBox
-                                            | QStyle::SC_GroupBoxLabel))
-                rect.setTop(rect.top() + 2);    // eat the top margin a little bit
-        }
-        break;
     default:
         return QWindowsStyle::subElementRect(element, option, widget);
     }
@@ -5430,9 +5429,6 @@ int QPlastiqueStyle::styleHint(StyleHint hint, const QStyleOption *option, const
     case SH_MainWindow_SpaceBelowMenuBar:
         ret = 0;
         break;
-    case SH_DialogButtonLayout:
-        ret = QDialogButtonBox::KdeLayout;
-        break;
     case SH_FormLayoutWrapPolicy:
         ret = QFormLayout::DontWrapRows;
         break;
@@ -5453,6 +5449,9 @@ int QPlastiqueStyle::styleHint(StyleHint hint, const QStyleOption *option, const
         break;
     case SH_ItemView_ArrowKeysNavigateIntoChildren:
         ret = true;
+        break;
+    case SH_Menu_SubMenuPopupDelay:
+        ret = 96; // from Plastik
         break;
     default:
         ret = QWindowsStyle::styleHint(hint, option, widget, returnData);
@@ -5608,16 +5607,6 @@ int QPlastiqueStyle::pixelMetric(PixelMetric metric, const QStyleOption *option,
 #endif
         ret = 2;
         break;
-#ifndef QT_NO_TABBAR
-    case PM_TabBarTabVSpace:
-        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option)) {
-            if (!tab->icon.isNull()) {
-                ret = 15;
-                break;
-            }
-        }
-        break;
-#endif // QT_NO_TABBAR
     case PM_MdiSubWindowFrameWidth:
         ret = 4;
         break;
@@ -5836,8 +5825,11 @@ void QPlastiqueStyle::unpolish(QWidget *widget)
     }
 
 #ifndef QT_NO_PROGRESSBAR
-    if (AnimateBusyProgressBar && qobject_cast<QProgressBar *>(widget))
+    if (AnimateBusyProgressBar && qobject_cast<QProgressBar *>(widget)) {
+        Q_D(QPlastiqueStyle);
         widget->removeEventFilter(this);
+        d->bars.removeAll(static_cast<QProgressBar*>(widget));
+    }
 #endif
 
 #if defined QPlastique_MaskButtons
@@ -5846,33 +5838,11 @@ void QPlastiqueStyle::unpolish(QWidget *widget)
 #endif
 }
 
-#ifdef Q_WS_X11
-static QString kdeHome()
-{
-    QString home = QString::fromLocal8Bit(qgetenv("KDEHOME"));
-    if (home.isEmpty())
-        home = QDir::homePath() + QLatin1String("/.kde");
-    return home;
-}
-#endif
-
 /*!
   \reimp
 */
 void QPlastiqueStyle::polish(QApplication *app)
 {
-#ifdef Q_WS_X11
-    Q_D(QPlastiqueStyle);
-
-    QString dataDirs = QString::fromLocal8Bit(getenv("XDG_DATA_DIRS"));
-
-    if (dataDirs.isEmpty())
-        dataDirs = QLatin1String("/usr/local/share/:/usr/share/");
-
-    dataDirs += QLatin1Char(':') + kdeHome() + QLatin1String("/share");
-
-    d->iconDirs = dataDirs.split(QLatin1Char(':'));
-#endif
     QWindowsStyle::polish(app);
 }
 
@@ -5896,86 +5866,13 @@ void QPlastiqueStyle::unpolish(QApplication *app)
     QWindowsStyle::unpolish(app);
 }
 
-void QPlastiqueStylePrivate::lookupIconTheme() const
-{
-#ifdef Q_WS_X11
-    if (!themeName.isEmpty())
-        return;
-    QFileInfo fileInfo(QLatin1String("/usr/share/icons/default.kde"));
-    QDir dir(fileInfo.canonicalFilePath());
-    QString defaultTheme = fileInfo.exists() ? dir.dirName() : QString::fromLatin1("crystalsvg");
-
-    QSettings settings(kdeHome() + QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
-    settings.beginGroup(QLatin1String("Icons"));
-    themeName = settings.value(QLatin1String("Theme"), defaultTheme).toString();
-    /*
-    // This can be enabled if there are bug reports that this doesn't cover all cases (which it doesn't)
-    QProcess kreadconfig;
-    kreadconfig.start(QLatin1String("kreadconfig --file kdeglobals --group Icons --key Theme --default crystalsvg"));
-    if (kreadconfig.waitForFinished())
-        themeName = QLatin1String(kreadconfig.readLine().trimmed());
-    */
-#endif
-}
-
 /*!
     \internal
 */
 QIcon QPlastiqueStyle::standardIconImplementation(StandardPixmap standardIcon, const QStyleOption *option,
                                                   const QWidget *widget) const
 {
-#ifndef Q_WS_QWS
-    Q_D(const QPlastiqueStyle);
-    if (!qApp->desktopSettingsAware())
-        return QWindowsStyle::standardIconImplementation(standardIcon, option, widget);
-    QIcon icon(standardPixmap(standardIcon, option, widget));
-    QPixmap pixmap;
-    switch (standardIcon) {
-    case SP_ComputerIcon:
-        icon.addPixmap(d->findIcon(32, QLatin1String("system.png")));
-        break;
-    case SP_DirHomeIcon:
-        icon.addPixmap(d->findIcon(32, QLatin1String("folder_home.png")));
-        break;
-    case SP_DirClosedIcon:
-    case SP_DirIcon:
-        icon.addPixmap(d->findIcon(32, QLatin1String("folder.png")));
-        break;
-    case SP_DriveHDIcon:
-        icon.addPixmap(d->findIcon(32, QLatin1String("hdd_unmount.png")));
-        break;
-    case SP_FileIcon:
-        icon.addPixmap(d->findIcon(32, QLatin1String("empty.png")));
-        break;
-    case SP_FileLinkIcon:
-        pixmap = d->findIcon(32, QLatin1String("link_overlay.png"));
-        if (!pixmap.isNull()) {
-            QPixmap fileIcon = d->findIcon(32, QLatin1String("empty.png"));
-            if (!fileIcon.isNull()) {
-                QPainter painter(&fileIcon);
-                painter.drawPixmap(0, 0, 32, 32, pixmap);
-                icon.addPixmap(fileIcon);
-            }
-        }
-        break;
-    case SP_DirLinkIcon:
-        pixmap = d->findIcon(32, QLatin1String("link_overlay.png"));
-        if (!pixmap.isNull()) {
-            QPixmap fileIcon = d->findIcon(32, QLatin1String("folder.png"));
-            if (!fileIcon.isNull()) {
-                QPainter painter(&fileIcon);
-                painter.drawPixmap(0, 0, 32, 32, pixmap);
-                icon.addPixmap(fileIcon);
-            }
-        }
-        break;
-    default:
-        break;
-    }
-    return icon;
-#else
     return QWindowsStyle::standardIconImplementation(standardIcon, option, widget);
-#endif
 }
 
 /*!
@@ -5984,266 +5881,6 @@ QIcon QPlastiqueStyle::standardIconImplementation(StandardPixmap standardIcon, c
 QPixmap QPlastiqueStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOption *opt,
                                         const QWidget *widget) const
 {
-    Q_D(const QPlastiqueStyle);
-    QPixmap pixmap;
-    if (!qApp->desktopSettingsAware())
-        return QWindowsStyle::standardPixmap(standardPixmap, opt, widget);
-    d->lookupIconTheme();
-#ifndef QT_NO_IMAGEFORMAT_XPM
-    switch (standardPixmap) {
-    case SP_DirHomeIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("folder_home.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MessageBoxInformation:
-        {
-            pixmap = d->findIcon(32, QLatin1String("messagebox_info.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MessageBoxWarning:
-        {
-            pixmap = d->findIcon(32, QLatin1String("messagebox_warning.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MessageBoxCritical:
-        {
-            pixmap = d->findIcon(32, QLatin1String("messagebox_critical.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MessageBoxQuestion:
-        {
-            pixmap = d->findIcon(32, QLatin1String("help.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_DialogOpenButton:
-    case SP_DirOpenIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("folder_open.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_FileIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("empty.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_FileLinkIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("link_overlay.png"));
-            if (!pixmap.isNull()) {
-                QPixmap fileIcon = d->findIcon(16, QLatin1String("empty.png"));
-                if (!fileIcon.isNull()) {
-                    QPainter painter(&fileIcon);
-                    painter.drawPixmap(0, 0, 16, 16, pixmap);
-                    return fileIcon;
-                }
-            }
-            break;
-       }
-    case SP_DirClosedIcon:
-    case SP_DirIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("folder.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_DirLinkIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("link_overlay.png"));
-            if (!pixmap.isNull()) {
-                QPixmap dirIcon = d->findIcon(16, QLatin1String("folder.png"));
-                if (!dirIcon.isNull()) {
-                    QPainter painter(&dirIcon);
-                    painter.drawPixmap(0, 0, 16, 16, pixmap);
-                    return dirIcon;
-                }
-            }
-            break;
-       }
-    case SP_DriveFDIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("3floppy_unmount.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_ComputerIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("system.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_DesktopIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("desktop.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_TrashIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("trashcan_empty.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_DriveCDIcon:
-    case SP_DriveDVDIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("cdrom_unmount.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_DriveHDIcon:
-        {
-            pixmap = d->findIcon(16, QLatin1String("hdd_unmount.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_FileDialogToParent:
-        {
-            pixmap = d->findIcon(32, QLatin1String("up.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_FileDialogNewFolder:
-        {
-            pixmap = d->findIcon(16, QLatin1String("folder_new.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_ArrowUp:
-        {
-            pixmap = d->findIcon(32, QLatin1String("up.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_ArrowDown:
-        {
-            pixmap = d->findIcon(32, QLatin1String("down.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_ArrowRight:
-        {
-            pixmap = d->findIcon(32, QLatin1String("forward.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_ArrowLeft:
-        {
-            pixmap = d->findIcon(32, QLatin1String("back.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_FileDialogDetailedView:
-        {
-            pixmap = d->findIcon(16, QLatin1String("view_detailed.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-
-    case SP_FileDialogListView:
-        {
-            pixmap = d->findIcon(16, QLatin1String("view_icon.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_BrowserReload:
-        {
-            pixmap = d->findIcon(32, QLatin1String("reload.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_BrowserStop:
-        {
-            pixmap = d->findIcon(32, QLatin1String("stop.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaPlay:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_play.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaPause:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_pause.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaStop:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_stop.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaSeekForward:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_fwd.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaSeekBackward:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_rew.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaSkipForward:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_end.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-    case SP_MediaSkipBackward:
-        {
-            pixmap = d->findIcon(16, QLatin1String("player_start.png"));
-            if (!pixmap.isNull())
-                return pixmap;
-            break;
-        }
-
-    default:
-        break;
-    }
-#endif //QT_NO_IMAGEFORMAT_XPM
-
     return QWindowsStyle::standardPixmap(standardPixmap, opt, widget);
 }
 

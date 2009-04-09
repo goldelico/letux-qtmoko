@@ -34,7 +34,6 @@
 #include "Element.h"
 #include "Event.h"
 #include "EventHandler.h"
-#include "EventNames.h"
 #include "Frame.h"
 #include "FrameView.h"
 #include "FrameTree.h"
@@ -51,11 +50,11 @@
 
 namespace WebCore {
 
-using namespace EventNames;
 using namespace HTMLNames;
 
 FocusController::FocusController(Page* page)
     : m_page(page)
+    , m_isActive(false)
 {
 }
 
@@ -64,17 +63,13 @@ void FocusController::setFocusedFrame(PassRefPtr<Frame> frame)
     if (m_focusedFrame == frame)
         return;
 
-    if (m_focusedFrame) {
-        m_focusedFrame->setWindowHasFocus(false);
-        m_focusedFrame->setIsActive(false);
-    }
+    if (m_focusedFrame && m_focusedFrame->view())
+        m_focusedFrame->selection()->setFocused(false);
 
     m_focusedFrame = frame;
 
-    if (m_focusedFrame) {
-        m_focusedFrame->setWindowHasFocus(true);
-        m_focusedFrame->setIsActive(true);
-    }
+    if (m_focusedFrame && m_focusedFrame->view())
+        m_focusedFrame->selection()->setFocused(true);
 }
 
 Frame* FocusController::focusedOrMainFrame()
@@ -113,11 +108,6 @@ static Node* deepFocusableNode(FocusDirection direction, Node* node, KeyboardEve
 bool FocusController::setInitialFocus(FocusDirection direction, KeyboardEvent* event)
 {
     return advanceFocus(direction, event, true);
-}
-
-bool FocusController::advanceFocus(KeyboardEvent* event)
-{
-    return advanceFocus((event && event->shiftKey()) ? FocusDirectionBackward : FocusDirectionForward, event);
 }
 
 bool FocusController::advanceFocus(FocusDirection direction, KeyboardEvent* event, bool initialFocus)
@@ -236,7 +226,7 @@ static void clearSelectionIfNeeded(Frame* oldFocusedFrame, Frame* newFocusedFram
     if (oldFocusedFrame->document() != newFocusedFrame->document())
         return;
     
-    SelectionController* s = oldFocusedFrame->selectionController();
+    SelectionController* s = oldFocusedFrame->selection();
     if (s->isNone())
         return;
     
@@ -295,6 +285,23 @@ bool FocusController::setFocusedNode(Node* node, PassRefPtr<Frame> newFocusedFra
     m_page->editorClient()->setInputMethodState(node->shouldUseInputMethod());
 
     return true;
+}
+
+void FocusController::setActive(bool active)
+{
+    if (m_isActive == active)
+        return;
+
+    m_isActive = active;
+
+    if (FrameView* view = m_page->mainFrame()->view()) {
+        if (!view->platformWidget()) {
+            view->layoutIfNeededRecursive();
+            view->updateControlTints();
+        }
+    }
+
+    focusedOrMainFrame()->selection()->pageActivationChanged();
 }
 
 } // namespace WebCore

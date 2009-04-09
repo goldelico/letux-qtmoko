@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,11 +55,17 @@
 
 QT_BEGIN_NAMESPACE
 
-// The below is a hack to make this compile with the
-// broken HPUX GL headers. They define GLX_VERSION_1_3
-// without defining the GLXFBConfig structure, which
-// is wrong. 
-#if defined (Q_OS_HPUX) && !defined(GLX_SGIX_pbuffer)
+QT_BEGIN_INCLUDE_NAMESPACE
+#include "QtOpenGL/qglpixelbuffer.h"
+#include <private/qgl_p.h>
+
+#if defined(Q_WS_X11) && !defined(QT_OPENGL_ES)
+#include <GL/glx.h>
+
+// The below is needed to for compilation on HPUX, due to broken GLX
+// headers. Some of the systems define GLX_VERSION_1_3 without
+// defining the GLXFBConfig structure, which is wrong.
+#if defined (Q_OS_HPUX) && defined(QT_DEFINE_GLXFBCONFIG_STRUCT)
 typedef unsigned long GLXPbuffer;
 
 struct GLXFBConfig {
@@ -114,28 +124,21 @@ struct GLXFBConfig {
 
 #endif // Q_OS_HPUX
 
-QT_BEGIN_INCLUDE_NAMESPACE
-#include "QtOpenGL/qglpixelbuffer.h"
-#include <private/qgl_p.h>
-
-#ifdef Q_WS_X11
-#include <GL/glx.h>
 #elif defined(Q_WS_WIN)
 DECLARE_HANDLE(HPBUFFERARB);
-#elif defined(Q_WS_MACX)
-#include <AGL/agl.h>
+#elif defined(QT_OPENGL_ES_2)
+#include <EGL/egl.h>
 #elif defined(QT_OPENGL_ES)
 #include <GLES/egl.h>
 #endif
 QT_END_INCLUDE_NAMESPACE
 
+class QEglContext;
+
 class QGLPixelBufferPrivate {
     Q_DECLARE_PUBLIC(QGLPixelBuffer)
 public:
     QGLPixelBufferPrivate(QGLPixelBuffer *q) : q_ptr(q), invalid(true), qctx(0), pbuf(0), ctx(0)
-#if defined(QT_OPENGL_ES)
-        , dpy(0), config(0)
-#endif
     {
         QGLExtensions::init();
 #ifdef Q_WS_WIN
@@ -157,7 +160,7 @@ public:
     QPointer<QGLWidget> req_shareWidget;
     QSize req_size;
 
-#ifdef Q_WS_X11
+#if defined(Q_WS_X11) && !defined(QT_OPENGL_ES)
     GLXPbuffer pbuf;
     GLXContext ctx;
 #elif defined(Q_WS_WIN)
@@ -168,19 +171,20 @@ public:
     HGLRC ctx;
 #endif
 #elif defined(Q_WS_MACX)
-#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_3)
-    AGLPbuffer pbuf;
-#else
+#  ifdef QT_MAC_USE_COCOA
     void *pbuf;
-#endif
+    void *ctx;
+    void *share_ctx;
+#  else
+    AGLPbuffer pbuf;
     AGLContext ctx;
     AGLContext share_ctx;
+#  endif
 #endif
 #if defined(QT_OPENGL_ES)
     EGLSurface pbuf;
-    EGLContext ctx;
-    EGLDisplay dpy;
-    EGLConfig config;
+    QEglContext *ctx;
+    int textureFormat;
 #endif
 };
 

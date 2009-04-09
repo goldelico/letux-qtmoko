@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -126,6 +130,17 @@ static qulonglong qstrtoull(const char *nptr, const char **endptr, register int 
 QT_BEGIN_INCLUDE_NAMESPACE
 #include "qlocale_data_p.h"
 QT_END_INCLUDE_NAMESPACE
+
+QLocale::MeasurementSystem QLocalePrivate::measurementSystem() const
+{
+    for (int i = 0; i < ImperialMeasurementSystemsCount; ++i) {
+        if (ImperialMeasurementSystems[i].languageId == m_language_id
+            && ImperialMeasurementSystems[i].countryId == m_country_id) {
+            return QLocale::ImperialSystem;
+        }
+    }
+    return QLocale::MetricSystem;
+}
 
 // Assumes that code is a
 // QChar code[3];
@@ -628,6 +643,34 @@ static QLocale::MeasurementSystem winSystemMeasurementSystem()
     return QLocale::MetricSystem;
 }
 
+static QString winSystemAMText()
+{
+    LCID id = GetUserDefaultLCID();
+    TCHAR output[15]; // maximum length including  terminating zero character for Win2003+
+
+    if (GetLocaleInfo(id, LOCALE_S1159, output, 15)) {
+        return QT_WA_INLINE(
+                QString::fromUtf16(reinterpret_cast<ushort*>(output)),
+                QString::fromLocal8Bit(reinterpret_cast<char*>(output)));
+    }
+
+    return QString();
+}
+
+static QString winSystemPMText()
+{
+    LCID id = GetUserDefaultLCID();
+    TCHAR output[15]; // maximum length including  terminating zero character for Win2003+
+
+    if (GetLocaleInfo(id, LOCALE_S2359, output, 15)) {
+        return QT_WA_INLINE(
+                QString::fromUtf16(reinterpret_cast<ushort*>(output)),
+                QString::fromLocal8Bit(reinterpret_cast<char*>(output)));
+    }
+
+    return QString();
+}
+
 QLocale QSystemLocale::fallbackLocale() const
 {
     return QLocale(QString::fromLatin1(getWinLocaleName()));
@@ -649,6 +692,9 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
         break;
     case NegativeSign:
         locale_info = LOCALE_SNEGATIVESIGN;
+        break;
+    case PositiveSign:
+        locale_info = LOCALE_SPOSITIVESIGN;
         break;
     case DateFormatLong:
         locale_info = LOCALE_SLONGDATE;
@@ -705,6 +751,11 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
 
     case MeasurementSystem:
         return QVariant(static_cast<int>(winSystemMeasurementSystem()));
+
+    case AMText:
+        return QVariant(winSystemAMText());
+    case PMText:
+        return QVariant(winSystemPMText());
     default:
         break;
     }
@@ -1202,6 +1253,7 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
         return macTimeToString(in.toTime(), (type == TimeToStringShort));
 
     case NegativeSign:
+    case PositiveSign:
     case ZeroDigit:
     case LanguageId:
     case CountryId:
@@ -1209,6 +1261,10 @@ QVariant QSystemLocale::query(QueryType type, QVariant in = QVariant()) const
 
     case MeasurementSystem:
         return QVariant(static_cast<int>(macMeasurementSystem()));
+
+    case AMText:
+    case PMText:
+        break;
     default:
         break;
     }
@@ -1286,10 +1342,12 @@ QVariant QSystemLocale::query(QueryType /* type */, QVariant /* in */) const
 
 #endif
 
+#ifndef QT_NO_SYSTEMLOCALE
 static QSystemLocale *_systemLocale = 0;
 Q_GLOBAL_STATIC_WITH_ARGS(QSystemLocale, QSystemLocale_globalSystemLocale, (true))
 static QLocalePrivate *system_lp = 0;
 Q_GLOBAL_STATIC(QLocalePrivate, globalLocalePrivate)
+#endif
 
 /******************************************************************************
 ** Default system locale behavior
@@ -1324,12 +1382,13 @@ Q_GLOBAL_STATIC(QLocalePrivate, globalLocalePrivate)
   \value GroupSeparator a QString specifying the group separator.
   \value ZeroDigit a QString specifying the zero digit.
   \value NegativeSign a QString specifying the minus sign.
+  \value PositiveSign a QString specifying the plus sign.
   \value DateFormatLong a QString specifying the long date format
   \value DateFormatShort a QString specifying the short date format
   \value TimeFormatLong a QString specifying the long time format
   \value TimeFormatShort a QString specifying the short time format
-  \value DayNameLong a QString specifying the name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Friday)
-  \value DayNameShort a QString specifying the short name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Friday)
+  \value DayNameLong a QString specifying the name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Sunday)
+  \value DayNameShort a QString specifying the short name of a weekday. the in variant contains an integer between 1 and 7 (Monday - Sunday)
   \value MonthNameLong a QString specifying the name of a month. the in variant contains an integer between 1 and 12
   \value MonthNameShort a QString specifying the short name of a month. the in variant contains an integer between 1 and 12
   \value DateToStringLong converts the QDate stored in the in variant to a QString using the long date format
@@ -1341,6 +1400,8 @@ Q_GLOBAL_STATIC(QLocalePrivate, globalLocalePrivate)
   \value DateTimeToStringLong converts the QDateTime in the in variant to a QString using the long datetime format
   \value DateTimeToStringShort converts the QDateTime in the in variant to a QString using the short datetime format
   \value MeasurementSystem a QLocale::MeasurementSystem enum specifying the measurement system
+  \value AMText a string that represents the system AM designator associated with a 12-hour clock.
+  \value PMText a string that represents the system PM designator associated with a 12-hour clock.
 */
 
 /*!
@@ -1410,6 +1471,10 @@ void QLocalePrivate::updateSystemPrivate()
     res = sys_locale->query(QSystemLocale::NegativeSign, QVariant());
     if (!res.isNull())
         system_lp->m_minus = res.toString().at(0).unicode();
+
+    res = sys_locale->query(QSystemLocale::PositiveSign, QVariant());
+    if (!res.isNull())
+        system_lp->m_plus = res.toString().at(0).unicode();
 }
 #endif
 
@@ -1433,18 +1498,25 @@ static const QLocalePrivate *defaultPrivate()
     return default_lp;
 }
 
-static QString getLocaleListData(const char *data, int index)
+static QString getLocaleListData(const ushort *data, int size, int index)
 {
-    while (index) {
-        while (*data != ';')
-            ++data;
+    static const ushort separator = ';';
+    while (index && size > 0) {
+        while (*data != separator)
+            ++data, --size;
         --index;
         ++data;
+        --size;
     }
-    const char *end = data;
-    while (*end != '\0' && *end != ';')
-        ++end;
-    return QString::fromUtf8(data, end - data);
+    const ushort *end = data;
+    while (size > 0 && *end != separator)
+        ++end, --size;
+    return QString::fromRawData(reinterpret_cast<const QChar*>(data), end-data);
+}
+
+static inline QString getLocaleData(const ushort *data, int size)
+{
+    return QString::fromRawData(reinterpret_cast<const QChar*>(data), size);
 }
 
 
@@ -1550,7 +1622,7 @@ QDataStream &operator>>(QDataStream &ds, QLocale &l)
     This product includes software developed by the University of
     California, Berkeley and its contributors.
 
-    QLocale's data is based on Common Locale Data Repository v1.4.
+    QLocale's data is based on Common Locale Data Repository v1.6.1.
 
     \sa QString::arg(), QString::toInt(), QString::toDouble()
 */
@@ -1560,7 +1632,7 @@ QDataStream &operator>>(QDataStream &ds, QLocale &l)
 
     This enumerated type is used to specify a language.
 
-    \value C
+    \value C The "C" locale is English/UnitedStates.
     \value Abkhazian
     \value Afan
     \value Afar
@@ -1994,8 +2066,19 @@ QDataStream &operator>>(QDataStream &ds, QLocale &l)
     This enum describes the types of format that can be used when
     converting QDate and QTime objects to strings.
 
-    \value LongFormat
-    \value ShortFormat
+    \value LongFormat The long version of day and month names; for
+    example, returning "January" as a month name.
+
+    \value ShortFormat The short version of day and month names; for
+    example, returning "Jan" as a month name.
+
+    \value NarrowFormat A special version of day and month names for
+    use when space is limited; for example, returning "J" as a month
+    name. Note that the narrow format might contain the same text for
+    different months and days or it can even be an empty string if the
+    locale doesn't support narrow names, so you should avoid using it
+    for date formatting. Also, for the system locale this format is
+    the same as ShortFormat.
 */
 
 /*!
@@ -2007,7 +2090,7 @@ QDataStream &operator>>(QDataStream &ds, QLocale &l)
 
     \value OmitGroupSeparator If this option is set, the number-to-string functions
             will not insert group separators in their return values. The default
-            is to insert group seperators.
+            is to insert group separators.
     \value RejectGroupSeparator If this option is set, the string-to-number functions
             will fail if they encounter group separators in their input. The default
             is to accept numbers containing correctly placed group separators.
@@ -2581,8 +2664,8 @@ QString QLocale::toString(const QDate &date, FormatType format) const
 
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::DateToStringShort : QSystemLocale::DateToStringLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::DateToStringLong : QSystemLocale::DateToStringShort,
                                              date);
         if (!res.isNull())
             return res.toString();
@@ -2674,9 +2757,9 @@ QString QLocale::toString(const QDateTime &dateTime, FormatType format) const
 
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::DateTimeToStringShort
-                                             : QSystemLocale::DateTimeToStringLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::DateTimeToStringLong
+                                             : QSystemLocale::DateTimeToStringShort,
                                              dateTime);
         if (!res.isNull())
             return res.toString();
@@ -2700,8 +2783,8 @@ QString QLocale::toString(const QTime &time, FormatType format) const
 
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::TimeToStringShort : QSystemLocale::TimeToStringLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::TimeToStringLong : QSystemLocale::TimeToStringShort,
                                              time);
         if (!res.isNull())
             return res.toString();
@@ -2717,8 +2800,8 @@ QString QLocale::toString(const QTime &time, FormatType format) const
 
     Returns the date format used for the current locale.
 
-    If \a format is ShortFormat the format will be a short version.
-    Otherwise it uses a longer version.
+    If \a format is LongFormat the format will be a long version.
+    Otherwise it uses a shorter version.
 
     \sa QDate::toString(), QDate::fromString()
 */
@@ -2727,19 +2810,26 @@ QString QLocale::dateFormat(FormatType format) const
 {
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::DateFormatShort : QSystemLocale::DateFormatLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::DateFormatLong : QSystemLocale::DateFormatShort,
                                              QVariant());
         if (!res.isNull())
             return res.toString();
     }
 #endif
 
-    const quint32 idx =
-        format == ShortFormat
-            ? d()->m_short_date_format_idx
-            : d()->m_long_date_format_idx;
-    return QString::fromUtf8(date_format_data + idx);
+    quint32 idx, size;
+    switch (format) {
+    case LongFormat:
+        idx = d()->m_long_date_format_idx;
+        size = d()->m_long_date_format_size;
+        break;
+    default:
+        idx = d()->m_short_date_format_idx;
+        size = d()->m_short_date_format_size;
+        break;
+    }
+    return getLocaleData(date_format_data + idx, size);
 }
 
 /*!
@@ -2747,8 +2837,8 @@ QString QLocale::dateFormat(FormatType format) const
 
     Returns the time format used for the current locale.
 
-    If \a format is ShortFormat the format will be a short version.
-    Otherwise it uses a longer version.
+    If \a format is LongFormat the format will be a long version.
+    Otherwise it uses a shorter version.
 
     \sa QTime::toString(), QTime::fromString()
 */
@@ -2757,19 +2847,26 @@ QString QLocale::timeFormat(FormatType format) const
 {
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::TimeFormatShort : QSystemLocale::TimeFormatLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::TimeFormatLong : QSystemLocale::TimeFormatShort,
                                              QVariant());
         if (!res.isNull())
             return res.toString();
     }
 #endif
 
-    const quint32 idx
-        = format == ShortFormat
-            ? d()->m_short_time_format_idx
-            : d()->m_long_time_format_idx;
-    return QString::fromUtf8(time_format_data + idx);
+    quint32 idx, size;
+    switch (format) {
+    case LongFormat:
+        idx = d()->m_long_time_format_idx;
+        size = d()->m_long_time_format_size;
+        break;
+    default:
+        idx = d()->m_short_time_format_idx;
+        size = d()->m_short_time_format_size;
+        break;
+    }
+    return getLocaleData(time_format_data + idx, size);
 }
 
 /*!
@@ -2787,9 +2884,9 @@ QString QLocale::dateTimeFormat(FormatType format) const
 {
 #ifndef QT_NO_SYSTEMLOCALE
     if (d() == systemPrivate()) {
-        QVariant res = systemLocale()->query(format == ShortFormat
-                                             ? QSystemLocale::DateTimeFormatShort
-                                             : QSystemLocale::DateTimeFormatLong,
+        QVariant res = systemLocale()->query(format == LongFormat
+                                             ? QSystemLocale::DateTimeFormatLong
+                                             : QSystemLocale::DateTimeFormatShort,
                                              QVariant());
         if (!res.isNull()) {
             return res.toString();
@@ -2998,6 +3095,16 @@ QChar QLocale::negativeSign() const
 }
 
 /*!
+    \since 4.5
+
+    Returns the positive sign character of this locale.
+*/
+QChar QLocale::positiveSign() const
+{
+    return d()->plus();
+}
+
+/*!
     \since 4.1
 
     Returns the exponential character of this locale.
@@ -3115,7 +3222,7 @@ QList<QLocale::Country> QLocale::countriesForLanguage(Language language)
     Returns the localized name of \a month, in the format specified
     by \a type.
 
-    \sa dayName()
+    \sa dayName(), standaloneMonthName()
 */
 QString QLocale::monthName(int month, FormatType type) const
 {
@@ -3132,17 +3239,83 @@ QString QLocale::monthName(int month, FormatType type) const
     }
 #endif
 
-    quint32 idx = (type == QLocale::ShortFormat) ? d()->m_short_month_names_idx : d()->m_long_month_names_idx;
-    return getLocaleListData(months_data + idx, month - 1);
+    quint32 idx, size;
+    switch (type) {
+    case QLocale::LongFormat:
+        idx = d()->m_long_month_names_idx;
+        size = d()->m_long_month_names_size;
+        break;
+    case QLocale::ShortFormat:
+        idx = d()->m_short_month_names_idx;
+        size = d()->m_short_month_names_size;
+        break;
+    case QLocale::NarrowFormat:
+        idx = d()->m_narrow_month_names_idx;
+        size = d()->m_narrow_month_names_size;
+        break;
+    default:
+        return QString();
+    }
+    return getLocaleListData(months_data + idx, size, month - 1);
+}
+
+/*!
+    \since 4.5
+
+    Returns the localized name of \a month that is used as a
+    standalone text, in the format specified by \a type.
+
+    If the locale information doesn't specify the standalone month
+    name then return value is the same as in monthName().
+
+    \sa monthName(), standaloneDayName()
+*/
+QString QLocale::standaloneMonthName(int month, FormatType type) const
+{
+    if (month < 1 || month > 12)
+        return QString();
+
+#ifndef QT_NO_SYSTEMLOCALE
+    if (d() == systemPrivate()) {
+        QVariant res = systemLocale()->query(type == LongFormat
+                                             ? QSystemLocale::MonthNameLong : QSystemLocale::MonthNameShort,
+                                             month);
+        if (!res.isNull())
+            return res.toString();
+    }
+#endif
+
+    quint32 idx, size;
+    switch (type) {
+    case QLocale::LongFormat:
+        idx = d()->m_standalone_long_month_names_idx;
+        size = d()->m_standalone_long_month_names_size;
+        break;
+    case QLocale::ShortFormat:
+        idx = d()->m_standalone_short_month_names_idx;
+        size = d()->m_standalone_short_month_names_size;
+        break;
+    case QLocale::NarrowFormat:
+        idx = d()->m_standalone_narrow_month_names_idx;
+        size = d()->m_standalone_narrow_month_names_size;
+        break;
+    default:
+        return QString();
+    }
+    QString name = getLocaleListData(standalone_months_data + idx, size, month - 1);
+    if (name.isEmpty())
+        return monthName(month, type);
+    return name;
 }
 
 /*!
     \since 4.2
 
-    Returns the localized name of \a day, in the format specified by
-    \a type.
+    Returns the localized name of the \a day (where 1 represents
+    Monday, 2 represents Tuesday and so on), in the format specified
+    by \a type.
 
-    \sa monthName()
+    \sa monthName(), standaloneDayName()
 */
 QString QLocale::dayName(int day, FormatType type) const
 {
@@ -3161,8 +3334,76 @@ QString QLocale::dayName(int day, FormatType type) const
     if (day == 7)
         day = 0;
 
-    quint32 idx = (type == QLocale::ShortFormat) ? d()->m_short_day_names_idx : d()->m_long_day_names_idx;
-    return getLocaleListData(days_data + idx, day);
+    quint32 idx, size;
+    switch (type) {
+    case QLocale::LongFormat:
+        idx = d()->m_long_day_names_idx;
+        size = d()->m_long_day_names_size;
+        break;
+    case QLocale::ShortFormat:
+        idx = d()->m_short_day_names_idx;
+        size = d()->m_short_day_names_size;
+        break;
+    case QLocale::NarrowFormat:
+        idx = d()->m_narrow_day_names_idx;
+        size = d()->m_narrow_day_names_size;
+        break;
+    default:
+        return QString();
+    }
+    return getLocaleListData(days_data + idx, size, day);
+}
+
+/*!
+    \since 4.5
+
+    Returns the localized name of the \a day (where 1 represents
+    Monday, 2 represents Tuesday and so on) that is used as a
+    standalone text, in the format specified by \a type.
+
+    If the locale information does not specify the standalone day
+    name then return value is the same as in dayName().
+
+    \sa dayName(), standaloneMonthName()
+*/
+QString QLocale::standaloneDayName(int day, FormatType type) const
+{
+    if (day < 1 || day > 7)
+        return QString();
+
+#ifndef QT_NO_SYSTEMLOCALE
+    if (d() == systemPrivate()) {
+        QVariant res = systemLocale()->query(type == LongFormat
+                                             ? QSystemLocale::DayNameLong : QSystemLocale::DayNameShort,
+                                             day);
+        if (!res.isNull())
+            return res.toString();
+    }
+#endif
+    if (day == 7)
+        day = 0;
+
+    quint32 idx, size;
+    switch (type) {
+    case QLocale::LongFormat:
+        idx = d()->m_standalone_long_day_names_idx;
+        size = d()->m_standalone_long_day_names_size;
+        break;
+    case QLocale::ShortFormat:
+        idx = d()->m_standalone_short_day_names_idx;
+        size = d()->m_standalone_short_day_names_size;
+        break;
+    case QLocale::NarrowFormat:
+        idx = d()->m_standalone_narrow_day_names_idx;
+        size = d()->m_standalone_narrow_day_names_size;
+        break;
+    default:
+        return QString();
+    }
+    QString name = getLocaleListData(days_data + idx, size, day);
+    if (name.isEmpty())
+        return dayName(day == 0 ? 7 : day, type);
+    return name;
 }
 
 /*!
@@ -3193,6 +3434,45 @@ QLocale::MeasurementSystem QLocale::measurementSystem() const
     return meas;
 }
 
+/*!
+    \since 4.5
+
+    Returns the localized name of the "AM" suffix for times specified using
+    the conventions of the 12-hour clock.
+
+    \sa pmText()
+*/
+QString QLocale::amText() const
+{
+#ifndef QT_NO_SYSTEMLOCALE
+    if (d() == systemPrivate()) {
+        QVariant res = systemLocale()->query(QSystemLocale::AMText, QVariant());
+        if (!res.isNull())
+            return res.toString();
+    }
+#endif
+    return getLocaleData(am_data + d()->m_am_idx, d()->m_am_size);
+}
+
+/*!
+    \since 4.5
+
+    Returns the localized name of the "PM" suffix for times specified using
+    the conventions of the 12-hour clock.
+
+    \sa amText()
+*/
+QString QLocale::pmText() const
+{
+#ifndef QT_NO_SYSTEMLOCALE
+    if (d() == systemPrivate()) {
+        QVariant res = systemLocale()->query(QSystemLocale::PMText, QVariant());
+        if (!res.isNull())
+            return res.toString();
+    }
+#endif
+    return getLocaleData(pm_data + d()->m_pm_idx, d()->m_pm_size);
+}
 
 
 /*!
@@ -3680,7 +3960,7 @@ QString QLocalePrivate::doubleToString(double d,
                 reinterpret_cast<ushort *>(digits.data())[i] += z;
         }
 
-        bool always_show_decpt = flags & Alternate;
+        bool always_show_decpt = (flags & Alternate || flags & ForcePoint);
         switch (form) {
             case DFExponent: {
                 num_str = exponentForm(digits, decpt, precision, PMDecimalDigits,
@@ -3776,7 +4056,7 @@ QString QLocalePrivate::longLongToString(qlonglong l, int precision,
     for (int i = num_str.length()/* - cnt_thousand_sep*/; i < precision; ++i)
         num_str.prepend(base == 10 ? zero() : QChar::fromLatin1('0'));
 
-    if (flags & Alternate
+    if ((flags & Alternate || flags & ShowBase)
             && base == 8
             && (num_str.isEmpty() || num_str[0].unicode() != QLatin1Char('0')))
         num_str.prepend(QLatin1Char('0'));
@@ -3797,30 +4077,31 @@ QString QLocalePrivate::longLongToString(qlonglong l, int precision,
             --num_pad_chars;
 
         // leave space for optional '0x' in hex form
-        if (base == 16
-                && flags & Alternate
-                && l != 0)
+        if (base == 16 && (flags & Alternate || flags & ShowBase))
+            num_pad_chars -= 2;
+        // leave space for optional '0b' in binary form
+        else if (base == 2 && (flags & Alternate || flags & ShowBase))
             num_pad_chars -= 2;
 
         for (int i = 0; i < num_pad_chars; ++i)
             num_str.prepend(base == 10 ? zero() : QChar::fromLatin1('0'));
     }
 
-    if (base == 16
-            && flags & Alternate
-            && l != 0)
-        num_str.prepend(QLatin1String("0x"));
+    if (flags & CapitalEorX)
+        num_str = num_str.toUpper();
+
+    if (base == 16 && (flags & Alternate || flags & ShowBase))
+        num_str.prepend(QLatin1String(flags & UppercaseBase ? "0X" : "0x"));
+    if (base == 2 && (flags & Alternate || flags & ShowBase))
+        num_str.prepend(QLatin1String(flags & UppercaseBase ? "0B" : "0b"));
 
     // add sign
     if (negative)
         num_str.prepend(minus());
     else if (flags & AlwaysShowSign)
-        num_str.prepend(base == 10 ? plus() : QChar::fromLatin1('+'));
+        num_str.prepend(plus());
     else if (flags & BlankBeforePositive)
         num_str.prepend(QLatin1Char(' '));
-
-    if (flags & CapitalEorX)
-        num_str = num_str.toUpper();
 
     return num_str;
 }
@@ -3848,7 +4129,7 @@ QString QLocalePrivate::unsLongLongToString(qulonglong l, int precision,
     for (int i = num_str.length()/* - cnt_thousand_sep*/; i < precision; ++i)
         num_str.prepend(base == 10 ? zero() : QChar::fromLatin1('0'));
 
-    if (flags & Alternate
+    if ((flags & Alternate || flags & ShowBase)
             && base == 8
             && (num_str.isEmpty() || num_str[0].unicode() != QLatin1Char('0')))
         num_str.prepend(QLatin1Char('0'));
@@ -3863,22 +4144,29 @@ QString QLocalePrivate::unsLongLongToString(qulonglong l, int precision,
         int num_pad_chars = width - num_str.length();
 
         // leave space for optional '0x' in hex form
-        if (base == 16
-                && flags & Alternate
-                && l != 0)
+        if (base == 16 && flags & Alternate)
+            num_pad_chars -= 2;
+        // leave space for optional '0b' in binary form
+        else if (base == 2 && flags & Alternate)
             num_pad_chars -= 2;
 
         for (int i = 0; i < num_pad_chars; ++i)
             num_str.prepend(base == 10 ? zero() : QChar::fromLatin1('0'));
     }
 
-    if (base == 16
-            && flags & Alternate
-            && l != 0)
-        num_str.prepend(QLatin1String("0x"));
-
     if (flags & CapitalEorX)
         num_str = num_str.toUpper();
+
+    if (base == 16 && (flags & Alternate || flags & ShowBase))
+        num_str.prepend(QLatin1String(flags & UppercaseBase ? "0X" : "0x"));
+    else if (base == 2 && (flags & Alternate || flags & ShowBase))
+        num_str.prepend(QLatin1String(flags & UppercaseBase ? "0B" : "0b"));
+
+    // add sign
+    if (flags & AlwaysShowSign)
+        num_str.prepend(plus());
+    else if (flags & BlankBeforePositive)
+        num_str.prepend(QLatin1Char(' '));
 
     return num_str;
 }

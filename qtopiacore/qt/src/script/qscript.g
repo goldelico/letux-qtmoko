@@ -1,37 +1,41 @@
 ----------------------------------------------------------------------------
 --
--- Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+-- Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 -- Contact: Qt Software Information (qt-info@nokia.com)
 --
 -- This file is part of the QtScript module of the Qt Toolkit.
 --
+-- $QT_BEGIN_LICENSE:LGPL$
 -- Commercial Usage
 -- Licensees holding valid Qt Commercial licenses may use this file in
 -- accordance with the Qt Commercial License Agreement provided with the
 -- Software or, alternatively, in accordance with the terms contained in
 -- a written agreement between you and Nokia.
 --
+-- GNU Lesser General Public License Usage
+-- Alternatively, this file may be used under the terms of the GNU Lesser
+-- General Public License version 2.1 as published by the Free Software
+-- Foundation and appearing in the file LICENSE.LGPL included in the
+-- packaging of this file.  Please review the following information to
+-- ensure the GNU Lesser General Public License version 2.1 requirements
+-- will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+--
+-- In addition, as a special exception, Nokia gives you certain
+-- additional rights. These rights are described in the Nokia Qt LGPL
+-- Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+-- package.
 --
 -- GNU General Public License Usage
 -- Alternatively, this file may be used under the terms of the GNU
--- General Public License versions 2.0 or 3.0 as published by the Free
--- Software Foundation and appearing in the file LICENSE.GPL included in
--- the packaging of this file.  Please review the following information
--- to ensure GNU General Public Licensing requirements will be met:
--- http://www.fsf.org/licensing/licenses/info/GPLv2.html and
--- http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
--- exception, Nokia gives you certain additional rights. These rights
--- are described in the Nokia Qt GPL Exception version 1.3, included in
--- the file GPL_EXCEPTION.txt in this package.
---
--- Qt for Windows(R) Licensees
--- As a special exception, Nokia, as the sole copyright holder for Qt
--- Designer, grants users of the Qt/Eclipse Integration plug-in the
--- right for the Qt/Eclipse Integration to link to functionality
--- provided by Qt Designer and its related libraries.
+-- General Public License version 3.0 as published by the Free Software
+-- Foundation and appearing in the file LICENSE.GPL included in the
+-- packaging of this file.  Please review the following information to
+-- ensure the GNU General Public License version 3.0 requirements will be
+-- met: http://www.gnu.org/copyleft/gpl.html.
 --
 -- If you are unsure which license is appropriate for your use, please
 -- contact the sales department at qt-sales@nokia.com.
+-- $QT_END_LICENSE$
 --
 -- This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 -- WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -72,6 +76,7 @@
 %token T_WITH "with"            T_XOR "^"                   T_XOR_EQ "^="
 %token T_NULL "null"            T_TRUE "true"               T_FALSE "false"
 %token T_CONST "const"
+%token T_DEBUGGER "debugger"
 %token T_RESERVED_WORD "reserved word"
 
 %start Program
@@ -79,38 +84,42 @@
 /.
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -142,38 +151,42 @@
 /:
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -462,6 +475,8 @@ case $rule_number: {
   bool rx = lexer->scanRegExp(QScript::Lexer::NoPrefix);
   if (!rx) {
       error_message = lexer->errorMessage();
+      error_lineno = lexer->startLineNo();
+      error_column = lexer->startColumnNo();
       return false;
   }
   sym(1).Node = QScript::makeAstNode<QScript::AST::RegExpLiteral> (driver->nodePool(), lexer->pattern, lexer->flags);
@@ -478,6 +493,8 @@ case $rule_number: {
   bool rx = lexer->scanRegExp(QScript::Lexer::EqualPrefix);
   if (!rx) {
       error_message = lexer->errorMessage();
+      error_lineno = lexer->startLineNo();
+      error_column = lexer->startColumnNo();
       return false;
   }
   sym(1).Node = QScript::makeAstNode<QScript::AST::RegExpLiteral> (driver->nodePool(), lexer->pattern, lexer->flags);
@@ -525,6 +542,14 @@ case $rule_number: {
   else
     sym(1).Node = QScript::makeAstNode<QScript::AST::ObjectLiteral> (driver->nodePool());
   Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(3));
+} break;
+./
+
+PrimaryExpression: T_LBRACE PropertyNameAndValueList T_COMMA T_RBRACE ;
+/.
+case $rule_number: {
+  sym(1).Node = QScript::makeAstNode<QScript::AST::ObjectLiteral> (driver->nodePool(), sym(2).PropertyNameAndValueList->finish ());
+  Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(4));
 } break;
 ./
 
@@ -623,6 +648,145 @@ case $rule_number: {
 } break;
 ./
 
+PropertyName: ReservedIdentifier ;
+/.
+case $rule_number: {
+  sym(1).Node = QScript::makeAstNode<QScript::AST::IdentifierPropertyName> (driver->nodePool(), sym(1).sval);
+  Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(1));
+} break;
+./
+
+ReservedIdentifier: T_BREAK ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_CASE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_CATCH ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_CONTINUE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_DEFAULT ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_DELETE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_DO ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_ELSE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_FALSE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_FINALLY ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_FOR ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_FUNCTION ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_IF ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_IN ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_INSTANCEOF ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_NEW ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_NULL ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_RETURN ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_SWITCH ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_THIS ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_THROW ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_TRUE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_TRY ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_TYPEOF ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_VAR ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_VOID ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_WHILE ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_CONST ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_DEBUGGER ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_RESERVED_WORD ;
+/.
+case $rule_number:
+./
+ReservedIdentifier: T_WITH ;
+/.
+case $rule_number:
+{
+  sym(1).sval = driver->intern(lexer->characterBuffer(), lexer->characterCount());
+} break;
+./
+
+PropertyIdentifier: T_IDENTIFIER ;
+PropertyIdentifier: ReservedIdentifier ;
+
 MemberExpression: PrimaryExpression ;
 MemberExpression: FunctionExpression ;
 
@@ -634,19 +798,11 @@ case $rule_number: {
 } break;
 ./
 
-MemberExpression: MemberExpression T_DOT ExtraIdentifiersMarker T_IDENTIFIER ;
+MemberExpression: MemberExpression T_DOT PropertyIdentifier ;
 /.
 case $rule_number: {
-  sym(1).Node = QScript::makeAstNode<QScript::AST::FieldMemberExpression> (driver->nodePool(), sym(1).Expression, sym(4).sval);
-  lexer->scanExtraIdentifiers(false);
+  sym(1).Node = QScript::makeAstNode<QScript::AST::FieldMemberExpression> (driver->nodePool(), sym(1).Expression, sym(3).sval);
   Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(4));
-} break;
-./
-
-ExtraIdentifiersMarker: ;
-/.
-case $rule_number: {
-  lexer->scanExtraIdentifiers(true);
 } break;
 ./
 
@@ -692,7 +848,7 @@ case $rule_number: {
 } break;
 ./
 
-CallExpression: CallExpression T_DOT T_IDENTIFIER ;
+CallExpression: CallExpression T_DOT PropertyIdentifier ;
 /.
 case $rule_number: {
   sym(1).Node = QScript::makeAstNode<QScript::AST::FieldMemberExpression> (driver->nodePool(), sym(1).Expression, sym(3).sval);
@@ -1331,6 +1487,7 @@ Statement: LabelledStatement ;
 Statement: SwitchStatement ;
 Statement: ThrowStatement ;
 Statement: TryStatement ;
+Statement: DebuggerStatement ;
 
 
 Block: T_LBRACE StatementListOpt T_RBRACE ;
@@ -1737,6 +1894,15 @@ Finally: T_FINALLY Block ;
 case $rule_number: {
   sym(1).Node = QScript::makeAstNode<QScript::AST::Finally> (driver->nodePool(), sym(2).Statement);
   Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(2));
+} break;
+./
+
+DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON ; -- automatic semicolon
+DebuggerStatement: T_DEBUGGER T_SEMICOLON ;
+/.
+case $rule_number: {
+  sym(1).Node = QScript::makeAstNode<QScript::AST::DebuggerStatement> (driver->nodePool());
+  Q_SCRIPT_UPDATE_POSITION(sym(1).Node, loc(1), loc(1));
 } break;
 ./
 

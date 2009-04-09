@@ -30,6 +30,7 @@
 
 #include "DocumentFragment.h"
 #include "Editor.h"
+#include "Frame.h"
 #include "Image.h"
 #include "markup.h"
 #include "RenderImage.h"
@@ -124,7 +125,7 @@ void Pasteboard::writeURL(const KURL& _url, const String&, Frame*)
 
 #ifndef QT_NO_CLIPBOARD
     QMimeData* md = new QMimeData;
-    QString url = _url.url();
+    QString url = _url.string();
     md->setText(url);
     md->setUrls(QList<QUrl>() << QUrl(url));
     QApplication::clipboard()->setMimeData(md, m_selectionMode ?
@@ -143,7 +144,7 @@ void Pasteboard::writeImage(Node* node, const KURL&, const String&)
     Image* image = cachedImage->image();
     ASSERT(image);
 
-    QPixmap* pixmap = image->getPixmap();
+    QPixmap* pixmap = image->nativeImageForCurrentFrame();
     ASSERT(pixmap);
 
     QApplication::clipboard()->setPixmap(*pixmap, QClipboard::Clipboard);

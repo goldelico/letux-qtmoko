@@ -37,7 +37,7 @@ class DefaultSimilarity;
 *    </small></td>
 *    <td valign="middle" rowspan="2">&nbsp;*
 *    {@link #coord(int32_t,int32_t) coord}(q,d) *
-*    {@link #queryNorm(float_t) queryNorm}(q)
+*    {@link #queryNorm(qreal) queryNorm}(q)
 *    </td>
 *  </tr>
 *  <tr>
@@ -83,17 +83,17 @@ public:
    * small to represent are rounded up to the smallest positive representable
    * value.
    *
-   * @see Field#setBoost(float_t)
+   * @see Field#setBoost(qreal)
    */
-   static uint8_t encodeNorm(float_t f);
+   static uint8_t encodeNorm(qreal f);
    
    /** Decodes a normalization factor stored in an index.
-   * @see #encodeNorm(float_t)
+   * @see #encodeNorm(qreal)
    */
-   static float_t decodeNorm(uint8_t b);
+   static qreal decodeNorm(uint8_t b);
    
-   static uint8_t floatToByte(float_t f);
-   static float_t byteToFloat(uint8_t b);
+   static uint8_t floatToByte(qreal f);
+   static qreal byteToFloat(uint8_t b);
 
    /** Computes a score factor for a phrase.
    *
@@ -104,8 +104,8 @@ public:
    * @param searcher the document collection being searched
    * @return a score factor for the phrase
    */
-   float_t idf(CL_NS(util)::CLVector<CL_NS(index)::Term*>* terms, Searcher* searcher);
-   //float_t idf(Term** terms, Searcher* searcher);
+   qreal idf(CL_NS(util)::CLVector<CL_NS(index)::Term*>* terms, Searcher* searcher);
+   //qreal idf(Term** terms, Searcher* searcher);
 
    
    /** Computes a score factor for a simple term.
@@ -123,7 +123,7 @@ public:
    * @param searcher the document collection being searched
    * @return a score factor for the term
    */
-   float_t idf(CL_NS(index)::Term* term, Searcher* searcher);
+   qreal idf(CL_NS(index)::Term* term, Searcher* searcher);
 
    
    /** Computes a score factor based on a term or phrase's frequency in a
@@ -136,12 +136,12 @@ public:
    * when <code>freq</code> is large, and smaller values when <code>freq</code>
    * is small.
    *
-   * <p>The default implementation calls {@link #tf(float_t)}.
+   * <p>The default implementation calls {@link #tf(qreal)}.
    *
    * @param freq the frequency of a term within a document
    * @return a score factor based on a term's within-document frequency
    */
-   inline float_t tf(int32_t freq){ return tf((float_t)freq); }
+   inline qreal tf(int32_t freq){ return tf((qreal)freq); }
 
    /** Computes the normalization value for a field given the total number of
    * terms contained in a field.  These values, together with field boosts, are
@@ -154,7 +154,7 @@ public:
    *
    * <p>That these values are computed under {@link
    * IndexWriter#addDocument(Document)} and stored then using
-   * {#encodeNorm(float_t)}.  Thus they have limited precision, and documents
+   * {#encodeNorm(qreal)}.  Thus they have limited precision, and documents
    * must be re-indexed if this method is altered.
    *
    * @param fieldName the name of the field
@@ -162,9 +162,9 @@ public:
    * <i>fieldName</i> of <i>doc</i>.
    * @return a normalization factor for hits on this field of this document
    *
-   * @see Field#setBoost(float_t)
+   * @see Field#setBoost(qreal)
    */
-   virtual float_t lengthNorm(const TCHAR* fieldName, int32_t numTokens) = 0;
+   virtual qreal lengthNorm(const TCHAR* fieldName, int32_t numTokens) = 0;
 
    /** Computes the normalization value for a query given the sum of the squared
    * weights of each of the query terms.  This value is then multipled into the
@@ -176,11 +176,11 @@ public:
    * @param sumOfSquaredWeights the sum of the squares of query term weights
    * @return a normalization factor for query weights
    */
-   virtual float_t queryNorm(float_t sumOfSquaredWeights) = 0;
+   virtual qreal queryNorm(qreal sumOfSquaredWeights) = 0;
 
    /** Computes the amount of a sloppy phrase match, based on an edit distance.
    * This value is summed for each sloppy phrase match in a document to form
-   * the frequency that is passed to {@link #tf(float_t)}.
+   * the frequency that is passed to {@link #tf(qreal)}.
    *
    * <p>A phrase match with a small edit distance to a document passage more
    * closely matches the document, so implementations of this method usually
@@ -191,7 +191,7 @@ public:
    * @param distance the edit distance of this sloppy phrase match
    * @return the frequency increment for this match
    */
-   virtual float_t sloppyFreq(int32_t distance) = 0;
+   virtual qreal sloppyFreq(int32_t distance) = 0;
 
    /** Computes a score factor based on a term or phrase's frequency in a
    * document.  This value is multiplied by the {@link #idf(Term, Searcher)}
@@ -206,7 +206,7 @@ public:
    * @param freq the frequency of a term within a document
    * @return a score factor based on a term's within-document frequency
    */
-   virtual float_t tf(float_t freq) = 0;
+   virtual qreal tf(qreal freq) = 0;
 
    /** Computes a score factor based on a term's document frequency (the number
    * of documents which contain the term).  This value is multiplied by the
@@ -221,7 +221,7 @@ public:
    * @param numDocs the total number of documents in the collection
    * @return a score factor based on the term's document frequency
    */
-   virtual float_t idf(int32_t docFreq, int32_t numDocs) = 0;
+   virtual qreal idf(int32_t docFreq, int32_t numDocs) = 0;
 
    /** Computes a score factor based on the fraction of all query terms that a
    * document contains.  This value is multiplied into scores.
@@ -235,7 +235,7 @@ public:
    * @param maxOverlap the total number of terms in the query
    * @return a score factor based on term overlap with the query
    */
-   virtual float_t coord(int32_t overlap, int32_t maxOverlap) = 0;
+   virtual qreal coord(int32_t overlap, int32_t maxOverlap) = 0;
 };
 
 
@@ -246,22 +246,22 @@ public:
 	~DefaultSimilarity();
 
   /** Implemented as <code>1/sqrt(numTerms)</code>. */
-  float_t lengthNorm(const TCHAR* fieldName, int32_t numTerms);
+  qreal lengthNorm(const TCHAR* fieldName, int32_t numTerms);
   
   /** Implemented as <code>1/sqrt(sumOfSquaredWeights)</code>. */
-  float_t queryNorm(float_t sumOfSquaredWeights);
+  qreal queryNorm(qreal sumOfSquaredWeights);
 
   /** Implemented as <code>sqrt(freq)</code>. */
-  inline float_t tf(float_t freq);
+  inline qreal tf(qreal freq);
     
   /** Implemented as <code>1 / (distance + 1)</code>. */
-  float_t sloppyFreq(int32_t distance);
+  qreal sloppyFreq(int32_t distance);
     
   /** Implemented as <code>log(numDocs/(docFreq+1)) + 1</code>. */
-  float_t idf(int32_t docFreq, int32_t numDocs);
+  qreal idf(int32_t docFreq, int32_t numDocs);
     
   /** Implemented as <code>overlap / maxOverlap</code>. */
-  float_t coord(int32_t overlap, int32_t maxOverlap);
+  qreal coord(int32_t overlap, int32_t maxOverlap);
 };
 
 CL_NS_END

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,6 +47,7 @@
 #include "qvariant.h"
 #include "qline.h"
 #include "qdebug.h"
+#include <QtCore/qcoreapplication.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -103,18 +108,63 @@ QPixmap qt_pixmapForBrush(int brushStyle, bool invert)
     return pm;
 }
 
+class QBrushPatternImageCache
+{
+public:
+    QBrushPatternImageCache()
+        : m_initialized(false)
+    {
+        init();
+    }
+
+    void init()
+    {
+        for (int style = Qt::Dense1Pattern; style <= Qt::DiagCrossPattern; ++style) {
+            int i = style - Qt::Dense1Pattern;
+            m_images[i][0] = QImage(qt_patternForBrush(style, 0), 8, 8, 1, QImage::Format_MonoLSB);
+            m_images[i][1] = QImage(qt_patternForBrush(style, 1), 8, 8, 1, QImage::Format_MonoLSB);
+        }
+        m_initialized = true;
+    }
+
+    QImage getImage(int brushStyle, bool invert) const
+    {
+        Q_ASSERT(brushStyle >= Qt::Dense1Pattern && brushStyle <= Qt::DiagCrossPattern);
+        if (!m_initialized)
+            const_cast<QBrushPatternImageCache*>(this)->init();
+        return m_images[brushStyle - Qt::Dense1Pattern][invert];
+    }
+
+    void cleanup() {
+        for (int style = Qt::Dense1Pattern; style <= Qt::DiagCrossPattern; ++style) {
+            int i = style - Qt::Dense1Pattern;
+            m_images[i][0] = QImage();
+            m_images[i][1] = QImage();
+        }
+        m_initialized = false;
+    }
+
+private:
+    QImage m_images[Qt::DiagCrossPattern - Qt::Dense1Pattern + 1][2];
+    bool m_initialized;
+};
+
+static void qt_cleanup_brush_pattern_image_cache();
+Q_GLOBAL_STATIC_WITH_INITIALIZER(QBrushPatternImageCache, qt_brushPatternImageCache,
+                                 {
+                                     qAddPostRoutine(qt_cleanup_brush_pattern_image_cache);
+                                 })
+
+static void qt_cleanup_brush_pattern_image_cache()
+{
+    qt_brushPatternImageCache()->cleanup();
+}
+
 Q_GUI_EXPORT
 QImage qt_imageForBrush(int brushStyle, bool invert)
 {
-    QImage image(8, 8, QImage::Format_MonoLSB);
-    const uchar *pattern = qt_patternForBrush(brushStyle, invert);
-
-    for (int y=0; y<8; ++y)
-        *image.scanLine(y) = pattern[y];
-
-    return image;
+    return qt_brushPatternImageCache()->getImage(brushStyle, invert);
 }
-
 
 struct QTexturedBrushData : public QBrushData
 {
@@ -287,7 +337,6 @@ Q_GLOBAL_STATIC_WITH_INITIALIZER(QBrushData, nullBrushInstance,
                                      x->ref = 1;
                                      x->style = Qt::BrushStyle(0);
                                      x->color = Qt::black;
-                                     x->hasTransform = false;
                                  })
 
 static bool qbrush_check_type(Qt::BrushStyle style) {
@@ -334,7 +383,6 @@ void QBrush::init(const QColor &color, Qt::BrushStyle style)
     d->ref = 1;
     d->style = style;
     d->color = color;
-    d->hasTransform = false;
 }
 
 /*!
@@ -552,8 +600,6 @@ void QBrush::detach(Qt::BrushStyle newStyle)
     x->style = newStyle;
     x->color = d->color;
     x->transform = d->transform;
-    x->hasTransform = d->hasTransform;
-    x->sourceRect = d->sourceRect;
     if (!d->ref.deref())
         cleanUp(d);
     d = x;
@@ -834,7 +880,6 @@ void QBrush::setTransform(const QTransform &matrix)
 {
     detach(d->style);
     d->transform = matrix;
-    d->hasTransform = !matrix.isIdentity();
 }
 
 
@@ -960,6 +1005,9 @@ QDataStream &operator<<(QDataStream &s, const QBrush &b)
             s << int(gradient->coordinateMode());
         }
 
+        if (s.version() >= QDataStream::Qt_4_5)
+            s << int(gradient->interpolationMode());
+
         if (sizeof(qreal) == sizeof(double)) {
             s << gradient->stops();
         } else {
@@ -1020,6 +1068,7 @@ QDataStream &operator>>(QDataStream &s, QBrush &b)
         QGradientStops stops;
         QGradient::CoordinateMode cmode = QGradient::LogicalMode;
         QGradient::Spread spread = QGradient::PadSpread;
+        QGradient::InterpolationMode imode = QGradient::ColorInterpolation;
 
         s >> type_as_int;
         type = QGradient::Type(type_as_int);
@@ -1028,6 +1077,11 @@ QDataStream &operator>>(QDataStream &s, QBrush &b)
             spread = QGradient::Spread(type_as_int);
             s >> type_as_int;
             cmode = QGradient::CoordinateMode(type_as_int);
+        }
+
+        if (s.version() >= QDataStream::Qt_4_5) {
+            s >> type_as_int;
+            imode = QGradient::InterpolationMode(type_as_int);
         }
 
         if (sizeof(qreal) == sizeof(double)) {
@@ -1052,6 +1106,7 @@ QDataStream &operator>>(QDataStream &s, QBrush &b)
             lg.setStops(stops);
             lg.setSpread(spread);
             lg.setCoordinateMode(cmode);
+            lg.setInterpolationMode(imode);
             b = QBrush(lg);
         } else if (type == QGradient::RadialGradient) {
             QPointF center, focal;
@@ -1063,6 +1118,7 @@ QDataStream &operator>>(QDataStream &s, QBrush &b)
             rg.setStops(stops);
             rg.setSpread(spread);
             rg.setCoordinateMode(cmode);
+            rg.setInterpolationMode(imode);
             b = QBrush(rg);
         } else { // type == QGradient::ConicalGradient
             QPointF center;
@@ -1073,6 +1129,7 @@ QDataStream &operator>>(QDataStream &s, QBrush &b)
             cg.setStops(stops);
             cg.setSpread(spread);
             cg.setCoordinateMode(cmode);
+            cg.setInterpolationMode(imode);
             b = QBrush(cg);
         }
     } else {
@@ -1315,6 +1372,8 @@ QGradientStops QGradient::stops() const
     return m_stops;
 }
 
+#define Q_DUMMY_ACCESSOR union {void *p; uint i;}; p = dummy;
+
 /*!
     \enum QGradient::CoordinateMode
     \since 4.4
@@ -1342,12 +1401,8 @@ QGradientStops QGradient::stops() const
 */
 QGradient::CoordinateMode QGradient::coordinateMode() const
 {
-    if (dummy == 0)
-        return LogicalMode;
-    else if (dummy == (void*)1)
-        return StretchToDeviceMode;
-    else
-        return ObjectBoundingMode;
+    Q_DUMMY_ACCESSOR
+    return CoordinateMode(i & 0x03);
 }
 
 /*!
@@ -1358,14 +1413,52 @@ QGradient::CoordinateMode QGradient::coordinateMode() const
 */
 void QGradient::setCoordinateMode(CoordinateMode mode)
 {
-    if (mode == LogicalMode)
-        dummy = 0;
-    else if (mode == StretchToDeviceMode)
-        dummy = (void *) 1;
-    else
-        dummy = (void *) 2;
+    Q_DUMMY_ACCESSOR
+    i &= ~0x03;
+    i |= uint(mode);
+    dummy = p;
 }
 
+/*!
+    \enum QGradient::InterpolationMode
+    \since 4.5
+    \internal
+
+    \value ComponentInterpolation The color components and the alpha component are
+    independently linearly interpolated.
+    \value ColorInterpolation The colors are linearly interpolated in
+    premultiplied color space.
+*/
+
+/*!
+    \since 4.5
+    \internal
+
+    Returns the interpolation mode of this gradient. The default mode is
+    ColorInterpolation.
+*/
+QGradient::InterpolationMode QGradient::interpolationMode() const
+{
+    Q_DUMMY_ACCESSOR
+    return InterpolationMode((i >> 2) & 0x01);
+}
+
+/*!
+    \since 4.5
+    \internal
+
+    Sets the interpolation mode of this gradient to \a mode. The default
+    mode is ColorInterpolation.
+*/
+void QGradient::setInterpolationMode(InterpolationMode mode)
+{
+    Q_DUMMY_ACCESSOR
+    i &= ~(1 << 2);
+    i |= (uint(mode) << 2);
+    dummy = p;
+}
+
+#undef Q_DUMMY_ACCESSOR
 
 /*!
     \fn bool QGradient::operator!=(const QGradient &gradient) const

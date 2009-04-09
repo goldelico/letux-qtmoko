@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2006, 2007, 2008 Nikolas Zimmermann <zimmermann@kde.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,44 +20,113 @@
 #include "config.h"
 
 #if ENABLE(SVG)
-
 #include "JSSVGMatrix.h"
 
-#include "AffineTransform.h"
+#include "TransformationMatrix.h"
 #include "SVGException.h"
 
-using namespace KJS;
+using namespace JSC;
 
 namespace WebCore {
 
-JSValue* JSSVGMatrix::inverse(ExecState* exec, const List&)
+JSValuePtr JSSVGMatrix::multiply(ExecState* exec, const ArgList& args)
 {
-    const AffineTransform& imp(*impl());
-    KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<AffineTransform>(imp.inverse()));
+    TransformationMatrix imp(*impl());
+
+    TransformationMatrix secondMatrix = toSVGMatrix(args.at(exec, 0));    
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.multiply(secondMatrix)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::inverse(ExecState* exec, const ArgList&)
+{
+    TransformationMatrix imp(*impl());
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.inverse()).get(), m_context.get());
 
     if (!imp.isInvertible())
-        setDOMException(exec, SVG_MATRIX_NOT_INVERTABLE);
+        setDOMException(exec, SVGException::SVG_MATRIX_NOT_INVERTABLE);
 
     return result;
 }
 
-JSValue* JSSVGMatrix::rotateFromVector(ExecState* exec, const List& args)
+JSValuePtr JSSVGMatrix::translate(ExecState* exec, const ArgList& args)
 {
-    AffineTransform& imp(*impl());
- 
-    float x = args[0]->toFloat(exec);
-    float y = args[1]->toFloat(exec);
+    TransformationMatrix imp(*impl());
 
-    KJS::JSValue* result = toJS(exec, new JSSVGPODTypeWrapper<AffineTransform>(imp.rotateFromVector(x, y)));
+    float x = args.at(exec, 0)->toFloat(exec);
+    float y = args.at(exec, 1)->toFloat(exec);
+
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.translate(x, y)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::scale(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+
+    float scaleFactor = args.at(exec, 0)->toFloat(exec);
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.scale(scaleFactor)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::scaleNonUniform(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+
+    float scaleFactorX = args.at(exec, 0)->toFloat(exec);
+    float scaleFactorY = args.at(exec, 1)->toFloat(exec);
+
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.scaleNonUniform(scaleFactorX, scaleFactorY)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::rotate(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+
+    float angle = args.at(exec, 0)->toFloat(exec);
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.rotate(angle)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::rotateFromVector(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+ 
+    float x = args.at(exec, 0)->toFloat(exec);
+    float y = args.at(exec, 1)->toFloat(exec);
+
+    JSC::JSValuePtr result = toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.rotateFromVector(x, y)).get(), m_context.get());
 
     if (x == 0.0 || y == 0.0)
-        setDOMException(exec, SVG_INVALID_VALUE_ERR);
+        setDOMException(exec, SVGException::SVG_INVALID_VALUE_ERR);
 
     return result;
 }
-    
+
+JSValuePtr JSSVGMatrix::flipX(ExecState* exec, const ArgList&)
+{
+    TransformationMatrix imp(*impl());
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.flipX()).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::flipY(ExecState* exec, const ArgList&)
+{
+    TransformationMatrix imp(*impl());
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.flipY()).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::skewX(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+
+    float angle = args.at(exec, 0)->toFloat(exec);
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.skewX(angle)).get(), m_context.get());
+}
+
+JSValuePtr JSSVGMatrix::skewY(ExecState* exec, const ArgList& args)
+{
+    TransformationMatrix imp(*impl());
+
+    float angle = args.at(exec, 0)->toFloat(exec);
+    return toJS(exec, JSSVGStaticPODTypeWrapper<TransformationMatrix>::create(imp.skewY(angle)).get(), m_context.get());
+}
+
 }
 
 #endif // ENABLE(SVG)
-
-// vim:ts=4:noet

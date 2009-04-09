@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -61,12 +65,73 @@ public:
     const char *tag() const;
     enum Access { Private, Protected, Public };
     Access access() const;
-    enum MethodType { Method, Signal, Slot };
+    enum MethodType { Method, Signal, Slot, Constructor };
     MethodType methodType() const;
     enum Attributes { Compatibility = 0x1, Cloned = 0x2, Scriptable = 0x4 };
     int attributes() const;
 
     inline const QMetaObject *enclosingMetaObject() const { return mobj; }
+
+    bool invoke(QObject *object,
+                Qt::ConnectionType connectionType,
+                QGenericReturnArgument returnValue,
+                QGenericArgument val0 = QGenericArgument(0),
+                QGenericArgument val1 = QGenericArgument(),
+                QGenericArgument val2 = QGenericArgument(),
+                QGenericArgument val3 = QGenericArgument(),
+                QGenericArgument val4 = QGenericArgument(),
+                QGenericArgument val5 = QGenericArgument(),
+                QGenericArgument val6 = QGenericArgument(),
+                QGenericArgument val7 = QGenericArgument(),
+                QGenericArgument val8 = QGenericArgument(),
+                QGenericArgument val9 = QGenericArgument()) const;
+    inline bool invoke(QObject *object,
+                       QGenericReturnArgument returnValue,
+                       QGenericArgument val0 = QGenericArgument(0),
+                       QGenericArgument val1 = QGenericArgument(),
+                       QGenericArgument val2 = QGenericArgument(),
+                       QGenericArgument val3 = QGenericArgument(),
+                       QGenericArgument val4 = QGenericArgument(),
+                       QGenericArgument val5 = QGenericArgument(),
+                       QGenericArgument val6 = QGenericArgument(),
+                       QGenericArgument val7 = QGenericArgument(),
+                       QGenericArgument val8 = QGenericArgument(),
+                       QGenericArgument val9 = QGenericArgument()) const
+    {
+        return invoke(object, Qt::AutoConnection, returnValue,
+                      val0, val1, val2, val3, val4, val5, val6, val7, val8, val9);
+    }
+    inline bool invoke(QObject *object,
+                       Qt::ConnectionType connectionType,
+                       QGenericArgument val0 = QGenericArgument(0),
+                       QGenericArgument val1 = QGenericArgument(),
+                       QGenericArgument val2 = QGenericArgument(),
+                       QGenericArgument val3 = QGenericArgument(),
+                       QGenericArgument val4 = QGenericArgument(),
+                       QGenericArgument val5 = QGenericArgument(),
+                       QGenericArgument val6 = QGenericArgument(),
+                       QGenericArgument val7 = QGenericArgument(),
+                       QGenericArgument val8 = QGenericArgument(),
+                       QGenericArgument val9 = QGenericArgument()) const
+    {
+        return invoke(object, connectionType, QGenericReturnArgument(),
+                      val0, val1, val2, val3, val4, val5, val6, val7, val8, val9);
+    }
+    inline bool invoke(QObject *object,
+                       QGenericArgument val0 = QGenericArgument(0),
+                       QGenericArgument val1 = QGenericArgument(),
+                       QGenericArgument val2 = QGenericArgument(),
+                       QGenericArgument val3 = QGenericArgument(),
+                       QGenericArgument val4 = QGenericArgument(),
+                       QGenericArgument val5 = QGenericArgument(),
+                       QGenericArgument val6 = QGenericArgument(),
+                       QGenericArgument val7 = QGenericArgument(),
+                       QGenericArgument val8 = QGenericArgument(),
+                       QGenericArgument val9 = QGenericArgument()) const
+    {
+        return invoke(object, Qt::AutoConnection, QGenericReturnArgument(),
+                      val0, val1, val2, val3, val4, val5, val6, val7, val8, val9);
+    }
 
 private:
     const QMetaObject *mobj;
@@ -126,6 +191,10 @@ public:
     bool isFlagType() const;
     bool isEnumType() const;
     QMetaEnum enumerator() const;
+
+    bool hasNotifySignal() const;
+    QMetaMethod notifySignal() const;
+    int notifySignalIndex() const;
 
     QVariant read(const QObject *obj) const;
     bool write(QObject *obj, const QVariant &value) const;

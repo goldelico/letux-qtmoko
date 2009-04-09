@@ -1,42 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qplatformdefs.h"
 #include "qtextcodec.h"
+#include "qtextcodec_p.h"
 
 #ifndef QT_NO_TEXTCODEC
 
@@ -81,6 +86,10 @@
 #include <locale.h>
 #if defined (_XOPEN_UNIX) && !defined(Q_OS_QNX6) && !defined(Q_OS_OSF)
 #include <langinfo.h>
+#endif
+
+#if defined(Q_OS_WINCE)
+#  define QT_NO_SETLOCALE
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -464,10 +473,10 @@ static const char * const probably_koi8_rlocales[] = {
 static QTextCodec * ru_RU_hack(const char * i) {
     QTextCodec * ru_RU_codec = 0;
 
-#if !defined(Q_OS_WINCE)
+#if !defined(QT_NO_SETLOCALE)
     QByteArray origlocale(setlocale(LC_CTYPE, i));
 #else
-	QByteArray origlocale(i);
+    QByteArray origlocale(i);
 #endif
     // unicode   koi8r   latin5   name
     // 0x044E    0xC0    0xEE     CYRILLIC SMALL LETTER YU
@@ -484,7 +493,7 @@ static QTextCodec * ru_RU_hack(const char * i) {
         qWarning("QTextCodec: Using KOI8-R, probe failed (%02x %02x %s)",
                   koi8r, latin5, i);
     }
-#if !defined(Q_OS_WINCE)
+#if !defined(QT_NO_SETLOCALE)
     setlocale(LC_CTYPE, origlocale);
 #endif
 
@@ -540,10 +549,10 @@ static void setupLocaleMapper()
         // First part is getting that locale name.  First try setlocale() which
         // definitely knows it, but since we cannot fully trust it, get ready
         // to fall back to environment variables.
-#if !defined(Q_OS_WINCE)
+#if !defined(QT_NO_SETLOCALE)
         char * ctype = qstrdup(setlocale(LC_CTYPE, 0));
 #else
-		char * ctype = qstrdup("");
+        char * ctype = qstrdup("");
 #endif
 
         // Get the first nonempty value from $LC_ALL, $LC_CTYPE, and $LANG
@@ -719,7 +728,13 @@ static void setup()
         setupLocaleMapper();
 }
 
-
+QTextCodec::ConverterState::~ConverterState()
+{
+    if (flags & FreeFunction)
+        (QTextCodecUnalignedPointer::decode(state_data))(this);
+    else if (d)
+        qFree(d);
+}
 
 /*!
     \class QTextCodec
@@ -743,6 +758,7 @@ static void setup()
     \o Apple Roman
     \o \l{Big5 Text Codec}{Big5}
     \o \l{Big5-HKSCS Text Codec}{Big5-HKSCS}
+    \o CP949
     \o \l{EUC-JP Text Codec}{EUC-JP}
     \o \l{EUC-KR Text Codec}{EUC-KR}
     \o \l{GBK Text Codec}{GB18030-0}
@@ -825,21 +841,19 @@ static void setup()
 
     \row \o name()
          \o Returns the official name for the encoding. If the
-            ncoding is listed in the
-            \l{http://www.iana.org/assignments/character-sets}{IANA
-            character-sets encoding file}, the name should be the
-            preferred MIME name for the encoding.
+            encoding is listed in the
+            \l{IANA character-sets encoding file}, the name
+            should be the preferred MIME name for the encoding.
 
     \row \o aliases()
          \o Returns a list of alternative names for the encoding.
             QTextCodec provides a default implementation that returns
             an empty list. For example, "ISO-8859-1" has "latin1",
-	    "CP819", "IBM819", and "iso-ir-100" as aliases.
+            "CP819", "IBM819", and "iso-ir-100" as aliases.
 
     \row \o mibEnum()
          \o Return the MIB enum for the encoding if it is listed in
-            the \l{http://www.iana.org/assignments/character-sets}{IANA
-            character-sets encoding file}.
+            the \l{IANA character-sets encoding file}.
 
     \row \o convertToUnicode()
          \o Converts an 8-bit character string to Unicode.
@@ -862,6 +876,8 @@ static void setup()
     \value ConvertInvalidToNull  If this flag is set, invalid input results in
            an empty string.
     \value IgnoreHeader  Ignore any Unicode byte-order mark and don't generate any.
+
+    \omitvalue FreeFunction
 */
 
 /*!
@@ -1025,7 +1041,7 @@ QList<int> QTextCodec::availableMibs()
 
 /*!
     Set the codec to \a c; this will be returned by
-    codecForLocale(). If \c is a null pointer, the codec is reset to
+    codecForLocale(). If \a c is a null pointer, the codec is reset to
     the default.
 
     This might be needed for some applications that want to use their
@@ -1073,28 +1089,25 @@ QTextCodec* QTextCodec::codecForLocale()
     the name of the encoding supported by the subclass.
 
     If the codec is registered as a character set in the
-    \link http://www.iana.org/assignments/character-sets
-    IANA character-sets encoding file\endlink this method should return
-    the preferred mime name for the codec if defined, otherwise its name.
+    \l{IANA character-sets encoding file} this method should
+    return the preferred mime name for the codec if defined,
+    otherwise its name.
 */
 
 /*!
     \fn int QTextCodec::mibEnum() const
 
     Subclasses of QTextCodec must reimplement this function. It
-    returns the MIBenum (see \link
-    http://www.iana.org/assignments/character-sets the
-    IANA character-sets encoding file\endlink for more information).
-    It is important that each QTextCodec subclass returns the correct
-    unique value for this function.
+    returns the MIBenum (see \l{IANA character-sets encoding file}
+    for more information). It is important that each QTextCodec
+    subclass returns the correct unique value for this function.
 */
 
 /*!
   Subclasses can return a number of aliases for the codec in question.
 
   Standard aliases for codecs can be found in the
-  \link http://www.iana.org/assignments/character-sets
-  IANA character-sets encoding file\endlink.
+  \l{IANA character-sets encoding file}.
 */
 QList<QByteArray> QTextCodec::aliases() const
 {
@@ -1301,6 +1314,17 @@ QString QTextCodec::toUnicode(const char *chars) const
 */
 QTextEncoder::~QTextEncoder()
 {
+}
+
+/*! \internal
+    \since 4.5
+    Determines whether the eecoder encountered a failure while decoding the input. If
+    an error was encountered, the produced result is undefined, and gets converted as according
+    to the conversion flags.
+ */
+bool QTextEncoder::hasFailure() const
+{
+    return state.invalidChars != 0;
 }
 
 /*!

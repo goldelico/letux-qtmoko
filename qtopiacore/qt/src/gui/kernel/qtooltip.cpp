@@ -1,39 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifdef Q_WS_MAC
+# include <private/qcore_mac_p.h>
+#endif
 
 #include <qapplication.h>
 #include <qdesktopwidget.h>
@@ -49,10 +56,12 @@
 #include <private/qeffects_p.h>
 #include <qtextdocument.h>
 #include <qdebug.h>
+#include <private/qstylesheetstyle_p.h>
 #ifndef QT_NO_TOOLTIP
 
 #ifdef Q_WS_MAC
 # include <private/qcore_mac_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -83,6 +92,11 @@ QT_BEGIN_NAMESPACE
     {QWidget::}{event()} function and call QToolTip::showText() with
     the text you want to display. The \l{widgets/tooltips}{Tooltips}
     example illustrates this technique.
+
+    If you are calling QToolTip::hideText(), or QToolTip::showText()
+    with an empty string, as a result of a \l{QEvent::}{ToolTip}-event you
+    should also call \l{QEvent::}{ignore()} on the event, to signal
+    that you don't want to start any tooltip specific modes.
 
     Note that, if you want to show tooltips in an item view, the
     model/view architecture provides functionality to set an item's
@@ -130,6 +144,20 @@ protected:
     void mouseMoveEvent(QMouseEvent *e);
     void resizeEvent(QResizeEvent *e);
 
+#ifndef QT_NO_STYLE_STYLESHEET
+public slots:
+    /** \internal
+      Cleanup the _q_stylesheet_parent propery.
+     */
+    void styleSheetParentDestroyed() {
+        setProperty("_q_stylesheet_parent", QVariant());
+        styleSheetParent = 0;
+    }
+
+private:
+    QWidget *styleSheetParent;
+#endif
+
 private:
     QWidget *widget;
     QRect rect;
@@ -138,7 +166,11 @@ private:
 QTipLabel *QTipLabel::instance = 0;
 
 QTipLabel::QTipLabel(const QString &text, QWidget *w)
+#ifndef QT_NO_STYLE_STYLESHEET
+    : QLabel(w, Qt::ToolTip), styleSheetParent(0), widget(0)
+#else
     : QLabel(w, Qt::ToolTip), widget(0)
+#endif
 {
     delete instance;
     instance = this;
@@ -166,6 +198,14 @@ void QTipLabel::restartHideTimer()
 
 void QTipLabel::reuseTip(const QString &text)
 {
+#ifndef QT_NO_STYLE_STYLESHEET
+    if (styleSheetParent) {
+        disconnect(styleSheetParent, SIGNAL(destroyed()),
+                   QTipLabel::instance, SLOT(styleSheetParentDestroyed()));
+        styleSheetParent = 0;
+    }
+#endif
+
     setText(text);
     QFontMetrics fm(font());
     QSize extra(1, 0);
@@ -244,8 +284,9 @@ void QTipLabel::timerEvent(QTimerEvent *e)
         if (QApplication::isEffectEnabled(Qt::UI_FadeTooltip)){
             // Fade out tip on mac (makes it invisible).
             // The tip will not be deleted until a new tip is shown.
-            TransitionWindowOptions options = {0, 0, 0, 0};
-            TransitionWindowWithOptions(qt_mac_window_for(this), kWindowFadeTransitionEffect, kWindowHideTransitionAction, 0, 1, &options);
+
+			// DRSWAT - Cocoa
+			macWindowFade(qt_mac_window_for(this));
             QTipLabel::instance->fadingOut = true; // will never be false again.
         }
         else
@@ -304,6 +345,23 @@ int QTipLabel::getTipScreen(const QPoint &pos, QWidget *w)
 
 void QTipLabel::placeTip(const QPoint &pos, QWidget *w)
 {
+#ifndef QT_NO_STYLE_STYLESHEET
+    if (testAttribute(Qt::WA_StyleSheet) || (w && qobject_cast<QStyleSheetStyle *>(w->style()))) {
+        //the stylesheet need to know the real parent
+        QTipLabel::instance->setProperty("_q_stylesheet_parent", qVariantFromValue(w));
+        //we force the style to be the QStyleSheetStyle, and force to clear the cache as well.
+        QTipLabel::instance->setStyleSheet(QLatin1String("/* */"));
+
+        // Set up for cleaning up this later...
+        QTipLabel::instance->styleSheetParent = w;
+        if (w) {
+            connect(w, SIGNAL(destroyed()),
+                QTipLabel::instance, SLOT(styleSheetParentDestroyed()));
+        }
+    }
+#endif //QT_NO_STYLE_STYLESHEET
+
+
 #ifdef Q_WS_MAC
     QRect screen = QApplication::desktop()->availableGeometry(getTipScreen(pos, w));
 #else
@@ -389,16 +447,17 @@ void QToolTip::showText(const QPoint &pos, const QString &text, QWidget *w, cons
     }
 
     if (!text.isEmpty()){ // no tip can be reused, create new tip:
-        new QTipLabel(text, 
-#ifdef Q_WS_WIN
-            QApplication::desktop()->screen(QTipLabel::getTipScreen(pos, w))
+#ifndef Q_WS_WIN
+        new QTipLabel(text, w); // sets QTipLabel::instance to itself
 #else
-            w
+        // On windows, we can't use the widget as parent otherwise the window will be
+        // raised when the tooltip will be shown
+        new QTipLabel(text, QApplication::desktop()->screen(QTipLabel::getTipScreen(pos, w)));
 #endif
-            ); // sets QTipLabel::instance to itself
         QTipLabel::instance->setTipRect(w, rect);
         QTipLabel::instance->placeTip(pos, w);
         QTipLabel::instance->setObjectName(QLatin1String("qtooltip_label"));
+
 
 #if !defined(QT_NO_EFFECTS) && !defined(Q_WS_MAC)
         if (QApplication::isEffectEnabled(Qt::UI_FadeTooltip))

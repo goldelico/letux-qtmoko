@@ -1,48 +1,58 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#include "qabstractprintdialog.h"
 #include "qabstractprintdialog_p.h"
+#include "qcoreapplication.h"
+#include "qprintdialog.h"
 #include "qprinter.h"
 #include "private/qprinter_p.h"
 
 #ifndef QT_NO_PRINTDIALOG
 
 QT_BEGIN_NAMESPACE
+
+// hack
+class QPrintDialogPrivate : public QAbstractPrintDialogPrivate
+{
+};
 
 /*!
     \class QAbstractPrintDialog
@@ -75,15 +85,17 @@ QT_BEGIN_NAMESPACE
 
     \value None None of the options are enabled.
     \value PrintToFile The print to file option is enabled.
-    \value PrintSelection The print selection option is enalbed.
+    \value PrintSelection The print selection option is enabled.
     \value PrintPageRange The page range selection option is enabled.
     \value PrintCollateCopies
-    \value DontUseSheet Do not make the native print dialog a sheet. By default
-    on Mac OS X, the native dialog is made a sheet if it has a parent that can
-    accept sheets and is visible.  Internally, Mac OS X tracks whether a
-    printing \bold session and not which particular dialog should be a sheet
-    or not.  Therefore, make sure this value matches between the page setup
-    dialog and the print dialog or you can potentially end up in a modal loop that you can't break.
+
+    This value is obsolete and does nothing since Qt 4.5:
+
+    \value DontUseSheet In previous versions of Qt, exec() the print dialog
+    would create a sheet by default the dialog was given a parent.
+    This is no longer supported in Qt 4.5.  If you want to use sheets, use
+    QPrintDialog::open() instead.
+
     \value PrintShowPageSize  Show the page size + margins page only if this is enabled.
 */
 
@@ -95,8 +107,8 @@ QAbstractPrintDialog::QAbstractPrintDialog(QPrinter *printer, QWidget *parent)
     : QDialog(*(new QAbstractPrintDialogPrivate), parent)
 {
     Q_D(QAbstractPrintDialog);
-    d->printer = printer;
-    d->pd = printer->d_func();
+    setWindowTitle(QCoreApplication::translate("QPrintDialog", "Print"));
+    d->setPrinter(printer);
 }
 
 /*!
@@ -108,17 +120,79 @@ QAbstractPrintDialog::QAbstractPrintDialog(QAbstractPrintDialogPrivate &ptr,
     : QDialog(ptr, parent)
 {
     Q_D(QAbstractPrintDialog);
-    d->printer = printer;
-    d->pd = printer->d_func();
+    setWindowTitle(QCoreApplication::translate("QPrintDialog", "Print"));
+    d->setPrinter(printer);
 }
 
+/*!
+    \internal
+*/
+QAbstractPrintDialog::~QAbstractPrintDialog()
+{
+    Q_D(QAbstractPrintDialog);
+    if (d->ownsPrinter)
+        delete d->printer;
+}
 
 /*!
-    Sets the set of options that should be enabled in the print dialog
-    to \a options.
+    Sets the given \a option to be enabled if \a on is true;
+    otherwise, clears the given \a option.
 
-    Except for the DontUseSheet option, this function has no effect on Mac OS
-    X. See the QPrintDialog documentation for more information.
+    \sa options, testOption()
+*/
+void QPrintDialog::setOption(PrintDialogOption option, bool on)
+{
+    Q_D(QPrintDialog);
+    if (!(d->pd->options & option) != !on)
+        setOptions(d->pd->options ^ option);
+}
+
+/*!
+    Returns true if the given \a option is enabled; otherwise, returns
+    false.
+
+    \sa options, setOption()
+*/
+bool QPrintDialog::testOption(PrintDialogOption option) const
+{
+    Q_D(const QPrintDialog);
+    return (d->pd->options & option) != 0;
+}
+
+/*!
+    \property QPrintDialog::options
+    \brief the various options that affect the look and feel of the dialog
+    \since 4.5
+
+    By default, all options are disabled.
+
+    Options should be set before showing the dialog. Setting them while the
+    dialog is visible is not guaranteed to have an immediate effect on the
+    dialog (depending on the option and on the platform).
+
+    \sa setOption(), testOption()
+*/
+void QPrintDialog::setOptions(PrintDialogOptions options)
+{
+    Q_D(QPrintDialog);
+
+    PrintDialogOptions changed = (options ^ d->pd->options);
+    if (!changed)
+        return;
+
+    d->pd->options = options;
+}
+
+QPrintDialog::PrintDialogOptions QPrintDialog::options() const
+{
+    Q_D(const QPrintDialog);
+    return d->pd->options;
+}
+
+/*!
+    \obsolete
+
+    Use QPrintDialog::setOptions() instead.
 */
 void QAbstractPrintDialog::setEnabledOptions(PrintDialogOptions options)
 {
@@ -127,10 +201,9 @@ void QAbstractPrintDialog::setEnabledOptions(PrintDialogOptions options)
 }
 
 /*!
-    Adds the option \a option to the set of enabled options in this dialog.
+    \obsolete
 
-    Except for the DontUseSheet option, this function has no effect on Mac OS
-    X. See the QPrintDialog documentation for more information.
+    Use QPrintDialog::setOption(\a option, true) instead.
 */
 void QAbstractPrintDialog::addEnabledOption(PrintDialogOption option)
 {
@@ -139,7 +212,9 @@ void QAbstractPrintDialog::addEnabledOption(PrintDialogOption option)
 }
 
 /*!
-    Returns the set of enabled options in this dialog.
+    \obsolete
+
+    Use QPrintDialog::options() instead.
 */
 QAbstractPrintDialog::PrintDialogOptions QAbstractPrintDialog::enabledOptions() const
 {
@@ -148,7 +223,9 @@ QAbstractPrintDialog::PrintDialogOptions QAbstractPrintDialog::enabledOptions() 
 }
 
 /*!
-    Returns true if the specified \a option is enabled; otherwise returns false
+    \obsolete
+
+    Use QPrintDialog::testOption(\a option) instead.
 */
 bool QAbstractPrintDialog::isOptionEnabled(PrintDialogOption option) const
 {
@@ -244,6 +321,7 @@ int QAbstractPrintDialog::toPage() const
     return d->pd->toPage;
 }
 
+
 /*!
     Returns the printer that this printer dialog operates
     on.
@@ -252,6 +330,18 @@ QPrinter *QAbstractPrintDialog::printer() const
 {
     Q_D(const QAbstractPrintDialog);
     return d->printer;
+}
+
+void QAbstractPrintDialogPrivate::setPrinter(QPrinter *newPrinter)
+{
+    if (newPrinter) {
+        printer = newPrinter;
+        ownsPrinter = false;
+    } else {
+        printer = new QPrinter;
+        ownsPrinter = true;
+    }
+    pd = printer->d_func();
 }
 
 /*!
@@ -305,10 +395,14 @@ QPrinter *QAbstractPrintDialog::printer() const
 
     On Windows and Mac OS X, the native print dialog is used, which means that
     some QWidget and QDialog properties set on the dialog won't be respected.
-    In addition, aside from the DontUseSheet option, the native print dialog on
+    The native print dialog on
     Mac OS X does not support setting printer options, i.e.
     QAbstractPrintDialog::setEnabledOptions() and
     QAbstractPrintDialog::addEnabledOption() have no effect.
+
+    In Qt 4.4, it was possible to use the satic functions to show a sheet on
+    Mac OS X. This is no longer supported in Qt 4.5. If you want this
+    functionality, use QPrintDialog::open().
 
     \sa QPageSetupDialog, QPrinter, {Pixelator Example}, {Order Form Example},
         {Image Viewer Example}, {Scribble Example}
@@ -345,6 +439,60 @@ void QAbstractPrintDialog::setOptionTabs(const QList<QWidget*> &tabs)
 {
     Q_D(QAbstractPrintDialog);
     d->setTabs(tabs);
+}
+
+/*!
+
+    \fn void QPrintDialog::accepted(QPrinter *printer)
+
+    This signal is emitted when the user accepts the values set in the print dialog.
+    The \a printer parameter includes the printer that the settings were applied to.
+*/
+
+/*!
+    \fn QPrinter *QPrintDialog::printer()
+
+    Returns the printer that this printer dialog operates
+    on. This can be useful when using the QPrintDialog::open() method.
+*/
+
+/*!
+  Closes the dialog and sets its result code to \a result. If this dialog
+  is shown with exec(), done() causes the local event loop to finish,
+  and exec() to return \a result.
+
+  \sa QDialog::done()
+*/
+void QPrintDialog::done(int result)
+{
+    Q_D(QPrintDialog);
+    QDialog::done(result);
+    if (result == Accepted)
+        emit accepted(printer());
+    if (d->receiverToDisconnectOnClose) {
+        disconnect(this, SIGNAL(accepted(QPrinter*)),
+                   d->receiverToDisconnectOnClose, d->memberToDisconnectOnClose);
+        d->receiverToDisconnectOnClose = 0;
+    }
+    d->memberToDisconnectOnClose.clear();
+}
+
+/*!
+    \since 4.5
+    \overload
+
+    Opens the dialog and connects its accepted() signal to the slot specified
+    by \a receiver and \a member.
+
+    The signal will be disconnected from the slot when the dialog is closed.
+*/
+void QPrintDialog::open(QObject *receiver, const char *member)
+{
+    Q_D(QPrintDialog);
+    connect(this, SIGNAL(accepted(QPrinter*)), receiver, member);
+    d->receiverToDisconnectOnClose = receiver;
+    d->memberToDisconnectOnClose = member;
+    QDialog::open();
 }
 
 QT_END_NAMESPACE

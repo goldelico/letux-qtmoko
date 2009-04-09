@@ -1,6 +1,4 @@
 /**
- * This file is part of the DOM implementation for KDE.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  * Copyright (C) 2003, 2007 Apple Inc. All rights reserved.
@@ -28,6 +26,7 @@
 #include "CSSValueKeywords.h"
 #include "HTMLNames.h"
 #include "RenderLayer.h"
+#include "RenderMarquee.h"
 
 namespace WebCore {
 
@@ -36,10 +35,11 @@ using namespace HTMLNames;
  // WinIE uses 60ms as the minimum delay by default.
 const int defaultMinimumDelay = 60;
 
-HTMLMarqueeElement::HTMLMarqueeElement(Document* doc)
-    : HTMLElement(marqueeTag, doc)
+HTMLMarqueeElement::HTMLMarqueeElement(const QualifiedName& tagName, Document* doc)
+    : HTMLElement(tagName, doc)
     , m_minimumDelay(defaultMinimumDelay)
 {
+    ASSERT(hasTagName(marqueeTag));
 }
 
 bool HTMLMarqueeElement::mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const
@@ -65,44 +65,44 @@ void HTMLMarqueeElement::parseMappedAttribute(MappedAttribute *attr)
 {
     if (attr->name() == widthAttr) {
         if (!attr->value().isEmpty())
-            addCSSLength(attr, CSS_PROP_WIDTH, attr->value());
+            addCSSLength(attr, CSSPropertyWidth, attr->value());
     } else if (attr->name() == heightAttr) {
         if (!attr->value().isEmpty())
-            addCSSLength(attr, CSS_PROP_HEIGHT, attr->value());
+            addCSSLength(attr, CSSPropertyHeight, attr->value());
     } else if (attr->name() == bgcolorAttr) {
         if (!attr->value().isEmpty())
-            addCSSColor(attr, CSS_PROP_BACKGROUND_COLOR, attr->value());
+            addCSSColor(attr, CSSPropertyBackgroundColor, attr->value());
     } else if (attr->name() == vspaceAttr) {
         if (!attr->value().isEmpty()) {
-            addCSSLength(attr, CSS_PROP_MARGIN_TOP, attr->value());
-            addCSSLength(attr, CSS_PROP_MARGIN_BOTTOM, attr->value());
+            addCSSLength(attr, CSSPropertyMarginTop, attr->value());
+            addCSSLength(attr, CSSPropertyMarginBottom, attr->value());
         }
     } else if (attr->name() == hspaceAttr) {
         if (!attr->value().isEmpty()) {
-            addCSSLength(attr, CSS_PROP_MARGIN_LEFT, attr->value());
-            addCSSLength(attr, CSS_PROP_MARGIN_RIGHT, attr->value());
+            addCSSLength(attr, CSSPropertyMarginLeft, attr->value());
+            addCSSLength(attr, CSSPropertyMarginRight, attr->value());
         }
     } else if (attr->name() == scrollamountAttr) {
         if (!attr->value().isEmpty())
-            addCSSLength(attr, CSS_PROP__WEBKIT_MARQUEE_INCREMENT, attr->value());
+            addCSSLength(attr, CSSPropertyWebkitMarqueeIncrement, attr->value());
     } else if (attr->name() == scrolldelayAttr) {
         if (!attr->value().isEmpty())
-            addCSSLength(attr, CSS_PROP__WEBKIT_MARQUEE_SPEED, attr->value());
+            addCSSLength(attr, CSSPropertyWebkitMarqueeSpeed, attr->value());
     } else if (attr->name() == loopAttr) {
         if (!attr->value().isEmpty()) {
             if (attr->value() == "-1" || equalIgnoringCase(attr->value(), "infinite"))
-                addCSSProperty(attr, CSS_PROP__WEBKIT_MARQUEE_REPETITION, CSS_VAL_INFINITE);
+                addCSSProperty(attr, CSSPropertyWebkitMarqueeRepetition, CSSValueInfinite);
             else
-                addCSSLength(attr, CSS_PROP__WEBKIT_MARQUEE_REPETITION, attr->value());
+                addCSSLength(attr, CSSPropertyWebkitMarqueeRepetition, attr->value());
         }
     } else if (attr->name() == behaviorAttr) {
         if (!attr->value().isEmpty())
-            addCSSProperty(attr, CSS_PROP__WEBKIT_MARQUEE_STYLE, attr->value());
+            addCSSProperty(attr, CSSPropertyWebkitMarqueeStyle, attr->value());
     } else if (attr->name() == directionAttr) {
         if (!attr->value().isEmpty())
-            addCSSProperty(attr, CSS_PROP__WEBKIT_MARQUEE_DIRECTION, attr->value());
+            addCSSProperty(attr, CSSPropertyWebkitMarqueeDirection, attr->value());
     } else if (attr->name() == truespeedAttr)
-        m_minimumDelay = !attr->isNull() ? 0 : defaultMinimumDelay;
+        m_minimumDelay = !attr->isEmpty() ? 0 : defaultMinimumDelay;
     else
         HTMLElement::parseMappedAttribute(attr);
 }

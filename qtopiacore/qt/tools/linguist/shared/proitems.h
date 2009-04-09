@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,14 +43,15 @@
 #define PROITEMS_H
 
 #include <QtCore/QObject>
-#include <QtCore/QByteArray>
+#include <QtCore/QString>
 #include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE
 
 struct AbstractProItemVisitor;
 
-class ProItem {
+class ProItem
+{
 public:
     enum ProItemKind {
         ValueKind,
@@ -55,23 +60,26 @@ public:
         OperatorKind,
         BlockKind
     };
+
+    ProItem() : m_lineNumber(0) {}
     virtual ~ProItem() {}
 
     virtual ProItemKind kind() const = 0;
 
-    void setComment(const QByteArray &comment);
-    QByteArray comment() const;
+    void setComment(const QString &comment);
+    QString comment() const;
 
     virtual bool Accept(AbstractProItemVisitor *visitor) = 0;
-    int getLineNumber() { return m_lineNumber; }
+    int lineNumber() const { return m_lineNumber; }
     void setLineNumber(int lineNumber) { m_lineNumber = lineNumber; }
 
 private:
-    QByteArray m_comment;
+    QString m_comment;
     int m_lineNumber;
 };
 
-class ProBlock : public ProItem {
+class ProBlock : public ProItem
+{
 public:
     enum ProBlockKind {
         NormalKind          = 0x00,
@@ -105,7 +113,8 @@ private:
     int m_blockKind;
 };
 
-class ProVariable : public ProBlock {
+class ProVariable : public ProBlock
+{
 public:
     enum VariableOperator {
         AddOperator         = 0,
@@ -115,26 +124,27 @@ public:
         UniqueAddOperator   = 4
     };
 
-    ProVariable(const QByteArray &name, ProBlock *parent);
+    ProVariable(const QString &name, ProBlock *parent);
 
-    void setVariableOperator(VariableOperator &variableKind);
+    void setVariableOperator(VariableOperator variableKind);
     VariableOperator variableOperator() const;
 
-    void setVariable(const QByteArray &name);
-    QByteArray variable() const;
+    void setVariable(const QString &name);
+    QString variable() const;
 
     virtual bool Accept(AbstractProItemVisitor *visitor);
 private:
     VariableOperator m_variableKind;
-    QByteArray m_variable;
+    QString m_variable;
 };
 
-class ProValue : public ProItem {
+class ProValue : public ProItem
+{
 public:
-    ProValue(const QByteArray &value, ProVariable *variable);
+    ProValue(const QString &value, ProVariable *variable);
 
-    void setValue(const QByteArray &value);
-    QByteArray value() const;
+    void setValue(const QString &value);
+    QString value() const;
 
     void setVariable(ProVariable *variable);
     ProVariable *variable() const;
@@ -143,46 +153,49 @@ public:
 
     virtual bool Accept(AbstractProItemVisitor *visitor);
 private:
-    QByteArray m_value;
+    QString m_value;
     ProVariable *m_variable;
 };
 
-class ProFunction : public ProItem {
+class ProFunction : public ProItem
+{
 public:
-    ProFunction(const QByteArray &text);
+    explicit ProFunction(const QString &text);
 
-    void setText(const QByteArray &text);
-    QByteArray text() const;
+    void setText(const QString &text);
+    QString text() const;
 
     ProItem::ProItemKind kind() const;
 
     virtual bool Accept(AbstractProItemVisitor *visitor);
 private:
-    QByteArray m_text;
+    QString m_text;
 };
 
-class ProCondition : public ProItem {
+class ProCondition : public ProItem
+{
 public:
-    ProCondition(const QByteArray &text);
+    explicit ProCondition(const QString &text);
 
-    void setText(const QByteArray &text);
-    QByteArray text() const;
+    void setText(const QString &text);
+    QString text() const;
 
     ProItem::ProItemKind kind() const;
 
     virtual bool Accept(AbstractProItemVisitor *visitor);
 private:
-    QByteArray m_text;
+    QString m_text;
 };
 
-class ProOperator : public ProItem {
+class ProOperator : public ProItem
+{
 public:
     enum OperatorKind {
         OrOperator      = 1,
         NotOperator     = 2
     };
 
-    ProOperator(OperatorKind operatorKind);
+    explicit ProOperator(OperatorKind operatorKind);
 
     void setOperatorKind(OperatorKind operatorKind);
     OperatorKind operatorKind() const;
@@ -194,15 +207,17 @@ private:
     OperatorKind m_operatorKind;
 };
 
-class ProFile : public QObject, public ProBlock {
+class ProFile : public QObject, public ProBlock
+{
     Q_OBJECT
 
 public:
-    ProFile(const QString &fileName);
+    explicit ProFile(const QString &fileName);
     ~ProFile();
 
     QString displayFileName() const;
     QString fileName() const;
+    QString directoryName() const;
 
     void setModified(bool modified);
     bool isModified() const;
@@ -212,9 +227,10 @@ public:
 private:
     QString m_fileName;
     QString m_displayFileName;
+    QString m_directoryName;
     bool m_modified;
 };
 
 QT_END_NAMESPACE
 
-#endif //PROITEMS_H
+#endif // PROITEMS_H

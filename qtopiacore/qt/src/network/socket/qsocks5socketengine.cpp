@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,9 +53,13 @@
 #include "qmutex.h"
 #include "qthread.h"
 #include "qcoreapplication.h"
+#include "qurl.h"
+#include "qauthenticator.h"
 #include <qendian.h>
 
 QT_BEGIN_NAMESPACE
+
+static const int MaxWriteBufferSize = 128*1024;
 
 //#define QSOCKS5SOCKETLAYER_DEBUG
 
@@ -66,16 +74,6 @@ QT_BEGIN_NAMESPACE
     if (!d->data) { \
         return returnValue; \
     } } while (0)
-
-#ifdef QSOCKS5SOCKETLAYER_DEBUG
-#  define QSOCKS5_Q_DEBUG qDebug() << this
-#  define QSOCKS5_D_DEBUG qDebug() << q_ptr
-#  define QSOCKS5_DEBUG qDebug() << "[QSocks5]"
-#else
-#  define QSOCKS5_DEBUG if (0) qDebug()
-#  define QSOCKS5_Q_DEBUG if (0) qDebug()
-#  define QSOCKS5_D_DEBUG if (0) qDebug()
-#endif
 
 #define S5_VERSION_5 0x05
 #define S5_CONNECT 0x01
@@ -94,60 +92,32 @@ QT_BEGIN_NAMESPACE
 #define S5_R_ERROR_CMD_NOT_SUPPORTED 0x07
 #define S5_R_ERROR_ADD_TYPE_NOT_SUPORTED 0x08
 
-static QString s5RequestErrorToString(int s5_r_error)
-{
-    QString ret;
-    switch(s5_r_error) {
-    case 0x01 : ret = QLatin1String("general SOCKS server failure"); break;
-    case 0x02 : ret = QLatin1String("connection not allowed by ruleset"); break;
-    case 0x03 : ret = QLatin1String("Network unreachable"); break;
-    case 0x04 : ret = QLatin1String("Host unreachable"); break;
-    case 0x05 : ret = QLatin1String("Connection refused"); break;
-    case 0x06 : ret = QLatin1String("TTL expired"); break;
-    case 0x07 : ret = QLatin1String("Command not supported"); break;
-    case 0x08 : ret = QLatin1String("Address type not supported"); break;
-    default   : ret = QLatin1String("unassigned error code"); break;
-    }
-    return ret;
-}
+#define S5_AUTHMETHOD_NONE 0x00
+#define S5_AUTHMETHOD_PASSWORD 0x02
+#define S5_AUTHMETHOD_NOTACCEPTABLE 0xFF
 
-static QString makeErrorString(const QString & e)
-{
-    return QLatin1String("Socks 5 - ") + e;
-}
+#define S5_PASSWORDAUTH_VERSION 0x01
 
-static QAbstractSocket::SocketError s5RAsSocketError(int s5_r_error)
-{
-    QAbstractSocket::SocketError ret;
-    switch(s5_r_error) {
-    case 0x01 : ret = QAbstractSocket::NetworkError; break;
-    case 0x02 : ret = QAbstractSocket::SocketAccessError; break;
-    case 0x03 : ret = QAbstractSocket::NetworkError; break;
-    case 0x04 : ret = QAbstractSocket::HostNotFoundError; break;
-    case 0x05 : ret = QAbstractSocket::ConnectionRefusedError; break;
-    case 0x06 : ret = QAbstractSocket::NetworkError; break;
-    case 0x07 : ret = QAbstractSocket::UnsupportedSocketOperationError; break;
-    case 0x08 : ret = QAbstractSocket::UnsupportedSocketOperationError; break;
-    default   : ret = QAbstractSocket::NetworkError; break;
-    }
-    return ret;
-}
-
+#ifdef QSOCKS5SOCKETLAYER_DEBUG
+#  define QSOCKS5_Q_DEBUG qDebug() << this
+#  define QSOCKS5_D_DEBUG qDebug() << q_ptr
+#  define QSOCKS5_DEBUG qDebug() << "[QSocks5]"
 static QString s5StateToString(QSocks5SocketEnginePrivate::Socks5State s)
 {
     switch (s) {
-    case QSocks5SocketEnginePrivate::unInitialized: return QLatin1String("unInitialized");
+    case QSocks5SocketEnginePrivate::Uninitialized: return QLatin1String("Uninitialized");
+    case QSocks5SocketEnginePrivate::ConnectError: return QLatin1String("ConnectError");
     case QSocks5SocketEnginePrivate::AuthenticationMethodsSent: return QLatin1String("AuthenticationMethodsSent");
     case QSocks5SocketEnginePrivate::Authenticating: return QLatin1String("Authenticating");
+    case QSocks5SocketEnginePrivate::AuthenticatingError: return QLatin1String("AuthenticatingError");
     case QSocks5SocketEnginePrivate::RequestMethodSent: return QLatin1String("RequestMethodSent");
-    case QSocks5SocketEnginePrivate::RequestSuccess: return QLatin1String("RequestSuccess");
     case QSocks5SocketEnginePrivate::RequestError: return QLatin1String("RequestError");
     case QSocks5SocketEnginePrivate::Connected: return QLatin1String("Connected");
-    case QSocks5SocketEnginePrivate::ConnectError: return QLatin1String("BindSuccess");
-    case QSocks5SocketEnginePrivate::BindSuccess: return QLatin1String("unInitialized");
-    case QSocks5SocketEnginePrivate::BindError: return QLatin1String("BindError");
+    case QSocks5SocketEnginePrivate::UdpAssociateSuccess: return QLatin1String("UdpAssociateSuccess");
+    case QSocks5SocketEnginePrivate::BindSuccess: return QLatin1String("BindSuccess");
     case QSocks5SocketEnginePrivate::ControlSocketError: return QLatin1String("ControlSocketError");
     case QSocks5SocketEnginePrivate::SocksError: return QLatin1String("SocksError");
+    case QSocks5SocketEnginePrivate::HostNameLookupError: return QLatin1String("HostNameLookupError");
     default: break;
     }
     return QLatin1String("unknown state");
@@ -168,55 +138,77 @@ static QString dump(const QByteArray &buf)
     return QString::fromLatin1("size: %1 data: { %2 }").arg(buf.size()).arg(data);
 }
 
+#else
+#  define QSOCKS5_DEBUG if (0) qDebug()
+#  define QSOCKS5_Q_DEBUG if (0) qDebug()
+#  define QSOCKS5_D_DEBUG if (0) qDebug()
+
+static inline QString s5StateToString(QSocks5SocketEnginePrivate::Socks5State) { return QString(); }
+static inline QString dump(const QByteArray &) { return QString(); }
+#endif
+
 /*
-   inserets the host address in buf at pos and updates pos.
+   inserts the host address in buf at pos and updates pos.
    if the func fails the data in buf and the vallue of pos is undefined
 */
-static bool qt_socks5_set_host_address_and_port(const QHostAddress &address, quint16 port, QByteArray *pBuf, int *pPos)
+static bool qt_socks5_set_host_address_and_port(const QHostAddress &address, quint16 port, QByteArray *pBuf)
 {
-    bool ret = false;
-    int pos = *pPos;
-
     QSOCKS5_DEBUG << "setting [" << address << ":" << port << "]";
 
+    union {
+        quint16 port;
+        quint32 ipv4;
+        QIPv6Address ipv6;
+        char ptr;
+    } data;
+
+    // add address
     if (address.protocol() == QAbstractSocket::IPv4Protocol) {
-        int spaceAvailable = pBuf->size() - pos;
-        if (spaceAvailable < int(sizeof(quint32) + 1))
-            pBuf->resize(pBuf->size() + sizeof(quint32) + 1 - spaceAvailable);
-        unsigned char *buf = reinterpret_cast<unsigned char *>(pBuf->data());
-        buf[pos++] = S5_IP_V4;
-        qToUnaligned(qToBigEndian<quint32>(address.toIPv4Address()), &buf[pos]);
-        pos += sizeof(quint32);
-        ret = true;
+        data.ipv4 = qToBigEndian<quint32>(address.toIPv4Address());
+        pBuf->append(S5_IP_V4);
+        pBuf->append(QByteArray::fromRawData(&data.ptr, sizeof data.ipv4));
     } else if (address.protocol() == QAbstractSocket::IPv6Protocol) {
-        int spaceAvailable = pBuf->size() - pos;
-        if (spaceAvailable < 17)
-            pBuf->resize(pBuf->size() + 17 - spaceAvailable);
-        char *buf = pBuf->data();
-        buf[pos++] = S5_IP_V6;
-        QIPv6Address ipv6 = address.toIPv6Address();
-        for (int i = 0; i < 16; ++i)
-            buf[pos++] = ipv6[i];
-        ret = true;
+        data.ipv6 = address.toIPv6Address();
+        pBuf->append(S5_IP_V6);
+        pBuf->append(QByteArray::fromRawData(&data.ptr, sizeof data.ipv6));
     } else {
-        // domain name.
-        ret = false;
+        return false;
     }
 
-    if (ret) {
-        int spaceAvailable = pBuf->size() - pos;
-        if (spaceAvailable < int(sizeof(quint16)))
-            pBuf->resize(pBuf->size() + sizeof(quint16) - spaceAvailable);
-        unsigned char *buf = reinterpret_cast<unsigned char *>(pBuf->data());
-        qToUnaligned(qToBigEndian<quint16>(port), &buf[pos]);
-        pos += sizeof(quint16);
-    }
-
-    if (ret)
-        *pPos = pos;
-
-    return ret;
+    // add port
+    data.port = qToBigEndian<quint16>(port);
+    pBuf->append(QByteArray::fromRawData(&data.ptr, sizeof data.port));
+    return true;
 }
+
+/*
+   like above, but for a hostname
+*/
+static bool qt_socks5_set_host_name_and_port(const QString &hostname, quint16 port, QByteArray *pBuf)
+{
+    QSOCKS5_DEBUG << "setting [" << hostname << ":" << port << "]";
+
+    QByteArray encodedHostName = QUrl::toAce(hostname);
+    QByteArray &buf = *pBuf;
+
+    if (encodedHostName.length() > 255)
+        return false;
+
+    buf.append(S5_DOMAINNAME);
+    buf.append(uchar(encodedHostName.length()));
+    buf.append(encodedHostName);
+
+    // add port
+    union {
+        quint16 port;
+        char ptr;
+    } data;
+    data.port = qToBigEndian<quint16>(port);
+    buf.append(QByteArray::fromRawData(&data.ptr, sizeof data.port));
+
+    return true;
+}
+
 
 /*
    retrives the host address in buf at pos and updates pos.
@@ -254,9 +246,10 @@ static bool qt_socks5_get_host_address_and_port(const QByteArray &buf, QHostAddr
             add[i] = buf[pos++];
         ret = true;
     } else if (pBuf[pos] == S5_DOMAINNAME){
+        // just skip it
         pos++;
-        // domain name.
-        ret = false;
+        qDebug() << "skipping hostname of len" << uint(pBuf[pos]);
+        pos += uchar(pBuf[pos]);
     } else {
         QSOCKS5_DEBUG << "invalid address type" << (int)pBuf[pos];
         ret = false;
@@ -293,7 +286,6 @@ static int qt_timeout_value(int msecs, int elapsed)
     int timeout = msecs - elapsed;
     return timeout < 0 ? 0 : timeout;
 }
-
 
 struct QSocks5Data
 {
@@ -487,7 +479,7 @@ bool QSocks5PasswordAuthenticator::beginAuthenticate(QTcpSocket *socket, bool *c
     QByteArray dataBuf(3 + uname.size() + passwd.size(), 0);
     char *buf = dataBuf.data();
     int pos = 0;
-    buf[pos++] = 0x01;
+    buf[pos++] = S5_PASSWORDAUTH_VERSION;
     buf[pos++] = uname.size();
     memcpy(&buf[pos], uname.data(), uname.size());
     pos += uname.size();
@@ -504,10 +496,13 @@ bool QSocks5PasswordAuthenticator::continueAuthenticate(QTcpSocket *socket, bool
         return true;
 
     QByteArray buf = socket->read(2);
-    if (buf.at(0) == 0x01) {
+    if (buf.at(0) == S5_PASSWORDAUTH_VERSION && buf.at(1) == 0x00) {
         *completed = true;
-        return buf.at(1) == 0x00;
+        return true;
     }
+
+    // must disconnect
+    socket->close();
     return false;
 }
 
@@ -519,7 +514,7 @@ QString QSocks5PasswordAuthenticator::errorString()
 
 
 QSocks5SocketEnginePrivate::QSocks5SocketEnginePrivate()
-    : socks5State(unInitialized)
+    : socks5State(Uninitialized)
     , readNotificationEnabled(false)
     , writeNotificationEnabled(false)
     , exceptNotificationEnabled(false)
@@ -534,6 +529,7 @@ QSocks5SocketEnginePrivate::QSocks5SocketEnginePrivate()
     , writeNotificationActivated(false)
     , readNotificationPending(false)
     , writeNotificationPending(false)
+    , connectionNotificationPending(false)
 {
     mode = NoMode;
 }
@@ -555,9 +551,7 @@ void QSocks5SocketEnginePrivate::initialize(Socks5Mode socks5Mode)
         udpData = new QSocks5UdpAssociateData;
         data = udpData;
         udpData->udpSocket = new QUdpSocket(q);
-        QNetworkProxy proxy;
-        proxy.setType(QNetworkProxy::NoProxy);
-        udpData->udpSocket->setProxy(proxy);
+        udpData->udpSocket->setProxy(QNetworkProxy::NoProxy);
         QObject::connect(udpData->udpSocket, SIGNAL(readyRead()),
                          q, SLOT(_q_udpSocketReadNotification()),
                          Qt::DirectConnection);
@@ -568,9 +562,7 @@ void QSocks5SocketEnginePrivate::initialize(Socks5Mode socks5Mode)
     }
 
     data->controlSocket = new QTcpSocket(q);
-    QNetworkProxy proxy;
-    proxy.setType(QNetworkProxy::NoProxy);
-    data->controlSocket->setProxy(proxy);
+    data->controlSocket->setProxy(QNetworkProxy::NoProxy);
     QObject::connect(data->controlSocket, SIGNAL(connected()), q, SLOT(_q_controlSocketConnected()),
                      Qt::DirectConnection);
     QObject::connect(data->controlSocket, SIGNAL(readyRead()), q, SLOT(_q_controlSocketReadNotification()),
@@ -585,78 +577,208 @@ void QSocks5SocketEnginePrivate::initialize(Socks5Mode socks5Mode)
     QObject::connect(data->controlSocket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
                      q, SLOT(_q_controlSocketStateChanged(QAbstractSocket::SocketState)),
                      Qt::DirectConnection);
-    //### this should be some where else when authentication methods are public
+
     if (!proxyInfo.user().isEmpty() || !proxyInfo.password().isEmpty()) {
+        QSOCKS5_D_DEBUG << "using username/password authentication; user =" << proxyInfo.user();
         data->authenticator = new QSocks5PasswordAuthenticator(proxyInfo.user(), proxyInfo.password());
     } else {
+        QSOCKS5_D_DEBUG << "not using authentication";
         data->authenticator = new QSocks5Authenticator();
+    }
+}
+
+void QSocks5SocketEnginePrivate::setErrorState(Socks5State state, const QString &extraMessage)
+{
+    Q_Q(QSocks5SocketEngine);
+
+    switch (state) {
+    case Uninitialized:
+    case Authenticating:
+    case AuthenticationMethodsSent:
+    case RequestMethodSent:
+    case Connected:
+    case UdpAssociateSuccess:
+    case BindSuccess:
+        // these aren't error states
+        return;
+
+    case ConnectError:
+    case ControlSocketError: {
+        QAbstractSocket::SocketError controlSocketError = data->controlSocket->error();
+        if (socks5State != Connected) {
+            switch (controlSocketError) {
+            case QAbstractSocket::ConnectionRefusedError:
+                q->setError(QAbstractSocket::ProxyConnectionRefusedError,
+                             QSocks5SocketEngine::tr("Connection to proxy refused"));
+                break;
+            case QAbstractSocket::RemoteHostClosedError:
+                q->setError(QAbstractSocket::ProxyConnectionClosedError,
+                             QSocks5SocketEngine::tr("Connection to proxy closed prematurely"));
+                break;
+            case QAbstractSocket::HostNotFoundError:
+                q->setError(QAbstractSocket::ProxyNotFoundError,
+                             QSocks5SocketEngine::tr("Proxy host not found"));
+                break;
+            case QAbstractSocket::SocketTimeoutError:
+                if (state == ConnectError) {
+                    q->setError(QAbstractSocket::ProxyConnectionTimeoutError,
+                                 QSocks5SocketEngine::tr("Connection to proxy timed out"));
+                    break;
+                }
+                /* fall through */
+            default:
+                q->setError(controlSocketError, data->controlSocket->errorString());
+                break;
+            }
+        } else {
+            q->setError(controlSocketError, data->controlSocket->errorString());
+        }
+        break;
+    }
+
+    case AuthenticatingError:
+        q->setError(QAbstractSocket::ProxyAuthenticationRequiredError,
+                    extraMessage.isEmpty() ?
+                     QSocks5SocketEngine::tr("Proxy authentication failed") :
+                     QSocks5SocketEngine::tr("Proxy authentication failed: %1").arg(extraMessage));
+        break;
+
+    case RequestError:
+        // error code set by caller (overload)
+        break;
+
+    case SocksError:
+        q->setError(QAbstractSocket::ProxyProtocolError,
+                     QSocks5SocketEngine::tr("SOCKS version 5 protocol error"));
+        break;
+
+    case HostNameLookupError:
+        q->setError(QAbstractSocket::HostNotFoundError,
+                    QAbstractSocket::tr("Host not found"));
+        break;
+    }
+
+    q->setState(QAbstractSocket::UnconnectedState);
+    socks5State = state;
+}
+
+void QSocks5SocketEnginePrivate::setErrorState(Socks5State state, Socks5Error socks5error)
+{
+    Q_Q(QSocks5SocketEngine);
+    switch (socks5error) {
+    case SocksFailure:
+        q->setError(QAbstractSocket::NetworkError,
+                     QSocks5SocketEngine::tr("General SOCKSv5 server failure"));
+        break;
+    case ConnectionNotAllowed:
+        q->setError(QAbstractSocket::SocketAccessError,
+                     QSocks5SocketEngine::tr("Connection not allowed by SOCKSv5 server"));
+        break;
+    case NetworkUnreachable:
+        q->setError(QAbstractSocket::NetworkError,
+                    QAbstractSocket::tr("Network unreachable"));
+        break;
+    case HostUnreachable:
+        q->setError(QAbstractSocket::HostNotFoundError,
+                    QAbstractSocket::tr("Host not found"));
+        break;
+    case ConnectionRefused:
+        q->setError(QAbstractSocket::ConnectionRefusedError,
+                    QAbstractSocket::tr("Connection refused"));
+        break;
+    case TTLExpired:
+        q->setError(QAbstractSocket::NetworkError,
+                     QSocks5SocketEngine::tr("TTL expired"));
+        break;
+    case CommandNotSupported:
+        q->setError(QAbstractSocket::UnsupportedSocketOperationError,
+                     QSocks5SocketEngine::tr("SOCKSv5 command not supported"));
+        break;
+    case AddressTypeNotSupported:
+        q->setError(QAbstractSocket::UnsupportedSocketOperationError,
+                     QSocks5SocketEngine::tr("Address type not supported"));
+        break;
+
+    default:
+        q->setError(QAbstractSocket::UnknownSocketError,
+                     QSocks5SocketEngine::tr("Unknown SOCKSv5 proxy error code 0x%1").arg(int(socks5error), 16));
+        break;
+    }
+
+    setErrorState(state, QString());
+}
+
+void QSocks5SocketEnginePrivate::reauthenticate()
+{
+    Q_Q(QSocks5SocketEngine);
+
+    // we require authentication
+    QAuthenticator auth;
+    emit q->proxyAuthenticationRequired(proxyInfo, &auth);
+
+    if (!auth.user().isEmpty() || !auth.password().isEmpty()) {
+        // we have new credentials, let's try again
+        QSOCKS5_DEBUG << "authentication failure: retrying connection";
+        socks5State = QSocks5SocketEnginePrivate::Uninitialized;
+
+        delete data->authenticator;
+        proxyInfo.setUser(auth.user());
+        proxyInfo.setPassword(auth.password());
+        data->authenticator = new QSocks5PasswordAuthenticator(proxyInfo.user(), proxyInfo.password());
+
+        data->controlSocket->blockSignals(true);
+        data->controlSocket->abort();
+        data->controlSocket->blockSignals(false);
+        data->controlSocket->connectToHost(proxyInfo.hostName(), proxyInfo.port());
+    } else {
+        // authentication failure
+
+        setErrorState(AuthenticatingError);
+        data->controlSocket->close();
+        emitConnectionNotification();
     }
 }
 
 void QSocks5SocketEnginePrivate::parseAuthenticationMethodReply()
 {
-    Q_Q(QSocks5SocketEngine);
-
     // not enough data to begin
     if (data->controlSocket->bytesAvailable() < 2)
         return;
 
-    QByteArray buf(2, 0);
-    if (data->controlSocket->read(buf.data(), 2) != 2) {
-        QSOCKS5_D_DEBUG << "Control socket read failure";
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::NetworkError, QLatin1String("Socks5 read error on control socket"));
-        data->controlSocket->close();
-        emitWriteNotification();
-        return;
-    }
+    QByteArray buf = data->controlSocket->read(2);
     if (buf.at(0) != S5_VERSION_5) {
         QSOCKS5_D_DEBUG << "Socks5 version incorrect";
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::NetworkError, QLatin1String("Socks5 version incorrect"));
+        setErrorState(SocksError);
         data->controlSocket->close();
-        emitWriteNotification();
+        emitConnectionNotification();
         return;
     }
-    if (uchar(buf.at(1)) == 0xFF) {
-        QSOCKS5_D_DEBUG << "Authentication method not supported";
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::SocketAccessError, QLatin1String("Socks5 host did not support authentication method."));
-        emitWriteNotification();
+
+    bool authComplete = false;
+    if (uchar(buf.at(1)) == S5_AUTHMETHOD_NONE) {
+        authComplete = true;
+    } else if (uchar(buf.at(1)) == S5_AUTHMETHOD_NOTACCEPTABLE) {
+        reauthenticate();
+        return;
+    } else if (buf.at(1) != data->authenticator->methodId()
+               || !data->authenticator->beginAuthenticate(data->controlSocket, &authComplete)) {
+        setErrorState(AuthenticatingError, QLatin1String("Socks5 host did not support authentication method."));
+        socketError = QAbstractSocket::SocketAccessError; // change the socket error
+        emitConnectionNotification();
         return;
     }
-    if (buf.at(1) != data->authenticator->methodId()) {
-        QSOCKS5_D_DEBUG << "Authentication method was not what we sent";
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::SocketAccessError, QLatin1String("Socks5 host did not support authentication method."));
-        emitWriteNotification();
-        return;
-    }
-    bool AuthComplete = false;
-    if (!data->authenticator->beginAuthenticate(data->controlSocket, &AuthComplete)) {
-        QSOCKS5_D_DEBUG << "Authentication faled" << data->authenticator->errorString();
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::SocketAccessError, data->authenticator->errorString());
-        emitWriteNotification();
-        return;
-    }
-    if (AuthComplete) {
+
+    if (authComplete)
         sendRequestMethod();
-        return;
-    }
-    socks5State = Authenticating;
+    else
+        socks5State = Authenticating;
 }
 
 void QSocks5SocketEnginePrivate::parseAuthenticatingReply()
 {
-    Q_Q(QSocks5SocketEngine);
-
     bool authComplete = false;
     if (!data->authenticator->continueAuthenticate(data->controlSocket, &authComplete)) {
-        QSOCKS5_D_DEBUG << "Authentication faled" << data->authenticator->errorString();
-        socks5State = AuthenticatingError;
-        q->setError(QAbstractSocket::SocketAccessError, data->authenticator->errorString());
-        emitWriteNotification();
+        reauthenticate();
         return;
     }
     if (authComplete)
@@ -686,11 +808,14 @@ void QSocks5SocketEnginePrivate::sendRequestMethod()
 
     QByteArray buf;
     buf.reserve(270); // big enough for domain name;
-    int pos = 0;
-    buf[pos++] = S5_VERSION_5;
-    buf[pos++] = command;
-    buf[pos++] = 0x00;
-    if (!qt_socks5_set_host_address_and_port(address, port, &buf, &pos)) {
+    buf[0] = S5_VERSION_5;
+    buf[1] = command;
+    buf[2] = 0x00;
+    if (peerName.isEmpty() && !qt_socks5_set_host_address_and_port(address, port, &buf)) {
+        QSOCKS5_DEBUG << "error setting address" << address << " : " << port;
+        //### set error code ....
+        return;
+    } else if (!peerName.isEmpty() && !qt_socks5_set_host_name_and_port(peerName, port, &buf)) {
         QSOCKS5_DEBUG << "error setting address" << address << " : " << port;
         //### set error code ....
         return;
@@ -707,6 +832,7 @@ void QSocks5SocketEnginePrivate::sendRequestMethod()
 
 void QSocks5SocketEnginePrivate::parseRequestMethodReply()
 {
+    Q_Q(QSocks5SocketEngine);
     QSOCKS5_DEBUG << "parseRequestMethodReply()";
 
     QByteArray inBuf;
@@ -716,92 +842,67 @@ void QSocks5SocketEnginePrivate::parseRequestMethodReply()
         return;
     }
     QSOCKS5_DEBUG << dump(inBuf);
-    int pos = 0;
-    const char *buf = inBuf.constData();
     if (inBuf.size() < 2) {
         QSOCKS5_DEBUG << "need more data for request reply header .. put this data somewhere";
         return;
     }
-    if (buf[pos++] != S5_VERSION_5) {
-        QSOCKS5_DEBUG << "totally lost";
-    }
-    if (buf[pos++] != S5_SUCCESS ) {
-        socks5Error = Socks5Error(buf[pos-1]);
-        socks5State = RequestError;
-        socks5ErrorString = s5RequestErrorToString(socks5Error);
-        QSOCKS5_DEBUG <<  "Request error :" << s5RequestErrorToString(socks5Error);
-        emitWriteNotification();
-        return;
-    }
-    if (buf[pos++] != 0x00) {
-        QSOCKS5_DEBUG << "totally lost";
-    }
-    if (!qt_socks5_get_host_address_and_port(inBuf, &localAddress, &localPort, &pos)) {
-        QSOCKS5_DEBUG << "error getting address";
-        //### set error code ....
-        return;
+
+    QHostAddress address;
+    quint16 port = 0;
+
+    if (inBuf.at(0) != S5_VERSION_5 || inBuf.length() < 3 || inBuf.at(2) != 0x00) {
+        QSOCKS5_DEBUG << "socks protocol error";
+        setErrorState(SocksError);
+    } else if (inBuf.at(1) != S5_SUCCESS) {
+        Socks5Error socks5Error = Socks5Error(inBuf.at(1));
+        QSOCKS5_DEBUG <<  "Request error :" << socks5Error;
+        if ((socks5Error == SocksFailure || socks5Error == ConnectionNotAllowed)
+            && !peerName.isEmpty()) {
+            // Dante seems to use this error code to indicate hostname resolution failure
+            setErrorState(HostNameLookupError);
+        } else {
+            setErrorState(RequestError, socks5Error);
+        }
+    } else {
+        // connection success, retrieve the remote addresses
+        int pos = 3;
+        if (!qt_socks5_get_host_address_and_port(inBuf, &address, &port, &pos)) {
+            QSOCKS5_DEBUG << "error getting address";
+            setErrorState(SocksError);
+        } else {
+            inBuf.remove(0, pos);
+            for (int i = inBuf.size() - 1; i >= 0 ; --i)
+                data->controlSocket->ungetChar(inBuf.at(i));
+        }
     }
 
-    // need a better place to keep this stuff and any others untill connect called again
-    // should use peek
-    inBuf.remove(0, pos);
-    for (int i = inBuf.size() - 1; i >= 0 ; --i)
-        data->controlSocket->ungetChar(inBuf.at(i));
+    if (socks5State == RequestMethodSent) {
+        // no error
+        localAddress = address;
+        localPort = port;
 
-    socks5State = RequestSuccess;
+        if (mode == ConnectMode) {
+            socks5State = Connected;
+            // notify the upper layer that we're done
+            q->setState(QAbstractSocket::ConnectedState);
+            emitConnectionNotification();
+        } else if (mode == BindMode) {
+            socks5State = BindSuccess;
+            q->setState(QAbstractSocket::ListeningState);
+        } else {
+            socks5State = UdpAssociateSuccess;
+        }
+    } else if (socks5State == BindSuccess) {
+        // no error and we got a connection
+        bindData->peerAddress = address;
+        bindData->peerPort = port;
 
-    // fire writeNotifier for connect and wait for the next call to conectTOHost
-    if (mode == ConnectMode)
-        emitWriteNotification();
-}
-
-void QSocks5SocketEnginePrivate::parseNewConnection()
-{
-    QSOCKS5_D_DEBUG << "parseNewConnection()";
-    // only emit readyRead if in listening state ...
-    QByteArray inBuf;
-    if (!data->authenticator->unSeal(data->controlSocket, &inBuf)) {
-        // ### check error and not just not enough data
-        QSOCKS5_DEBUG << "unSeal failed, needs more data";
-        return;
-    }
-    QSOCKS5_D_DEBUG << dump(inBuf);
-    int pos = 0;
-    const char *buf = inBuf.constData();
-    if (inBuf.length() < 2) {
-        QSOCKS5_D_DEBUG << "need more data for request reply header .. put this data somewhere";
-        return;
-    }
-    if (buf[pos++] != S5_VERSION_5) {
-        QSOCKS5_D_DEBUG << "totally lost";
-    }
-    if (buf[pos++] != S5_SUCCESS) {
-        QSOCKS5_D_DEBUG <<  "Request error :" << s5RequestErrorToString(buf[pos-1]);
-        socks5State = BindError;
-        socks5Error = Socks5Error(buf[pos-1]);
-        socks5ErrorString = s5RequestErrorToString(socks5Error);
-        // #### now what
-        return;
-    }
-    if (buf[pos++] != 0x00) {
-        QSOCKS5_D_DEBUG << "totally lost";
-    }
-    if (!qt_socks5_get_host_address_and_port(inBuf, &bindData->peerAddress, &bindData->peerPort, &pos)) {
-        QSOCKS5_D_DEBUG << "error getting address";
-        //### set error code ....
-        return;
-    }
-
-    // need a better place to keep this stuff and any others untill connect called again
-    // should use peek
-    inBuf.remove(0, pos);
-    for (int i = inBuf.size() - 1; i >= 0 ; --i)
-        data->controlSocket->ungetChar(inBuf.at(i));
-
-    // got a successful reply
-    socks5State = BindSuccess;
-    if (socketState == QAbstractSocket::ListeningState)
         emitReadNotification();
+    } else {
+        // got an error
+        data->controlSocket->close();
+        emitConnectionNotification();
+    }
 }
 
 void QSocks5SocketEnginePrivate::_q_emitPendingReadNotification()
@@ -814,9 +915,9 @@ void QSocks5SocketEnginePrivate::_q_emitPendingReadNotification()
         emit q->readNotification();
         if (!qq)
             return;
-        // check if there needs to be a new zero read notifcation
-        if (socks5State == ControlSocketError
-            && data->controlSocket->error() == QAbstractSocket::RemoteHostClosedError) {
+        // check if there needs to be a new zero read notification
+        if (data && data->controlSocket->state() == QAbstractSocket::UnconnectedState
+                && data->controlSocket->error() == QAbstractSocket::RemoteHostClosedError) {
             connectData->readBuffer.clear();
             emitReadNotification();
         }
@@ -853,6 +954,22 @@ void QSocks5SocketEnginePrivate::emitWriteNotification()
         writeNotificationPending = true;
         QMetaObject::invokeMethod(q, "_q_emitPendingWriteNotification", Qt::QueuedConnection);
     }
+}
+
+void QSocks5SocketEnginePrivate::_q_emitPendingConnectionNotification()
+{
+    connectionNotificationPending = false;
+    Q_Q(QSocks5SocketEngine);
+    QSOCKS5_D_DEBUG << "emitting connectionNotification";
+    emit q->connectionNotification();
+}
+
+void QSocks5SocketEnginePrivate::emitConnectionNotification()
+{
+    Q_Q(QSocks5SocketEngine);
+    QSOCKS5_D_DEBUG << "queueing connectionNotification";
+    connectionNotificationPending = true;
+    QMetaObject::invokeMethod(q, "_q_emitPendingConnectionNotification", Qt::QueuedConnection);
 }
 
 QSocks5SocketEngine::QSocks5SocketEngine(QObject *parent)
@@ -910,7 +1027,7 @@ bool QSocks5SocketEngine::initialize(int socketDescriptor, QAbstractSocket::Sock
     QSocks5BindData *bindData = socks5BindStore()->retrieve(socketDescriptor);
     if (bindData) {
 
-        d->socketState = socketState;
+        d->socketState = QAbstractSocket::ConnectedState;
         d->socketType = QAbstractSocket::TcpSocket;
         d->connectData = new QSocks5ConnectData;
         d->data = d->connectData;
@@ -966,17 +1083,15 @@ bool QSocks5SocketEngine::isValid() const
 {
     Q_D(const QSocks5SocketEngine);
     return d->socketType != QAbstractSocket::UnknownSocketType
-           && d->socketProtocol != QAbstractSocket::UnknownNetworkLayerProtocol
            && d->socks5State != QSocks5SocketEnginePrivate::SocksError
            && (d->socketError == QAbstractSocket::UnknownSocketError
-               || d->socketError == QAbstractSocket::SocketTimeoutError);
+               || d->socketError == QAbstractSocket::SocketTimeoutError
+               || d->socketError == QAbstractSocket::UnfinishedSocketOperationError);
 }
 
-bool QSocks5SocketEngine::connectToHost(const QHostAddress &address, quint16 port)
+bool QSocks5SocketEngine::connectInternal()
 {
     Q_D(QSocks5SocketEngine);
-
-    QSOCKS5_DEBUG << "connectToHost" << address << ":" << port;
 
     if (!d->data) {
         if (socketType() == QAbstractSocket::TcpSocket) {
@@ -987,47 +1102,46 @@ bool QSocks5SocketEngine::connectToHost(const QHostAddress &address, quint16 por
             // all udp needs to be bound
             if (!bind(QHostAddress(QLatin1String("0.0.0.0")), 0))
                 return false;
-            d->peerAddress = address;
-            d->peerPort = port;
+
             setState(QAbstractSocket::ConnectedState);
             return true;
 #endif
         } else {
-            //### something invalied
+            qFatal("QSocks5SocketEngine::connectToHost: in QTcpServer mode");
             return false;
         }
     }
-    if (d->socks5State == QSocks5SocketEnginePrivate::unInitialized && d->socketState != QAbstractSocket::ConnectingState) {
-        setPeerAddress(address);
-        setPeerPort(port);
+
+    if (d->socks5State == QSocks5SocketEnginePrivate::Uninitialized
+        && d->socketState != QAbstractSocket::ConnectingState) {
         setState(QAbstractSocket::ConnectingState);
         d->data->controlSocket->connectToHost(d->proxyInfo.hostName(), d->proxyInfo.port());
         return false;
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::RequestSuccess) {
-        setState(QAbstractSocket::ConnectedState);
-        d->socks5State = QSocks5SocketEnginePrivate::Connected;
-        // check for pending data
-        if (d->data->controlSocket->bytesAvailable())
-            d->_q_controlSocketReadNotification();
-        return true;
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::RequestError) {
-        setError(s5RAsSocketError(d->socks5Error), makeErrorString(d->socks5ErrorString));
-        setState(QAbstractSocket::UnconnectedState);
-        return false;
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::ConnectError) {
-        setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
-        setState(QAbstractSocket::UnconnectedState);
-        return false;
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::AuthenticatingError) {
-        setState(QAbstractSocket::UnconnectedState);
-        return false;
-    } else if (d->socketState == QAbstractSocket::ConnectingState && d->socks5State != QSocks5SocketEnginePrivate::RequestSuccess) {
-        QSOCKS5_DEBUG << "not yet connected";
-        return false;
-    } else {
-        // qDebug() << "unexpected call to contectToHost";
     }
     return false;
+}
+
+bool QSocks5SocketEngine::connectToHost(const QHostAddress &address, quint16 port)
+{
+    Q_D(QSocks5SocketEngine);
+    QSOCKS5_DEBUG << "connectToHost" << address << ":" << port;
+
+    setPeerAddress(address);
+    setPeerPort(port);
+    d->peerName.clear();
+
+    return connectInternal();
+}
+
+bool QSocks5SocketEngine::connectToHostByName(const QString &hostname, quint16 port)
+{
+    Q_D(QSocks5SocketEngine);
+
+    setPeerAddress(QHostAddress());
+    setPeerPort(port);
+    d->peerName = hostname;
+
+    return connectInternal();
 }
 
 void QSocks5SocketEnginePrivate::_q_controlSocketConnected()
@@ -1061,13 +1175,6 @@ void QSocks5SocketEnginePrivate::_q_controlSocketReadNotification()
         case RequestMethodSent:
             parseRequestMethodReply();
             break;
-        case RequestSuccess:
-            if (mode == BindMode) {
-                // only get here if command is bind
-                parseNewConnection();
-            }
-            // else in conect mode but wating for second call to connectToHost
-            break;
         case Connected: {
             QByteArray buf;
             if (!data->authenticator->unSeal(data->controlSocket, &buf)) {
@@ -1080,8 +1187,18 @@ void QSocks5SocketEnginePrivate::_q_controlSocketReadNotification()
             }
             break;
         }
+        case BindSuccess:
+            // only get here if command is bind
+            if (mode == BindMode) {
+                parseRequestMethodReply();
+                break;
+            }
+
+            // fall through
         default:
-            QSOCKS5_DEBUG << "why a _q_controlSocketReadNotification ????";
+            qWarning("QSocks5SocketEnginePrivate::_q_controlSocketReadNotification: "
+                     "Unexpectedly received data while in state=%d and mode=%d",
+                     socks5State, mode);
             break;
     };
 }
@@ -1094,27 +1211,36 @@ void QSocks5SocketEnginePrivate::_q_controlSocketBytesWritten()
         || (mode == ConnectMode
         && data->controlSocket->bytesToWrite()))
         return;
-    emitWriteNotification();
-    writeNotificationActivated = false;
+    if (data->controlSocket->bytesToWrite() < MaxWriteBufferSize) {
+        emitWriteNotification();
+        writeNotificationActivated = false;
+    }
 }
 
 void QSocks5SocketEnginePrivate::_q_controlSocketError(QAbstractSocket::SocketError error)
 {
     QSOCKS5_D_DEBUG << "controlSocketError" << error << data->controlSocket->errorString();
 
-    if (error == QAbstractSocket::RemoteHostClosedError) {
+    if (error == QAbstractSocket::SocketTimeoutError)
+        return;                 // ignore this error -- comes from the waitFor* functions
+
+    if (error == QAbstractSocket::RemoteHostClosedError
+        && socks5State == Connected) {
         // clear the read buffer in connect mode so that bytes available returns 0
-        // if there already is a read notification pending then this will be porcessed first
-        if (mode == ConnectMode) {
-            socks5State = ControlSocketError;
-            if (!readNotificationPending)
-                connectData->readBuffer.clear();
-            emitReadNotification();
-        }
-    } else if (error == QAbstractSocket::ConnectionRefusedError
-        || error == QAbstractSocket::HostNotFoundError) {
-        socks5State = ConnectError;
-        emitWriteNotification();
+        // if there already is a read notification pending then this will be processed first
+        if (!readNotificationPending)
+            connectData->readBuffer.clear();
+        emitReadNotification();
+    } else if (socks5State == Uninitialized
+               || socks5State == AuthenticationMethodsSent
+               || socks5State == Authenticating
+               || socks5State == RequestMethodSent) {
+        setErrorState(socks5State == Uninitialized ? ConnectError : ControlSocketError);
+        data->controlSocket->close();
+        emitConnectionNotification();
+    } else {
+        q_func()->setError(data->controlSocket->error(), data->controlSocket->errorString());
+        emitReadNotification();
     }
 }
 
@@ -1224,43 +1350,38 @@ bool QSocks5SocketEngine::bind(const QHostAddress &address, quint16 port)
     QTime stopWatch;
     stopWatch.start();
     d->data->controlSocket->connectToHost(d->proxyInfo.hostName(), d->proxyInfo.port());
-    if (!d->data->controlSocket->waitForConnected(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-        if (d->data->controlSocket->error() != QAbstractSocket::SocketTimeoutError) {
-            setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
-        } else {
-            setError(QAbstractSocket::SocketTimeoutError, tr("Socks5 timeout error connecting to socks server"));
-        }
+    if (!d->waitForConnected(msecs, 0) ||
+        d->data->controlSocket->state() == QAbstractSocket::UnconnectedState) {
+        // waitForConnected sets the error state and closes the socket
         QSOCKS5_Q_DEBUG << "waitForConnected to proxy server" << d->data->controlSocket->errorString();
         return false;
     }
-    while (d->data->controlSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-        // check error
-        if (d->socks5State == QSocks5SocketEnginePrivate::RequestSuccess) {
-            setState(QAbstractSocket::BoundState);
+    if (d->socks5State == QSocks5SocketEnginePrivate::BindSuccess) {
+        setState(QAbstractSocket::BoundState);
+        return true;
 #ifndef QT_NO_UDPSOCKET
-            if (d->mode == QSocks5SocketEnginePrivate::UdpAssociateMode) {
-                d->udpData->associateAddress = d->localAddress;
-                d->localAddress = QHostAddress();
-                d->udpData->associatePort = d->localPort;
-                d->localPort = 0;
-                QUdpSocket dummy;
-                QNetworkProxy proxy;
-                proxy.setType(QNetworkProxy::NoProxy);
-                dummy.setProxy(proxy);
-                if (!dummy.bind()
-                    || writeDatagram(0,0, d->data->controlSocket->localAddress(), dummy.localPort()) != 0
-                    || !dummy.waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))
-                    || dummy.readDatagram(0,0, &d->localAddress, &d->localPort) != 0) {
-                    QSOCKS5_DEBUG << "udp actual address and port lookup failed";
-                    //### reset and error
-                    return false;
-                }
-                QSOCKS5_DEBUG << "udp actual address and port" << d->localAddress << ":" << d->localPort;
-            }
-#endif // QT_NO_UDPSOCKET
-            return true;
+    } else if (d->socks5State == QSocks5SocketEnginePrivate::UdpAssociateSuccess) {
+        setState(QAbstractSocket::BoundState);
+        d->udpData->associateAddress = d->localAddress;
+        d->localAddress = QHostAddress();
+        d->udpData->associatePort = d->localPort;
+        d->localPort = 0;
+        QUdpSocket dummy;
+        dummy.setProxy(QNetworkProxy::NoProxy);
+        if (!dummy.bind()
+            || writeDatagram(0,0, d->data->controlSocket->localAddress(), dummy.localPort()) != 0
+            || !dummy.waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))
+            || dummy.readDatagram(0,0, &d->localAddress, &d->localPort) != 0) {
+            QSOCKS5_DEBUG << "udp actual address and port lookup failed";
+            setState(QAbstractSocket::UnconnectedState);
+            setError(dummy.error(), dummy.errorString());
+            d->data->controlSocket->close();
+            //### reset and error
+            return false;
         }
-        QSOCKS5_DEBUG << "looping";
+        QSOCKS5_DEBUG << "udp actual address and port" << d->localAddress << ":" << d->localPort;
+        return true;
+#endif // QT_NO_UDPSOCKET
     }
 
     // binding timed out
@@ -1312,13 +1433,9 @@ int QSocks5SocketEngine::accept()
         d->socketDescriptor = 0;
         //### do something about this socket layer ... set it closed and an error about why ...
         // reset state and local port/address
-        d->socks5State = QSocks5SocketEnginePrivate::unInitialized; // ..??
+        d->socks5State = QSocks5SocketEnginePrivate::Uninitialized; // ..??
         d->socketState = QAbstractSocket::UnconnectedState;
         return sd;
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::BindError) {
-        // what now
-    } else if (d->socks5State == QSocks5SocketEnginePrivate::RequestSuccess) {
-        // accept was called to early ...
     }
     return -1;
 }
@@ -1394,42 +1511,20 @@ qint64 QSocks5SocketEngine::write(const char *data, qint64 len)
     QSOCKS5_Q_DEBUG << "write" << dump(QByteArray(data, len));
 
     if (d->mode == QSocks5SocketEnginePrivate::ConnectMode) {
+        // clamp down the amount of bytes to transfer at once
+        len = qMin<qint64>(len, MaxWriteBufferSize) - d->data->controlSocket->bytesToWrite();
+        if (len <= 0)
+            return 0;
 
-        int msecs = 10;
-        QTime stopWatch;
-        stopWatch.start();
-        qint64 totalWritten = 0;
-
-        while (totalWritten < len
-            && stopWatch.elapsed() < msecs) {
-
-            QByteArray buf(data + totalWritten, qMin<int>(len - totalWritten, 49152));
-            QByteArray sealedBuf;
-            if (!d->data->authenticator->seal(buf, &sealedBuf)) {
-                // ### Handle this error.
-            }
-            int written = d->data->controlSocket->write(sealedBuf);
-            if (written != sealedBuf.size()) {
-                QSOCKS5_Q_DEBUG << "control socket write failed :" << d->data->controlSocket->errorString();
-                setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
-                return -1; //### ?????
-            }
-            totalWritten += buf.size();
-            while(d->data->controlSocket->bytesToWrite()) {
-                if (!d->data->controlSocket->waitForBytesWritten(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-                    QSOCKS5_Q_DEBUG << "controlSocket->waitForBytesWritten() retruned false";
-                    break;
-                }
-            }
-            if (d->data->controlSocket->error() != QAbstractSocket::UnknownSocketError
-                && d->data->controlSocket->error() != QAbstractSocket::SocketTimeoutError) {
-                QSOCKS5_DEBUG << "control socket error while writing. -- " << d->data->controlSocket->errorString();
-                totalWritten = -1;
-                break;
-            }
+        QByteArray buf = QByteArray::fromRawData(data, len);
+        QByteArray sealedBuf;
+        if (!d->data->authenticator->seal(buf, &sealedBuf)) {
+            // ### Handle this error.
         }
-        QSOCKS5_DEBUG << "wrote" << totalWritten;
-        return totalWritten;
+
+        d->data->controlSocket->write(sealedBuf);
+        d->data->controlSocket->waitForBytesWritten(0);
+        return len;
 #ifndef QT_NO_UDPSOCKET
     } else if (d->mode == QSocks5SocketEnginePrivate::UdpAssociateMode) {
         // send to connected address
@@ -1478,11 +1573,10 @@ qint64 QSocks5SocketEngine::writeDatagram(const char *data, qint64 len, const QH
 
     QByteArray outBuf;
     outBuf.reserve(270 + len);
-    int pos = 0;
-    outBuf[pos++] = 0x00;
-    outBuf[pos++] = 0x00;
-    outBuf[pos++] = 0x00;
-    if (!qt_socks5_set_host_address_and_port(address, port, &outBuf, &pos)) {
+    outBuf[0] = 0x00;
+    outBuf[1] = 0x00;
+    outBuf[2] = 0x00;
+    if (!qt_socks5_set_host_address_and_port(address, port, &outBuf)) {
     }
     outBuf += QByteArray(data, len);
     QSOCKS5_DEBUG << "sending" << dump(outBuf);
@@ -1538,9 +1632,37 @@ bool QSocks5SocketEngine::setOption(SocketOption option, int value)
     return false;
 }
 
-bool QSocks5SocketEngine::waitForRead(int msecs, bool *timedOut) const
+bool QSocks5SocketEnginePrivate::waitForConnected(int msecs, bool *timedOut)
 {
-    Q_D(const QSocks5SocketEngine);
+    if (data->controlSocket->state() == QAbstractSocket::UnconnectedState)
+        return false;
+
+    const Socks5State wantedState =
+        mode == ConnectMode ? Connected :
+        mode == BindMode ? BindSuccess :
+        UdpAssociateSuccess;
+
+    QTime stopWatch;
+    stopWatch.start();
+
+    while (socks5State != wantedState) {
+        if (!data->controlSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
+            if (data->controlSocket->state() == QAbstractSocket::UnconnectedState)
+                return true;
+
+            setErrorState(QSocks5SocketEnginePrivate::ControlSocketError);
+            if (timedOut && data->controlSocket->error() == QAbstractSocket::SocketTimeoutError)
+                *timedOut = true;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool QSocks5SocketEngine::waitForRead(int msecs, bool *timedOut)
+{
+    Q_D(QSocks5SocketEngine);
     QSOCKS5_DEBUG << "waitForRead" << msecs;
 
     d->readNotificationActivated = false;
@@ -1548,32 +1670,35 @@ bool QSocks5SocketEngine::waitForRead(int msecs, bool *timedOut) const
     QTime stopWatch;
     stopWatch.start();
 
-    if (socketType() == QAbstractSocket::TcpSocket) {
-        // check for pending data
-        if (d->data->controlSocket->bytesAvailable())
-            const_cast<QSocks5SocketEnginePrivate*>(d)->_q_controlSocketReadNotification();
+    // are we connected yet?
+    if (!d->waitForConnected(msecs, timedOut))
+        return false;
+    if (d->data->controlSocket->state() == QAbstractSocket::UnconnectedState)
+        return true;
 
-        bool success = true;
-        while (!d->readNotificationActivated && (success = d->data->controlSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed())))) {
-            QSOCKS5_DEBUG << "looping";
-        }
-        if (!success) {
-            setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
-            if (timedOut && d->data->controlSocket->error() == QAbstractSocket::SocketTimeoutError)
-                *timedOut = true;
-            if (d->data->controlSocket->state() == QAbstractSocket::UnconnectedState)
-                d->readNotificationActivated = true;
+    // we're connected
+    if (d->mode == QSocks5SocketEnginePrivate::ConnectMode ||
+        d->mode == QSocks5SocketEnginePrivate::BindMode) {
+        while (!d->readNotificationActivated) {
+            if (!d->data->controlSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
+                if (d->data->controlSocket->state() == QAbstractSocket::UnconnectedState)
+                    return true;
+
+                setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
+                if (timedOut && d->data->controlSocket->error() == QAbstractSocket::SocketTimeoutError)
+                    *timedOut = true;
+                return false;
+            }
         }
 #ifndef QT_NO_UDPSOCKET
     } else {
-        // what about if the tcp socket is disconnected ...
-        while (!d->readNotificationActivated && d->udpData->udpSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-            QSOCKS5_DEBUG << "looping";
-        }
-        if (d->udpData->udpSocket->error() != QAbstractSocket::UnknownSocketError) {
-            setError(d->udpData->udpSocket->error(), d->udpData->udpSocket->errorString());
-            if (timedOut && d->udpData->udpSocket->error() == QAbstractSocket::SocketTimeoutError)
-                *timedOut = true;
+        while (!d->readNotificationActivated) {
+            if (!d->udpData->udpSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
+                setError(d->udpData->udpSocket->error(), d->udpData->udpSocket->errorString());
+                if (timedOut && d->udpData->udpSocket->error() == QAbstractSocket::SocketTimeoutError)
+                    *timedOut = true;
+                return false;
+            }
         }
 #endif // QT_NO_UDPSOCKET
     }
@@ -1587,57 +1712,35 @@ bool QSocks5SocketEngine::waitForRead(int msecs, bool *timedOut) const
 }
 
 
-bool QSocks5SocketEngine::waitForWrite(int msecs, bool *timedOut) const
+bool QSocks5SocketEngine::waitForWrite(int msecs, bool *timedOut)
 {
-    Q_D(const QSocks5SocketEngine);
+    Q_D(QSocks5SocketEngine);
     QSOCKS5_DEBUG << "waitForWrite" << msecs;
 
-    if (d->socketState == QAbstractSocket::ConnectingState) {
-        d->writeNotificationActivated = false;
+    QTime stopWatch;
+    stopWatch.start();
 
-        QSOCKS5_DEBUG << "waitForWrite ... waiting for connected";
-        QTime stopWatch;
-        stopWatch.start();
-
-        if (!d->data->controlSocket->waitForConnected(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-            // qDebug() << "failed to connect to proxy";
-            setError(d->data->controlSocket->error(), d->data->controlSocket->errorString());
-            if (timedOut && d->data->controlSocket->error() == QAbstractSocket::SocketTimeoutError)
-                *timedOut = true;
-            return false;
-        }
-        QSOCKS5_DEBUG << "waitForWrite ... waiting for proxy init" << msecs;
-        while (!d->writeNotificationActivated
-               && d->data->controlSocket->waitForReadyRead(qt_timeout_value(msecs, stopWatch.elapsed()))) {
-            QSOCKS5_DEBUG << "looping";
-        }
-        if (timedOut && d->data->controlSocket->error() == QAbstractSocket::SocketTimeoutError) {
-            QSOCKS5_DEBUG << "timeout";
-            *timedOut = true;
-        }
-
-        bool ret = d->writeNotificationActivated;
-        d->writeNotificationActivated = false;
-
-        return ret;
-    }
-
-    // probably just return true unless we are not set up ??
-    if (d->socketState == QAbstractSocket::ConnectedState) {
-        if (d->mode == QSocks5SocketEnginePrivate::ConnectMode) {
-            //### check for time out;
-            while(d->data->controlSocket->bytesToWrite())
-                d->data->controlSocket->waitForBytesWritten();
-        }
+    // are we connected yet?
+    if (!d->waitForConnected(msecs, timedOut))
+        return false;
+    if (d->data->controlSocket->state() == QAbstractSocket::UnconnectedState)
         return true;
-    }
-    return false;
-}
 
+    // we're connected
+
+    // flush any bytes we may still have buffered in the time that we have left
+    if (d->data->controlSocket->bytesToWrite())
+        d->data->controlSocket->waitForBytesWritten(qt_timeout_value(msecs, stopWatch.elapsed()));
+    while ((msecs == -1 || stopWatch.elapsed() < msecs)
+           && d->data->controlSocket->state() == QAbstractSocket::ConnectedState
+           && d->data->controlSocket->bytesToWrite() >= MaxWriteBufferSize)
+        d->data->controlSocket->waitForBytesWritten(qt_timeout_value(msecs, stopWatch.elapsed()));
+    return d->data->controlSocket->bytesToWrite() < MaxWriteBufferSize;
+}
 
 bool QSocks5SocketEngine::waitForReadOrWrite(bool *readyToRead, bool *readyToWrite,
                                             bool checkRead, bool checkWrite,
-                                            int msecs, bool *timedOut) const
+                                            int msecs, bool *timedOut)
 {
     Q_UNUSED(checkRead);
     if (!checkWrite) {
@@ -1716,36 +1819,17 @@ void QSocks5SocketEngine::setExceptionNotificationEnabled(bool enable)
     d->exceptNotificationEnabled = enable;
 }
 
-QAbstractSocketEngine *QSocks5SocketEngineHandler::createSocketEngine(const QHostAddress &address, QAbstractSocket::SocketType socketType, QObject *parent)
+QAbstractSocketEngine *
+QSocks5SocketEngineHandler::createSocketEngine(QAbstractSocket::SocketType socketType,
+                                               const QNetworkProxy &proxy, QObject *parent)
 {
     Q_UNUSED(socketType);
 
-    QSOCKS5_DEBUG << "createSocketEngine" << address;
-
-    if (address == QHostAddress::LocalHost || address == QHostAddress::LocalHostIPv6) {
+    // proxy type must have been resolved by now
+    if (proxy.type() != QNetworkProxy::Socks5Proxy) {
         QSOCKS5_DEBUG << "not proxying";
         return 0;
     }
-
-    QNetworkProxy proxy;
-    // find proxy info
-    if (qobject_cast<QAbstractSocket *>(parent)) {
-        QAbstractSocket *abstractSocket = qobject_cast<QAbstractSocket *>(parent);
-        if (abstractSocket->proxy().type() != QNetworkProxy::DefaultProxy)
-            proxy = abstractSocket->proxy();
-    } else if (qobject_cast<QTcpServer *>(parent)) {
-        QTcpServer *server = qobject_cast<QTcpServer *>(parent);
-        if (server->proxy().type() != QNetworkProxy::DefaultProxy)
-            proxy = server->proxy();
-    }
-    if (proxy.type() == QNetworkProxy::DefaultProxy) {
-        proxy = QNetworkProxy::applicationProxy();
-    }
-    if (proxy.type() == QNetworkProxy::DefaultProxy || proxy.type() == QNetworkProxy::NoProxy || proxy.type() != QNetworkProxy::Socks5Proxy) {
-        QSOCKS5_DEBUG << "not proxying";
-        return 0;
-    }
-    QSOCKS5_DEBUG << "use proxy for" << address;
     QSocks5SocketEngine *engine = new QSocks5SocketEngine(parent);
     engine->setProxy(proxy);
     return engine;

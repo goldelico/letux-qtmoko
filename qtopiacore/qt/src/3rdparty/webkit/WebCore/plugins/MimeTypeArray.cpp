@@ -1,5 +1,6 @@
 /*
  *  Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+ *  Copyright (C) 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -52,7 +53,7 @@ PassRefPtr<MimeType> MimeTypeArray::item(unsigned index)
     const Vector<MimeClassInfo*>& mimes = data->mimes();
     if (index >= mimes.size())
         return 0;
-    return new MimeType(data, index);
+    return MimeType::create(data, index).get();
 }
 
 bool MimeTypeArray::canGetItemsForName(const AtomicString& propertyName)
@@ -68,7 +69,7 @@ bool MimeTypeArray::canGetItemsForName(const AtomicString& propertyName)
     return false;
 }
 
-PassRefPtr<MimeType> MimeTypeArray::nameGetter(const AtomicString& propertyName)
+PassRefPtr<MimeType> MimeTypeArray::namedItem(const AtomicString& propertyName)
 {
     PluginData *data = getPluginData();
     if (!data)
@@ -76,7 +77,7 @@ PassRefPtr<MimeType> MimeTypeArray::nameGetter(const AtomicString& propertyName)
     const Vector<MimeClassInfo*>& mimes = data->mimes();
     for (unsigned i = 0; i < mimes.size(); ++i) {
         if (mimes[i]->type == propertyName)
-            return new MimeType(data, i);
+            return MimeType::create(data, i).get();
     }
     return 0;
 }

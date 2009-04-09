@@ -1,4 +1,3 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2003, 2006 Apple Computer, Inc.  All rights reserved.
  *
@@ -45,7 +44,7 @@ bool ResourceRequestBase::isNull() const
 {
     updateResourceRequest(); 
     
-    return m_url.url().isNull();
+    return m_url.isNull();
 }
 
 const KURL& ResourceRequestBase::url() const 
@@ -64,7 +63,7 @@ void ResourceRequestBase::setURL(const KURL& url)
     m_platformRequestUpdated = false;
 }
 
-const ResourceRequestCachePolicy ResourceRequestBase::cachePolicy() const
+ResourceRequestCachePolicy ResourceRequestBase::cachePolicy() const
 {
     updateResourceRequest(); 
     
@@ -135,18 +134,33 @@ const HTTPHeaderMap& ResourceRequestBase::httpHeaderFields() const
     return m_httpHeaderFields; 
 }
 
-String ResourceRequestBase::httpHeaderField(const String& name) const
+String ResourceRequestBase::httpHeaderField(const AtomicString& name) const
 {
     updateResourceRequest(); 
     
     return m_httpHeaderFields.get(name);
 }
 
-void ResourceRequestBase::setHTTPHeaderField(const String& name, const String& value)
+void ResourceRequestBase::setHTTPHeaderField(const AtomicString& name, const String& value)
 {
     updateResourceRequest(); 
     
     m_httpHeaderFields.set(name, value); 
+    
+    m_platformRequestUpdated = false;
+}
+
+void ResourceRequestBase::setResponseContentDispositionEncodingFallbackArray(const String& encoding1, const String& encoding2, const String& encoding3)
+{
+    updateResourceRequest(); 
+    
+    m_responseContentDispositionEncodingFallbackArray.clear();
+    if (!encoding1.isNull())
+        m_responseContentDispositionEncodingFallbackArray.append(encoding1);
+    if (!encoding2.isNull())
+        m_responseContentDispositionEncodingFallbackArray.append(encoding2);
+    if (!encoding3.isNull())
+        m_responseContentDispositionEncodingFallbackArray.append(encoding3);
     
     m_platformRequestUpdated = false;
 }
@@ -183,7 +197,7 @@ void ResourceRequestBase::setAllowHTTPCookies(bool allowHTTPCookies)
     m_platformRequestUpdated = false;
 }
 
-void ResourceRequestBase::addHTTPHeaderField(const String& name, const String& value) 
+void ResourceRequestBase::addHTTPHeaderField(const AtomicString& name, const String& value) 
 {
     updateResourceRequest();
     pair<HTTPHeaderMap::iterator, bool> result = m_httpHeaderFields.add(name, value); 

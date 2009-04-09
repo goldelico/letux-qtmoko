@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGTRefElement.h"
 
 #include <wtf/GetPtr.h>
@@ -35,78 +31,71 @@
 #include "JSSVGAnimatedString.h"
 #include "SVGTRefElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGTRefElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGTRefElementTableEntries[] =
+static const HashTableValue JSSVGTRefElementTableValues[2] =
 {
-    { "href", JSSVGTRefElement::HrefAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "href", DontDelete|ReadOnly, (intptr_t)jsSVGTRefElementHref, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTRefElementTable = 
-{
-    2, 1, JSSVGTRefElementTableEntries, 1
-};
+static const HashTable JSSVGTRefElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGTRefElementTableValues, 0 };
+#else
+    { 2, 1, JSSVGTRefElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGTRefElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGTRefElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGTRefElementPrototypeTable = 
-{
-    2, 1, JSSVGTRefElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGTRefElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGTRefElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGTRefElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGTRefElementPrototype::info = { "SVGTRefElementPrototype", 0, &JSSVGTRefElementPrototypeTable, 0 };
+const ClassInfo JSSVGTRefElementPrototype::s_info = { "SVGTRefElementPrototype", 0, &JSSVGTRefElementPrototypeTable, 0 };
 
 JSObject* JSSVGTRefElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGTRefElementPrototype>(exec, "[[JSSVGTRefElement.prototype]]");
+    return getDOMPrototype<JSSVGTRefElement>(exec);
 }
 
-const ClassInfo JSSVGTRefElement::info = { "SVGTRefElement", &JSSVGTextPositioningElement::info, &JSSVGTRefElementTable, 0 };
+const ClassInfo JSSVGTRefElement::s_info = { "SVGTRefElement", &JSSVGTextPositioningElement::s_info, &JSSVGTRefElementTable, 0 };
 
-JSSVGTRefElement::JSSVGTRefElement(ExecState* exec, SVGTRefElement* impl)
-    : JSSVGTextPositioningElement(exec, impl)
+JSSVGTRefElement::JSSVGTRefElement(PassRefPtr<Structure> structure, PassRefPtr<SVGTRefElement> impl)
+    : JSSVGTextPositioningElement(structure, impl)
 {
-    setPrototype(JSSVGTRefElementPrototype::self(exec));
+}
+
+JSObject* JSSVGTRefElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGTRefElementPrototype(JSSVGTRefElementPrototype::createStructure(JSSVGTextPositioningElementPrototype::self(exec)));
 }
 
 bool JSSVGTRefElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGTRefElement, JSSVGTextPositioningElement>(exec, &JSSVGTRefElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGTRefElement, Base>(exec, &JSSVGTRefElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGTRefElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGTRefElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case HrefAttrNum: {
-        SVGTRefElement* imp = static_cast<SVGTRefElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+    SVGTRefElement* imp = static_cast<SVGTRefElement*>(static_cast<JSSVGTRefElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
 

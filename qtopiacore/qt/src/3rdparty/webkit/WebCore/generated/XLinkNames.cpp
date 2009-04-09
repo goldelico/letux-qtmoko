@@ -28,7 +28,7 @@
 
 
 #include "config.h"
-#ifdef AVOID_STATIC_CONSTRUCTORS
+#ifdef SKIP_STATIC_CONSTRUCTORS_ON_GCC
 #define DOM_XLinkNAMES_HIDE_GLOBALS 1
 #else
 #define QNAME_DEFAULT_CONSTRUCTOR 1
@@ -37,7 +37,9 @@
 #include "XLinkNames.h"
 
 #include "StaticConstructors.h"
-namespace WebCore { namespace XLinkNames {
+namespace WebCore {
+
+ namespace XLinkNames {
 
 using namespace WebCore;
 
@@ -68,6 +70,15 @@ WebCore::QualifiedName** getXLinkAttrs(size_t* size)
     return XLinkAttr;
 }
 
+// Attributes as strings
+char actuateAttrString[] = "actuate";
+char arcroleAttrString[] = "arcrole";
+char hrefAttrString[] = "href";
+char roleAttrString[] = "role";
+char showAttrString[] = "show";
+char titleAttrString[] = "title";
+char typeAttrString[] = "type";
+
 void init()
 {
     static bool initialized = false;
@@ -84,14 +95,6 @@ void init()
     new ((void*)&xlinkNamespaceURI) AtomicString(xlinkNS);
 
     // Attributes
-    const char *actuateAttrString = "actuate";
-    const char *arcroleAttrString = "arcrole";
-    const char *hrefAttrString = "href";
-    const char *roleAttrString = "role";
-    const char *showAttrString = "show";
-    const char *titleAttrString = "title";
-    const char *typeAttrString = "type";
-
     new ((void*)&actuateAttr) QualifiedName(nullAtom, actuateAttrString, xlinkNS);
     new ((void*)&arcroleAttr) QualifiedName(nullAtom, arcroleAttrString, xlinkNS);
     new ((void*)&hrefAttr) QualifiedName(nullAtom, hrefAttrString, xlinkNS);

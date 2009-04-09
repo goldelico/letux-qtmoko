@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,7 +47,7 @@
 
     \reentrant
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     This class makes it possible to accept incoming TCP connections.
     You can specify the port or have QTcpServer pick one
@@ -124,13 +128,15 @@ public:
     int maxConnections;
 
 #ifndef QT_NO_NETWORKPROXY
-    QNetworkProxy *proxy;
+    QNetworkProxy proxy;
+    QNetworkProxy resolveProxy(const QHostAddress &address, quint16 port);
 #endif
 
     // from QAbstractSocketEngineReceiver
     void readNotification();
     inline void writeNotification() {}
     inline void exceptionNotification() {}
+    inline void connectionNotification() {}
 #ifndef QT_NO_NETWORKPROXY
     inline void proxyAuthenticationRequired(const QNetworkProxy &, QAuthenticator *) {}
 #endif
@@ -145,9 +151,6 @@ QTcpServerPrivate::QTcpServerPrivate()
  , socketEngine(0)
  , serverSocketError(QAbstractSocket::UnknownSocketError)
  , maxConnections(30)
-#ifndef QT_NO_NETWORKPROXY
- , proxy(0)
-#endif
 {
 }
 
@@ -155,10 +158,40 @@ QTcpServerPrivate::QTcpServerPrivate()
 */
 QTcpServerPrivate::~QTcpServerPrivate()
 {
-#ifndef QT_NO_NETWORKPROXY
-     delete proxy;
-#endif
 }
+
+#ifndef QT_NO_NETWORKPROXY
+/*! \internal
+
+    Resolve the proxy to its final value.
+*/
+QNetworkProxy QTcpServerPrivate::resolveProxy(const QHostAddress &address, quint16 port)
+{
+    if (address == QHostAddress::LocalHost ||
+        address == QHostAddress::LocalHostIPv6)
+        return QNetworkProxy::NoProxy;
+
+    QList<QNetworkProxy> proxies;
+    if (proxy.type() != QNetworkProxy::DefaultProxy) {
+        // a non-default proxy was set with setProxy
+        proxies << proxy;
+    } else {
+        // try the application settings instead
+        QNetworkProxyQuery query(port, QString(), QNetworkProxyQuery::TcpServer);
+        proxies = QNetworkProxyFactory::proxyForQuery(query);
+    }
+
+    // return the first that we can use
+    foreach (const QNetworkProxy &p, proxies) {
+        if (p.capabilities() & QNetworkProxy::ListeningCapability)
+            return p;
+    }
+
+    // no proxy found
+    // DefaultProxy will raise an error
+    return QNetworkProxy(QNetworkProxy::DefaultProxy);
+}
+#endif
 
 /*! \internal
 */
@@ -236,9 +269,19 @@ bool QTcpServer::listen(const QHostAddress &address, quint16 port)
 
     QAbstractSocket::NetworkLayerProtocol proto = address.protocol();
 
-    if (d->socketEngine)
-        delete d->socketEngine;
-    d->socketEngine = QAbstractSocketEngine::createSocketEngine(address, QAbstractSocket::TcpSocket, this);
+#ifdef QT_NO_NETWORKPROXY
+    static const QNetworkProxy &proxy = *(QNetworkProxy *)0;
+#else
+    QNetworkProxy proxy = d->resolveProxy(address, port);
+#endif
+
+    delete d->socketEngine;
+    d->socketEngine = QAbstractSocketEngine::createSocketEngine(QAbstractSocket::TcpSocket, proxy, this);
+    if (!d->socketEngine) {
+        d->serverSocketError = QAbstractSocket::UnsupportedSocketOperationError;
+        d->serverSocketErrorString = tr("Operation on socket is not supported");
+        return false;
+    }
     if (!d->socketEngine->initialize(QAbstractSocket::TcpSocket, proto)) {
         d->serverSocketError = d->socketEngine->error();
         d->serverSocketErrorString = d->socketEngine->errorString();
@@ -576,9 +619,7 @@ QString QTcpServer::errorString() const
 void QTcpServer::setProxy(const QNetworkProxy &networkProxy)
 {
     Q_D(QTcpServer);
-    if (!d->proxy)
-        d->proxy = new QNetworkProxy();
-    *d->proxy = networkProxy;
+    d->proxy = networkProxy;
 }
 
 /*!
@@ -592,9 +633,7 @@ void QTcpServer::setProxy(const QNetworkProxy &networkProxy)
 QNetworkProxy QTcpServer::proxy() const
 {
     Q_D(const QTcpServer);
-    if (d->proxy)
-        return *d->proxy;
-    return QNetworkProxy();
+    return d->proxy;
 }
 #endif // QT_NO_NETWORKPROXY
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,16 +68,37 @@
 #include <QtGui/QScrollArea>
 #include <QtGui/QFormLayout>
 #include <QtGui/QLabel>
+#include <QtGui/QWizardPage>
+#include <QtGui/QWizard>
 #include <QtCore/QDebug>
 #include <QtCore/QSet>
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-    enum { FormLayoutColumns = 2 };
-}
+enum { FormLayoutColumns = 2 };
 
 namespace qdesigner_internal {
+
+/* The wizard has a policy of setting a size policy of its external children
+ * according to the page being expanding or not (in the latter case, the
+ * page will be pushed to the top). When setting/breaking layouts, this needs
+ * to be updated, which happens via a fake style change event. */
+
+void updateWizardLayout(QWidget *layoutBase);
+
+class FriendlyWizardPage : public  QWizardPage {
+    friend void updateWizardLayout(QWidget *);
+};
+
+void updateWizardLayout(QWidget *layoutBase)
+{
+    if (QWizardPage *wizardPage = qobject_cast<QWizardPage*>(layoutBase))
+        if (QWizard *wizard = static_cast<FriendlyWizardPage*>(wizardPage)->wizard()) {
+            QEvent event(QEvent::StyleChange);
+            QApplication::sendEvent(wizard, &event);
+        }
+}
+
 /*!
   \class Layout layout.h
   \brief Baseclass for layouting widgets in the Designer (Helper for Layout commands)
@@ -100,6 +125,7 @@ Layout::Layout(const QWidgetList &wl, QWidget *p, QDesignerFormWindowInterface *
     m_layoutBase(lb),
     m_formWindow(fw),
     m_layoutType(layoutType),
+    m_reparentLayoutWidget(true),
     m_isBreak(false)
 {
     if (m_layoutBase)
@@ -204,7 +230,7 @@ bool Layout::prepareLayout(bool &needMove, bool &needReparent)
     }
 
     needMove = !m_layoutBase;
-    needReparent = needMove || qobject_cast<QLayoutWidget*>(m_layoutBase) || qobject_cast<QSplitter*>(m_layoutBase);
+    needReparent = needMove || (m_reparentLayoutWidget && qobject_cast<QLayoutWidget*>(m_layoutBase)) || qobject_cast<QSplitter*>(m_layoutBase);
 
     QDesignerWidgetFactoryInterface *widgetFactory = m_formWindow->core()->widgetFactory();
     QDesignerMetaDataBaseInterface *metaDataBase = m_formWindow->core()->metaDataBase();
@@ -274,7 +300,7 @@ void Layout::finishLayout(bool needMove, QLayout *layout)
 
             done = true;
         }
-
+        updateWizardLayout(m_layoutBase);
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
         // We don't want to resize the form window
         if (!Utils::isCentralWidget(m_formWindow, widget))
@@ -299,6 +325,7 @@ void Layout::finishLayout(bool needMove, QLayout *layout)
     m_layoutBase->show();
 
     if (qobject_cast<QLayoutWidget*>(m_layoutBase) || qobject_cast<QSplitter*>(m_layoutBase)) {
+        m_formWindow->clearSelection(false);
         m_formWindow->manageWidget(m_layoutBase);
         m_formWindow->selectWidget(m_layoutBase);
     }
@@ -351,27 +378,32 @@ void Layout::undoLayout()
                     (!mw || mw->centralWidget() != m_layoutBase))
             m_layoutBase->setGeometry(m_oldGeometry);
     }
-
-    QWidget *ww = m_widgets.size() ? m_widgets.front() : m_formWindow;
-    m_formWindow->selectWidget(ww);
 }
 
 void Layout::breakLayout()
 {
-    QMap<QWidget *, QRect> rects;
+    typedef QMap<QWidget *, QRect> WidgetRectMap;
+    WidgetRectMap rects;
+    /* Store the geometry of the widgets. The idea is to give the user space
+     * to rearrange them, so, we do a adjustSize() on them, unless they want
+     * to grow (expanding widgets like QTextEdit), in which the geometry is
+     * preserved. Note that historically, geometries were re-applied
+     * only after breaking splitters. */
     foreach (QWidget *w, m_widgets) {
-        rects.insert(w, w->geometry());
+        const QRect geom = w->geometry();
+        const QSize sizeHint = w->sizeHint();
+        const bool restoreGeometry = sizeHint.isEmpty() || sizeHint.width() > geom.width() || sizeHint.height() > geom.height();
+        rects.insert(w, restoreGeometry ? w->geometry() : QRect(geom.topLeft(), QSize()));
     }
     const QPoint m_layoutBasePos = m_layoutBase->pos();
     QDesignerWidgetDataBaseInterface *widgetDataBase = m_formWindow->core()->widgetDataBase();
 
     LayoutInfo::deleteLayout(m_formWindow->core(), m_layoutBase);
 
-    const bool needReparent = qobject_cast<QLayoutWidget*>(m_layoutBase) ||
+    const bool needReparent = (m_reparentLayoutWidget && qobject_cast<QLayoutWidget*>(m_layoutBase)) ||
                         qobject_cast<QSplitter*>(m_layoutBase)     ||
                         (!widgetDataBase->isContainer(m_layoutBase, false) &&
                           m_layoutBase != m_formWindow->mainContainer());
-    const bool needResize = qobject_cast<QSplitter*>(m_layoutBase);
     const bool add = m_geometries.isEmpty();
 
     QMapIterator<QWidget*, QRect> it(rects);
@@ -385,8 +417,12 @@ void Layout::breakLayout()
             w->show();
         }
 
-        if (needResize)
-            w->resize(it.value().size());
+        const QRect oldGeometry = it.value();
+        if (oldGeometry.isEmpty()) {
+            w->adjustSize();
+        } else {
+            w->resize(oldGeometry.size());
+        }
 
         if (add)
             m_geometries.insert(w, QRect(w->pos(), w->size()));
@@ -399,6 +435,7 @@ void Layout::breakLayout()
     } else {
         m_parentWidget = m_layoutBase;
     }
+    updateWizardLayout(m_layoutBase);
 
     if (!m_widgets.isEmpty() && m_widgets.first() && m_widgets.first()->isVisibleTo(m_formWindow))
         m_formWindow->selectWidget(m_widgets.first());
@@ -591,8 +628,9 @@ public:
 
 private:
     void setCell(int row, int col, QWidget* w) { m_cells[ row * m_ncols + col] = w; }
+    void swapCells(int r1, int c1, int r2, int c2);
     void shrink();
-    void shrinkToFormLayout();
+    void reallocFormLayout();
     int countRow(int r, int c) const;
     int countCol(int r, int c) const;
     void setRow(int r, int c, QWidget* w, int count);
@@ -603,10 +641,10 @@ private:
     bool isWidgetEndRow(int r) const;
     bool isWidgetTopLeft(int r, int c) const;
     void extendLeft();
-    void moveToFormColumns();
     void extendRight();
     void extendUp();
     void extendDown();
+    bool shrinkFormLayoutSpans();
 
     const Mode m_mode;
     int m_nrows;
@@ -664,14 +702,21 @@ static inline QDebug operator<<(QDebug str, const Grid &g) { return g.debug(str)
 
 void Grid::setCells(const QRect &c, QWidget* w)
 {
-    // We ignore spans in form layout mode
-    const int bottom = c.top() + (m_mode == FormLayout ? 1 : c.height());
-    const int width =  m_mode == FormLayout ? 1 : c.width();
+    const int bottom = c.top() + c.height();
+    const int width =  c.width();
 
     for (int r = c.top(); r < bottom; r++) {
         QWidget **pos = m_cells + r * m_ncols + c.left();
         qFill(pos, pos + width, w);
     }
+}
+
+
+void Grid::swapCells(int r1, int c1, int r2, int c2)
+{
+    QWidget *w1 = cell(r1, c1);
+    setCell(r1, c1, cell(r2, c2));
+    setCell(r2, c2, w1);
 }
 
 int Grid::countRow(int r, int c) const
@@ -748,68 +793,6 @@ bool Grid::isWidgetTopLeft(int r, int c) const
     if (!w)
         return false;
     return (!r || cell(r-1, c) != w) && (!c || cell(r, c-1) != w);
-}
-
-// Try to get from
-// ' A'                 'A B'
-//      B'              'C D E'
-// '   C   D E'    ==>  'F G'
-// '  F  G'
-
-void Grid::moveToFormColumns()
-{
-    enum RowState { NoWidgets, HasWidgets, Conflict };
-    // Move all widgets to the left. If it is a label, preferrably column 0, else 1
-    for (int c = 1; c < m_ncols; c++) {
-        for (int r = 0; r < m_nrows; r++) {
-            QWidget* w = cell(r, c);
-            const int leftMost = qobject_cast<QLabel *>(w) ? 0 : 1;
-            if (c > leftMost) {
-                int newColumn = c;
-                for (int nc = c - 1; nc >= leftMost && !cell(r, nc); nc--)
-                    newColumn = nc;
-                if (newColumn != c) {
-                    setCell(r, newColumn, w);
-                    setCell(r, c, 0);
-                }
-            }
-        }
-    }
-    // Move all widgets up to form mostly complete rows
-    // (move widgets up until a conflict occurs at which point start a new row)
-    int newRow = 0;
-    QVector<bool> occupied(m_ncols, false);
-    for (int c = 0; c < m_ncols; c++)
-        occupied[c] = cell(0, c) != 0;
-    for (int r = newRow + 1; r < m_nrows; r++) {
-        // Check row for widgets/conflicts
-        RowState rowState = NoWidgets;
-        for (int c = 0; c < m_ncols; c++)
-            if (cell(r, c)) {
-                rowState = HasWidgets;
-                if (occupied[c]) {
-                    rowState = Conflict;
-                    break;
-                }
-            }
-        switch (rowState) {
-        case NoWidgets:
-            break;
-        case HasWidgets: // move up
-            for (int c = 0; c < m_ncols; c++)
-                if (QWidget *w = cell(r, c)) {
-                    setCell(newRow, c, w);
-                    setCell(r, c, 0);
-                    occupied[c] = true;
-                }
-            break;
-        case Conflict:  // start a new row here
-            for (int c = 0; c < m_ncols; c++)
-                occupied[c] = cell(r, c) != 0;
-            newRow = r;
-            break;
-        }
-    }
 }
 
 void Grid::extendLeft()
@@ -933,25 +916,33 @@ void Grid::extendDown()
 
 void Grid::simplify()
 {
-    // Grid: Extend all widgets to occupy most space and delete
-    // rows/columns that are not bordering on a widget
-    // Form: Do not extend (no span), just simplify and squeeze to 2 columns.
     switch (m_mode) {
-    case FormLayout:
-        moveToFormColumns();
-        break;
     case GridLayout:
+        // Grid: Extend all widgets to occupy most space and delete
+        // rows/columns that are not bordering on a widget
         extendLeft();
         extendRight();
         extendUp();
         extendDown();
+        shrink();
+        break;
+    case FormLayout:
+        // Form: First treat it as a grid to get the same behaviour
+        // regarding spanning and shrinking. Then restrict the span to
+        // the horizontal span possible in the form, simplify again
+        // and spread the widgets over a 2-column layout
+        extendLeft();
+        extendRight();
+        extendUp();
+        extendDown();
+        shrink();
+        if (shrinkFormLayoutSpans())
+            shrink();
+        reallocFormLayout();
         break;
     }
-    shrink();
-    if (m_mode == FormLayout && m_ncols > FormLayoutColumns)
-        shrinkToFormLayout();
-}
 
+}
 
 void Grid::shrink()
 {
@@ -989,35 +980,92 @@ void Grid::shrink()
     m_ncols = simplifiedNCols;
 }
 
-void Grid::shrinkToFormLayout()
+bool Grid::shrinkFormLayoutSpans()
 {
-    Q_ASSERT(m_mode == FormLayout);
-    // Count the widgets to the right of column 2
-    int pastRightWidgetCount = 0;
-    for (int c = FormLayoutColumns; c < m_ncols; c++)
-        for (int r = 0; r < m_nrows; r++)
-            if (cell(r, c))
-                pastRightWidgetCount++;
-    if (pastRightWidgetCount == 0)
-        return;
-    // just insert them as fields. reallocate
-    const int formNRows = m_nrows + pastRightWidgetCount;
+    bool shrunk = false;
+    typedef  QSet<QWidget*> WidgetSet;
+    // Determine unique set of widgets
+    WidgetSet widgets;
+    QWidget **end =  m_cells + m_ncols * m_nrows;
+    for (QWidget **wptr = m_cells; wptr < end; wptr++)
+        if (QWidget *w = *wptr)
+            widgets.insert(w);
+    // Restrict the widget span: max horizontal span at column 0: 2, anything else: 1
+    const int maxRowSpan = 1;
+    const WidgetSet::const_iterator cend = widgets.constEnd();
+    for (WidgetSet::const_iterator it = widgets.constBegin(); it != cend ; ++it) {
+        QWidget *w = *it;
+        int row, col,  rowspan, colspan;
+        locateWidget(w, row, col, rowspan, colspan);
+        const int maxColSpan = col == 0 ? 2 : 1;
+        const int newColSpan = qMin(colspan, maxColSpan);
+        const int newRowSpan = qMin(rowspan, maxRowSpan);
+        if (newColSpan != colspan || newRowSpan != rowspan) {
+            setCells(QRect(col, row, colspan, rowspan), 0);
+            setCells(QRect(col, row, newColSpan, newRowSpan), w);
+            shrunk = true;
+        }
+    }
+    return shrunk;
+}
 
+void Grid::reallocFormLayout()
+{
+    // Columns matching? -> happy!
+    if (m_ncols == FormLayoutColumns)
+        return;
+
+    // If there are offset columns (starting past the field column),
+    // move them to the left and squeeze them. This also prevents the
+    // following reallocation from creating empty form rows.
+    int pastRightWidgetCount = 0;
+    if (m_ncols > FormLayoutColumns) {
+        for (int r = 0; r < m_nrows; r++) {
+            // Try to find a column where the form columns are empty and
+            // there are widgets further to the right.
+            if (cell(r, 0) == 0 && cell(r, 1) == 0) {
+                int sourceCol = FormLayoutColumns;
+                QWidget *firstWidget = 0;
+                for ( ; sourceCol < m_ncols; sourceCol++)
+                    if (QWidget *w = cell(r, sourceCol)) {
+                        firstWidget = w;
+                        break;
+                    }
+                if (firstWidget) {
+                    // Move/squeeze. Copy to beginning of column if it is a label, else field
+                    int targetCol = qobject_cast<QLabel*>(firstWidget) ? 0 : 1;
+                    for ( ; sourceCol < m_ncols; sourceCol++)
+                        if (QWidget *w = cell(r, sourceCol))
+                            setCell(r,  targetCol++, w);
+                    // Pad with zero
+                    for ( ; targetCol < m_ncols; targetCol++)
+                        setCell(r, targetCol, 0);
+                }
+            }
+            // Any protruding widgets left on that row?
+            for (int c = FormLayoutColumns; c < m_ncols; c++)
+                if (cell(r, c))
+                    pastRightWidgetCount++;
+        }
+    }
+    // Reallocate with 2 columns. Just insert the protruding ones as fields.
+    const int formNRows = m_nrows + pastRightWidgetCount;
     QWidget **formCells = new QWidget*[FormLayoutColumns * formNRows];
     qFill(formCells, formCells + FormLayoutColumns * formNRows, static_cast<QWidget *>(0));
     QWidget **formPtr = formCells;
-
-    for (int r = 0; r < m_nrows; r++)
-        for (int c = 0; c < m_ncols; c++)
-            if (c < FormLayoutColumns) {
-                *formPtr++ = cell(r, c);   // left of column2: just add
-            } else {
-                // right: start a new form row if there is a widget
-                if (QWidget *w = cell(r, c)) {
-                    formPtr++;
-                    *formPtr++ = w;
-                }
+    const int matchingColumns = qMin(m_ncols, static_cast<int>(FormLayoutColumns));
+    for (int r = 0; r < m_nrows; r++) {
+        int c = 0;
+        for ( ; c < matchingColumns; c++)               // Just copy over matching columns
+             *formPtr++ = cell(r, c);
+        formPtr += FormLayoutColumns - matchingColumns; // In case old format was 1 column
+        // protruding widgets: Insert as single-field rows
+        for ( ; c < m_ncols; c++)
+            if (QWidget *w = cell(r, c)) {
+                formPtr++;
+                *formPtr++ = w;
             }
+    }
     Q_ASSERT(formPtr == formCells + FormLayoutColumns * formNRows);
     delete [] m_cells;
     m_cells = formCells;
@@ -1056,9 +1104,9 @@ inline void getGridItemPosition(QFormLayout *formLayout, int index, int *row, in
     getFormLayoutItemPosition(formLayout, index, row, column, rowspan, colspan);
 }
 
-inline void addWidgetToGrid(QFormLayout *lt, QWidget * widget, int row, int column, int, int, Qt::Alignment)
+inline void addWidgetToGrid(QFormLayout *lt, QWidget * widget, int row, int column, int, int columnSpan, Qt::Alignment)
 {
-    lt->setWidget(row, column == 0 ? QFormLayout::LabelRole : QFormLayout::FieldRole, widget);
+    formLayoutAddWidget(lt, widget, QRect(column, row,  columnSpan, 1), false);
 }
 
 // ----------- Base template for grid like layouts

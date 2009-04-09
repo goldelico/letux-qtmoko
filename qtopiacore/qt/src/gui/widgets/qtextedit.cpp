@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -506,7 +510,7 @@ void QTextEditPrivate::_q_ensureVisible(const QRectF &_rect)
     will select the character to the right, and \e{Shift+Ctrl+Right} will select the word to the right, etc.
 
     \sa QTextDocument, QTextCursor, {Application Example},
-	{Syntax Highlighter Example}, {Rich Text Processing}
+        {Syntax Highlighter Example}, {Rich Text Processing}
 */
 
 /*!
@@ -1310,7 +1314,6 @@ void QTextEdit::keyPressEvent(QKeyEvent *e)
 */
 void QTextEdit::keyReleaseEvent(QKeyEvent *e)
 {
-    QWidget::keyReleaseEvent(e);
 #ifdef QT_KEYPAD_NAVIGATION
     Q_D(QTextEdit);
     if (QApplication::keypadNavigationEnabled()) {
@@ -1331,9 +1334,11 @@ void QTextEdit::keyReleaseEvent(QKeyEvent *e)
             }
             setTextCursor(cursor);
             e->accept();
+            return;
         }
     }
 #endif
+    e->ignore();
 }
 
 /*!
@@ -1459,7 +1464,18 @@ void QTextEditPrivate::paint(QPainter *p, QPaintEvent *e)
     p->translate(-xOffset, -yOffset);
     r.translate(xOffset, yOffset);
 
+    QTextDocument *doc = control->document();
+    QTextDocumentLayout *layout = qobject_cast<QTextDocumentLayout *>(doc->documentLayout());
+
+    // the layout might need to expand the root frame to
+    // the viewport if NoWrap is set
+    if (layout)
+        layout->setViewport(viewport->rect());
+
     control->drawContents(p, r, q_func());
+
+    if (layout)
+        layout->setViewport(QRect());
 }
 
 /*! \reimp
@@ -1718,6 +1734,8 @@ void QTextEdit::changeEvent(QEvent *e)
         d->sendControlEvent(e);
     } else if (e->type() == QEvent::PaletteChange) {
         d->control->setPalette(palette());
+    } else if (e->type() == QEvent::LayoutDirectionChange) {
+        d->sendControlEvent(e);
     }
 }
 
@@ -1730,9 +1748,9 @@ void QTextEdit::wheelEvent(QWheelEvent *e)
     if (!(d->control->textInteractionFlags() & Qt::TextEditable)) {
         if (e->modifiers() & Qt::ControlModifier) {
             const int delta = e->delta();
-            if (delta > 0)
+            if (delta < 0)
                 zoomOut();
-            else if (delta < 0)
+            else if (delta > 0)
                 zoomIn();
             return;
         }
@@ -2034,6 +2052,7 @@ void QTextEdit::setReadOnly(bool ro)
     } else {
         flags = Qt::TextEditorInteraction;
     }
+    setAttribute(Qt::WA_InputMethodEnabled, !ro);
     d->control->setTextInteractionFlags(flags);
 }
 

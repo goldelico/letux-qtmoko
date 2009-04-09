@@ -18,45 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedLength_H
-#define JSSVGAnimatedLength_H
+#ifndef JSSVGAnimatedLength_h
+#define JSSVGAnimatedLength_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
-class JSSVGAnimatedLength : public KJS::DOMObject {
+class JSSVGAnimatedLength : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGAnimatedLength(KJS::ExecState*, SVGAnimatedLength*);
+    JSSVGAnimatedLength(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimatedLength>, SVGElement* context);
     virtual ~JSSVGAnimatedLength();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        BaseValAttrNum, AnimValAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     SVGAnimatedLength* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGAnimatedLength> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGAnimatedLength > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGAnimatedLength*);
-SVGAnimatedLength* toSVGAnimatedLength(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGAnimatedLength*, SVGElement* context);
+SVGAnimatedLength* toSVGAnimatedLength(JSC::JSValuePtr);
 
-class JSSVGAnimatedLengthPrototype : public KJS::JSObject {
+class JSSVGAnimatedLengthPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGAnimatedLengthPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGAnimatedLengthPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGAnimatedLengthBaseVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimatedLengthAnimVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

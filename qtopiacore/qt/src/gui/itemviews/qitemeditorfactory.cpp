@@ -1,42 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include <qplatformdefs.h>
 #include "qitemeditorfactory.h"
+#include "qitemeditorfactory_p.h"
 
 #ifndef QT_NO_ITEMVIEWS
 
@@ -47,29 +52,11 @@
 #include <qspinbox.h>
 #include <limits.h>
 #include <float.h>
-#include <qcoreapplication.h>
+#include <qapplication.h>
 #include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_LINEEDIT
-
-class QExpandingLineEdit : public QLineEdit
-{
-    Q_OBJECT
-
-public:
-    QExpandingLineEdit(QWidget *parent);
-    QExpandingLineEdit(const QString &contents, QWidget *parent);
-
-public Q_SLOTS:
-    void resizeToContents();
-
-private:
-    int originalWidth;
-};
-
-#endif // QT_NO_LINEEDIT
 
 #ifndef QT_NO_COMBOBOX
 
@@ -126,7 +113,7 @@ public:
     \row    \o QTime \o QTimeEdit
     \endtable
 
-    Additional editors can be registered with the registerEditor() function. 
+    Additional editors can be registered with the registerEditor() function.
 
     \sa QItemDelegate, {Model/View Programming}, {Color Editor Factory Example}
 */
@@ -245,8 +232,10 @@ QWidget *QDefaultItemEditorFactory::createEditor(QVariant::Type type, QWidget *p
     case QVariant::String:
     default: {
         // the default editor is a lineedit
-        QLineEdit *le = new QExpandingLineEdit(parent);
-        le->setFrame(false);
+        QExpandingLineEdit *le = new QExpandingLineEdit(parent);
+        le->setFrame(le->style()->styleHint(QStyle::SH_ItemView_DrawDelegateFrame, 0, le));
+        if (!le->style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, 0, le))
+            le->setWidgetOwnsGeometry(true);
         return le; }
 #else
     default:
@@ -488,32 +477,60 @@ void QItemEditorFactory::setDefaultFactory(QItemEditorFactory *factory)
 #ifndef QT_NO_LINEEDIT
 
 QExpandingLineEdit::QExpandingLineEdit(QWidget *parent)
-    : QLineEdit(parent), originalWidth(-1)
+    : QLineEdit(parent), originalWidth(-1), widgetOwnsGeometry(false)
 {
     connect(this, SIGNAL(textChanged(QString)), this, SLOT(resizeToContents()));
+    updateMinimumWidth();
 }
 
-QExpandingLineEdit::QExpandingLineEdit(const QString &contents, QWidget *parent)
-    : QLineEdit(contents, parent), originalWidth(-1)
+void QExpandingLineEdit::changeEvent(QEvent *e)
 {
-    connect(this, SIGNAL(textChanged(QString)), this, SLOT(resizeToContents()));
+    switch (e->type())
+    {
+    case QEvent::FontChange:
+    case QEvent::StyleChange:
+    case QEvent::ContentsRectChange:
+        updateMinimumWidth();
+        break;
+    default:
+        break;
+    }
+
+    QLineEdit::changeEvent(e);
+}
+
+void QExpandingLineEdit::updateMinimumWidth()
+{
+    int left, right;
+    getTextMargins(&left, 0, &right, 0);
+    int width = left + right + 4 /*horizontalMargin in qlineedit.cpp*/;
+    getContentsMargins(&left, 0, &right, 0);
+    width += left + right;
+
+    QStyleOptionFrameV2 opt;
+    initStyleOption(&opt);
+    
+    int minWidth = style()->sizeFromContents(QStyle::CT_LineEdit, &opt, QSize(width, 0).
+                                      expandedTo(QApplication::globalStrut()), this).width();
+    setMinimumWidth(minWidth);
 }
 
 void QExpandingLineEdit::resizeToContents()
 {
+    int oldWidth = width();
     if (originalWidth == -1)
-        originalWidth = width();
+        originalWidth = oldWidth;
     if (QWidget *parent = parentWidget()) {
         QPoint position = pos();
-	QFontMetrics fm(font());
-	int hintWidth = sizeHint().width() - (fm.width(QLatin1Char('x')) * 17) + fm.width(displayText());
+        int hintWidth = minimumWidth() + fontMetrics().width(displayText());
         int parentWidth = parent->width();
-	int maxWidth = isRightToLeft() ? position.x() + width() : parentWidth - position.x();
-	int newWidth = qBound(originalWidth, hintWidth, maxWidth);
-	if (isRightToLeft())
-	    setGeometry(position.x() - newWidth + width(), position.y(), newWidth, height());
-	else
-	    resize(newWidth, height());
+        int maxWidth = isRightToLeft() ? position.x() + oldWidth : parentWidth - position.x();
+        int newWidth = qBound(originalWidth, hintWidth, maxWidth);
+        if (widgetOwnsGeometry)
+            setMaximumWidth(newWidth);
+        if (isRightToLeft())
+            move(position.x() - newWidth + oldWidth, position.y());
+        resize(newWidth, height());
     }
 }
 

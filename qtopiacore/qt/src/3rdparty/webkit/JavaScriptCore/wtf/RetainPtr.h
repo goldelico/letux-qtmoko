@@ -1,7 +1,5 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
- *  This file is part of the KDE libraries
- *  Copyright (C) 2005, 2006 Apple Computer, Inc.
+ *  Copyright (C) 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Library General Public
@@ -56,8 +54,7 @@ namespace WTF {
     }
 #endif
 
-    template <typename T> class RetainPtr
-    {
+    template <typename T> class RetainPtr {
     public:
         typedef typename RemovePointer<T>::type ValueType;
         typedef ValueType* PtrType;
@@ -83,8 +80,8 @@ namespace WTF {
         bool operator!() const { return !m_ptr; }
     
         // This conversion operator allows implicit conversion to bool but not to other integer types.
-        typedef PtrType (RetainPtr::*UnspecifiedBoolType)() const;
-        operator UnspecifiedBoolType() const { return m_ptr ? &RetainPtr::get : 0; }
+        typedef PtrType RetainPtr::*UnspecifiedBoolType;
+        operator UnspecifiedBoolType() const { return m_ptr ? &RetainPtr::m_ptr : 0; }
         
         RetainPtr& operator=(const RetainPtr&);
         template <typename U> RetainPtr& operator=(const RetainPtr<U>&);

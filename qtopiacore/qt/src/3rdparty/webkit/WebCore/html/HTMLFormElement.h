@@ -2,7 +2,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2000 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,6 +24,7 @@
 #ifndef HTMLFormElement_h
 #define HTMLFormElement_h
 
+#include "FormDataBuilder.h"
 #include "HTMLCollection.h" 
 #include "HTMLElement.h"
 
@@ -33,14 +34,15 @@ namespace WebCore {
 
 class Event;
 class FormData;
-class HTMLGenericFormElement;
+class HTMLFormControlElement;
 class HTMLImageElement;
 class HTMLInputElement;
 class HTMLFormCollection;
+class TextEncoding;
 
-class HTMLFormElement : public HTMLElement {
+class HTMLFormElement : public HTMLElement { 
 public:
-    HTMLFormElement(Document*);
+    HTMLFormElement(const QualifiedName&, Document*);
     virtual ~HTMLFormElement();
 
     virtual HTMLTagStatus endTagRequirement() const { return TagStatusRequired; }
@@ -58,18 +60,18 @@ public:
     unsigned length() const;
     Node* item(unsigned index);
 
-    String enctype() const { return m_enctype; }
+    String enctype() const { return m_formDataBuilder.encodingType(); }
     void setEnctype(const String&);
 
-    String encoding() const { return m_enctype; }
-    void setEncoding(const String& enctype) { setEnctype(enctype); }
+    String encoding() const { return m_formDataBuilder.encodingType(); }
+    void setEncoding(const String& value) { setEnctype(value); }
 
     bool autoComplete() const { return m_autocomplete; }
 
     virtual void parseMappedAttribute(MappedAttribute*);
 
-    void registerFormElement(HTMLGenericFormElement*);
-    void removeFormElement(HTMLGenericFormElement*);
+    void registerFormElement(HTMLFormControlElement*);
+    void removeFormElement(HTMLFormControlElement*);
     void registerImgElement(HTMLImageElement*);
     void removeImgElement(HTMLImageElement*);
 
@@ -78,8 +80,9 @@ public:
     void submit(Event*, bool activateSubmitButton = false);
     void reset();
 
+    // Used to indicate a malformed state to keep from applying the bottom margin of the form.
     void setMalformed(bool malformed) { m_malformed = malformed; }
-    virtual bool isMalformed() { return m_malformed; }
+    bool isMalformed() const { return m_malformed; }
 
     virtual bool isURLAttribute(Attribute*) const;
     
@@ -89,7 +92,7 @@ public:
     String name() const;
     void setName(const String&);
 
-    String acceptCharset() const;
+    String acceptCharset() const { return m_formDataBuilder.acceptCharset(); }
     void setAcceptCharset(const String&);
 
     String action() const;
@@ -101,16 +104,16 @@ public:
     virtual String target() const;
     void setTarget(const String&);
     
-    PassRefPtr<HTMLGenericFormElement> elementForAlias(const AtomicString&);
-    void addElementAlias(HTMLGenericFormElement*, const AtomicString& alias);
+    PassRefPtr<HTMLFormControlElement> elementForAlias(const AtomicString&);
+    void addElementAlias(HTMLFormControlElement*, const AtomicString& alias);
 
     // FIXME: Change this to be private after getting rid of all the clients.
-    Vector<HTMLGenericFormElement*> formElements;
+    Vector<HTMLFormControlElement*> formElements;
 
     class CheckedRadioButtons {
     public:
-        void addButton(HTMLGenericFormElement*);
-        void removeButton(HTMLGenericFormElement*);
+        void addButton(HTMLFormControlElement*);
+        void removeButton(HTMLFormControlElement*);
         HTMLInputElement* checkedButtonForGroup(const AtomicString& name) const;
 
     private:
@@ -120,15 +123,23 @@ public:
     
     CheckedRadioButtons& checkedRadioButtons() { return m_checkedRadioButtons; }
     
+    virtual void documentDidBecomeActive();
+
+protected:
+    virtual void willMoveToNewOwnerDocument();
+    virtual void didMoveToNewOwnerDocument();
+
 private:
-    void parseEnctype(const String&);
-    PassRefPtr<FormData> formData(const char* boundary) const;
-    unsigned formElementIndex(HTMLGenericFormElement*);
+    bool isMailtoForm() const;
+    TextEncoding dataEncoding() const;
+    PassRefPtr<FormData> createFormData(const CString& boundary);
+    unsigned formElementIndex(HTMLFormControlElement*);
 
     friend class HTMLFormCollection;
 
-    typedef HashMap<RefPtr<AtomicStringImpl>, RefPtr<HTMLGenericFormElement> > AliasMap;
-    
+    typedef HashMap<RefPtr<AtomicStringImpl>, RefPtr<HTMLFormControlElement> > AliasMap;
+
+    FormDataBuilder m_formDataBuilder;
     AliasMap* m_elementAliases;
     HTMLCollection::CollectionInfo* collectionInfo;
 
@@ -137,16 +148,12 @@ private:
     Vector<HTMLImageElement*> imgElements;
     String m_url;
     String m_target;
-    String m_enctype;
-    String m_acceptcharset;
-    bool m_post : 1;
-    bool m_multipart : 1;
     bool m_autocomplete : 1;
     bool m_insubmit : 1;
     bool m_doingsubmit : 1;
     bool m_inreset : 1;
     bool m_malformed : 1;
-    String oldNameAttr;
+    AtomicString m_name;
 };
 
 } // namespace WebCore

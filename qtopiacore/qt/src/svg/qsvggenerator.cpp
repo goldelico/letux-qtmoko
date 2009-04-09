@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,11 +47,13 @@
 
 #include "private/qpaintengine_p.h"
 #include "private/qtextengine_p.h"
+#include "private/qdrawhelper_p.h"
 
 #include "qfile.h"
 #include "qtextcodec.h"
 #include "qtextstream.h"
 #include "qbuffer.h"
+#include "qmath.h"
 
 #include "qdebug.h"
 
@@ -83,7 +89,8 @@ class QSvgPaintEnginePrivate : public QPaintEnginePrivate
 public:
     QSvgPaintEnginePrivate()
     {
-        size = QSize(100, 100);
+        size = QSize();
+        viewBox = QRectF();
         outputDevice = 0;
         resolution = 72;
 
@@ -99,6 +106,7 @@ public:
     }
 
     QSize size;
+    QRectF viewBox;
     QIODevice *outputDevice;
     QTextStream *stream;
     int resolution;
@@ -177,6 +185,22 @@ public:
         d_func()->size = size;
     }
 
+    QRectF viewBox() const { return d_func()->viewBox; }
+    void setViewBox(const QRectF &viewBox) {
+        Q_ASSERT(!isActive());
+        d_func()->viewBox = viewBox;
+    }
+
+    QString documentTitle() const { return d_func()->attributes.document_title; }
+    void setDocumentTitle(const QString &title) {
+        d_func()->attributes.document_title = title;
+    }
+
+    QString documentDescription() const { return d_func()->attributes.document_description; }
+    void setDocumentDescription(const QString &description) {
+        d_func()->attributes.document_description = description;
+    }
+
     QIODevice *outputDevice() const { return d_func()->outputDevice; }
     void setOutputDevice(QIODevice *device) {
         Q_ASSERT(!isActive());
@@ -229,6 +253,37 @@ public:
 
     void saveGradientStops(QTextStream &str, const QGradient *g) {
         QGradientStops stops = g->stops();
+
+        if (g->interpolationMode() == QGradient::ColorInterpolation) {
+            bool constantAlpha = true;
+            int alpha = stops.at(0).second.alpha();
+            for (int i = 1; i < stops.size(); ++i)
+                constantAlpha &= (stops.at(i).second.alpha() == alpha);
+
+            if (!constantAlpha) {
+                const qreal spacing = 0.02;
+                QGradientStops newStops;
+                QRgb fromColor = PREMUL(stops.at(0).second.rgba());
+                QRgb toColor;
+                for (int i = 0; i + 1 < stops.size(); ++i) {
+                    int parts = qCeil((stops.at(i + 1).first - stops.at(i).first) / spacing);
+                    newStops.append(stops.at(i));
+                    toColor = PREMUL(stops.at(i + 1).second.rgba());
+
+                    if (parts > 1) {
+                        qreal step = (stops.at(i + 1).first - stops.at(i).first) / parts;
+                        for (int j = 1; j < parts; ++j) {
+                            QRgb color = INV_PREMUL(INTERPOLATE_PIXEL_256(fromColor, 256 - 256 * j / parts, toColor, 256 * j / parts));
+                            newStops.append(QGradientStop(stops.at(i).first + j * step, QColor::fromRgba(color)));
+                        }
+                    }
+                    fromColor = toColor;
+                }
+                newStops.append(stops.back());
+                stops = newStops;
+            }
+        }
+
         foreach(QGradientStop stop, stops) {
             QString color =
                 QString::fromLatin1("#%1%2%3")
@@ -412,7 +467,12 @@ public:
         Q_D(QSvgPaintEngine);
 
         d->font = sfont;
-        d->attributes.font_size = QString::number(d->font.pointSize()) + QLatin1String("pt");
+
+        if (d->font.pixelSize() == -1)
+            d->attributes.font_size = QString::number(d->font.pointSizeF() * d->resolution / 72);
+        else
+            d->attributes.font_size = QString::number(d->font.pixelSize());
+
         int svgWeight = d->font.weight();
         switch (svgWeight) {
         case QFont::Light:
@@ -484,38 +544,141 @@ QSvgGenerator::~QSvgGenerator()
 }
 
 /*!
-  Returns the size of the generated SVG.
+    \property QSvgGenerator::title
+    \brief the title of the generated SVG drawing
+    \since 4.5
+    \sa description
 */
-QSize QSvgGenerator::size() const
+QString QSvgGenerator::title() const
 {
-    return d_func()->engine->size();
+    Q_D(const QSvgGenerator);
+
+    return d->engine->documentTitle();
+}
+
+void QSvgGenerator::setTitle(const QString &title)
+{
+    Q_D(QSvgGenerator);
+
+    d->engine->setDocumentTitle(title);
 }
 
 /*!
-  Sets the size of the generated SVG to \a size.
-
-  It is not possible to set the size while the SVG is being generated.
+    \property QSvgGenerator::description
+    \brief the description of the generated SVG drawing
+    \since 4.5
+    \sa title
 */
+QString QSvgGenerator::description() const
+{
+    Q_D(const QSvgGenerator);
+
+    return d->engine->documentDescription();
+}
+
+void QSvgGenerator::setDescription(const QString &description)
+{
+    Q_D(QSvgGenerator);
+
+    d->engine->setDocumentDescription(description);
+}
+
+/*!
+    \property QSvgGenerator::size
+    \brief the size of the generated SVG drawing
+    \since 4.5
+
+    By default this property is set to \c{QSize(-1, -1)}, which
+    indicates that the generator should not output the width and
+    height attributes of the \c<svg> element.
+
+    \note It is not possible to change this property while a
+    QPainter is active on the generator.
+
+    \sa viewBox, resolution
+*/
+QSize QSvgGenerator::size() const
+{
+    Q_D(const QSvgGenerator);
+    return d->engine->size();
+}
+
 void QSvgGenerator::setSize(const QSize &size)
 {
     Q_D(QSvgGenerator);
     if (d->engine->isActive()) {
-        qWarning("QSvgGenerator::setSize(), cannot set size while svg is being generated");
+        qWarning("QSvgGenerator::setSize(), cannot set size while SVG is being generated");
         return;
     }
     d->engine->setSize(size);
 }
 
 /*!
-  Sets the target filename for generated SVGs to \a fileName.
+    \property QSvgGenerator::viewBox
+    \brief the viewBox of the generated SVG drawing
+    \since 4.5
 
-  \sa setOutputDevice()
+    By default this property is set to \c{QRect(0, 0, -1, -1)}, which
+    indicates that the generator should not output the viewBox attribute
+    of the \c<svg> element.
+
+    \note It is not possible to change this property while a
+    QPainter is active on the generator.
+
+    \sa viewBox(), size, resolution
 */
+QRectF QSvgGenerator::viewBoxF() const
+{
+    Q_D(const QSvgGenerator);
+    return d->engine->viewBox();
+}
+
+/*!
+    \since 4.5
+
+    Returns viewBoxF().toRect().
+
+    \sa viewBoxF()
+*/
+QRect QSvgGenerator::viewBox() const
+{
+    Q_D(const QSvgGenerator);
+    return d->engine->viewBox().toRect();
+}
+
+void QSvgGenerator::setViewBox(const QRectF &viewBox)
+{
+    Q_D(QSvgGenerator);
+    if (d->engine->isActive()) {
+        qWarning("QSvgGenerator::setViewBox(), cannot set viewBox while SVG is being generated");
+        return;
+    }
+    d->engine->setViewBox(viewBox);
+}
+
+void QSvgGenerator::setViewBox(const QRect &viewBox)
+{
+    setViewBox(QRectF(viewBox));
+}
+
+/*!
+    \property QSvgGenerator::fileName
+    \brief the target filename for the generated SVG drawing
+    \since 4.5
+
+    \sa outputDevice
+*/
+QString QSvgGenerator::fileName() const
+{
+    Q_D(const QSvgGenerator);
+    return d->fileName;
+}
+
 void QSvgGenerator::setFileName(const QString &fileName)
 {
     Q_D(QSvgGenerator);
     if (d->engine->isActive()) {
-        qWarning("QSvgGenerator::setFileName(), cannot set fileName svg is being generated");
+        qWarning("QSvgGenerator::setFileName(), cannot set file name while SVG is being generated");
         return;
     }
 
@@ -530,7 +693,14 @@ void QSvgGenerator::setFileName(const QString &fileName)
 }
 
 /*!
-  Returns the target output device for generated SVGs.
+    \property QSvgGenerator::outputDevice
+    \brief the output device for the generated SVG drawing
+    \since 4.5
+
+    If both output device and file name are specified, the output device
+    will have precedence.
+
+    \sa fileName
 */
 QIODevice *QSvgGenerator::outputDevice() const
 {
@@ -538,22 +708,38 @@ QIODevice *QSvgGenerator::outputDevice() const
     return d->engine->outputDevice();
 }
 
-/*!
-  Sets the output device for generated SVGs to \a outputDevice.
-
-  If both output device and file name are specified, the output device
-  will have precedence.
-*/
 void QSvgGenerator::setOutputDevice(QIODevice *outputDevice)
 {
     Q_D(QSvgGenerator);
     if (d->engine->isActive()) {
-        qWarning("QSvgGenerator::setOutputDevice(), cannot set output device svg is being generated");
+        qWarning("QSvgGenerator::setOutputDevice(), cannot set output device while SVG is being generated");
         return;
     }
     d->owns_iodevice = false;
     d->engine->setOutputDevice(outputDevice);
     d->fileName = QString();
+}
+
+/*!
+    \property QSvgGenerator::resolution
+    \brief the resolution of the generated output
+    \since 4.5
+
+    The resolution is specified in dots per inch, and is used to
+    calculate the physical size of an SVG drawing.
+
+    \sa size, viewBox
+*/
+int QSvgGenerator::resolution() const
+{
+    Q_D(const QSvgGenerator);
+    return d->engine->resolution();
+}
+
+void QSvgGenerator::setResolution(int dpi)
+{
+    Q_D(QSvgGenerator);
+    d->engine->setResolution(dpi);
 }
 
 /*!
@@ -600,42 +786,6 @@ int QSvgGenerator::metric(QPaintDevice::PaintDeviceMetric metric) const
     return 0;
 }
 
-/*!
-    \fn QString QSvgGenerator::fileName() const
-
-    Returns the name of the file to be created by the generator.
-*/
-
-QString QSvgGenerator::fileName() const
-{
-    Q_D(const QSvgGenerator);
-    return d->fileName;
-}
-
-/*!
-    \fn void QSvgGenerator::setResolution(int resolution)
-
-    Sets the resolution of the generated output to \a resolution.
-    The argument is specified in dots per inch.
-
-    The resolution is used to calculate the physical size of
-    an SVG drawing.
-*/
-void QSvgGenerator::setResolution(int dpi)
-{
-    Q_D(QSvgGenerator);
-    d->engine->setResolution(dpi);
-}
-
-/*!
-    Returns the resolution of the generated output in dots per inch.
-*/
-int QSvgGenerator::resolution() const
-{
-    Q_D(const QSvgGenerator);
-    return d->engine->resolution();
-}
-
 /*****************************************************************************
  * class QSvgPaintEngine
  */
@@ -662,16 +812,20 @@ bool QSvgPaintEngine::begin(QPaintDevice *)
 
     d->stream = new QTextStream(&d->header);
 
-    int w = d->size.width();
-    int h = d->size.height();
-
-    qreal wmm = w * 25.4 / d->resolution;
-    qreal hmm = h * 25.4 / d->resolution;
-
     // stream out the header...
-    *d->stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << endl;
-    *d->stream << "<svg width=\"" << wmm << "mm\" height=\"" << hmm << "mm\"" << endl;
-    *d->stream << " viewBox=\"0 0 " << w << " " << h << "\"" << endl;
+    *d->stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << endl << "<svg";
+
+    if (d->size.isValid()) {
+        qreal wmm = d->size.width() * 25.4 / d->resolution;
+        qreal hmm = d->size.height() * 25.4 / d->resolution;
+        *d->stream << " width=\"" << wmm << "mm\" height=\"" << hmm << "mm\"" << endl;
+    }
+
+    if (d->viewBox.isValid()) {
+        *d->stream << " viewBox=\"" << d->viewBox.left() << " " << d->viewBox.top();
+        *d->stream << " " << d->viewBox.width() << " " << d->viewBox.height() << "\"" << endl;
+    }
+
     *d->stream << " xmlns=\"http://www.w3.org/2000/svg\""
                << " xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
                << " version=\"1.2\" baseProfile=\"tiny\">" << endl;

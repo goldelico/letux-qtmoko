@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -40,6 +44,7 @@
 
 #ifndef QT_NO_THREAD
 #include "qatomic.h"
+#include "qthread.h"
 #include "qmutex_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -142,10 +147,10 @@ QMutex::~QMutex()
 */
 void QMutex::lock()
 {
-    ulong self;
+    Qt::HANDLE self;
 
     if (d->recursive) {
-        self = d->self();
+        self = QThread::currentThreadId();
         if (d->owner == self) {
             ++d->count;
             Q_ASSERT_X(d->count != 0, "QMutex::lock", "Overflow in recursion counter");
@@ -154,9 +159,16 @@ void QMutex::lock()
 
         bool isLocked = d->contenders.fetchAndAddAcquire(1) == 0;
         if (!isLocked) {
+#ifndef QT_NO_DEBUG
+            if (d->owner == self)
+                qWarning("QMutex::lock: Deadlock detected in thread %ld",
+                         long(d->owner));
+#endif
+
             // didn't get the lock, wait for it
             isLocked = d->wait();
-            Q_ASSERT_X(isLocked, "QMutex::lock", "Internal error, infinite wait has timed out.");
+            Q_ASSERT_X(isLocked, "QMutex::lock",
+                       "Internal error, infinite wait has timed out.");
 
             // don't need to wait for the lock anymore
             d->contenders.deref();
@@ -169,22 +181,52 @@ void QMutex::lock()
     }
 
 #ifndef QT_NO_DEBUG
-    self = d->self();
+    self = QThread::currentThreadId();
 #endif
-    bool isLocked = d->contenders.fetchAndAddAcquire(1) == 0;
+
+    bool isLocked = d->contenders == 0 && d->contenders.testAndSetAcquire(0, 1);
     if (!isLocked) {
+        int spinCount = 0;
+        int lastSpinCount = d->lastSpinCount;
+
+        enum { AdditionalSpins = 100, SpinCountPenalizationDivisor = 4 };
+        const int maximumSpinCount = lastSpinCount + AdditionalSpins;
+
+        do {
+            if (spinCount++ > maximumSpinCount) {
+                // puts("spinning useless, sleeping");
+                isLocked = d->contenders.fetchAndAddAcquire(1) == 0;
+                if (!isLocked) {
 #ifndef QT_NO_DEBUG
-        if (d->owner == self)
-            qWarning("QMutex::lock: Deadlock detected in thread %ld", d->owner);
+                    if (d->owner == self)
+                        qWarning("QMutex::lock: Deadlock detected in thread %ld",
+                                 long(d->owner));
 #endif
 
-        // didn't get the lock, wait for it
-        isLocked = d->wait();
-        Q_ASSERT_X(isLocked, "QMutex::lock", "Internal error, infinite wait has timed out.");
+                    // didn't get the lock, wait for it
+                    isLocked = d->wait();
+                    Q_ASSERT_X(isLocked, "QMutex::lock",
+                               "Internal error, infinite wait has timed out.");
 
-        // don't need to wait for the lock anymore
-        d->contenders.deref();
+                    // don't need to wait for the lock anymore
+                    d->contenders.deref();
+                }
+                // decrease the lastSpinCount since we didn't actually get the lock by spinning
+                spinCount = -d->lastSpinCount / SpinCountPenalizationDivisor;
+                break;
+            }
+
+            QThread::yieldCurrentThread();
+            isLocked = d->contenders == 0 && d->contenders.testAndSetAcquire(0, 1);
+        } while (!isLocked);
+
+        // adjust the last spin lock count
+        lastSpinCount = d->lastSpinCount;
+        d->lastSpinCount = spinCount >= 0
+                           ? qMax(lastSpinCount, spinCount)
+                           : lastSpinCount + spinCount;
     }
+
 #ifndef QT_NO_DEBUG
     d->owner = self;
 #endif
@@ -209,17 +251,17 @@ void QMutex::lock()
 */
 bool QMutex::tryLock()
 {
-    ulong self;
+    Qt::HANDLE self;
 
     if (d->recursive) {
-        self = d->self();
+        self = QThread::currentThreadId();
         if (d->owner == self) {
             ++d->count;
             Q_ASSERT_X(d->count != 0, "QMutex::tryLock", "Overflow in recursion counter");
             return true;
         }
 
-        bool isLocked = d->contenders.testAndSetAcquire(0, 1);
+        bool isLocked = d->contenders == 0 && d->contenders.testAndSetAcquire(0, 1);
         if (!isLocked) {
             // some other thread has the mutex locked, or we tried to
             // recursively lock an non-recursive mutex
@@ -233,9 +275,9 @@ bool QMutex::tryLock()
     }
 
 #ifndef QT_NO_DEBUG
-    self = d->self();
+    self = QThread::currentThreadId();
 #endif
-    bool isLocked = d->contenders.testAndSetAcquire(0, 1);
+    bool isLocked = d->contenders == 0 && d->contenders.testAndSetAcquire(0, 1);
     if (!isLocked) {
         // some other thread has the mutex locked, or we tried to
         // recursively lock an non-recursive mutex
@@ -272,10 +314,10 @@ bool QMutex::tryLock()
 */
 bool QMutex::tryLock(int timeout)
 {
-    ulong self;
+    Qt::HANDLE self;
 
     if (d->recursive) {
-        self = d->self();
+        self = QThread::currentThreadId();
         if (d->owner == self) {
             ++d->count;
             Q_ASSERT_X(d->count != 0, "QMutex::tryLock", "Overflow in recursion counter");
@@ -300,7 +342,7 @@ bool QMutex::tryLock(int timeout)
     }
 
 #ifndef QT_NO_DEBUG
-    self = d->self();
+    self = QThread::currentThreadId();
 #endif
     bool isLocked = d->contenders.fetchAndAddAcquire(1) == 0;
     if (!isLocked) {
@@ -328,7 +370,7 @@ bool QMutex::tryLock(int timeout)
 */
 void QMutex::unlock()
 {
-    Q_ASSERT_X(d->owner == d->self(), "QMutex::unlock()",
+    Q_ASSERT_X(d->owner == QThread::currentThreadId(), "QMutex::unlock()",
                "A mutex must be unlocked in the same thread that locked it.");
 
     if (d->recursive) {

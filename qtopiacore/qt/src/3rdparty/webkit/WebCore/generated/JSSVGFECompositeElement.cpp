@@ -21,370 +21,315 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFECompositeElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFECompositeElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFECompositeElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFECompositeElementTableEntries[] =
+static const HashTableValue JSSVGFECompositeElementTableValues[16] =
 {
-    { "in2", JSSVGFECompositeElement::In2AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "k2", JSSVGFECompositeElement::K2AttrNum, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementTableEntries[15] },
-    { "in1", JSSVGFECompositeElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementTableEntries[17] },
-    { 0, 0, 0, 0, 0 },
-    { "k4", JSSVGFECompositeElement::K4AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "k1", JSSVGFECompositeElement::K1AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFECompositeElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSSVGFECompositeElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "x", JSSVGFECompositeElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementTableEntries[16] },
-    { "k3", JSSVGFECompositeElement::K3AttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "_operator", JSSVGFECompositeElement::_operatorAttrNum, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementTableEntries[14] },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFECompositeElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFECompositeElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFECompositeElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFECompositeElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementIn1, (intptr_t)0 },
+    { "in2", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementIn2, (intptr_t)0 },
+    { "_operator", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElement_operator, (intptr_t)0 },
+    { "k1", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementK1, (intptr_t)0 },
+    { "k2", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementK2, (intptr_t)0 },
+    { "k3", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementK3, (intptr_t)0 },
+    { "k4", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementK4, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGFECompositeElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFECompositeElementTable = 
+static const HashTable JSSVGFECompositeElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFECompositeElementTableValues, 0 };
+#else
+    { 34, 31, JSSVGFECompositeElementTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSSVGFECompositeElementConstructorTableValues[8] =
 {
-    2, 18, JSSVGFECompositeElementTableEntries, 14
+    { "SVG_FECOMPOSITE_OPERATOR_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_OVER", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OVER, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_IN", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_IN, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_OUT", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OUT, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_ATOP", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ATOP, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_XOR", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_XOR, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_ARITHMETIC", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ARITHMETIC, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSSVGFECompositeElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFECompositeElementConstructorTableValues, 0 };
+#else
+    { 16, 15, JSSVGFECompositeElementConstructorTableValues, 0 };
+#endif
+
+class JSSVGFECompositeElementConstructor : public DOMObject {
+public:
+    JSSVGFECompositeElementConstructor(ExecState* exec)
+        : DOMObject(JSSVGFECompositeElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSSVGFECompositeElementPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSSVGFECompositeElementConstructor::s_info = { "SVGFECompositeElementConstructor", 0, &JSSVGFECompositeElementConstructorTable, 0 };
+
+bool JSSVGFECompositeElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSSVGFECompositeElementConstructor, DOMObject>(exec, &JSSVGFECompositeElementConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFECompositeElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFECompositeElementPrototypeTableValues[9] =
 {
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_FECOMPOSITE_OPERATOR_OUT", WebCore::SVG_FECOMPOSITE_OPERATOR_OUT, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOMPOSITE_OPERATOR_ATOP", WebCore::SVG_FECOMPOSITE_OPERATOR_ATOP, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOMPOSITE_OPERATOR_ARITHMETIC", WebCore::SVG_FECOMPOSITE_OPERATOR_ARITHMETIC, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOMPOSITE_OPERATOR_OVER", WebCore::SVG_FECOMPOSITE_OPERATOR_OVER, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_FECOMPOSITE_OPERATOR_UNKNOWN", WebCore::SVG_FECOMPOSITE_OPERATOR_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementPrototypeTableEntries[7] },
-    { "SVG_FECOMPOSITE_OPERATOR_IN", WebCore::SVG_FECOMPOSITE_OPERATOR_IN, DontDelete|ReadOnly, 0, &JSSVGFECompositeElementPrototypeTableEntries[8] },
-    { "SVG_FECOMPOSITE_OPERATOR_XOR", WebCore::SVG_FECOMPOSITE_OPERATOR_XOR, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_FECOMPOSITE_OPERATOR_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_UNKNOWN, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_OVER", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OVER, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_IN", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_IN, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_OUT", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OUT, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_ATOP", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ATOP, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_XOR", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_XOR, (intptr_t)0 },
+    { "SVG_FECOMPOSITE_OPERATOR_ARITHMETIC", DontDelete|ReadOnly, (intptr_t)jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ARITHMETIC, (intptr_t)0 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFECompositeElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFECompositeElementPrototypeTable = 
-{
-    2, 9, JSSVGFECompositeElementPrototypeTableEntries, 7
-};
+static const HashTable JSSVGFECompositeElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGFECompositeElementPrototypeTableValues, 0 };
+#else
+    { 17, 15, JSSVGFECompositeElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFECompositeElementPrototype::info = { "SVGFECompositeElementPrototype", 0, &JSSVGFECompositeElementPrototypeTable, 0 };
+const ClassInfo JSSVGFECompositeElementPrototype::s_info = { "SVGFECompositeElementPrototype", 0, &JSSVGFECompositeElementPrototypeTable, 0 };
 
 JSObject* JSSVGFECompositeElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFECompositeElementPrototype>(exec, "[[JSSVGFECompositeElement.prototype]]");
+    return getDOMPrototype<JSSVGFECompositeElement>(exec);
 }
 
 bool JSSVGFECompositeElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFECompositeElementPrototype, JSObject>(exec, &JSSVGFECompositeElementPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSSVGFECompositeElementPrototype, JSObject>(exec, &JSSVGFECompositeElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFECompositeElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGFECompositeElement::s_info = { "SVGFECompositeElement", &JSSVGElement::s_info, &JSSVGFECompositeElementTable, 0 };
+
+JSSVGFECompositeElement::JSSVGFECompositeElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFECompositeElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGFECompositeElement::info = { "SVGFECompositeElement", &JSSVGElement::info, &JSSVGFECompositeElementTable, 0 };
-
-JSSVGFECompositeElement::JSSVGFECompositeElement(ExecState* exec, SVGFECompositeElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGFECompositeElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGFECompositeElementPrototype::self(exec));
+    return new (exec) JSSVGFECompositeElementPrototype(JSSVGFECompositeElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFECompositeElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFECompositeElement, JSSVGElement>(exec, &JSSVGFECompositeElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFECompositeElement, Base>(exec, &JSSVGFECompositeElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFECompositeElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFECompositeElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementIn2(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in2Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElement_operator(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->_operatorAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case In2AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementK1(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->k1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementK2(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->k2Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in2Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementK3(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->k3Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case _operatorAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementK4(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->k4Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedEnumeration> obj = imp->_operatorAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case K1AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->k1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case K2AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->k2Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSSVGFECompositeElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGFECompositeElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGFECompositeElementConstructor>(exec);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case K3AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFECompositeElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFECompositeElement* castedThisObj = static_cast<JSSVGFECompositeElement*>(asObject(thisValue));
+    SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        ASSERT(exec && exec->dynamicInterpreter());
 
-        RefPtr<SVGAnimatedNumber> obj = imp->k3Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
 
-        return toJS(exec, obj.get());
-    }
-    case K4AttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+// Constant getters
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->k4Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OVER(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_IN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_OUT(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ATOP(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_XOR(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFECompositeElement* imp = static_cast<SVGFECompositeElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFECompositeElementSVG_FECOMPOSITE_OPERATOR_ARITHMETIC(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(6));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

@@ -1,51 +1,62 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qnetworkinterface.h"
 #include "qnetworkinterface_p.h"
+
+#ifndef QT_NO_NETWORKINTERFACE
+
 #include "qnetworkinterface_win_p.h"
+#include <qhostinfo.h>
 #include <qhash.h>
+#include <qurl.h>
 
 QT_BEGIN_NAMESPACE
 
 typedef DWORD (WINAPI *PtrGetAdaptersInfo)(PIP_ADAPTER_INFO, PULONG);
-PtrGetAdaptersInfo ptrGetAdaptersInfo = 0;
+static PtrGetAdaptersInfo ptrGetAdaptersInfo = 0;
 typedef ULONG (WINAPI *PtrGetAdaptersAddresses)(ULONG, ULONG, PVOID, PIP_ADAPTER_ADDRESSES, PULONG);
-PtrGetAdaptersAddresses ptrGetAdaptersAddresses = 0;
+static PtrGetAdaptersAddresses ptrGetAdaptersAddresses = 0;
+typedef DWORD (WINAPI *PtrGetNetworkParams)(PFIXED_INFO, PULONG);
+static PtrGetNetworkParams ptrGetNetworkParams = 0;
 
 static void resolveLibs()
 {
@@ -67,9 +78,11 @@ static void resolveLibs()
 #if defined(Q_OS_WINCE)
         ptrGetAdaptersInfo = (PtrGetAdaptersInfo)GetProcAddressW(iphlpapiHnd, L"GetAdaptersInfo");
         ptrGetAdaptersAddresses = (PtrGetAdaptersAddresses)GetProcAddressW(iphlpapiHnd, L"GetAdaptersAddresses");
+        ptrGetNetworkParams = (PtrGetNetworkParams)GetProcAddressW(iphlpapiHnd, L"GetNetworkParams");
 #else
         ptrGetAdaptersInfo = (PtrGetAdaptersInfo)GetProcAddress(iphlpapiHnd, "GetAdaptersInfo");
         ptrGetAdaptersAddresses = (PtrGetAdaptersAddresses)GetProcAddress(iphlpapiHnd, "GetAdaptersAddresses");
+        ptrGetNetworkParams = (PtrGetNetworkParams)GetProcAddress(iphlpapiHnd, "GetNetworkParams");
 #endif
     }
 }
@@ -88,53 +101,6 @@ static QHostAddress addressFromSockaddr(sockaddr *sa)
         qWarning("Got unknown socket family %d", sa->sa_family);
     return address;
 
-}
-
-static QHostAddress netmaskFromPrefixLength(uint len, int family)
-{
-    Q_ASSERT(len <= 128);
-    union {
-        quint8 u8[16];
-        quint32 ipv4;
-    } data;
-
-    // initialize data
-    memset(&data, 0, sizeof data);
-
-    quint8 *ptr = data.u8;
-    while (len > 0) {
-        switch (len) {
-        default:
-            // a byte or more left
-            *ptr |= 0x01;
-        case 7:
-            *ptr |= 0x02;
-        case 6:
-            *ptr |= 0x04;
-        case 5:
-            *ptr |= 0x08;
-        case 4:
-            *ptr |= 0x10;
-        case 3:
-            *ptr |= 0x20;
-        case 2:
-            *ptr |= 0x40;
-        case 1:
-            *ptr |= 0x80;
-        }
-
-        if (len < 8)
-            break;
-        len -= 8;
-        ++ptr;
-    }
-
-    if (family == AF_INET)
-        return QHostAddress(htonl(data.ipv4));
-    else if (family == AF_INET6)
-        return QHostAddress(data.u8);
-    else
-        return QHostAddress();
 }
 
 static QHash<QHostAddress, QHostAddress> ipv4Netmasks()
@@ -219,6 +185,7 @@ static QList<QNetworkInterfacePrivate *> interfaceListingWinXP()
             iface->flags |= QNetworkInterface::CanMulticast;
 
         iface->name = QString::fromLocal8Bit(ptr->AdapterName);
+        iface->friendlyName = QString::fromWCharArray(ptr->FriendlyName);
         if (ptr->PhysicalAddressLength)
             iface->hardwareAddress = iface->makeHwAddress(ptr->PhysicalAddressLength,
                                                           ptr->PhysicalAddress);
@@ -244,7 +211,7 @@ static QList<QNetworkInterfacePrivate *> interfaceListingWinXP()
 
                     // broadcast address is set on postProcess()
                 } else { //IPV6
-                    entry.setNetmask(netmaskFromPrefixLength(pprefix->PrefixLength, addr->Address.lpSockaddr->sa_family));
+                    entry.setPrefixLength(pprefix->PrefixLength);
                 }
                 pprefix = pprefix->Next ? pprefix->Next : pprefix;
             }
@@ -328,4 +295,33 @@ QList<QNetworkInterfacePrivate *> QNetworkInterfaceManager::scan()
     return interfaceListing();
 }
 
+QString QHostInfo::localDomainName()
+{
+    resolveLibs();
+    if (ptrGetNetworkParams == NULL)
+        return QString();       // couldn't resolve
+
+    FIXED_INFO info, *pinfo;
+    ULONG bufSize = sizeof info;
+    pinfo = &info;
+    if (ptrGetNetworkParams(pinfo, &bufSize) == ERROR_BUFFER_OVERFLOW) {
+        pinfo = (FIXED_INFO *)qMalloc(bufSize);
+
+        // try again
+        if (ptrGetNetworkParams(pinfo, &bufSize) != ERROR_SUCCESS) {
+            qFree(pinfo);
+            return QString();   // error
+        }
+    }
+
+    QString domainName = QUrl::fromAce(pinfo->DomainName);
+
+    if (pinfo != &info)
+        qFree(pinfo);
+
+    return domainName;
+}
+
 QT_END_NAMESPACE
+
+#endif // QT_NO_NETWORKINTERFACE

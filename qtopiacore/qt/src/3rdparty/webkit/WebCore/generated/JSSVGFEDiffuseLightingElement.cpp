@@ -21,310 +21,198 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEDiffuseLightingElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEDiffuseLightingElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEDiffuseLightingElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEDiffuseLightingElementTableEntries[] =
+static const HashTableValue JSSVGFEDiffuseLightingElementTableValues[13] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "surfaceScale", JSSVGFEDiffuseLightingElement::SurfaceScaleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFEDiffuseLightingElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "x", JSSVGFEDiffuseLightingElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDiffuseLightingElementTableEntries[13] },
-    { "in1", JSSVGFEDiffuseLightingElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDiffuseLightingElementTableEntries[14] },
-    { "diffuseConstant", JSSVGFEDiffuseLightingElement::DiffuseConstantAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDiffuseLightingElementTableEntries[12] },
-    { "style", JSSVGFEDiffuseLightingElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "kernelUnitLengthY", JSSVGFEDiffuseLightingElement::KernelUnitLengthYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "kernelUnitLengthX", JSSVGFEDiffuseLightingElement::KernelUnitLengthXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFEDiffuseLightingElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFEDiffuseLightingElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEDiffuseLightingElement::ResultAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEDiffuseLightingElementTableEntries[15] },
-    { "className", JSSVGFEDiffuseLightingElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementIn1, (intptr_t)0 },
+    { "surfaceScale", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementSurfaceScale, (intptr_t)0 },
+    { "diffuseConstant", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementDiffuseConstant, (intptr_t)0 },
+    { "kernelUnitLengthX", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementKernelUnitLengthX, (intptr_t)0 },
+    { "kernelUnitLengthY", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementKernelUnitLengthY, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEDiffuseLightingElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDiffuseLightingElementTable = 
-{
-    2, 16, JSSVGFEDiffuseLightingElementTableEntries, 12
-};
+static const HashTable JSSVGFEDiffuseLightingElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEDiffuseLightingElementTableValues, 0 };
+#else
+    { 34, 31, JSSVGFEDiffuseLightingElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEDiffuseLightingElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEDiffuseLightingElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEDiffuseLightingElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEDiffuseLightingElementPrototypeTable = 
-{
-    2, 1, JSSVGFEDiffuseLightingElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEDiffuseLightingElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEDiffuseLightingElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEDiffuseLightingElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEDiffuseLightingElementPrototype::info = { "SVGFEDiffuseLightingElementPrototype", 0, &JSSVGFEDiffuseLightingElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEDiffuseLightingElementPrototype::s_info = { "SVGFEDiffuseLightingElementPrototype", 0, &JSSVGFEDiffuseLightingElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEDiffuseLightingElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEDiffuseLightingElementPrototype>(exec, "[[JSSVGFEDiffuseLightingElement.prototype]]");
+    return getDOMPrototype<JSSVGFEDiffuseLightingElement>(exec);
 }
 
-const ClassInfo JSSVGFEDiffuseLightingElement::info = { "SVGFEDiffuseLightingElement", &JSSVGElement::info, &JSSVGFEDiffuseLightingElementTable, 0 };
-
-JSSVGFEDiffuseLightingElement::JSSVGFEDiffuseLightingElement(ExecState* exec, SVGFEDiffuseLightingElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEDiffuseLightingElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEDiffuseLightingElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEDiffuseLightingElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEDiffuseLightingElement::s_info = { "SVGFEDiffuseLightingElement", &JSSVGElement::s_info, &JSSVGFEDiffuseLightingElementTable, 0 };
+
+JSSVGFEDiffuseLightingElement::JSSVGFEDiffuseLightingElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEDiffuseLightingElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEDiffuseLightingElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEDiffuseLightingElementPrototype(JSSVGFEDiffuseLightingElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEDiffuseLightingElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEDiffuseLightingElement, JSSVGElement>(exec, &JSSVGFEDiffuseLightingElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEDiffuseLightingElement, Base>(exec, &JSSVGFEDiffuseLightingElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEDiffuseLightingElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEDiffuseLightingElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDiffuseLightingElementSurfaceScale(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->surfaceScaleAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDiffuseLightingElementDiffuseConstant(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->diffuseConstantAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case SurfaceScaleAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
+JSValuePtr jsSVGFEDiffuseLightingElementKernelUnitLengthX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->kernelUnitLengthXAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDiffuseLightingElementKernelUnitLengthY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->kernelUnitLengthYAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->surfaceScaleAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDiffuseLightingElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case DiffuseConstantAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
+JSValuePtr jsSVGFEDiffuseLightingElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDiffuseLightingElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->diffuseConstantAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDiffuseLightingElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case KernelUnitLengthXAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
+JSValuePtr jsSVGFEDiffuseLightingElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEDiffuseLightingElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->kernelUnitLengthXAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEDiffuseLightingElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(static_cast<JSSVGFEDiffuseLightingElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        return toJS(exec, obj.get());
-    }
-    case KernelUnitLengthYAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
+JSValuePtr jsSVGFEDiffuseLightingElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEDiffuseLightingElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEDiffuseLightingElement* castedThisObj = static_cast<JSSVGFEDiffuseLightingElement*>(asObject(thisValue));
+    SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        ASSERT(exec && exec->dynamicInterpreter());
 
-        RefPtr<SVGAnimatedNumber> obj = imp->kernelUnitLengthYAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEDiffuseLightingElement* imp = static_cast<SVGFEDiffuseLightingElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -265,11 +269,12 @@ struct WinTimerInfo {                           // internal timer info
     int fastTimerId;
 };
 
-class QZeroTimerEvent : public QEvent
+class QZeroTimerEvent : public QTimerEvent
 {
 public:
-    int timerid;
-    QZeroTimerEvent(int id) : QEvent(QEvent::ZeroTimerEvent), timerid(id) {}
+    inline QZeroTimerEvent(int timerId)
+        : QTimerEvent(timerId)
+    { t = QEvent::ZeroTimerEvent; }
 };
 
 typedef QList<WinTimerInfo*>  WinTimerVec;      // vector of TimerInfo structs
@@ -284,6 +289,8 @@ typedef MMRESULT(WINAPI *ptimeKillEvent)(UINT);
 
 static ptimeSetEvent qtimeSetEvent = 0;
 static ptimeKillEvent qtimeKillEvent = 0;
+
+LRESULT CALLBACK qt_internal_proc(HWND hwnd, UINT message, WPARAM wp, LPARAM lp);
 
 static void resolveTimerAPI()
 {
@@ -364,7 +371,8 @@ QEventDispatcherWin32Private::~QEventDispatcherWin32Private()
 #if !defined(Q_OS_WINCE)
     UnregisterClassA(className.constData(), qWinAppInst());
 #else
-	UnregisterClassW(reinterpret_cast<const wchar_t *> (QString::fromLatin1(className.constData()).utf16()), qWinAppInst());
+    UnregisterClassW(reinterpret_cast<const wchar_t *> (QString::fromLatin1(className.constData()).utf16())
+                     , qWinAppInst());
 #endif
 }
 
@@ -577,9 +585,15 @@ void QEventDispatcherWin32Private::registerTimer(WinTimerInfo *t)
 
 void QEventDispatcherWin32Private::unregisterTimer(WinTimerInfo *t)
 {
-    if (t->fastTimerId != 0) {
+    // mark timer as unused
+    if (!QObjectPrivate::get(t->obj)->inThreadChangeEvent)
+        QAbstractEventDispatcherPrivate::releaseTimerId(t->timerId);
+
+    if (t->interval == 0) {
+        QCoreApplicationPrivate::removePostedTimerEvent(t->dispatcher, t->timerId);
+    } else if (t->fastTimerId != 0) {
         qtimeKillEvent(t->fastTimerId);
-        QCoreApplicationPrivate::removePostedTimerEvent(t->obj, t->timerId);
+        QCoreApplicationPrivate::removePostedTimerEvent(t->dispatcher, t->timerId);
     } else if (internalHwnd) {
         KillTimer(internalHwnd, t->timerId);
     }
@@ -800,7 +814,7 @@ void QEventDispatcherWin32::registerSocketNotifier(QSocketNotifier *notifier)
 
     if (dict->contains(sockfd)) {
         const char *t[] = { "Read", "Write", "Exception" };
-	/* Variable "socket" below is a function pointer. */
+    /* Variable "socket" below is a function pointer. */
         qWarning("QSocketNotifier: Multiple socket notifiers for "
                  "same socket %d and type %s", sockfd, t[type]);
     }
@@ -991,7 +1005,7 @@ void QEventDispatcherWin32::activateEventNotifiers()
         if (WaitForSingleObjectEx(d->winEventNotifierList.at(i)->handle(), 0, TRUE) == WAIT_OBJECT_0)
             d->activateEventNotifier(d->winEventNotifierList.at(i));
 #else
-		if (WaitForSingleObject(d->winEventNotifierList.at(i)->handle(), 0) == WAIT_OBJECT_0)
+        if (WaitForSingleObject(d->winEventNotifierList.at(i)->handle(), 0) == WAIT_OBJECT_0)
             d->activateEventNotifier(d->winEventNotifierList.at(i));
 #endif
     }
@@ -1043,13 +1057,13 @@ bool QEventDispatcherWin32::event(QEvent *e)
     Q_D(QEventDispatcherWin32);
     if (e->type() == QEvent::ZeroTimerEvent) {
         QZeroTimerEvent *zte = static_cast<QZeroTimerEvent*>(e);
-        WinTimerInfo *t = d->timerDict.value(zte->timerid);
+        WinTimerInfo *t = d->timerDict.value(zte->timerId());
         if (t) {
-            QTimerEvent te(zte->timerid);
+            QTimerEvent te(zte->timerId());
             QCoreApplication::sendEvent(t->obj, &te);
-            WinTimerInfo *tn = d->timerDict.value(zte->timerid);
+            WinTimerInfo *tn = d->timerDict.value(zte->timerId());
             if (tn && t == tn)
-                QCoreApplication::postEvent(this, new QZeroTimerEvent(zte->timerid));
+                QCoreApplication::postEvent(this, new QZeroTimerEvent(zte->timerId()));
         }
         return true;
     } else if (e->type() == QEvent::Timer) {

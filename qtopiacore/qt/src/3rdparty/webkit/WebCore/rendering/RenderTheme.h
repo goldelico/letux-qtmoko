@@ -1,7 +1,7 @@
 /*
  * This file is part of the theme implementation for form controls in WebCore.
  *
- * Copyright (C) 2005 Apple Computer, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008 Apple Computer, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,25 +24,22 @@
 #define RenderTheme_h
 
 #include "RenderObject.h"
+#if USE(NEW_THEME)
+#include "Theme.h"
+#else
+#include "ThemeTypes.h"
+#endif
 
 namespace WebCore {
 
 class Element;
 class PopupMenu;
 class RenderMenuList;
-
-enum ControlState {
-    HoverState,
-    PressedState,
-    FocusState,
-    EnabledState,
-    CheckedState,
-    ReadOnlyState
-};
+class CSSStyleSheet;
 
 class RenderTheme {
 public:
-    RenderTheme() { }
+    RenderTheme();
     virtual ~RenderTheme() { }
 
     // This method is called whenever style has been computed for an element and the appearance
@@ -51,7 +48,7 @@ public:
     // selection of control size based off the font, the disabling of appearance when certain other properties like
     // "border" are set, or if the appearance is not supported by the theme.
     void adjustStyle(CSSStyleSelector*, RenderStyle*, Element*,  bool UAHasAppearance,
-                     const BorderData&, const BackgroundLayer&, const Color& backgroundColor);
+                     const BorderData&, const FillLayer&, const Color& backgroundColor);
 
     // This method is called to paint the widget as a background of the RenderObject.  A widget's foreground, e.g., the
     // text of a button, is always rendered by the engine itself.  The boolean return value indicates
@@ -63,27 +60,35 @@ public:
     // The remaining methods should be implemented by the platform-specific portion of the theme, e.g.,
     // RenderThemeMac.cpp for Mac OS X.
 
+    // These methods return the theme's extra style sheets rules, to let each platform
+    // adjust the default CSS rules in html4.css, quirks.css, or mediaControls.css
+    virtual String extraDefaultStyleSheet() { return String(); }
+    virtual String extraQuirksStyleSheet() { return String(); }
+#if ENABLE(VIDEO)
+    virtual String extraMediaControlsStyleSheet() { return String(); };
+#endif
+
     // A method to obtain the baseline position for a "leaf" control.  This will only be used if a baseline
     // position cannot be determined by examining child content. Checkboxes and radio buttons are examples of
     // controls that need to do this.
-    virtual short baselinePosition(const RenderObject*) const;
+    virtual int baselinePosition(const RenderObject*) const;
 
     // A method for asking if a control is a container or not.  Leaf controls have to have some special behavior (like
     // the baseline position API above).
-    virtual bool isControlContainer(EAppearance) const;
+    bool isControlContainer(ControlPart) const;
 
     // A method asking if the control changes its tint when the window has focus or not.
     virtual bool controlSupportsTints(const RenderObject*) const { return false; }
 
     // Whether or not the control has been styled enough by the author to disable the native appearance.
-    virtual bool isControlStyled(const RenderStyle*, const BorderData&, const BackgroundLayer&, const Color& backgroundColor) const;
+    virtual bool isControlStyled(const RenderStyle*, const BorderData&, const FillLayer&, const Color& backgroundColor) const;
 
     // A general method asking if any control tinting is supported at all.
     virtual bool supportsControlTints() const { return false; }
 
     // Some controls may spill out of their containers (e.g., the check on an OS X checkbox).  When these controls repaint,
     // the theme needs to communicate this inflated rect to the engine so that it can invalidate the whole control.
-    virtual void adjustRepaintRect(const RenderObject*, IntRect&) { }
+    virtual void adjustRepaintRect(const RenderObject*, IntRect&);
 
     // This method is called whenever a relevant state changes on a particular themed object, e.g., the mouse becomes pressed
     // or a control becomes disabled.
@@ -103,6 +108,8 @@ public:
     Color activeSelectionBackgroundColor() const;
     Color inactiveSelectionBackgroundColor() const;
 
+    virtual Color platformTextSearchHighlightColor() const;
+
     // The platform selection color.
     virtual Color platformActiveSelectionBackgroundColor() const;
     virtual Color platformInactiveSelectionBackgroundColor() const;
@@ -115,30 +122,33 @@ public:
     virtual Color inactiveListBoxSelectionBackgroundColor() const;
     virtual Color inactiveListBoxSelectionForegroundColor() const;
 
-    void platformColorsDidChange();
+    virtual void platformColorsDidChange();
 
-    // System fonts.
-    virtual void systemFont(int propId, FontDescription&) const = 0;
+    virtual double caretBlinkInterval() const { return 0.5; }
+
+    // System fonts and colors for CSS.
+    virtual void systemFont(int cssValueId, FontDescription&) const = 0;
+    virtual Color systemColor(int cssValueId) const;
 
     virtual int minimumMenuListSize(RenderStyle*) const { return 0; }
 
+    virtual void adjustButtonInnerStyle(RenderStyle*) const;
     virtual void adjustSliderThumbSize(RenderObject*) const;
 
-    // Methods for state querying
-    bool isChecked(const RenderObject*) const;
-    bool isIndeterminate(const RenderObject*) const;
-    bool isEnabled(const RenderObject*) const;
-    bool isFocused(const RenderObject*) const;
-    bool isPressed(const RenderObject*) const;
-    bool isHovered(const RenderObject*) const;
-    bool isReadOnlyControl(const RenderObject*) const;
-    
     virtual int popupInternalPaddingLeft(RenderStyle*) const { return 0; }
     virtual int popupInternalPaddingRight(RenderStyle*) const { return 0; }
     virtual int popupInternalPaddingTop(RenderStyle*) const { return 0; }
     virtual int popupInternalPaddingBottom(RenderStyle*) const { return 0; }
+    
+    // Method for painting the caps lock indicator
+    virtual bool paintCapsLockIndicator(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return 0; };
+
+#if ENABLE(VIDEO)
+    virtual bool hitTestMediaControlPart(RenderObject*, const IntPoint& absPoint);
+#endif
 
 protected:
+#if !USE(NEW_THEME)
     // Methods for each appearance value.
     virtual void adjustCheckboxStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
     virtual bool paintCheckbox(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
@@ -151,6 +161,7 @@ protected:
     virtual void adjustButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
     virtual bool paintButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
     virtual void setButtonSize(RenderStyle*) const { }
+#endif
 
     virtual void adjustTextFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
     virtual bool paintTextField(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
@@ -185,9 +196,33 @@ protected:
     virtual void adjustSearchFieldResultsButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
     virtual bool paintSearchFieldResultsButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
 
+    virtual bool paintMediaFullscreenButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaPlayButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaMuteButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaSeekBackButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaSeekForwardButton(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaSliderTrack(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+    virtual bool paintMediaSliderThumb(RenderObject*, const RenderObject::PaintInfo&, const IntRect&) { return true; }
+
+public:
+    // Methods for state querying
+    ControlStates controlStatesForRenderer(const RenderObject* o) const;
+    bool isActive(const RenderObject*) const;
+    bool isChecked(const RenderObject*) const;
+    bool isIndeterminate(const RenderObject*) const;
+    bool isEnabled(const RenderObject*) const;
+    bool isFocused(const RenderObject*) const;
+    bool isPressed(const RenderObject*) const;
+    bool isHovered(const RenderObject*) const;
+    bool isReadOnlyControl(const RenderObject*) const;
+    bool isDefault(const RenderObject*) const;
+
 private:
     mutable Color m_activeSelectionColor;
     mutable Color m_inactiveSelectionColor;
+#if USE(NEW_THEME)
+    Theme* m_theme; // The platform-specific theme.
+#endif
 };
 
 // Function to obtain the theme.  This is implemented in your platform-specific theme implementation to hand

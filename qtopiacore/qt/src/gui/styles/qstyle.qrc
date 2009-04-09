@@ -102,6 +102,9 @@
 <file>images/standardbutton-yes-128.png</file>
 <file>images/standardbutton-yes-16.png</file>
 <file>images/standardbutton-yes-32.png</file>
+<file>images/standardbutton-closetab-16.png</file>
+<file>images/standardbutton-closetab-down-16.png</file>
+<file>images/standardbutton-closetab-hover-16.png</file>
 <file>images/refresh-24.png</file>
 <file>images/refresh-32.png</file>
 <file>images/stop-24.png</file>
@@ -128,8 +131,5 @@
 <file>images/closedock-down-16.png</file>
 <file>images/dockdock-16.png</file>
 <file>images/dockdock-down-16.png</file>
-</qresource>
-<qresource prefix="/trolltech/stylesheet">
-<file>default.qss</file>
 </qresource>
 </RCC>

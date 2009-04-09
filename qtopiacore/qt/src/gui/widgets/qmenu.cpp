@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,6 +76,7 @@
 
 #if defined(Q_WS_MAC) && !defined(QT_NO_EFFECTS)
 #   include <private/qcore_mac_p.h>
+#   include <private/qt_cocoa_helpers_mac_p.h>
 #endif
 
 
@@ -144,6 +149,7 @@ private:
 void QMenuPrivate::init()
 {
     Q_Q(QMenu);
+    activationRecursionGuard = false;
 #ifndef QT_NO_WHATSTHIS
     q->setAttribute(Qt::WA_CustomWhatsThis);
 #endif
@@ -255,7 +261,7 @@ void QMenuPrivate::calcActionRects(QMap<QAction*, QRect> &actionRects, QList<QAc
                         tabWidth = qMax(int(tabWidth), qfm.width(seq));
     #endif
                 }
-                int w = fm.width(s);
+                int w = fm.boundingRect(QRect(), Qt::TextSingleLine, s).width();
                 w -= s.count(QLatin1Char('&')) * fm.width(QLatin1Char('&'));
                 w += s.count(QLatin1String("&&")) * fm.width(QLatin1Char('&'));
                 sz.setWidth(w);
@@ -455,12 +461,10 @@ void QMenuPrivate::hideMenu(QMenu *menu)
         // Hopefully we'll integrate qt/research/windowtransitions into main before 4.4.
         // Talk to Richard, Trenton or Bjoern.
 #if defined(Q_WS_MAC)
-        TransitionWindowOptions options = {0, 0.15, 0, 0};
-        TransitionWindowWithOptions(qt_mac_window_for(menu), kWindowFadeTransitionEffect,
-                                    kWindowHideTransitionAction, 0, 1, &options);
+		macWindowFade(qt_mac_window_for(menu));		// FIXME - what is the default duration for view animations
 
         // Wait for the transition to complete.
-        QEventLoop eventLoop;
+		QEventLoop eventLoop;
         QTimer::singleShot(150, &eventLoop, SLOT(quit()));
         eventLoop.exec();
 #endif // Q_WS_MAC
@@ -556,7 +560,11 @@ void QMenuPrivate::setCurrentAction(QAction *action, int popup, SelectionReason 
             activateAction(action, QAction::Hover);
             if (popup != -1) {
                 hideActiveMenu = 0; //will be done "later"
-                popupAction(currentAction, popup, activateFirst);
+                // if the menu is visible then activate the required action,
+                // otherwise we just mark the action as currentAction
+                // and activate it when the menu will be popuped.
+                if (q->isVisible())
+                    popupAction(currentAction, popup, activateFirst);
             }
             q->update(actionRect(action));
             QWidget *widget = widgetItems.value(action);
@@ -946,6 +954,57 @@ bool QMenuPrivate::mouseEventTaken(QMouseEvent *e)
     return false;
 }
 
+void QMenuPrivate::activateCausedStack(const QList<QPointer<QWidget> > &causedStack, QAction *action, QAction::ActionEvent action_e, bool self)
+{
+    Q_ASSERT(!activationRecursionGuard);
+    activationRecursionGuard = true;
+    if(self)
+        action->activate(action_e);
+
+#ifdef QT3_SUPPORT
+    const int actionId = q_func()->findIdForAction(action);
+#endif
+   for(int i = 0; i < causedStack.size(); ++i) {
+        QPointer<QWidget> widget = causedStack.at(i);
+        if (!widget)
+            continue;
+        //fire
+        if (QMenu *qmenu = qobject_cast<QMenu*>(widget)) {
+            widget = qmenu->d_func()->causedPopup.widget;
+            if (action_e == QAction::Trigger) {
+                emit qmenu->triggered(action);
+           } else if (action_e == QAction::Hover) {
+                emit qmenu->hovered(action);
+#ifdef QT3_SUPPORT
+                if (emitHighlighted) {
+                    emit qmenu->highlighted(actionId);
+                    emitHighlighted = false;
+                }
+#endif
+            }
+#ifndef QT_NO_MENUBAR
+        } else if (QMenuBar *qmenubar = qobject_cast<QMenuBar*>(widget)) {
+            if (action_e == QAction::Trigger) {
+                emit qmenubar->triggered(action);
+#ifdef QT3_SUPPORT
+                emit qmenubar->activated(actionId);
+#endif
+            } else if (action_e == QAction::Hover) {
+                emit qmenubar->hovered(action);
+#ifdef QT3_SUPPORT
+                if (emitHighlighted) {
+                    emit qmenubar->highlighted(actionId);
+                    emitHighlighted = false;
+                }
+#endif
+            }
+            break; //nothing more..
+#endif
+        }
+    }
+    activationRecursionGuard = false;
+}
+
 void QMenuPrivate::activateAction(QAction *action, QAction::ActionEvent action_e, bool self)
 {
     Q_Q(QMenu);
@@ -995,47 +1054,9 @@ void QMenuPrivate::activateAction(QAction *action, QAction::ActionEvent action_e
 #endif
     }
 
-#ifdef QT3_SUPPORT
-    const int actionId = q->findIdForAction(action);
-#endif
-    if(self)
-        action->activate(action_e);
 
-    for(int i = 0; i < causedStack.size(); ++i) {
-        QPointer<QWidget> widget = causedStack.at(i);
-        if (!widget)
-            continue;
-        //fire
-        if (QMenu *qmenu = qobject_cast<QMenu*>(widget)) {
-            widget = qmenu->d_func()->causedPopup.widget;
-            if (action_e == QAction::Trigger) {
-                emit qmenu->triggered(action);
-            } else if (action_e == QAction::Hover) {
-                emit qmenu->hovered(action);
-#ifdef QT3_SUPPORT
-                if (emitHighlighted) {
-                    emit qmenu->highlighted(actionId);
-                    emitHighlighted = false;
-                }
-#endif
-            }
-#ifndef QT_NO_MENUBAR
-        } else if (QMenuBar *qmenubar = qobject_cast<QMenuBar*>(widget)) {
-            if (action_e == QAction::Trigger) {
-                emit qmenubar->triggered(action);
-            } else if (action_e == QAction::Hover) {
-                emit qmenubar->hovered(action);
-#ifdef QT3_SUPPORT
-                if (emitHighlighted) {
-                    emit qmenubar->highlighted(actionId);
-                    emitHighlighted = false;
-                }
-#endif
-            }
-            break; //nothing more..
-#endif
-        }
-    }
+    activateCausedStack(causedStack, action, action_e, self);
+
 
     if (action_e == QAction::Hover) {
 #ifndef QT_NO_ACCESSIBILITY
@@ -1066,6 +1087,25 @@ void QMenuPrivate::_q_actionTriggered()
 #ifdef QT3_SUPPORT
         emit q->activated(id);
 #endif
+
+        if (!activationRecursionGuard) {
+            //in case the action has not been activated by the mouse
+            //we check the parent hierarchy
+            QList< QPointer<QWidget> > list;
+            for(QWidget *widget = q->parentWidget(); widget; ) {
+                if (qobject_cast<QMenu*>(widget) 
+#ifndef QT_NO_MENUBAR
+                    || qobject_cast<QMenuBar*>(widget)
+#endif
+                    ) {
+                    list.append(widget);
+                    widget = widget->parentWidget();
+                } else {
+                    break;
+                }
+            }
+            activateCausedStack(list, action, QAction::Trigger, false);
+        }
     }
 }
 
@@ -1213,16 +1253,20 @@ void QMenu::initStyleOption(QStyleOptionMenuItem *option, const QAction *action)
     </table>
     \endraw
 
-    A menu consists of a list of action items. Actions are added with
-    addAction(). An action is represented vertically and rendered by
-    QStyle. In addition, actions can have a text label, an optional
-    icon drawn on the very left side, and shortcut key sequence such
-    as "Ctrl+X".
+    \section1 Actions
 
-    There are three kinds of action items: separators, actions that
-    show a submenu, and actions that perform an action. Separators are
-    inserted with addSeparator(). For submenus use addMenu(). All
-    other items are considered action items.
+    A menu consists of a list of action items. Actions are added with
+    the addAction(), addActions() and insertAction() functions. An action
+    is represented vertically and rendered by QStyle. In addition, actions
+    can have a text label, an optional icon drawn on the very left side,
+    and shortcut key sequence such as "Ctrl+X". 
+
+    The existing actions held by a menu can be found with actions().
+
+    There are four kinds of action items: separators, actions that
+    show a submenu, widgets, and actions that perform an action.
+    Separators are inserted with addSeparator(), submenus with addMenu(),
+    and all other items are considered action items.
 
     When inserting action items you usually specify a receiver and a
     slot. The receiver will be notifed whenever the item is
@@ -1243,6 +1287,13 @@ void QMenu::initStyleOption(QStyleOptionMenuItem *option, const QAction *action)
     some users may not be familiar with it. Consider using a QToolBar
     instead.
 
+    Widgets can be inserted into menus with the QWidgetAction class.
+    Instances of this class are used to hold widgets, and are inserted
+    into menus with the addAction() overload that takes a QAction.
+
+    Conversely, actions can be added to widgets with the addAction(),
+    addActions() and insertAction() functions.
+
     \section1 QMenu on Qt for Windows CE
 
     If a menu is integrated into the native menubar on Windows Mobile we
@@ -1252,7 +1303,7 @@ void QMenu::initStyleOption(QStyleOptionMenuItem *option, const QAction *action)
     See the \l{mainwindows/menus}{Menus} example for an example of how
     to use QMenuBar and QMenu in your application.
 
-    Important inherited functions: addAction(), removeAction(), clear(),
+    \bold{Important inherited functions:} addAction(), removeAction(), clear(),
     addSeparator(), and addMenu().
 
     \sa QMenuBar, {fowler}{GUI Design Handbook: Menu, Drop-Down and Pop-Up},
@@ -1404,7 +1455,9 @@ QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject 
 
 /*!
     This convenience function adds \a menu as a submenu to this menu.
-    It returns the menus menuAction().
+    It returns \a menu's menuAction(). This menu does not take
+    ownership of \a menu.
+
     \sa QWidget::addAction() QMenu::menuAction()
 */
 QAction *QMenu::addMenu(QMenu *menu)
@@ -1948,7 +2001,37 @@ QAction *QMenu::exec(const QPoint &p, QAction *action)
 /*!
     \overload
 
-    Executes this menu synchronously.
+    Executes a menu synchronously.
+
+    The menu's actions are specified by the list of \a actions. The menu will
+    pop up so that the specified action, \a at, appears at global position \a
+    pos. If \a at is not specified then the menu appears at position \a
+    pos. \a parent is the menu's parent widget; specifying the parent will
+    provide context when \a pos alone is not enough to decide where the menu
+    should go (e.g., with multiple desktops or when the parent is embedded in
+    QGraphicsView).
+
+    The function returns the triggered QAction in either the popup
+    menu or one of its submenus, or 0 if no item was triggered
+    (normally because the user pressed Esc).
+
+    This is equivalent to:
+    \snippet doc/src/snippets/code/src_gui_widgets_qmenu.cpp 6
+
+    \sa popup(), QWidget::mapToGlobal()
+*/
+QAction *QMenu::exec(QList<QAction*> actions, const QPoint &pos, QAction *at, QWidget *parent)
+{
+    QMenu menu(parent);
+    for(QList<QAction*>::ConstIterator it = actions.constBegin(); it != actions.constEnd(); ++it)
+        menu.addAction((*it));
+    return menu.exec(pos, at);
+}
+
+/*!
+    \overload
+
+    Executes a menu synchronously.
 
     The menu's actions are specified by the list of \a actions. The menu
     will pop up so that the specified action, \a at, appears at global
@@ -1966,10 +2049,8 @@ QAction *QMenu::exec(const QPoint &p, QAction *action)
 */
 QAction *QMenu::exec(QList<QAction*> actions, const QPoint &pos, QAction *at)
 {
-    QMenu menu;
-    for(QList<QAction*>::ConstIterator it = actions.constBegin(); it != actions.constEnd(); ++it)
-        menu.addAction((*it));
-    return menu.exec(pos, at);
+    // ### Qt 5: merge
+    return exec(actions, pos, at, 0);
 }
 
 /*!
@@ -2004,6 +2085,14 @@ void QMenu::paintEvent(QPaintEvent *e)
     QPainter p(this);
     QRegion emptyArea = QRegion(rect());
 
+    QStyleOptionMenuItem menuOpt;
+    menuOpt.initFrom(this);
+    menuOpt.state = QStyle::State_None;
+    menuOpt.checkType = QStyleOptionMenuItem::NotCheckable;
+    menuOpt.maxIconWidth = 0;
+    menuOpt.tabWidth = 0;
+    style()->drawPrimitive(QStyle::PE_PanelMenu, &menuOpt, &p, this);
+
     //draw the items that need updating..
     for (int i = 0; i < d->actionList.count(); ++i) {
         QAction *action = d->actionList.at(i);
@@ -2023,14 +2112,6 @@ void QMenu::paintEvent(QPaintEvent *e)
     }
 
     const int fw = style()->pixelMetric(QStyle::PM_MenuPanelWidth, 0, this);
-    QStyleOptionMenuItem menuOpt;
-    menuOpt.initFrom(this);
-    menuOpt.palette = palette();
-    menuOpt.state = QStyle::State_None;
-    menuOpt.checkType = QStyleOptionMenuItem::NotCheckable;
-    menuOpt.menuRect = rect();
-    menuOpt.maxIconWidth = 0;
-    menuOpt.tabWidth = 0;
     //draw the scroller regions..
     if (d->scroll) {
         const int scrollerHeight = style()->pixelMetric(QStyle::PM_MenuScrollerHeight, 0, this);
@@ -2151,20 +2232,22 @@ void QMenu::mouseReleaseEvent(QMouseEvent *e)
         if (action->menu())
             action->menu()->d_func()->setFirstActionActive();
         else {
-#ifdef Q_WS_WIN
-#ifndef QT_NO_MENUBAR
+#if defined(Q_WS_WIN) && !defined(QT_NO_MENUBAR)
             //On Windows only context menus can be activated with the right button
             bool isContextMenu = true;
-            const QWidget *parent = parentWidget();
-            while (parent) {
-                if (qobject_cast<const QMenuBar *>(parent)) {
+            const QWidget *cause = d->causedPopup.widget;
+            while (cause) {
+                //if the popup was caused by either QMenuBar or a QToolButton, it is not a context menu
+                if (qobject_cast<const QMenuBar *>(cause) || qobject_cast<const QToolButton *>(cause)) {
                     isContextMenu = false;
                     break;
+                } else if (const QMenu *menu = qobject_cast<const QMenu *>(cause)) {
+                    cause = menu->d_func()->causedPopup.widget;
+                } else {
+                    break;
                 }
-                parent = parent->parentWidget();
             }
             if (e->button() == Qt::LeftButton || (e->button() == Qt::RightButton && isContextMenu))
-#endif
 #endif
                 d->activateAction(action, QAction::Trigger);
         }
@@ -2197,7 +2280,8 @@ void QMenu::changeEvent(QEvent *e)
             d->tornPopup->setEnabled(isEnabled());
         d->menuAction->setEnabled(isEnabled());
 #ifdef Q_WS_MAC
-        d->setMacMenuEnabled(isEnabled());
+        if (d->mac_menu)
+            d->setMacMenuEnabled(isEnabled());
 #endif
     }
     QWidget::changeEvent(e);
@@ -2249,6 +2333,8 @@ QMenu::event(QEvent *e)
     case QEvent::Show:
         d->mouseDown = 0;
         d->updateActions();
+        if (d->currentAction)
+            d->popupAction(d->currentAction, 0, false);
         break;
 #ifndef QT_NO_WHATSTHIS
     case QEvent::QueryWhatsThis:
@@ -2432,11 +2518,6 @@ void QMenu::keyPressEvent(QKeyEvent *e)
         break; }
 
     case Qt::Key_Right:
-        if (!d->currentAction) {
-            d->setFirstActionActive();
-            key_consumed = true;
-            break;
-        }
         if (d->currentAction && d->currentAction->isEnabled() && d->currentAction->menu()) {
             d->popupAction(d->currentAction, 0, true);
             key_consumed = true;
@@ -2460,8 +2541,7 @@ void QMenu::keyPressEvent(QKeyEvent *e)
                 key_consumed = true;
             }
         }
-        if (!key_consumed && key == Qt::Key_Left && d->causedPopup.widget &&
-            qobject_cast<QMenu*>(d->causedPopup.widget)) {
+        if (!key_consumed && key == Qt::Key_Left && qobject_cast<QMenu*>(d->causedPopup.widget)) {
             QPointer<QWidget> caused = d->causedPopup.widget;
             d->hideMenu(this);
             if (caused)
@@ -2804,10 +2884,11 @@ void QMenu::internalDelayedPopup()
     d->activeMenu->d_func()->causedPopup.widget = this;
     d->activeMenu->d_func()->causedPopup.action = d->currentAction;
 
+    int subMenuOffset = style()->pixelMetric(QStyle::PM_SubMenuOverlap, 0, this);
     const QRect actionRect(d->actionRect(d->currentAction));
     const QSize menuSize(d->activeMenu->sizeHint());
-    const QPoint rightPos(mapToGlobal(QPoint(actionRect.right(), actionRect.top())));
-    const QPoint leftPos(mapToGlobal(QPoint(actionRect.left() - menuSize.width(), actionRect.top())));
+    const QPoint rightPos(mapToGlobal(QPoint(rect().right() + subMenuOffset + 1, actionRect.top())));
+    const QPoint leftPos(mapToGlobal(QPoint(rect().left() - subMenuOffset - menuSize.width(), actionRect.top())));
 
     QPoint pos(rightPos);
     QMenu *caused = qobject_cast<QMenu*>(d->activeMenu->d_func()->causedPopup.widget);

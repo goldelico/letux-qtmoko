@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/examples/application.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/application.qdoc -->
 <head>
-  <title>Qt 4.4: Application Example</title>
+  <title>Qt 4.5: Application Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">Application Example<br /><span class="subtitle"></span>
 </h1>
@@ -60,7 +60,7 @@
      void setCurrentFile(const QString &amp;fileName);
      QString strippedName(const QString &amp;fullFileName);
 
-     QTextEdit *textEdit;
+     QPlainTextEdit *textEdit;
      QString curFile;
 
      QMenu *fileMenu;
@@ -89,7 +89,7 @@
 <p>You might wonder why we don't include <tt>&lt;QtGui&gt;</tt> in <tt>mainwindow.h</tt> and be done with it. The reason is that including such a large header from another header file can rapidly degrade performances. Here, it wouldn't do any harm, but it's still generally a good idea to include only the header files that are strictly necessary from another header file.</p>
 <pre> MainWindow::MainWindow()
  {
-     textEdit = new QTextEdit;
+     textEdit = new QPlainTextEdit;
      setCentralWidget(textEdit);
 
      createActions();
@@ -103,6 +103,7 @@
              this, SLOT(documentWasModified()));
 
      setCurrentFile(&quot;&quot;);
+     setUnifiedTitleAndToolBarOnMac(true);
  }</pre>
 <p>In the constructor, we start by creating a <a href="qtextedit.html">QTextEdit</a> widget as a child of the main window (the <tt>this</tt> object). Then we call <a href="qmainwindow.html#setCentralWidget">QMainWindow::setCentralWidget</a>() to tell that this is going to be the widget that occupies the central area of the main window, between the toolbars and the status bar.</p>
 <p>Then we call <tt>createActions()</tt>, <tt>createMenus()</tt>, <tt>createToolBars()</tt>, and <tt>createStatusBar()</tt>, four private functions that set up the user interface. After that, we call <tt>readSettings()</tt> to restore the user's preferences.</p>
@@ -170,12 +171,12 @@
 <pre> void MainWindow::createActions()
  {
      newAct = new QAction(QIcon(&quot;:/images/new.png&quot;), tr(&quot;&amp;New&quot;), this);
-     newAct-&gt;setShortcut(tr(&quot;Ctrl+N&quot;));
+     newAct-&gt;setShortcuts(QKeySequence::New);
      newAct-&gt;setStatusTip(tr(&quot;Create a new file&quot;));
      connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
 
      openAct = new QAction(QIcon(&quot;:/images/open.png&quot;), tr(&quot;&amp;Open...&quot;), this);
-     openAct-&gt;setShortcut(tr(&quot;Ctrl+O&quot;));
+     openAct-&gt;setShortcuts(QKeySequence::Open);
      openAct-&gt;setStatusTip(tr(&quot;Open an existing file&quot;));
      connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
      ...
@@ -376,8 +377,8 @@
 <p><tt>qmake</tt> will produce make rules to generate a file called <tt>qrc_application.cpp</tt> that is linked into the application. This file contains all the data for the images and other resources as static C++ arrays of compressed binary data. See <a href="resources.html">The Qt Resource System</a> for more information about resources.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

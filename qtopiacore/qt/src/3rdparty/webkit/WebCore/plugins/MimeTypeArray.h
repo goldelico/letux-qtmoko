@@ -1,5 +1,6 @@
 /*
     Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+    Copyright (C) 2008 Apple Inc. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -25,23 +26,15 @@
 #include <wtf/RefCounted.h>
 #include <wtf/Vector.h>
 
-namespace KJS {
-    class ExecState;
-    class JSValue;
-};
-
 namespace WebCore {
 
     class AtomicString;
     class Frame;
     class PluginData;
 
-    // FIXME: Generated JSMimeTypeArray.cpp doesn't include JSMimeType.h for toJS
-    KJS::JSValue* toJS(KJS::ExecState*, MimeType*);
-
     class MimeTypeArray : public RefCounted<MimeTypeArray> {
     public:
-        MimeTypeArray(Frame*);
+        static PassRefPtr<MimeTypeArray> create(Frame* frame) { return adoptRef(new MimeTypeArray(frame)); }
         ~MimeTypeArray();
 
         void disconnectFrame() { m_frame = 0; }
@@ -49,12 +42,15 @@ namespace WebCore {
         unsigned length() const;
         PassRefPtr<MimeType> item(unsigned index);
         bool canGetItemsForName(const AtomicString& propertyName);
-        PassRefPtr<MimeType> nameGetter(const AtomicString& propertyName);
+        PassRefPtr<MimeType> namedItem(const AtomicString& propertyName);
+
     private:
+        MimeTypeArray(Frame*);
         PluginData* getPluginData() const;
 
         Frame* m_frame;
     };
-}
 
-#endif
+} // namespace WebCore
+
+#endif // MimeTypeArray_h

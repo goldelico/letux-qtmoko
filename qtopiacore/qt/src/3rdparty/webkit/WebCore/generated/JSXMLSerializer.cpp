@@ -25,149 +25,163 @@
 #include <wtf/GetPtr.h>
 
 #include "JSNode.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "XMLSerializer.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSXMLSerializer)
+
 /* Hash table */
 
-static const HashEntry JSXMLSerializerTableEntries[] =
+static const HashTableValue JSXMLSerializerTableValues[2] =
 {
-    { "constructor", JSXMLSerializer::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsXMLSerializerConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSXMLSerializerTable = 
-{
-    2, 1, JSXMLSerializerTableEntries, 1
-};
+static const HashTable JSXMLSerializerTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSXMLSerializerTableValues, 0 };
+#else
+    { 2, 1, JSXMLSerializerTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSXMLSerializerConstructorTableEntries[] =
+static const HashTableValue JSXMLSerializerConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSXMLSerializerConstructorTable = 
-{
-    2, 1, JSXMLSerializerConstructorTableEntries, 1
-};
+static const HashTable JSXMLSerializerConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSXMLSerializerConstructorTableValues, 0 };
+#else
+    { 1, 0, JSXMLSerializerConstructorTableValues, 0 };
+#endif
 
 class JSXMLSerializerConstructor : public DOMObject {
 public:
     JSXMLSerializerConstructor(ExecState* exec)
+        : DOMObject(JSXMLSerializerConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSXMLSerializerPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
-    virtual bool implementsConstruct() const { return true; }
-    virtual JSObject* construct(ExecState* exec, const List& args) { return static_cast<JSObject*>(toJS(exec, new XMLSerializer)); }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+    static JSObject* construct(ExecState* exec, JSObject*, const ArgList&)
+    {
+        return asObject(toJS(exec, XMLSerializer::create()));
+    }
+    virtual ConstructType getConstructData(ConstructData& constructData)
+    {
+        constructData.native.function = construct;
+        return ConstructTypeHost;
+    }
 };
 
-const ClassInfo JSXMLSerializerConstructor::info = { "XMLSerializerConstructor", 0, &JSXMLSerializerConstructorTable, 0 };
+const ClassInfo JSXMLSerializerConstructor::s_info = { "XMLSerializerConstructor", 0, &JSXMLSerializerConstructorTable, 0 };
 
 bool JSXMLSerializerConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSXMLSerializerConstructor, DOMObject>(exec, &JSXMLSerializerConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSXMLSerializerConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSXMLSerializerPrototypeTableEntries[] =
+static const HashTableValue JSXMLSerializerPrototypeTableValues[2] =
 {
-    { "serializeToString", JSXMLSerializer::SerializeToStringFuncNum, DontDelete|Function, 1, 0 }
+    { "serializeToString", DontDelete|Function, (intptr_t)jsXMLSerializerPrototypeFunctionSerializeToString, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSXMLSerializerPrototypeTable = 
-{
-    2, 1, JSXMLSerializerPrototypeTableEntries, 1
-};
+static const HashTable JSXMLSerializerPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSXMLSerializerPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSXMLSerializerPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSXMLSerializerPrototype::info = { "XMLSerializerPrototype", 0, &JSXMLSerializerPrototypeTable, 0 };
+const ClassInfo JSXMLSerializerPrototype::s_info = { "XMLSerializerPrototype", 0, &JSXMLSerializerPrototypeTable, 0 };
 
 JSObject* JSXMLSerializerPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSXMLSerializerPrototype>(exec, "[[JSXMLSerializer.prototype]]");
+    return getDOMPrototype<JSXMLSerializer>(exec);
 }
 
 bool JSXMLSerializerPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSXMLSerializerPrototypeFunction, JSObject>(exec, &JSXMLSerializerPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSXMLSerializerPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSXMLSerializer::info = { "XMLSerializer", 0, &JSXMLSerializerTable, 0 };
+const ClassInfo JSXMLSerializer::s_info = { "XMLSerializer", 0, &JSXMLSerializerTable, 0 };
 
-JSXMLSerializer::JSXMLSerializer(ExecState* exec, XMLSerializer* impl)
-    : m_impl(impl)
+JSXMLSerializer::JSXMLSerializer(PassRefPtr<Structure> structure, PassRefPtr<XMLSerializer> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSXMLSerializerPrototype::self(exec));
 }
 
 JSXMLSerializer::~JSXMLSerializer()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSXMLSerializer::createPrototype(ExecState* exec)
+{
+    return new (exec) JSXMLSerializerPrototype(JSXMLSerializerPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSXMLSerializer::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSXMLSerializer, KJS::DOMObject>(exec, &JSXMLSerializerTable, this, propertyName, slot);
+    return getStaticValueSlot<JSXMLSerializer, Base>(exec, &JSXMLSerializerTable, this, propertyName, slot);
 }
 
-JSValue* JSXMLSerializer::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsXMLSerializerConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSXMLSerializer*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSXMLSerializer::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSXMLSerializerConstructor>(exec);
 }
 
-JSValue* JSXMLSerializer::getConstructor(ExecState* exec)
+JSValuePtr jsXMLSerializerPrototypeFunctionSerializeToString(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheGlobalObject<JSXMLSerializerConstructor>(exec, "[[XMLSerializer.constructor]]");
+    if (!thisValue->isObject(&JSXMLSerializer::s_info))
+        return throwError(exec, TypeError);
+    JSXMLSerializer* castedThisObj = static_cast<JSXMLSerializer*>(asObject(thisValue));
+    XMLSerializer* imp = static_cast<XMLSerializer*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    Node* node = toNode(args.at(exec, 0));
+
+
+    JSC::JSValuePtr result = jsString(exec, imp->serializeToString(node, ec));
+    setDOMException(exec, ec);
+    return result;
 }
-JSValue* JSXMLSerializerPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, XMLSerializer* object)
 {
-    if (!thisObj->inherits(&JSXMLSerializer::info))
-      return throwError(exec, TypeError);
-
-    XMLSerializer* imp = static_cast<XMLSerializer*>(static_cast<JSXMLSerializer*>(thisObj)->impl());
-
-    switch (id) {
-    case JSXMLSerializer::SerializeToStringFuncNum: {
-        ExceptionCode ec = 0;
-        Node* node = toNode(args[0]);
-
-
-        KJS::JSValue* result = jsString(imp->serializeToString(node, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    return getDOMObjectWrapper<JSXMLSerializer>(exec, object);
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, XMLSerializer* obj)
+XMLSerializer* toXMLSerializer(JSC::JSValuePtr value)
 {
-    return KJS::cacheDOMObject<XMLSerializer, JSXMLSerializer>(exec, obj);
-}
-XMLSerializer* toXMLSerializer(KJS::JSValue* val)
-{
-    return val->isObject(&JSXMLSerializer::info) ? static_cast<JSXMLSerializer*>(val)->impl() : 0;
+    return value->isObject(&JSXMLSerializer::s_info) ? static_cast<JSXMLSerializer*>(asObject(value))->impl() : 0;
 }
 
 }

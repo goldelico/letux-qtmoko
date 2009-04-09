@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@
 #include "qevent.h"
 #include "qfile.h"
 #include "qfileinfo.h"
+#include "qgraphicsscene.h"
 #include "qhash.h"
 #include "qset.h"
 #include "qlayout.h"
@@ -58,6 +63,7 @@
 #include "qdnd_p.h"
 #include "qcolormap.h"
 #include "qdebug.h"
+#include "private/qgraphicssystemfactory_p.h"
 #include "private/qstylesheetstyle_p.h"
 #include "private/qstyle_p.h"
 #include "qmessagebox.h"
@@ -104,12 +110,16 @@ static void initResources()
 #if !defined(QT_NO_DIRECT3D) && defined(Q_WS_WIN)
     Q_INIT_RESOURCE(qpaintengine_d3d);
 #endif
+    Q_INIT_RESOURCE(qmessagebox);
+#if !defined(QT_NO_PRINTDIALOG)
+    Q_INIT_RESOURCE(qprintdialog);
+#endif
+
 }
 
 QT_BEGIN_NAMESPACE
 
 extern void qt_call_post_routines();
-
 
 int QApplicationPrivate::app_compile_version = 0x040000; //we don't know exactly, but it's at least 4.0.0
 
@@ -122,6 +132,7 @@ bool QApplicationPrivate::quitOnLastWindowClosed = true;
 
 #ifdef Q_OS_WINCE
 int QApplicationPrivate::autoMaximizeThreshold = -1;
+bool QApplicationPrivate::autoSipEnabled = false;
 #endif
 
 QApplicationPrivate::QApplicationPrivate(int &argc, char **argv, QApplication::Type type)
@@ -408,6 +419,9 @@ QPalette *QApplicationPrivate::app_pal = 0;        // default application palett
 QPalette *QApplicationPrivate::sys_pal = 0;        // default system palette
 QPalette *QApplicationPrivate::set_pal = 0;        // default palette set by programmer
 
+QGraphicsSystem *QApplicationPrivate::graphics_system = 0; // default graphics system
+QString QApplicationPrivate::graphics_system_name;         // graphics system id - for delayed initialization
+
 Q_GLOBAL_STATIC(QMutex, applicationFontMutex);
 QFont *QApplicationPrivate::app_font = 0;        // default application font
 QFont *QApplicationPrivate::sys_font = 0;        // default system font
@@ -423,7 +437,7 @@ int QApplicationPrivate::cursor_flash_time = 1000;        // text caret flash ti
 int QApplicationPrivate::mouse_double_click_time = 400;        // mouse dbl click limit
 int QApplicationPrivate::keyboard_input_time = 400; // keyboard input interval
 #ifndef QT_NO_WHEELEVENT
-int QApplicationPrivate::wheel_scroll_lines = 3;                // number of lines to scroll
+int QApplicationPrivate::wheel_scroll_lines;   // number of lines to scroll
 #endif
 bool qt_is_gui_used;
 bool Q_GUI_EXPORT qt_tab_all_widgets = true;
@@ -543,6 +557,8 @@ void QApplicationPrivate::process_cmdline()
             q->setLayoutDirection(Qt::RightToLeft);
         } else if (qstrcmp(arg, "-widgetcount") == 0) {
             widgetCount = true;
+        } else if (arg == "-graphicssystem" && i < argc-1) {
+            graphics_system_name = QString::fromLocal8Bit(argv[++i]);
         } else {
             argv[j++] = argv[i];
         }
@@ -567,8 +583,10 @@ void QApplicationPrivate::process_cmdline()
   Initializes the window system and constructs an application object
   with \a argc command line arguments in \a argv.
 
-  \warning The data pointed to by \a argc and \a argv must stay valid
-  for the entire lifetime of the QApplication object.
+  \warning The data referred to by \a argc and \a argv must stay valid
+  for the entire lifetime of the QApplication object. In addition,
+  \a argc must be greater than zero and \a argv must contain at least
+  one valid character string.
 
   The global \c qApp pointer refers to this application object. Only
   one application object should be created.
@@ -610,6 +628,8 @@ void QApplicationPrivate::process_cmdline()
   \o -widgetcount, prints debug message at the end about number of widgets left
         undestroyed and maximum number of widgets existed at the same time
   \o -reverse, sets the application's layout direction to Qt::RightToLeft
+  \o -graphicssystem, sets the backend to be used for on-screen
+      widgets and QPixmaps. Available options are \c{raster} and \c{opengl}.
 
   \endlist
 
@@ -646,7 +666,6 @@ void QApplicationPrivate::process_cmdline()
        on an 8-bit display.
   \o -im, sets the input method server (equivalent to setting the XMODIFIERS
        environment variable)
-  \o -noxim, disables the input method framework ("no X input method").
   \o -inputstyle, defines how the input is inserted into the given widget. E.g.,
        \c onTheSpot makes the input appear directly in the widget, while
        \c overTheSpot makes the input appear in a box floating over the
@@ -669,6 +688,11 @@ QApplication::QApplication(int &argc, char **argv, int _internal)
     Constructs an application object with \a argc command line arguments
     in \a argv. If \a GUIenabled is true, a GUI application is
     constructed, otherwise a non-GUI (console) application is created.
+
+    \warning The data referred to by \a argc and \a argv must stay valid
+    for the entire lifetime of the QApplication object. In addition,
+    \a argc must be greater than zero and \a argv must contain at least
+    one valid character string.
 
     Set \a GUIenabled to false for programs without a graphical user
     interface that should be able to run without a window system.
@@ -698,6 +722,11 @@ QApplication::QApplication(int &argc, char **argv, bool GUIenabled , int _intern
 /*!
   Constructs an application object with \a argc command line arguments
   in \a argv.
+
+  \warning The data referred to by \a argc and \a argv must stay valid
+  for the entire lifetime of the QApplication object. In addition,
+  \a argc must be greater than zero and \a argv must contain at least
+  one valid character string.
 
   With Qt for Embedded Linux, passing QApplication::GuiServer for \a type
   makes this application the server (equivalent to running with the
@@ -859,6 +888,24 @@ void QApplicationPrivate::initialize()
         autoMaximizeThreshold = -1;
 #endif //QT_AUTO_MAXIMIZE_THRESHOLD
 #endif //Q_OS_WINCE
+
+    // Set up which span functions should be used in raster engine...
+    extern void qInitDrawhelperAsm();
+    qInitDrawhelperAsm();
+
+#if !defined(Q_WS_X11) && !defined(Q_WS_QWS)
+    // initialize the graphics system - on X11 this is initialized inside
+    // qt_init() in qapplication_x11.cpp because of several reasons.
+    // On QWS, the graphics system is set by the QScreen plugin.
+    graphics_system = QGraphicsSystemFactory::create(graphics_system_name);
+#endif
+#ifndef QT_NO_WHEELEVENT
+#ifdef QT_MAC_USE_COCOA
+    QApplicationPrivate::wheel_scroll_lines = 1;
+#else
+    QApplicationPrivate::wheel_scroll_lines = 3;
+#endif
+#endif
 }
 
 /*!
@@ -1023,9 +1070,7 @@ QApplication::~QApplication()
     QApplicationPrivate::cursor_flash_time = 1000;
     QApplicationPrivate::mouse_double_click_time = 400;
     QApplicationPrivate::keyboard_input_time = 400;
-#ifndef QT_NO_WHEELEVENT
-    QApplicationPrivate::wheel_scroll_lines = 3;
-#endif
+
     drag_time = 500;
     drag_distance = 4;
     layout_direction = Qt::LeftToRight;
@@ -1183,14 +1228,38 @@ bool QApplication::compressEvent(QEvent *event, QObject *receiver, QPostEventLis
     On Windows Mobile the default is 40.
 */
 
+/*!
+    \property QApplication::autoSipEnabled
+    \since 4.5
+    \brief toggles automatic SIP (software input panel) visibility
+
+    The auto SIP property is only available
+    as part of Qt for Windows CE.
+
+    Set this property to true to automatically display the SIP when entering
+    widgets that accept keyboard input. This only affects widgets that have the
+    attribute WA_InputMethodEnabled set.
+*/
+
 #ifdef Q_OS_WINCE
 void QApplication::setAutoMaximizeThreshold(const int threshold)
 {
     QApplicationPrivate::autoMaximizeThreshold = threshold;
 }
+
 int QApplication::autoMaximizeThreshold() const
 {
     return QApplicationPrivate::autoMaximizeThreshold;
+}
+
+void QApplication::setAutoSipEnabled(const bool enabled)
+{
+    QApplicationPrivate::autoSipEnabled = enabled;
+}
+
+bool QApplication::autoSipEnabled() const
+{
+    return QApplicationPrivate::autoSipEnabled;
 }
 #endif
 
@@ -1231,7 +1300,7 @@ QStyle *QApplication::style()
         return QApplicationPrivate::app_style;
     if (!qt_is_gui_used) {
         Q_ASSERT(!"No style available in non-gui applications!");
-	return 0;
+        return 0;
     }
 
 #if defined(Q_WS_X11)
@@ -1450,6 +1519,28 @@ QStyle* QApplication::setStyle(const QString& style)
 }
 
 /*!
+   \since 4.5
+
+   Sets the default graphics backend to be used for on-screen widgets
+   and QPixmaps. Available options are \c{"native"}, \c{"raster"} and
+   \c{"opengl"}.
+
+   Note that this function call overrides both the application
+   commandline \c{-graphicssystem} switch and the configure
+   \c{-graphicssystem} switch.
+
+   \warning This function must be called before the QApplication
+   constructor is called.
+
+   The \c{"opengl"} option is currently considered experimental.
+*/
+
+void QApplication::setGraphicsSystem(const QString &system)
+{
+    QApplicationPrivate::graphics_system_name = system;
+}
+
+/*!
   Returns the color specification.
   \sa QApplication::setColorSpec()
  */
@@ -1644,6 +1735,15 @@ void QApplicationPrivate::setPalette_helper(const QPalette &palette, const char*
             if (all || (!className && w->isWindow()) || w->inherits(className)) // matching class
                 QApplication::sendEvent(w, &e);
         }
+
+        // Send to all scenes as well.
+#ifndef QT_NO_GRAPHICSVIEW
+        QList<QGraphicsScene *> &scenes = qApp->d_func()->scene_list;
+        for (QList<QGraphicsScene *>::ConstIterator it = scenes.constBegin();
+             it != scenes.constEnd(); ++it) {
+            QApplication::sendEvent(*it, &e);
+        }
+#endif //QT_NO_GRAPHICSVIEW
     }
     if (!className && (!QApplicationPrivate::sys_pal || !palette.isCopyOf(*QApplicationPrivate::sys_pal))) {
         if (!QApplicationPrivate::set_pal)
@@ -1824,6 +1924,15 @@ void QApplication::setFont(const QFont &font, const char *className)
             if (all || (!className && w->isWindow()) || w->inherits(className)) // matching class
                 sendEvent(w, &e);
         }
+
+#ifndef QT_NO_GRAPHICSVIEW
+        // Send to all scenes as well.
+        QList<QGraphicsScene *> &scenes = qApp->d_func()->scene_list;
+        for (QList<QGraphicsScene *>::ConstIterator it = scenes.constBegin();
+             it != scenes.constEnd(); ++it) {
+            QApplication::sendEvent(*it, &e);
+        }
+#endif //QT_NO_GRAPHICSVIEW
     }
     if (!className && (!QApplicationPrivate::sys_font || !font.isCopyOf(*QApplicationPrivate::sys_font))) {
         if (!QApplicationPrivate::set_font)
@@ -1941,9 +2050,11 @@ QWidget *QApplication::focusWidget()
 
 void QApplicationPrivate::setFocusWidget(QWidget *focus, Qt::FocusReason reason)
 {
-    QWidget *tlw = focus ? focus->window() : 0;
-    QTLWExtra *tlwExtra = tlw ? tlw->d_func()->maybeTopData() : 0;
-    if (tlwExtra && tlwExtra->proxyWidget)
+    if (focus && focus->window()
+#ifndef QT_NO_GRAPHICSVIEW
+        && focus->window()->graphicsProxyWidget()
+#endif
+       )
         return;
 
     hidden_focus_widget = 0;
@@ -1961,8 +2072,10 @@ void QApplicationPrivate::setFocusWidget(QWidget *focus, Qt::FocusReason reason)
             focus->window()->setAttribute(Qt::WA_KeyboardFocusChange);
         }
         QWidget *prev = focus_widget;
+        focus_widget = focus;
 
-        if (prev && reason != Qt::PopupFocusReason && reason != Qt::MenuBarFocusReason) {
+        if (prev && reason != Qt::PopupFocusReason && reason != Qt::MenuBarFocusReason &&
+            prev->testAttribute(Qt::WA_InputMethodEnabled)) {
             QInputContext *qic = prev->inputContext();
             if(qic) {
                 qic->reset();
@@ -1970,7 +2083,6 @@ void QApplicationPrivate::setFocusWidget(QWidget *focus, Qt::FocusReason reason)
             }
         }
 
-        focus_widget = focus;
         if(focus_widget)
             focus_widget->d_func()->setFocus_sys();
 
@@ -1991,9 +2103,11 @@ void QApplicationPrivate::setFocusWidget(QWidget *focus, Qt::FocusReason reason)
                     QApplication::sendEvent(that->style(), &out);
             }
             if(focus && QApplicationPrivate::focus_widget == focus) {
-                QInputContext *qic = focus->inputContext();
-                if (qic && focus_widget->testAttribute(Qt::WA_WState_Created))
-                    qic->setFocusWidget( focus_widget );
+                if (focus->testAttribute(Qt::WA_InputMethodEnabled)) {
+                    QInputContext *qic = focus->inputContext();
+                    if (qic && focus_widget->testAttribute(Qt::WA_WState_Created))
+                        qic->setFocusWidget( focus_widget );
+                }
                 QFocusEvent in(QEvent::FocusIn, reason);
                 QPointer<QWidget> that = focus;
                 QApplication::sendEvent(focus, &in);
@@ -2081,7 +2195,13 @@ void QApplication::closeAllWindows()
 void QApplication::aboutQt()
 {
 #ifndef QT_NO_MESSAGEBOX
-    QMessageBox::aboutQt(activeWindow());
+    QMessageBox::aboutQt(
+#ifdef Q_WS_MAC
+            0
+#else
+            activeWindow()
+#endif // Q_WS_MAC
+            );
 #endif // QT_NO_MESSAGEBOX
 }
 
@@ -2123,6 +2243,18 @@ void QApplication::aboutQt()
     the change through QFocusEvent.
 
     \sa QWidget::setFocus() QWidget::clearFocus() Qt::FocusReason
+*/
+
+/*!
+    \since 4.5
+    \fn void QApplication::fontDatabaseChanged()
+
+    This signal is emitted when application fonts are loaded or removed.
+
+   \sa QFontDatabase::addApplicationFont()
+   \sa QFontDatabase::addApplicationFontFromData()
+   \sa QFontDatabase::removeAllApplicationFonts()
+   \sa QFontDatabase::removeApplicationFont()
 */
 
 #ifndef QT_NO_TRANSLATION
@@ -2173,16 +2305,31 @@ bool QApplication::event(QEvent *e)
         Q_ASSERT(te != 0);
         if (te->timerId() == d->toolTipWakeUp.timerId()) {
             d->toolTipWakeUp.stop();
-            d->toolTipFallAsleep.start(2000, this);
-            if (d->toolTipWidget
-                && (d->toolTipWidget->window()->testAttribute(Qt::WA_AlwaysShowToolTips)
-                    || d->toolTipWidget->isActiveWindow())) {
-                QHelpEvent e(QEvent::ToolTip, d->toolTipPos, d->toolTipGlobalPos);
-                QApplication::sendEvent(d->toolTipWidget, &e);
+            if (d->toolTipWidget) {
+                QWidget *w = d->toolTipWidget->window();
+                // show tooltip if WA_AlwaysShowToolTips is set, or if
+                // any ancestor of d->toolTipWidget is the active
+                // window
+                bool showToolTip = w->testAttribute(Qt::WA_AlwaysShowToolTips);
+                while (w && !showToolTip) {
+                    showToolTip = w->isActiveWindow();
+                    w = w->parentWidget();
+                    w = w ? w->window() : 0;
+                }
+                if (showToolTip) {
+                    QHelpEvent e(QEvent::ToolTip, d->toolTipPos, d->toolTipGlobalPos);
+                    QApplication::sendEvent(d->toolTipWidget, &e);
+                    if (e.isAccepted())
+                        d->toolTipFallAsleep.start(2000, this);
+                }
             }
         } else if (te->timerId() == d->toolTipFallAsleep.timerId()) {
             d->toolTipFallAsleep.stop();
         }
+#ifdef QT_MAC_USE_COCOA
+    } else if (e->type() == QEvent::CocoaRequestModal) {
+        d->_q_runAppModalWindow();
+#endif
     }
     return QCoreApplication::event(e);
 }
@@ -2226,10 +2373,12 @@ void QApplication::setActiveWindow(QWidget* act)
     if (QApplicationPrivate::active_window == window)
         return;
 
-    if (window && window->d_func()->maybeTopData() && window->d_func()->maybeTopData()->proxyWidget) {
+#ifndef QT_NO_GRAPHICSVIEW
+    if (window && window->graphicsProxyWidget()) {
         // Activate the proxy's view->viewport() ?
         return;
     }
+#endif
 
     QWidgetList toBeActivated;
     QWidgetList toBeDeactivated;
@@ -2493,8 +2642,7 @@ void QApplicationPrivate::dispatchEnterLeave(QWidget* enter, QWidget* leave) {
     if (parentOfLeavingCursor && (!enterOnAlien
         || parentOfLeavingCursor->effectiveWinId() != enter->effectiveWinId())) {
 #ifndef QT_NO_GRAPHICSVIEW
-        QTLWExtra *extra = parentOfLeavingCursor->window()->d_func()->maybeTopData();
-        if (!extra || !extra->proxyWidget)
+        if (!parentOfLeavingCursor->window()->graphicsProxyWidget())
 #endif
         {
             qt_x11_enforce_cursor(parentOfLeavingCursor,true);
@@ -2509,10 +2657,9 @@ void QApplicationPrivate::dispatchEnterLeave(QWidget* enter, QWidget* leave) {
         if (!cursorWidget)
             return;
 
-        QTLWExtra *extra = cursorWidget->window()->d_func()->maybeTopData();
 #ifndef QT_NO_GRAPHICSVIEW
-        if (extra && extra->proxyWidget) {
-            extra->proxyWidget->setCursor(cursorWidget->cursor());
+        if (cursorWidget->window()->graphicsProxyWidget()) {
+            QWidgetPrivate::nearestGraphicsProxyWidget(cursorWidget)->setCursor(cursorWidget->cursor());
         } else
 #endif
         {
@@ -2687,7 +2834,7 @@ bool QApplicationPrivate::tryModalHelper(QWidget *widget, QWidget **rettop)
     if (qApp->activePopupWidget())
         return true;
 
-#ifdef Q_WS_MAC
+#if defined(Q_WS_MAC) && defined(QT_MAC_USE_COCOA)
     top = QApplicationPrivate::tryModalHelper_sys(top);
     if (rettop)
         *rettop = top;
@@ -2819,6 +2966,64 @@ bool QApplicationPrivate::sendMouseEvent(QWidget *receiver, QMouseEvent *event,
     return result;
 }
 
+#if defined(Q_WS_WIN) || defined(Q_WS_X11)
+/*
+    This function should only be called when the widget changes visibility, i.e.
+    when the \a widget is shown, hidden or deleted. This function does nothing
+    if the widget is a top-level or native, i.e. not an alien widget. In that
+    case enter/leave events are genereated by the underlying windowing system.
+*/
+extern QPointer<QWidget> qt_last_mouse_receiver;
+extern QWidget *qt_button_down;
+void QApplicationPrivate::sendSyntheticEnterLeave(QWidget *widget)
+{
+#ifndef QT_NO_CURSOR
+    if (!widget || widget->internalWinId() || widget->isWindow())
+        return;
+
+    const bool widgetInShow = widget->isVisible() && !widget->data->in_destructor;
+    if (!widgetInShow && widget != qt_last_mouse_receiver)
+        return; // Widget was not under the cursor when it was hidden/deleted.
+
+    if (widgetInShow && widget->parentWidget()->data->in_show)
+        return; // Ingore recursive show.
+
+    QWidget *mouseGrabber = QWidget::mouseGrabber();
+    if (mouseGrabber && mouseGrabber != widget)
+        return; // Someone else has the grab; enter/leave should not occur.
+
+    QWidget *tlw = widget->window();
+    if (tlw->data->in_destructor || tlw->data->is_closing)
+        return; // Closing down the business.
+
+    if (widgetInShow && (!qt_last_mouse_receiver || qt_last_mouse_receiver->window() != tlw))
+        return; // Mouse cursor not inside the widget's top-level.
+
+    const QPoint globalPos(QCursor::pos());
+    QPoint pos = tlw->mapFromGlobal(globalPos);
+
+    // Find the current widget under the mouse. If this function was called from
+    // the widget's destructor, we have to make sure childAt() doesn't take into
+    // account widgets that are about to be destructed.
+    QWidget *widgetUnderCursor = tlw->d_func()->childAt_helper(pos, widget->data->in_destructor);
+    if (!widgetUnderCursor)
+        widgetUnderCursor = tlw;
+    else
+        pos = widgetUnderCursor->mapFrom(tlw, pos);
+
+    if (widgetInShow && widgetUnderCursor != widget && !widget->isAncestorOf(widgetUnderCursor))
+        return; // Mouse cursor not inside the widget or any of its children.
+
+    if (widget->data->in_destructor && qt_button_down == widget)
+        qt_button_down = 0;
+
+    // Send enter/leave events followed by a mouse move on the entered widget.
+    QMouseEvent e(QEvent::MouseMove, pos, globalPos, Qt::NoButton, mouse_buttons, modifier_buttons);
+    sendMouseEvent(widgetUnderCursor, &e, widgetUnderCursor, tlw, &qt_button_down, qt_last_mouse_receiver);
+#endif // QT_NO_CURSOR
+}
+#endif // Q_WS_WIN || Q_WS_X11
+
 /*!
     Returns the desktop widget (also called the root window).
 
@@ -2842,10 +3047,17 @@ QDesktopWidget *QApplication::desktop()
 #ifndef QT_NO_CLIPBOARD
 /*!
   Returns a pointer to the application global clipboard.
+
+  \note The QApplication object should already be constructed before
+  accessing the clipboard.
 */
 QClipboard *QApplication::clipboard()
 {
     if (qt_clipboard == 0) {
+        if (!qApp) {
+            qWarning("QApplication: Must construct a QApplication before accessing a QClipboard");
+            return 0;
+        }
         qt_clipboard = new QClipboard(0);
     }
     return qt_clipboard;
@@ -3320,6 +3532,16 @@ void QApplication::changeOverrideCursor(const QCursor &cursor)
     QTimer with 0 timeout. More advanced idle processing schemes can
     be achieved using processEvents().
 
+    We recommend that you connect clean-up code to the
+    \l{QCoreApplication::}{aboutToQuit()} signal, instead of putting it in
+    your application's \c{main()} function because on some platforms the
+    QApplication::exec() call may not return. For example, on Windows
+    when the user logs off, the system terminates the process after Qt
+    closes all top-level windows. Hence, there is no guarantee that the
+    application will have time to exit its event loop and execute code at
+    the end of the \c{main()} function after the QApplication::exec()
+    call.
+
     \sa quitOnLastWindowClosed, quit(), exit(), processEvents(),
         QCoreApplication::exec()
 */
@@ -3356,18 +3578,34 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
 
     // capture the current mouse/keyboard state
     if(e->spontaneous()) {
-        if(e->type() == QEvent::KeyPress || e->type() == QEvent::KeyRelease) {
+        if (e->type() == QEvent::KeyPress
+            || e->type() == QEvent::KeyRelease) {
             QKeyEvent *ke = static_cast<QKeyEvent*>(e);
             QApplicationPrivate::modifier_buttons = ke->modifiers();
         } else if(e->type() == QEvent::MouseButtonPress
-                  || e->type() == QEvent::MouseButtonRelease) {
-            QMouseEvent *me = static_cast<QMouseEvent*>(e);
-            QApplicationPrivate::modifier_buttons = me->modifiers();
-            if(me->type() == QEvent::MouseButtonPress)
-                QApplicationPrivate::mouse_buttons |= me->button();
-            else
-                QApplicationPrivate::mouse_buttons &= ~me->button();
+            || e->type() == QEvent::MouseButtonRelease) {
+                QMouseEvent *me = static_cast<QMouseEvent*>(e);
+                QApplicationPrivate::modifier_buttons = me->modifiers();
+                if(me->type() == QEvent::MouseButtonPress)
+                    QApplicationPrivate::mouse_buttons |= me->button();
+                else
+                    QApplicationPrivate::mouse_buttons &= ~me->button();
         }
+#if !defined(QT_NO_WHEELEVENT) || !defined(QT_NO_TABLETEVENT)
+        else if (
+#  ifndef QT_NO_WHEELEVENT
+                 e->type() == QEvent::Wheel ||
+#  endif
+#  ifndef QT_NO_TABLETEVENT
+                 e->type() == QEvent::TabletMove
+                 || e->type() == QEvent::TabletPress
+                 || e->type() == QEvent::TabletRelease
+#  endif
+        ) {
+            QInputEvent *ie = static_cast<QInputEvent*>(e);
+            QApplicationPrivate::modifier_buttons = ie->modifiers();
+        }
+#endif // !QT_NO_WHEELEVENT || !QT_NO_TABLETEVENT
     }
 
     // User input and window activation makes tooltips sleep
@@ -3414,20 +3652,25 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
     case QEvent::KeyPress:
     case QEvent::KeyRelease:
         {
-            if (!receiver->isWidgetType()) {
+            bool isWidget = receiver->isWidgetType();
+            bool isGraphicsWidget = false;
+#ifndef QT_NO_GRAPHICSVIEW
+            isGraphicsWidget = !isWidget && qobject_cast<QGraphicsWidget *>(receiver);
+#endif
+            if (!isWidget && !isGraphicsWidget) {
                 res = d->notify_helper(receiver, e);
                 break;
             }
-            QWidget* w = static_cast<QWidget*>(receiver);
+
             QKeyEvent* key = static_cast<QKeyEvent*>(e);
 #if defined QT3_SUPPORT && !defined(QT_NO_SHORTCUT)
-            if (d->use_compat() && d->qt_tryComposeUnicode(w, key))
+            if (d->use_compat() && d->qt_tryComposeUnicode(static_cast<QWidget*>(receiver), key))
                 break;
 #endif
             if (key->type()==QEvent::KeyPress) {
 #ifndef QT_NO_SHORTCUT
                 // Try looking for a Shortcut before sending key events
-                if ((res = qApp->d_func()->shortcutMap.tryShortcutEvent(w, key)))
+                if ((res = qApp->d_func()->shortcutMap.tryShortcutEvent(receiver, key)))
                     return res;
 #endif
                 qt_in_tab_key_event = (key->key() == Qt::Key_Backtab
@@ -3438,13 +3681,18 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
                                        || key->key() == Qt::Key_Down);
             }
             bool def = key->isAccepted();
-            QPointer<QWidget> pw = w;
-            while (w) {
+            QPointer<QObject> pr = receiver;
+            while (receiver) {
                 if (def)
                     key->accept();
                 else
                     key->ignore();
-                res = d->notify_helper(w, e);
+                res = d->notify_helper(receiver, e);
+                QWidget *w = isWidget ? static_cast<QWidget *>(receiver) : 0;
+#ifndef QT_NO_GRAPHICSVIEW
+                QGraphicsWidget *gw = isGraphicsWidget ? static_cast<QGraphicsWidget *>(receiver) : 0;
+#endif
+
                 if ((res && key->isAccepted())
                     /*
                        QLineEdit will emit a signal on Key_Return, but
@@ -3458,11 +3706,20 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
                        propagating (because the original receiver will
                        be destroyed if one of its ancestors is)
                     */
-                    || !pw
-                    || w->isWindow() || !w->parentWidget()) {
+                    || !pr
+                    || (isWidget && (w->isWindow() || !w->parentWidget()))
+#ifndef QT_NO_GRAPHICSVIEW
+                    || (isGraphicsWidget && (gw->isWindow() || !gw->parentWidget()))
+#endif
+                    ) {
                     break;
                 }
-                w = w->parentWidget();
+
+#ifndef QT_NO_GRAPHICSVIEW
+                receiver = w ? (QObject *)w->parentWidget() : (QObject *)gw->parentWidget();
+#else
+                receiver = w->parentWidget();
+#endif
             }
             qt_in_tab_key_event = false;
         }
@@ -3482,7 +3739,8 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
                 if (e->type() == QEvent::MouseButtonPress) {
                     QWidget *fw = w;
                     while (fw) {
-                        if (fw->isEnabled() && (fw->focusPolicy() & Qt::ClickFocus)) {
+                        if (fw->isEnabled()
+                            && QApplicationPrivate::shouldSetFocus(fw, Qt::ClickFocus)) {
                             fw->setFocus(Qt::MouseFocusReason);
                             break;
                         }
@@ -3573,7 +3831,8 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
             if (e->spontaneous()) {
                 QWidget *fw = w;
                 while (fw) {
-                    if (fw->isEnabled() && (fw->focusPolicy() & Qt::WheelFocus) == Qt::WheelFocus) {
+                    if (fw->isEnabled()
+                        && QApplicationPrivate::shouldSetFocus(fw, Qt::WheelFocus)) {
                         fw->setFocus(Qt::MouseFocusReason);
                         break;
                     }
@@ -3713,6 +3972,15 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
                 QApplication::sendEvent(currentTarget, &event);
             }
 #endif
+#ifndef QT_NO_GRAPHICSVIEW
+            // QGraphicsProxyWidget handles its own propagation,
+            // and we must not change QDragManagers currentTarget.
+            QWExtra *extra = w->window()->d_func()->extra;
+            if (extra && extra->proxyWidget) {
+                res = d->notify_helper(w, dragEvent);
+                break;
+            }
+#endif
             while (w) {
                 if (w->isEnabled() && w->acceptDrops()) {
                     res = d->notify_helper(w, dragEvent);
@@ -3731,7 +3999,16 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
     case QEvent::DragMove:
     case QEvent::Drop:
     case QEvent::DragLeave: {
-            QWidget * w = QDragManager::self()->currentTarget();
+            QWidget* w = static_cast<QWidget *>(receiver);
+#ifndef QT_NO_GRAPHICSVIEW
+            // QGraphicsProxyWidget handles its own propagation,
+            // and we must not change QDragManagers currentTarget.
+            QWExtra *extra = w->window()->d_func()->extra;
+            bool isProxyWidget = extra && extra->proxyWidget;
+            if (!isProxyWidget)
+#endif
+                w = QDragManager::self()->currentTarget();
+
             if (!w) {
 #ifdef Q_WS_MAC
                 // HIView has a slight difference in how it delivers events to children and parents
@@ -3758,7 +4035,11 @@ bool QApplication::notify(QObject *receiver, QEvent *e)
                 }
             }
             res = d->notify_helper(w, e);
-            if (e->type() != QEvent::DragMove)
+            if (e->type() != QEvent::DragMove
+#ifndef QT_NO_GRAPHICSVIEW
+                && !isProxyWidget
+#endif
+                )
                 QDragManager::self()->setCurrentTarget(0, e->type() == QEvent::Drop);
         }
         break;
@@ -4117,23 +4398,27 @@ bool QApplicationPrivate::notify_helper(QObject *receiver, QEvent * e)
 #ifndef QT_NO_SESSIONMANAGER
 #if defined(Q_WS_WIN) || defined(Q_WS_MAC) || defined(Q_WS_QWS)
 
-#if defined(Q_OS_WINCE) && !defined(OLE32_MCOMGUID)
-HRESULT CoCreateGuid(GUID* guid)
+#if defined(Q_OS_WINCE)
+HRESULT qt_CoCreateGuid(GUID* guid)
 {
     // We will use the following information to create the GUID
     // 1. absolute path to application
     wchar_t tempFilename[512];
     if (!GetModuleFileNameW(0, tempFilename, 512))
         return S_FALSE;
-    unsigned int hash = qHash(QString::fromUtf16(tempFilename));
+    unsigned int hash = qHash(QString::fromUtf16((const unsigned short *) tempFilename));
     guid->Data1 = hash;
     // 2. creation time of file
-    QFileInfo info(QString::fromUtf16(tempFilename));
+    QFileInfo info(QString::fromUtf16((const unsigned short *) tempFilename));
     guid->Data2 = qHash(info.created().toTime_t());
     // 3. current system time
     guid->Data3 = qHash(QDateTime::currentDateTime().toTime_t());
     return S_OK;
 }
+#if !defined(OLE32_MCOMGUID) || defined(QT_WINCE_FORCE_CREATE_GUID)
+#define CoCreateGuid qt_CoCreateGuid
+#endif
+
 #endif
 
 class QSessionManagerPrivate : public QObjectPrivate
@@ -4714,6 +4999,12 @@ uint QApplicationPrivate::currentPlatform(){
     return platform;
 }
 
+bool qt_sendSpontaneousEvent(QObject *receiver, QEvent *event)
+{
+    return QCoreApplication::sendSpontaneousEvent(receiver, event);
+}
+
+
 /*!
     \since 4.2
 
@@ -4736,6 +5027,19 @@ Qt::LayoutDirection QApplication::keyboardInputDirection()
     if (!QApplicationPrivate::checkInstance("keyboardInputDirection"))
         return Qt::LeftToRight;
     return qt_keymapper_private()->keyboardInputDirection;
+}
+
+bool QApplicationPrivate::shouldSetFocus(QWidget *w, Qt::FocusPolicy policy)
+{
+    QWidget *f = w;
+    while (f->d_func()->extra && f->d_func()->extra->focus_proxy)
+        f = f->d_func()->extra->focus_proxy;
+
+    if ((w->focusPolicy() & policy) != policy)
+        return false;
+    if (w != f && (f->focusPolicy() & policy) != policy)
+        return false;
+    return true;
 }
 
 QT_END_NAMESPACE

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,56 +53,71 @@
 // We mean it.
 //
 
-#include "QtCore/qglobal.h"
-#include "QtCore/qvariant.h"
-#include "private/qcore_mac_p.h"
-#include <ApplicationServices/ApplicationServices.h>
+#include "qmacdefines_mac.h"
 
-#include "QtGui/qpainter.h"
-#include "QtGui/qwidget.h"
-#include "private/qwidget_p.h"
-#ifndef QT_MAC_NO_QUICKDRAW
-#include "qpaintdevice.h"
+#ifdef __OBJC__
+#include <Cocoa/Cocoa.h>
 #endif
 
+#include <CoreServices/CoreServices.h>
+
+#include "QtCore/qglobal.h"
+#include "QtCore/qvariant.h"
+#include "QtCore/qmimedata.h"
+#include "QtCore/qpointer.h"
+#include "private/qcore_mac_p.h"
+
+
+#include "QtGui/qpainter.h"
+
+#include <Carbon/Carbon.h>
+
 QT_BEGIN_NAMESPACE
+class QWidget;
+class QDragMoveEvent;
 
 /* Event masks */
 // internal Qt types
-const UInt32 kEventClassQt = 'cute'; // Event class for our own Carbon events.
+
+ // Event class for our own Carbon events.
+#if defined(QT_NAMESPACE) && defined(QT_NAMESPACE_MAC_CRC)
+// Take the CRC we generated at configure time. This *may* result in a
+// collision with another value If that is the case, please change the value
+// here to something other than 'Cute'.
+const UInt32 kEventClassQt = QT_NAMESPACE_MAC_CRC;
+#else
+const UInt32 kEventClassQt = 'Cute';
+#endif
+
 enum {
     //AE types
     typeAEClipboardChanged = 1,
     //types
     typeQWidget = 1,  /* QWidget *  */
-    typeMacTimerInfo = 2, /* MacTimerInfo * */
-    typeQEventDispatcherMac = 3, /* QEventDispatcherMac * */
     //params
-    kEventParamMacTimer = 'qtim',     /* typeMacTimerInfo */
     kEventParamQWidget = 'qwid',   /* typeQWidget */
-    kEventParamQEventDispatcherMac = 'qevd', /* typeQEventDispatcherMac */
     //events
-    kEventQtRequestSelect = 12,
     kEventQtRequestContext = 13,
     kEventQtRequestMenubarUpdate = 14,
-    kEventQtRequestTimer = 15,
     kEventQtRequestShowSheet = 17,
     kEventQtRequestActivate = 18,
-    kEventQtRequestSocketAct = 19,
     kEventQtRequestWindowChange = 20
 };
 
-class QMacBlockingFunction //implemented in qeventdispatcher_mac.cpp
+// Simple class to manage short-lived regions
+class QMacSmartQuickDrawRegion
 {
-private:
-    class Object;
-    static Object *block;
+    RgnHandle qdRgn;
+    Q_DISABLE_COPY(QMacSmartQuickDrawRegion)
 public:
-    inline QMacBlockingFunction()  { addRef(); }
-    inline ~QMacBlockingFunction() { subRef(); }
-    static void addRef();
-    static void subRef();
-    static bool blocking() { return block != 0; }
+    explicit QMacSmartQuickDrawRegion(RgnHandle rgn) : qdRgn(rgn) {}
+    ~QMacSmartQuickDrawRegion() {
+        extern void qt_mac_dispose_rgn(RgnHandle); // qregion_mac.cpp
+        qt_mac_dispose_rgn(qdRgn);
+    }
+    operator RgnHandle() {
+        return qdRgn;
+    }
 };
 
 class Q_GUI_EXPORT QMacCocoaAutoReleasePool
@@ -111,6 +130,8 @@ public:
 
     inline void *handle() const { return pool; }
 };
+
+QString qt_mac_removeMnemonics(const QString &original); //implemented in qmacstyle_mac.cpp
 
 class Q_GUI_EXPORT QMacWindowChangeEvent
 {
@@ -181,14 +202,14 @@ class QMacPasteboard
     };
     QList<Promise> promises;
 
-    PasteboardRef paste;
+    OSPasteboardRef paste;
     uchar mime_type;
     mutable QPointer<QMimeData> mime;
     mutable bool mac_mime_source;
-    static OSStatus promiseKeeper(PasteboardRef, PasteboardItemID, CFStringRef, void *);
+    static OSStatus promiseKeeper(OSPasteboardRef, PasteboardItemID, CFStringRef, void *);
     void clear_helper();
 public:
-    QMacPasteboard(PasteboardRef p, uchar mime_type=0);
+    QMacPasteboard(OSPasteboardRef p, uchar mime_type=0);
     QMacPasteboard(uchar mime_type);
     QMacPasteboard(CFStringRef name=0, uchar mime_type=0);
     ~QMacPasteboard();
@@ -196,7 +217,7 @@ public:
     bool hasFlavor(QString flavor) const;
     bool hasOSType(int c_flavor) const;
 
-    PasteboardRef pasteBoard() const;
+    OSPasteboardRef pasteBoard() const;
     QMimeData *mimeData() const;
     void setMimeData(QMimeData *mime);
 
@@ -208,141 +229,36 @@ public:
     bool sync() const;
 };
 
-#ifdef Q_WS_MAC64
-# define QT_MAC_NO_QUICKDRAW
-#endif
-
 extern QPaintDevice *qt_mac_safe_pdev; //qapplication_mac.cpp
-#ifndef QT_MAC_NO_QUICKDRAW
 
-extern WindowPtr qt_mac_window_for(const QWidget*); //qwidget_mac.cpp
-class QMacSavedPortInfo
-{
-    RgnHandle clip;
-    GWorldPtr world;
-    GDHandle handle;
-    PenState pen; //go pennstate
-    RGBColor back, fore;
-    bool valid_gworld;
-    void init();
-
-public:
-    inline QMacSavedPortInfo() { init(); }
-    inline QMacSavedPortInfo(QPaintDevice *pd) { init(); setPaintDevice(pd); }
-    inline QMacSavedPortInfo(QWidget *w, bool set_clip = false)
-        { init(); setPaintDevice(w, set_clip); }
-    inline QMacSavedPortInfo(QPaintDevice *pd, const QRect &r)
-        { init(); setPaintDevice(pd); setClipRegion(r); }
-    inline QMacSavedPortInfo(QPaintDevice *pd, const QRegion &r)
-        { init(); setPaintDevice(pd); setClipRegion(r); }
-    ~QMacSavedPortInfo();
-    static inline bool setClipRegion(const QRect &r);
-    static inline bool setClipRegion(const QRegion &r);
-    static inline bool setClipRegion(QWidget *w)
-        { return setClipRegion(w->d_func()->clippedRegion()); }
-    static inline bool setPaintDevice(QPaintDevice *);
-    static inline bool setPaintDevice(QWidget *, bool set_clip=false, bool with_child=true);
-};
-
-inline bool
-QMacSavedPortInfo::setClipRegion(const QRect &rect)
-{
-    Rect r;
-    SetRect(&r, rect.x(), rect.y(), rect.right()+1, rect.bottom()+1);
-    ClipRect(&r);
-    return true;
-}
-
-inline bool
-QMacSavedPortInfo::setClipRegion(const QRegion &r)
-{
-    if(r.isEmpty())
-        return setClipRegion(QRect());
-    RgnHandle rgn = r.handle();
-    if(!rgn)
-        return setClipRegion(r.boundingRect());
-    SetClip(rgn);
-    return true;
-}
-
-inline bool
-QMacSavedPortInfo::setPaintDevice(QWidget *w, bool set_clip, bool with_child)
-{
-    if (!w)
-        return false;
-    if(!setPaintDevice((QPaintDevice *)w))
-        return false;
-    if(set_clip)
-        return setClipRegion(w->d_func()->clippedRegion(with_child));
-    return true;
-}
-
-inline bool
-QMacSavedPortInfo::setPaintDevice(QPaintDevice *pd)
-{
-    if(!pd)
-        return false;
-    bool ret = true;
-    extern GrafPtr qt_mac_qd_context(const QPaintDevice *); // qpaintdevice_mac.cpp
-    if(pd->devType() == QInternal::Widget)
-        SetPortWindowPort(qt_mac_window_for(static_cast<QWidget*>(pd)));
-    else if(pd->devType() == QInternal::Pixmap || pd->devType() == QInternal::Printer)
-        SetGWorld((GrafPtr)qt_mac_qd_context(pd), 0); //set the gworld
-    return ret;
-}
-
-
-inline void
-QMacSavedPortInfo::init()
-{
-    GetBackColor(&back);
-    GetForeColor(&fore);
-    GetGWorld(&world, &handle);
-    valid_gworld = true;
-    clip = NewRgn();
-    GetClip(clip);
-    GetPenState(&pen);
-}
-
-inline QMacSavedPortInfo::~QMacSavedPortInfo()
-{
-    bool set_state = false;
-    if(valid_gworld) {
-        set_state = IsValidPort(world);
-        if(set_state)
-            SetGWorld(world,handle); //always do this one first
-    } else {
-        setPaintDevice(qt_mac_safe_pdev);
-    }
-    if(set_state) {
-        SetClip(clip);
-        SetPenState(&pen);
-        RGBForeColor(&fore);
-        RGBBackColor(&back);
-    }
-    DisposeRgn(clip);
-}
-#else
-class QMacSavedPortInfo
-{
-public:
-    inline QMacSavedPortInfo() { }
-    inline QMacSavedPortInfo(QPaintDevice *) { }
-    inline QMacSavedPortInfo(QWidget *, bool = false) { }
-    inline QMacSavedPortInfo(QPaintDevice *, const QRect &) { }
-    inline QMacSavedPortInfo(QPaintDevice *, const QRegion &) { }
-    ~QMacSavedPortInfo() { }
-    static inline bool setClipRegion(const QRect &) { return false; }
-    static inline bool setClipRegion(const QRegion &) { return false; }
-    static inline bool setClipRegion(QWidget *) { return false; }
-    static inline bool setPaintDevice(QPaintDevice *) { return false; }
-    static inline bool setPaintDevice(QWidget *, bool =false, bool =true) { return false; }
-};
-#endif
+extern OSWindowRef qt_mac_window_for(const QWidget*); //qwidget_mac.mm
+extern OSViewRef qt_mac_nativeview_for(const QWidget *); //qwidget_mac.mm
 
 #ifdef check
 # undef check
 #endif
+
+QFont qfontForThemeFont(ThemeFontID themeID);
+
+QColor qcolorForTheme(ThemeBrush brush);
+
+QColor qcolorForThemeTextColor(ThemeTextColor themeColor);
+
+struct QMacDndAnswerRecord {
+    QRect rect;
+    Qt::KeyboardModifiers modifiers;
+    Qt::MouseButtons buttons;
+    Qt::DropAction lastAction;
+    void clear() {
+        rect = QRect();
+        modifiers = Qt::NoModifier;
+        buttons = Qt::NoButton;
+        lastAction = Qt::IgnoreAction;
+    }
+};
+extern QMacDndAnswerRecord qt_mac_dnd_answer_rec;
+void qt_mac_copy_answer_rect(const QDragMoveEvent &event);
+bool qt_mac_mouse_inside_answer_rect(QPoint mouse);
 
 QT_END_NAMESPACE
 

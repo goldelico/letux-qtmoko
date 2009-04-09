@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -77,6 +81,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \fn QDBusReply::QDBusReply(const QDBusPendingReply<T> &reply)
+    Constructs a QDBusReply object from the pending reply message, \a reply.
+*/
+
+/*!
+    \fn QDBusReply::QDBusReply(const QDBusPendingCall &pcall)
+    Automatically construct a QDBusReply object from the asynchronous
+    pending call \a pcall. If the call isn't finished yet, QDBusReply
+    will call QDBusPendingCall::waitForFinished(), which is a blocking
+    operation.
+
+    If the return types patch, QDBusReply will extract the first
+    return argument from the reply.
+*/
+
+/*!
     \fn QDBusReply::QDBusReply(const QDBusError &error)
     Constructs an error reply from the D-Bus error code given by \a error.
 */
@@ -102,6 +122,24 @@ QT_BEGIN_NAMESPACE
     If \a message is a standard reply message and contains at least
     one parameter, it will be copied into this object, as long as it
     is of the correct type. If it's not of the same type as this
+    QDBusError object, this function will instead set an error code
+    indicating a type mismatch.
+*/
+
+/*!
+    \fn QDBusReply::operator=(const QDBusPendingCall &pcall)
+
+    Makes this object contain the reply specified by the pending
+    asynchronous call \a pcall. If the call is not finished yet, this
+    function will call QDBusPendingCall::waitForFinished() to block
+    until the reply arrives.
+
+    If \a pcall finishes with an error message, this function will
+    copy the error code and message into this object
+
+    If \a pcall finished with a standard reply message and contains at
+    least one parameter, it will be copied into this object, as long
+    as it is of the correct type. If it's not of the same type as this
     QDBusError object, this function will instead set an error code
     indicating a type mismatch.
 */

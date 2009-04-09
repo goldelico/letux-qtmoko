@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -48,8 +52,8 @@
 QT_BEGIN_NAMESPACE
 
 // ############### DON'T EXPORT HERE!!!
-Q_CORE_EXPORT char         appFileName[256];                // application file name
-Q_CORE_EXPORT char         theAppName[256];                        // application name
+Q_CORE_EXPORT char         appFileName[MAX_PATH+1];                // application file name
+Q_CORE_EXPORT char         theAppName[MAX_PATH+1];                        // application name
 Q_CORE_EXPORT HINSTANCE appInst        = 0;                // handle to app instance
 Q_CORE_EXPORT HINSTANCE appPrevInst        = 0;                // handle to prev app instance
 Q_CORE_EXPORT int appCmdShow = 0;
@@ -72,11 +76,12 @@ void set_winapp_name()
         already_set = true;
 #ifndef Q_OS_WINCE
         GetModuleFileNameA(0, appFileName, sizeof(appFileName));
+        appFileName[sizeof(appFileName)-1] = 0;
 #else
         QString afm;
-        afm.resize(256);
-        afm.resize(GetModuleFileName(0, (wchar_t *) (afm.unicode()), 255));
-        strncpy(appFileName, afm.toLatin1(), afm.length());
+        afm.resize(sizeof(appFileName));
+        afm.resize(GetModuleFileName(0, (wchar_t *) (afm.unicode()), sizeof(appFileName)));
+        memcpy(appFileName, afm.toLatin1(), sizeof(appFileName));
 #endif
         const char *p = strrchr(appFileName, '\\');        // skip path
         if (p)
@@ -210,7 +215,7 @@ void QCoreApplicationPrivate::removePostedTimerEvent(QObject *object, int timerI
         const QPostEvent & pe = data->postEventList.at(i);
         if (pe.receiver == object
             && pe.event
-            && pe.event->type() == QEvent::Timer
+            && (pe.event->type() == QEvent::Timer || pe.event->type() == QEvent::ZeroTimerEvent)
             && static_cast<QTimerEvent *>(pe.event)->timerId() == timerId) {
                 --pe.receiver->d_func()->postedEvents;
                 pe.event->posted = false;

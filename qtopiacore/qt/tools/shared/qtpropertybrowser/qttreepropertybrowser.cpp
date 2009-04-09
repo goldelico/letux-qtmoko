@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -74,6 +78,7 @@ public:
     bool lastColumn(int column) const;
     void disableItem(QTreeWidgetItem *item) const;
     void enableItem(QTreeWidgetItem *item) const;
+    bool hasValue(QTreeWidgetItem *item) const;
 
     void slotCollapsed(const QModelIndex &index);
     void slotExpanded(const QModelIndex &index);
@@ -198,10 +203,15 @@ void QtPropertyEditorView::mousePressEvent(QMouseEvent *event)
     QTreeWidget::mousePressEvent(event);
     QTreeWidgetItem *item = itemAt(event->pos());
 
-    if (item && (item != m_editorPrivate->editedItem()) && (event->button() == Qt::LeftButton)
+    if (item) {
+        if ((item != m_editorPrivate->editedItem()) && (event->button() == Qt::LeftButton)
                 && (header()->logicalIndexAt(event->pos().x()) == 1)
                 && ((item->flags() & (Qt::ItemIsEditable | Qt::ItemIsEnabled)) == (Qt::ItemIsEditable | Qt::ItemIsEnabled))) {
-        editItem(item, 1);
+            editItem(item, 1);
+        } else if (!m_editorPrivate->hasValue(item) && m_editorPrivate->markPropertiesWithoutValue() && !rootIsDecorated()) {
+            if (event->pos().x() + header()->offset() < 20)
+                item->setExpanded(!item->isExpanded());
+        }
     }
 }
 
@@ -366,7 +376,7 @@ void QtPropertyEditorDelegate::paint(QPainter *painter, const QStyleOptionViewIt
 QSize QtPropertyEditorDelegate::sizeHint(const QStyleOptionViewItem &option,
             const QModelIndex &index) const
 {
-    return QItemDelegate::sizeHint(option, index) + QSize(3, 3);
+    return QItemDelegate::sizeHint(option, index) + QSize(3, 4);
 }
 
 bool QtPropertyEditorDelegate::eventFilter(QObject *object, QEvent *event)
@@ -426,6 +436,9 @@ void QtTreePropertyBrowserPrivate::init(QWidget *parent)
     layout->setMargin(0);
     m_treeWidget = new QtPropertyEditorView(parent);
     m_treeWidget->setEditorPrivate(this);
+    const int indicatorWidth = m_treeWidget->style()->pixelMetric(QStyle::PM_IndicatorWidth, 0, m_treeWidget);
+    QSize iconSize(indicatorWidth, indicatorWidth);
+    m_treeWidget->setIconSize(QSize(indicatorWidth, indicatorWidth));
     layout->addWidget(m_treeWidget);
 
     m_treeWidget->setColumnCount(2);
@@ -519,6 +532,14 @@ void QtTreePropertyBrowserPrivate::enableItem(QTreeWidgetItem *item) const
             enableItem(child);
         }
     }
+}
+
+bool QtTreePropertyBrowserPrivate::hasValue(QTreeWidgetItem *item) const
+{
+    QtBrowserItem *browserItem = m_itemToIndex.value(item);
+    if (browserItem)
+        return browserItem->property()->hasValue();
+    return false;
 }
 
 void QtTreePropertyBrowserPrivate::propertyInserted(QtBrowserItem *index, QtBrowserItem *afterIndex)
@@ -768,6 +789,22 @@ void QtTreePropertyBrowser::setRootIsDecorated(bool show)
 }
 
 /*!
+  \property QtTreePropertyBrowser::alternatingRowColors
+  \brief whether to draw the background using alternating colors.
+  By default this property is set to true.
+*/
+bool QtTreePropertyBrowser::alternatingRowColors() const
+{
+    return d_ptr->m_treeWidget->alternatingRowColors();
+}
+
+void QtTreePropertyBrowser::setAlternatingRowColors(bool enable)
+{
+    d_ptr->m_treeWidget->setAlternatingRowColors(enable);
+    QMapIterator<QTreeWidgetItem *, QtBrowserItem *> it(d_ptr->m_itemToIndex);
+}
+
+/*!
   \property QtTreePropertyBrowser::headerVisible
   \brief whether to show the header.
 */
@@ -876,6 +913,33 @@ bool QtTreePropertyBrowser::isExpanded(QtBrowserItem *item) const
 }
 
 /*!
+    Returns true if the \a item is visible; otherwise returns false.
+
+    \sa setItemVisible()
+    \since 4.5
+*/
+
+bool QtTreePropertyBrowser::isItemVisible(QtBrowserItem *item) const
+{
+    if (const QTreeWidgetItem *treeItem = d_ptr->m_indexToItem.value(item))
+        return !treeItem->isHidden();
+    return false;
+}
+
+/*!
+    Sets the \a item to be visible, depending on the value of \a visible.
+
+   \sa isItemVisible()
+   \since 4.5
+*/
+
+void QtTreePropertyBrowser::setItemVisible(QtBrowserItem *item, bool visible)
+{
+    if (QTreeWidgetItem *treeItem = d_ptr->m_indexToItem.value(item))
+        treeItem->setHidden(!visible);
+}
+
+/*!
     Sets the \a item's background color to \a color. Note that while item's background
     is rendered every second row is being drawn with alternate color (which is a bit lighter than items \a color)
 
@@ -922,9 +986,9 @@ QColor QtTreePropertyBrowser::calculatedBackgroundColor(QtBrowserItem *item) con
     When marking is enabled the item's background is rendered in dark color and item's
     foreground is rendered with light color.
 
-    \sa markPropertiesWithoutValue()
+    \sa propertiesWithoutValueMarked()
 */
-void QtTreePropertyBrowser::setMarkPropertiesWithoutValue(bool mark)
+void QtTreePropertyBrowser::setPropertiesWithoutValueMarked(bool mark)
 {
     if (d_ptr->m_markPropertiesWithoutValue == mark)
         return;
@@ -942,9 +1006,9 @@ void QtTreePropertyBrowser::setMarkPropertiesWithoutValue(bool mark)
 /*!
     Returns true if marking properties without value is enabled.
 
-    \sa setMarkPropertiesWithoutValue()
+    \sa setPropertiesWithoutValueMarked()
 */
-bool QtTreePropertyBrowser::markPropertiesWithoutValue() const
+bool QtTreePropertyBrowser::propertiesWithoutValueMarked() const
 {
     return d_ptr->m_markPropertiesWithoutValue;
 }

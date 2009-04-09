@@ -18,45 +18,55 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSDocumentType_H
-#define JSDocumentType_H
+#ifndef JSDocumentType_h
+#define JSDocumentType_h
 
 #include "JSNode.h"
-
+#include "DocumentType.h"
 namespace WebCore {
 
 class DocumentType;
 
 class JSDocumentType : public JSNode {
+    typedef JSNode Base;
 public:
-    JSDocumentType(KJS::ExecState*, DocumentType*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSDocumentType(PassRefPtr<JSC::Structure>, PassRefPtr<DocumentType>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        NameAttrNum, EntitiesAttrNum, NotationsAttrNum, PublicIdAttrNum, 
-        SystemIdAttrNum, InternalSubsetAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
-    DocumentType* impl() const;
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
+    DocumentType* impl() const
+    {
+        return static_cast<DocumentType*>(Base::impl());
+    }
 };
 
-DocumentType* toDocumentType(KJS::JSValue*);
+DocumentType* toDocumentType(JSC::JSValuePtr);
 
-class JSDocumentTypePrototype : public KJS::JSObject {
+class JSDocumentTypePrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSDocumentTypePrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSNodePrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSDocumentTypePrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsDocumentTypeName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypeEntities(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypeNotations(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypePublicId(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypeSystemId(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypeInternalSubset(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsDocumentTypeConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

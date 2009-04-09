@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,6 +56,9 @@
 #include <limits.h>
 
 QT_BEGIN_NAMESPACE
+
+int qFindString(const QChar *haystack, int haystackLen, int from,
+    const QChar *needle, int needleLen, Qt::CaseSensitivity cs);
 
 // error strings for the regexp parser
 #define RXERR_OK         QT_TRANSLATE_NOOP("QRegExp", "no error occurred")
@@ -840,7 +847,7 @@ struct QRegExpMatchState
     int caretPos;
     int len; // the length of the input string
     bool minimal; // minimal matching?
-    QVector<int> bigArray; // big QVector<int> array
+    int *bigArray; // big array holding the data for the next pointers
     int *inNextStack; // is state is nextStack?
     int *curStack; // stack of current states
     int *nextStack; // stack of next states
@@ -853,19 +860,21 @@ struct QRegExpMatchState
     int *capBegin; // start of captures for a next state
     int *capEnd; // end of captures for a next state
     int *slideTab; // bump-along slide table for bad-character heuristic
+    int *captured; // what match() returned last
     int slideTabSize; // size of slide table
+    int capturedSize;
 #ifndef QT_NO_REGEXP_BACKREF
     QList<QVector<int> > sleeping; // list of back-reference sleepers
 #endif
     int matchLen; // length of match
     int oneTestMatchedLen; // length of partial match
 
-    QVector<int> captured; // what match() returned last
     const QRegExpEngine *eng;
 
-    inline QRegExpMatchState() { captured.fill(-1, 2); }
+    inline QRegExpMatchState() : bigArray(0), captured(0) {}
+    inline ~QRegExpMatchState() { free(bigArray); }
 
-    void drain() { bigArray.clear(); } // to save memory
+    void drain() { free(bigArray); bigArray = 0; captured = 0; } // to save memory
     void prepareForMatch(QRegExpEngine *eng);
     void match(const QChar *str, int len, int pos, bool minimal,
         bool oneTest, int caretIndex);
@@ -1062,7 +1071,7 @@ private:
            Anchor_NonWord = 0x00000008, Anchor_FirstLookahead = 0x00000010,
            Anchor_BackRef1Empty = Anchor_FirstLookahead << MaxLookaheads,
            Anchor_BackRef0Empty = Anchor_BackRef1Empty >> 1,
-           Anchor_Alternation = Anchor_BackRef1Empty << MaxBackRefs,
+           Anchor_Alternation = unsigned(Anchor_BackRef1Empty) << MaxBackRefs,
 
            Anchor_LookaheadMask = (Anchor_FirstLookahead - 1) ^
                    ((Anchor_FirstLookahead << MaxLookaheads) - 1) };
@@ -1292,9 +1301,11 @@ void QRegExpMatchState::prepareForMatch(QRegExpEngine *eng)
 #else
     slideTabSize = 0;
 #endif
-    bigArray.resize((3 + 4 * ncap) * ns + 4 * ncap + slideTabSize);
+    int numCaptures = eng->numCaptures();
+    capturedSize = 2 + 2 * numCaptures;
+    bigArray = (int *)realloc(bigArray, ((3 + 4 * ncap) * ns + 4 * ncap + slideTabSize + capturedSize)*sizeof(int));
 
-    inNextStack = bigArray.data();
+    inNextStack = bigArray;
     memset(inNextStack, -1, ns * sizeof(int));
     curStack = inNextStack + ns;
     nextStack = inNextStack + 2 * ns;
@@ -1310,6 +1321,8 @@ void QRegExpMatchState::prepareForMatch(QRegExpEngine *eng)
     capEnd = tempCapBegin + 3 * ncap;
 
     slideTab = tempCapBegin + 4 * ncap;
+    captured = slideTab + slideTabSize;
+    memset(captured, -1, capturedSize*sizeof(int));
     this->eng = eng;
 }
 
@@ -1362,14 +1375,12 @@ void QRegExpMatchState::match(const QChar *str0, int len0, int pos0,
         }
     }
 
-    int numCaptures = eng->numCaptures();
-    int capturedSize = 2 + 2 * numCaptures;
-    captured.resize(capturedSize);
     if (matched) {
-        int *c = captured.data();
+        int *c = captured;
         *c++ = pos;
         *c++ = matchLen;
 
+        int numCaptures = (capturedSize - 2) >> 1;
 #ifndef QT_NO_REGEXP_CAPTURE
         for (int i = 0; i < numCaptures; ++i) {
             int j = eng->captureForOfficialCapture.at(i);
@@ -1380,7 +1391,7 @@ void QRegExpMatchState::match(const QChar *str0, int len0, int pos0,
 #endif
     } else {
         // we rely on 2's complement here
-        memset(captured.data(), -1, capturedSize * sizeof(int));
+        memset(captured, -1, capturedSize * sizeof(int));
     }
 }
 
@@ -1445,7 +1456,7 @@ void QRegExpEngine::addPlusTransitions(const QVector<int> &from, const QVector<i
             for (int j = 0; j < to.size(); j++) {
                 // ### st.reenter.contains(to.at(j)) check looks suspicious
                 if (!st.reenter.contains(to.at(j)) &&
-                     qBinaryFind(oldOuts.begin(), oldOuts.end(), to.at(j)) == oldOuts.end())
+                     qBinaryFind(oldOuts.constBegin(), oldOuts.constEnd(), to.at(j)) == oldOuts.end())
                     st.reenter.insert(to.at(j), atom);
             }
         }
@@ -1746,7 +1757,7 @@ bool QRegExpMatchState::testAnchor(int i, int a, const int *capBegin)
                 matchState.prepareForMatch(ahead[j]->eng);
                 matchState.match(in + pos + i, len - pos - i, 0,
                     true, true, matchState.caretPos - matchState.pos - i);
-                if ((matchState.captured.at(0) == 0) == ahead[j]->neg)
+                if ((matchState.captured[0] == 0) == ahead[j]->neg)
                     return false;
             }
         }
@@ -1776,8 +1787,8 @@ bool QRegExpMatchState::testAnchor(int i, int a, const int *capBegin)
 bool QRegExpEngine::goodStringMatch(QRegExpMatchState &matchState) const
 {
     int k = matchState.pos + goodEarlyStart;
-    while ((k = qFindString(matchState.in, matchState.len, k,
-                goodStr.unicode(), goodStr.length(), cs)) != -1) {
+    QStringMatcher matcher(goodStr.unicode(), goodStr.length(), cs);
+    while ((k = matcher.indexIn(matchState.in, matchState.len, k)) != -1) {
         int from = k - goodLateStart;
         int to = k - goodEarlyStart;
         if (from > matchState.pos)
@@ -3016,7 +3027,7 @@ int QRegExpEngine::parse(const QChar *pattern, int len)
     if (caretAnchored) {
         const QMap<int, int> &anchors = sinit.anchors;
         QMap<int, int>::const_iterator a;
-        for (a = anchors.begin(); a != anchors.end(); ++a) {
+        for (a = anchors.constBegin(); a != anchors.constEnd(); ++a) {
             if (
 #ifndef QT_NO_REGEXP_ANCHOR_ALT
                 (*a & Anchor_Alternation) != 0 ||
@@ -3266,14 +3277,12 @@ Q_GLOBAL_STATIC(QMutex, mutex)
 
 static void derefEngine(QRegExpEngine *eng, const QRegExpEngineKey &key)
 {
-#if !defined(QT_NO_REGEXP_OPTIM)
-    QMutexLocker locker(mutex());
-#endif // QT_NO_REGEXP_OPTIM
-
     if (!eng->ref.deref()) {
 #if !defined(QT_NO_REGEXP_OPTIM)
-        if (globalEngineCache())
+        if (globalEngineCache()) {
+            QMutexLocker locker(mutex());
             globalEngineCache()->insert(key, eng, 4 + key.pattern.length() / 4);
+        }
         else
             delete eng;
 #else
@@ -3285,30 +3294,21 @@ static void derefEngine(QRegExpEngine *eng, const QRegExpEngineKey &key)
 
 static void prepareEngine_helper(QRegExpPrivate *priv)
 {
-    bool initMatchState;
-
-    {
+    bool initMatchState = !priv->eng;
 #if !defined(QT_NO_REGEXP_OPTIM)
-        // the mutex protects both the globalEngineCache() and the priv->eng pointer
+    if (!priv->eng) {
         QMutexLocker locker(mutex());
-#endif
-
-        initMatchState = !priv->eng;
-
-#if !defined(QT_NO_REGEXP_OPTIM)
-        if (!priv->eng) {
-            priv->eng = globalEngineCache()->take(priv->engineKey);
-            if (priv->eng != 0)
-                priv->eng->ref.ref();
-        }
+        priv->eng = globalEngineCache()->take(priv->engineKey);
+        if (priv->eng != 0)
+            priv->eng->ref.ref();
+    }
 #endif // QT_NO_REGEXP_OPTIM
 
-        if (!priv->eng)
-            priv->eng = new QRegExpEngine(priv->engineKey);
-    }
+    if (!priv->eng)
+        priv->eng = new QRegExpEngine(priv->engineKey);
 
     if (initMatchState)
-        priv->matchState.captured.fill(-1, 2 + 2 * priv->eng->numCaptures());
+        priv->matchState.prepareForMatch(priv->eng);
 }
 
 inline static void prepareEngine(QRegExpPrivate *priv)
@@ -3657,7 +3657,7 @@ bool QRegExp::exactMatch(const QString &str) const
 {
     prepareEngineForMatch(priv, str);
     priv->matchState.match(str.unicode(), str.length(), 0, priv->minimal, true, 0);
-    if (priv->matchState.captured.at(1) == str.length()) {
+    if (priv->matchState.captured[1] == str.length()) {
         return true;
     } else {
         priv->matchState.captured[0] = 0;
@@ -3702,7 +3702,7 @@ int QRegExp::indexIn(const QString &str, int offset, CaretMode caretMode) const
         offset += str.length();
     priv->matchState.match(str.unicode(), str.length(), offset,
         priv->minimal, false, caretIndex(offset, caretMode));
-    return priv->matchState.captured.at(0);
+    return priv->matchState.captured[0];
 }
 
 // ### Qt 5: make non-const
@@ -3732,14 +3732,14 @@ int QRegExp::lastIndexIn(const QString &str, int offset, CaretMode caretMode) co
     if (offset < 0)
         offset += str.length();
     if (offset < 0 || offset > str.length()) {
-        priv->matchState.captured.fill(-1);
+        memset(priv->matchState.captured, -1, priv->matchState.capturedSize*sizeof(int));
         return -1;
     }
 
     while (offset >= 0) {
         priv->matchState.match(str.unicode(), str.length(), offset,
             priv->minimal, true, caretIndex(offset, caretMode));
-        if (priv->matchState.captured.at(0) == offset)
+        if (priv->matchState.captured[0] == offset)
             return offset;
         --offset;
     }
@@ -3754,7 +3754,7 @@ int QRegExp::lastIndexIn(const QString &str, int offset, CaretMode caretMode) co
 */
 int QRegExp::matchedLength() const
 {
-    return priv->matchState.captured.at(1);
+    return priv->matchState.captured[1];
 }
 
 #ifndef QT_NO_REGEXP_CAPTURE
@@ -3805,24 +3805,32 @@ int QRegExp::numCaptures() const
 
     \sa cap(), pos()
 */
-QStringList QRegExp::capturedTexts()
+QStringList QRegExp::capturedTexts() const
 {
     if (priv->capturedCache.isEmpty()) {
         prepareEngine(priv);
-        const QVector<int> &captured = priv->matchState.captured;
-        int n = captured.size();
+        const int *captured = priv->matchState.captured;
+        int n = priv->matchState.capturedSize;
 
         for (int i = 0; i < n; i += 2) {
             QString m;
-            if (captured.at(i + 1) == 0)
+            if (captured[i + 1] == 0)
                 m = QLatin1String(""); // ### Qt 5: don't distinguish between null and empty
-            else if (captured.at(i) >= 0)
-                m = priv->t.mid(captured.at(i), captured.at(i + 1));
+            else if (captured[i] >= 0)
+                m = priv->t.mid(captured[i], captured[i + 1]);
             priv->capturedCache.append(m);
         }
         priv->t.clear();
     }
     return priv->capturedCache;
+}
+
+/*!
+    \internal
+*/
+QStringList QRegExp::capturedTexts()
+{
+    return const_cast<const QRegExp *>(this)->capturedTexts();
 }
 
 /*!
@@ -3840,9 +3848,17 @@ QStringList QRegExp::capturedTexts()
 
     \sa capturedTexts(), pos()
 */
-QString QRegExp::cap(int nth)
+QString QRegExp::cap(int nth) const
 {
     return capturedTexts().value(nth);
+}
+
+/*!
+    \internal
+*/
+QString QRegExp::cap(int nth)
+{
+    return const_cast<const QRegExp *>(this)->cap(nth);
 }
 
 /*!
@@ -3859,12 +3875,20 @@ QString QRegExp::cap(int nth)
 
     \sa cap(), capturedTexts()
 */
-int QRegExp::pos(int nth)
+int QRegExp::pos(int nth) const
 {
-    if (nth < 0 || nth >= priv->matchState.captured.size() / 2)
+    if (nth < 0 || nth >= priv->matchState.capturedSize / 2)
         return -1;
     else
-        return priv->matchState.captured.at(2 * nth);
+        return priv->matchState.captured[2 * nth];
+}
+
+/*!
+    \internal
+*/
+int QRegExp::pos(int nth)
+{
+    return const_cast<const QRegExp *>(this)->pos(nth);
 }
 
 /*!
@@ -3873,13 +3897,21 @@ int QRegExp::pos(int nth)
 
   \sa isValid()
 */
-QString QRegExp::errorString()
+QString QRegExp::errorString() const
 {
     if (isValid()) {
         return QString::fromLatin1(RXERR_OK);
     } else {
         return priv->eng->errorString();
     }
+}
+
+/*!
+    \internal
+*/
+QString QRegExp::errorString()
+{
+    return const_cast<const QRegExp *>(this)->errorString();
 }
 #endif
 
@@ -3900,14 +3932,29 @@ QString QRegExp::errorString()
 */
 QString QRegExp::escape(const QString &str)
 {
-    static const char meta[] = "$()*+.?[\\]^{|}";
-    QString quoted = str;
-    int i = 0;
-
-    while (i < quoted.length()) {
-        if (strchr(meta, quoted.at(i).toLatin1()) != 0)
-            quoted.insert(i++, QLatin1Char('\\'));
-        ++i;
+    QString quoted;
+    const int count = str.count();
+    quoted.reserve(count * 2);
+    const QLatin1Char backslash('\\');
+    for (int i = 0; i < count; i++) {
+        switch (str.at(i).toLatin1()) {
+        case '$':
+        case '(':
+        case ')':
+        case '*':
+        case '+':
+        case '.':
+        case '?':
+        case '[':
+        case '\\':
+        case ']':
+        case '^':
+        case '{':
+        case '|':
+        case '}':
+            quoted.append(backslash);
+        }
+        quoted.append(str.at(i));
     }
     return quoted;
 }

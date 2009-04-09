@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -180,8 +184,9 @@ int QDialPrivate::valueFromPoint(const QPoint &p) const
 
     The dial initially emits valueChanged() signals continuously while
     the slider is being moved; you can make it emit the signal less
-    often by disabling the \l tracking property. The sliderMoved() signal
-    is emitted continuously even when tracking is disabled.
+    often by disabling the \l{QAbstractSlider::tracking} {tracking}
+    property. The sliderMoved() signal is emitted continuously even
+    when tracking is disabled.
 
     The dial also emits sliderPressed() and sliderReleased() signals
     when the mouse button is pressed and released. Note that the
@@ -198,15 +203,20 @@ int QDialPrivate::valueFromPoint(const QPoint &p) const
     setValue(), addLine(), subtractLine(), addPage() and
     subtractPage() available as slots.
 
-    The dial's keyboard interface is fairly simple: The \key{left}/\key{up}
-    and \key{right}/\key{down} arrow keys adjust the dial's \l value by the
-    defined \l singleStep, \key{Page Up} and \key{Page Down} by the defined
-    \l pageStep, and the \key Home and \key End keys set the value to the
-    defined \l minimum and \l maximum values.
+    The dial's keyboard interface is fairly simple: The
+    \key{left}/\key{up} and \key{right}/\key{down} arrow keys adjust
+    the dial's \l {QAbstractSlider::value} {value} by the defined
+    \l {QAbstractSlider::singleStep} {singleStep}, \key{Page Up} and
+    \key{Page Down} by the defined \l {QAbstractSlider::pageStep}
+    {pageStep}, and the \key Home and \key End keys set the value to
+    the defined \l {QAbstractSlider::minimum} {minimum} and
+    \l {QAbstractSlider::maximum} {maximum} values.
 
-    If you are using the mouse wheel to adjust the dial, the increment value
-    is determined by the lesser value of \l{QApplication::wheelScrollLines()}
-    {wheelScrollLines} multipled by \l singleStep, and \l pageStep.
+    If you are using the mouse wheel to adjust the dial, the increment
+    value is determined by the lesser value of
+    \l{QApplication::wheelScrollLines()} {wheelScrollLines} multipled
+    by \l {QAbstractSlider::singleStep} {singleStep}, and
+    \l {QAbstractSlider::pageStep} {pageStep}.
 
     \table
     \row \o \inlineimage plastique-dial.png Screenshot of a dial in the Plastique widget style
@@ -318,7 +328,8 @@ void QDial::mousePressEvent(QMouseEvent *e)
 void QDial::mouseReleaseEvent(QMouseEvent * e)
 {
     Q_D(QDial);
-    if (e->buttons() & (~e->button())) {
+    if (e->buttons() & (~e->button()) ||
+       (e->button() != Qt::LeftButton)) {
         e->ignore();
         return;
     }

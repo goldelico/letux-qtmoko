@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,17 +30,30 @@
 
 namespace WebCore {
 
+class HTMLElement;
+
 class InsertListCommand : public CompositeEditCommand {
 public:
     enum Type { OrderedList, UnorderedList };
-    static PassRefPtr<Node> insertList(Document*, Type);
+
+    static PassRefPtr<InsertListCommand> create(Document* document, Type listType, const String& listID)
+    {
+        return adoptRef(new InsertListCommand(document, listType, listID));
+    }
+
+    static PassRefPtr<HTMLElement> insertList(Document*, Type);
+    
+    virtual bool preservesTypingStyle() const { return true; }
+
+private:
     InsertListCommand(Document*, Type, const String&);
+
     virtual void doApply();
     virtual EditAction editingAction() const { return EditActionInsertList; }
-private:
-    Node* fixOrphanedListChild(Node*);
+
+    HTMLElement* fixOrphanedListChild(Node*);
     bool modifyRange();
-    RefPtr<Node> m_listElement;
+    RefPtr<HTMLElement> m_listElement;
     Type m_type;
     String m_id;
     bool m_forceCreateList;

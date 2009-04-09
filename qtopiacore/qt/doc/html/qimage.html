@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/image/qimage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/image/qimage.cpp -->
 <head>
-  <title>Qt 4.4: QImage Class Reference</title>
+  <title>Qt 4.5: QImage Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QImage Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -25,114 +25,113 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qimage.html#Format-enum">Format</a></b> { Format_Invalid, Format_Mono, Format_MonoLSB, Format_Indexed8, ..., Format_ARGB4444_Premultiplied }</li>
-<li><div class="fn"/>enum <b><a href="qimage.html#InvertMode-enum">InvertMode</a></b> { InvertRgb, InvertRgba }</li>
+<li><div class="fn"></div>enum <b><a href="qimage.html#Format-enum">Format</a></b> { Format_Invalid, Format_Mono, Format_MonoLSB, Format_Indexed8, ..., Format_ARGB4444_Premultiplied }</li>
+<li><div class="fn"></div>enum <b><a href="qimage.html#InvertMode-enum">InvertMode</a></b> { InvertRgb, InvertRgba }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qimage.html#QImage">QImage</a></b> ()</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-2">QImage</a></b> ( const QSize &amp; <i>size</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-3">QImage</a></b> ( int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-4">QImage</a></b> ( uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-5">QImage</a></b> ( const uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-6">QImage</a></b> ( uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, int <i>bytesPerLine</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-7">QImage</a></b> ( const uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, int <i>bytesPerLine</i>, Format <i>format</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-8">QImage</a></b> ( const char * const[] <i>xpm</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-9">QImage</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-10">QImage</a></b> ( const char * <i>fileName</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qimage.html#QImage-11">QImage</a></b> ( const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/><b><a href="qimage.html#dtor.QImage">~QImage</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#allGray">allGray</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#alphaChannel">alphaChannel</a></b> () const</li>
-<li><div class="fn"/>uchar * <b><a href="qimage.html#bits">bits</a></b> ()</li>
-<li><div class="fn"/>const uchar * <b><a href="qimage.html#bits-2">bits</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#bytesPerLine">bytesPerLine</a></b> () const</li>
-<li><div class="fn"/>qint64 <b><a href="qimage.html#cacheKey">cacheKey</a></b> () const</li>
-<li><div class="fn"/>QRgb <b><a href="qimage.html#color">color</a></b> ( int <i>i</i> ) const</li>
-<li><div class="fn"/>QVector&lt;QRgb&gt; <b><a href="qimage.html#colorTable">colorTable</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#convertToFormat">convertToFormat</a></b> ( Format <i>format</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#convertToFormat-2">convertToFormat</a></b> ( Format <i>format</i>, const QVector&lt;QRgb&gt; &amp; <i>colorTable</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#copy">copy</a></b> ( const QRect &amp; <i>rectangle</i> = QRect() ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#copy-4">copy</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#createAlphaMask">createAlphaMask</a></b> ( Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#createHeuristicMask">createHeuristicMask</a></b> ( bool <i>clipTight</i> = true ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#createMaskFromColor">createMaskFromColor</a></b> ( QRgb <i>color</i>, Qt::MaskMode <i>mode</i> = Qt::MaskInColor ) const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#depth">depth</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#dotsPerMeterX">dotsPerMeterX</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qimage.html#fill">fill</a></b> ( uint <i>pixelValue</i> )</li>
-<li><div class="fn"/>Format <b><a href="qimage.html#format">format</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#hasAlphaChannel">hasAlphaChannel</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#height">height</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qimage.html#invertPixels">invertPixels</a></b> ( InvertMode <i>mode</i> = InvertRgb )</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#isGrayscale">isGrayscale</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#isNull">isNull</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#load">load</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#load-2">load</a></b> ( QIODevice * <i>device</i>, const char * <i>format</i> )</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#loadFromData">loadFromData</a></b> ( const uchar * <i>data</i>, int <i>len</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#loadFromData-2">loadFromData</a></b> ( const QByteArray &amp; <i>data</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#mirrored">mirrored</a></b> ( bool <i>horizontal</i> = false, bool <i>vertical</i> = true ) const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#numBytes">numBytes</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#numColors">numColors</a></b> () const</li>
-<li><div class="fn"/>QPoint <b><a href="qimage.html#offset">offset</a></b> () const</li>
-<li><div class="fn"/>QRgb <b><a href="qimage.html#pixel">pixel</a></b> ( const QPoint &amp; <i>position</i> ) const</li>
-<li><div class="fn"/>QRgb <b><a href="qimage.html#pixel-2">pixel</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#pixelIndex">pixelIndex</a></b> ( const QPoint &amp; <i>position</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#pixelIndex-2">pixelIndex</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
-<li><div class="fn"/>QRect <b><a href="qimage.html#rect">rect</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#rgbSwapped">rgbSwapped</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#save">save</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0, int <i>quality</i> = -1 ) const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#save-2">save</a></b> ( QIODevice * <i>device</i>, const char * <i>format</i> = 0, int <i>quality</i> = -1 ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#scaled">scaled</a></b> ( const QSize &amp; <i>size</i>, Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio, Qt::TransformationMode <i>transformMode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#scaled-2">scaled</a></b> ( int <i>width</i>, int <i>height</i>, Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio, Qt::TransformationMode <i>transformMode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#scaledToHeight">scaledToHeight</a></b> ( int <i>height</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#scaledToWidth">scaledToWidth</a></b> ( int <i>width</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>uchar * <b><a href="qimage.html#scanLine">scanLine</a></b> ( int <i>i</i> )</li>
-<li><div class="fn"/>const uchar * <b><a href="qimage.html#scanLine-2">scanLine</a></b> ( int <i>i</i> ) const</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setAlphaChannel">setAlphaChannel</a></b> ( const QImage &amp; <i>alphaChannel</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setColor">setColor</a></b> ( int <i>index</i>, QRgb <i>colorValue</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setColorTable">setColorTable</a></b> ( const QVector&lt;QRgb&gt; <i>colors</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setDotsPerMeterX">setDotsPerMeterX</a></b> ( int <i>x</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setDotsPerMeterY">setDotsPerMeterY</a></b> ( int <i>y</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setNumColors">setNumColors</a></b> ( int <i>numColors</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setOffset">setOffset</a></b> ( const QPoint &amp; <i>offset</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setPixel">setPixel</a></b> ( const QPoint &amp; <i>position</i>, uint <i>index_or_rgb</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setPixel-2">setPixel</a></b> ( int <i>x</i>, int <i>y</i>, uint <i>index_or_rgb</i> )</li>
-<li><div class="fn"/>void <b><a href="qimage.html#setText">setText</a></b> ( const QString &amp; <i>key</i>, const QString &amp; <i>text</i> )</li>
-<li><div class="fn"/>QSize <b><a href="qimage.html#size">size</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qimage.html#text">text</a></b> ( const QString &amp; <i>key</i> = QString() ) const</li>
-<li><div class="fn"/>QStringList <b><a href="qimage.html#textKeys">textKeys</a></b> () const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#transformed">transformed</a></b> ( const QMatrix &amp; <i>matrix</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#transformed-2">transformed</a></b> ( const QTransform &amp; <i>matrix</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#valid">valid</a></b> ( const QPoint &amp; <i>pos</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#valid-2">valid</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
-<li><div class="fn"/>int <b><a href="qimage.html#width">width</a></b> () const</li>
-<li><div class="fn"/><b><a href="qimage.html#operator-QVariant">operator QVariant</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#operator-not-eq">operator!=</a></b> ( const QImage &amp; <i>image</i> ) const</li>
-<li><div class="fn"/>QImage &amp; <b><a href="qimage.html#operator-eq">operator=</a></b> ( const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>bool <b><a href="qimage.html#operator-eq-eq">operator==</a></b> ( const QImage &amp; <i>image</i> ) const</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage">QImage</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-2">QImage</a></b> ( const QSize &amp; <i>size</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-3">QImage</a></b> ( int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-4">QImage</a></b> ( uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-5">QImage</a></b> ( const uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-6">QImage</a></b> ( uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, int <i>bytesPerLine</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-7">QImage</a></b> ( const uchar * <i>data</i>, int <i>width</i>, int <i>height</i>, int <i>bytesPerLine</i>, Format <i>format</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-8">QImage</a></b> ( const char * const[] <i>xpm</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-9">QImage</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-10">QImage</a></b> ( const char * <i>fileName</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qimage.html#QImage-11">QImage</a></b> ( const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div><b><a href="qimage.html#dtor.QImage">~QImage</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#allGray">allGray</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#alphaChannel">alphaChannel</a></b> () const</li>
+<li><div class="fn"></div>uchar * <b><a href="qimage.html#bits">bits</a></b> ()</li>
+<li><div class="fn"></div>const uchar * <b><a href="qimage.html#bits-2">bits</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#bytesPerLine">bytesPerLine</a></b> () const</li>
+<li><div class="fn"></div>qint64 <b><a href="qimage.html#cacheKey">cacheKey</a></b> () const</li>
+<li><div class="fn"></div>QRgb <b><a href="qimage.html#color">color</a></b> ( int <i>i</i> ) const</li>
+<li><div class="fn"></div>QVector&lt;QRgb&gt; <b><a href="qimage.html#colorTable">colorTable</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#convertToFormat">convertToFormat</a></b> ( Format <i>format</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#convertToFormat-2">convertToFormat</a></b> ( Format <i>format</i>, const QVector&lt;QRgb&gt; &amp; <i>colorTable</i>, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#copy">copy</a></b> ( const QRect &amp; <i>rectangle</i> = QRect() ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#copy-4">copy</a></b> ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#createAlphaMask">createAlphaMask</a></b> ( Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#createHeuristicMask">createHeuristicMask</a></b> ( bool <i>clipTight</i> = true ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#createMaskFromColor">createMaskFromColor</a></b> ( QRgb <i>color</i>, Qt::MaskMode <i>mode</i> = Qt::MaskInColor ) const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#depth">depth</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#dotsPerMeterX">dotsPerMeterX</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#fill">fill</a></b> ( uint <i>pixelValue</i> )</li>
+<li><div class="fn"></div>Format <b><a href="qimage.html#format">format</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#hasAlphaChannel">hasAlphaChannel</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#height">height</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#invertPixels">invertPixels</a></b> ( InvertMode <i>mode</i> = InvertRgb )</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#isGrayscale">isGrayscale</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#isNull">isNull</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#load">load</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#load-2">load</a></b> ( QIODevice * <i>device</i>, const char * <i>format</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#loadFromData">loadFromData</a></b> ( const uchar * <i>data</i>, int <i>len</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#loadFromData-2">loadFromData</a></b> ( const QByteArray &amp; <i>data</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#mirrored">mirrored</a></b> ( bool <i>horizontal</i> = false, bool <i>vertical</i> = true ) const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#numBytes">numBytes</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#numColors">numColors</a></b> () const</li>
+<li><div class="fn"></div>QPoint <b><a href="qimage.html#offset">offset</a></b> () const</li>
+<li><div class="fn"></div>QRgb <b><a href="qimage.html#pixel">pixel</a></b> ( const QPoint &amp; <i>position</i> ) const</li>
+<li><div class="fn"></div>QRgb <b><a href="qimage.html#pixel-2">pixel</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#pixelIndex">pixelIndex</a></b> ( const QPoint &amp; <i>position</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#pixelIndex-2">pixelIndex</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
+<li><div class="fn"></div>QRect <b><a href="qimage.html#rect">rect</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#rgbSwapped">rgbSwapped</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#save">save</a></b> ( const QString &amp; <i>fileName</i>, const char * <i>format</i> = 0, int <i>quality</i> = -1 ) const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#save-2">save</a></b> ( QIODevice * <i>device</i>, const char * <i>format</i> = 0, int <i>quality</i> = -1 ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#scaled">scaled</a></b> ( const QSize &amp; <i>size</i>, Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio, Qt::TransformationMode <i>transformMode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#scaled-2">scaled</a></b> ( int <i>width</i>, int <i>height</i>, Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio, Qt::TransformationMode <i>transformMode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#scaledToHeight">scaledToHeight</a></b> ( int <i>height</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#scaledToWidth">scaledToWidth</a></b> ( int <i>width</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>uchar * <b><a href="qimage.html#scanLine">scanLine</a></b> ( int <i>i</i> )</li>
+<li><div class="fn"></div>const uchar * <b><a href="qimage.html#scanLine-2">scanLine</a></b> ( int <i>i</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setColor">setColor</a></b> ( int <i>index</i>, QRgb <i>colorValue</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setColorTable">setColorTable</a></b> ( const QVector&lt;QRgb&gt; <i>colors</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setDotsPerMeterX">setDotsPerMeterX</a></b> ( int <i>x</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setDotsPerMeterY">setDotsPerMeterY</a></b> ( int <i>y</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setNumColors">setNumColors</a></b> ( int <i>numColors</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setOffset">setOffset</a></b> ( const QPoint &amp; <i>offset</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setPixel">setPixel</a></b> ( const QPoint &amp; <i>position</i>, uint <i>index_or_rgb</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setPixel-2">setPixel</a></b> ( int <i>x</i>, int <i>y</i>, uint <i>index_or_rgb</i> )</li>
+<li><div class="fn"></div>void <b><a href="qimage.html#setText">setText</a></b> ( const QString &amp; <i>key</i>, const QString &amp; <i>text</i> )</li>
+<li><div class="fn"></div>QSize <b><a href="qimage.html#size">size</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qimage.html#text">text</a></b> ( const QString &amp; <i>key</i> = QString() ) const</li>
+<li><div class="fn"></div>QStringList <b><a href="qimage.html#textKeys">textKeys</a></b> () const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#transformed">transformed</a></b> ( const QMatrix &amp; <i>matrix</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#transformed-2">transformed</a></b> ( const QTransform &amp; <i>matrix</i>, Qt::TransformationMode <i>mode</i> = Qt::FastTransformation ) const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#valid">valid</a></b> ( const QPoint &amp; <i>pos</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#valid-2">valid</a></b> ( int <i>x</i>, int <i>y</i> ) const</li>
+<li><div class="fn"></div>int <b><a href="qimage.html#width">width</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qimage.html#operator-QVariant">operator QVariant</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#operator-not-eq">operator!=</a></b> ( const QImage &amp; <i>image</i> ) const</li>
+<li><div class="fn"></div>QImage &amp; <b><a href="qimage.html#operator-eq">operator=</a></b> ( const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qimage.html#operator-eq-eq">operator==</a></b> ( const QImage &amp; <i>image</i> ) const</li>
 </ul>
 <ul>
-<li><div class="fn"/>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QImage <b><a href="qimage.html#fromData">fromData</a></b> ( const uchar * <i>data</i>, int <i>size</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/>QImage <b><a href="qimage.html#fromData-2">fromData</a></b> ( const QByteArray &amp; <i>data</i>, const char * <i>format</i> = 0 )</li>
-<li><div class="fn"/>QMatrix <b><a href="qimage.html#trueMatrix">trueMatrix</a></b> ( const QMatrix &amp; <i>matrix</i>, int <i>width</i>, int <i>height</i> )</li>
-<li><div class="fn"/>QTransform <b><a href="qimage.html#trueMatrix-2">trueMatrix</a></b> ( const QTransform &amp; <i>matrix</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#fromData">fromData</a></b> ( const uchar * <i>data</i>, int <i>size</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div>QImage <b><a href="qimage.html#fromData-2">fromData</a></b> ( const QByteArray &amp; <i>data</i>, const char * <i>format</i> = 0 )</li>
+<li><div class="fn"></div>QMatrix <b><a href="qimage.html#trueMatrix">trueMatrix</a></b> ( const QMatrix &amp; <i>matrix</i>, int <i>width</i>, int <i>height</i> )</li>
+<li><div class="fn"></div>QTransform <b><a href="qimage.html#trueMatrix-2">trueMatrix</a></b> ( const QTransform &amp; <i>matrix</i>, int <i>width</i>, int <i>height</i> )</li>
 </ul>
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"/>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-17">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"/>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-9">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-86">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-54">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -170,7 +169,6 @@
 <tr valign="top" class="even"><td>XBM</td><td>X11 Bitmap</td><td>Read/write</td></tr>
 <tr valign="top" class="odd"><td>XPM</td><td>X11 Pixmap</td><td>Read/write</td></tr>
 </table></p>
-<p>(To configure Qt with GIF support, pass <tt>-qt-gif</tt> to the <tt>configure</tt> script or check the appropriate option in the graphical installer.)</p>
 <a name="image-information"></a>
 <h3>Image Information</h3>
 <p>QImage provides a collection of functions that can be used to obtain a variety of information about the image:</p>
@@ -246,7 +244,7 @@
 <p>There are also functions for changing attributes of an image in-place:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Function</th><th>Description</th></tr></thead>
-<tr valign="top" class="odd"><td><a href="qimage.html#setAlphaChannel">setAlphaChannel</a>()</td><td>Sets the alpha channel of the image.</td></tr>
+<tr valign="top" class="odd"><td><a href="qimage-obsolete.html#setAlphaChannel">setAlphaChannel</a>()</td><td>Sets the alpha channel of the image.</td></tr>
 <tr valign="top" class="even"><td><a href="qimage.html#setDotsPerMeterX">setDotsPerMeterX</a>()</td><td>Defines the aspect ratio by setting the number of pixels that fit horizontally in a physical meter.</td></tr>
 <tr valign="top" class="odd"><td><a href="qimage.html#setDotsPerMeterY">setDotsPerMeterY</a>()</td><td>Defines the aspect ratio by setting the number of pixels that fit vertically in a physical meter.</td></tr>
 <tr valign="top" class="even"><td><a href="qimage.html#fill">fill</a>()</td><td>Fills the entire image with the given pixel value.</td></tr>
@@ -358,7 +356,7 @@
 <h3 class="fn"><a name="alphaChannel"></a>QImage QImage::alphaChannel () const</h3>
 <p>Returns the alpha channel of the image as a new grayscale <a href="qimage.html">QImage</a> in which each pixel's red, green, and blue values are given the alpha value of the original image. The color depth of the returned image is 8-bit.</p>
 <p>You can see an example of use of this function in <a href="qpixmap.html">QPixmap</a>'s <a href="qpixmap.html#alphaChannel">alphaChannel()</a>, which works in the same way as this function on QPixmaps.</p>
-<p>See also <a href="qimage.html#setAlphaChannel">setAlphaChannel</a>(), <a href="qimage.html#hasAlphaChannel">hasAlphaChannel</a>(), <a href="qpixmap.html#pixmap-information">Pixmap</a>, and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
+<p>See also <a href="qimage-obsolete.html#setAlphaChannel">setAlphaChannel</a>(), <a href="qimage.html#hasAlphaChannel">hasAlphaChannel</a>(), <a href="qpixmap.html#pixmap-information">Pixmap</a>, and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="bits"></a><a href="qtglobal.html#uchar-typedef">uchar</a> * QImage::bits ()</h3>
 <p>Returns a pointer to the first pixel data. This is equivalent to scanLine(0).</p>
 <p>Note that <a href="qimage.html">QImage</a> uses <a href="shared.html#implicit-data-sharing">implicit data sharing</a>. This function performs a deep copy of the shared pixel data, thus ensuring that this <a href="qimage.html">QImage</a> is the only one using the current return value.</p>
@@ -415,7 +413,7 @@
 <h3 class="fn"><a name="depth"></a>int QImage::depth () const</h3>
 <p>Returns the depth of the image.</p>
 <p>The image depth is the number of bits used to encode a single pixel, also called bits per pixel (bpp).</p>
-<p>The supported depths are 1, 8, 16 and 32.</p>
+<p>The supported depths are 1, 8, 16, 24 and 32.</p>
 <p>See also <a href="qimage.html#convertToFormat">convertToFormat</a>(), <a href="qimage.html#image-formats">Image Formats</a>, and <a href="qimage.html#image-information">Image Information</a>.</p>
 <h3 class="fn"><a name="dotsPerMeterX"></a>int QImage::dotsPerMeterX () const</h3>
 <p>Returns the number of pixels that fit horizontally in a physical meter. Together with <a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a>(), this number defines the intended scale and aspect ratio of the image.</p>
@@ -550,11 +548,6 @@
 <p>See also <a href="qimage.html#bytesPerLine">bytesPerLine</a>(), <a href="qimage.html#bits">bits</a>(), and <a href="qimage.html#pixel-manipulation">Pixel Manipulation</a>.</p>
 <h3 class="fn"><a name="scanLine-2"></a>const <a href="qtglobal.html#uchar-typedef">uchar</a> * QImage::scanLine ( int <i>i</i> ) const</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
-<h3 class="fn"><a name="setAlphaChannel"></a>void QImage::setAlphaChannel ( const QImage &amp; <i>alphaChannel</i> )</h3>
-<p>Sets the alpha channel of this image to the given <i>alphaChannel</i>.</p>
-<p>If <i>alphaChannel</i> is an 8 bit grayscale image, the intensity values are written into this buffer directly. Otherwise, <i>alphaChannel</i> is converted to 32 bit and the intensity of the RGB pixel values is used.</p>
-<p>Note that the image will be converted to the <a href="qimage.html#Format-enum">Format_ARGB32_Premultiplied</a> format if the function succeeds.</p>
-<p>See also <a href="qimage.html#alphaChannel">alphaChannel</a>(), <a href="qimage.html#image-transformations">Image Transformations</a>, and <a href="qimage.html#image-formats">Image Formats</a>.</p>
 <h3 class="fn"><a name="setColor"></a>void QImage::setColor ( int <i>index</i>, <a href="qcolor.html#QRgb-typedef">QRgb</a> <i>colorValue</i> )</h3>
 <p>Sets the color at the given <i>index</i> in the color table, to the given to <i>colorValue</i>. The color value is an ARGB quadruplet.</p>
 <p>If <i>index</i> is outside the current size of the color table, it is expanded with <a href="qimage.html#setNumColors">setNumColors</a>().</p>
@@ -614,7 +607,6 @@
 <p>The transformation <i>matrix</i> is internally adjusted to compensate for unwanted translation; i.e&#x2e; the image produced is the smallest image that contains all the transformed points of the original image. Use the <a href="qimage.html#trueMatrix">trueMatrix</a>() function to retrieve the actual matrix used for transforming an image.</p>
 <p>See also <a href="qimage.html#trueMatrix">trueMatrix</a>() and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="transformed-2"></a>QImage QImage::transformed ( const <a href="qtransform.html">QTransform</a> &amp; <i>matrix</i>, <a href="qt.html#TransformationMode-enum">Qt::TransformationMode</a> <i>mode</i> = Qt::FastTransformation ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns a copy of the image that is transformed using the given transformation <i>matrix</i> and transformation <i>mode</i>.</p>
 <p>The transformation <i>matrix</i> is internally adjusted to compensate for unwanted translation; i.e&#x2e; the image produced is the smallest image that contains all the transformed points of the original image. Use the <a href="qimage.html#trueMatrix">trueMatrix</a>() function to retrieve the actual matrix used for transforming an image.</p>
 <p>Unlike the other overload, this function can be used to perform perspective transformations on images.</p>
@@ -624,7 +616,6 @@
 <p>When transforming an image using the <a href="qimage.html#transformed">transformed</a>() function, the transformation matrix is internally adjusted to compensate for unwanted translation, i.e&#x2e; <a href="qimage.html#transformed">transformed</a>() returns the smallest image containing all transformed points of the original image. This function returns the modified matrix, which maps points correctly from the original image into the new image.</p>
 <p>See also <a href="qimage.html#transformed">transformed</a>() and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="trueMatrix-2"></a><a href="qtransform.html">QTransform</a> QImage::trueMatrix ( const <a href="qtransform.html">QTransform</a> &amp; <i>matrix</i>, int <i>width</i>, int <i>height</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the actual matrix used for transforming an image with the given <i>width</i>, <i>height</i> and <i>matrix</i>.</p>
 <p>When transforming an image using the <a href="qimage.html#transformed">transformed</a>() function, the transformation matrix is internally adjusted to compensate for unwanted translation, i.e&#x2e; <a href="qimage.html#transformed">transformed</a>() returns the smallest image containing all transformed points of the original image. This function returns the modified matrix, which maps points correctly from the original image into the new image.</p>
 <p>Unlike the other overload, this function creates transformation matrices that can be used to perform perspective transformations on images.</p>
@@ -654,18 +645,16 @@
 <p>See also <a href="qimage.html#operator-eq">operator=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-17"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<h3 class="fn"><a name="operator-lt-lt-86"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
 <p>Writes the given <i>image</i> to the given <i>stream</i> as a PNG image, or as a BMP image if the stream's version is 1. Note that writing the stream to a file will not produce a valid image file.</p>
 <p>See also <a href="qimage.html#save">QImage::save</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-9"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<h3 class="fn"><a name="operator-gt-gt-54"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
 <p>Reads an image from the given <i>stream</i> and stores it in the given <i>image</i>.</p>
 <p>See also <a href="qimage.html#load">QImage::load</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

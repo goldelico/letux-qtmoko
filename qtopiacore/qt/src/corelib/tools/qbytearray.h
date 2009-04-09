@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -139,8 +143,10 @@ public:
     void reserve(int size);
     void squeeze();
 
+#ifndef QT_NO_CAST_FROM_BYTEARRAY
     operator const char *() const;
     operator const void *() const;
+#endif
     char *data();
     const char *data() const;
     inline const char *constData() const;
@@ -161,10 +167,10 @@ public:
     QByteRef operator[](uint i);
 
     int indexOf(char c, int from = 0) const;
-    inline int indexOf(const char *c, int from = 0) const;
+    int indexOf(const char *c, int from = 0) const;
     int indexOf(const QByteArray &a, int from = 0) const;
     int lastIndexOf(char c, int from = -1) const;
-    inline int lastIndexOf(const char *c, int from = -1) const;
+    int lastIndexOf(const char *c, int from = -1) const;
     int lastIndexOf(const QByteArray &a, int from = -1) const;
 
     QBool contains(char c) const;
@@ -209,6 +215,7 @@ public:
     QByteArray &prepend(const QByteArray &a);
     QByteArray &append(char c);
     QByteArray &append(const char *s);
+    QByteArray &append(const char *s, int len);
     QByteArray &append(const QByteArray &a);
     QByteArray &insert(int i, char c);
     QByteArray &insert(int i, const char *s);
@@ -219,6 +226,7 @@ public:
     QByteArray &replace(char before, const char *after);
     QByteArray &replace(char before, const QByteArray &after);
     QByteArray &replace(const char *before, const char *after);
+    QByteArray &replace(const char *before, int bsize, const char *after, int asize);
     QByteArray &replace(const QByteArray &before, const QByteArray &after);
     QByteArray &replace(const QByteArray &before, const char *after);
     QByteArray &replace(const char *before, const QByteArray &after);
@@ -228,6 +236,8 @@ public:
     QByteArray &operator+=(const QByteArray &a);
 
     QList<QByteArray> split(char sep) const;
+
+    QByteArray repeated(int times) const;
 
 #ifndef QT_NO_CAST_TO_ASCII
     QT_ASCII_CAST_WARN QByteArray &append(const QString &s);
@@ -352,6 +362,7 @@ private:
     QByteArray(Data *dd, int /*dummy*/, int /*dummy*/) : d(dd) {}
     void realloc(int alloc);
     void expand(int i);
+    QByteArray nulTerminated() const;
 
     friend class QByteRef;
     friend class QString;
@@ -383,10 +394,12 @@ inline char QByteArray::operator[](uint i) const
 
 inline bool QByteArray::isEmpty() const
 { return d->size == 0; }
+#ifndef QT_NO_CAST_FROM_BYTEARRAY
 inline QByteArray::operator const char *() const
 { return d->data; }
 inline QByteArray::operator const void *() const
 { return d->data; }
+#endif
 inline char *QByteArray::data()
 { detach(); return d->data; }
 inline const char *QByteArray::data() const
@@ -428,10 +441,10 @@ public:
         { return i < a.d->size ? a.d->data[i] : 0; }
 #endif
     inline QByteRef &operator=(char c)
-        { if (a.d->ref != 1 || i >= a.d->size) a.expand(i);
+        { if (i >= a.d->size) a.expand(i); else a.detach();
           a.d->data[i] = c;  return *this; }
     inline QByteRef &operator=(const QByteRef &c)
-        { if (a.d->ref != 1 || i >= a.d->size) a.expand(i);
+        { if (i >= a.d->size) a.expand(i); else a.detach();
           a.d->data[i] = c.a.d->data[c.i];  return *this; }
     inline bool operator==(char c) const
     { return a.d->data[i] == c; }
@@ -486,7 +499,7 @@ inline QBool QByteArray::contains(const QByteArray &a) const
 inline QBool QByteArray::contains(char c) const
 { return QBool(indexOf(c) != -1); }
 inline bool operator==(const QByteArray &a1, const QByteArray &a2)
-{ return (a1.size() == a2.size()) && (memcmp(a1, a2, a1.size())==0); }
+{ return (a1.size() == a2.size()) && (memcmp(a1.constData(), a2.constData(), a1.size())==0); }
 inline bool operator==(const QByteArray &a1, const char *a2)
 { return a2 ? qstrcmp(a1,a2) == 0 : a1.isEmpty(); }
 inline bool operator==(const char *a1, const QByteArray &a2)
@@ -531,22 +544,14 @@ inline const QByteArray operator+(const char *a1, const QByteArray &a2)
 { return QByteArray(a1) += a2; }
 inline const QByteArray operator+(char a1, const QByteArray &a2)
 { return QByteArray(&a1, 1) += a2; }
-inline int QByteArray::indexOf(const char *c, int i) const
-{ return indexOf(fromRawData(c, qstrlen(c)), i); }
-inline int QByteArray::lastIndexOf(const char *c, int i) const
-{ return lastIndexOf(fromRawData(c, qstrlen(c)), i); }
 inline QBool QByteArray::contains(const char *c) const
-{ return contains(fromRawData(c, qstrlen(c))); }
-inline QByteArray &QByteArray::replace(int index, int len, const char *c)
-{ return replace(index, len, fromRawData(c, qstrlen(c))); }
+{ return QBool(indexOf(c) != -1); }
 inline QByteArray &QByteArray::replace(char before, const char *c)
-{ return replace(before, fromRawData(c, qstrlen(c))); }
+{ return replace(&before, 1, c, qstrlen(c)); }
 inline QByteArray &QByteArray::replace(const QByteArray &before, const char *c)
-{ return replace(before, fromRawData(c, qstrlen(c))); }
-inline QByteArray &QByteArray::replace(const char *c, const QByteArray &after)
-{ return replace(fromRawData(c, qstrlen(c)), after); }
+{ return replace(before.constData(), before.size(), c, qstrlen(c)); }
 inline QByteArray &QByteArray::replace(const char *before, const char *after)
-{ return replace(fromRawData(before, qstrlen(before)), fromRawData(after, qstrlen(after))); }
+{ return replace(before, qstrlen(before), after, qstrlen(after)); }
 
 inline QByteArray &QByteArray::setNum(short n, int base)
 { return setNum(qlonglong(n), base); }

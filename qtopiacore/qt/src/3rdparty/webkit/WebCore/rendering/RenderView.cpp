@@ -25,6 +25,7 @@
 
 #include "Document.h"
 #include "Element.h"
+#include "Frame.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "RenderLayer.h"
@@ -72,13 +73,13 @@ RenderView::~RenderView()
 void RenderView::calcHeight()
 {
     if (!printing() && m_frameView)
-        m_height = m_frameView->visibleHeight();
+        m_height = viewHeight();
 }
 
 void RenderView::calcWidth()
 {
     if (!printing() && m_frameView)
-        m_width = m_frameView->visibleWidth();
+        m_width = viewWidth();
     m_marginLeft = 0;
     m_marginRight = 0;
 }
@@ -97,10 +98,16 @@ void RenderView::layout()
     if (printing())
         m_minPrefWidth = m_maxPrefWidth = m_width;
 
-    bool relayoutChildren = !printing() && (!m_frameView || m_width != m_frameView->visibleWidth() || m_height != m_frameView->visibleHeight());
-    if (relayoutChildren)
+    // Use calcWidth/Height to get the new width/height, since this will take the full page zoom factor into account.
+    bool relayoutChildren = !printing() && (!m_frameView || m_width != viewWidth() || m_height != viewHeight());
+    if (relayoutChildren) {
         setChildNeedsLayout(true, false);
-    
+        for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
+            if (child->style()->height().isPercent() || child->style()->minHeight().isPercent() || child->style()->maxHeight().isPercent())
+                child->setChildNeedsLayout(true, false);
+        }
+    }
+
     ASSERT(!m_layoutState);
     LayoutState state;
     // FIXME: May be better to push a clip and avoid issuing offscreen repaints.
@@ -117,20 +124,36 @@ void RenderView::layout()
     setOverflowWidth(docWidth());
     setOverflowHeight(docHeight());
 
+    ASSERT(layoutDelta() == IntSize());
     ASSERT(m_layoutStateDisableCount == 0);
     ASSERT(m_layoutState == &state);
     m_layoutState = 0;
     setNeedsLayout(false);
 }
 
-bool RenderView::absolutePosition(int& xPos, int& yPos, bool fixed) const
+FloatPoint RenderView::localToAbsolute(FloatPoint localPoint, bool fixed, bool) const
 {
-    if (fixed && m_frameView) {
-        xPos = m_frameView->contentsX();
-        yPos = m_frameView->contentsY();
-    } else
-        xPos = yPos = 0;
-    return true;
+    if (fixed && m_frameView)
+        localPoint += m_frameView->scrollOffset();
+
+    return localPoint;
+}
+
+FloatPoint RenderView::absoluteToLocal(FloatPoint containerPoint, bool fixed, bool) const
+{
+    if (fixed && m_frameView)
+        containerPoint -= m_frameView->scrollOffset();
+
+    return containerPoint;
+}
+
+FloatQuad RenderView::localToAbsoluteQuad(const FloatQuad& localQuad, bool fixed) const
+{
+    FloatQuad quad = localQuad;
+    if (fixed && m_frameView)
+        quad += m_frameView->scrollOffset();
+
+    return quad;
 }
 
 void RenderView::paint(PaintInfo& paintInfo, int tx, int ty)
@@ -146,24 +169,36 @@ void RenderView::paint(PaintInfo& paintInfo, int tx, int ty)
     paintObject(paintInfo, tx, ty);
 }
 
-void RenderView::paintBoxDecorations(PaintInfo& paintInfo, int tx, int ty)
+static inline bool rendererObscuresBackground(RenderObject* object)
 {
-    // Check to see if we are enclosed by a transparent layer.  If so, we cannot blit
-    // when scrolling, and we need to use slow repaints.
-    Element* elt = document()->ownerElement();
-    if (view() && elt && elt->renderer()) {
+    return object && object->style()->visibility() == VISIBLE && object->style()->opacity() == 1 && !object->style()->hasTransform();
+}
+    
+void RenderView::paintBoxDecorations(PaintInfo& paintInfo, int, int)
+{
+    // Check to see if we are enclosed by a layer that requires complex painting rules.  If so, we cannot blit
+    // when scrolling, and we need to use slow repaints.  Examples of layers that require this are transparent layers,
+    // layers with reflections, or transformed layers.
+    // FIXME: This needs to be dynamic.  We should be able to go back to blitting if we ever stop being inside
+    // a transform, transparency layer, etc.
+    Element* elt;
+    for (elt = document()->ownerElement(); view() && elt && elt->renderer(); elt = elt->document()->ownerElement()) {
         RenderLayer* layer = elt->renderer()->enclosingLayer();
-        if (layer->isTransparent() || layer->transparentAncestor())
+        if (layer->requiresSlowRepaints()) {
             frameView()->setUseSlowRepaints();
+            break;
+        }
     }
 
-    if (elt || (firstChild() && firstChild()->style()->visibility() == VISIBLE) || !view())
+    // If painting will entirely fill the view, no need to fill the background.
+    if (elt || rendererObscuresBackground(firstChild()) || !view())
         return;
 
-    // This code typically only executes if the root element's visibility has been set to hidden.
+    // This code typically only executes if the root element's visibility has been set to hidden,
+    // or there is a transform on the <html>.
     // Only fill with the base background color (typically white) if we're the root document, 
     // since iframes/frames with no background in the child document should show the parent's background.
-    if (view()->isTransparent())
+    if (view()->isTransparent()) // FIXME: This needs to be dynamic.  We should be able to go back to blitting if we ever stop being transparent.
         frameView()->setUseSlowRepaints(); // The parent must show behind the child.
     else {
         Color baseColor = frameView()->baseBackgroundColor();
@@ -189,7 +224,7 @@ void RenderView::repaintViewRectangle(const IntRect& ur, bool immediate)
     // or even invisible.
     Element* elt = document()->ownerElement();
     if (!elt)
-        m_frameView->repaintRectangle(ur, immediate);
+        m_frameView->repaintContentRectangle(ur, immediate);
     else if (RenderObject* obj = elt->renderer()) {
         IntRect vr = viewRect();
         IntRect r = intersection(ur, vr);
@@ -211,12 +246,21 @@ void RenderView::computeAbsoluteRepaintRect(IntRect& rect, bool fixed)
         return;
 
     if (fixed && m_frameView)
-        rect.move(m_frameView->contentsX(), m_frameView->contentsY());
+        rect.move(m_frameView->scrollX(), m_frameView->scrollY());
+        
+    // Apply our transform if we have one (because of full page zooming).
+    if (m_layer && m_layer->transform())
+        rect = m_layer->transform()->mapRect(rect);
 }
 
 void RenderView::absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool)
 {
     rects.append(IntRect(tx, ty, m_layer->width(), m_layer->height()));
+}
+
+void RenderView::absoluteQuads(Vector<FloatQuad>& quads, bool)
+{
+    quads.append(FloatRect(0, 0, m_layer->width(), m_layer->height()));
 }
 
 RenderObject* rendererAfterPosition(RenderObject* object, unsigned offset)
@@ -228,7 +272,17 @@ RenderObject* rendererAfterPosition(RenderObject* object, unsigned offset)
     return child ? child : object->nextInPreOrderAfterChildren();
 }
 
-IntRect RenderView::selectionRect(bool clipToVisibleContent) const
+IntRect RenderView::selectionRect(bool clipToVisibleContent)
+{
+    // The virtual selectionRect() should never be called on the RenderView.
+    // We assert because there used to be ambiguity between
+    // RenderView::selectionRect(bool) and
+    // virtual RenderObject::selectionRect(bool) const
+    ASSERT_NOT_REACHED();
+    return RenderBlock::selectionRect(clipToVisibleContent);
+}
+
+IntRect RenderView::selectionBounds(bool clipToVisibleContent) const
 {
     document()->updateRendering();
 
@@ -299,7 +353,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     while (os && os != stop) {
         if ((os->canBeSelectionLeaf() || os == m_selectionStart || os == m_selectionEnd) && os->selectionState() != SelectionNone) {
             // Blocks are responsible for painting line gaps and margin gaps.  They must be examined as well.
-            oldSelectedObjects.set(os, new SelectionInfo(os, false));
+            oldSelectedObjects.set(os, new SelectionInfo(os, true));
             RenderBlock* cb = os->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = oldSelectedBlocks.get(cb);
@@ -348,7 +402,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     o = start;
     while (o && o != stop) {
         if ((o->canBeSelectionLeaf() || o == start || o == end) && o->selectionState() != SelectionNone) {
-            newSelectedObjects.set(o, new SelectionInfo(o, false));
+            newSelectedObjects.set(o, new SelectionInfo(o, true));
             RenderBlock* cb = o->containingBlock();
             while (cb && !cb->isRenderView()) {
                 BlockSelectionInfo* blockInfo = newSelectedBlocks.get(cb);
@@ -380,9 +434,9 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
         if (!newInfo || oldInfo->rect() != newInfo->rect() || oldInfo->state() != newInfo->state() ||
             (m_selectionStart == obj && oldStartPos != m_selectionStartPos) ||
             (m_selectionEnd == obj && oldEndPos != m_selectionEndPos)) {
-            m_frameView->updateContents(oldInfo->rect());
+            repaintViewRectangle(oldInfo->rect());
             if (newInfo) {
-                m_frameView->updateContents(newInfo->rect());
+                repaintViewRectangle(newInfo->rect());
                 newSelectedObjects.remove(obj);
                 delete newInfo;
             }
@@ -394,7 +448,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     SelectedObjectMap::iterator newObjectsEnd = newSelectedObjects.end();
     for (SelectedObjectMap::iterator i = newSelectedObjects.begin(); i != newObjectsEnd; ++i) {
         SelectionInfo* newInfo = i->second;
-        m_frameView->updateContents(newInfo->rect());
+        repaintViewRectangle(newInfo->rect());
         delete newInfo;
     }
 
@@ -405,9 +459,9 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
         BlockSelectionInfo* newInfo = newSelectedBlocks.get(block);
         BlockSelectionInfo* oldInfo = i->second;
         if (!newInfo || oldInfo->rects() != newInfo->rects() || oldInfo->state() != newInfo->state()) {
-            m_frameView->updateContents(oldInfo->rects());
+            repaintViewRectangle(oldInfo->rects());
             if (newInfo) {
-                m_frameView->updateContents(newInfo->rects());
+                repaintViewRectangle(newInfo->rects());
                 newSelectedBlocks.remove(block);
                 delete newInfo;
             }
@@ -419,7 +473,7 @@ void RenderView::setSelection(RenderObject* start, int startPos, RenderObject* e
     SelectedBlockMap::iterator newBlocksEnd = newSelectedBlocks.end();
     for (SelectedBlockMap::iterator i = newSelectedBlocks.begin(); i != newBlocksEnd; ++i) {
         BlockSelectionInfo* newInfo = i->second;
-        m_frameView->updateContents(newInfo->rects());
+        repaintViewRectangle(newInfo->rects());
         delete newInfo;
     }
 }
@@ -462,18 +516,13 @@ IntRect RenderView::viewRect() const
     if (printing())
         return IntRect(0, 0, m_width, m_height);
     if (m_frameView)
-        return enclosingIntRect(m_frameView->visibleContentRect());
+        return m_frameView->visibleContentRect();
     return IntRect();
 }
 
 int RenderView::docHeight() const
 {
-    int h;
-    if (printing() || !m_frameView)
-        h = m_height;
-    else
-        h = m_frameView->visibleHeight();
-
+    int h = m_height;
     int lowestPos = lowestPosition();
     if (lowestPos > h)
         h = lowestPos;
@@ -493,12 +542,7 @@ int RenderView::docHeight() const
 
 int RenderView::docWidth() const
 {
-    int w;
-    if (printing() || !m_frameView)
-        w = m_width;
-    else
-        w = m_frameView->visibleWidth();
-
+    int w = m_width;
     int rightmostPos = rightmostPosition();
     if (rightmostPos > w)
         w = rightmostPos;
@@ -510,6 +554,26 @@ int RenderView::docWidth() const
     }
 
     return w;
+}
+
+int RenderView::viewHeight() const
+{
+    int height = 0;
+    if (!printing() && m_frameView) {
+        height = m_frameView->layoutHeight();
+        height = m_frameView->useFixedLayout() ? ceilf(style()->effectiveZoom() * float(height)) : height;
+    }
+    return height;
+}
+
+int RenderView::viewWidth() const
+{
+    int width = 0;
+    if (!printing() && m_frameView) {
+        width = m_frameView->layoutWidth();
+        width = m_frameView->useFixedLayout() ? ceilf(style()->effectiveZoom() * float(width)) : width;
+    }
+    return width;
 }
 
 // The idea here is to take into account what object is moving the pagination point, and

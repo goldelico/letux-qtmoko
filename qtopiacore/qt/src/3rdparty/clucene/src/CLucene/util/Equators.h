@@ -1,22 +1,32 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_util_Equators_
 #define _lucene_util_Equators_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
-# pragma once
+#   pragma once
 #endif
+
+#include <QtCore/QString>
+
+//#ifdef QT_LINUXBASE
+// we are going to use qreal now, we basically maintain our own clucene anyway
+//// LSB doesn't define float_t - see http://bugs.linuxbase.org/show_bug.cgi?id=2374
+//typedef float float_t;
+//#endif
 
 CL_NS_DEF(util)
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Equators
-////////////////////////////////////////////////////////////////////////////////
-/** @internal */
+///////////////////////////////////////////////////////////////////////////////
+
 class Equals{
 public:
 	class Int32:public CL_NS_STD(binary_function)<const int32_t*,const int32_t*,bool>
@@ -43,7 +53,6 @@ public:
 	};
 #endif
 
-
     template<typename _cl>
 	class Void:public CL_NS_STD(binary_function)<const void*,const void*,bool>
 	{
@@ -52,14 +61,21 @@ public:
 			return val1==val2;
 		}
 	};
+
+    class Qstring : public CL_NS_STD(binary_function)<const QString&, const QString&, bool>
+    {
+    public:
+        bool operator() (const QString& val1, const QString& val2) const;
+    };
 };
 
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Comparors
-////////////////////////////////////////////////////////////////////////////////
-/** @internal */
-class Comparable:LUCENE_BASE{
+///////////////////////////////////////////////////////////////////////////////
+
+class Comparable : LUCENE_BASE
+{
 public:
    virtual ~Comparable(){
    }
@@ -97,10 +113,10 @@ public:
 
 	
 	class Float:public Comparable{
-		float_t value;
+		qreal value;
 	public:
-		float_t getValue() const;
-		Float(float_t val);
+		qreal getValue() const;
+		Float(qreal val);
 		int32_t compareTo(void* o);
 	};
 
@@ -151,13 +167,21 @@ public:
 			return (size_t)t;
 		}
 	};
+
+	class Qstring : public _base
+	{
+	public:
+		bool operator() (const QString& val1, const QString& val2) const;
+		size_t operator() (const QString& val1) const;
+	};
 };
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // allocators
-////////////////////////////////////////////////////////////////////////////////
-/** @internal */
-class Deletor{
+///////////////////////////////////////////////////////////////////////////////
+
+class Deletor
+{
 public:
 
 	template<typename _kt>
@@ -200,9 +224,11 @@ public:
 	};
 	class Dummy{
 	public:
-		static void doDelete(const void* nothing){
-			//todo: remove all occurances where it hits this point
-			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
+		static void doDelete(const void* nothing)
+        {
+			// TODO: remove all occurances where it hits this point
+			// CND_WARNING(false, "Deletor::Dummy::doDelete run, set deleteKey
+            // or deleteValue to false");
 		}
 	};
 	class DummyInt32{
@@ -212,24 +238,33 @@ public:
 	};
 	class DummyFloat{
 	public:
-		static void doDelete(const float_t nothing){
+		static void doDelete(const qreal nothing){
 		}
 	};
 	template <typename _type>
 	class ConstNullVal{
 	public:
-		static void doDelete(const _type nothing){
-			//todo: remove all occurances where it hits this point
-			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
+		static void doDelete(const _type nothing)
+        {
+			// TODO: remove all occurances where it hits this point
+			// CND_WARNING(false, "Deletor::Dummy::doDelete run, set deleteKey
+            // or deleteValue to false");
 		}
 	};
 	
 	template <typename _type>
 	class NullVal{
 	public:
-		static void doDelete(_type nothing){
-			//todo: remove all occurances where it hits this point
-			//CND_WARNING(false,"Deletor::Dummy::doDelete run, set deleteKey or deleteValue to false");
+		static void doDelete(_type nothing)
+        {
+			// TODO: remove all occurances where it hits this point
+			// CND_WARNING(false, "Deletor::Dummy::doDelete run, set deleteKey
+            // or deleteValue to false");
+		}
+	};
+	class DummyQString {
+	public:
+		static void doDelete(const QString& nothing) {
 		}
 	};
 };

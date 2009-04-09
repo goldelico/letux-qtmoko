@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt3Support module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -1921,7 +1925,8 @@ const QPixmap * Q3ListViewItem::pixmap(int column) const
     \sa paintBranches(), Q3ListView::drawContentsOffset()
 */
 
-static QStyleOptionQ3ListView getStyleOption(const Q3ListView *lv, const Q3ListViewItem *item)
+static QStyleOptionQ3ListView getStyleOption(const Q3ListView *lv, const Q3ListViewItem *item,
+                                             bool hierarchy = false)
 {
     QStyleOptionQ3ListView opt;
     opt.init(lv);
@@ -1935,11 +1940,12 @@ static QStyleOptionQ3ListView getStyleOption(const Q3ListView *lv, const Q3ListV
     opt.treeStepSize = lv->treeStepSize();
     opt.rootIsDecorated = lv->rootIsDecorated();
     bool firstItem = true;
+    int y = item ? item->itemPos() : 0;
     while (item) {
         QStyleOptionQ3ListViewItem lvi;
         lvi.height = item->height();
         lvi.totalHeight = item->totalHeight();
-        lvi.itemY = item->itemPos();
+        lvi.itemY = y;
         lvi.childCount = item->childCount();
         lvi.features = QStyleOptionQ3ListViewItem::None;
         lvi.state = QStyle::State_None;
@@ -1957,11 +1963,18 @@ static QStyleOptionQ3ListView getStyleOption(const Q3ListView *lv, const Q3ListV
             && static_cast<Q3CheckListItem *>(item->parent())->type() == Q3CheckListItem::Controller)
             lvi.features |= QStyleOptionQ3ListViewItem::ParentControl;
         opt.items.append(lvi);
-        if (!firstItem) {
-            item = item->nextSibling();
+        // we only care about the children when we are painting the branches
+        // this is only enabled by Q3ListViewItem::paintBranches
+        if (hierarchy) {
+            if (!firstItem) {
+                item = item->nextSibling();
+            } else {
+                firstItem = false;
+                item = item->firstChild();
+            }
+            y += lvi.height;
         } else {
-            firstItem = false;
-            item = item->firstChild();
+            break;
         }
     }
     return opt;
@@ -2070,7 +2083,7 @@ void Q3ListViewItem::paintCell(QPainter * p, const QColorGroup & cg,
     const QPixmap * icon = pixmap(column);
 
     const QPalette::ColorRole crole = lv->viewport()->backgroundRole();
-    if (pal.brush(crole) != lv->palette().brush(crole))
+    if (pal.brush(crole) != lv->palette().brush(pal.currentColorGroup(), crole))
         p->fillRect(0, 0, width, height(), pal.brush(crole));
     else
         lv->paintEmptyArea(p, QRect(0, 0, width, height()));
@@ -2246,7 +2259,7 @@ void Q3ListViewItem::paintBranches(QPainter * p, const QColorGroup & cg,
         lv->paintEmptyArea(p, QRect(0, 0, w, h));
     if (!visible || !lv)
         return;
-    QStyleOptionQ3ListView opt = getStyleOption(lv, this);
+    QStyleOptionQ3ListView opt = getStyleOption(lv, this, true);
     opt.rect.setRect(0, y, w, h);
     opt.palette = cg;
     opt.subControls = QStyle::SC_Q3ListViewBranch | QStyle::SC_Q3ListViewExpand;
@@ -3110,11 +3123,11 @@ void Q3ListView::insertItem(Q3ListViewItem * i)
 void Q3ListView::clear()
 {
     bool wasUpdatesEnabled = viewport()->updatesEnabled();
-    if (!wasUpdatesEnabled)
+    if (wasUpdatesEnabled)
         viewport()->setUpdatesEnabled(false);
     setContentsPos(0, 0);
-    if (!wasUpdatesEnabled)
-        viewport()->setUpdatesEnabled(true);
+    viewport()->setUpdatesEnabled(wasUpdatesEnabled);	
+
     bool block = signalsBlocked();
     blockSignals(true);
     d->clearing = true;
@@ -3513,6 +3526,7 @@ void Q3ListView::updateGeometries()
 #endif
     verticalScrollBar()->raise();
     resizeContents(tw, th);
+    d->drawables.clear();
     if (d->h->isHidden()) {
         setMargins(0, 0, 0, 0);
     } else {
@@ -3602,6 +3616,7 @@ void Q3ListView::updateDirtyItems()
         const Q3ListViewItem *item = d->dirtyItems.at(i);
         ir = ir.united(itemRect(item));
     }
+    d->dirtyItems.clear();
     if (!ir.isEmpty())  {                      // rectangle to be repainted
         if (ir.x() < 0)
             ir.moveBy(-ir.x(), 0);
@@ -6529,7 +6544,7 @@ void Q3CheckListItem::paintCell(QPainter * p, const QColorGroup & cg,
         return;
 
     const QPalette::ColorRole crole = lv->backgroundRole();
-    if (cg.brush(crole) != lv->palette().brush(crole))
+    if (cg.brush(crole) != lv->palette().brush(cg.currentColorGroup(), crole))
         p->fillRect(0, 0, width, height(), cg.brush(crole));
     else
         lv->paintEmptyArea(p, QRect(0, 0, width, height()));

@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/painting/qprinter.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qprinter.cpp -->
 <head>
-  <title>Qt 4.4: QPrinter Class Reference</title>
+  <title>Qt 4.5: QPrinter Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QPrinter Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -25,96 +25,96 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qprinter.html#ColorMode-enum">ColorMode</a></b> { Color, GrayScale }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#DuplexMode-enum">DuplexMode</a></b> { DuplexNone, DuplexAuto, DuplexLongSide, DuplexShortSide }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#Orientation-enum">Orientation</a></b> { Portrait, Landscape }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#OutputFormat-enum">OutputFormat</a></b> { NativeFormat, PdfFormat, PostScriptFormat }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PageOrder-enum">PageOrder</a></b> { FirstPageFirst, LastPageFirst }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PaperSize-enum">PaperSize</a></b> { A0, A1, A2, A3, ..., Custom }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PaperSource-enum">PaperSource</a></b> { Auto, Cassette, Envelope, EnvelopeManual, ..., SmallFormat }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PrintRange-enum">PrintRange</a></b> { AllPages, Selection, PageRange }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PrinterMode-enum">PrinterMode</a></b> { ScreenResolution, PrinterResolution, HighResolution }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#PrinterState-enum">PrinterState</a></b> { Idle, Active, Aborted, Error }</li>
-<li><div class="fn"/>enum <b><a href="qprinter.html#Unit-enum">Unit</a></b> { Millimeter, Point, Inch, Pica, ..., DevicePixel }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#ColorMode-enum">ColorMode</a></b> { Color, GrayScale }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#DuplexMode-enum">DuplexMode</a></b> { DuplexNone, DuplexAuto, DuplexLongSide, DuplexShortSide }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#Orientation-enum">Orientation</a></b> { Portrait, Landscape }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#OutputFormat-enum">OutputFormat</a></b> { NativeFormat, PdfFormat, PostScriptFormat }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PageOrder-enum">PageOrder</a></b> { FirstPageFirst, LastPageFirst }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PaperSize-enum">PaperSize</a></b> { A0, A1, A2, A3, ..., Custom }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PaperSource-enum">PaperSource</a></b> { Auto, Cassette, Envelope, EnvelopeManual, ..., SmallFormat }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PrintRange-enum">PrintRange</a></b> { AllPages, Selection, PageRange }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PrinterMode-enum">PrinterMode</a></b> { ScreenResolution, PrinterResolution, HighResolution }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#PrinterState-enum">PrinterState</a></b> { Idle, Active, Aborted, Error }</li>
+<li><div class="fn"></div>enum <b><a href="qprinter.html#Unit-enum">Unit</a></b> { Millimeter, Point, Inch, Pica, ..., DevicePixel }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qprinter.html#QPrinter">QPrinter</a></b> ( PrinterMode <i>mode</i> = ScreenResolution )</li>
-<li><div class="fn"/><b><a href="qprinter.html#QPrinter-2">QPrinter</a></b> ( const QPrinterInfo &amp; <i>printer</i>, PrinterMode <i>mode</i> = ScreenResolution )</li>
-<li><div class="fn"/><b><a href="qprinter.html#dtor.QPrinter">~QPrinter</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#abort">abort</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#collateCopies">collateCopies</a></b> () const</li>
-<li><div class="fn"/>ColorMode <b><a href="qprinter.html#colorMode">colorMode</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#creator">creator</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#docName">docName</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#doubleSidedPrinting">doubleSidedPrinting</a></b> () const</li>
-<li><div class="fn"/>DuplexMode <b><a href="qprinter.html#duplex">duplex</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#fontEmbeddingEnabled">fontEmbeddingEnabled</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qprinter.html#fromPage">fromPage</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#fullPage">fullPage</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#getPageMargins">getPageMargins</a></b> ( qreal * <i>left</i>, qreal * <i>top</i>, qreal * <i>right</i>, qreal * <i>bottom</i>, Unit <i>unit</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#isValid">isValid</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qprinter.html#newPage">newPage</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qprinter.html#numCopies">numCopies</a></b> () const</li>
-<li><div class="fn"/>Orientation <b><a href="qprinter.html#orientation">orientation</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#outputFileName">outputFileName</a></b> () const</li>
-<li><div class="fn"/>OutputFormat <b><a href="qprinter.html#outputFormat">outputFormat</a></b> () const</li>
-<li><div class="fn"/>PageOrder <b><a href="qprinter.html#pageOrder">pageOrder</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qprinter.html#pageRect">pageRect</a></b> () const</li>
-<li><div class="fn"/>QRectF <b><a href="qprinter.html#pageRect-2">pageRect</a></b> ( Unit <i>unit</i> ) const</li>
-<li><div class="fn"/>virtual QPaintEngine * <b><a href="qprinter.html#paintEngine">paintEngine</a></b> () const</li>
-<li><div class="fn"/>QRect <b><a href="qprinter.html#paperRect">paperRect</a></b> () const</li>
-<li><div class="fn"/>QRectF <b><a href="qprinter.html#paperRect-2">paperRect</a></b> ( Unit <i>unit</i> ) const</li>
-<li><div class="fn"/>PaperSize <b><a href="qprinter.html#paperSize">paperSize</a></b> () const</li>
-<li><div class="fn"/>QSizeF <b><a href="qprinter.html#paperSize-2">paperSize</a></b> ( Unit <i>unit</i> ) const</li>
-<li><div class="fn"/>PaperSource <b><a href="qprinter.html#paperSource">paperSource</a></b> () const</li>
-<li><div class="fn"/>QPrintEngine * <b><a href="qprinter.html#printEngine">printEngine</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#printProgram">printProgram</a></b> () const</li>
-<li><div class="fn"/>PrintRange <b><a href="qprinter.html#printRange">printRange</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#printerName">printerName</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qprinter.html#printerSelectionOption">printerSelectionOption</a></b> () const</li>
-<li><div class="fn"/>PrinterState <b><a href="qprinter.html#printerState">printerState</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qprinter.html#resolution">resolution</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setCollateCopies">setCollateCopies</a></b> ( bool <i>collate</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setColorMode">setColorMode</a></b> ( ColorMode <i>newColorMode</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setCreator">setCreator</a></b> ( const QString &amp; <i>creator</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setDocName">setDocName</a></b> ( const QString &amp; <i>name</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setDoubleSidedPrinting">setDoubleSidedPrinting</a></b> ( bool <i>doubleSided</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setDuplex">setDuplex</a></b> ( DuplexMode <i>duplex</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setFontEmbeddingEnabled">setFontEmbeddingEnabled</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setFromTo">setFromTo</a></b> ( int <i>from</i>, int <i>to</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setFullPage">setFullPage</a></b> ( bool <i>fp</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setNumCopies">setNumCopies</a></b> ( int <i>numCopies</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setOrientation">setOrientation</a></b> ( Orientation <i>orientation</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setOutputFileName">setOutputFileName</a></b> ( const QString &amp; <i>fileName</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setOutputFormat">setOutputFormat</a></b> ( OutputFormat <i>format</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPageMargins">setPageMargins</a></b> ( qreal <i>left</i>, qreal <i>top</i>, qreal <i>right</i>, qreal <i>bottom</i>, Unit <i>unit</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPageOrder">setPageOrder</a></b> ( PageOrder <i>pageOrder</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPaperSize">setPaperSize</a></b> ( PaperSize <i>newPaperSize</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPaperSize-2">setPaperSize</a></b> ( const QSizeF &amp; <i>paperSize</i>, Unit <i>unit</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPaperSource">setPaperSource</a></b> ( PaperSource <i>source</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPrintProgram">setPrintProgram</a></b> ( const QString &amp; <i>printProg</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPrintRange">setPrintRange</a></b> ( PrintRange <i>range</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPrinterName">setPrinterName</a></b> ( const QString &amp; <i>name</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setPrinterSelectionOption">setPrinterSelectionOption</a></b> ( const QString &amp; <i>option</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setResolution">setResolution</a></b> ( int <i>dpi</i> )</li>
-<li><div class="fn"/>void <b><a href="qprinter.html#setWinPageSize">setWinPageSize</a></b> ( int <i>pageSize</i> )</li>
-<li><div class="fn"/>QList&lt;PaperSource&gt; <b><a href="qprinter.html#supportedPaperSources">supportedPaperSources</a></b> () const</li>
-<li><div class="fn"/>QList&lt;int&gt; <b><a href="qprinter.html#supportedResolutions">supportedResolutions</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qprinter.html#toPage">toPage</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qprinter.html#winPageSize">winPageSize</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qprinter.html#QPrinter">QPrinter</a></b> ( PrinterMode <i>mode</i> = ScreenResolution )</li>
+<li><div class="fn"></div><b><a href="qprinter.html#QPrinter-2">QPrinter</a></b> ( const QPrinterInfo &amp; <i>printer</i>, PrinterMode <i>mode</i> = ScreenResolution )</li>
+<li><div class="fn"></div><b><a href="qprinter.html#dtor.QPrinter">~QPrinter</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#abort">abort</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#collateCopies">collateCopies</a></b> () const</li>
+<li><div class="fn"></div>ColorMode <b><a href="qprinter.html#colorMode">colorMode</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#creator">creator</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#docName">docName</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#doubleSidedPrinting">doubleSidedPrinting</a></b> () const</li>
+<li><div class="fn"></div>DuplexMode <b><a href="qprinter.html#duplex">duplex</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#fontEmbeddingEnabled">fontEmbeddingEnabled</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qprinter.html#fromPage">fromPage</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#fullPage">fullPage</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#getPageMargins">getPageMargins</a></b> ( qreal * <i>left</i>, qreal * <i>top</i>, qreal * <i>right</i>, qreal * <i>bottom</i>, Unit <i>unit</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#isValid">isValid</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qprinter.html#newPage">newPage</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qprinter.html#numCopies">numCopies</a></b> () const</li>
+<li><div class="fn"></div>Orientation <b><a href="qprinter.html#orientation">orientation</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#outputFileName">outputFileName</a></b> () const</li>
+<li><div class="fn"></div>OutputFormat <b><a href="qprinter.html#outputFormat">outputFormat</a></b> () const</li>
+<li><div class="fn"></div>PageOrder <b><a href="qprinter.html#pageOrder">pageOrder</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qprinter.html#pageRect">pageRect</a></b> () const</li>
+<li><div class="fn"></div>QRectF <b><a href="qprinter.html#pageRect-2">pageRect</a></b> ( Unit <i>unit</i> ) const</li>
+<li><div class="fn"></div>virtual QPaintEngine * <b><a href="qprinter.html#paintEngine">paintEngine</a></b> () const</li>
+<li><div class="fn"></div>QRect <b><a href="qprinter.html#paperRect">paperRect</a></b> () const</li>
+<li><div class="fn"></div>QRectF <b><a href="qprinter.html#paperRect-2">paperRect</a></b> ( Unit <i>unit</i> ) const</li>
+<li><div class="fn"></div>PaperSize <b><a href="qprinter.html#paperSize">paperSize</a></b> () const</li>
+<li><div class="fn"></div>QSizeF <b><a href="qprinter.html#paperSize-2">paperSize</a></b> ( Unit <i>unit</i> ) const</li>
+<li><div class="fn"></div>PaperSource <b><a href="qprinter.html#paperSource">paperSource</a></b> () const</li>
+<li><div class="fn"></div>QPrintEngine * <b><a href="qprinter.html#printEngine">printEngine</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#printProgram">printProgram</a></b> () const</li>
+<li><div class="fn"></div>PrintRange <b><a href="qprinter.html#printRange">printRange</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#printerName">printerName</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qprinter.html#printerSelectionOption">printerSelectionOption</a></b> () const</li>
+<li><div class="fn"></div>PrinterState <b><a href="qprinter.html#printerState">printerState</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qprinter.html#resolution">resolution</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setCollateCopies">setCollateCopies</a></b> ( bool <i>collate</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setColorMode">setColorMode</a></b> ( ColorMode <i>newColorMode</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setCreator">setCreator</a></b> ( const QString &amp; <i>creator</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setDocName">setDocName</a></b> ( const QString &amp; <i>name</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setDoubleSidedPrinting">setDoubleSidedPrinting</a></b> ( bool <i>doubleSided</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setDuplex">setDuplex</a></b> ( DuplexMode <i>duplex</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setFontEmbeddingEnabled">setFontEmbeddingEnabled</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setFromTo">setFromTo</a></b> ( int <i>from</i>, int <i>to</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setFullPage">setFullPage</a></b> ( bool <i>fp</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setNumCopies">setNumCopies</a></b> ( int <i>numCopies</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setOrientation">setOrientation</a></b> ( Orientation <i>orientation</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setOutputFileName">setOutputFileName</a></b> ( const QString &amp; <i>fileName</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setOutputFormat">setOutputFormat</a></b> ( OutputFormat <i>format</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPageMargins">setPageMargins</a></b> ( qreal <i>left</i>, qreal <i>top</i>, qreal <i>right</i>, qreal <i>bottom</i>, Unit <i>unit</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPageOrder">setPageOrder</a></b> ( PageOrder <i>pageOrder</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPaperSize">setPaperSize</a></b> ( PaperSize <i>newPaperSize</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPaperSize-2">setPaperSize</a></b> ( const QSizeF &amp; <i>paperSize</i>, Unit <i>unit</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPaperSource">setPaperSource</a></b> ( PaperSource <i>source</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPrintProgram">setPrintProgram</a></b> ( const QString &amp; <i>printProg</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPrintRange">setPrintRange</a></b> ( PrintRange <i>range</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPrinterName">setPrinterName</a></b> ( const QString &amp; <i>name</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setPrinterSelectionOption">setPrinterSelectionOption</a></b> ( const QString &amp; <i>option</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setResolution">setResolution</a></b> ( int <i>dpi</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setWinPageSize">setWinPageSize</a></b> ( int <i>pageSize</i> )</li>
+<li><div class="fn"></div>QList&lt;PaperSource&gt; <b><a href="qprinter.html#supportedPaperSources">supportedPaperSources</a></b> () const</li>
+<li><div class="fn"></div>QList&lt;int&gt; <b><a href="qprinter.html#supportedResolutions">supportedResolutions</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qprinter.html#toPage">toPage</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qprinter.html#winPageSize">winPageSize</a></b> () const</li>
 </ul>
 <ul>
-<li><div class="fn"/>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qprinter.html#setEngines">setEngines</a></b> ( QPrintEngine * <i>printEngine</i>, QPaintEngine * <i>paintEngine</i> )</li>
+<li><div class="fn"></div>void <b><a href="qprinter.html#setEngines">setEngines</a></b> ( QPrintEngine * <i>printEngine</i>, QPaintEngine * <i>paintEngine</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -354,6 +354,7 @@
 <p>See also <a href="qprinter.html#setPrinterName">setPrinterName</a>().</p>
 <h3 class="fn"><a name="newPage"></a>bool QPrinter::newPage ()</h3>
 <p>Tells the printer to eject the current page and to continue printing on a new page. Returns true if this was successful; otherwise returns false.</p>
+<p>Calling newPage() on an inactive <a href="qprinter.html">QPrinter</a> object will always fail.</p>
 <h3 class="fn"><a name="numCopies"></a>int QPrinter::numCopies () const</h3>
 <p>Returns the number of copies to be printed. The default value is 1.</p>
 <p>On Windows, Mac OS X and X11 systems that support CUPS, this will always return 1 as these operating systems can internally handle the number of copies.</p>
@@ -378,7 +379,6 @@
 <p>The unit of the returned rectangle is <a href="qprinter.html#Unit-enum">DevicePixel</a>.</p>
 <p>See also <a href="qprinter.html#paperSize">paperSize</a>().</p>
 <h3 class="fn"><a name="pageRect-2"></a><a href="qrectf.html">QRectF</a> QPrinter::pageRect ( <a href="qprinter.html#Unit-enum">Unit</a> <i>unit</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the page's rectangle in <i>unit</i>; this is usually smaller than the <a href="qprinter.html#paperRect">paperRect</a>() since the page normally has margins between its borders and the paper.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#paperSize">paperSize</a>().</p>
@@ -390,7 +390,6 @@
 <p>The unit of the returned rectangle is <a href="qprinter.html#Unit-enum">DevicePixel</a>.</p>
 <p>See also <a href="qprinter.html#pageRect">pageRect</a>().</p>
 <h3 class="fn"><a name="paperRect-2"></a><a href="qrectf.html">QRectF</a> QPrinter::paperRect ( <a href="qprinter.html#Unit-enum">Unit</a> <i>unit</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the paper's rectangle in <i>unit</i>; this is usually larger than the <a href="qprinter.html#pageRect">pageRect</a>().</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#pageRect">pageRect</a>().</p>
@@ -399,7 +398,6 @@
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#setPaperSize">setPaperSize</a>(), <a href="qprinter.html#pageRect">pageRect</a>(), and <a href="qprinter.html#paperRect">paperRect</a>().</p>
 <h3 class="fn"><a name="paperSize-2"></a><a href="qsizef.html">QSizeF</a> QPrinter::paperSize ( <a href="qprinter.html#Unit-enum">Unit</a> <i>unit</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the paper size in <i>unit</i>.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#setPaperSize">setPaperSize</a>().</p>
@@ -506,6 +504,7 @@
 <p>Sets the page order to <i>pageOrder</i>.</p>
 <p>The page order can be <a href="qprinter.html#PageOrder-enum">QPrinter::FirstPageFirst</a> or <a href="qprinter.html#PageOrder-enum">QPrinter::LastPageFirst</a>. The application is responsible for reading the page order and printing accordingly.</p>
 <p>This function is mostly useful for setting a default value that the user can override in the print dialog.</p>
+<p>This function is only supported under X11.</p>
 <p>See also <a href="qprinter.html#pageOrder">pageOrder</a>().</p>
 <h3 class="fn"><a name="setPaperSize"></a>void QPrinter::setPaperSize ( <a href="qprinter.html#PaperSize-enum">PaperSize</a> <i>newPaperSize</i> )</h3>
 <p>Sets the printer paper size to <i>newPaperSize</i> if that size is supported. The result is undefined if <i>newPaperSize</i> is not supported.</p>
@@ -514,7 +513,6 @@
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#paperSize">paperSize</a>(), <a href="qprinter.html#PaperSize-enum">PaperSize</a>, <a href="qprinter.html#setFullPage">setFullPage</a>(), <a href="qprinter.html#setResolution">setResolution</a>(), <a href="qprinter.html#pageRect">pageRect</a>(), and <a href="qprinter.html#paperRect">paperRect</a>().</p>
 <h3 class="fn"><a name="setPaperSize-2"></a>void QPrinter::setPaperSize ( const <a href="qsizef.html">QSizeF</a> &amp; <i>paperSize</i>, <a href="qprinter.html#Unit-enum">Unit</a> <i>unit</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Sets the paper size based on <i>paperSize</i> in <i>unit</i>.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="qprinter.html#paperSize">paperSize</a>().</p>
@@ -567,8 +565,8 @@
 <p>See also <a href="qprinter.html#setWinPageSize">setWinPageSize</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

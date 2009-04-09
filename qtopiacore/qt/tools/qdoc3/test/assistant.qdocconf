@@ -6,21 +6,28 @@ include(qt-defines.qdocconf)
 
 project                 = Qt Assistant
 description             = Qt Assistant Manual
-url                     = http://doc.trolltech.com/4.4
+url                     = http://doc.trolltech.com/4.5
 
-indexes                 = $QT_BUILD_TREE/doc/html-qt/qt.index
+indexes                 = $QT_BUILD_TREE/doc-build/html-qt/qt.index
 
 qhp.projects            = Assistant
 
 qhp.Assistant.file                = assistant.qhp
-qhp.Assistant.namespace           = com.trolltech.assistant.442
+qhp.Assistant.namespace           = com.trolltech.assistant.450
 qhp.Assistant.virtualFolder       = qdoc
 qhp.Assistant.indexTitle          = Qt Assistant Manual
 qhp.Assistant.extraFiles          = classic.css images/qt-logo.png images/trolltech-logo.png
-qhp.Assistant.filterAttributes    = qt 4.4.2 tools assistant
+qhp.Assistant.filterAttributes    = qt 4.5.0 tools assistant
 qhp.Assistant.customFilters.Assistant.name = Qt Assistant Manual
 qhp.Assistant.customFilters.Assistant.filterAttributes = qt tools assistant
-qhp.Assistant.selectors           = fake:page,example
+qhp.Assistant.subprojects         = manual examples
+qhp.Assistant.subprojects.manual.title = Manual
+qhp.Assistant.subprojects.manual.indexTitle = Qt Assistant Manual
+qhp.Assistant.subprojects.manual.selectors = fake:page
+qhp.Assistant.subprojects.examples.title = Examples
+qhp.Assistant.subprojects.examples.indexTitle = Qt Examples
+qhp.Assistant.subprojects.examples.selectors = fake:example
+qhp.Assistant.subprojects.examples.sortPages = true
 
 language                = Cpp
 

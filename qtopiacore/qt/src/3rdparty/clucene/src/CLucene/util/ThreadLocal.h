@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 *
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #ifndef _lucene_util_ThreadLocal_H
 #define _lucene_util_ThreadLocal_H
@@ -97,7 +97,7 @@ ThreadLocal<T,_deletor>::ThreadLocal():
 	//notified in case of UnregisterThread()
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
 	SCOPED_LOCK_MUTEX(ThreadLocalBase_THIS_LOCK)
-	threadLocals.insert( pair<const _LUCENE_THREADID_TYPE, ThreadLocalBase*>(id, this) );
+	threadLocals.insert( CL_NS_STD(pair)<const _LUCENE_THREADID_TYPE, ThreadLocalBase*>(id, this) );
 }
 
 template<typename T,typename _deletor>
@@ -136,7 +136,7 @@ void ThreadLocal<T,_deletor>::set(T t){
 	_LUCENE_THREADID_TYPE id = _LUCENE_CURRTHREADID;
 	locals.remove(id);
 	if ( t != NULL )
-		locals.insert( pair<const _LUCENE_THREADID_TYPE,T>(id, t) );
+		locals.insert( CL_NS_STD(pair)<const _LUCENE_THREADID_TYPE,T>(id, t) );
 }
 
 CL_NS_END

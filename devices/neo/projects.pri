@@ -18,5 +18,6 @@ PROJECTS*=\
     ../examples/scribble \
     ../examples/webviewer \
     ../examples/whereabouts/mappingdemo \
-    3rdparty/applications/qterminal
+    3rdparty/applications/qterminal \
+    3rdparty/applications/screenshot
 

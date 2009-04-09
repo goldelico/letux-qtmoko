@@ -1,40 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
+#include "abstractsettings_p.h"
+#include "abstractformeditor.h"
 #include "qtresourceeditordialog_p.h"
 #include "ui_qtresourceeditordialog.h"
 #include "qtresourcemodel_p.h"
@@ -44,7 +50,7 @@
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
-#include <QtCore/QSettings>
+#include <QtCore/QCoreApplication>
 #include <QtXml/QDomDocument>
 #include <QtGui/QMenu>
 #include <QtGui/QHeaderView>
@@ -893,6 +899,7 @@ public:
     QString qrcStartDirectory() const;
 
     Ui::QtResourceEditorDialog m_ui;
+    QDesignerFormEditorInterface *m_core;
     QtResourceModel *m_resourceModel;
     QDesignerDialogGuiInterface *m_dlgGui;
     QtQrcManager *m_qrcManager;
@@ -934,6 +941,7 @@ public:
 };
 
 QtResourceEditorDialogPrivate::QtResourceEditorDialogPrivate() :
+    m_core(0),
     m_resourceModel(0),
     m_qrcManager(0),
     m_ignoreCurrentChanged(false),
@@ -1572,13 +1580,19 @@ void QtResourceEditorDialogPrivate::slotNewPrefix()
 static inline QString outOfPathWarning(const QString &fname)
 {
     return QApplication::translate("QtResourceEditorDialog",
-    "<p><b>Warning:</b> The file:</p>"
-    "<p>%1</p><p>is outside of the current resource file's directory.</p>"
+    "<p><b>Warning:</b> The file</p>"
+    "<p>%1</p>"
+    "<p>is outside of the current resource file's parent directory.</p>").arg(fname);
+}
+
+static inline QString outOfPathWarningInfo()
+{
+    return QApplication::translate("QtResourceEditorDialog",
     "<p>To resolve the issue, press:</p>"
     "<table>"
-    "<tr><th>Copy</th><td>to copy the file to resource file's  directory.</td></tr>"
-    "<tr><th>Copy As...</th><td>to copy the file to one of resource file's subdirectories.</td></tr>"
-    "<tr><th>Keep</th><td>to use its current location.</td></tr></table>").arg(fname);
+    "<tr><th align=\"left\">Copy</th><td>to copy the file to the resource file's parent directory.</td></tr>"
+    "<tr><th align=\"left\">Copy As...</th><td>to copy the file into a subdirectory of the resource file's parent directory.</td></tr>"
+    "<tr><th align=\"left\">Keep</th><td>to use its current location.</td></tr></table>");
 }
 
 void QtResourceEditorDialogPrivate::slotAddFiles()
@@ -1597,7 +1611,7 @@ void QtResourceEditorDialogPrivate::slotAddFiles()
         initialPath = fi.absolutePath();
     }
 
-    const QStringList resourcePaths = m_dlgGui->getOpenFileNames(q_ptr,
+    const QStringList resourcePaths = m_dlgGui->getOpenImageFileNames(q_ptr,
                 QApplication::translate("QtResourceEditorDialog", "Add Files", 0, QApplication::UnicodeUTF8),
                 initialPath);
     if (resourcePaths.isEmpty())
@@ -1621,6 +1635,7 @@ void QtResourceEditorDialogPrivate::slotAddFiles()
             QMessageBox msgBox(QMessageBox::Warning,
                     QApplication::translate("QtResourceEditorDialog", "Incorrect Path", 0, QApplication::UnicodeUTF8),
                     outOfPathWarning(relativePath), QMessageBox::Cancel);
+            msgBox.setInformativeText(outOfPathWarningInfo());
             QPushButton *copyButton = msgBox.addButton(QApplication::translate("QtResourceEditorDialog",
                         "Copy", 0, QApplication::UnicodeUTF8), QMessageBox::ActionRole);
             QPushButton *copyAsButton = msgBox.addButton(QApplication::translate("QtResourceEditorDialog",
@@ -1860,7 +1875,7 @@ QString QtResourceEditorDialogPrivate::copyResourceFile(const QString &resourceF
     }
     while (!QFile::copy(resourceFile, destPath)) {
         if (warning(QApplication::translate("QtResourceEditorDialog", "Copy", 0, QApplication::UnicodeUTF8),
-                    QApplication::translate("QtResourceEditorDialog", "Could not copy:\n%1\nto:\n%2",
+                    QApplication::translate("QtResourceEditorDialog", "Could not copy\n%1\nto\n%2",
                         0, QApplication::UnicodeUTF8).arg(resourceFile).arg(destPath),
                     QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Retry)
             return QString();
@@ -1895,7 +1910,7 @@ bool QtResourceEditorDialogPrivate::loadQrcFile(const QString &path, QtQrcFileDa
     QDomDocument doc;
     int errLine, errCol;
     if (!doc.setContent(dataArray, errorMessage, &errLine, &errCol))  {
-        *errorMessage = QObject::tr("A parse error occurred at line %1, column %2 of %3:\n%4").arg(errLine).arg(errCol).arg(path).arg(*errorMessage);
+        *errorMessage = QCoreApplication::translate("QtResourceEditorDialog", "A parse error occurred at line %1, column %2 of %3:\n%4").arg(errLine).arg(errCol).arg(path).arg(*errorMessage);
         return false;
     }
 
@@ -1931,7 +1946,7 @@ bool QtResourceEditorDialogPrivate::saveQrcFile(const QtQrcFileData &qrcFileData
     return true;
 }
 
-QtResourceEditorDialog::QtResourceEditorDialog(QDesignerDialogGuiInterface *dlgGui, QWidget *parent)
+QtResourceEditorDialog::QtResourceEditorDialog(QDesignerFormEditorInterface *core, QDesignerDialogGuiInterface *dlgGui, QWidget *parent)
     : QDialog(parent)
 {
     d_ptr = new QtResourceEditorDialogPrivate();
@@ -1939,7 +1954,9 @@ QtResourceEditorDialog::QtResourceEditorDialog(QDesignerDialogGuiInterface *dlgG
     d_ptr->m_ui.setupUi(this);
     d_ptr->m_qrcManager = new QtQrcManager(this);
     d_ptr->m_dlgGui = dlgGui;
+    d_ptr->m_core = core;
 
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setWindowTitle(tr("Edit Resources"));
 
     connect(d_ptr->m_qrcManager, SIGNAL(qrcFileInserted(QtQrcFile *)),
@@ -2048,24 +2065,24 @@ QtResourceEditorDialog::QtResourceEditorDialog(QDesignerDialogGuiInterface *dlgG
     d_ptr->m_moveUpQrcFileAction->setEnabled(false);
     d_ptr->m_moveDownQrcFileAction->setEnabled(false);
 
-    QSettings settings;
-    settings.beginGroup(QLatin1String(QrcDialogC));
+    QDesignerSettingsInterface *settings = core->settingsManager();
+    settings->beginGroup(QLatin1String(QrcDialogC));
 
-    d_ptr->m_ui.splitter->restoreState(settings.value(QLatin1String(SplitterPosition)).toByteArray());
-    if (settings.contains(QLatin1String(Geometry)))
-        setGeometry(settings.value(QLatin1String(Geometry)).toRect());
+    d_ptr->m_ui.splitter->restoreState(settings->value(QLatin1String(SplitterPosition)).toByteArray());
+    if (settings->contains(QLatin1String(Geometry)))
+        setGeometry(settings->value(QLatin1String(Geometry)).toRect());
 
-    settings.endGroup();
+    settings->endGroup();
 }
 
 QtResourceEditorDialog::~QtResourceEditorDialog()
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String(QrcDialogC));
+    QDesignerSettingsInterface *settings = d_ptr->m_core->settingsManager();
+    settings->beginGroup(QLatin1String(QrcDialogC));
 
-    settings.setValue(QLatin1String(SplitterPosition), d_ptr->m_ui.splitter->saveState());
-    settings.setValue(QLatin1String(Geometry), geometry());
-    settings.endGroup();
+    settings->setValue(QLatin1String(SplitterPosition), d_ptr->m_ui.splitter->saveState());
+    settings->setValue(QLatin1String(Geometry), geometry());
+    settings->endGroup();
 
     delete d_ptr;
 }
@@ -2166,7 +2183,10 @@ void QtResourceEditorDialog::accept()
         if (qrcFileData == qrcFile->initialState()) {
             // nothing
         } else {
-            if (!d_ptr->saveQrcFile(qrcFileData))
+            d_ptr->m_resourceModel->setWatcherEnabled(qrcFileData.qrcPath, false);
+            bool ok = d_ptr->saveQrcFile(qrcFileData);
+            d_ptr->m_resourceModel->setWatcherEnabled(qrcFileData.qrcPath, true);
+            if (!ok)
                 return;
 
             d_ptr->m_resourceModel->setModified(qrcFileData.qrcPath);
@@ -2186,9 +2206,12 @@ void QtResourceEditorDialog::accept()
     QDialog::accept();
 }
 
-QString QtResourceEditorDialog::editResources(QtResourceModel *model, QDesignerDialogGuiInterface *dlgGui, QWidget *parent)
+QString QtResourceEditorDialog::editResources(QDesignerFormEditorInterface *core,
+                                              QtResourceModel *model,
+                                              QDesignerDialogGuiInterface *dlgGui,
+                                              QWidget *parent)
 {
-    QtResourceEditorDialog dialog(dlgGui, parent);
+    QtResourceEditorDialog dialog(core, dlgGui, parent);
     dialog.setResourceModel(model);
     if (dialog.exec() == QDialog::Accepted)
         return dialog.selectedResource();

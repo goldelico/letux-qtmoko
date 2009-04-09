@@ -25,232 +25,239 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLBodyElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLBodyElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLBodyElementTableEntries[] =
+static const HashTableValue JSHTMLBodyElementTableValues[12] =
 {
-    { "aLink", JSHTMLBodyElement::ALinkAttrNum, DontDelete, 0, &JSHTMLBodyElementTableEntries[11] },
-    { "text", JSHTMLBodyElement::TextAttrNum, DontDelete, 0, &JSHTMLBodyElementTableEntries[12] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "link", JSHTMLBodyElement::LinkAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "background", JSHTMLBodyElement::BackgroundAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "vLink", JSHTMLBodyElement::VLinkAttrNum, DontDelete, 0, 0 },
-    { "scrollLeft", JSHTMLBodyElement::ScrollLeftAttrNum, DontDelete, 0, &JSHTMLBodyElementTableEntries[13] },
-    { "bgColor", JSHTMLBodyElement::BgColorAttrNum, DontDelete, 0, &JSHTMLBodyElementTableEntries[14] },
-    { "scrollTop", JSHTMLBodyElement::ScrollTopAttrNum, DontDelete, 0, &JSHTMLBodyElementTableEntries[15] },
-    { "scrollWidth", JSHTMLBodyElement::ScrollWidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "scrollHeight", JSHTMLBodyElement::ScrollHeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSHTMLBodyElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "aLink", DontDelete, (intptr_t)jsHTMLBodyElementALink, (intptr_t)setJSHTMLBodyElementALink },
+    { "background", DontDelete, (intptr_t)jsHTMLBodyElementBackground, (intptr_t)setJSHTMLBodyElementBackground },
+    { "bgColor", DontDelete, (intptr_t)jsHTMLBodyElementBgColor, (intptr_t)setJSHTMLBodyElementBgColor },
+    { "link", DontDelete, (intptr_t)jsHTMLBodyElementLink, (intptr_t)setJSHTMLBodyElementLink },
+    { "text", DontDelete, (intptr_t)jsHTMLBodyElementText, (intptr_t)setJSHTMLBodyElementText },
+    { "vLink", DontDelete, (intptr_t)jsHTMLBodyElementVLink, (intptr_t)setJSHTMLBodyElementVLink },
+    { "scrollLeft", DontDelete, (intptr_t)jsHTMLBodyElementScrollLeft, (intptr_t)setJSHTMLBodyElementScrollLeft },
+    { "scrollTop", DontDelete, (intptr_t)jsHTMLBodyElementScrollTop, (intptr_t)setJSHTMLBodyElementScrollTop },
+    { "scrollWidth", DontDelete|ReadOnly, (intptr_t)jsHTMLBodyElementScrollWidth, (intptr_t)0 },
+    { "scrollHeight", DontDelete|ReadOnly, (intptr_t)jsHTMLBodyElementScrollHeight, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLBodyElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBodyElementTable = 
-{
-    2, 16, JSHTMLBodyElementTableEntries, 11
-};
+static const HashTable JSHTMLBodyElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSHTMLBodyElementTableValues, 0 };
+#else
+    { 33, 31, JSHTMLBodyElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLBodyElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLBodyElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBodyElementConstructorTable = 
-{
-    2, 1, JSHTMLBodyElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLBodyElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLBodyElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLBodyElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLBodyElementConstructor : public DOMObject {
 public:
     JSHTMLBodyElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLBodyElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLBodyElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLBodyElementConstructor::info = { "HTMLBodyElementConstructor", 0, &JSHTMLBodyElementConstructorTable, 0 };
+const ClassInfo JSHTMLBodyElementConstructor::s_info = { "HTMLBodyElementConstructor", 0, &JSHTMLBodyElementConstructorTable, 0 };
 
 bool JSHTMLBodyElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLBodyElementConstructor, DOMObject>(exec, &JSHTMLBodyElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLBodyElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLBodyElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLBodyElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBodyElementPrototypeTable = 
-{
-    2, 1, JSHTMLBodyElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLBodyElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLBodyElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLBodyElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLBodyElementPrototype::info = { "HTMLBodyElementPrototype", 0, &JSHTMLBodyElementPrototypeTable, 0 };
+const ClassInfo JSHTMLBodyElementPrototype::s_info = { "HTMLBodyElementPrototype", 0, &JSHTMLBodyElementPrototypeTable, 0 };
 
 JSObject* JSHTMLBodyElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLBodyElementPrototype>(exec, "[[JSHTMLBodyElement.prototype]]");
+    return getDOMPrototype<JSHTMLBodyElement>(exec);
 }
 
-const ClassInfo JSHTMLBodyElement::info = { "HTMLBodyElement", &JSHTMLElement::info, &JSHTMLBodyElementTable, 0 };
+const ClassInfo JSHTMLBodyElement::s_info = { "HTMLBodyElement", &JSHTMLElement::s_info, &JSHTMLBodyElementTable, 0 };
 
-JSHTMLBodyElement::JSHTMLBodyElement(ExecState* exec, HTMLBodyElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLBodyElement::JSHTMLBodyElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLBodyElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLBodyElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLBodyElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLBodyElementPrototype(JSHTMLBodyElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLBodyElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLBodyElement, JSHTMLElement>(exec, &JSHTMLBodyElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLBodyElement, Base>(exec, &JSHTMLBodyElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLBodyElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLBodyElementALink(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ALinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->aLink());
-    }
-    case BackgroundAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->background());
-    }
-    case BgColorAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->bgColor());
-    }
-    case LinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->link());
-    }
-    case TextAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->text());
-    }
-    case VLinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsString(imp->vLink());
-    }
-    case ScrollLeftAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsNumber(imp->scrollLeft());
-    }
-    case ScrollTopAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsNumber(imp->scrollTop());
-    }
-    case ScrollWidthAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsNumber(imp->scrollWidth());
-    }
-    case ScrollHeightAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        return jsNumber(imp->scrollHeight());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->aLink());
 }
 
-void JSHTMLBodyElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLBodyElementBackground(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLBodyElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLBodyElementTable, this);
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->background());
 }
 
-void JSHTMLBodyElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLBodyElementBgColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ALinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setALink(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case BackgroundAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setBackground(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case BgColorAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setBgColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case LinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setLink(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TextAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setText(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case VLinkAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setVLink(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ScrollLeftAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setScrollLeft(value->toInt32(exec));
-        break;
-    }
-    case ScrollTopAttrNum: {
-        HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(impl());
-
-        imp->setScrollTop(value->toInt32(exec));
-        break;
-    }
-    }
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->bgColor());
 }
 
-JSValue* JSHTMLBodyElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLBodyElementLink(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLBodyElementConstructor>(exec, "[[HTMLBodyElement.constructor]]");
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->link());
 }
+
+JSValuePtr jsHTMLBodyElementText(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->text());
+}
+
+JSValuePtr jsHTMLBodyElementVLink(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->vLink());
+}
+
+JSValuePtr jsHTMLBodyElementScrollLeft(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollLeft());
+}
+
+JSValuePtr jsHTMLBodyElementScrollTop(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollTop());
+}
+
+JSValuePtr jsHTMLBodyElementScrollWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollWidth());
+}
+
+JSValuePtr jsHTMLBodyElementScrollHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->scrollHeight());
+}
+
+JSValuePtr jsHTMLBodyElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLBodyElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLBodyElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLBodyElement, Base>(exec, propertyName, value, &JSHTMLBodyElementTable, this, slot);
+}
+
+void setJSHTMLBodyElementALink(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setALink(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementBackground(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setBackground(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementBgColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setBgColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementLink(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setLink(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementText(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setText(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementVLink(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setVLink(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLBodyElementScrollLeft(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setScrollLeft(value->toInt32(exec));
+}
+
+void setJSHTMLBodyElementScrollTop(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLBodyElement* imp = static_cast<HTMLBodyElement*>(static_cast<JSHTMLBodyElement*>(thisObject)->impl());
+    imp->setScrollTop(value->toInt32(exec));
+}
+
+JSValuePtr JSHTMLBodyElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLBodyElementConstructor>(exec);
+}
+
 
 }

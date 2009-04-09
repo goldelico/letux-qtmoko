@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,12 +47,15 @@
 #include <qpaintdevice.h>
 #include <qvarlengtharray.h>
 
+
+//#define QT_DIRECTFB_DEBUG_SURFACES 1
+
 QDirectFBSurface::QDirectFBSurface()
     : QCustomRasterPaintDevice(0)
 #ifndef QT_NO_DIRECTFB_WM
     , dfbWindow(0)
 #endif
-    , dfbSurface(0), engine(new QDirectFBPaintEngine), surfaceImage(0)
+    , dfbSurface(0), engine(0), surfaceImage(0)
 {
     setSurfaceFlags(Opaque | Buffered);
 }
@@ -58,7 +65,7 @@ QDirectFBSurface::QDirectFBSurface(QWidget *widget)
 #ifndef QT_NO_DIRECTFB_WM
     , dfbWindow(0)
 #endif
-    , dfbSurface(0), engine(new QDirectFBPaintEngine), surfaceImage(0)
+    , dfbSurface(0), engine(0), surfaceImage(0)
 {
     onscreen = widget->testAttribute(Qt::WA_PaintOnScreen);
     if (onscreen)
@@ -92,6 +99,9 @@ void QDirectFBSurface::createWindow()
     if (result != DFB_OK)
         DirectFBErrorFatal("QDirectFBWindowSurface::createWindow", result);
 
+    if (dfbSurface)
+        dfbSurface->Release(dfbSurface);
+
     dfbWindow->GetSurface(dfbWindow, &dfbSurface);
 }
 #endif // QT_NO_DIRECTFB_WM
@@ -102,6 +112,7 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
 #ifndef QT_NO_DIRECTFB_WM
         if (dfbWindow) {
             dfbWindow->Destroy(dfbWindow);
+            dfbWindow->Release(dfbWindow);
             dfbWindow = 0;
         }
 #endif
@@ -113,6 +124,9 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
         const bool isResize = rect.size() != geometry().size();
         DFBResult result = DFB_OK;
 
+        // If we're in a resize, the surface shouldn't be locked
+        Q_ASSERT( (surfaceImage == 0) || (isResize == false));
+
         IDirectFBSurface *s = QDirectFBScreen::instance()->dfbSurface();
         if (onscreen && s) {
             if (dfbSurface)
@@ -122,23 +136,7 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
                                rect.width(), rect.height() };
             result = s->GetSubSurface(s, &r, &dfbSurface);
         } else {
-#ifndef QT_NO_DIRECTFB_WM
-            const QRect oldRect = geometry();
-            const bool isMove = oldRect.isEmpty() ||
-                                rect.topLeft() != oldRect.topLeft();
-
-            if (!dfbWindow)
-                createWindow();
-
-            if (isResize && isMove)
-                result = dfbWindow->SetBounds(dfbWindow, rect.x(), rect.y(),
-                                              rect.width(), rect.height());
-            else if (isResize)
-                result = dfbWindow->Resize(dfbWindow,
-                                           rect.width(), rect.height());
-            else if (isMove)
-                result = dfbWindow->MoveTo(dfbWindow, rect.x(), rect.y());
-#else
+#ifdef QT_NO_DIRECTFB_WM
             if (isResize) {
                 if (dfbSurface)
                     dfbSurface->Release(dfbSurface);
@@ -161,6 +159,22 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
             } else {
                 Q_ASSERT(dfbSurface);
             }
+#else
+            const QRect oldRect = geometry();
+            const bool isMove = oldRect.isEmpty() ||
+                                rect.topLeft() != oldRect.topLeft();
+
+            if (!dfbWindow)
+                createWindow();
+
+            if (isResize && isMove)
+                result = dfbWindow->SetBounds(dfbWindow, rect.x(), rect.y(),
+                                              rect.width(), rect.height());
+            else if (isResize)
+                result = dfbWindow->Resize(dfbWindow,
+                                           rect.width(), rect.height());
+            else if (isMove)
+                result = dfbWindow->MoveTo(dfbWindow, rect.x(), rect.y());
 #endif
         }
 
@@ -262,6 +276,11 @@ QRegion QDirectFBSurface::move(const QPoint &offset, const QRegion &newClip)
 
 QPaintEngine* QDirectFBSurface::paintEngine() const
 {
+    if (!engine) {
+        QDirectFBSurface *that = const_cast<QDirectFBSurface*>(this);
+        that->engine = new QDirectFBPaintEngine(that);
+        return that->engine;
+    }
     return engine;
 }
 
@@ -349,7 +368,17 @@ void QDirectFBSurface::beginPaint(const QRegion &)
 
 void QDirectFBSurface::endPaint(const QRegion &)
 {
+#ifdef QT_DIRECTFB_DEBUG_SURFACES
+    if (bufferImages.count()) {
+        qDebug("QDirectFBSurface::endPaint() this=%p", this);
+
+        foreach(QImage* bufferImg, bufferImages)
+            qDebug("   Deleting buffer image %p", bufferImg);
+    }
+#endif
+
     qDeleteAll(bufferImages);
+    bufferImages.clear();
     unlockDirectFB();
 }
 
@@ -361,6 +390,8 @@ bool QDirectFBSurface::lockDirectFB()
     void *mem;
     int stride;
 
+
+    // When a DirectFB surface is locked, the address of it's memory is written to mem
     DFBResult result = dfbSurface->Lock(dfbSurface, DSLF_WRITE, &mem, &stride);
     if (result != DFB_OK) {
         DirectFBError("QDirectFBPixmapData::buffer()", result);
@@ -373,8 +404,15 @@ bool QDirectFBSurface::lockDirectFB()
     DFBSurfacePixelFormat format;
     dfbSurface->GetPixelFormat(dfbSurface, &format);
 
+    // Wrap the pointer to the surface's memory into a new QImage
     surfaceImage = new QImage(static_cast<uchar*>(mem), w, h, stride,
                               QDirectFBScreen::getImageFormat(format));
+
+#ifdef QT_DIRECTFB_DEBUG_SURFACES
+    qDebug("QDirectFBSurface::lockDirectFB() this=%p dfbSurface=%p, mem=%p, surfaceImage=%p",
+                this, dfbSurface, mem, surfaceImage);
+#endif
+
     return true;
 }
 
@@ -382,6 +420,11 @@ void QDirectFBSurface::unlockDirectFB()
 {
     if (!surfaceImage)
         return;
+
+#ifdef QT_DIRECTFB_DEBUG_SURFACES
+    qDebug("QDirectFBSurface::unlockDirectFB() this=%p, dfbSurface=%p, surfaceImage=%p",
+                this, dfbSurface, surfaceImage);
+#endif
 
     dfbSurface->Unlock(dfbSurface);
     delete surfaceImage;
@@ -404,6 +447,10 @@ QImage* QDirectFBSurface::buffer(const QWidget *widget)
                              surfaceImage->bytesPerLine(),
                              surfaceImage->format());
     bufferImages.append(img);
+
+#ifdef QT_DIRECTFB_DEBUG_SURFACES
+    qDebug("QDirectFBSurface::buffer() Created & returned %p", img);
+#endif
 
     return img;
 }

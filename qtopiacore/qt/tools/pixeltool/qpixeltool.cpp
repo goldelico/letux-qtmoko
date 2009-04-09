@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -68,8 +72,11 @@ QPixelTool::QPixelTool(QWidget *parent)
     m_displayGridSizeId = 0;
 
     m_zoom = settings.value(QLatin1String("zoom"), 4).toInt();
+
     m_displayZoom = false;
     m_displayZoomId = 0;
+
+    m_preview_mode = false;
 
     m_currentColor = 0;
 
@@ -93,6 +100,13 @@ QPixelTool::~QPixelTool()
     settings.setValue(QLatin1String("zoom"), m_zoom);
     settings.setValue(QLatin1String("initialSize"), size());
     settings.setValue(QLatin1String("position"), pos());
+}
+
+void QPixelTool::setPreviewImage(const QImage &image)
+{
+    m_preview_mode = true;
+    m_preview_image = image;
+    m_freeze = true;
 }
 
 void QPixelTool::timerEvent(QTimerEvent *event)
@@ -129,25 +143,25 @@ void QPixelTool::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
 
+    if (m_preview_mode) {
+        QPixmap pixmap(40, 40);
+        QPainter pt(&pixmap);
+        pt.fillRect(0, 0, 20, 20, Qt::white);
+        pt.fillRect(20, 20, 20, 20, Qt::white);
+        pt.fillRect(20, 0, 20, 20, Qt::lightGray);
+        pt.fillRect(0, 20, 20, 20, Qt::lightGray);
+        pt.end();
+        p.fillRect(0, 0, width(), height(), pixmap);
+    }
+
     int w = width();
     int h = height();
 
-    if (m_zoom <= 4) {
-        int wext = m_zoom - (width()-1) % m_zoom;
-        int hext = m_zoom - (height()-1) % m_zoom;
-        p.drawPixmap(0, 0, width() + wext, height() + hext, m_buffer);
-    } else {
-        p.setPen(Qt::NoPen);
-        QImage im = m_buffer.toImage().convertToFormat(QImage::Format_RGB32);
-        for (int y=0; y<h; y+=m_zoom) {
-            int y_px = qMin(im.height()-1, y/m_zoom);
-            for (int x=0; x<w; x+=m_zoom) {
-                int x_px = qMin(im.width()-1, x/m_zoom);
-                p.setBrush(QColor(im.pixel(x_px, y_px)));
-                p.drawRect(x, y, m_zoom, m_zoom);
-            }
-        }
-    }
+    p.save();
+    p.scale(m_zoom, m_zoom);
+    p.drawPixmap(0, 0, m_buffer);
+    p.scale(1/m_zoom, 1/m_zoom);
+    p.restore();
 
     // Draw the grid on top.
     if (m_gridActive) {
@@ -166,7 +180,7 @@ void QPixelTool::paintEvent(QPaintEvent *)
     if (m_displayZoom) {
         render_string(&p, w, h,
                       QString(QLatin1String("Zoom: x%1")).arg(m_zoom),
-                      Qt::AlignBottom | Qt::AlignRight);
+                      Qt::AlignTop | Qt::AlignRight);
     }
 
     if (m_displayGridSize) {
@@ -177,14 +191,15 @@ void QPixelTool::paintEvent(QPaintEvent *)
 
     if (m_freeze) {
         QString str;
-        str.sprintf("Pixel: %6X\nRed:   %3d\nGreen: %3d\nBlue:  %3d",
-                    0x00ffffff & m_currentColor,
+        str.sprintf("%8X (%3d,%3d,%3d,%3d)",
+                    m_currentColor,
+                    (0xff000000 & m_currentColor) >> 24,
                     (0x00ff0000 & m_currentColor) >> 16,
                     (0x0000ff00 & m_currentColor) >> 8,
                     (0x000000ff & m_currentColor));
         render_string(&p, w, h,
                       str,
-                      Qt::AlignTop | Qt::AlignLeft);
+                      Qt::AlignBottom | Qt::AlignRight);
     }
 
     if (m_mouseDown && m_dragStart != m_dragCurrent) {
@@ -275,7 +290,7 @@ void QPixelTool::mouseMoveEvent(QMouseEvent *e)
     int x = e->x() / m_zoom;
     int y = e->y() / m_zoom;
 
-    QImage im = m_buffer.toImage().convertToFormat(QImage::Format_RGB32);
+    QImage im = m_buffer.toImage().convertToFormat(QImage::Format_ARGB32);
     if (x < im.width() && y < im.height() && x >= 0 && y >= 0) {
         m_currentColor = im.pixel(x, y);
         update();
@@ -393,6 +408,14 @@ QSize QPixelTool::sizeHint() const
 
 void QPixelTool::grabScreen()
 {
+    if (m_preview_mode) {
+        int w = qMin(width() / m_zoom + 1, m_preview_image.width());
+        int h = qMin(height() / m_zoom + 1, m_preview_image.height());
+        m_buffer = QPixmap::fromImage(m_preview_image).copy(0, 0, w, h);
+        update();
+        return;
+    }
+
     QPoint mousePos = QCursor::pos();
     if (mousePos == m_lastMousePos && !m_autoUpdate)
         return;
@@ -502,9 +525,11 @@ void QPixelTool::saveToFile()
     bool oldFreeze = m_freeze;
     m_freeze = true;
     QString name = QFileDialog::getSaveFileName(this, QLatin1String("Save as image"), QString(), QLatin1String("*.png"));
-    if (!name.endsWith(QLatin1String(".png")))
-        name.append(QLatin1String(".png"));
-    m_buffer.save(name, "PNG");
+    if (!name.isEmpty()) {
+        if (!name.endsWith(QLatin1String(".png")))
+            name.append(QLatin1String(".png"));
+        m_buffer.save(name, "PNG");
+    }
     m_freeze = oldFreeze;
 }
 

@@ -5,7 +5,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = Qt
-PROJECT_NUMBER         = 4.4.3
+PROJECT_NUMBER         = 4.5.0
 OUTPUT_DIRECTORY       = doc
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
@@ -216,5 +216,5 @@ ALIASES = \
         "x11=<a href=\"http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3\">X11</a>" \
         "gpl=<a href=\"http://www.fsf.org/licensing/licenses/gpl.html#SEC1\">GPL</a>" \
         "lgpl=<a href=\"http://www.fsf.org/licensing/licenses/lgpl.html#SEC1\">LGPL</a>" \
-        "qpl=<a href=\"http://www.trolltech.com/products/qt/licenses\">QPL</a>"
+        "qpl=<a href=\"http://qtsoftware.com/products/qt/licenses\">QPL</a>"
 

@@ -1,43 +1,49 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qdesigner_formbuilder_p.h"
 #include "dynamicpropertysheet.h"
 #include "qsimpleresource_p.h"
+#include "widgetfactory_p.h"
+#include "qdesigner_introspection_p.h"
 
 #include <ui4_p.h>
 #include <formbuilderextra_p.h>
@@ -53,6 +59,10 @@
 #include <abstractdialoggui_p.h>
 
 // shared
+#include <qdesigner_propertysheet_p.h>
+#include <qdesigner_utils_p.h>
+#include <formwindowbase_p.h>
+#include <qtresourcemodel_p.h>
 #include <scripterrordialog_p.h>
 
 #include <QtGui/QWidget>
@@ -69,17 +79,13 @@
 
 #include <QtCore/QBuffer>
 #include <QtCore/qdebug.h>
-
-#include <qdesigner_propertysheet_p.h>
-#include <qdesigner_utils_p.h>
-#include <formwindowbase_p.h>
-#include <qtresourcemodel_p.h>
+#include <QtCore/QCoreApplication>
 
 QT_BEGIN_NAMESPACE
 
 static QString summarizeScriptErrors(const QFormScriptRunner::Errors &errors)
 {
-    QString rc =  QObject::tr("Script errors occurred:");
+    QString rc =  QCoreApplication::translate("QDesignerFormBuilder", "Script errors occurred:");
     foreach (QFormScriptRunner::Error error, errors) {
         rc += QLatin1Char('\n');
         rc += error.errorMessage;
@@ -89,13 +95,17 @@ static QString summarizeScriptErrors(const QFormScriptRunner::Errors &errors)
 
 namespace qdesigner_internal {
 
-QDesignerFormBuilder::QDesignerFormBuilder(QDesignerFormEditorInterface *core, Mode mode) :
+QDesignerFormBuilder::QDesignerFormBuilder(QDesignerFormEditorInterface *core,
+                                           Mode mode,
+                                           const DeviceProfile &deviceProfile) :
     m_core(core),
     m_mode(mode),
+    m_deviceProfile(deviceProfile),
     m_pixmapCache(0),
     m_iconCache(0),
     m_ignoreCreateResources(false),
-    m_tempResourceSet(0)
+    m_tempResourceSet(0),
+    m_mainWidget(true)
 {
     Q_ASSERT(m_core);
     // Disable scripting in the editors.
@@ -112,15 +122,24 @@ QDesignerFormBuilder::QDesignerFormBuilder(QDesignerFormEditorInterface *core, M
     formScriptRunner()-> setOptions(options);
 }
 
+QString QDesignerFormBuilder::systemStyle() const
+{
+    return m_deviceProfile.isEmpty() ?
+        QString::fromUtf8(QApplication::style()->metaObject()->className()) :
+        m_deviceProfile.style();
+}
+
 QWidget *QDesignerFormBuilder::createWidgetFromContents(const QString &contents, QWidget *parentWidget)
 {
     QByteArray data = contents.toUtf8();
     QBuffer buffer(&data);
+    buffer.open(QIODevice::ReadOnly);
     return load(&buffer, parentWidget);
 }
 
 QWidget *QDesignerFormBuilder::create(DomUI *ui, QWidget *parentWidget)
 {
+    m_mainWidget = true;
     QtResourceSet *resourceSet = core()->resourceModel()->currentResourceSet();
 
     // reload resource properties;
@@ -166,6 +185,10 @@ QWidget *QDesignerFormBuilder::createWidget(const QString &widgetName, QWidget *
             m_customWidgetsWithScript.insert(widget);
     }
 
+    if (m_mainWidget) { // We need to apply the DPI here to take effect on size hints, etc.
+        m_deviceProfile.apply(m_core, widget, DeviceProfile::ApplyPreview);
+        m_mainWidget = false;
+    }
     return widget;
 }
 
@@ -257,8 +280,9 @@ void QDesignerFormBuilder::applyProperties(QObject *o, const QList<DomProperty*>
     QFormBuilderExtra *formBuilderExtra = QFormBuilderExtra::instance(this);
     const QDesignerPropertySheetExtension *sheet = qt_extension<QDesignerPropertySheetExtension*>(core()->extensionManager(), o);
     const QDesignerDynamicPropertySheetExtension *dynamicSheet = qt_extension<QDesignerDynamicPropertySheetExtension*>(core()->extensionManager(), o);
-    const QMetaObject *meta = o->metaObject();
-    const bool dynamicPropertiesAllowed = dynamicSheet && dynamicSheet->dynamicPropertiesAllowed() && strcmp(meta->className(), "QAxWidget") != 0;
+    const bool changingMetaObject = WidgetFactory::classNameOf(core(), o) == QLatin1String("QAxWidget");
+    const QDesignerMetaObjectInterface *meta = core()->introspection()->metaObject(o);
+    const bool dynamicPropertiesAllowed = dynamicSheet && dynamicSheet->dynamicPropertiesAllowed();
 
     QDesignerPropertySheet *designerPropertySheet = qobject_cast<QDesignerPropertySheet *>(
                     core()->extensionManager()->extension(o, Q_TYPEID(QDesignerPropertySheetExtension)));
@@ -275,7 +299,7 @@ void QDesignerFormBuilder::applyProperties(QObject *o, const QList<DomProperty*>
         DomProperty *p = *it;
         QVariant v;
         if (!readDomEnumerationValue(p, sheet, v))
-            v = toVariant(meta, p);
+            v = toVariant(o->metaObject(), p);
 
         if (v.isNull())
             continue;
@@ -284,18 +308,21 @@ void QDesignerFormBuilder::applyProperties(QObject *o, const QList<DomProperty*>
         if (formBuilderExtra->applyPropertyInternally(o, attributeName, v))
             continue;
 
-        const QByteArray pname = attributeName.toUtf8();
-        const int index = meta->indexOfProperty(pname);
+        // refuse fake properties like current tab name (weak test)
+        if (!dynamicPropertiesAllowed) {
+            if (changingMetaObject) // Changes after setting control of QAxWidget
+                meta = core()->introspection()->metaObject(o);
+            if (meta->indexOfProperty(attributeName) == -1)
+                continue;
+        }
 
         QObject *obj = o;
         QAbstractScrollArea *scroll = qobject_cast<QAbstractScrollArea *>(o);
-        if (scroll && QLatin1String(pname) == QLatin1String("cursor") && scroll->viewport())
+        if (scroll && attributeName == QLatin1String("cursor") && scroll->viewport())
             obj = scroll->viewport();
 
-        if (index != -1 || dynamicPropertiesAllowed) {
-            // a real property
-            obj->setProperty(pname, v);
-        }
+        // a real property
+        obj->setProperty(attributeName.toUtf8(), v);
     }
 }
 
@@ -343,22 +370,14 @@ void QDesignerFormBuilder::loadExtraInfo(DomWidget *ui_widget, QWidget *widget, 
 QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface *fw,
                                              const QString &styleName,
                                              const QString &appStyleSheet,
-                                      ScriptErrors *scriptErrors,
+                                             const DeviceProfile &deviceProfile,
+                                             ScriptErrors *scriptErrors,
                                              QString *errorMessage)
 {
     scriptErrors->clear();
-    // style
-    QStyle *style = 0;
-    if (!styleName.isEmpty()) {
-        style = QStyleFactory::create(styleName);
-        if (!style) {
-            *errorMessage = QObject::tr("The style %1 could not be loaded.").arg(styleName);
-            return 0;
-        }
-    }
 
     // load
-    QDesignerFormBuilder builder(fw->core(), EnableScripts);
+    QDesignerFormBuilder builder(fw->core(), EnableScripts, deviceProfile);
     builder.setWorkingDirectory(fw->absoluteDir());
 
     const bool warningsEnabled = QSimpleResource::setWarningsEnabled(false);
@@ -366,11 +385,20 @@ QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface 
     QSimpleResource::setWarningsEnabled(warningsEnabled);
 
     QBuffer buffer(&bytes);
+    buffer.open(QIODevice::ReadOnly);
 
     QWidget *widget = builder.load(&buffer, 0);
     if (!widget) { // Shouldn't happen
-        *errorMessage = QObject::tr("The preview failed to build.");
+        *errorMessage = QCoreApplication::translate("QDesignerFormBuilder", "The preview failed to build.");
         return  0;
+    }
+    // Make sure palette is applied
+    const QString styleToUse = styleName.isEmpty() ? builder.deviceProfile().style() : styleName;
+    if (!styleToUse.isEmpty()) {
+        if (WidgetFactory *wf = qobject_cast<qdesigner_internal::WidgetFactory *>(fw->core()->widgetFactory())) {
+            if (styleToUse != wf->styleName())
+                WidgetFactory::applyStyleToTopLevel(wf->getStyle(styleToUse), widget);
+        }
     }
     // Check for script errors
     *scriptErrors = builder.formScriptRunner()->errors();
@@ -378,18 +406,6 @@ QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface 
         *errorMessage = summarizeScriptErrors(*scriptErrors);
         delete widget;
         return  0;
-    }
-
-    // Apply style stored in action if any
-    if (style) {
-        style->setParent(widget);
-        widget->setStyle(style);
-        if (style->metaObject()->className() != QApplication::style()->metaObject()->className())
-            widget->setPalette(style->standardPalette());
-
-        const QList<QWidget*> lst = qFindChildren<QWidget*>(widget);
-        foreach (QWidget *w, lst)
-            w->setStyle(style);
     }
     // Fake application style sheet by prepending. (If this doesn't work, fake by nesting
     // into parent widget).
@@ -399,8 +415,6 @@ QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface 
         styleSheet +=  widget->styleSheet();
         widget->setStyleSheet(styleSheet);
     }
-
-    widget->setWindowTitle(QObject::tr("%1 - [Preview]").arg(widget->windowTitle()));
     return widget;
 }
 
@@ -409,23 +423,36 @@ QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface 
     return createPreview(fw, styleName, QString());
 }
 
-QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName, const QString &appStyleSheet, QString *errorMessage)
+QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface *fw,
+                                             const QString &styleName,
+                                             const QString &appStyleSheet,
+                                             const DeviceProfile &deviceProfile,
+                                             QString *errorMessage)
 {
     ScriptErrors scriptErrors;
-    return  createPreview(fw, styleName, appStyleSheet, &scriptErrors, errorMessage);
+    return  createPreview(fw, styleName, appStyleSheet, deviceProfile, &scriptErrors, errorMessage);
+}
+
+QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface *fw,
+                                             const QString &styleName,
+                                             const QString &appStyleSheet,
+                                             QString *errorMessage)
+{
+    ScriptErrors scriptErrors;
+    return  createPreview(fw, styleName, appStyleSheet, DeviceProfile(), &scriptErrors, errorMessage);
 }
 
 QWidget *QDesignerFormBuilder::createPreview(const QDesignerFormWindowInterface *fw, const QString &styleName, const QString &appStyleSheet)
 {
     ScriptErrors scriptErrors;
     QString errorMessage;
-    QWidget *widget = createPreview(fw, styleName, appStyleSheet, &scriptErrors, &errorMessage);
+    QWidget *widget = createPreview(fw, styleName, appStyleSheet, DeviceProfile(), &scriptErrors, &errorMessage);
     if (!widget) {
         // Display Script errors or message box
         QWidget *dialogParent = fw->core()->topLevel();
         if (scriptErrors.empty()) {
             fw->core()->dialogGui()->message(dialogParent, QDesignerDialogGuiInterface::PreviewFailureMessage,
-                                             QMessageBox::Warning, QObject::tr("Designer"), errorMessage, QMessageBox::Ok);
+                                             QMessageBox::Warning, QCoreApplication::translate("QDesignerFormBuilder", "Designer"), errorMessage, QMessageBox::Ok);
         } else {
             ScriptErrorDialog scriptErrorDialog(scriptErrors, dialogParent);
             scriptErrorDialog.exec();

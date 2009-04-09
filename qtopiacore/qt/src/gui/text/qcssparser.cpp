@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -274,6 +278,25 @@ static const QCssKnownValue values[NumKnownValues - 1] = {
     { "xx-large", Value_XXLarge }
 };
 
+QString Value::toString() const
+{
+    static int indexOfId[NumKnownValues - 1];
+    static bool hasCachedIndexes = false;
+
+    if (type == KnownIdentifier) {
+        if (!hasCachedIndexes) {
+            for (int i = 0; i < NumKnownValues - 1; ++i)
+                indexOfId[values[i].id] = i;
+
+            hasCachedIndexes = true;
+        }
+
+        return QLatin1String(values[indexOfId[variant.toInt()]].name);
+    } else {
+        return variant.toString();
+    }
+}
+
 static const QCssKnownValue pseudos[NumPseudos - 1] = {
     { "active", PseudoClass_Active },
     { "adjoins-item", PseudoClass_Item },
@@ -385,52 +408,81 @@ ValueExtractor::ValueExtractor(const QVector<Declaration> &decls, const QPalette
 {
 }
 
-int ValueExtractor::lengthValue(const Value& v)
+LengthData ValueExtractor::lengthValue(const Value& v)
 {
     QString s = v.variant.toString();
     s.reserve(s.length());
-    enum { None, Px, Ex, Em } unit = None;
+    LengthData data;
+    data.unit = LengthData::None;
     if (s.endsWith(QLatin1String("px"), Qt::CaseInsensitive))
-        unit = Px;
+        data.unit = LengthData::Px;
     else if (s.endsWith(QLatin1String("ex"), Qt::CaseInsensitive))
-        unit = Ex;
+        data.unit = LengthData::Ex;
     else if (s.endsWith(QLatin1String("em"), Qt::CaseInsensitive))
-        unit = Em;
+        data.unit = LengthData::Em;
 
-    if (unit != None)
+    if (data.unit != LengthData::None)
         s.chop(2);
 
     bool ok;
-    qreal number = s.toDouble(&ok);
+    data.number = s.toDouble(&ok);
     if (!ok)
-        return 0;
+        data.number = 0;
+    return data;
+}
 
-    QFontMetrics fm(f);
-    if (unit == Ex)
-        return qRound(fm.xHeight() * number);
-    else if (unit == Em)
-        return qRound(fm.height() * number);
-
-    return qRound(number);
+static int lengthValueFromData(const LengthData& data, const QFont& f)
+{
+    if (data.unit == LengthData::Ex)
+        return qRound(QFontMetrics(f).xHeight() * data.number);
+    else if (data.unit == LengthData::Em)
+        return qRound(QFontMetrics(f).height() * data.number);
+    return qRound(data.number);
 }
 
 int ValueExtractor::lengthValue(const Declaration &decl)
 {
-    if (decl.values.count() < 1)
+    if (decl.d->parsed.isValid())
+        return  lengthValueFromData(qvariant_cast<LengthData>(decl.d->parsed), f);
+    if (decl.d->values.count() < 1)
         return 0;
-    return lengthValue(decl.values.first());
+    LengthData data = lengthValue(decl.d->values.at(0));
+    decl.d->parsed = qVariantFromValue<LengthData>(data);
+    return lengthValueFromData(data,f);
 }
 
 void ValueExtractor::lengthValues(const Declaration &decl, int *m)
 {
-    int i;
-    for (i = 0; i < qMin(decl.values.count(), 4); i++)
-        m[i] = lengthValue(decl.values[i]);
+    if (decl.d->parsed.isValid()) {
+        QList<QVariant> v = decl.d->parsed.toList();
+        for (int i = 0; i < 4; i++)
+            m[i] = lengthValueFromData(qvariant_cast<LengthData>(v.at(i)), f);
+        return;
+    }
 
-    if (i == 0) m[0] = m[1] = m[2] = m[3] = 0;
-    else if (i == 1) m[3] = m[2] = m[1] = m[0];
-    else if (i == 2) m[2] = m[0], m[3] = m[1];
-    else if (i == 3) m[3] = m[1];
+    LengthData datas[4];
+    int i;
+    for (i = 0; i < qMin(decl.d->values.count(), 4); i++)
+        datas[i] = lengthValue(decl.d->values[i]);
+
+    if (i == 0) {
+        LengthData zero = {0.0, LengthData::None};
+        datas[0] = datas[1] = datas[2] = datas[3] = zero;
+    } else if (i == 1) {
+        datas[3] = datas[2] = datas[1] = datas[0];
+    } else if (i == 2) {
+        datas[2] = datas[0];
+        datas[3] = datas[1];
+    } else if (i == 3) {
+        datas[3] = datas[1];
+    }
+
+    QList<QVariant> v;
+    for (i = 0; i < 4; i++) {
+        v += qVariantFromValue<LengthData>(datas[i]);
+        m[i] = lengthValueFromData(datas[i], f);
+    }
+    decl.d->parsed = v;
 }
 
 bool ValueExtractor::extractGeometry(int *w, int *h, int *minw, int *minh, int *maxw, int *maxh)
@@ -439,7 +491,7 @@ bool ValueExtractor::extractGeometry(int *w, int *h, int *minw, int *minh, int *
     bool hit = false;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case Width: *w = lengthValue(decl); break;
         case Height: *h = lengthValue(decl); break;
         case MinimumWidth: *minw = lengthValue(decl); break;
@@ -461,7 +513,7 @@ bool ValueExtractor::extractPosition(int *left, int *top, int *right, int *botto
     bool hit = false;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case Left: *left = lengthValue(decl); break;
         case Top: *top = lengthValue(decl); break;
         case Right: *right = lengthValue(decl); break;
@@ -484,7 +536,7 @@ bool ValueExtractor::extractBox(int *margins, int *paddings, int *spacing)
     bool hit = false;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case PaddingLeft: paddings[LeftEdge] = lengthValue(decl); break;
         case PaddingRight: paddings[RightEdge] = lengthValue(decl); break;
         case PaddingTop: paddings[TopEdge] = lengthValue(decl); break;
@@ -511,7 +563,7 @@ int ValueExtractor::extractStyleFeatures()
     int features = StyleFeature_None;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        if (decl.propertyId == QtStyleFeatures)
+        if (decl.d->propertyId == QtStyleFeatures)
             features = decl.styleFeaturesValue();
     }
     return features;
@@ -519,14 +571,23 @@ int ValueExtractor::extractStyleFeatures()
 
 QSize ValueExtractor::sizeValue(const Declaration &decl)
 {
-    int x[2] = { 0, 0 };
-    if (decl.values.count() > 0)
-        x[0] = lengthValue(decl.values.at(0));
-    if (decl.values.count() > 1)
-        x[1] = lengthValue(decl.values.at(1));
+    if (decl.d->parsed.isValid()) {
+        QList<QVariant> v = decl.d->parsed.toList();
+        return QSize(lengthValueFromData(qvariant_cast<LengthData>(v.at(0)), f),
+                     lengthValueFromData(qvariant_cast<LengthData>(v.at(1)), f));
+    }
+
+    LengthData x[2] = { {0, LengthData::None }, {0, LengthData::None} };   
+    if (decl.d->values.count() > 0)
+        x[0] = lengthValue(decl.d->values.at(0));
+    if (decl.d->values.count() > 1)
+        x[1] = lengthValue(decl.d->values.at(1));
     else
         x[1] = x[0];
-    return QSize(x[0], x[1]);
+    QList<QVariant> v;
+    v << qVariantFromValue<LengthData>(x[0]) << qVariantFromValue<LengthData>(x[1]);
+    decl.d->parsed = v;
+    return QSize(lengthValueFromData(x[0], f), lengthValueFromData(x[1], f));
 }
 
 void ValueExtractor::sizeValues(const Declaration &decl, QSize *radii)
@@ -543,7 +604,7 @@ bool ValueExtractor::extractBorder(int *borders, QBrush *colors, BorderStyle *st
     bool hit = false;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case BorderLeftWidth: borders[LeftEdge] = lengthValue(decl); break;
         case BorderRightWidth: borders[RightEdge] = lengthValue(decl); break;
         case BorderTopWidth: borders[TopEdge] = lengthValue(decl); break;
@@ -602,7 +663,7 @@ bool ValueExtractor::extractOutline(int *borders, QBrush *colors, BorderStyle *s
     bool hit = false;
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case OutlineWidth: lengthValues(decl, borders); break;
         case OutlineColor: decl.brushValues(colors, pal); break;
         case OutlineStyle:  decl.styleValues(styles); break;
@@ -652,7 +713,7 @@ static Qt::Alignment parseAlignment(const Value *values, int count)
     return a[0] | a[1];
 }
 
-static QColor parseColorValue(Value v, const QPalette &pal)
+static ColorData parseColorValue(Value v)
 {
     if (v.type == Value::Identifier || v.type == Value::String) {
         v.variant.convert(QVariant::Color);
@@ -663,39 +724,39 @@ static QColor parseColorValue(Value v, const QPalette &pal)
         return qvariant_cast<QColor>(v.variant);
 
     if (v.type == Value::KnownIdentifier && v.variant.toInt() == Value_Transparent)
-        return Qt::transparent;
+        return QColor(Qt::transparent);
 
     if (v.type != Value::Function)
-        return QColor();
+        return ColorData();
 
     QStringList lst = v.variant.toStringList();
     if (lst.count() != 2)
-        return QColor();
+        return ColorData();
 
     if ((lst.at(0).compare(QLatin1String("palette"), Qt::CaseInsensitive)) == 0) {
-        int role = findKnownValue(lst.at(1), values, NumKnownValues);
+        int role = findKnownValue(lst.at(1).trimmed(), values, NumKnownValues);
         if (role >= Value_FirstColorRole && role <= Value_LastColorRole)
-            return pal.color((QPalette::ColorRole)(role-Value_FirstColorRole));
+            return (QPalette::ColorRole)(role-Value_FirstColorRole);
 
-        return QColor();
+        return ColorData();
     }
 
     bool rgb = lst.at(0).startsWith(QLatin1String("rgb"));
 
     Parser p(lst.at(1));
     if (!p.testExpr())
-        return QColor();
+        return ColorData();
 
     QVector<Value> colorDigits;
     if (!p.parseExpr(&colorDigits))
-        return QColor();
+        return ColorData();
 
     for (int i = 0; i < qMin(colorDigits.count(), 7); i += 2) {
         if (colorDigits.at(i).type == Value::Percentage) {
             colorDigits[i].variant = colorDigits.at(i).variant.toDouble() * 255. / 100.;
             colorDigits[i].type = Value::Number;
         } else if (colorDigits.at(i).type != Value::Number) {
-            return QColor();
+            return ColorData();
         }
     }
 
@@ -708,25 +769,38 @@ static QColor parseColorValue(Value v, const QPalette &pal)
                : QColor::fromHsv(v1, v2, v3, alpha);
 }
 
-static QBrush parseBrushValue(Value v, const QPalette &pal)
+static QColor colorFromData(const ColorData& c, const QPalette &pal)
 {
-    QColor c = parseColorValue(v, pal);
-    if (c.isValid())
-        return QBrush(c);
+    if (c.type == ColorData::Color) {
+        return c.color;
+    } else if (c.type == ColorData::Role) {
+        return pal.color(c.role);
+    }
+    return QColor();
+}
+
+static BrushData parseBrushValue(const Value &v, const QPalette &pal)
+{
+    ColorData c = parseColorValue(v);
+    if (c.type == ColorData::Color) {
+        return QBrush(c.color);
+    } else if (c.type == ColorData::Role) {
+        return c.role;
+    }
 
     if (v.type != Value::Function)
-        return QBrush();
+        return BrushData();
 
     QStringList lst = v.variant.toStringList();
     if (lst.count() != 2)
-        return QBrush();
+        return BrushData();
 
     QStringList gradFuncs;
     gradFuncs << QLatin1String("qlineargradient") << QLatin1String("qradialgradient") << QLatin1String("qconicalgradient") << QLatin1String("qgradient");
     int gradType = -1;
 
     if ((gradType = gradFuncs.indexOf(lst.at(0).toLower())) == -1)
-        return QBrush();
+        return BrushData();
 
     QHash<QString, qreal> vars;
     QVector<QGradientStop> stops;
@@ -735,24 +809,28 @@ static QBrush parseBrushValue(Value v, const QPalette &pal)
     QStringList spreads;
     spreads << QLatin1String("pad") << QLatin1String("reflect") << QLatin1String("repeat");
 
+    bool dependsOnThePalette = false;
     Parser parser(lst.at(1));
     while (parser.hasNext()) {
         parser.skipSpace();
         if (!parser.test(IDENT))
-            return QBrush();
+            return BrushData();
         QString attr = parser.lexem();
         parser.skipSpace();
         if (!parser.test(COLON))
-            return QBrush();
+            return BrushData();
         parser.skipSpace();
         if (attr.compare(QLatin1String("stop"), Qt::CaseInsensitive) == 0) {
             Value stop, color;
             parser.next();
-            if (!parser.parseTerm(&stop)) return QBrush();
+            if (!parser.parseTerm(&stop)) return BrushData();
             parser.skipSpace();
             parser.next();
-            if (!parser.parseTerm(&color)) return QBrush();
-            stops.append(QGradientStop(stop.variant.toDouble(), parseColorValue(color, pal)));
+            if (!parser.parseTerm(&color)) return BrushData();
+            ColorData cd = parseColorValue(color);
+            if(cd.type == ColorData::Role)
+                dependsOnThePalette = true;
+            stops.append(QGradientStop(stop.variant.toDouble(), colorFromData(cd, pal)));
         } else {
             parser.next();
             Value value;
@@ -774,7 +852,10 @@ static QBrush parseBrushValue(Value v, const QPalette &pal)
         lg.setStops(stops);
         if (spread != -1)
             lg.setSpread(QGradient::Spread(spread));
-        return QBrush(lg);
+        BrushData bd = QBrush(lg);
+        if (dependsOnThePalette)
+            bd.type = BrushData::DependsOnThePalette;
+        return bd;
     }
 
     if (gradType == 1) {
@@ -785,7 +866,10 @@ static QBrush parseBrushValue(Value v, const QPalette &pal)
         rg.setStops(stops);
         if (spread != -1)
             rg.setSpread(QGradient::Spread(spread));
-        return QBrush(rg);
+        BrushData bd = QBrush(rg);
+        if (dependsOnThePalette)
+            bd.type = BrushData::DependsOnThePalette;
+        return bd;
     }
 
     if (gradType == 2) {
@@ -795,10 +879,22 @@ static QBrush parseBrushValue(Value v, const QPalette &pal)
         cg.setStops(stops);
         if (spread != -1)
             cg.setSpread(QGradient::Spread(spread));
-        return QBrush(cg);
+        BrushData bd = QBrush(cg);
+        if (dependsOnThePalette)
+            bd.type = BrushData::DependsOnThePalette;
+        return bd;
     }
 
-    return QBrush();
+    return BrushData();
+}
+
+static QBrush brushFromData(const BrushData& c, const QPalette &pal)
+{
+    if (c.type == BrushData::Role) {
+        return pal.color(c.role);
+    } else {
+        return c.brush;
+    }
 }
 
 static BorderStyle parseStyleValue(Value v)
@@ -839,40 +935,62 @@ static BorderStyle parseStyleValue(Value v)
 
 void ValueExtractor::borderValue(const Declaration &decl, int *width, QCss::BorderStyle *style, QBrush *color)
 {
+    if (decl.d->parsed.isValid()) {
+        BorderData data = qvariant_cast<BorderData>(decl.d->parsed);
+        *width = lengthValueFromData(data.width, f);
+        *style = data.style;
+        *color = brushFromData(data.color, pal);
+        return;
+    }
+
     *width = 0;
     *style = BorderStyle_None;
     *color = QColor();
 
-    if (decl.values.isEmpty())
+    if (decl.d->values.isEmpty())
         return;
+    
+    BorderData data;
+    data.width.number = 0;
+    data.width.unit = LengthData::None;
+    data.style = BorderStyle_None;
 
     int i = 0;
-    if (decl.values.at(i).type == Value::Length || decl.values.at(i).type == Value::Number) {
-        *width = lengthValue(decl.values.at(i));
-        if (++i >= decl.values.count())
+    if (decl.d->values.at(i).type == Value::Length || decl.d->values.at(i).type == Value::Number) {
+        data.width = lengthValue(decl.d->values.at(i));
+        *width = lengthValueFromData(data.width, f);
+        if (++i >= decl.d->values.count()) {
+            decl.d->parsed = qVariantFromValue<BorderData>(data);
             return;
+        }
     }
 
-    *style = parseStyleValue(decl.values.at(i));
-    if (*style != BorderStyle_Unknown) {
-        if (++i >= decl.values.count())
+    data.style = parseStyleValue(decl.d->values.at(i));
+    if (data.style != BorderStyle_Unknown) {
+        *style = data.style;
+        if (++i >= decl.d->values.count()) {
+            decl.d->parsed = qVariantFromValue<BorderData>(data);
             return;
+        }
     } else {
-        *style = BorderStyle_None;
+        data.style = BorderStyle_None;
     }
 
-    *color = parseBrushValue(decl.values.at(i), pal);
+     data.color = parseBrushValue(decl.d->values.at(i), pal);
+     *color = brushFromData(data.color, pal);
+     if (data.color.type != BrushData::DependsOnThePalette)
+         decl.d->parsed = qVariantFromValue<BorderData>(data);
 }
 
-static void parseShorthandBackgroundProperty(const QVector<Value> &values, QBrush *brush, QString *image, Repeat *repeat, Qt::Alignment *alignment, const QPalette &pal)
+static void parseShorthandBackgroundProperty(const QVector<Value> &values, BrushData *brush, QString *image, Repeat *repeat, Qt::Alignment *alignment, const QPalette &pal)
 {
-    *brush = QBrush();
+    *brush = BrushData();
     *image = QString();
     *repeat = Repeat_XY;
     *alignment = Qt::AlignTop | Qt::AlignLeft;
 
     for (int i = 0; i < values.count(); ++i) {
-        const Value v = values.at(i);
+        const Value &v = values.at(i);
         if (v.type == Value::Uri) {
             *image = v.variant.toString();
             continue;
@@ -917,20 +1035,25 @@ bool ValueExtractor::extractBackground(QBrush *brush, QString *image, Repeat *re
     bool hit = false;
     for (int i = 0; i < declarations.count(); ++i) {
         const Declaration &decl = declarations.at(i);
-        if (decl.values.isEmpty())
+        if (decl.d->values.isEmpty())
             continue;
-        const Value val = decl.values.first();
-        switch (decl.propertyId) {
+        const Value &val = decl.d->values.at(0);
+        switch (decl.d->propertyId) {
             case BackgroundColor:
-                *brush = parseBrushValue(val, pal);
+                    *brush = decl.brushValue();
                 break;
             case BackgroundImage:
                 if (val.type == Value::Uri)
                     *image = val.variant.toString();
                 break;
             case BackgroundRepeat:
-                *repeat = static_cast<Repeat>(findKnownValue(val.variant.toString(),
-                                              repeats, NumKnownRepeats));
+                if (decl.d->parsed.isValid()) {
+                    *repeat = static_cast<Repeat>(decl.d->parsed.toInt());
+                } else {
+                    *repeat = static_cast<Repeat>(findKnownValue(val.variant.toString(),
+                                                  repeats, NumKnownRepeats));
+                    decl.d->parsed = *repeat;
+                }
                 break;
             case BackgroundPosition:
                 *alignment = decl.alignmentValue();
@@ -942,7 +1065,29 @@ bool ValueExtractor::extractBackground(QBrush *brush, QString *image, Repeat *re
                 *clip = decl.originValue();
                 break;
             case Background:
-                parseShorthandBackgroundProperty(decl.values, brush, image, repeat, alignment, pal);
+                if (decl.d->parsed.isValid()) {
+                    BackgroundData data = qvariant_cast<BackgroundData>(decl.d->parsed);
+                    *brush = brushFromData(data.brush, pal);
+                    *image = data.image;
+                    *repeat = data.repeat;
+                    *alignment = data.alignment;
+                } else {
+                    BrushData brushData;
+                    parseShorthandBackgroundProperty(decl.d->values, &brushData, image, repeat, alignment, pal);
+                    *brush = brushFromData(brushData, pal);
+                    if (brushData.type != BrushData::DependsOnThePalette) {
+#if defined Q_CC_MSVC && _MSC_VER <= 1300
+                        BackgroundData data;
+                        data.brush = brushData;
+                        data.image = *image;
+                        data.repeat = *repeat;
+                        data.alignment = *alignment;
+#else
+                        BackgroundData data = { brushData, *image, *repeat, *alignment };
+#endif
+                        decl.d->parsed = qVariantFromValue<BackgroundData>(data);
+                    }
+                }
                 break;
             case BackgroundAttachment:
                 *attachment = decl.attachmentValue();
@@ -1120,16 +1265,16 @@ bool ValueExtractor::extractFont(QFont *font, int *fontSizeAdjustment)
     bool hit = false;
     for (int i = 0; i < declarations.count(); ++i) {
         const Declaration &decl = declarations.at(i);
-        if (decl.values.isEmpty())
+        if (decl.d->values.isEmpty())
             continue;
-        const Value val = decl.values.first();
-        switch (decl.propertyId) {
+        const Value &val = decl.d->values.at(0);
+        switch (decl.d->propertyId) {
             case FontSize: setFontSizeFromValue(val, font, fontSizeAdjustment); break;
             case FontStyle: setFontStyleFromValue(val, font); break;
             case FontWeight: setFontWeightFromValue(val, font); break;
-            case FontFamily: setFontFamilyFromValues(decl.values, font); break;
-            case TextDecoration: setTextDecorationFromValues(decl.values, font); break;
-            case Font: parseShorthandFontProperty(decl.values, font, fontSizeAdjustment); break;
+            case FontFamily: setFontFamilyFromValues(decl.d->values, font); break;
+            case TextDecoration: setTextDecorationFromValues(decl.d->values, font); break;
+            case Font: parseShorthandFontProperty(decl.d->values, font, fontSizeAdjustment); break;
             case FontVariant: setFontVariantFromValue(val, font); break;
             case TextTransform: setTextTransformFromValue(val, font); break;
             default: continue;
@@ -1148,7 +1293,7 @@ bool ValueExtractor::extractPalette(QBrush *fg, QBrush *sfg, QBrush *sbg, QBrush
     bool hit = false;
     for (int i = 0; i < declarations.count(); ++i) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case Color: *fg = decl.brushValue(pal); break;
         case QtSelectionForeground: *sfg = decl.brushValue(pal); break;
         case QtSelectionBackground: *sbg = decl.brushValue(pal); break;
@@ -1173,12 +1318,12 @@ bool ValueExtractor::extractImage(QIcon *icon, Qt::Alignment *a, QSize *size)
     bool hit = false;
     for (int i = 0; i < declarations.count(); ++i) {
         const Declaration &decl = declarations.at(i);
-        switch (decl.propertyId) {
+        switch (decl.d->propertyId) {
         case QtImage:
             *icon = decl.iconValue();
-            if (decl.values.count() > 0 && decl.values.at(0).type == Value::Uri) {
+            if (decl.d->values.count() > 0 && decl.d->values.at(0).type == Value::Uri) {
                 // try to pull just the size from the image...
-                QImageReader imageReader(decl.values.at(0).variant.toString());
+                QImageReader imageReader(decl.d->values.at(0).variant.toString());
                 if ((*size = imageReader.size()).isNull()) {
                     // but we'll have to load the whole image if the
                     // format doesn't support just reading the size
@@ -1198,25 +1343,89 @@ bool ValueExtractor::extractImage(QIcon *icon, Qt::Alignment *a, QSize *size)
 // Declaration
 QColor Declaration::colorValue(const QPalette &pal) const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return QColor();
 
-    return parseColorValue(values.first(), pal);
+    if (d->parsed.isValid()) {
+        if (d->parsed.type() == QVariant::Color)
+            return qvariant_cast<QColor>(d->parsed);
+        if (d->parsed.type() == QVariant::Int)
+            return pal.color((QPalette::ColorRole)(d->parsed.toInt()));
+    }
+
+    ColorData color = parseColorValue(d->values.at(0));
+    if(color.type == ColorData::Role) {
+        d->parsed = qVariantFromValue<int>(color.role);
+        return pal.color((QPalette::ColorRole)(color.role));
+    } else {
+        d->parsed = qVariantFromValue<QColor>(color.color);
+        return color.color;
+    }
 }
 
 QBrush Declaration::brushValue(const QPalette &pal) const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return QBrush();
 
-    return parseBrushValue(values.first(), pal);
+    if (d->parsed.isValid()) {
+        if (d->parsed.type() == QVariant::Brush)
+            return qvariant_cast<QBrush>(d->parsed);
+        if (d->parsed.type() == QVariant::Int)
+            return pal.color((QPalette::ColorRole)(d->parsed.toInt()));
+    }
+
+    BrushData data = parseBrushValue(d->values.at(0), pal);
+
+    if(data.type == BrushData::Role) {
+        d->parsed = qVariantFromValue<int>(data.role);
+        return pal.color((QPalette::ColorRole)(data.role));
+    } else {
+        if (data.type != BrushData::DependsOnThePalette)
+            d->parsed = qVariantFromValue<QBrush>(data.brush);
+        return data.brush;
+    }
 }
 
 void Declaration::brushValues(QBrush *c, const QPalette &pal) const
 {
-    int i;
-    for (i = 0; i < qMin(values.count(), 4); i++)
-        c[i] = parseBrushValue(values.at(i), pal);
+    int needParse = 0x1f; // bits 0..3 say if we should parse the corresponding value.
+                          // the bit 4 say we need to update d->parsed
+    int i = 0;
+    if (d->parsed.isValid()) {
+        needParse = 0;
+        QList<QVariant> v = d->parsed.toList();
+        for (i = 0; i < qMin(v.count(), 4); i++) {
+            if (v.at(i).type() == QVariant::Brush) {
+                c[i] = qvariant_cast<QBrush>(v.at(i));
+            } else if (v.at(i).type() == QVariant::Int) {
+                c[i] = pal.color((QPalette::ColorRole)(v.at(i).toInt()));
+            } else {
+                needParse |= (1<<i);
+            }
+        }
+    }
+    if (needParse != 0) {
+        QList<QVariant> v;
+        for (i = 0; i < qMin(d->values.count(), 4); i++) {
+            if (!(needParse & (1<<i)))
+                continue;
+            BrushData data = parseBrushValue(d->values.at(i), pal);
+            if(data.type == BrushData::Role) {
+                v += qVariantFromValue<int>(data.role);
+                c[i] = pal.color((QPalette::ColorRole)(data.role));
+            } else {
+                if (data.type != BrushData::DependsOnThePalette) {
+                    v += qVariantFromValue<QBrush>(data.brush);
+                } else {
+                    v += QVariant();
+                }
+                c[i] = data.brush;
+            }
+        }
+        if (needParse & 0x10)
+            d->parsed = v;
+    }
     if (i == 0) c[0] = c[1] = c[2] = c[3] = QBrush();
     else if (i == 1) c[3] = c[2] = c[1] = c[0];
     else if (i == 2) c[2] = c[0], c[3] = c[1];
@@ -1225,9 +1434,9 @@ void Declaration::brushValues(QBrush *c, const QPalette &pal) const
 
 bool Declaration::realValue(qreal *real, const char *unit) const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return false;
-    const Value &v = values.first();
+    const Value &v = d->values.at(0);
     if (unit && v.type != Value::Length)
         return false;
     QString s = v.variant.toString();
@@ -1262,44 +1471,77 @@ static bool intValueHelper(const Value &v, int *i, const char *unit)
 
 bool Declaration::intValue(int *i, const char *unit) const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return false;
-    return intValueHelper(values.first(), i, unit);
+    return intValueHelper(d->values.at(0), i, unit);
 }
 
 QSize Declaration::sizeValue() const
 {
+    if (d->parsed.isValid())
+        return qvariant_cast<QSize>(d->parsed);
+
     int x[2] = { 0, 0 };
-    if (values.count() > 0)
-        intValueHelper(values.at(0), &x[0], "px");
-    if (values.count() > 1)
-        intValueHelper(values.at(1), &x[1], "px");
+    if (d->values.count() > 0)
+        intValueHelper(d->values.at(0), &x[0], "px");
+    if (d->values.count() > 1)
+        intValueHelper(d->values.at(1), &x[1], "px");
     else
         x[1] = x[0];
-    return QSize(x[0], x[1]);
+    QSize size(x[0], x[1]);
+    d->parsed = qVariantFromValue<QSize>(size);
+    return size;
 }
 
 QRect Declaration::rectValue() const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return QRect();
-    const Value &v = values.first();
+    
+    if (d->parsed.isValid())
+        return qvariant_cast<QRect>(d->parsed);
+
+    const Value &v = d->values.at(0);
     if (v.type != Value::Function)
         return QRect();
     QStringList func = v.variant.toStringList();
-    if (func.count() != 2 || func.first().compare(QLatin1String("rect")) != 0)
+    if (func.count() != 2 || func.at(0).compare(QLatin1String("rect")) != 0)
         return QRect();
     QStringList args = func[1].split(QLatin1String(" "), QString::SkipEmptyParts);
     if (args.count() != 4)
         return QRect();
-    return QRect(args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3].toInt());
+    QRect rect(args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3].toInt());
+    d->parsed = qVariantFromValue<QRect>(rect);
+    return rect;
 }
 
 void Declaration::colorValues(QColor *c, const QPalette &pal) const
 {
     int i;
-    for (i = 0; i < qMin(values.count(), 4); i++)
-        c[i] = parseColorValue(values.at(i), pal);
+    if (d->parsed.isValid()) {
+        QList<QVariant> v = d->parsed.toList();
+        for (i = 0; i < qMin(d->values.count(), 4); i++) {
+            if (v.at(i).type() == QVariant::Color) {
+                c[i] = qvariant_cast<QColor>(v.at(i));
+            } else {
+                c[i] = pal.color((QPalette::ColorRole)(v.at(i).toInt()));
+            }
+        }
+    } else {
+        QList<QVariant> v;
+        for (i = 0; i < qMin(d->values.count(), 4); i++) {
+            ColorData color = parseColorValue(d->values.at(i));
+            if(color.type == ColorData::Role) {
+                v += qVariantFromValue<int>(color.role);
+                c[i] = pal.color((QPalette::ColorRole)(color.role));
+            } else {
+                v += qVariantFromValue<QColor>(color.color);
+                c[i] = color.color;
+            }
+        }
+        d->parsed = v;
+    }
+
     if (i == 0) c[0] = c[1] = c[2] = c[3] = QColor();
     else if (i == 1) c[3] = c[2] = c[1] = c[0];
     else if (i == 2) c[2] = c[0], c[3] = c[1];
@@ -1308,16 +1550,16 @@ void Declaration::colorValues(QColor *c, const QPalette &pal) const
 
 BorderStyle Declaration::styleValue() const
 {
-    if (values.count() != 1)
+    if (d->values.count() != 1)
         return BorderStyle_None;
-    return parseStyleValue(values.first());
+    return parseStyleValue(d->values.at(0));
 }
 
 void Declaration::styleValues(BorderStyle *s) const
 {
     int i;
-    for (i = 0; i < qMin(values.count(), 4); i++)
-        s[i] = parseStyleValue(values.at(i));
+    for (i = 0; i < qMin(d->values.count(), 4); i++)
+        s[i] = parseStyleValue(d->values.at(i));
     if (i == 0) s[0] = s[1] = s[2] = s[3] = BorderStyle_None;
     else if (i == 1) s[3] = s[2] = s[1] = s[0];
     else if (i == 2) s[2] = s[0], s[3] = s[1];
@@ -1326,59 +1568,83 @@ void Declaration::styleValues(BorderStyle *s) const
 
 Repeat Declaration::repeatValue() const
 {
-    if (values.count() != 1)
+    if (d->parsed.isValid())
+        return static_cast<Repeat>(d->parsed.toInt());
+    if (d->values.count() != 1)
         return Repeat_Unknown;
-    return static_cast<Repeat>(findKnownValue(values.first().variant.toString(),
-                                repeats, NumKnownRepeats));
+    int v = findKnownValue(d->values.at(0).variant.toString(),
+                   repeats, NumKnownRepeats);
+    d->parsed = v;
+    return static_cast<Repeat>(v);
 }
 
 Origin Declaration::originValue() const
 {
-    if (values.count() != 1)
+    if (d->parsed.isValid())
+        return static_cast<Origin>(d->parsed.toInt());
+    if (d->values.count() != 1)
         return Origin_Unknown;
-    return static_cast<Origin>(findKnownValue(values.first().variant.toString(),
-                               origins, NumKnownOrigins));
+    int v = findKnownValue(d->values.at(0).variant.toString(),
+                               origins, NumKnownOrigins);
+    d->parsed = v;
+    return static_cast<Origin>(v);
 }
 
 PositionMode Declaration::positionValue() const
 {
-    if (values.count() != 1)
+    if (d->parsed.isValid())
+        return static_cast<PositionMode>(d->parsed.toInt());
+    if (d->values.count() != 1)
         return PositionMode_Unknown;
-    return static_cast<PositionMode>(findKnownValue(values.first().variant.toString(),
-                                     positions, NumKnownPositionModes));
+    int v = findKnownValue(d->values.at(0).variant.toString(),
+                           positions, NumKnownPositionModes);
+    d->parsed = v;
+    return static_cast<PositionMode>(v);
 }
 
 Attachment Declaration::attachmentValue() const
 {
-    if (values.count() != 1)
+    if (d->parsed.isValid())
+        return static_cast<Attachment>(d->parsed.toInt());
+    if (d->values.count() != 1)
         return Attachment_Unknown;
-    return static_cast<Attachment>(findKnownValue(values.first().variant.toString(),
-                                   attachments, NumKnownAttachments));
+    int v = findKnownValue(d->values.at(0).variant.toString(),
+                           attachments, NumKnownAttachments);
+    d->parsed = v;
+    return static_cast<Attachment>(v);
 }
 
 int Declaration::styleFeaturesValue() const
 {
+    Q_ASSERT(d->propertyId == QtStyleFeatures);
+    if (d->parsed.isValid())
+        return d->parsed.toInt();
     int features = StyleFeature_None;
-    for (int i = 0; i < values.count(); i++) {
-        features |= static_cast<int>(findKnownValue(values.value(i).variant.toString(),
+    for (int i = 0; i < d->values.count(); i++) {
+        features |= static_cast<int>(findKnownValue(d->values.value(i).variant.toString(),
                                      styleFeatures, NumKnownStyleFeatures));
     }
+    d->parsed = features;
     return features;
 }
 
 QString Declaration::uriValue() const
 {
-    if (values.isEmpty() || values.first().type != Value::Uri)
+    if (d->values.isEmpty() || d->values.at(0).type != Value::Uri)
         return QString();
-    return values.first().variant.toString();
+    return d->values.at(0).variant.toString();
 }
 
 Qt::Alignment Declaration::alignmentValue() const
 {
-    if (values.isEmpty() || values.count() > 2)
+    if (d->parsed.isValid())
+        return Qt::Alignment(d->parsed.toInt());
+    if (d->values.isEmpty() || d->values.count() > 2)
         return Qt::AlignLeft | Qt::AlignTop;
 
-    return parseAlignment(values.constData(), values.count());
+    Qt::Alignment v = parseAlignment(d->values.constData(), d->values.count());
+    d->parsed = int(v);
+    return v;
 }
 
 void Declaration::borderImageValue(QString *image, int *cuts,
@@ -1389,13 +1655,13 @@ void Declaration::borderImageValue(QString *image, int *cuts,
         cuts[i] = -1;
     *h = *v = TileMode_Stretch;
 
-    if (values.count() < 2)
+    if (d->values.count() < 2)
         return;
 
-    if (values.at(1).type == Value::Number) { // cuts!
+    if (d->values.at(1).type == Value::Number) { // cuts!
         int i;
-        for (i = 0; i < qMin(values.count()-1, 4); i++) {
-            const Value& v = values.at(i+1);
+        for (i = 0; i < qMin(d->values.count()-1, 4); i++) {
+            const Value& v = d->values.at(i+1);
             if (v.type != Value::Number)
                 break;
             cuts[i] = v.variant.toString().toInt();
@@ -1406,13 +1672,13 @@ void Declaration::borderImageValue(QString *image, int *cuts,
         else if (i == 3) cuts[3] = cuts[1];
     }
 
-    if (values.last().type == Value::Identifier) {
-        *v = static_cast<TileMode>(findKnownValue(values.last().variant.toString(),
+    if (d->values.last().type == Value::Identifier) {
+        *v = static_cast<TileMode>(findKnownValue(d->values.last().variant.toString(),
                                       tileModes, NumKnownTileModes));
     }
-    if (values[values.count() - 2].type == Value::Identifier) {
+    if (d->values[d->values.count() - 2].type == Value::Identifier) {
         *h = static_cast<TileMode>
-                        (findKnownValue(values[values.count()-2].variant.toString(),
+                (findKnownValue(d->values[d->values.count()-2].variant.toString(),
                                         tileModes, NumKnownTileModes));
     } else
         *h = *v;
@@ -1420,17 +1686,20 @@ void Declaration::borderImageValue(QString *image, int *cuts,
 
 QIcon Declaration::iconValue() const
 {
+    if (d->parsed.isValid())
+        return qvariant_cast<QIcon>(d->parsed);
+
     QIcon icon;
-    for (int i = 0; i < values.count();) {
-        Value value = values.at(i++);
+    for (int i = 0; i < d->values.count();) {
+        const Value &value = d->values.at(i++);
         if (value.type != Value::Uri)
             break;
         QString uri = value.variant.toString();
         QIcon::Mode mode = QIcon::Normal;
         QIcon::State state = QIcon::Off;
         for (int j = 0; j < 2; j++) {
-            if (i != values.count() && values.at(i).type == Value::KnownIdentifier) {
-                switch (values.at(i).variant.toInt()) {
+            if (i != d->values.count() && d->values.at(i).type == Value::KnownIdentifier) {
+                switch (d->values.at(i).variant.toInt()) {
                 case Value_Disabled: mode = QIcon::Disabled; break;
                 case Value_Active: mode = QIcon::Active; break;
                 case Value_Selected: mode = QIcon::Selected; break;
@@ -1451,12 +1720,14 @@ QIcon Declaration::iconValue() const
         else
             icon.addPixmap(uri, mode, state);
 
-        if (i == values.count())
+        if (i == d->values.count())
             break;
 
-        if (values.at(i).type == Value::TermOperatorComma)
+        if (d->values.at(i).type == Value::TermOperatorComma)
             i++;
     }
+
+    d->parsed = qVariantFromValue<QIcon>(icon);
     return icon;
 }
 
@@ -1479,8 +1750,8 @@ int Selector::specificity() const
 QString Selector::pseudoElement() const
 {
     const BasicSelector& bs = basicSelectors.last();
-    if (!bs.pseudos.isEmpty() && bs.pseudos.first().type == PseudoClass_Unknown)
-        return bs.pseudos.first().name;
+    if (!bs.pseudos.isEmpty() && bs.pseudos.at(0).type == PseudoClass_Unknown)
+        return bs.pseudos.at(0).name;
     return QString();
 }
 
@@ -1503,9 +1774,67 @@ quint64 Selector::pseudoClass(quint64 *negated) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// StyleSheet
+void StyleSheet::buildIndexes(Qt::CaseSensitivity nameCaseSensitivity)
+{
+    QVector<StyleRule> universals;
+    for (int i = 0; i < styleRules.count(); ++i) {
+        const StyleRule &rule = styleRules.at(i);
+        QVector<Selector> universalsSelectors;
+        for (int j = 0; j < rule.selectors.count(); ++j) {
+            const Selector& selector = rule.selectors.at(j);
+
+            if (selector.basicSelectors.isEmpty())
+                continue;
+
+            if (selector.basicSelectors.at(0).relationToNext == BasicSelector::NoRelation) {
+                if (selector.basicSelectors.count() != 1)
+                    continue;
+            } else if (selector.basicSelectors.count() <= 1) {
+                continue;
+            }
+
+            const BasicSelector &sel = selector.basicSelectors.at(selector.basicSelectors.count() - 1);
+
+            if (!sel.ids.isEmpty()) {
+                StyleRule nr;
+                nr.selectors += selector;
+                nr.declarations = rule.declarations;
+                nr.order = i;
+                idIndex.insert(sel.ids.at(0), nr);
+            } else if (!sel.elementName.isEmpty()) {
+                StyleRule nr;
+                nr.selectors += selector;
+                nr.declarations = rule.declarations;
+                nr.order = i;
+                QString name = sel.elementName;
+                if (nameCaseSensitivity == Qt::CaseInsensitive)
+                    name=name.toLower();
+                nameIndex.insert(name, nr);
+            } else {
+                universalsSelectors += selector;
+            }
+        }
+        if (!universalsSelectors.isEmpty()) {
+            StyleRule nr;
+            nr.selectors = universalsSelectors;
+            nr.declarations = rule.declarations;
+            nr.order = i;
+            universals << nr;
+        }
+    }
+    styleRules = universals;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // StyleSelector
 StyleSelector::~StyleSelector()
 {
+}
+
+bool StyleSelector::nodeNameEquals(NodePtr node, const QString& nodeName) const
+{
+    return nodeNames(node).contains(nodeName, nameCaseSensitivity);
 }
 
 QStringList StyleSelector::nodeIds(NodePtr node) const
@@ -1518,10 +1847,10 @@ bool StyleSelector::selectorMatches(const Selector &selector, NodePtr node)
     if (selector.basicSelectors.isEmpty())
         return false;
 
-    if (selector.basicSelectors.first().relationToNext == BasicSelector::NoRelation) {
+    if (selector.basicSelectors.at(0).relationToNext == BasicSelector::NoRelation) {
         if (selector.basicSelectors.count() != 1)
             return false;
-        return basicSelectorMatches(selector.basicSelectors.first(), node);
+        return basicSelectorMatches(selector.basicSelectors.at(0), node);
     }
     if (selector.basicSelectors.count() <= 1)
         return false;
@@ -1576,10 +1905,10 @@ bool StyleSelector::basicSelectorMatches(const BasicSelector &sel, NodePtr node)
 
         for (int i = 0; i < sel.attributeSelectors.count(); ++i) {
             const QCss::AttributeSelector &a = sel.attributeSelectors.at(i);
-            if (!hasAttribute(node, a.name))
-                return false;
 
             const QString attrValue = attribute(node, a.name);
+            if (attrValue.isNull())
+                return false;
 
             if (a.valueMatchCriterium == QCss::AttributeSelector::MatchContains) {
 
@@ -1608,26 +1937,22 @@ bool StyleSelector::basicSelectorMatches(const BasicSelector &sel, NodePtr node)
     return true;
 }
 
-static inline bool qcss_selectorLessThan(const QPair<int, QCss::StyleRule> &lhs, const QPair<int, QCss::StyleRule> &rhs)
+void StyleSelector::matchRule(NodePtr node, const StyleRule &rule, StyleSheetOrigin origin,
+                               int depth, QMap<uint, StyleRule> *weightedRules)
 {
-    return lhs.first < rhs.first;
-}
-
-void StyleSelector::matchRules(NodePtr node, const QVector<StyleRule> &rules, StyleSheetOrigin origin,
-                               int depth, QVector<QPair<int, StyleRule> > *weightedRules)
-{
-    for (int i = 0; i < rules.count(); ++i) {
-        const StyleRule &rule = rules.at(i);
-        for (int j = 0; j < rule.selectors.count(); ++j) {
-            const Selector& selector = rule.selectors.at(j);
-            if (selectorMatches(selector, node)) {
-                QPair<int, StyleRule> weightedRule;
-                weightedRule.first = selector.specificity()
-                                     + (origin == StyleSheetOrigin_Inline)*0x1000*depth;
-                weightedRule.second.selectors.append(selector);
-                weightedRule.second.declarations = rule.declarations;
-                weightedRules->append(weightedRule);
+    for (int j = 0; j < rule.selectors.count(); ++j) {
+        const Selector& selector = rule.selectors.at(j);
+        if (selectorMatches(selector, node)) {
+            uint weight = rule.order
+                        + selector.specificity() *0x100
+                        + (uint(origin) + depth)*0x100000;
+            StyleRule newRule = rule;
+            if(rule.selectors.count() > 1) {
+                newRule.selectors.resize(1);
+                newRule.selectors[0] = selector;
             }
+            //We might have rules with the same weight if they came from a rule with several selectors
+            weightedRules->insertMulti(weight, newRule);
         }
     }
 }
@@ -1640,25 +1965,55 @@ QVector<StyleRule> StyleSelector::styleRulesForNode(NodePtr node)
     if (styleSheets.isEmpty())
         return rules;
 
-    QVector<QPair<int, StyleRule> > weightedRules; // (spec, rule) that will be sorted below
+    QMap<uint, StyleRule> weightedRules; // (spec, rule) that will be sorted below
+    
+    //prune using indexed stylesheet
     for (int sheetIdx = 0; sheetIdx < styleSheets.count(); ++sheetIdx) {
         const StyleSheet &styleSheet = styleSheets.at(sheetIdx);
+        for (int i = 0; i < styleSheet.styleRules.count(); ++i) {
+            matchRule(node, styleSheet.styleRules.at(i), styleSheet.origin, styleSheet.depth, &weightedRules);
+        }
 
-        matchRules(node, styleSheet.styleRules, styleSheet.origin, styleSheet.depth, &weightedRules);
+        if (!styleSheet.idIndex.isEmpty()) {
+            QStringList ids = nodeIds(node);
+            for (int i = 0; i < ids.count(); i++) {
+                const QString &key = ids.at(i);
+                QMultiHash<QString, StyleRule>::const_iterator it = styleSheet.idIndex.constFind(key);
+                while (it != styleSheet.idIndex.constEnd() && it.key() == key) {
+                    matchRule(node, it.value(), styleSheet.origin, styleSheet.depth, &weightedRules);
+                    ++it;
+                }
+            }
+        }
+        if (!styleSheet.nameIndex.isEmpty()) {
+            QStringList names = nodeNames(node);
+            for (int i = 0; i < names.count(); i++) {
+                QString name = names.at(i);
+                if (nameCaseSensitivity == Qt::CaseInsensitive)
+                    name = name.toLower();
+                QMultiHash<QString, StyleRule>::const_iterator it = styleSheet.nameIndex.constFind(name);
+                while (it != styleSheet.nameIndex.constEnd() && it.key() == name) {
+                    matchRule(node, it.value(), styleSheet.origin, styleSheet.depth, &weightedRules);
+                    ++it;
+                }
+            }
+        }
         if (!medium.isEmpty()) {
             for (int i = 0; i < styleSheet.mediaRules.count(); ++i) {
                 if (styleSheet.mediaRules.at(i).media.contains(medium, Qt::CaseInsensitive)) {
-                    matchRules(node, styleSheet.mediaRules.at(i).styleRules, styleSheet.origin,
+                    for (int j = 0; j < styleSheet.mediaRules.at(i).styleRules.count(); ++j) {
+                        matchRule(node, styleSheet.mediaRules.at(i).styleRules.at(j), styleSheet.origin,
                                styleSheet.depth, &weightedRules);
+                    }
                 }
             }
         }
     }
 
-    qStableSort(weightedRules.begin(), weightedRules.end(), qcss_selectorLessThan);
-
-    for (int j = 0; j < weightedRules.count(); j++)
-        rules += weightedRules.at(j).second;
+    rules.reserve(weightedRules.count());
+    QMap<uint, StyleRule>::const_iterator it = weightedRules.constBegin();
+    for ( ; it != weightedRules.constEnd() ; ++it)
+        rules += *it;
 
     return rules;
 }
@@ -1813,10 +2168,9 @@ void Parser::init(const QString &css, bool isFile)
     Scanner::scan(Scanner::preprocess(styleSheet, &hasEscapeSequences), &symbols);
     index = 0;
     errorIndex = -1;
-    symbols.reserve(qMax(symbols.capacity(), symbols.size()));
 }
 
-bool Parser::parse(StyleSheet *styleSheet)
+bool Parser::parse(StyleSheet *styleSheet, Qt::CaseSensitivity nameCaseSensitivity)
 {
     if (testTokenAndEndsWith(ATKEYWORD_SYM, QLatin1String("charset"))) {
         if (!next(STRING)) return false;
@@ -1852,6 +2206,7 @@ bool Parser::parse(StyleSheet *styleSheet)
         }
         while (test(S) || test(CDO) || test(CDC)) {}
     } while (hasNext());
+    styleSheet->buildIndexes(nameCaseSensitivity);
     return true;
 }
 
@@ -1987,8 +2342,8 @@ bool Parser::parseCombinator(BasicSelector::Relation *relation)
 
 bool Parser::parseProperty(Declaration *decl)
 {
-    decl->property = lexem();
-    decl->propertyId = static_cast<Property>(findKnownValue(decl->property, properties, NumProperties));
+    decl->d->property = lexem();
+    decl->d->propertyId = static_cast<Property>(findKnownValue(decl->d->property, properties, NumProperties));
     skipSpace();
     return true;
 }
@@ -2070,10 +2425,10 @@ bool Parser::parseSimpleSelector(BasicSelector *basicSel)
     do {
         onceMore = false;
         if (test(HASH)) {
-            QString id = lexem();
+            QString theid = lexem();
             // chop off leading #
-            id.remove(0, 1);
-            basicSel->ids.append(id);
+            theid.remove(0, 1);
+            basicSel->ids.append(theid);
             onceMore = true;
         } else if (testClass()) {
             onceMore = true;
@@ -2168,7 +2523,7 @@ bool Parser::parseNextDeclaration(Declaration *decl)
     if (!parseProperty(decl)) return false;
     if (!next(COLON)) return false;
     skipSpace();
-    if (!parseNextExpr(&decl->values)) return false;
+    if (!parseNextExpr(&decl->d->values)) return false;
     if (testPrio())
         if (!parsePrio(decl)) return false;
     return true;
@@ -2192,7 +2547,7 @@ bool Parser::testPrio()
 
 bool Parser::parsePrio(Declaration *declaration)
 {
-    declaration->important = true;
+    declaration->d->important = true;
     skipSpace();
     return true;
 }
@@ -2268,10 +2623,10 @@ bool Parser::parseTerm(Value *value)
         case IDENT: {
             if (haveUnary) return false;
             value->type = Value::Identifier;
-            const int id = findKnownValue(str, values, NumKnownValues);
-            if (id != 0) {
+            const int theid = findKnownValue(str, values, NumKnownValues);
+            if (theid != 0) {
                 value->type = Value::KnownIdentifier;
-                value->variant = id;
+                value->variant = theid;
             }
             break;
         }

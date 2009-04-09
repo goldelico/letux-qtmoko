@@ -21,51 +21,56 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEFuncRElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGFEFuncRElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEFuncRElement)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEFuncRElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEFuncRElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEFuncRElementPrototypeTable = 
-{
-    2, 1, JSSVGFEFuncRElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEFuncRElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEFuncRElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGFEFuncRElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEFuncRElementPrototype::info = { "SVGFEFuncRElementPrototype", 0, &JSSVGFEFuncRElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEFuncRElementPrototype::s_info = { "SVGFEFuncRElementPrototype", 0, &JSSVGFEFuncRElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEFuncRElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEFuncRElementPrototype>(exec, "[[JSSVGFEFuncRElement.prototype]]");
+    return getDOMPrototype<JSSVGFEFuncRElement>(exec);
 }
 
-const ClassInfo JSSVGFEFuncRElement::info = { "SVGFEFuncRElement", &JSSVGComponentTransferFunctionElement::info, 0, 0 };
+const ClassInfo JSSVGFEFuncRElement::s_info = { "SVGFEFuncRElement", &JSSVGComponentTransferFunctionElement::s_info, 0, 0 };
 
-JSSVGFEFuncRElement::JSSVGFEFuncRElement(ExecState* exec, SVGFEFuncRElement* impl)
-    : JSSVGComponentTransferFunctionElement(exec, impl)
+JSSVGFEFuncRElement::JSSVGFEFuncRElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEFuncRElement> impl)
+    : JSSVGComponentTransferFunctionElement(structure, impl)
 {
-    setPrototype(JSSVGFEFuncRElementPrototype::self(exec));
+}
+
+JSObject* JSSVGFEFuncRElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEFuncRElementPrototype(JSSVGFEFuncRElementPrototype::createStructure(JSSVGComponentTransferFunctionElementPrototype::self(exec)));
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

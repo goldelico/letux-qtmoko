@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,14 +60,17 @@
 #include <qbitmap.h>
 #include <qpixmapcache.h>
 #include <qitemeditorfactory.h>
+#include <private/qitemeditorfactory_p.h>
 #include <qmetaobject.h>
 #include <qtextlayout.h>
 #include <private/qobject_p.h>
 #include <private/qdnd_p.h>
 #include <private/qtextengine_p.h>
+#include <private/qlayoutengine_p.h>
 #include <qdebug.h>
 #include <qlocale.h>
 #include <qdialog.h>
+#include <qtableview.h>
 
 #include <limits.h>
 
@@ -123,12 +130,12 @@ public:
     \l{Qt::}{ItemDataRole}; each item can store a QVariant for each
     role. QStyledItemDelegate implements display and editing for the
     most common datatypes expected by users, including booleans,
-    integers, and strings. 
+    integers, and strings.
 
     The data will be drawn differently depending on which role they
     have in the model. The following table describes the roles and the
     data types the delegate can handle for each of them. It is often
-    sufficient to unsure that the model returns appropriate data for
+    sufficient to ensure that the model returns appropriate data for
     each of the roles to determine the appearance of items in views.
 
     \table
@@ -209,7 +216,7 @@ public:
     \endlist
 
     The \l{Star Delegate Example}{Star Delegate} example creates
-    editors by reimplementing these methods. 
+    editors by reimplementing these methods.
 
     \section1 QStyledItemDelegate and QItemDelegate
 
@@ -388,7 +395,7 @@ void QStyledItemDelegate::initStyleOption(QStyleOptionViewItem *option,
     QStyledItemDelegate; the option will always be an instance of
     QStyleOptionViewItemV4. Please see its class description for
     information on its contents.
-    
+
     Whenever possible, use the \a option while painting.
     Especially its \l{QStyleOption::}{rect} variable to decide
     where to draw and its \l{QStyleOption::}{state} to determine
@@ -506,9 +513,6 @@ void QStyledItemDelegate::setEditorData(QWidget *editor, const QModelIndex &inde
     model from the \a editor widget's \l {Qt's Property System} {user
     property}.
 
-    Note that the \a model parameter is redundant because the \a index
-    knows about its model.
-
     \sa QMetaProperty::isUser()
 */
 void QStyledItemDelegate::setModelData(QWidget *editor,
@@ -543,13 +547,31 @@ void QStyledItemDelegate::updateEditorGeometry(QWidget *editor,
     if (!editor)
         return;
     Q_ASSERT(index.isValid());
+    const QWidget *widget = QStyledItemDelegatePrivate::widget(option);
+
     QStyleOptionViewItemV4 opt = option;
     initStyleOption(&opt, index);
-    opt.showDecorationSelected = true; // let the editor take up all available space
+    // let the editor take up all available space 
+    //if the editor is not a QLineEdit
+    //or it is in a QTableView 
+#if !defined(QT_NO_TABLEVIEW) && !defined(QT_NO_LINEEDIT)
+    if (qobject_cast<QExpandingLineEdit*>(editor) && !qobject_cast<const QTableView*>(widget))
+        opt.showDecorationSelected = editor->style()->styleHint(QStyle::SH_ItemView_ShowDecorationSelected, 0, editor);
+    else
+#endif
+        opt.showDecorationSelected = true;
 
-    const QWidget *widget = QStyledItemDelegatePrivate::widget(option);
     QStyle *style = widget ? widget->style() : QApplication::style();
-    editor->setGeometry(style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget));
+    QRect geom = style->subElementRect(QStyle::SE_ItemViewItemText, &opt, widget);
+    if ( editor->layoutDirection() == Qt::RightToLeft) {
+        const int delta = qSmartMinSize(editor).width() - geom.width();
+        if (delta > 0) {
+            //we need to widen the geometry
+            geom.adjust(-delta, 0, 0, 0);
+        }
+    }
+
+    editor->setGeometry(geom);
 }
 
 /*!
@@ -647,7 +669,8 @@ bool QStyledItemDelegate::eventFilter(QObject *object, QEvent *event)
         if (editor->parentWidget())
             editor->parentWidget()->setFocus();
         return true;
-    } else if (event->type() == QEvent::FocusOut) {
+    } else if (event->type() == QEvent::FocusOut || event->type() == QEvent::Hide) {
+        //the Hide event will take care of he editors that are in fact complete dialogs
         if (!editor->isActiveWindow() || (QApplication::focusWidget() != editor)) {
             QWidget *w = QApplication::focusWidget();
             while (w) { // don't worry about focus changes internally in the editor

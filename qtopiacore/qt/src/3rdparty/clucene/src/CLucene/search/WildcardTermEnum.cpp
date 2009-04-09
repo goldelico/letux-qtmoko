@@ -65,7 +65,7 @@ CL_NS_DEF(search)
       close();
     }
 
-    float_t WildcardTermEnum::difference() {
+    qreal WildcardTermEnum::difference() {
         return 1.0f;
     }
 

@@ -3,6 +3,8 @@
 * 
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
+*
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "QueryParser.h"
@@ -177,7 +179,7 @@ CL_NS_DEF(queryParser)
 
 		CND_PRECONDITION(tokens != NULL, "tokens is NULL");
 
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 
 		Query* q = NULL;
 
@@ -447,7 +449,7 @@ CL_NS_DEF(queryParser)
 
 
 		if( q!=NULL && boost != NULL ){
-			float_t f = 1.0F;
+			qreal f = 1.0F;
 			try {
 				TCHAR* tmp;
 				f = _tcstod(boost->Value, &tmp);

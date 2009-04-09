@@ -28,7 +28,7 @@
 
 
 #include "config.h"
-#ifdef AVOID_STATIC_CONSTRUCTORS
+#ifdef SKIP_STATIC_CONSTRUCTORS_ON_GCC
 #define DOM_XMLNAMES_HIDE_GLOBALS 1
 #else
 #define QNAME_DEFAULT_CONSTRUCTOR 1
@@ -37,7 +37,9 @@
 #include "XMLNames.h"
 
 #include "StaticConstructors.h"
-namespace WebCore { namespace XMLNames {
+namespace WebCore {
+
+ namespace XMLNames {
 
 using namespace WebCore;
 
@@ -60,6 +62,8 @@ WebCore::QualifiedName** getXMLAttrs(size_t* size)
     return XMLAttr;
 }
 
+// Attributes as strings
+
 void init()
 {
     static bool initialized = false;
@@ -79,7 +83,6 @@ void init()
     const char *baseAttrString = "base";
     const char *langAttrString = "lang";
     const char *spaceAttrString = "space";
-
     new ((void*)&baseAttr) QualifiedName(nullAtom, baseAttrString, xmlNS);
     new ((void*)&langAttr) QualifiedName(nullAtom, langAttrString, xmlNS);
     new ((void*)&spaceAttr) QualifiedName(nullAtom, spaceAttrString, xmlNS);

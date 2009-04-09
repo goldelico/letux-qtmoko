@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -159,10 +163,10 @@ QT_BEGIN_NAMESPACE
 QScriptValue QScriptContext::throwValue(const QScriptValue &value)
 {
     Q_D(QScriptContext);
-    d->m_result = QScriptValuePrivate::valueOf(value);
+    d->m_result = d->engine()->toImpl(value);
     d->m_state = QScriptContext::ExceptionState;
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
-        d->enginePrivate()->notifyException(d);
+        d->engine()->notifyException(d);
 #endif
     return value;
 }
@@ -184,7 +188,7 @@ QScriptValue QScriptContext::throwValue(const QScriptValue &value)
 QScriptValue QScriptContext::throwError(Error error, const QString &text)
 {
     Q_D(QScriptContext);
-    return d->throwError(error, text);
+    return d->engine()->toPublic(d->throwError(error, text));
 }
 
 /*!
@@ -198,7 +202,7 @@ QScriptValue QScriptContext::throwError(Error error, const QString &text)
 QScriptValue QScriptContext::throwError(const QString &text)
 {
     Q_D(QScriptContext);
-    return d->throwError(text);
+    return d->engine()->toPublic(d->throwError(text));
 }
 
 /*!
@@ -225,7 +229,7 @@ QScriptContext::~QScriptContext()
 QScriptEngine *QScriptContext::engine() const
 {
     Q_D(const QScriptContext);
-    return d->engine();
+    return QScriptEnginePrivate::get(d->engine());
 }
 
 /*!
@@ -241,7 +245,7 @@ QScriptValue QScriptContext::argument(int index) const
     Q_D(const QScriptContext);
     if (index < 0)
         return QScriptValue();
-    return d->argument(index);
+    return d->engine()->toPublic(d->argument(index));
 }
 
 /*!
@@ -251,7 +255,7 @@ QScriptValue QScriptContext::argument(int index) const
 QScriptValue QScriptContext::callee() const
 {
     Q_D(const QScriptContext);
-    return d->m_callee;
+    return d->engine()->toPublic(d->m_callee);
 }
 
 /*!
@@ -272,13 +276,7 @@ QScriptValue QScriptContext::callee() const
 QScriptValue QScriptContext::argumentsObject() const
 {
     Q_D(const QScriptContext);
-    if (!d->m_arguments.isValid() && d->m_activation.isValid()) {
-        QScriptContextPrivate *dd = const_cast<QScriptContextPrivate*>(d);
-        QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
-        eng_p->newArguments(&dd->m_arguments, d->m_activation,
-                            d->argc, d->m_callee);
-    }
-    return d->m_arguments;
+    return d->engine()->toPublic(d->argumentsObject());
 }
 
 /*!
@@ -300,7 +298,7 @@ bool QScriptContext::isCalledAsConstructor() const
 QScriptContext *QScriptContext::parentContext() const
 {
     Q_D(const QScriptContext);
-    return d->previous;
+    return QScriptContextPrivate::get(d->previous);
 }
 
 /*!
@@ -325,7 +323,7 @@ int QScriptContext::argumentCount() const
 QScriptValue QScriptContext::returnValue() const
 {
     Q_D(const QScriptContext);
-    return d->m_result;
+    return d->engine()->toPublic(d->m_result);
 }
 
 /*!
@@ -334,7 +332,7 @@ QScriptValue QScriptContext::returnValue() const
 void QScriptContext::setReturnValue(const QScriptValue &result)
 {
     Q_D(QScriptContext);
-    d->m_result = QScriptValuePrivate::valueOf(result);
+    d->m_result = d->engine()->toImpl(result);
 }
 
 /*!
@@ -347,21 +345,27 @@ void QScriptContext::setReturnValue(const QScriptValue &result)
 QScriptValue QScriptContext::activationObject() const
 {
     Q_D(const QScriptContext);
-    if (d->previous && !d->m_activation.property(QLatin1String("arguments")).isValid()) {
-        QScriptContextPrivate *dd = const_cast<QScriptContextPrivate*>(d);
-        dd->m_activation.setProperty(QLatin1String("arguments"), QScriptValuePrivate::valueOf(argumentsObject()));
-    }
-    return d->m_activation;
+    return d->engine()->toPublic(d->activationObject());
 }
 
 /*!
   Sets the activation object of this QScriptContext to be the given \a
   activation.
+
+  If \a activation is not an object, this function does nothing.
 */
 void QScriptContext::setActivationObject(const QScriptValue &activation)
 {
     Q_D(QScriptContext);
-    d->m_activation = QScriptValuePrivate::valueOf(activation);
+    if (!activation.isObject()) {
+        return;
+    } else if (activation.engine() != engine()) {
+        qWarning("QScriptContext::setActivationObject() failed: "
+                 "cannot set an object created in "
+                 "a different engine");
+    } else {
+        d->m_activation = d->engine()->toImpl(activation);
+    }
 }
 
 /*!
@@ -370,17 +374,26 @@ void QScriptContext::setActivationObject(const QScriptValue &activation)
 QScriptValue QScriptContext::thisObject() const
 {
     Q_D(const QScriptContext);
-    return d->m_thisObject;
+    return d->engine()->toPublic(d->m_thisObject);
 }
 
 /*!
   Sets the `this' object associated with this QScriptContext to be
   \a thisObject.
+
+  If \a thisObject is not an object, this function does nothing.
 */
 void QScriptContext::setThisObject(const QScriptValue &thisObject)
 {
     Q_D(QScriptContext);
-    d->m_thisObject = QScriptValuePrivate::valueOf(thisObject);
+    if (!thisObject.isObject()) {
+    } else if (thisObject.engine() != engine()) {
+        qWarning("QScriptContext::setThisObject() failed: "
+                 "cannot set an object created in "
+                 "a different engine");
+    } else {
+        d->m_thisObject = d->engine()->toImpl(thisObject);
+    }
 }
 
 /*!
@@ -467,6 +480,90 @@ QString QScriptContext::toString() const
     }
     result.append(QString::number(lineNumber));
     return result;
+}
+
+/*!
+  \internal
+  \since 4.5
+
+  Returns the scope chain of this QScriptContext.
+*/
+QScriptValueList QScriptContext::scopeChain() const
+{
+    Q_D(const QScriptContext);
+    // make sure arguments properties are initialized
+    const QScriptContextPrivate *ctx = d;
+    while (ctx) {
+        (void)ctx->activationObject();
+        ctx = ctx->previous;
+    }
+    QScriptValueList result;
+    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+    QScriptValueImpl scope = d->m_scopeChain;
+    while (scope.isObject()) {
+        if (scope.classInfo() == eng_p->m_class_with)
+            result.append(eng_p->toPublic(scope.prototype()));
+        else
+            result.append(eng_p->toPublic(scope));
+        scope = scope.scope();
+    }
+    return result;
+}
+
+/*!
+  \internal
+  \since 4.5
+
+  Adds the given \a object to the front of this context's scope chain.
+
+  If \a object is not an object, this function does nothing.
+*/
+void QScriptContext::pushScope(const QScriptValue &object)
+{
+    Q_D(QScriptContext);
+    if (!object.isObject()) {
+        return;
+    } else if (object.engine() != engine()) {
+        qWarning("QScriptContext::pushScope() failed: "
+                 "cannot push an object created in "
+                 "a different engine");
+        return;
+    }
+    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+    if (!d->m_scopeChain.isValid()) {
+        d->m_scopeChain = eng_p->toImpl(object);
+    } else {
+        QScriptValueImpl withObject;
+        eng_p->newObject(&withObject, eng_p->toImpl(object), eng_p->m_class_with);
+        withObject.m_object_value->m_scope = d->m_scopeChain;
+        withObject.setInternalValue(1); // to differentiate from with-statement objects
+        d->m_scopeChain = withObject;
+    }
+}
+
+/*!
+  \internal
+  \since 4.5
+
+  Removes the front object from this context's scope chain, and
+  returns the removed object.
+
+  If the scope chain is already empty, this function returns an
+  invalid QScriptValue.
+*/
+QScriptValue QScriptContext::popScope()
+{
+    Q_D(QScriptContext);
+    if (!d->m_scopeChain.isObject())
+        return QScriptValue();
+    QScriptValueImpl result;
+    QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine());
+    if (d->m_scopeChain.classInfo() != eng_p->m_class_with)
+        result = d->m_scopeChain;
+    else
+        result = d->m_scopeChain.prototype();
+    d->m_scopeChain = d->m_scopeChain.m_object_value->m_scope;
+    return eng_p->toPublic(result);
 }
 
 QT_END_NAMESPACE

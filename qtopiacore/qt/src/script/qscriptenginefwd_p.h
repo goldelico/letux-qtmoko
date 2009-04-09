@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -163,12 +167,15 @@ class QScriptEnginePrivate
     };
 
 public:
-    inline QScriptEnginePrivate();
+    QScriptEnginePrivate();
     virtual ~QScriptEnginePrivate();
 
     void init();
+    void initStringRepository();
 
     static inline QScriptEnginePrivate *get(QScriptEngine *q);
+    static inline const QScriptEnginePrivate *get(const QScriptEngine *q);
+    static inline QScriptEngine *get(QScriptEnginePrivate *d);
 
     QScript::AST::Node *createAbstractSyntaxTree(
         const QString &source, int lineNumber,
@@ -184,8 +191,11 @@ public:
     void emitSignalHandlerException();
 #endif
 
-    inline QScriptContext *currentContext() const;
-    inline QScriptContext *pushContext();
+    static bool canEvaluate(const QString &program);
+    static QScriptSyntaxCheckResult checkSyntax(const QString &program);
+
+    inline QScriptContextPrivate *currentContext() const;
+    inline QScriptContextPrivate *pushContext();
     inline void popContext();
 
     inline QScript::MemoryPool *nodePool();
@@ -230,43 +240,34 @@ public:
                                            int length, QScriptClassInfo *classInfo,
                                            const QString &name = QString());
 
-    inline QString toString(QScriptNameIdImpl *id) const;
+    static inline QString toString(QScriptNameIdImpl *id);
     inline QString memberName(const QScript::Member &member) const;
     inline void newReference(QScriptValueImpl *object, int mode);
     inline void newActivation(QScriptValueImpl *object);
-    inline void newBoolean(QScriptValueImpl *object, bool b);
-    inline void newNumber(QScriptValueImpl *object, qsreal d);
     inline void newFunction(QScriptValueImpl *object, QScriptFunction *function);
     inline void newConstructor(QScriptValueImpl *ctor, QScriptFunction *function,
                         QScriptValueImpl &proto);
     inline void newInteger(QScriptValueImpl *object, int i);
-    inline void newNull(QScriptValueImpl *object);
     inline void newPointer(QScriptValueImpl *object, void *ptr);
     inline void newNameId(QScriptValueImpl *object, const QString &s);
     inline void newNameId(QScriptValueImpl *object, QScriptNameIdImpl *id);
     inline void newString(QScriptValueImpl *object, const QString &s);
-    inline void newUndefined(QScriptValueImpl *object);
     inline void newArguments(QScriptValueImpl *object, const QScriptValueImpl &activation,
                       uint length, const QScriptValueImpl &callee);
-    inline QString convertToNativeString(const QScriptValueImpl &object);
-    QString convertToNativeString_helper(const QScriptValueImpl &object);
-    inline qsreal convertToNativeDouble(const QScriptValueImpl &object);
-    qsreal convertToNativeDouble_helper(const QScriptValueImpl &object);
-    inline bool convertToNativeBoolean(const QScriptValueImpl &object);
-    bool convertToNativeBoolean_helper(const QScriptValueImpl &object);
-    inline qint32 convertToNativeInt32(const QScriptValueImpl &object);
-    inline QScriptFunction *convertToNativeFunction(const QScriptValueImpl &object);
+    static inline QString convertToNativeString(const QScriptValueImpl &value);
+    static QString convertToNativeString_helper(const QScriptValueImpl &value);
+    static inline qsreal convertToNativeDouble(const QScriptValueImpl &value);
+    static qsreal convertToNativeDouble_helper(const QScriptValueImpl &value);
+    static inline bool convertToNativeBoolean(const QScriptValueImpl &value);
+    static bool convertToNativeBoolean_helper(const QScriptValueImpl &value);
+    static inline qint32 convertToNativeInt32(const QScriptValueImpl &value);
+    static inline QScriptFunction *convertToNativeFunction(const QScriptValueImpl &value);
 
-    inline static qsreal toNumber(const QString &value);
-    inline static QString toString(qsreal value);
-    static QString toString_helper(qsreal d);
+    inline QScriptValue toPublic(const QScriptValueImpl &value);
+    inline QScriptValueImpl toImpl(const QScriptValue &value);
+    QScriptValueImpl toImpl_helper(const QScriptValue &value);
+    inline QScriptValueImplList toImplList(const QScriptValueList &lst);
 
-    inline static qsreal Inf();
-    inline static qsreal SNaN();
-    inline static qsreal QNaN();
-    inline static bool isInf(qsreal d);
-    inline static bool isNaN(qsreal d);
-    inline static bool isFinite(qsreal d);
     inline const QScript::IdTable *idTable() const;
 
     inline QScriptValueImpl toObject(const QScriptValueImpl &value);
@@ -338,20 +339,21 @@ public:
     QScriptNameIdImpl *insertStringEntry(const QString &s);
 
     QScriptValueImpl create(int type, const void *ptr);
-    bool convert(const QScriptValueImpl &value, int type, void *ptr);
+    static bool convert(const QScriptValueImpl &value, int type, void *ptr,
+                        QScriptEnginePrivate *eng);
 
     QScriptValueImpl arrayFromStringList(const QStringList &lst);
-    QStringList stringListFromArray(const QScriptValueImpl &arr);
+    static QStringList stringListFromArray(const QScriptValueImpl &arr);
 
     QScriptValueImpl arrayFromVariantList(const QVariantList &lst);
-    QVariantList variantListFromArray(const QScriptValueImpl &arr);
+    static QVariantList variantListFromArray(const QScriptValueImpl &arr);
 
     QScriptValueImpl objectFromVariantMap(const QVariantMap &vmap);
-    QVariantMap variantMapFromObject(const QScriptValueImpl &obj);
+    static QVariantMap variantMapFromObject(const QScriptValueImpl &obj);
 
-    inline bool lessThan(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs) const;
-    inline bool equals(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs) const;
-    inline bool strictlyEquals(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs) const;
+    static inline bool lessThan(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs);
+    static inline bool equals(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs);
+    static inline bool strictlyEquals(const QScriptValueImpl &lhs, const QScriptValueImpl &rhs);
 
     QScriptValuePrivate *registerValue(const QScriptValueImpl &value);
     inline void unregisterValue(QScriptValuePrivate *p);
@@ -412,6 +414,8 @@ public:
 
     void agentDeleted(QScriptEngineAgent *agent);
 
+    void installTranslatorFunctions(QScriptValueImpl &object);
+
 #ifndef Q_SCRIPT_NO_EVENT_NOTIFY
     qint64 nextScriptId();
     inline bool shouldNotify() const;
@@ -435,6 +439,7 @@ public:
     void notifyException_helper(QScriptContextPrivate *ctx);
     inline void notifyExceptionCatch(QScriptContextPrivate *ctx);
     void notifyExceptionCatch_helper(QScriptContextPrivate *ctx);
+    void notifyDebugger(QScriptContextPrivate *ctx);
 #endif // Q_SCRIPT_NO_EVENT_NOTIFY
 
 public: // attributes
@@ -448,12 +453,15 @@ public: // attributes
     int m_oldStringRepositorySize;
     int m_oldTempStringRepositorySize;
     QVector<QScriptNameIdImpl*> m_stringRepository;
+    int m_newAllocatedStringRepositoryChars;
     QVector<QScriptNameIdImpl*> m_tempStringRepository;
+    int m_newAllocatedTempStringRepositoryChars;
     QScriptNameIdImpl **m_string_hash_base;
     int m_string_hash_size;
-    QScript::GCAlloc<QScriptObject, QScriptEngine*> objectAllocator;
+    QScript::GCAlloc<QScriptObject> objectAllocator;
+    int m_objectGeneration;
     QScript::Repository<QScriptContext, QScriptContextPrivate> m_frameRepository;
-    QScriptContext *m_context;
+    QScriptContextPrivate *m_context;
     QScriptValueImpl *tempStackBegin;
     QScriptValueImpl *tempStackEnd;
     QScript::AST::Node *m_abstractSyntaxTree;
@@ -462,6 +470,9 @@ public: // attributes
     QStringList m_exceptionBacktrace;
     qint64 m_scriptCounter;
 
+    QScriptValueImpl m_undefinedValue;
+    QScriptValueImpl m_nullValue;
+    
     QScript::Ecma::Object *objectConstructor;
     QScript::Ecma::Number *numberConstructor;
     QScript::Ecma::Boolean *booleanConstructor;
@@ -479,16 +490,6 @@ public: // attributes
     QHash<int, QScriptCustomTypeInfo> m_customTypes;
 
     QScriptFunction *m_evalFunction;
-
-    QScriptTypeInfo *m_type_boolean;
-    QScriptTypeInfo *m_type_number;
-    QScriptTypeInfo *m_type_int;
-    QScriptTypeInfo *m_type_null;
-    QScriptTypeInfo *m_type_object;
-    QScriptTypeInfo *m_type_pointer;
-    QScriptTypeInfo *m_type_reference;
-    QScriptTypeInfo *m_type_string;
-    QScriptTypeInfo *m_type_undefined;
 
     QList<QScriptClassInfo*> m_allocated_classes;
     QScriptClassInfo *m_class_object;
@@ -508,6 +509,8 @@ public: // attributes
     QScript::Repository<QScriptStringPrivate,
                         QScriptStringPrivate> m_internedStringRepository;
     QHash<QScriptNameIdImpl*, QScriptStringPrivate*> m_internedStrings;
+
+    QSet<QScriptObject*> visitedArrayElements;
 
 #ifndef QT_NO_REGEXP
     QHash<QString, QRegExp> m_regExpLiterals;

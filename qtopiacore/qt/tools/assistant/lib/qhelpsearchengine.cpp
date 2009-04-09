@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -85,7 +89,7 @@ private:
         indexWriter = 0;
     }
 
-    ~QHelpSearchEnginePrivate() 
+    ~QHelpSearchEnginePrivate()
     {
         hitList.clear();
         delete indexReader;
@@ -139,7 +143,7 @@ private:
         if (indexWriter)
             indexWriter->cancelIndexing();
     }
-    
+
     void search(const QList<QHelpSearchQuery> &queryList)
     {
         if (helpEngine.isNull())
@@ -156,6 +160,7 @@ private:
         }
 
         if (indexReader) {
+            m_queryList = queryList;
             indexReader->cancelSearching();
             indexReader->search(helpEngine->collectionFile(), indexFilesFolder(), queryList);
         }
@@ -197,9 +202,11 @@ private:
 
     QHelpSearchIndexReader *indexReader;
     QHelpSearchIndexWriter *indexWriter;
-    
+
     QPointer<QHelpEngineCore> helpEngine;
     QList<QHelpSearchEngine::SearchHit> hitList;
+
+    QList<QHelpSearchQuery> m_queryList;
 };
 
 #include "qhelpsearchengine.moc"
@@ -209,10 +216,10 @@ private:
     \class QHelpSearchQuery
     \since 4.4
     \inmodule QtHelp
-    \brief The QHelpSearchQuery class contains the field name and the associated 
+    \brief The QHelpSearchQuery class contains the field name and the associated
     search term
 
-    The QHelpSearchQuery class contains the field name and the associated search 
+    The QHelpSearchQuery class contains the field name and the associated search
     term. Depending on the field the search term might get split up into seperate
     terms to be parsed differently by the search engine.
 
@@ -224,7 +231,7 @@ private:
 
     Constructs a new empty QHelpSearchQuery.
 */
-    
+
 /*!
     \fn QHelpSearchQuery::QHelpSearchQuery(FieldName field, const QStringList &wordList)
 
@@ -235,7 +242,7 @@ private:
     \enum QHelpSearchQuery::FieldName
     This enum type specifies the field names that are handled by the search engine.
 
-    \value DEFAULT  the default field provided by the search widget, several terms should be 
+    \value DEFAULT  the default field provided by the search widget, several terms should be
                     splitted and stored in the wordlist except search terms enclosed in quotes.
     \value FUZZY    a field only provided in use with clucene. Terms should be split in seperate
                     words and passed to the search engine.
@@ -258,7 +265,7 @@ private:
 
     Before the search engine can be used, one has to instantiate at least a
     QHelpEngineCore object that needs to be passed to the search engines constructor.
-    This is required as the search engine needs to be connected to the help 
+    This is required as the search engine needs to be connected to the help
     engines setupFinished() signal to know when it can start to index documentation.
 
     After starting the indexing process the signal indexingStarted() is emitted and
@@ -267,12 +274,12 @@ private:
 
     While the indexing process has finished, the search engine can now be used to search
     thru its index for a given term. To do this one may use the possibility of creating the
-    QHelpSearchQuery list by self or reuse the QHelpSearchQueryWidget which has the inbuild 
+    QHelpSearchQuery list by self or reuse the QHelpSearchQueryWidget which has the inbuild
     functionality to set up a proper search querys list that get's passed to the search engines
     search() function.
 
     After the list of querys has been passed to the search engine, the signal searchingStarted()
-    is emited and after the search has finished the searchingFinished() signal is emited. The 
+    is emited and after the search has finished the searchingFinished() signal is emited. The
     search process can be stopped by calling cancelSearching().
 
     If the search succeeds, the searchingFinished() will be called with the search hits count,
@@ -315,7 +322,7 @@ private:
 /*!
     Constructs a new search engine with the given \a parent. The search engine
     uses the given \a helpEngine to access the documentation that needs to be indexed.
-    The QHelpEngine's setupFinished() signal is automatically connected to the 
+    The QHelpEngine's setupFinished() signal is automatically connected to the
     QHelpSearchEngine's indexing function, so that new documentation will be indexed
     after the signal is emited.
 */
@@ -341,14 +348,14 @@ QHelpSearchEngine::~QHelpSearchEngine()
 }
 
 /*!
-    Returns a widget to use as input widget. Depending on your search engine 
+    Returns a widget to use as input widget. Depending on your search engine
     configuration you will get a different widget with more or less subwidgets.
 */
 QHelpSearchQueryWidget* QHelpSearchEngine::queryWidget()
 {
     if (!d->queryWidget)
         d->queryWidget = new QHelpSearchQueryWidget();
-    
+
     return d->queryWidget;
 }
 
@@ -359,7 +366,7 @@ QHelpSearchResultWidget* QHelpSearchEngine::resultWidget()
 {
     if (!d->resultWidget)
         d->resultWidget = new QHelpSearchResultWidget(this);
-    
+
     return d->resultWidget;
 }
 
@@ -386,6 +393,15 @@ int QHelpSearchEngine::hitsCount() const
 QList<QHelpSearchEngine::SearchHit> QHelpSearchEngine::hits(int start, int end) const
 {
    return d->hits(start, end);
+}
+
+/*!
+    Returns the list of queries last searched for.
+    \since 4.5
+*/
+QList<QHelpSearchQuery> QHelpSearchEngine::query() const
+{
+    return d->m_queryList;
 }
 
 /*!

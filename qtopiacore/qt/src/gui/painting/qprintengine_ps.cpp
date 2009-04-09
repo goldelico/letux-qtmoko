@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -172,6 +176,7 @@ QPSPrintEnginePrivate::QPSPrintEnginePrivate(QPrinter::PrinterMode m)
     : QPdfBaseEnginePrivate(m),
       printerState(QPrinter::Idle), hugeDocument(false), headerDone(false)
 {
+    useAlphaEngine = true;
     postscript = true;
 
     firstPage = true;
@@ -290,22 +295,19 @@ static const char *const filters[3] = {
     "/DCTDecode filter "
 };
 
-static QByteArray compressHelper(const QImage &img, bool gray, int *format)
+static QByteArray compressHelper(const QImage &image, bool gray, int *format)
 {
     // we can't use premultiplied here
-    QImage image = img;
-
-    if (image.format() == QImage::Format_ARGB32_Premultiplied)
-        image = image.convertToFormat(QImage::Format_ARGB32);
-
     QByteArray pixelData;
     int depth = image.depth();
+
+    Q_ASSERT(image.format() != QImage::Format_ARGB32_Premultiplied);
 
     if (depth != 1 && !gray && QImageWriter::supportedImageFormats().contains("jpeg")) {
         QBuffer buffer(&pixelData);
         QImageWriter writer(&buffer, "jpeg");
         writer.setQuality(94);
-        writer.write(img);
+        writer.write(image);
         *format = DCT;
     } else {
         int width = image.width();
@@ -380,19 +382,72 @@ static QByteArray compressHelper(const QImage &img, bool gray, int *format)
     return outarr;
 }
 
+void QPSPrintEnginePrivate::drawImageHelper(qreal x, qreal y, qreal w, qreal h, const QImage &img,
+                                            const QImage &mask, bool gray, qreal scaleX, qreal scaleY)
+{
+    Q_UNUSED(h);
+    Q_UNUSED(w);
+    int width = img.width();
+    int height = img.height();
+
+    QByteArray out;
+    int size = 0;
+    const char *bits;
+
+    if (!mask.isNull()) {
+        int format;
+        out = compressHelper(mask, true, &format);
+        size = (width+7)/8*height;
+        *currentPage << "/mask currentfile/ASCII85Decode filter"
+                     << filters[format]
+                     << size << " string readstring\n";
+        ps_r7(*currentPage, out, out.size());
+        *currentPage << " pop def\n";
+    }
+    if (img.depth() == 1) {
+        size = (width+7)/8*height;
+        bits = "1 ";
+    } else if (gray) {
+        size = width*height;
+        bits = "8 ";
+    } else {
+        size = width*height*3;
+        bits = "24 ";
+    }
+
+    int format;
+    out = compressHelper(img, gray, &format);
+    *currentPage << "/sl currentfile/ASCII85Decode filter"
+                 << filters[format]
+                 << size << " string readstring\n";
+    ps_r7(*currentPage, out, out.size());
+    *currentPage << " pop def\n";
+    *currentPage << width << ' ' << height << "[" << scaleX << " 0 0 " << scaleY << " 0 0]sl "
+                 << bits << (!mask.isNull() ? "mask " : "false ")
+                 << x << ' ' << y << " di\n";
+}
+
 
 void QPSPrintEnginePrivate::drawImage(qreal x, qreal y, qreal w, qreal h,
-                                      const QImage &img, const QImage &mask)
+                                      const QImage &image, const QImage &msk)
 {
-    if (!w || !h || img.isNull()) return;
+    if (!w || !h || image.isNull()) return;
+
+    QImage img(image);
+    QImage mask(msk);
+
+    if (image.format() == QImage::Format_ARGB32_Premultiplied)
+        img = image.convertToFormat(QImage::Format_ARGB32);
+
+    if (!msk.isNull() && msk.format() == QImage::Format_ARGB32_Premultiplied)
+        mask = msk.convertToFormat(QImage::Format_ARGB32);
 
     int width  = img.width();
     int height = img.height();
     qreal scaleX = width/w;
     qreal scaleY = height/h;
 
-    bool gray = (colorMode == QPrinter::GrayScale) ||
-                img.allGray();
+    bool gray = (colorMode == QPrinter::GrayScale) || img.allGray();
     int splitSize = 21830 * (gray ? 3 : 1);
     if (width * height > splitSize) { // 65535/3, tolerance for broken printers
         int images, subheight;
@@ -403,48 +458,20 @@ void QPSPrintEnginePrivate::drawImage(qreal x, qreal y, qreal w, qreal h,
             subheight = (height + images-1) / images;
         }
         int suby = 0;
+        const QImage constImg(img);
+        const QImage constMask(mask);
         while(suby < height) {
-            drawImage(x, y + suby/scaleY, w, qMin(subheight, height-suby)/scaleY,
-                      img.copy(0, suby, width, qMin(subheight, height-suby)),
-                      mask.isNull() ? mask : mask.copy(0, suby, width, qMin(subheight, height-suby)));
+            qreal subImageHeight = qMin(subheight, height-suby);
+            const QImage subImage(constImg.scanLine(suby), width, subImageHeight,
+                                  constImg.bytesPerLine(), constImg.format());
+            const QImage subMask = mask.isNull() ? mask : QImage(constMask.scanLine(suby), width, subImageHeight,
+                                                                 constMask.bytesPerLine(), constMask.format());
+            drawImageHelper(x, y + suby/scaleY, w, subImageHeight/scaleY,
+                            subImage, subMask, gray, scaleX, scaleY);
             suby += subheight;
         }
     } else {
-        QByteArray out;
-        int size = 0;
-        const char *bits;
-
-        if (!mask.isNull()) {
-            int format;
-            out = compressHelper(mask, true, &format);
-            size = (width+7)/8*height;
-            *currentPage << "/mask currentfile/ASCII85Decode filter"
-                         << filters[format]
-                         << size << " string readstring\n";
-            ps_r7(*currentPage, out, out.size());
-            *currentPage << " pop def\n";
-        }
-        if (img.depth() == 1) {
-            size = (width+7)/8*height;
-            bits = "1 ";
-        } else if (gray) {
-            size = width*height;
-            bits = "8 ";
-        } else {
-            size = width*height*3;
-            bits = "24 ";
-        }
-
-        int format;
-        out = compressHelper(img, gray, &format);
-        *currentPage << "/sl currentfile/ASCII85Decode filter"
-                     << filters[format]
-                     << size << " string readstring\n";
-        ps_r7(*currentPage, out, out.size());
-        *currentPage << " pop def\n";
-        *currentPage << width << ' ' << height << "[" << scaleX << " 0 0 " << scaleY << " 0 0]sl "
-                    << bits << (!mask.isNull() ? "mask " : "false ")
-                    << x << ' ' << y << " di\n";
+        drawImageHelper(x, y, width, height, img, mask, gray, scaleX, scaleY);
     }
 }
 
@@ -519,9 +546,9 @@ void QPSPrintEnginePrivate::emitHeader(bool finished)
         "\n%%EndComments\n"
 
         "%%BeginProlog\n"
-        "% Prolog copyright 1994-2006 Trolltech. You may copy this prolog in any way\n"
-        "% that is directly related to this document. For other use of this prolog,\n"
-        "% see your licensing agreement for Qt.\n"
+        "% Prolog copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).\n"
+        "% You may copy this prolog in any way that is directly related to this document.\n"
+        "% For other use of this prolog, see your licensing agreement for Qt.\n"
       << ps_header << "\n";
 
 
@@ -555,9 +582,25 @@ void QPSPrintEnginePrivate::emitPages()
             outDevice->write((*it)->toType1());
     }
 
-    outDevice->write(buffer);
+    QIODevice *content = buffer.stream();
+    // Write the page contents in chunks.
+    while (!content->atEnd()) {
+        QByteArray buf = content->read(currentPage->chunkSize());
+        if (!buf.isEmpty())
+            outDevice->write(buf);
+    }
+    content = currentPage->stream();
+    // Write the page contents in chunks.
+    while (!content->atEnd()) {
+        QByteArray buf = content->read(currentPage->chunkSize());
+        if (!buf.isEmpty())
+            outDevice->write(buf);
+    }
+    outDevice->write(trailer);
 
-    buffer = QByteArray();
+    buffer.clear();
+    currentPage->clear();
+    trailer = QByteArray();
     hugeDocument = true;
 }
 
@@ -570,38 +613,42 @@ static const int max_in_memory_size = 32000000;
 
 void QPSPrintEnginePrivate::flushPage(bool last)
 {
-    if (!last && currentPage->content().isEmpty())
+    if (!last && currentPage->stream()->size() == 0)
         return;
 
-    QPdf::ByteStream s(&buffer);
-    s << "%%Page: "
-      << pageCount << pageCount << "\n"
-      << "%%BeginPageSetup\n"
-      << "QI\n";
+    QPdf::ByteStream e(&trailer);
+    buffer << "%%Page: "
+           << pageCount << pageCount << "\n"
+           << "%%BeginPageSetup\n"
+           << "QI\n";
     if (hugeDocument) {
         for (QHash<QFontEngine::FaceId, QFontSubset *>::const_iterator it = fonts.constBegin();
              it != fonts.constEnd(); ++it) {
             if (currentPage->fonts.contains((*it)->object_id)) {
                 if ((*it)->downloaded_glyphs == 0) {
-                    s << (*it)->toType1();
+                    buffer << (*it)->toType1();
                     (*it)->downloaded_glyphs = 0;
                 } else {
-                    s << (*it)->type1AddedGlyphs();
+                    buffer << (*it)->type1AddedGlyphs();
                 }
             }
         }
     }
     for (int i = 0; i < currentPage->fonts.size(); ++i)
-        s << "(F" << QByteArray::number(currentPage->fonts.at(i)) << ") T1Setup\n";
+        buffer << "(F" << QByteArray::number(currentPage->fonts.at(i)) << ") T1Setup\n";
 
-    s << "%%EndPageSetup\nq\n"
-      << currentPage->content()
-      << "\nQ QP\n";
-    if (last || hugeDocument || buffer.size() > max_in_memory_size) {
+    buffer << "%%EndPageSetup\nq\n";
+    e << "\nQ QP\n";
+    if (last || hugeDocument
+        || buffer.stream()->size() + currentPage->stream()->size() > max_in_memory_size) {
 //        qDebug("emiting header at page %d", pageCount);
         if (!headerDone)
             emitHeader(last);
         emitPages();
+    } else {
+        buffer << *currentPage << e;
+        currentPage->clear();
+        trailer.clear();
     }
     pageCount++;
 }
@@ -682,8 +729,16 @@ bool QPSPrintEngine::begin(QPaintDevice *pdev)
     if (d->fd >= 0)
         return true;
 
-    if(!QPdfBaseEngine::begin(pdev))
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::begin(pdev);
+        if (!continueCall())
+            return true;
+    }
+
+    if(!QPdfBaseEngine::begin(pdev)) {
+        d->printerState = QPrinter::Error;
         return false;
+    }
 
     d->pageCount = 1;                // initialize state
 
@@ -708,6 +763,12 @@ bool QPSPrintEngine::begin(QPaintDevice *pdev)
 bool QPSPrintEngine::end()
 {
     Q_D(QPSPrintEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::end();
+        if (!continueCall())
+            return true;
+    }
 
     // we're writing to lp/lpr through a pipe, we don't want to crash with SIGPIPE
     // if lp/lpr dies
@@ -774,7 +835,9 @@ void QPSPrintEngine::drawImageInternal(const QRectF &r, QImage image, bool bitma
     if (bitmap && image.depth() != 1)
         bitmap = false;
     QImage mask;
-    if (!bitmap) {
+    // the below is not necessary since it's handled by the alpha
+    // engine
+    if (!d->useAlphaEngine && !bitmap) {
         if (image.format() == QImage::Format_Mono || image.format() == QImage::Format_MonoLSB)
             image = image.convertToFormat(QImage::Format_Indexed8);
         if (image.hasAlphaChannel()) {
@@ -805,12 +868,27 @@ void QPSPrintEngine::drawImageInternal(const QRectF &r, QImage image, bool bitma
 void QPSPrintEngine::drawImage(const QRectF &r, const QImage &img, const QRectF &sr,
                                Qt::ImageConversionFlags)
 {
+    Q_D(QPSPrintEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawImage(r, img, sr);
+        if (!continueCall())
+            return;
+    }
     QImage image = img.copy(sr.toRect());
     drawImageInternal(r, image, false);
 }
 
 void QPSPrintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr)
 {
+    Q_D(QPSPrintEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawPixmap(r, pm, sr);
+        if (!continueCall())
+            return;
+    }
+
     QImage img = pm.copy(sr.toRect()).toImage();
     drawImageInternal(r, img, true);
 }
@@ -818,6 +896,13 @@ void QPSPrintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF
 void QPSPrintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &p)
 {
     Q_D(QPSPrintEngine);
+
+    if (d->useAlphaEngine) {
+        QAlphaPaintEngine::drawTiledPixmap(r, pixmap, p);
+        if (!continueCall())
+            return;
+    }
+
     if (d->clipEnabled && d->allClipped)
         return;
     // ### Optimise implementation!
@@ -835,7 +920,7 @@ void QPSPrintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, con
                 drawW = r.x() + r.width() - xPos;
             // ########
             painter()->drawPixmap(QPointF(xPos, yPos).toPoint(), pixmap,
-                                   QRectF(xOff, yOff, drawW, drawH).toRect());
+                                  QRectF(xOff, yOff, drawW, drawH).toRect());
             xPos += drawW;
             xOff = 0;
         }
@@ -848,6 +933,10 @@ void QPSPrintEngine::drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, con
 bool QPSPrintEngine::newPage()
 {
     Q_D(QPSPrintEngine);
+
+    if (!d->firstPage && d->useAlphaEngine)
+        flushAndInit();
+
     // we're writing to lp/lpr through a pipe, we don't want to crash with SIGPIPE
     // if lp/lpr dies
     ignoreSigPipe(true);

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -47,6 +51,7 @@
 #include <QtGui/QSplitter>
 #include <QtCore/QDebug>
 #include <QtCore/QHash>
+#include <QtCore/QRect>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,17 +75,28 @@ LayoutInfo::Type LayoutInfo::layoutType(const QDesignerFormEditorInterface *core
     return UnknownLayout;
 }
 
+static const QHash<QString, LayoutInfo::Type> &layoutNameTypeMap()
+{
+    static QHash<QString, LayoutInfo::Type> nameTypeMap;
+    if (nameTypeMap.empty()) {
+        nameTypeMap.insert(QLatin1String("QVBoxLayout"), LayoutInfo::VBox);
+        nameTypeMap.insert(QLatin1String("QHBoxLayout"), LayoutInfo::HBox);
+        nameTypeMap.insert(QLatin1String("QGridLayout"), LayoutInfo::Grid);
+        nameTypeMap.insert(QLatin1String("QFormLayout"), LayoutInfo::Form);
+    }
+    return nameTypeMap;
+}
+
 LayoutInfo::Type LayoutInfo::layoutType(const QString &typeName)
 {
-    static QHash<QString, Type> nameTypeMap;
-    if (nameTypeMap.empty()) {
-        nameTypeMap.insert(QLatin1String("QVBoxLayout"), VBox);
-        nameTypeMap.insert(QLatin1String("QHBoxLayout"), HBox);
-        nameTypeMap.insert(QLatin1String("QGridLayout"), Grid);
-        nameTypeMap.insert(QLatin1String("QFormLayout"), Form);
-    }
-    return nameTypeMap.value(typeName, NoLayout);
+    return layoutNameTypeMap().value(typeName, NoLayout);
 }
+
+QString LayoutInfo::layoutName(Type t)
+{
+    return layoutNameTypeMap().key(t);
+}
+
 /*!
   \overload
 */
@@ -89,6 +105,22 @@ LayoutInfo::Type LayoutInfo::layoutType(const QDesignerFormEditorInterface *core
     if (const QSplitter *splitter = qobject_cast<const QSplitter *>(w))
         return  splitter->orientation() == Qt::Horizontal ? HSplitter : VSplitter;
     return layoutType(core, w->layout());
+}
+
+LayoutInfo::Type LayoutInfo::managedLayoutType(const QDesignerFormEditorInterface *core,
+                                               const QWidget *w,
+                                               QLayout **ptrToLayout)
+{
+    if (ptrToLayout)
+        *ptrToLayout = 0;
+    if (const QSplitter *splitter = qobject_cast<const QSplitter *>(w))
+        return  splitter->orientation() == Qt::Horizontal ? HSplitter : VSplitter;
+    QLayout *layout = managedLayout(core, w);
+    if (!layout)
+        return NoLayout;
+    if (ptrToLayout)
+        *ptrToLayout = layout;
+    return layoutType(core, layout);
 }
 
 QWidget *LayoutInfo::layoutParent(const QDesignerFormEditorInterface *core, QLayout *layout)
@@ -123,10 +155,15 @@ void LayoutInfo::deleteLayout(const QDesignerFormEditorInterface *core, QWidget 
     qDebug() << "trying to delete an unmanaged layout:" << "widget:" << widget << "layout:" << layout;
 }
 
-LayoutInfo::Type LayoutInfo::laidoutWidgetType(const QDesignerFormEditorInterface *core, QWidget *widget, bool *isManaged)
+LayoutInfo::Type LayoutInfo::laidoutWidgetType(const QDesignerFormEditorInterface *core,
+                                               QWidget *widget,
+                                               bool *isManaged,
+                                               QLayout **ptrToLayout)
 {
     if (isManaged)
         *isManaged = false;
+    if (ptrToLayout)
+        *ptrToLayout = 0;
 
     QWidget *parent = widget->parentWidget();
     if (!parent)
@@ -147,20 +184,26 @@ LayoutInfo::Type LayoutInfo::laidoutWidgetType(const QDesignerFormEditorInterfac
     if (parentLayout->indexOf(widget) != -1) {
         if (isManaged)
             *isManaged = core->metaDataBase()->item(parentLayout);
+        if (ptrToLayout)
+            *ptrToLayout = parentLayout;
         return layoutType(core, parentLayout);
     }
 
-    // 3) Some child layout
+    // 3) Some child layout (see below comment about Q3GroupBox)
     const QList<QLayout*> childLayouts = qFindChildren<QLayout*>(parentLayout);
     if (childLayouts.empty())
         return NoLayout;
     const QList<QLayout*>::const_iterator lcend = childLayouts.constEnd();
-    for (QList<QLayout*>::const_iterator it = childLayouts.constBegin(); it != lcend; ++it)
-        if ((*it)->indexOf(widget) != -1) {
+    for (QList<QLayout*>::const_iterator it = childLayouts.constBegin(); it != lcend; ++it) {
+        QLayout *layout = *it;
+        if (layout->indexOf(widget) != -1) {
             if (isManaged)
-                *isManaged = core->metaDataBase()->item(*it);
-            return layoutType(core, parentLayout);
+                *isManaged = core->metaDataBase()->item(layout);
+            if (ptrToLayout)
+                *ptrToLayout = layout;
+            return layoutType(core, layout);
         }
+    }
 
     return NoLayout;
 }
@@ -197,7 +240,8 @@ QLayout *LayoutInfo::managedLayout(const QDesignerFormEditorInterface *core, QLa
 
     if (!metaDataBase)
         return layout;
-
+    /* This code exists mainly for the Q3GroupBox class, for which
+     * widget->layout() returns an internal VBoxLayout. */
     const QDesignerMetaDataBaseItemInterface *item = metaDataBase->item(layout);
     if (item == 0) {
         layout = qFindChild<QLayout*>(layout);
@@ -208,11 +252,14 @@ QLayout *LayoutInfo::managedLayout(const QDesignerFormEditorInterface *core, QLa
     return layout;
 }
 
-    static inline void getFormItemPosition(const QFormLayout *formLayout, int index, int *row, int *column)
+// Is it a a dummy grid placeholder created by Designer?
+bool LayoutInfo::isEmptyItem(QLayoutItem *item)
 {
-    QFormLayout::ItemRole role;
-    formLayout->getItemPosition(index, row, &role);
-    *column = role == QFormLayout::LabelRole ? 0 : 1;
+    if (item == 0) {
+        qDebug() << "** WARNING Zero-item passed on to isEmptyItem(). This indicates a layout inconsistency.";
+        return true;
+    }
+    return item->spacerItem() != 0;
 }
 
 QDESIGNER_SHARED_EXPORT void getFormLayoutItemPosition(const QFormLayout *formLayout, int index, int *rowPtr, int *columnPtr, int *rowspanPtr, int *colspanPtr)
@@ -220,15 +267,46 @@ QDESIGNER_SHARED_EXPORT void getFormLayoutItemPosition(const QFormLayout *formLa
     int row;
     QFormLayout::ItemRole role;
     formLayout->getItemPosition(index, &row, &role);
+    const int columnspan = role == QFormLayout::SpanningRole ? 2 : 1;
+    const int column = (columnspan > 1 || role == QFormLayout::LabelRole) ? 0 : 1;
     if (rowPtr)
         *rowPtr = row;
     if (columnPtr)
-        *columnPtr = role == QFormLayout::LabelRole ? 0 : 1;
+        *columnPtr = column;
     if (rowspanPtr)
         *rowspanPtr = 1;
     if (colspanPtr)
-        *colspanPtr = 1;
+        *colspanPtr = columnspan;
 }
+
+static inline QFormLayout::ItemRole formLayoutRole(int column, int colspan)
+{
+    if (colspan > 1)
+        return QFormLayout::SpanningRole;
+    return column == 0 ? QFormLayout::LabelRole : QFormLayout::FieldRole;
+}
+
+QDESIGNER_SHARED_EXPORT void formLayoutAddWidget(QFormLayout *formLayout, QWidget *w, const QRect &r, bool insert)
+{
+    // Consistent API galore...
+    if (insert) {
+        const bool spanning = r.width() > 1;
+        if (spanning) {
+            formLayout->insertRow(r.y(), w);
+        } else {
+            QWidget *label = 0, *field = 0;
+            if (r.x() == 0) {
+                label = w;
+            } else {
+                field = w;
+            }
+            formLayout->insertRow(r.y(), label, field);
+        }
+    } else {
+        formLayout->setWidget(r.y(), formLayoutRole(r.x(), r.width()), w);
+    }
+}
+
 } // namespace qdesigner_internal
 
 QT_END_NAMESPACE

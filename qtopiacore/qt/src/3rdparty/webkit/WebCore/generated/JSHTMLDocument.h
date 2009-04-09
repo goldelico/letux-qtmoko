@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSHTMLDocument_H
-#define JSHTMLDocument_H
+#ifndef JSHTMLDocument_h
+#define JSHTMLDocument_h
 
 #include "JSDocument.h"
 
@@ -28,75 +28,85 @@ namespace WebCore {
 class HTMLDocument;
 
 class JSHTMLDocument : public JSDocument {
+    typedef JSDocument Base;
 public:
-    JSHTMLDocument(KJS::ExecState*, HTMLDocument*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSHTMLDocument(PassRefPtr<JSC::Structure>, PassRefPtr<HTMLDocument>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        TitleAttrNum, ReferrerAttrNum, DomainAttrNum, URLAttrNum, 
-        BodyAttrNum, ImagesAttrNum, AppletsAttrNum, LinksAttrNum, 
-        FormsAttrNum, AnchorsAttrNum, CookieAttrNum, EmbedsAttrNum, 
-        PluginsAttrNum, ScriptsAttrNum, LastModifiedAttrNum, AllAttrNum, 
-        LocationAttrNum, WidthAttrNum, HeightAttrNum, DirAttrNum, 
-        DesignModeAttrNum, BgColorAttrNum, FgColorAttrNum, AlinkColorAttrNum, 
-        LinkColorAttrNum, VlinkColorAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        OpenFuncNum, CloseFuncNum, WriteFuncNum, WritelnFuncNum, 
-        GetElementsByNameFuncNum, GetElementByIdFuncNum, ClearFuncNum, CaptureEventsFuncNum, 
-        ReleaseEventsFuncNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
     // Custom attributes
-    KJS::JSValue* all(KJS::ExecState*) const;
-    void setAll(KJS::ExecState*, KJS::JSValue*);
-    KJS::JSValue* location(KJS::ExecState*) const;
-    void setLocation(KJS::ExecState*, KJS::JSValue*);
+    JSC::JSValuePtr all(JSC::ExecState*) const;
+    void setAll(JSC::ExecState*, JSC::JSValuePtr);
 
     // Custom functions
-    KJS::JSValue* open(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* write(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* writeln(KJS::ExecState*, const KJS::List&);
-    KJS::JSValue* clear(KJS::ExecState*, const KJS::List&);
+    JSC::JSValuePtr open(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr write(JSC::ExecState*, const JSC::ArgList&);
+    JSC::JSValuePtr writeln(JSC::ExecState*, const JSC::ArgList&);
 private:
-    static bool canGetItemsForName(KJS::ExecState*, HTMLDocument*, const KJS::Identifier&);
-    static KJS::JSValue* nameGetter(KJS::ExecState*, KJS::JSObject*, const KJS::Identifier&, const KJS::PropertySlot&);
+    static bool canGetItemsForName(JSC::ExecState*, HTMLDocument*, const JSC::Identifier&);
+    static JSC::JSValuePtr nameGetter(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 };
 
 
-class JSHTMLDocumentPrototype : public KJS::JSObject {
+class JSHTMLDocumentPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSHTMLDocumentPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSDocumentPrototype::self(exec)) { }
-};
-
-class JSHTMLDocumentPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSHTMLDocumentPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSHTMLDocumentPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionOpen(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionClose(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionWrite(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionWriteln(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionClear(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionCaptureEvents(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionReleaseEvents(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsHTMLDocumentPrototypeFunctionHasFocus(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsHTMLDocumentEmbeds(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentPlugins(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentScripts(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentAll(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentAll(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentWidth(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentHeight(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentDir(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentDir(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentDesignMode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentDesignMode(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentCompatMode(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentActiveElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsHTMLDocumentBgColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentBgColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentFgColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentFgColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentAlinkColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentAlinkColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentLinkColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentLinkColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentVlinkColor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSHTMLDocumentVlinkColor(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsHTMLDocumentConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

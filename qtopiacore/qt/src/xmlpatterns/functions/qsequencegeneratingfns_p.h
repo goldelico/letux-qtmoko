@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,7 +53,8 @@
 #define Patternist_SequenceGeneratingFNs_H
 
 #include "qanyuri_p.h"
-#include "qfunctioncall_p.h"
+#include "qcontextnodechecker_p.h"
+#include "qstaticbaseuricontainer_p.h"
 
 /**
  * @file
@@ -72,7 +77,7 @@ namespace QPatternist
      * @ingroup Patternist_functions
      * @author Frans Englich <fenglich@trolltech.com>
      */
-    class IdFN : public FunctionCall
+    class IdFN : public ContextNodeChecker
     {
     public:
         IdFN();
@@ -80,18 +85,11 @@ namespace QPatternist
 
         virtual Item::Iterator::Ptr evaluateSequence(const DynamicContext::Ptr &context) const;
 
-        inline Item mapToItem(const Item &id,
+        inline Item mapToItem(const QString &id,
                               const IDContext &context) const;
 
         virtual Expression::Ptr typeCheck(const StaticContext::Ptr &context,
                                           const SequenceType::Ptr &reqType);
-
-    protected:
-        /**
-         * @short Checks that the root node of @p node is a document node, and
-         * otherwise issues an error.
-         */
-        inline void checkTargetNode(const QXmlNodeModelIndex &node, const DynamicContext::Ptr &context) const;
 
     private:
         typedef QExplicitlySharedDataPointer<const IdFN> ConstPtr;
@@ -104,39 +102,10 @@ namespace QPatternist
      * @ingroup Patternist_functions
      * @author Frans Englich <fenglich@trolltech.com>
      */
-    class IdrefFN : public IdFN
+    class IdrefFN : public ContextNodeChecker
     {
     public:
         virtual Item::Iterator::Ptr evaluateSequence(const DynamicContext::Ptr &context) const;
-    };
-
-    /**
-     * @short Base class for functions that needs to
-     * store the static base URI for use at runtime.
-     *
-     * @ingroup Patternist_functions
-     * @author Frans Englich <fenglich@trolltech.com>
-     */
-    class StaticBaseUriContainer
-    {
-    protected:
-        inline StaticBaseUriContainer()
-        {
-        }
-
-        void prepareStaticBaseURI(const StaticContext::Ptr &context)
-        {
-            m_staticBaseURI = context->baseURI();
-        }
-
-        const QUrl &staticBaseURI() const
-        {
-            return m_staticBaseURI;
-        }
-
-    private:
-        Q_DISABLE_COPY(StaticBaseUriContainer)
-        QUrl m_staticBaseURI;
     };
 
     /**
@@ -145,8 +114,7 @@ namespace QPatternist
      * @ingroup Patternist_functions
      * @author Frans Englich <fenglich@trolltech.com>
      */
-    class DocFN : public FunctionCall
-                , private StaticBaseUriContainer
+    class DocFN : public StaticBaseUriContainer
     {
     public:
         virtual Item evaluateSingleton(const DynamicContext::Ptr &context) const;
@@ -154,7 +122,7 @@ namespace QPatternist
         /**
          * The implementation of this function is placed in a different compilation unit,
          * namely qsequencefns.cpp, to workaround a compiler bug on
-         * solaris-cc-64, suspected to be related to the instanciation of QUrl::toQUrl().
+         * solaris-cc-64, suspected to be related to the instantiation of QUrl::toQUrl().
          *
          * @see <a
          * href="http://onesearch.sun.com/search/onesearch/index.jsp?qt=6532605&site=sunsolve&otf=ss&col=support-sunsolve&otf=sunsolve&site=ss&col=search-sunsolve">Sun,
@@ -174,13 +142,10 @@ namespace QPatternist
      * @ingroup Patternist_functions
      * @author Frans Englich <fenglich@trolltech.com>
      */
-    class DocAvailableFN : public FunctionCall
-                         , private StaticBaseUriContainer
+    class DocAvailableFN : public StaticBaseUriContainer
     {
     public:
         virtual bool evaluateEBV(const DynamicContext::Ptr &context) const;
-        virtual Expression::Ptr typeCheck(const StaticContext::Ptr &context,
-                                          const SequenceType::Ptr &reqType);
     };
 
     /**
@@ -197,7 +162,6 @@ namespace QPatternist
 }
 
 QT_END_NAMESPACE
-
 QT_END_HEADER
 
 #endif

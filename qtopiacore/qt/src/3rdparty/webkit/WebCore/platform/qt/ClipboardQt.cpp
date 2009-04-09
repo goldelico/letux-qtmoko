@@ -30,7 +30,6 @@
 
 #include "CachedImage.h"
 #include "CSSHelper.h"
-#include "DeprecatedString.h"
 #include "Document.h"
 #include "Element.h"
 #include "Frame.h"
@@ -195,10 +194,10 @@ void ClipboardQt::setDragImage(CachedImage* image, Node *node, const IntPoint &l
         return;
 
     if (m_dragImage)
-        m_dragImage->deref(this);
+        m_dragImage->removeClient(this);
     m_dragImage = image;
     if (m_dragImage)
-        m_dragImage->ref(this);
+        m_dragImage->addClient(this);
     
     m_dragLoc = loc;
     m_dragImageElement = node;
@@ -209,7 +208,7 @@ DragImageRef ClipboardQt::createDragImage(IntPoint& dragLoc) const
     if (!m_dragImage)
         return 0;
     dragLoc = m_dragLoc;
-    return m_dragImage->image()->getPixmap();
+    return m_dragImage->image()->nativeImageForCurrentFrame();
 }
 
 
@@ -241,20 +240,20 @@ void ClipboardQt::declareAndWriteDragImage(Element* element, const KURL& url, co
     CachedImage* cachedImage = getCachedImage(element);
     if (!cachedImage || !cachedImage->image() || !cachedImage->isLoaded())
         return;
-    QPixmap *pixmap = cachedImage->image()->getPixmap();
+    QPixmap *pixmap = cachedImage->image()->nativeImageForCurrentFrame();
     if (pixmap)
-        m_writableData->setImageData(pixmap);
+        m_writableData->setImageData(*pixmap);
 
     AtomicString imageURL = element->getAttribute(HTMLNames::srcAttr);
     if (imageURL.isEmpty()) 
         return;
 
-    String fullURL = frame->document()->completeURL(parseURL(imageURL));
+    KURL fullURL = frame->document()->completeURL(parseURL(imageURL));
     if (fullURL.isEmpty()) 
         return;
 
     QList<QUrl> urls;
-    urls.append(QUrl(fullURL));
+    urls.append(fullURL);
 
     m_writableData->setUrls(urls);
 #ifndef QT_NO_CLIPBOARD
@@ -268,7 +267,7 @@ void ClipboardQt::writeURL(const KURL& url, const String&, Frame* frame)
     ASSERT(frame);
     
     QList<QUrl> urls;
-    urls.append(QUrl(frame->document()->completeURL(url.url())));
+    urls.append(frame->document()->completeURL(url.string()));
     if (!m_writableData)
         m_writableData = new QMimeData;
     m_writableData->setUrls(urls);

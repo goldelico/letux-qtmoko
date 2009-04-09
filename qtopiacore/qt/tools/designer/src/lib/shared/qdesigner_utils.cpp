@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -77,7 +81,7 @@ namespace qdesigner_internal
             return;
 
         for (int c = 0; c < item->columnCount(); c++) {
-            const QVariant v = item->data(c, QAbstractFormBuilder::resourceRole());
+            const QVariant v = item->data(c, Qt::DecorationPropertyRole);
             if (qVariantCanConvert<PropertySheetIconValue>(v))
                 item->setIcon(c, iconCache->icon(qVariantValue<PropertySheetIconValue>(v)));
         }
@@ -88,7 +92,7 @@ namespace qdesigner_internal
         if (!item)
             return;
 
-        const QVariant v = item->data(QAbstractFormBuilder::resourceRole());
+        const QVariant v = item->data(Qt::DecorationPropertyRole);
         if (qVariantCanConvert<PropertySheetIconValue>(v))
             item->setIcon(iconCache->icon(qVariantValue<PropertySheetIconValue>(v)));
     }
@@ -98,7 +102,7 @@ namespace qdesigner_internal
         if (!item)
             return;
 
-        const QVariant v = item->data(QAbstractFormBuilder::resourceRole());
+        const QVariant v = item->data(Qt::DecorationPropertyRole);
         if (qVariantCanConvert<PropertySheetIconValue>(v))
             item->setIcon(iconCache->icon(qVariantValue<PropertySheetIconValue>(v)));
     }
@@ -110,7 +114,7 @@ namespace qdesigner_internal
                 reloadListItem(iconCache, listWidget->item(i));
         } else if (QComboBox *comboBox = qobject_cast<QComboBox *>(object)) {
             for (int i = 0; i < comboBox->count(); i++) {
-                const QVariant v = comboBox->itemData(i, QAbstractFormBuilder::resourceRole());
+                const QVariant v = comboBox->itemData(i, Qt::DecorationPropertyRole);
                 if (qVariantCanConvert<PropertySheetIconValue>(v)) {
                     QIcon icon = iconCache->icon(qVariantValue<PropertySheetIconValue>(v));
                     comboBox->setItemIcon(i, icon);
@@ -166,12 +170,12 @@ namespace qdesigner_internal
 
     QString DesignerMetaEnum::messageToStringFailed(int value) const
     {
-        return QObject::tr("%1 is not a valid enumeration value of '%2'.").arg(value).arg(name());
+        return QCoreApplication::translate("DesignerMetaEnum", "%1 is not a valid enumeration value of '%2'.").arg(value).arg(name());
     }
 
     QString DesignerMetaEnum::messageParseFailed(const QString &s) const
     {
-        return QObject::tr("'%1' could not be converted to an enumeration value of type '%2'.").arg(s).arg(name());
+        return QCoreApplication::translate("DesignerMetaEnum", "'%1' could not be converted to an enumeration value of type '%2'.").arg(s).arg(name());
     }
     // -------------- DesignerMetaFlags
     DesignerMetaFlags::DesignerMetaFlags(const QString &name, const QString &scope, const QString &separator) :
@@ -249,7 +253,7 @@ namespace qdesigner_internal
 
     QString DesignerMetaFlags::messageParseFailed(const QString &s) const
     {
-        return QObject::tr("'%1' could not be converted to a flag value of type '%2'.").arg(s).arg(name());
+        return QCoreApplication::translate("DesignerMetaFlags", "'%1' could not be converted to a flag value of type '%2'.").arg(s).arg(name());
     }
 
     // ---------- PropertySheetEnumValue
@@ -359,6 +363,188 @@ namespace qdesigner_internal
             m_paths.remove(pair);
         else
             m_paths.insert(pair, pixmap);
+    }
+
+    QPixmap DesignerPixmapCache::pixmap(const PropertySheetPixmapValue &value) const
+    {
+        QMap<PropertySheetPixmapValue, QPixmap>::const_iterator it = m_cache.constFind(value);
+        if (it != m_cache.constEnd())
+            return it.value();
+
+        QPixmap pix = QPixmap(value.path());
+        m_cache.insert(value, pix);
+        return pix;
+    }
+
+    void DesignerPixmapCache::clear()
+    {
+        m_cache.clear();
+    }
+
+    DesignerPixmapCache::DesignerPixmapCache(QObject *parent)
+        : QObject(parent)
+    {
+    }
+
+    QIcon DesignerIconCache::icon(const PropertySheetIconValue &value) const
+    {
+        QMap<PropertySheetIconValue, QIcon>::const_iterator it = m_cache.constFind(value);
+        if (it != m_cache.constEnd())
+            return it.value();
+
+        QIcon icon;
+        QMap<QPair<QIcon::Mode, QIcon::State>, PropertySheetPixmapValue> paths = value.paths();
+        QMapIterator<QPair<QIcon::Mode, QIcon::State>, PropertySheetPixmapValue> itPath(paths);
+        while (itPath.hasNext()) {
+            QPair<QIcon::Mode, QIcon::State> pair = itPath.next().key();
+            icon.addPixmap(m_pixmapCache->pixmap(itPath.value()), pair.first, pair.second);
+        }
+        m_cache.insert(value, icon);
+        return icon;
+    }
+
+    void DesignerIconCache::clear()
+    {
+        m_cache.clear();
+    }
+
+    DesignerIconCache::DesignerIconCache(DesignerPixmapCache *pixmapCache, QObject *parent)
+        : QObject(parent),
+        m_pixmapCache(pixmapCache)
+    {
+
+    }
+
+    PropertySheetStringValue::PropertySheetStringValue(const QString &value,
+                    bool translatable, const QString &disambiguation, const QString &comment)
+        : m_value(value), m_translatable(translatable), m_disambiguation(disambiguation), m_comment(comment)
+    {  }
+
+    QString PropertySheetStringValue::value() const
+    {
+        return m_value;
+    }
+
+    void PropertySheetStringValue::setValue(const QString &value)
+    {
+        m_value = value;
+    }
+
+    bool PropertySheetStringValue::translatable() const
+    {
+        return m_translatable;
+    }
+
+    void PropertySheetStringValue::setTranslatable(bool translatable)
+    {
+        m_translatable = translatable;
+    }
+
+    QString PropertySheetStringValue::disambiguation() const
+    {
+        return m_disambiguation;
+    }
+
+    void PropertySheetStringValue::setDisambiguation(const QString &disambiguation)
+    {
+        m_disambiguation = disambiguation;
+    }
+
+    QString PropertySheetStringValue::comment() const
+    {
+        return m_comment;
+    }
+
+    void PropertySheetStringValue::setComment(const QString &comment)
+    {
+        m_comment = comment;
+    }
+
+    bool PropertySheetStringValue::equals(const PropertySheetStringValue &rhs) const
+    {
+        return (m_value == rhs.m_value) && (m_translatable == rhs.m_translatable)
+            && (m_disambiguation == rhs.m_disambiguation) && (m_comment == rhs.m_comment);
+    }
+
+    PropertySheetKeySequenceValue::PropertySheetKeySequenceValue(const QKeySequence &value,
+                    bool translatable, const QString &disambiguation, const QString &comment)
+        : m_value(value),
+          m_standardKey(QKeySequence::UnknownKey),
+          m_translatable(translatable),
+          m_disambiguation(disambiguation),
+          m_comment(comment)
+    {  }
+
+    PropertySheetKeySequenceValue::PropertySheetKeySequenceValue(const QKeySequence::StandardKey &standardKey,
+                    bool translatable, const QString &disambiguation, const QString &comment)
+        : m_value(QKeySequence(standardKey)),
+          m_standardKey(standardKey),
+          m_translatable(translatable),
+          m_disambiguation(disambiguation),
+          m_comment(comment)
+    {  }
+
+    QKeySequence PropertySheetKeySequenceValue::value() const
+    {
+        return m_value;
+    }
+
+    void PropertySheetKeySequenceValue::setValue(const QKeySequence &value)
+    {
+        m_value = value;
+        m_standardKey = QKeySequence::UnknownKey;
+    }
+
+    QKeySequence::StandardKey PropertySheetKeySequenceValue::standardKey() const
+    {
+        return m_standardKey;
+    }
+
+    void PropertySheetKeySequenceValue::setStandardKey(const QKeySequence::StandardKey &standardKey)
+    {
+        m_value = QKeySequence(standardKey);
+        m_standardKey = standardKey;
+    }
+
+    bool PropertySheetKeySequenceValue::isStandardKey() const
+    {
+        return m_standardKey != QKeySequence::UnknownKey;
+    }
+
+    QString PropertySheetKeySequenceValue::comment() const
+    {
+        return m_comment;
+    }
+
+    void PropertySheetKeySequenceValue::setComment(const QString &comment)
+    {
+        m_comment = comment;
+    }
+
+    QString PropertySheetKeySequenceValue::disambiguation() const
+    {
+        return m_disambiguation;
+    }
+
+    void PropertySheetKeySequenceValue::setDisambiguation(const QString &disambiguation)
+    {
+        m_disambiguation = disambiguation;
+    }
+
+    bool PropertySheetKeySequenceValue::translatable() const
+    {
+        return m_translatable;
+    }
+
+    void PropertySheetKeySequenceValue::setTranslatable(bool translatable)
+    {
+        m_translatable = translatable;
+    }
+
+    bool PropertySheetKeySequenceValue::equals(const PropertySheetKeySequenceValue &rhs) const
+    {
+        return (m_value == rhs.m_value) && (m_standardKey == rhs.m_standardKey)
+            && (m_translatable == rhs.m_translatable) && (m_disambiguation == rhs.m_disambiguation) && (m_comment == rhs.m_comment);
     }
 
     class StateMap
@@ -501,7 +687,7 @@ namespace qdesigner_internal
             return false;
         }
         if (uic.exitCode()) {
-            errorMessage =  uic.readAllStandardError();
+            errorMessage =  QString::fromAscii(uic.readAllStandardError());
             return false;
         }
         ba = uic.readAllStandardOutput();
@@ -531,15 +717,15 @@ namespace qdesigner_internal
     // --------------- UpdateBlocker
     UpdateBlocker::UpdateBlocker(QWidget *w) :
         m_widget(w),
-        m_updatesEnabled(w->updatesEnabled())
+        m_enabled(w->updatesEnabled() && w->isVisible())
     {
-        if (m_updatesEnabled)
+        if (m_enabled)
             m_widget->setUpdatesEnabled(false);
     }
 
     UpdateBlocker::~UpdateBlocker()
     {
-        if (m_updatesEnabled)
+        if (m_enabled)
             m_widget->setUpdatesEnabled(true);
     }
 

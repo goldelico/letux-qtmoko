@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,7 +55,8 @@
 #include "qpixmap.h"
 #include "qmetaobject.h"
 #include "qthread.h"
-#include <qhash.h>
+#include "qqueue.h"
+#include "qset.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,9 +78,11 @@ public:
     QCheckBox * again;
     QTextEdit * errors;
     QLabel * icon;
-    QStringList pending;
-    QHash<QString, int> doNotShow;
+    QQueue<QPair<QString, QString> > pending;
+    QSet<QString> doNotShow;
+    QSet<QString> doNotShowType;
     QString currentMessage;
+    QString currentType;
 
     bool nextPending();
     void retranslateStrings();
@@ -266,9 +273,14 @@ QErrorMessage::~QErrorMessage()
 void QErrorMessage::done(int a)
 {
     Q_D(QErrorMessage);
-    if (!d->again->isChecked() && !d->currentMessage.isEmpty())
-        d->doNotShow.insert(d->currentMessage, 0);
+    if (!d->again->isChecked() && !d->currentMessage.isEmpty() && d->currentType.isEmpty()) {
+        d->doNotShow.insert(d->currentMessage);
+    }
+    if (!d->again->isChecked() && !d->currentType.isEmpty()) {
+        d->doNotShowType.insert(d->currentType);
+    }
     d->currentMessage.clear();
+    d->currentType.clear();
     if (!d->nextPending()) {
         QDialog::done(a);
         if (this == qtMessageHandler && metFatal)
@@ -300,14 +312,17 @@ QErrorMessage * QErrorMessage::qtHandler()
 bool QErrorMessagePrivate::nextPending()
 {
     while (!pending.isEmpty()) {
-        QString p = pending.takeFirst();
-        if (!p.isEmpty() && !doNotShow.contains(p)) {
+        QPair<QString,QString> pendingMessage = pending.dequeue();
+        QString message = pendingMessage.first;
+        QString type = pendingMessage.second;
+        if (!message.isEmpty() && ((type.isEmpty() && !doNotShow.contains(message)) || (!type.isEmpty() && !doNotShowType.contains(type)))) {
 #ifndef QT_NO_TEXTHTMLPARSER
-            errors->setHtml(p);
+            errors->setHtml(message);
 #else
-            errors->setPlainText(p);
+            errors->setPlainText(message);
 #endif
-            currentMessage = p;
+            currentMessage = message;
+            currentType = type;
             return true;
         }
     }
@@ -316,11 +331,12 @@ bool QErrorMessagePrivate::nextPending()
 
 
 /*!
-    Shows the given \a message, and returns immediately. This function does
-    nothing if the user has requested that \a message should not be shown again.
+    Shows the given message, \a message, and returns immediately. If the user
+    has requested for the message not to be shown again, this function does
+    nothing.
 
-    Normally, \a message is shown at once, but if there are pending messages,
-    \a message is queued for later display.
+    Normally, the message is displayed immediately. However, if there are
+    pending messages, it will be queued to be displayed later.
 */
 
 void QErrorMessage::showMessage(const QString &message)
@@ -328,10 +344,35 @@ void QErrorMessage::showMessage(const QString &message)
     Q_D(QErrorMessage);
     if (d->doNotShow.contains(message))
         return;
-    d->pending.append(message);
+    d->pending.enqueue(qMakePair(message,QString()));
     if (!isVisible() && d->nextPending())
         show();
 }
+
+/*!
+    \since 4.5
+    \overload
+
+    Shows the given message, \a message, and returns immediately. If the user
+    has requested for messages of type, \a type, not to be shown again, this
+    function does nothing.
+
+    Normally, the message is displayed immediately. However, if there are
+    pending messages, it will be queued to be displayed later.
+
+    \sa showMessage()
+*/
+
+void QErrorMessage::showMessage(const QString &message, const QString &type)
+{
+    Q_D(QErrorMessage);
+    if (d->doNotShow.contains(message) && d->doNotShowType.contains(type))
+        return;
+     d->pending.push_back(qMakePair(message,type));
+    if (!isVisible() && d->nextPending())
+        show();
+}
+
 
 /*!
     \reimp

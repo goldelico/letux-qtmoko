@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -46,6 +50,7 @@
 #include "qlocale.h"
 #include "qlocale_p.h"
 #include "qstringmatcher.h"
+#include "qvarlengtharray.h"
 #include "qtools_p.h"
 #include "qhash.h"
 #include "qdebug.h"
@@ -54,8 +59,9 @@
 #include <private/qcore_mac_p.h>
 #endif
 
+#include <private/qfunctions_p.h>
+
 #if defined(Q_OS_WINCE)
-#include <qfunctions_wince.h>
 #include <windows.h>
 #include <winnls.h>
 #endif
@@ -93,6 +99,14 @@ QTextCodec *QString::codecForCStrings;
 static QHash<void *, QByteArray> *asciiCache = 0;
 #endif
 
+// internal
+int qFindString(const QChar *haystack, int haystackLen, int from,
+    const QChar *needle, int needleLen, Qt::CaseSensitivity cs);
+int qFindStringBoyerMoore(const QChar *haystack, int haystackLen, int from,
+    const QChar *needle, int needleLen, Qt::CaseSensitivity cs);
+
+
+// Unicode case-insensitive comparison
 static int ucstricmp(const ushort *a, const ushort *ae, const ushort *b, const ushort *be)
 {
     if (a == b)
@@ -126,6 +140,7 @@ static int ucstricmp(const ushort *a, const ushort *ae, const ushort *b, const u
     return 1;
 }
 
+// Case-insensitive comparison between a Unicode string and a QLatin1String
 static int ucstricmp(const ushort *a, const ushort *ae, const uchar *b)
 {
     if (a == 0) {
@@ -151,7 +166,7 @@ static int ucstricmp(const ushort *a, const ushort *ae, const uchar *b)
     return 1;
 }
 
-
+// Unicode case-insensitive comparison
 static int ucstrcmp(const QChar *a, int alen, const QChar *b, int blen)
 {
     if (a == b)
@@ -164,18 +179,7 @@ static int ucstrcmp(const QChar *a, int alen, const QChar *b, int blen)
     return a->unicode() - b->unicode();
 }
 
-inline int ucstrcmp(const QString &as, const QString &bs)
-{
-    return ucstrcmp(as.unicode(), as.size(), bs.unicode(), bs.size());
-}
-
-inline int ucstrcmp(const QStringRef &as, const QStringRef &bs)
-{
-    return ucstrcmp(as.unicode(), as.size(), bs.unicode(), bs.size());
-}
-
-
-
+// Unicode case-sensitive compare two same-sized strings
 static int ucstrncmp(const QChar *a, const QChar *b, int l)
 {
     while (l-- && *a == *b)
@@ -185,7 +189,7 @@ static int ucstrncmp(const QChar *a, const QChar *b, int l)
     return a->unicode() - b->unicode();
 }
 
-
+// Unicode case-insensitive compare two same-sized strings
 static int ucstrnicmp(const ushort *a, const ushort *b, int l)
 {
     return ucstricmp(a, a + l, b, b + l);
@@ -259,7 +263,7 @@ const QString::Null QString::null = { };
 
   Disables automatic conversions from 8-bit strings (char *) to unicode QStrings
 
-  \sa QT_NO_CAST_TO_ASCII
+  \sa QT_NO_CAST_TO_ASCII, QT_NO_CAST_FROM_BYTEARRAY
 */
 
 /*!
@@ -268,7 +272,7 @@ const QString::Null QString::null = { };
 
   disables automatic conversion from QString to ASCII 8-bit strings (char *)
 
-  \sa QT_NO_CAST_FROM_ASCII
+  \sa QT_NO_CAST_FROM_ASCII, QT_NO_CAST_FROM_BYTEARRAY
 */
 
 /*!
@@ -575,6 +579,27 @@ const QString::Null QString::null = { };
     '\\0' character for a null string (\e not a null pointer), and
     QString() compares equal to QString(""). We recommend that you
     always use the isEmpty() function and avoid isNull().
+    
+    \section1 Argument Formats
+
+    In member functions where an argument \e format can be specified
+    (e.g., arg(), number()), the argument \e format can be one of the
+    following:
+
+    \table
+    \header \o Format \o Meaning
+    \row \o \c e \o format as [-]9.9e[+|-]999
+    \row \o \c E \o format as [-]9.9E[+|-]999
+    \row \o \c f \o format as [-]9.9
+    \row \o \c g \o use \c e or \c f format, whichever is the most concise
+    \row \o \c G \o use \c E or \c f format, whichever is the most concise
+    \endtable
+
+    A \e precision is also specified with the argument \e format. For
+    the 'e', 'E', and 'f' formats, the \e precision represents the
+    number of digits \e after the decimal point. For the 'g' and 'G'
+    formats, the \e precision represents the maximum number of
+    significant digits (trailing zeroes are omitted).
 
     \sa fromRawData(), QChar, QLatin1String, QByteArray, QStringRef
 */
@@ -637,7 +662,7 @@ int QString::grow(int size)
 
 /*! \fn QString::const_iterator QString::begin() const
 
-    \overload
+    \overload begin()
 */
 
 /*! \fn QString::const_iterator QString::constBegin() const
@@ -658,7 +683,7 @@ int QString::grow(int size)
 
 /*! \fn QString::const_iterator QString::end() const
 
-    \overload
+    \overload end()
 */
 
 /*! \fn QString::const_iterator QString::constEnd() const
@@ -720,7 +745,7 @@ int QString::grow(int size)
 
     Returns a copy of the \a string string encoded in ucs4.
 
-    If \a size is -1 (the default), the \a string has to be 0 terminated.
+    If \a size is -1 (default), the \a string has to be 0 terminated.
 
     \sa fromUtf16(), fromLatin1(), fromLocal8Bit(), fromUtf8(), fromUcs4(), fromStdWString()
 */
@@ -970,7 +995,8 @@ void QString::resize(int size)
             QString::free(d);
         d = x;
     } else {
-        if (d->ref != 1 || size > d->alloc || (!d->capacity && size < d->size && size < d->alloc >> 1))
+        if (d->ref != 1 || size > d->alloc ||
+            (!d->capacity && size < d->size && size < d->alloc >> 1))
             realloc(grow(size));
         if (d->alloc >= size) {
             d->size = size;
@@ -1110,14 +1136,14 @@ QString &QString::operator=(const QString &other)
 
 /*! \fn QString &QString::operator=(const QLatin1String &str)
 
-    \overload
+    \overload operator=()
 
     Assigns the Latin-1 string \a str to this string.
 */
 
 /*! \fn QString &QString::operator=(const QByteArray &ba)
 
-    \overload
+    \overload operator=()
 
     Assigns \a ba to this string. The byte array is converted to
     Unicode using the fromAscii() function.
@@ -1130,7 +1156,7 @@ QString &QString::operator=(const QString &other)
 
 /*! \fn QString &QString::operator=(const char *str)
 
-    \overload
+    \overload operator=()
 
     Assigns \a str to this string. The const char pointer is converted
     to Unicode using the fromAscii() function.
@@ -1143,7 +1169,7 @@ QString &QString::operator=(const QString &other)
 
 /*! \fn QString &QString::operator=(char ch)
 
-    \overload
+    \overload operator=()
 
     Assigns character \a ch to this string. The character is converted
     to Unicode using the fromAscii() function.
@@ -1155,7 +1181,7 @@ QString &QString::operator=(const QString &other)
 */
 
 /*!
-    \overload
+    \overload operator=()
 
     Sets the string to contain the single character \a ch.
 */
@@ -1183,7 +1209,7 @@ QString &QString::operator=(QChar ch)
 
 /*!
     \fn QString &QString::insert(int position, const QLatin1String &str)
-    \overload
+    \overload insert()
 
     Inserts the Latin-1 string \a str at the given index \a position.
 */
@@ -1204,7 +1230,7 @@ QString &QString::insert(int i, const QLatin1String &str)
 
 /*!
     \fn QString& QString::insert(int position, const QChar *unicode, int size)
-    \overload
+    \overload insert()
 
     Inserts the first \a size characters of the QChar array \a unicode
     at the given index \a position in the string.
@@ -1233,7 +1259,7 @@ QString& QString::insert(int i, const QChar *unicode, int size)
 
 /*!
     \fn QString& QString::insert(int position, QChar ch)
-    \overload
+    \overload insert()
 
     Inserts \a ch at the given index \a position in the string.
 */
@@ -1284,9 +1310,10 @@ QString &QString::append(const QString &str)
     return *this;
 }
 
-/*! \overload
+/*!
+  \overload append()
 
-    Appends the Latin-1 string \a str to this string.
+  Appends the Latin-1 string \a str to this string.
 */
 QString &QString::append(const QLatin1String &str)
 {
@@ -1305,7 +1332,7 @@ QString &QString::append(const QLatin1String &str)
 
 /*! \fn QString &QString::append(const QByteArray &ba)
 
-    \overload
+    \overload append()
 
     Appends the byte array \a ba to this string. The given byte array
     is converted to Unicode using the fromAscii() function.
@@ -1318,7 +1345,7 @@ QString &QString::append(const QLatin1String &str)
 
 /*! \fn QString &QString::append(const char *str)
 
-    \overload
+    \overload append()
 
     Appends the string \a str to this string. The given const char
     pointer is converted to Unicode using the fromAscii() function.
@@ -1330,7 +1357,7 @@ QString &QString::append(const QLatin1String &str)
 */
 
 /*!
-    \overload
+    \overload append()
 
     Appends the character \a ch to this string.
 */
@@ -1357,14 +1384,14 @@ QString &QString::append(QChar ch)
 
 /*! \fn QString &QString::prepend(const QLatin1String &str)
 
-    \overload
+    \overload prepend()
 
     Prepends the Latin-1 string \a str to this string.
 */
 
 /*! \fn QString &QString::prepend(const QByteArray &ba)
 
-    \overload
+    \overload prepend()
 
     Prepends the byte array \a ba to this string. The byte array is
     converted to Unicode using the fromAscii() function.
@@ -1377,7 +1404,7 @@ QString &QString::append(QChar ch)
 
 /*! \fn QString &QString::prepend(const char *str)
 
-    \overload
+    \overload prepend()
 
     Prepends the string \a str to this string. The const char pointer
     is converted to Unicode using the fromAscii() function.
@@ -1390,26 +1417,25 @@ QString &QString::append(QChar ch)
 
 /*! \fn QString &QString::prepend(QChar ch)
 
-    \overload
+    \overload prepend()
 
     Prepends the character \a ch to this string.
 */
 
 /*!
-    \fn QString &QString::remove(int position, int n)
+  \fn QString &QString::remove(int position, int n)
 
-    Removes \a n characters from the string, starting at the given \a
-    position index, and returns a reference to the string.
+  Removes \a n characters from the string, starting at the given \a
+  position index, and returns a reference to the string.
 
-    If the specified \a position index is within the string, but \a
-    position + \a n is beyond the end of the string, the string is
-    truncated at the specified \a position.
+  If the specified \a position index is within the string, but \a
+  position + \a n is beyond the end of the string, the string is
+  truncated at the specified \a position.
 
-    \snippet doc/src/snippets/qstring/main.cpp 37
-
-    \sa insert(), replace()
+  \snippet doc/src/snippets/qstring/main.cpp 37
+  
+  \sa insert(), replace()
 */
-
 QString &QString::remove(int pos, int len)
 {
     if (pos < 0)
@@ -1427,17 +1453,16 @@ QString &QString::remove(int pos, int len)
     return *this;
 }
 
-/*! \overload
+/*!
+  Removes every occurrence of the given \a str string in this
+  string, and returns a reference to this string.
 
-    Removes every occurrence of the given \a str string in this
-    string, and returns a reference to this string.
+  If \a cs is Qt::CaseSensitive (default), the search is
+  case sensitive; otherwise the search is case insensitive.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
+  This is the same as \c replace(str, "", cs).
 
-    This is the same as \c replace(str, "", cs).
-
-    \sa replace()
+  \sa replace()
 */
 QString &QString::remove(const QString &str, Qt::CaseSensitivity cs)
 {
@@ -1449,21 +1474,20 @@ QString &QString::remove(const QString &str, Qt::CaseSensitivity cs)
     return *this;
 }
 
-/*! \overload
+/*!
+  Removes every occurrence of the character \a ch in this string, and
+  returns a reference to this string.
 
-    Removes every occurrence of the character \a ch in this string,
-    and returns a reference to this string.
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
+  Example:
 
-    Example:
+  \snippet doc/src/snippets/qstring/main.cpp 38
 
-    \snippet doc/src/snippets/qstring/main.cpp 38
+  This is the same as \c replace(ch, "", cs).
 
-    This is the same as \c replace(ch, "", cs).
-
-    \sa replace()
+  \sa replace()
 */
 QString &QString::remove(QChar ch, Qt::CaseSensitivity cs)
 {
@@ -1486,198 +1510,225 @@ QString &QString::remove(QChar ch, Qt::CaseSensitivity cs)
     return *this;
 }
 
-/*! \fn QString &QString::remove(const QRegExp &rx)
+/*!
+  \fn QString &QString::remove(const QRegExp &rx)
 
-    \overload
+  Removes every occurrence of the regular expression \a rx in the
+  string, and returns a reference to the string. For example:
 
-    Removes every occurrence of the regular expression \a rx in the
-    string, and returns a reference to the string. For example:
+  \snippet doc/src/snippets/qstring/main.cpp 39
 
-    \snippet doc/src/snippets/qstring/main.cpp 39
-
-    \sa indexOf(), lastIndexOf(), replace()
+  \sa indexOf(), lastIndexOf(), replace()
 */
 
 /*!
-    \fn QString &QString::replace(int position, int n, const QString &after)
+  \fn QString &QString::replace(int position, int n, const QString &after)
 
-    Replaces \a n characters from the specified index \a position with the string \a
-    after, and returns a reference to this string.
+  Replaces \a n characters beginning at index \a position with
+  the string \a after and returns a reference to this string.
 
-    Example:
+  Example:
 
-    \snippet doc/src/snippets/qstring/main.cpp 40
+  \snippet doc/src/snippets/qstring/main.cpp 40
 
-    \sa insert(), remove()
+  \sa insert(), remove()
 */
-
 QString &QString::replace(int pos, int len, const QString &after)
 {
-    if (len == after.d->size && pos >= 0 && pos + len <= d->size) {
-        detach();
-        memmove(d->data + pos, after.d->data, len * sizeof(QChar));
-        return *this;
-    } else {
-        QString copy = after;
-        remove(pos, len);
-        return insert(pos, copy.constData(), copy.d->size);
-    }
+    QString copy = after;
+    return replace(pos, len, copy.constData(), copy.length());
 }
 
 /*!
-    \fn QString &QString::replace(int position, int n, const QChar *unicode, int size)
-    \overload
-
-    Replaces \a n characters from the specified index \a position with
-    the first \a size characters of the QChar array \a unicode.
+  \fn QString &QString::replace(int position, int n, const QChar *unicode, int size)
+  \overload replace()
+  Replaces \a n characters beginning at index \a position with the
+  first \a size characters of the QChar array \a unicode and returns a
+  reference to this string.
 */
 QString &QString::replace(int pos, int len, const QChar *unicode, int size)
 {
-    remove(pos, len);
-    return insert(pos, unicode, size);
-}
-
-/*!
-    \fn QString &QString::replace(int position, int n, QChar after)
-    \overload
-
-    Replaces \a n characters from the specified index \a position with
-    the character \a after.
-*/
-QString &QString::replace(int pos, int len, QChar after)
-{
-    remove(pos, len);
-    return insert(pos, after);
-}
-
-/*! \overload
-
-    Replaces every occurrence of the string \a before with the string
-    \a after.
-
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
-
-    Example:
-
-    \snippet doc/src/snippets/qstring/main.cpp 41
-
-    \note The replacement text is not rescanned after it is inserted.
-
-    Example:
-
-    \snippet doc/src/snippets/qstring/main.cpp 86
-*/
-QString &QString::replace(const QString &before, const QString &after, Qt::CaseSensitivity cs)
-{
-    if (d->size == 0) {
-        if (before.d->size)
-            return *this;
-    } else {
-        if (cs == Qt::CaseSensitive && before == after)
-            return *this;
-    }
-    if (d->ref != 1)
-        realloc(d->size);
-
-    QStringMatcher matcher(before, cs);
-    int index = 0;
-    const int bl = before.d->size;
-    const int al = after.d->size;
-
-    if (bl == al) {
-        if (bl) {
-            const QChar *auc = (const QChar*) after.d->data;
-            while ((index = matcher.indexIn(*this, index)) != -1) {
-                // we need memmove(), not memcpy(), in the rare case where
-                // this == &after, before == after, and cs is Qt::CaseInsensitive
-                memmove(d->data + index, auc, al * sizeof(QChar));
-                index += bl;
-            }
-        }
-    } else if (al < bl) {
-        const QChar *auc = after.unicode();
-        uint to = 0;
-        uint movestart = 0;
-        uint num = 0;
-        while ((index = matcher.indexIn(*this, index)) != -1) {
-            if (num) {
-                int msize = index - movestart;
-                if (msize > 0) {
-                    memmove(d->data + to, d->data + movestart, msize * sizeof(QChar));
-                    to += msize;
-                }
-            } else {
-                to = index;
-            }
-            if (al) {
-                memcpy(d->data+to, auc, al*sizeof(QChar));
-                to += al;
-            }
-            index += bl;
-            movestart = index;
-            num++;
-        }
-        if (num) {
-            int msize = d->size - movestart;
-            if (msize > 0)
-                memmove(d->data + to, d->data + movestart, msize * sizeof(QChar));
-            resize(d->size - num*(bl-al));
-        }
-    } else {
-        const QString copy = after;
-
-        // the most complex case. We don't want to lose performance by doing repeated
-        // copies and reallocs of the string.
-        while (index != -1) {
-            uint indices[4096];
-            uint pos = 0;
-            while (pos < 4095) {
-                index = matcher.indexIn(*this, index);
-                if (index == -1)
-                    break;
-                indices[pos++] = index;
-                index += bl;
-                // avoid infinite loop
-                if (!bl)
-                    index++;
-            }
-            if (!pos)
-                break;
-
-            // we have a table of replacement positions, use them for fast replacing
-            int adjust = pos*(al-bl);
-            // index has to be adjusted in case we get back into the loop above.
-            if (index != -1)
-                index += adjust;
-            int newLen = d->size + adjust;
-            int moveend = d->size;
-            if (newLen > d->size)
-                resize(newLen);
-
-            while (pos) {
-                pos--;
-                int movestart = indices[pos] + bl;
-                int insertstart = indices[pos] + pos*(al-bl);
-                int moveto = insertstart + al;
-                memmove(d->data + moveto, d->data + movestart, (moveend - movestart)*sizeof(QChar));
-                memcpy(d->data + insertstart, copy.unicode(), al*sizeof(QChar));
-                moveend = movestart-bl;
-            }
-        }
-    }
+    if (pos < 0 || pos > d->size)
+        return *this;
+    if (pos + len > d->size)
+        len = d->size - pos;
+    
+    uint index = pos;
+    replace_helper(&index, 1, len, unicode, size);
     return *this;
 }
 
-/*! \overload
-
-    Replaces every occurrence of the character \a ch in the string
-    with \a after. Returns a reference to the string.
-
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
+/*!
+  \fn QString &QString::replace(int position, int n, QChar after)
+  \overload replace()
+  
+  Replaces \a n characters beginning at index \a position with the
+  character \a after and returns a reference to this string.
 */
+QString &QString::replace(int pos, int len, QChar after)
+{
+    uint index = pos;
+    replace_helper(&index, 1, len, &after, 1);
+    return *this;
+}
 
+/*!
+  \overload replace()
+  Replaces every occurrence of the string \a before with the string \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  Example:
+
+  \snippet doc/src/snippets/qstring/main.cpp 41
+
+  \note The replacement text is not rescanned after it is inserted.
+
+  Example:
+
+  \snippet doc/src/snippets/qstring/main.cpp 86
+*/
+QString &QString::replace(const QString &before, const QString &after, Qt::CaseSensitivity cs)
+{
+    return replace(before.constData(), before.size(), after.constData(), after.size(), cs);
+}
+
+/*!
+  \internal
+ */
+void QString::replace_helper(uint *indices, int nIndices, int blen, const QChar *after, int alen)
+{
+    if (blen == alen) {
+        detach();
+        for (int i = 0; i < nIndices; ++i) 
+            memcpy(d->data + indices[i], after, alen * sizeof(QChar));
+    } else if (alen < blen) {
+        detach();
+        uint to = indices[0];
+        if (alen)
+            memcpy(d->data+to, after, alen*sizeof(QChar));
+        to += alen;
+        uint movestart = indices[0] + blen;
+        for (int i = 1; i < nIndices; ++i) {
+            int msize = indices[i] - movestart;
+            if (msize > 0) {
+                memmove(d->data + to, d->data + movestart, msize * sizeof(QChar));
+                to += msize;
+            }
+            if (alen) {
+                memcpy(d->data + to, after, alen*sizeof(QChar));
+                to += alen;
+            }
+            movestart = indices[i] + blen;
+        }
+        int msize = d->size - movestart;
+        if (msize > 0)
+            memmove(d->data + to, d->data + movestart, msize * sizeof(QChar));
+        resize(d->size - nIndices*(blen-alen));
+    } else {
+        // we have a table of replacement positions, use them for fast replacing
+        int adjust = nIndices*(alen-blen);
+        int newLen = d->size + adjust;
+        int moveend = d->size;
+        resize(newLen);
+        
+        while (nIndices) {
+            --nIndices;
+            int movestart = indices[nIndices] + blen;
+            int insertstart = indices[nIndices] + nIndices*(alen-blen);
+            int moveto = insertstart + alen;
+            memmove(d->data + moveto, d->data + movestart,
+                    (moveend - movestart)*sizeof(QChar));
+            memcpy(d->data + insertstart, after, alen*sizeof(QChar));
+            moveend = movestart-blen;
+        }
+    }
+}
+
+/*!
+  \since 4.5
+  \overload replace()
+
+  Replaces each occurrence in this string of the first \a blen
+  characters of \a before with the first \a alen characters of \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+*/
+QString &QString::replace(const QChar *before, int blen,
+                          const QChar *after, int alen,
+                          Qt::CaseSensitivity cs)
+{
+    if (d->size == 0) {
+        if (blen)
+            return *this;
+    } else {
+        if (cs == Qt::CaseSensitive && before == after && blen == alen)
+            return *this;
+    }
+    if (alen == 0 && blen == 0)
+        return *this;
+
+    // protect against before or after being part of this
+    const QChar *a = after;
+    const QChar *b = before;
+    if (after >= (const QChar *)d->data && after < (const QChar *)d->data + d->size) {
+        QChar *copy = (QChar *)malloc(alen*sizeof(QChar));
+        memcpy(copy, after, alen*sizeof(QChar));
+        a = copy;
+    }
+    if (before >= (const QChar *)d->data && before < (const QChar *)d->data + d->size) {
+        QChar *copy = (QChar *)malloc(blen*sizeof(QChar));
+        memcpy(copy, before, blen*sizeof(QChar));
+        b = copy;
+    }
+    
+    QStringMatcher matcher(b, blen, cs);
+
+    int index = 0;
+    while (1) {
+        uint indices[1024];
+        uint pos = 0;
+        while (pos < 1023) {
+            index = matcher.indexIn(*this, index);
+            if (index == -1)
+                break;
+            indices[pos++] = index;
+            index += blen;
+            // avoid infinite loop
+            if (!blen)
+                index++;
+        }
+        if (!pos)
+            break;
+
+        replace_helper(indices, pos, blen, a, alen);
+
+        if (index == -1)
+            break;
+        // index has to be adjusted in case we get back into the loop above.
+        index += pos*(alen-blen);
+    }
+    
+    if (a != after)
+        ::free((QChar *)a);
+    if (b != before)
+        ::free((QChar *)b);
+
+    return *this;
+}
+
+/*!
+  \overload replace()
+  Replaces every occurrence of the character \a ch in the string with
+  \a after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+*/
 QString& QString::replace(QChar ch, const QString &after, Qt::CaseSensitivity cs)
 {
     if (after.d->size == 0)
@@ -1689,47 +1740,45 @@ QString& QString::replace(QChar ch, const QString &after, Qt::CaseSensitivity cs
     if (d->size == 0)
         return *this;
 
-    if (cs != Qt::CaseSensitive || &after == this)
-        return replace(QString(ch), after, cs);
+    ushort cc = (cs == Qt::CaseSensitive ? ch.unicode() : ch.toCaseFolded().unicode());
 
-    const uint cc = ch.unicode();
-    int hits = 0;
-    for (int x = d->size; --x >= 0; )
-	    hits += (d->data[x] == cc);
+    int index = 0;
+    while (1) {
+        uint indices[1024];
+        uint pos = 0;
+        if (cs == Qt::CaseSensitive) {
+            while (pos < 1023 && index < d->size) {
+                if (d->data[index] == cc)
+                    indices[pos++] = index;
+                index++;
+            }
+        } else {
+            while (pos < 1023 && index < d->size) {
+                if (QChar::toCaseFolded(d->data[index]) == cc)
+                    indices[pos++] = index;
+                index++;
+            }
+        }
+        if (!pos)
+            break;
 
-    if (hits == 0)
-        return *this;
+        replace_helper(indices, pos, 1, after.constData(), after.d->size);
 
-    const int n = d->size;
-    resize(d->size + hits * (after.d->size - 1));
-
-    // the idea is to alternate copies of chunks of original
-    // data and the replacement string
-    int i = n; // begin of an unchanged chunk of this string
-    int k = d->size; // end target
-    while (--hits >= 0) {
-        const int j = i;
-        // search for next hit
-        while (d->data[--i] != cc)
-            ;
-        const int l = j - i - 1; // length of chunk to be moved
-        k -= l;
-        if (l > 0)
-            memmove(d->data + k, d->data + i + 1, l * sizeof(QChar));
-        // replacement data
-        k -= after.d->size;
-        memcpy(d->data + k, after.d->data, after.d->size * sizeof(QChar));
+        if (index == -1)
+            break;
+        // index has to be adjusted in case we get back into the loop above.
+        index += pos*(after.d->size - 1);
     }
     return *this;
 }
 
-/*! \overload
+/*!
+  \overload replace()
+  Replaces every occurrence of the character \a before with the
+  character \a after and returns a reference to this string.
 
-    Replaces every occurrence of the character \a before with the
-    character \a after. Returns a reference to the string.
-
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
 */
 QString& QString::replace(QChar before, QChar after, Qt::CaseSensitivity cs)
 {
@@ -1754,13 +1803,108 @@ QString& QString::replace(QChar before, QChar after, Qt::CaseSensitivity cs)
 }
 
 /*!
-    Returns true if string \a other is equal to this string;
-    otherwise returns false.
+  \since 4.5
+  \overload replace()
 
-    The comparison is based exclusively on the numeric Unicode values
-    of the characters and is very fast, but is not what a human would
-    expect. Consider sorting user-interface strings with
-    localeAwareCompare().
+  Replaces every occurrence of the string \a before with the string \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  \note The text is not rescanned after a replacement.
+*/
+QString &QString::replace(const QLatin1String &before,
+                          const QLatin1String &after,
+                          Qt::CaseSensitivity cs)
+{
+    int alen = qstrlen(after.latin1());
+    QVarLengthArray<ushort> a(alen);
+    for (int i = 0; i < alen; ++i)
+        a[i] = (uchar)after.latin1()[i];
+    int blen = qstrlen(before.latin1());
+    QVarLengthArray<ushort> b(blen);
+    for (int i = 0; i < blen; ++i)
+        b[i] = (uchar)before.latin1()[i];
+    return replace((const QChar *)b.data(), blen, (const QChar *)a.data(), alen, cs);
+}
+
+/*!
+  \since 4.5
+  \overload replace()
+
+  Replaces every occurrence of the string \a before with the string \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  \note The text is not rescanned after a replacement.
+*/
+QString &QString::replace(const QLatin1String &before,
+                          const QString &after,
+                          Qt::CaseSensitivity cs)
+{
+    int blen = qstrlen(before.latin1());
+    QVarLengthArray<ushort> b(blen);
+    for (int i = 0; i < blen; ++i)
+        b[i] = (uchar)before.latin1()[i];
+    return replace((const QChar *)b.data(), blen, after.constData(), after.d->size, cs);
+}
+
+/*!
+  \since 4.5
+  \overload replace()
+
+  Replaces every occurrence of the string \a before with the string \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  \note The text is not rescanned after a replacement.
+*/
+QString &QString::replace(const QString &before,
+                          const QLatin1String &after,
+                          Qt::CaseSensitivity cs)
+{
+    int alen = qstrlen(after.latin1());
+    QVarLengthArray<ushort> a(alen);
+    for (int i = 0; i < alen; ++i)
+        a[i] = (uchar)after.latin1()[i];
+    return replace(before.constData(), before.d->size, (const QChar *)a.data(), alen, cs);
+}
+
+/*!
+  \since 4.5
+  \overload replace()
+
+  Replaces every occurrence of the character \a c with the string \a
+  after and returns a reference to this string.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  \note The text is not rescanned after a replacement.
+*/
+QString &QString::replace(QChar c, const QLatin1String &after, Qt::CaseSensitivity cs)
+{
+    int alen = qstrlen(after.latin1());
+    QVarLengthArray<ushort> a(alen);
+    for (int i = 0; i < alen; ++i)
+        a[i] = (uchar)after.latin1()[i];
+    return replace(&c, 1, (const QChar *)a.data(), alen, cs);
+}
+
+
+/*!
+  Returns true if string \a other is equal to this string; otherwise
+  returns false.
+
+  The comparison is based exclusively on the numeric Unicode values of
+  the characters and is very fast, but is not what a human would
+  expect. Consider sorting user-interface strings with
+  localeAwareCompare().
 */
 bool QString::operator==(const QString &other) const
 {
@@ -1769,7 +1913,7 @@ bool QString::operator==(const QString &other) const
 }
 
 /*!
-    \overload
+    \overload operator==()
 */
 bool QString::operator==(const QLatin1String &other) const
 {
@@ -1791,7 +1935,7 @@ bool QString::operator==(const QLatin1String &other) const
 
 /*! \fn bool QString::operator==(const QByteArray &other) const
 
-    \overload
+    \overload operator==()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -1804,7 +1948,7 @@ bool QString::operator==(const QLatin1String &other) const
 
 /*! \fn bool QString::operator==(const char *other) const
 
-    \overload
+    \overload operator==()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -1826,11 +1970,11 @@ bool QString::operator==(const QLatin1String &other) const
 */
 bool QString::operator<(const QString &other) const
 {
-    return ucstrcmp(*this, other) < 0;
+    return ucstrcmp(constData(), length(), other.constData(), other.length()) < 0;
 }
 
 /*!
-    \overload
+    \overload operator<()
 */
 bool QString::operator<(const QLatin1String &other) const
 {
@@ -1852,7 +1996,7 @@ bool QString::operator<(const QLatin1String &other) const
 
 /*! \fn bool QString::operator<(const QByteArray &other) const
 
-    \overload
+    \overload operator<()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -1865,7 +2009,7 @@ bool QString::operator<(const QLatin1String &other) const
 
 /*! \fn bool QString::operator<(const char *other) const
 
-    \overload
+    \overload operator<()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -1889,12 +2033,12 @@ bool QString::operator<(const QLatin1String &other) const
 
 /*! \fn bool QString::operator<=(const QLatin1String &other) const
 
-    \overload
+    \overload operator<=()
 */
 
 /*! \fn bool QString::operator<=(const QByteArray &other) const
 
-    \overload
+    \overload operator<=()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -1907,7 +2051,7 @@ bool QString::operator<(const QLatin1String &other) const
 
 /*! \fn bool QString::operator<=(const char *other) const
 
-    \overload
+    \overload operator<=()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -1930,7 +2074,7 @@ bool QString::operator<(const QLatin1String &other) const
 */
 
 /*!
-    \overload
+    \overload operator>()
 */
 bool QString::operator>(const QLatin1String &other) const
 {
@@ -1952,7 +2096,7 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator>(const QByteArray &other) const
 
-    \overload
+    \overload operator>()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -1965,7 +2109,7 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator>(const char *other) const
 
-    \overload
+    \overload operator>()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -1989,12 +2133,12 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator>=(const QLatin1String &other) const
 
-    \overload
+    \overload operator>=()
 */
 
 /*! \fn bool QString::operator>=(const QByteArray &other) const
 
-    \overload
+    \overload operator>=()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -2007,7 +2151,7 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator>=(const char *other) const
 
-    \overload
+    \overload operator>=()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -2031,12 +2175,12 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator!=(const QLatin1String &other) const
 
-    \overload
+    \overload operator!=()
 */
 
 /*! \fn bool QString::operator!=(const QByteArray &other) const
 
-    \overload
+    \overload operator!=()
 
     The \a other byte array is converted to a QString using the
     fromAscii() function.
@@ -2049,7 +2193,7 @@ bool QString::operator>(const QLatin1String &other) const
 
 /*! \fn bool QString::operator!=(const char *other) const
 
-    \overload
+    \overload operator!=()
 
     The \a other const char pointer is converted to a QString using
     the fromAscii() function.
@@ -2060,28 +2204,54 @@ bool QString::operator>(const QLatin1String &other) const
     go through QObject::tr(), for example.
 */
 
-
 /*!
-    Returns the index position of the first occurrence of the string
-    \a str in this string, searching forward from index position \a
-    from. Returns -1 if \a str is not found.
+  Returns the index position of the first occurrence of the string \a
+  str in this string, searching forward from index position \a
+  from. Returns -1 if \a str is not found.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
 
-    Example:
+  Example:
 
-    \snippet doc/src/snippets/qstring/main.cpp 24
+  \snippet doc/src/snippets/qstring/main.cpp 24
 
-    If \a from is -1, the search starts at the last character; if it
-    is -2, at the next to last character and so on.
+  If \a from is -1, the search starts at the last character; if it is
+  -2, at the next to last character and so on.
 
-    \sa lastIndexOf(), contains(), count()
+  \sa lastIndexOf(), contains(), count()
 */
-
 int QString::indexOf(const QString &str, int from, Qt::CaseSensitivity cs) const
 {
     return qFindString(unicode(), length(), from, str.unicode(), str.length(), cs);
+}
+
+/*!
+  \since 4.5
+  Returns the index position of the first occurrence of the string \a
+  str in this string, searching forward from index position \a
+  from. Returns -1 if \a str is not found.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  Example:
+
+  \snippet doc/src/snippets/qstring/main.cpp 24
+
+  If \a from is -1, the search starts at the last character; if it is
+  -2, at the next to last character and so on.
+
+  \sa lastIndexOf(), contains(), count()
+*/
+int QString::indexOf(const QLatin1String &str, int from, Qt::CaseSensitivity cs) const
+{
+    int len = qstrlen(str.latin1());
+    QVarLengthArray<ushort> s(len);
+    for (int i = 0; i < len; ++i)
+        s[i] = str.latin1()[i];
+    
+    return qFindString(unicode(), length(), from, (const QChar *)s.data(), len, cs);
 }
 
 int qFindString(
@@ -2160,7 +2330,7 @@ int qFindString(
 }
 
 /*!
-    \overload
+    \overload indexOf()
 
     Returns the index position of the first occurrence of the
     character \a ch in the string, searching forward from index
@@ -2171,45 +2341,14 @@ int QString::indexOf(QChar ch, int from, Qt::CaseSensitivity cs) const
     return findChar(unicode(), length(), ch, from, cs);
 }
 
-/*!
-    Returns the index position of the last occurrence of the string
-    \a str in this string, searching backward from index position \a
-    from. If \a from is -1 (the default), the search starts at the
-    last character; if \a from is -2, at the next to last character
-    and so on. Returns -1 if \a str is not found.
-
-    If \a cs is Qt::CaseSensitive (the default), the search is
-    case sensitive; otherwise the search is case insensitive.
-
-    Example:
-
-    \snippet doc/src/snippets/qstring/main.cpp 29
-
-    \sa indexOf(), contains(), count()
-*/
-int QString::lastIndexOf(const QString &str, int from, Qt::CaseSensitivity cs) const
+static int lastIndexOfHelper(const ushort *haystack, int from, const ushort *needle, int sl, Qt::CaseSensitivity cs)
 {
     /*
         See indexOf() for explanations.
     */
-    const int l = d->size;
-    if (from < 0)
-        from += l;
-    const int sl = str.d->size;
-    int delta = l-sl;
-    if (from == l && sl == 0)
-        return from;
-    if (from < 0 || from >= l || delta < 0)
-        return -1;
-    if (from > delta)
-        from = delta;
-
-    if (sl == 1)
-        return lastIndexOf(QChar(str.d->data[0]), from, cs);
-
-    const ushort *needle = str.d->data;
-    const ushort *haystack = d->data + from;
-    const ushort *end = d->data;
+    
+    const ushort *end = haystack;
+    haystack += from;
     const int sl_minus_1 = sl-1;
     const ushort *n = needle+sl_minus_1;
     const ushort *h = haystack+sl_minus_1;
@@ -2226,13 +2365,13 @@ int QString::lastIndexOf(const QString &str, int from, Qt::CaseSensitivity cs) c
             hashHaystack += *haystack;
             if (hashHaystack == hashNeedle
                  && ucstrncmp((const QChar *)needle, (const QChar *)haystack, sl) == 0)
-                return haystack - d->data;
+                return haystack - end;
             --haystack;
             REHASH(haystack[sl]);
         }
     } else {
         for (idx = 0; idx < sl; ++idx) {
-            hashNeedle = ((hashNeedle<<1) + foldCase(n-idx, str.d->data));
+            hashNeedle = ((hashNeedle<<1) + foldCase(n-idx, needle));
             hashHaystack = ((hashHaystack<<1) + foldCase(h-idx, end));
         }
         hashHaystack -= foldCase(haystack, end);
@@ -2240,7 +2379,7 @@ int QString::lastIndexOf(const QString &str, int from, Qt::CaseSensitivity cs) c
         while (haystack >= end) {
             hashHaystack += foldCase(haystack, end);
             if (hashHaystack == hashNeedle && ucstrnicmp(needle, haystack, sl) == 0)
-                return haystack - d->data;
+                return haystack - end;
             --haystack;
             REHASH(foldCase(haystack + sl, end));
         }
@@ -2248,10 +2387,89 @@ int QString::lastIndexOf(const QString &str, int from, Qt::CaseSensitivity cs) c
     return -1;
 }
 
-/*! \overload
+/*!
+  Returns the index position of the last occurrence of the string \a
+  str in this string, searching backward from index position \a
+  from. If \a from is -1 (default), the search starts at the last
+  character; if \a from is -2, at the next to last character and so
+  on. Returns -1 if \a str is not found.
 
-    Returns the index position of the last occurrence of the
-    character \a ch, searching backward from position \a from.
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  Example:
+
+  \snippet doc/src/snippets/qstring/main.cpp 29
+
+  \sa indexOf(), contains(), count()
+*/
+int QString::lastIndexOf(const QString &str, int from, Qt::CaseSensitivity cs) const
+{
+    const int sl = str.d->size;
+    if (sl == 1)
+        return lastIndexOf(QChar(str.d->data[0]), from, cs);
+    
+    const int l = d->size;
+    if (from < 0)
+        from += l;
+    int delta = l-sl;
+    if (from == l && sl == 0)
+        return from;
+    if (from < 0 || from >= l || delta < 0)
+        return -1;
+    if (from > delta)
+        from = delta;
+
+
+    return lastIndexOfHelper(d->data, from, str.d->data, str.d->size, cs);
+}
+
+/*!
+  \since 4.5
+  Returns the index position of the last occurrence of the string \a
+  str in this string, searching backward from index position \a
+  from. If \a from is -1 (default), the search starts at the last
+  character; if \a from is -2, at the next to last character and so
+  on. Returns -1 if \a str is not found.
+
+  If \a cs is Qt::CaseSensitive (default), the search is case
+  sensitive; otherwise the search is case insensitive.
+
+  Example:
+
+  \snippet doc/src/snippets/qstring/main.cpp 29
+
+  \sa indexOf(), contains(), count()
+*/
+int QString::lastIndexOf(const QLatin1String &str, int from, Qt::CaseSensitivity cs) const
+{
+    const int sl = qstrlen(str.latin1());
+    if (sl == 1)
+        return lastIndexOf(QLatin1Char(str.latin1()[0]), from, cs);
+    
+    const int l = d->size;
+    if (from < 0)
+        from += l;
+    int delta = l-sl;
+    if (from == l && sl == 0)
+        return from;
+    if (from < 0 || from >= l || delta < 0)
+        return -1;
+    if (from > delta)
+        from = delta;
+
+    QVarLengthArray<ushort> s(sl);
+    for (int i = 0; i < sl; ++i)
+        s[i] = str.latin1()[i];
+
+    return lastIndexOfHelper(d->data, from, s.data(), sl, cs);
+}
+
+/*!
+  \overload lastIndexOf()
+
+  Returns the index position of the last occurrence of the character
+  \a ch, searching backward from position \a from.
 */
 int QString::lastIndexOf(QChar ch, int from, Qt::CaseSensitivity cs) const
 {
@@ -2285,21 +2503,22 @@ struct QStringCapture
     int no;
 };
 
-/*! \overload
+/*!
+  \overload replace()
 
-    Replaces every occurrence of the regular expression \a rx in the
-    string with \a after. Returns a reference to the string. For
-    example:
+  Replaces every occurrence of the regular expression \a rx in the
+  string with \a after. Returns a reference to the string. For
+  example:
 
-    \snippet doc/src/snippets/qstring/main.cpp 42
+  \snippet doc/src/snippets/qstring/main.cpp 42
 
-    For regular expressions containing \l{capturing parentheses},
-    occurrences of \bold{\\1}, \bold{\\2}, ..., in \a after are
-    replaced with \a{rx}.cap(1), cap(2), ...
+  For regular expressions containing \l{capturing parentheses},
+  occurrences of \bold{\\1}, \bold{\\2}, ..., in \a after are replaced
+  with \a{rx}.cap(1), cap(2), ...
 
-    \snippet doc/src/snippets/qstring/main.cpp 43
+  \snippet doc/src/snippets/qstring/main.cpp 43
 
-    \sa indexOf(), lastIndexOf(), remove(), QRegExp::cap()
+  \sa indexOf(), lastIndexOf(), remove(), QRegExp::cap()
 */
 QString& QString::replace(const QRegExp &rx, const QString &after)
 {
@@ -2443,7 +2662,7 @@ QString& QString::replace(const QRegExp &rx, const QString &after)
     Returns the number of (potentially overlapping) occurrences of
     the string \a str in this string.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
+    If \a cs is Qt::CaseSensitive (default), the search is
     case sensitive; otherwise the search is case insensitive.
 
     \sa contains(), indexOf()
@@ -2463,10 +2682,10 @@ int QString::count(const QString &str, Qt::CaseSensitivity cs) const
     return num;
 }
 
-/*! \overload
+/*!
+  \overload count()
 
-    Returns the number of occurrences of character \a ch in the
-    string.
+  Returns the number of occurrences of character \a ch in the string.
 */
 int QString::count(QChar ch, Qt::CaseSensitivity cs) const
 {
@@ -2492,7 +2711,7 @@ int QString::count(QChar ch, Qt::CaseSensitivity cs) const
     Returns true if this string contains an occurrence of the string
     \a str; otherwise returns false.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
+    If \a cs is Qt::CaseSensitive (default), the search is
     case sensitive; otherwise the search is case insensitive.
 
     Example:
@@ -2503,7 +2722,7 @@ int QString::count(QChar ch, Qt::CaseSensitivity cs) const
 
 /*! \fn bool QString::contains(QChar ch, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
 
-    \overload
+    \overload contains()
 
     Returns true if this string contains an occurrence of the
     character \a ch; otherwise returns false.
@@ -2511,15 +2730,26 @@ int QString::count(QChar ch, Qt::CaseSensitivity cs) const
 
 /*! \fn bool QString::contains(const QRegExp &rx) const
 
-    \overload
+    \overload contains()
 
     Returns true if the regular expression \a rx matches somewhere in
     this string; otherwise returns false.
 */
 
+/*! \fn bool QString::contains(QRegExp &rx) const
+    \overload contains()
+    \since 4.5
+
+    Returns true if the regular expression \a rx matches somewhere in
+    this string; otherwise returns false.
+
+    If there is a match, the \a rx regular expression will contain the
+    matched captures (see QRegExp::matchedLength, QRegExp::cap).
+*/
+
 #ifndef QT_NO_REGEXP
 /*!
-    \overload
+    \overload indexOf()
 
     Returns the index position of the first match of the regular
     expression \a rx in the string, searching forward from index
@@ -2531,11 +2761,32 @@ int QString::count(QChar ch, Qt::CaseSensitivity cs) const
 */
 int QString::indexOf(const QRegExp& rx, int from) const
 {
+    QRegExp rx2(rx);
+    return rx2.indexIn(*this, from);
+}
+
+/*!
+    \overload indexOf()
+    \since 4.5
+
+    Returns the index position of the first match of the regular
+    expression \a rx in the string, searching forward from index
+    position \a from. Returns -1 if \a rx didn't match anywhere.
+
+    If there is a match, the \a rx regular expression will contain the
+    matched captures (see QRegExp::matchedLength, QRegExp::cap).
+
+    Example:
+
+    \snippet doc/src/snippets/qstring/main.cpp 25
+*/
+int QString::indexOf(QRegExp& rx, int from) const
+{
     return rx.indexIn(*this, from);
 }
 
 /*!
-    \overload
+    \overload lastIndexOf()
 
     Returns the index position of the last match of the regular
     expression \a rx in the string, searching backward from index
@@ -2547,11 +2798,32 @@ int QString::indexOf(const QRegExp& rx, int from) const
 */
 int QString::lastIndexOf(const QRegExp& rx, int from) const
 {
+    QRegExp rx2(rx);
+    return rx2.lastIndexIn(*this, from);
+}
+
+/*!
+    \overload lastIndexOf()
+    \since 4.5
+
+    Returns the index position of the last match of the regular
+    expression \a rx in the string, searching backward from index
+    position \a from. Returns -1 if \a rx didn't match anywhere.
+
+    If there is a match, the \a rx regular expression will contain the
+    matched captures (see QRegExp::matchedLength, QRegExp::cap).
+
+    Example:
+
+    \snippet doc/src/snippets/qstring/main.cpp 30
+*/
+int QString::lastIndexOf(QRegExp& rx, int from) const
+{
     return rx.lastIndexIn(*this, from);
 }
 
 /*!
-    \overload
+    \overload count()
 
     Returns the number of times the regular expression \a rx matches
     in the string.
@@ -2564,11 +2836,12 @@ int QString::lastIndexOf(const QRegExp& rx, int from) const
 */
 int QString::count(const QRegExp& rx) const
 {
+    QRegExp rx2(rx);
     int count = 0;
     int index = -1;
     int len = length();
     while (index < len - 1) {                 // count overlapping matches
-        index = rx.indexIn(*this, index + 1);
+        index = rx2.indexIn(*this, index + 1);
         if (index == -1)
             break;
         count++;
@@ -2579,7 +2852,7 @@ int QString::count(const QRegExp& rx) const
 
 /*! \fn int QString::count() const
 
-    \overload
+    \overload count()
 
     Same as size().
 */
@@ -2641,7 +2914,7 @@ int QString::count(const QRegExp& rx) const
 */
 
 /*!
-    \overload
+    \overload section()
 
     \snippet doc/src/snippets/qstring/main.cpp 51
     \snippet doc/src/snippets/qstring/main.cpp 54
@@ -2705,7 +2978,7 @@ public:
 };
 
 /*!
-    \overload
+    \overload section()
 
     This string is treated as a sequence of fields separated by the
     regular expression, \a reg.
@@ -2816,7 +3089,7 @@ QString QString::right(int n) const
     Returns a null string if the \a position index exceeds the
     length of the string. If there are less than \a n characters
     available in the string starting at the given \a position, or if
-    \a n is -1 (the default), the function returns all characters that
+    \a n is -1 (default), the function returns all characters that
     are available from the specified \a position.
 
     Example:
@@ -2847,7 +3120,7 @@ QString QString::mid(int position, int n) const
     Returns true if the string starts with \a s; otherwise returns
     false.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is
+    If \a cs is Qt::CaseSensitive (default), the search is
     case sensitive; otherwise the search is case insensitive.
 
     \snippet doc/src/snippets/qstring/main.cpp 65
@@ -2875,7 +3148,7 @@ bool QString::startsWith(const QString& s, Qt::CaseSensitivity cs) const
 }
 
 /*!
-  \overload
+  \overload startsWith()
  */
 bool QString::startsWith(const QLatin1String& s, Qt::CaseSensitivity cs) const
 {
@@ -2900,7 +3173,7 @@ bool QString::startsWith(const QLatin1String& s, Qt::CaseSensitivity cs) const
 }
 
 /*!
-  \overload
+  \overload startsWith()
 
   Returns true if the string starts with \a c; otherwise returns
   false.
@@ -2917,7 +3190,7 @@ bool QString::startsWith(const QChar &c, Qt::CaseSensitivity cs) const
     Returns true if the string ends with \a s; otherwise returns
     false.
 
-    If \a cs is Qt::CaseSensitive (the default), the search is case
+    If \a cs is Qt::CaseSensitive (default), the search is case
     sensitive; otherwise the search is case insensitive.
 
     \snippet doc/src/snippets/qstring/main.cpp 20
@@ -2946,7 +3219,7 @@ bool QString::endsWith(const QString& s, Qt::CaseSensitivity cs) const
 }
 
 /*!
-    \overload
+    \overload endsWith()
 */
 bool QString::endsWith(const QLatin1String& s, Qt::CaseSensitivity cs) const
 {
@@ -2975,7 +3248,7 @@ bool QString::endsWith(const QLatin1String& s, Qt::CaseSensitivity cs) const
   Returns true if the string ends with \a c; otherwise returns
   false.
 
-  \overload
+  \overload endsWith()
  */
 bool QString::endsWith(const QChar &c, Qt::CaseSensitivity cs) const
 {
@@ -3009,6 +3282,22 @@ bool QString::endsWith(const QChar &c, Qt::CaseSensitivity cs) const
     Use toLocal8Bit() instead.
 */
 
+static QByteArray toLatin1_helper(const QChar *data, int length)
+{
+    QByteArray ba;
+    if (length) {
+        ba.resize(length);
+        const ushort *i = reinterpret_cast<const ushort *>(data);
+        const ushort *e = i + length;
+        uchar *s = (uchar*) ba.data();
+        while (i != e) {
+            *s++ = (*i>0xff) ? '?' : (uchar) *i;
+            ++i;
+        }
+    }
+    return ba;
+}
+
 /*!
     Returns a Latin-1 representation of the string as a QByteArray.
     The returned byte array is undefined if the string contains
@@ -3018,18 +3307,7 @@ bool QString::endsWith(const QChar &c, Qt::CaseSensitivity cs) const
 */
 QByteArray QString::toLatin1() const
 {
-    QByteArray ba;
-    if (d->size) {
-        ba.resize(d->size);
-        const ushort *i = d->data;
-        const ushort *e = d->data + d->size;
-        uchar *s = (uchar*) ba.data();
-        while (i != e) {
-            *s++ = (*i>0xff) ? '?' : (uchar) *i;
-            ++i;
-        }
-    }
-    return ba;
+    return toLatin1_helper(unicode(), length());
 }
 
 // ### Qt 5: Change the return type of at least toAscii(),
@@ -3053,6 +3331,17 @@ QByteArray QString::toAscii() const
 #endif // QT_NO_TEXTCODEC
     return toLatin1();
 }
+
+#ifndef Q_WS_MAC
+static QByteArray toLocal8Bit_helper(const QChar *data, int length)
+{
+#ifndef QT_NO_TEXTCODEC
+    if (QTextCodec::codecForLocale())
+        return QTextCodec::codecForLocale()->fromUnicode(data, length);
+#endif // QT_NO_TEXTCODEC
+    return toLatin1_helper(data, length);
+}
+#endif
 
 /*!
     Returns the local 8-bit representation of the string as a
@@ -3201,7 +3490,7 @@ QString::Data *QString::fromAscii_helper(const char *str, int size)
     Returns a QString initialized with the first \a size characters
     of the Latin-1 string \a str.
 
-    If \a size is -1 (the default), it is taken to be qstrlen(\a
+    If \a size is -1 (default), it is taken to be qstrlen(\a
     str).
 
     \sa toLatin1(), fromAscii(), fromUtf8(), fromLocal8Bit()
@@ -3348,7 +3637,7 @@ QT_BEGIN_NAMESPACE
     Returns a QString initialized with the first \a size characters
     of the 8-bit string \a str.
 
-    If \a size is -1 (the default), it is taken to be qstrlen(\a
+    If \a size is -1 (default), it is taken to be qstrlen(\a
     str).
 
     QTextCodec::codecForLocale() is used to perform the conversion
@@ -3381,7 +3670,7 @@ QString QString::fromLocal8Bit(const char *str, int size)
     Returns a QString initialized with the first \a size characters
     of the 8-bit ASCII string \a str.
 
-    If \a size is -1 (the default), it is taken to be qstrlen(\a
+    If \a size is -1 (default), it is taken to be qstrlen(\a
     str).
 
     If a codec has been set using QTextCodec::setCodecForCStrings(),
@@ -3399,7 +3688,7 @@ QString QString::fromAscii(const char *str, int size)
     Returns a QString initialized with the first \a size bytes
     of the UTF-8 string \a str.
 
-    If \a size is -1 (the default), it is taken to be qstrlen(\a
+    If \a size is -1 (default), it is taken to be qstrlen(\a
     str).
 
     \sa toUtf8(), fromAscii(), fromLatin1(), fromLocal8Bit()
@@ -3486,7 +3775,7 @@ QString QString::fromUtf8(const char *str, int size)
     Returns a QString initialized with the first \a size characters
     of the Unicode string \a unicode (ISO-10646-UTF-16 encoded).
 
-    If \a size is -1 (the default), \a unicode must be terminated
+    If \a size is -1 (default), \a unicode must be terminated
     with a 0.
 
     QString makes a deep copy of the Unicode data.
@@ -3512,7 +3801,7 @@ QString QString::fromUtf16(const ushort *unicode, int size)
     Returns a QString initialized with the first \a size characters
     of the Unicode string \a unicode (ISO-10646-UCS-4 encoded).
 
-    If \a size is -1 (the default), \a unicode must be terminated
+    If \a size is -1 (default), \a unicode must be terminated
     with a 0.
 
     \sa toUcs4(), fromUtf16(), utf16(), setUtf16(), fromWCharArray()
@@ -3684,12 +3973,12 @@ QString QString::trimmed() const
 /*!
     \fn const QChar QString::operator[](int position) const
 
-    \overload
+    \overload operator[]()
 */
 
 /*! \fn QCharRef QString::operator[](uint position)
 
-\overload
+\overload operator[]()
 
 Returns the character at the specified \a position in the string as a
 modifiable reference. Equivalent to \c at(position).
@@ -3697,7 +3986,7 @@ modifiable reference. Equivalent to \c at(position).
 
 /*! \fn const QChar QString::operator[](uint position) const
 
-\overload
+\overload operator[]()
 */
 
 /*!
@@ -3745,7 +4034,7 @@ void QString::chop(int n)
 
 /*!
     Sets every character in the string to character \a ch. If \a size
-    is different from -1 (the default), the string is resized to \a
+    is different from -1 (default), the string is resized to \a
     size beforehand.
 
     Example:
@@ -3841,14 +4130,14 @@ QString& QString::fill(QChar ch, int size)
 
 /*! \fn QString &QString::operator+=(const QLatin1String &str)
 
-    \overload
+    \overload operator+=()
 
     Appends the Latin-1 string \a str to this string.
 */
 
 /*! \fn QString &QString::operator+=(const QByteArray &ba)
 
-    \overload
+    \overload operator+=()
 
     Appends the byte array \a ba to this string. The byte array is
     converted to Unicode using the fromAscii() function.
@@ -3861,7 +4150,7 @@ QString& QString::fill(QChar ch, int size)
 
 /*! \fn QString &QString::operator+=(const char *str)
 
-    \overload
+    \overload operator+=()
 
     Appends the string \a str to this string. The const char pointer
     is converted to Unicode using the fromAscii() function.
@@ -3874,14 +4163,14 @@ QString& QString::fill(QChar ch, int size)
 
 /*! \fn QString &QString::operator+=(const QStringRef &str)
 
-    \overload
+    \overload operator+=()
 
     Appends the string section referenced by \a str to this string.
 */
 
 /*! \fn QString &QString::operator+=(char ch)
 
-    \overload
+    \overload operator+=()
 
     Appends the character \a ch to this string. The character is
     converted to Unicode using the fromAscii() function.
@@ -3894,14 +4183,14 @@ QString& QString::fill(QChar ch, int size)
 
 /*! \fn QString &QString::operator+=(QChar ch)
 
-    \overload
+    \overload operator+=()
 
     Appends the character \a ch to the string.
 */
 
 /*! \fn QString &QString::operator+=(QChar::SpecialCharacter c)
 
-    \overload
+    \overload operator+=()
 
     \internal
 */
@@ -3909,7 +4198,7 @@ QString& QString::fill(QChar ch, int size)
 /*!
     \fn bool operator==(const char *s1, const QString &s2)
 
-    \overload
+    \overload  operator==()
     \relates QString
 
     Returns true if \a s1 is equal to \a s2; otherwise returns false.
@@ -3922,22 +4211,19 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn bool operator!=(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
-    Returns true if \a s1 is not equal to \a s2; otherwise returns false.
+    Returns true if \a s1 is not equal to \a s2; otherwise returns
+    false.
 
-    For \a s1 != 0, this is equivalent to \c {compare(} \a s1, \a s2 \c {) !=
-    0}. Note that no string is equal to \a s1 being 0.
+    For \a s1 != 0, this is equivalent to \c {compare(} \a s1, \a s2
+    \c {) != 0}. Note that no string is equal to \a s1 being 0.
 
     \sa QString::compare()
 */
 
 /*!
     \fn bool operator<(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
     Returns true if \a s1 is lexically less than \a s2; otherwise
@@ -3954,8 +4240,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn bool operator<=(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
     Returns true if \a s1 is lexically less than or equal to \a s2;
@@ -3972,8 +4256,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn bool operator>(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
     Returns true if \a s1 is lexically greater than \a s2; otherwise
@@ -3989,8 +4271,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn bool operator>=(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
     Returns true if \a s1 is lexically greater than or equal to \a s2;
@@ -4013,8 +4293,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn const QString operator+(const QString &s1, const char *s2)
-
-    \overload
     \relates QString
 
     Returns a string which is the result of concatenating \a s1 and \a
@@ -4026,8 +4304,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn const QString operator+(const char *s1, const QString &s2)
-
-    \overload
     \relates QString
 
     Returns a string which is the result of concatenating \a s1 and \a
@@ -4039,8 +4315,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn const QString operator+(const QString &s, char ch)
-
-    \overload
     \relates QString
 
     Returns a string which is the result of concatenating the string
@@ -4049,8 +4323,6 @@ QString& QString::fill(QChar ch, int size)
 
 /*!
     \fn const QString operator+(char ch, const QString &s)
-
-    \overload
     \relates QString
 
     Returns a string which is the result of concatenating the
@@ -4058,18 +4330,20 @@ QString& QString::fill(QChar ch, int size)
 */
 
 /*!
-    \fn int QString::compare(const QString & s1, const QString & s2, Qt::CaseSensitivity cs)
+    \fn int QString::compare(const QString &s1, const QString &s2, Qt::CaseSensitivity cs)
     \since 4.2
 
-    Compares \a s1 with \a s2 and returns an integer less than, equal to, or greater
-    than zero if \a s1 is less than, equal to, or greater than \a s2.
+    Compares \a s1 with \a s2 and returns an integer less than, equal
+    to, or greater than zero if \a s1 is less than, equal to, or
+    greater than \a s2.
 
     If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
     otherwise the comparison is case insensitive.
 
-    Case sensitive comparison is based exclusively on the numeric Unicode values
-    of the characters and is very fast, but is not what a human would expect.
-    Consider sorting user-visible strings with localeAwareCompare().
+    Case sensitive comparison is based exclusively on the numeric
+    Unicode values of the characters and is very fast, but is not what
+    a human would expect.  Consider sorting user-visible strings with
+    localeAwareCompare().
 
     \snippet doc/src/snippets/qstring/main.cpp 16
 
@@ -4079,34 +4353,32 @@ QString& QString::fill(QChar ch, int size)
 /*!
     \fn int QString::compare(const QString & s1, const QString & s2)
 
-    \overload
+    \overload compare()
 
     Performs a case sensitive compare of \a s1 and \a s2.
 */
 
 /*!
-    \fn int QString::compare(const QString &s1, const QLatin1String &s2,
-                             Qt::CaseSensitivity cs)
+    \fn int QString::compare(const QString &s1, const QLatin1String &s2, Qt::CaseSensitivity cs)
     \since 4.2
-    \overload
+    \overload compare()
 
     Performs a comparison of \a s1 and \a s2, using the case
     sensitivity setting \a cs.
 */
 
 /*!
-    \fn int QString::compare(const QLatin1String &s1, const QString &s2,
-                             Qt::CaseSensitivity cs = Qt::CaseSensitive)
+    \fn int QString::compare(const QLatin1String &s1, const QString &s2, Qt::CaseSensitivity cs = Qt::CaseSensitive)
 
     \since 4.2
-    \overload
+    \overload compare()
 
     Performs a comparison of \a s1 and \a s2, using the case
     sensitivity setting \a cs.
 */
 
 /*!
-    \overload
+    \overload compare()
 
     Lexically compares this string with the \a other string and
     returns an integer less than, equal to, or greater than zero if
@@ -4117,11 +4389,11 @@ QString& QString::fill(QChar ch, int size)
 */
 int QString::compare(const QString &other) const
 {
-    return ucstrcmp(*this, other);
+    return ucstrcmp(constData(), length(), other.constData(), other.length());
 }
 
 /*!
-    \overload
+    \overload compare()
     \since 4.2
 
     Same as compare(*this, \a other, \a cs).
@@ -4129,24 +4401,62 @@ int QString::compare(const QString &other) const
 int QString::compare(const QString &other, Qt::CaseSensitivity cs) const
 {
     if (cs == Qt::CaseSensitive)
-        return ucstrcmp(*this, other);
+        return ucstrcmp(constData(), length(), other.constData(), other.length());
     return ucstricmp(d->data, d->data + d->size, other.d->data, other.d->data + other.d->size);
 }
 
 /*!
-    \overload
+    \internal
+    \since 4.5
+*/
+int QString::compare_helper(const QChar *data1, int length1, const QChar *data2, int length2,
+                            Qt::CaseSensitivity cs)
+{
+    if (cs == Qt::CaseSensitive)
+        return ucstrcmp(data1, length1, data2, length2);
+    register const ushort *s1 = reinterpret_cast<const ushort *>(data1);
+    register const ushort *s2 = reinterpret_cast<const ushort *>(data2);
+    return ucstricmp(s1, s1 + length1, s2, s2 + length2);
+}
+
+/*!
+    \overload compare()
     \since 4.2
 
     Same as compare(*this, \a other, \a cs).
 */
 int QString::compare(const QLatin1String &other, Qt::CaseSensitivity cs) const
 {
-    const ushort *uc = d->data;
-    const ushort *e = uc + d->size;
-    const uchar *c = (uchar *)other.latin1();
+    return compare_helper(unicode(), length(), other, cs);
+}
+
+/*!
+  \fn int QString::compare(const QStringRef &ref, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+  \overload compare()
+
+  Compares the string reference, \a ref, with the string and returns
+  an integer less than, equal to, or greater than zero if the string
+  is less than, equal to, or greater than \a ref.
+*/
+
+/*!
+  \fn int QString::compare(const QString &s1, const QStringRef &s2, Qt::CaseSensitivity cs = Qt::CaseSensitive)
+  \overload compare()
+*/
+
+/*!
+    \internal
+    \since 4.5
+*/
+int QString::compare_helper(const QChar *data1, int length1, QLatin1String s2,
+                            Qt::CaseSensitivity cs)
+{
+    const ushort *uc = reinterpret_cast<const ushort *>(data1);
+    const ushort *e = uc + length1;
+    const uchar *c = (uchar *)s2.latin1();
 
     if (!c)
-        return d->size;
+        return length1;
 
     if (cs == Qt::CaseSensitive) {
         while (uc != e && *c && *uc == *c)
@@ -4154,7 +4464,7 @@ int QString::compare(const QLatin1String &other, Qt::CaseSensitivity cs) const
 
         return *uc - *c;
     } else {
-        return ucstricmp(d->data, d->data + d->size, c);
+        return ucstricmp(uc, e, c);
     }
 }
 
@@ -4176,14 +4486,35 @@ int QString::compare(const QLatin1String &other, Qt::CaseSensitivity cs) const
 */
 
 /*!
-    \overload
+    \fn int QString::localeAwareCompare(const QStringRef &other) const
+    \since 4.5
+    \overload localeAwareCompare()
 
     Compares this string with the \a other string and returns an
     integer less than, equal to, or greater than zero if this string
     is less than, equal to, or greater than the \a other string.
 
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+
     Same as \c {localeAwareCompare(*this, other)}.
 */
+
+/*!
+    \fn int QString::localeAwareCompare(const QString &s1, const QStringRef &s2)
+    \since 4.5
+    \overload localeAwareCompare()
+
+    Compares \a s1 with \a s2 and returns an integer less than, equal
+    to, or greater than zero if \a s1 is less than, equal to, or
+    greater than \a s2.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+*/
+
 
 #if !defined(CSTR_LESS_THAN)
 #define CSTR_LESS_THAN    1
@@ -4191,22 +4522,45 @@ int QString::compare(const QLatin1String &other, Qt::CaseSensitivity cs) const
 #define CSTR_GREATER_THAN 3
 #endif
 
+/*!
+    \overload localeAwareCompare()
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+
+    Same as \c {localeAwareCompare(*this, other)}.
+*/
 int QString::localeAwareCompare(const QString &other) const
 {
+    return localeAwareCompare_helper(constData(), length(), other.constData(), other.length());
+}
+
+/*!
+    \internal
+    \since 4.5
+*/
+int QString::localeAwareCompare_helper(const QChar *data1, int length1,
+                                       const QChar *data2, int length2)
+{
     // do the right thing for null and empty
-    if (isEmpty() || other.isEmpty())
-        return compare(other);
+    if (length1 == 0 || length2 == 0)
+        return ucstrcmp(data1, length1, data2, length2);
 
 #if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
     int res;
     QT_WA({
-        const TCHAR* s1 = (TCHAR*)utf16();
-        const TCHAR* s2 = (TCHAR*)other.utf16();
-        res = CompareStringW(GetThreadLocale(), 0, s1, length(), s2, other.length());
+        const TCHAR* s1 = (TCHAR*)data1;
+        const TCHAR* s2 = (TCHAR*)data2;
+        res = CompareStringW(GetUserDefaultLCID(), 0, s1, length1, s2, length2);
     } , {
-        QByteArray s1 = toLocal8Bit();
-        QByteArray s2 = other.toLocal8Bit();
-        res = CompareStringA(GetThreadLocale(), 0, s1.data(), s1.length(), s2.data(), s2.length());
+        QByteArray s1 = toLocal8Bit_helper(data1, length1);
+        QByteArray s2 = toLocal8Bit_helper(data2, length2);
+        res = CompareStringA(GetUserDefaultLCID(), 0, s1.data(), s1.length(), s2.data(), s2.length());
     });
 
     switch (res) {
@@ -4224,10 +4578,10 @@ int QString::localeAwareCompare(const QString &other) const
     // panel.
     const CFStringRef thisString =
         CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
-            reinterpret_cast<const UniChar *>(this->unicode()), this->length(), kCFAllocatorNull);
+            reinterpret_cast<const UniChar *>(data1), length1, kCFAllocatorNull);
     const CFStringRef otherString =
         CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
-            reinterpret_cast<const UniChar *>(other.unicode()), other.length(), kCFAllocatorNull);
+            reinterpret_cast<const UniChar *>(data2), length2, kCFAllocatorNull);
 
     const int result = CFStringCompare(thisString, otherString, kCFCompareLocalized);
     CFRelease(thisString);
@@ -4235,12 +4589,12 @@ int QString::localeAwareCompare(const QString &other) const
     return result;
 #elif defined(Q_OS_UNIX)
     // declared in <string.h>
-    int delta = strcoll(toLocal8Bit(), other.toLocal8Bit());
+    int delta = strcoll(toLocal8Bit_helper(data1, length1), toLocal8Bit_helper(data2, length2));
     if (delta == 0)
-        delta = ucstrcmp(*this, other);
+        delta = ucstrcmp(data1, length1, data2, length2);
     return delta;
 #else
-    return ucstrcmp(*this, other);
+    return ucstrcmp(data1, length1, data2, length2);
 #endif
 }
 
@@ -5238,7 +5592,9 @@ float QString::toFloat(bool *ok) const
 
     \snippet doc/src/snippets/qstring/main.cpp 56
 
-   The formatting follows the current locale.
+   The formatting always uses QLocale::C, i.e., English/UnitedStates.
+   To get a localized string representation of a number, use
+   QLocale::toString() with the appropriate locale.
 */
 
 /*! \fn QString &QString::setNum(uint n, int base)
@@ -5431,12 +5787,10 @@ QString QString::number(qulonglong n, int base)
 
 /*!
     \fn QString QString::number(double n, char format, int precision)
-    \overload
 
     Returns a string equivalent of the number \a n, formatted
-    according to the specified \a format and \a precision. The \a
-    format can be 'f', 'F', 'e', 'E', 'g' or 'G' (see the
-    arg() function documentation for an explanation of the formats).
+    according to the specified \a format and \a precision. See
+    \l{Argument Formats} for details.
 
     Unlike QLocale::toString(), this function does not honor the
     user's locale settings.
@@ -5532,12 +5886,13 @@ QStringList QString::split(const QChar &sep, SplitBehavior behavior, Qt::CaseSen
 */
 QStringList QString::split(const QRegExp &rx, SplitBehavior behavior) const
 {
+    QRegExp rx2(rx);
     QStringList list;
     int start = 0;
     int extra = 0;
     int end;
-    while ((end = indexOf(rx, start + extra)) != -1) {
-        int matchedLen = rx.matchedLength();
+    while ((end = rx2.indexIn(*this, start + extra)) != -1) {
+        int matchedLen = rx2.matchedLength();
         if (start != end || behavior == KeepEmptyParts)
             list.append(mid(start, end - start));
         start = end + matchedLen;
@@ -5573,6 +5928,55 @@ QString QString::normalized(QString::NormalizationForm mode) const
 }
 
 /*!
+    \since 4.5
+
+    Returns a copy of this string repeated the specified number of \a times.
+
+    If \a times is less than 1, an empty string is returned.
+
+    Example:
+
+    \code
+        QString str("ab");
+        str.repeated(4);            // returns "abababab"
+    \endcode
+*/
+QString QString::repeated(int times) const
+{
+    if (d->size == 0)
+        return *this;
+
+    if (times <= 1) {
+        if (times == 1)
+            return *this;
+        return QString();
+    }
+
+    const int resultSize = times * d->size;
+
+    QString result;
+    result.reserve(resultSize);
+    if (result.d->alloc != resultSize)
+        return QString(); // not enough memory
+
+    qMemCopy(result.d->data, d->data, d->size * sizeof(ushort));
+
+    int sizeSoFar = d->size;
+    ushort *end = result.d->data + sizeSoFar;
+
+    const int halfResultSize = resultSize >> 1;
+    while (sizeSoFar <= halfResultSize) {
+        qMemCopy(end, result.d->data, sizeSoFar * sizeof(ushort));
+        end += sizeSoFar;
+        sizeSoFar <<= 1;
+    }
+    qMemCopy(end, result.d->data, (resultSize - sizeSoFar) * sizeof(ushort));
+    result.d->data[resultSize] = '\0';
+    result.d->size = resultSize;
+    return result;
+}
+
+/*!
     \overload
     \fn QString QString::normalized(NormalizationForm mode, QChar::UnicodeVersion version) const
 
@@ -5581,18 +5985,46 @@ QString QString::normalized(QString::NormalizationForm mode) const
 */
 QString QString::normalized(QString::NormalizationForm mode, QChar::UnicodeVersion version) const
 {
+    bool simple = true;
+    for (int i = 0; i < d->size; ++i) {
+        if (d->data[i] >= 0x80) {
+            simple = false;
+            break;
+        }
+    }
+    if (simple)
+        return *this;
+    
     QString s = *this;
     if (version != CURRENT_VERSION) {
         for (int i = 0; i < NumNormalizationCorrections; ++i) {
-            const NormalizationCorrection n = uc_normalization_corrections[i];
+            const NormalizationCorrection &n = uc_normalization_corrections[i];
             if (n.version > version) {
-                QString orig;
-                orig.append(QChar::highSurrogate(n.ucs4));
-                orig.append(QChar::lowSurrogate(n.ucs4));
-                QString replacement;
-                replacement.append(QChar::highSurrogate(n.old_mapping));
-                replacement.append(QChar::lowSurrogate(n.old_mapping));
-                s.replace(orig, replacement);
+                if (n.ucs4 > 0xffff) {
+                    ushort ucs4High = QChar::highSurrogate(n.ucs4);
+                    ushort ucs4Low = QChar::lowSurrogate(n.ucs4);
+                    ushort oldHigh = QChar::highSurrogate(n.old_mapping);
+                    ushort oldLow = QChar::lowSurrogate(n.old_mapping);
+                    int pos = 0;
+                    while (pos < s.d->size - 1) {
+                        if (s.d->data[pos] == ucs4High && s.d->data[pos + 1] == ucs4Low) {
+                            s.detach();
+                            s.d->data[pos] = oldHigh;
+                            s.d->data[pos + 1] = oldLow;
+                            ++pos;
+                        }
+                        ++pos;
+                    }
+                } else {
+                    int pos = 0;
+                    while (pos < s.d->size) {
+                        if (s.d->data[pos] == n.ucs4) {
+                            s.detach();
+                            s.d->data[pos] = n.old_mapping;
+                        }
+                        ++pos;
+                    }
+                }
             }
         }
     }
@@ -5772,26 +6204,33 @@ static QString replaceArgEscapes(const QString &s, const ArgEscapeData &d, int f
 }
 
 /*!
-    This function returns a copy of this string where \a a
-    replaces the lowest numbered occurrence of \c %1, \c %2, ..., \c
-    %99.
+  Returns a copy of this string with the lowest numbered place marker
+  replaced by string \a a, i.e., \c %1, \c %2, ..., \c %99.
+  
+  \a fieldWidth specifies the minimum amount of space that argument \a
+  a shall occupy. If \a a requires less space than \a fieldWidth, it
+  is padded to \a fieldWidth with character \a fillChar.  A positive
+  \a fieldWidth produces right-aligned text. A negative \a fieldWidth
+  produces left-aligned text.
 
-    The \a fieldWidth value specifies the minimum amount of space that
-    \a a is padded to and filled with the character \a
-    fillChar. A positive value will produce right-aligned text,
-    whereas a negative value will produce left-aligned text.
+  This example shows how we might create a \c status string for
+  reporting progress while processing a list of files:
 
-    The following example shows how we could create a 'status' string
-    when processing a list of files:
+  \snippet doc/src/snippets/qstring/main.cpp 11
 
-    \snippet doc/src/snippets/qstring/main.cpp 11
+  First, \c arg(i) replaces \c %1. Then \c arg(total) replaces \c
+  %2. Finally, \c arg(fileName) replaces \c %3.
 
-    One advantage of using arg() over sprintf() is that the order of arguments
-    may need to change in other languages, when the application is translated.
+  One advantage of using arg() over sprintf() is that the order of the
+  numbered place markers can change, if the application's strings are
+  translated into other languages, but each arg() will still replace
+  the lowest numbered unreplaced place marker, no matter where it
+  appears. Also, if place marker \c %i appears more than once in the
+  string, the arg() replaces all of them.
 
-    If there is no place marker (\c %1, \c %2, etc.), a warning
-    message is output and the result is undefined.  Note that only
-    placeholders between \c %1 and \c %99 are supported.
+  If there is no unreplaced place marker remaining, a warning message
+  is output and the result is undefined. Place marker numbers must be
+  in the range 1 to 99.
 */
 QString QString::arg(const QString &a, int fieldWidth, const QChar &fillChar) const
 {
@@ -5806,149 +6245,177 @@ QString QString::arg(const QString &a, int fieldWidth, const QChar &fillChar) co
 }
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2) const
+  \overload arg()
 
-    This is the same as \c {str.arg(a1).arg(a2)}, except that the
-    strings \a a1 and \a a2 are replaced in one pass. This can make a
-    difference if \a a1 contains e.g. \c{%1}:
+  This is the same as \c {str.arg(a1).arg(a2)}, except that the
+  strings \a a1 and \a a2 are replaced in one pass. This can make a
+  difference if \a a1 contains e.g. \c{%1}:
 
-    \snippet doc/src/snippets/qstring/main.cpp 13
+  \snippet doc/src/snippets/qstring/main.cpp 13
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3) const
+  \overload arg()
 
-    This is the same as calling \c str.arg(a1).arg(a2).arg(a3), except
-    that the strings \a a1, \a a2 and \a a3 are replaced in one pass.
+  This is the same as calling \c str.arg(a1).arg(a2).arg(a3), except
+  that the strings \a a1, \a a2 and \a a3 are replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4)}, except that the strings \a
-    a1, \a a2, \a a3 and \a a4 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4)}, except that the strings \a
+  a1, \a a2, \a a3 and \a a4 are replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5)}, except that the strings
-    \a a1, \a a2, \a a3, \a a4, and \a a5 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5)}, except that the strings
+  \a a1, \a a2, \a a3, \a a4, and \a a5 are replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6))}, except that the strings
-    \a a1, \a a2, \a a3, \a a4, \a a5, and \a a6 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6))}, except that
+  the strings \a a1, \a a2, \a a3, \a a4, \a a5, and \a a6 are
+  replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7)}, except that the strings
-    \a a1, \a a2, \a a3, \a a4, \a a5, \a a6, and \a a7 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7)},
+  except that the strings \a a1, \a a2, \a a3, \a a4, \a a5, \a a6,
+  and \a a7 are replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7, const QString& a8) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7, const QString& a8) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).arg(a8)}, except that the strings
-    \a a1, \a a2, \a a3, \a a4, \a a5, \a a6, \a a7, and \a a8 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).arg(a8)},
+  except that the strings \a a1, \a a2, \a a3, \a a4, \a a5, \a a6, \a
+  a7, and \a a8 are replaced in one pass.
 */
 
 /*!
-    \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7, const QString& a8, const QString& a9) const
-    \overload
+  \fn QString QString::arg(const QString& a1, const QString& a2, const QString& a3, const QString& a4, const QString& a5, const QString& a6, const QString& a7, const QString& a8, const QString& a9) const
+  \overload arg()
 
-    This is the same as calling \c
-    {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).arg(a8).arg(a9)}, except that the strings
-    \a a1, \a a2, \a a3, \a a4, \a a5, \a a6, \a a7, \a a8, and \a a9 are replaced in one pass.
+  This is the same as calling \c
+  {str.arg(a1).arg(a2).arg(a3).arg(a4).arg(a5).arg(a6).arg(a7).arg(a8).arg(a9)},
+  except that the strings \a a1, \a a2, \a a3, \a a4, \a a5, \a a6, \a
+  a7, \a a8, and \a a9 are replaced in one pass.
 */
 
 /*! \fn QString QString::arg(int a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  The \a a argument is expressed in base \a base, which is 10 by
+  default and must be between 2 and 36. For bases other than 10, \a a
+  is treated as an unsigned integer.
 
-    The \a a argument is expressed in base \a base, which is 10 by
-    default and must be between 2 and 36. For bases other than 10,
-    \a a is treated as an unsigned integer.
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
 
-    The \a fieldWidth value specifies the minimum amount of space that
-    \a a is padded to and filled with the character \a fillChar. A
-    positive value will produce a right-aligned number, whereas a
-    negative value will produce a left-aligned number.
+  The '%' can be followed by an 'L', in which case the sequence is
+  replaced with a localized representation of \a a. The conversion
+  uses the default locale, set by QLocale::setDefault(). If no default
+  locale was specified, the "C" locale is used. The 'L' flag is
+  ignored if \a base is not 10.
 
-    The '%' can be followed by an 'L', in which case the sequence is
-    replaced with a localized representation of \a a. The conversion
-    uses the default locale, set by QLocale::setDefault(). If no
-    default locale was specified, the "C" locale is used. The 'L' flag
-    is ignored if \a base is not 10.
+  \snippet doc/src/snippets/qstring/main.cpp 12
+  \snippet doc/src/snippets/qstring/main.cpp 14
 
-    \snippet doc/src/snippets/qstring/main.cpp 12
-    \snippet doc/src/snippets/qstring/main.cpp 14
-
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*! \fn QString QString::arg(uint a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  The \a base argument specifies the base to use when converting the
+  integer \a a into a string. The base must be between 2 and 36.
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. The base must be between 2 and 36.
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*! \fn QString QString::arg(long a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
 
-    The \a fieldWidth value specifies the minimum amount of space that
-    \a a is padded to and filled with the character \a fillChar. A
-    positive value will produce a right-aligned number, whereas a
-    negative value will produce a left-aligned number.
+  The \a a argument is expressed in the given \a base, which is 10 by
+  default and must be between 2 and 36.
 
-    The \a a argument is expressed in the given \a base, which is 10
-    by default and must be between 2 and 36.
+  The '%' can be followed by an 'L', in which case the sequence is
+  replaced with a localized representation of \a a. The conversion
+  uses the default locale. The default locale is determined from the
+  system's locale settings at application startup. It can be changed
+  using QLocale::setDefault(). The 'L' flag is ignored if \a base is
+  not 10.
 
-    The '%' can be followed by an 'L', in which case the sequence is
-    replaced with a localized representation of \a a. The conversion
-    uses the default locale. The default locale is determined from the
-    system's locale settings at application startup. It can be changed
-    using QLocale::setDefault(). The 'L' flag is ignored if \a base is
-    not 10.
+  \snippet doc/src/snippets/qstring/main.cpp 12
+  \snippet doc/src/snippets/qstring/main.cpp 14
 
-    \snippet doc/src/snippets/qstring/main.cpp 12
-    \snippet doc/src/snippets/qstring/main.cpp 14
-
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*! \fn QString QString::arg(ulong a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. The base must be between 2 and 36,
-    with 8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+  The \a base argument specifies the base to use when converting the
+  integer \a a to a string. The base must be between 2 and 36, with 8
+  giving octal, 10 decimal, and 16 hexadecimal numbers.
+
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*!
-    \overload
+  \overload arg()
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. The base must be between 2 and 36,
-    with 8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
+
+  The \a base argument specifies the base to use when converting the
+  integer \a a into a string. The base must be between 2 and 36, with
+  8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 QString QString::arg(qlonglong a, int fieldWidth, int base, const QChar &fillChar) const
 {
@@ -5959,25 +6426,39 @@ QString QString::arg(qlonglong a, int fieldWidth, int base, const QChar &fillCha
         return *this;
     }
 
+    unsigned flags = QLocalePrivate::NoFlags;
+    if (fillChar == QLatin1Char('0'))
+        flags = QLocalePrivate::ZeroPadded;
+
     QString arg;
     if (d.occurrences > d.locale_occurrences)
-        arg = number(a, base);
+        arg = QLocale::c().d()->longLongToString(a, -1, base, fieldWidth, flags);
 
     QString locale_arg;
     if (d.locale_occurrences > 0) {
         QLocale locale;
-        locale_arg = locale.d()->longLongToString(a, -1, base, -1, QLocalePrivate::ThousandsGroup);
+        locale_arg = locale.d()->longLongToString(a, -1, base, fieldWidth,
+                                                  flags | QLocalePrivate::ThousandsGroup);
     }
 
     return replaceArgEscapes(*this, d, fieldWidth, arg, locale_arg, fillChar);
 }
 
 /*!
-    \overload
+  \overload arg()
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. \a base must be between 2 and 36, with
-    8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
+
+  The \a base argument specifies the base to use when converting the
+  integer \a a into a string. \a base must be between 2 and 36, with 8
+  giving octal, 10 decimal, and 16 hexadecimal numbers.
+
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 QString QString::arg(qulonglong a, int fieldWidth, int base, const QChar &fillChar) const
 {
@@ -5988,41 +6469,63 @@ QString QString::arg(qulonglong a, int fieldWidth, int base, const QChar &fillCh
         return *this;
     }
 
+    unsigned flags = QLocalePrivate::NoFlags;
+    if (fillChar == QLatin1Char('0'))
+        flags = QLocalePrivate::ZeroPadded;
+
     QString arg;
     if (d.occurrences > d.locale_occurrences)
-        arg = number(a, base);
+        arg = QLocale::c().d()->unsLongLongToString(a, -1, base, fieldWidth, flags);
 
     QString locale_arg;
     if (d.locale_occurrences > 0) {
         QLocale locale;
-        locale_arg = locale.d()->unsLongLongToString(a, -1, base, -1, QLocalePrivate::ThousandsGroup);
+        locale_arg = locale.d()->unsLongLongToString(a, -1, base, fieldWidth,
+                                                     flags | QLocalePrivate::ThousandsGroup);
     }
 
     return replaceArgEscapes(*this, d, fieldWidth, arg, locale_arg, fillChar);
 }
 
 /*!
-    \fn QString QString::arg(short a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  \fn QString QString::arg(short a, int fieldWidth, int base, const QChar &fillChar) const
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. The base must be between 2 and 36,
-    with 8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
+
+  The \a base argument specifies the base to use when converting the
+  integer \a a into a string. The base must be between 2 and 36, with
+  8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*!
-    \fn QString QString::arg(ushort a, int fieldWidth, int base, const QChar &fillChar) const
+  \fn QString QString::arg(ushort a, int fieldWidth, int base, const QChar &fillChar) const
+  \overload arg()
 
-    \overload
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar. A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
 
-    The \a base argument specifies the base to use when converting the
-    integer \a a into a string. The base must be between 2 and 36,
-    with 8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+  The \a base argument specifies the base to use when converting the
+  integer \a a into a string. The base must be between 2 and 36, with
+  8 giving octal, 10 decimal, and 16 hexadecimal numbers.
+
+  If \a fillChar is '0' (the number 0, ASCII 48), the locale's zero is
+  used. For negative numbers, zero padding might appear before the
+  minus sign.
 */
 
 /*!
-    \overload
+    \overload arg()
 */
 QString QString::arg(QChar a, int fieldWidth, const QChar &fillChar) const
 {
@@ -6032,9 +6535,9 @@ QString QString::arg(QChar a, int fieldWidth, const QChar &fillChar) const
 }
 
 /*!
-    \overload
+  \overload arg()
 
-    The \a a argument is interpreted as a Latin-1 character.
+  The \a a argument is interpreted as a Latin-1 character.
 */
 QString QString::arg(char a, int fieldWidth, const QChar &fillChar) const
 {
@@ -6044,35 +6547,29 @@ QString QString::arg(char a, int fieldWidth, const QChar &fillChar) const
 }
 
 /*!
-    \fn QString QString::arg(double a, int fieldWidth, char format, int precision, const QChar &fillChar) const
-    \overload
+  \fn QString QString::arg(double a, int fieldWidth, char format, int precision, const QChar &fillChar) const
+  \overload arg()
 
-    \target arg-formats
+  Argument \a a is formatted according to the specified \a format and
+  \a precision. See \l{Argument Formats} for details.
 
-    Argument \a a is formatted according to the specified \a format,
-    which is 'g' by default and can be any of the following:
+  \a fieldWidth specifies the minimum amount of space that \a a is
+  padded to and filled with the character \a fillChar.  A positive
+  value produces right-aligned text; a negative value produces
+  left-aligned text.
 
-    \table
-    \header \o Format \o Meaning
-    \row \o \c e \o format as [-]9.9e[+|-]999
-    \row \o \c E \o format as [-]9.9E[+|-]999
-    \row \o \c f \o format as [-]9.9
-    \row \o \c g \o use \c e or \c f format, whichever is the most concise
-    \row \o \c G \o use \c E or \c f format, whichever is the most concise
-    \endtable
+  \snippet doc/src/snippets/code/src_corelib_tools_qstring.cpp 2
 
-    With 'e', 'E', and 'f', \a precision is the number of digits after
-    the decimal point. With 'g' and 'G', \a precision is the maximum
-    number of significant digits (trailing zeroes are omitted).
+  The '%' can be followed by an 'L', in which case the sequence is
+  replaced with a localized representation of \a a. The conversion
+  uses the default locale, set by QLocale::setDefaultLocale(). If no
+  default locale was specified, the "C" locale is used.
 
-    \snippet doc/src/snippets/code/src_corelib_tools_qstring.cpp 2
+  If \a fillChar is '0' (the number 0, ASCII 48), this function will
+  use the locale's zero to pad. For negative numbers, the zero padding
+  will probably appear before the minus sign.
 
-    The '%' can be followed by an 'L', in which case the sequence is
-    replaced with a localized representation of \a a. The conversion uses
-    the default locale, set by QLocale::setDefaultLocale(). If no default
-    locale was specified, the "C" locale is used.
-
-    \sa QLocale::toString()
+  \sa QLocale::toString()
 */
 QString QString::arg(double a, int fieldWidth, char fmt, int prec, const QChar &fillChar) const
 {
@@ -6083,41 +6580,42 @@ QString QString::arg(double a, int fieldWidth, char fmt, int prec, const QChar &
         return *this;
     }
 
+    unsigned flags = QLocalePrivate::NoFlags;
+    if (fillChar == QLatin1Char('0'))
+        flags = QLocalePrivate::ZeroPadded;
+
+    if (qIsUpper(fmt))
+        flags |= QLocalePrivate::CapitalEorX;
+    fmt = qToLower(fmt);
+
+    QLocalePrivate::DoubleForm form = QLocalePrivate::DFDecimal;
+    switch (fmt) {
+    case 'f':
+        form = QLocalePrivate::DFDecimal;
+        break;
+    case 'e':
+        form = QLocalePrivate::DFExponent;
+        break;
+    case 'g':
+        form = QLocalePrivate::DFSignificantDigits;
+        break;
+    default:
+#if defined(QT_CHECK_RANGE)
+        qWarning("QString::arg: Invalid format char '%c'", fmt);
+#endif
+        break;
+    }
+
     QString arg;
     if (d.occurrences > d.locale_occurrences)
-        arg = number(a, fmt, prec);
+        arg = QLocale::c().d()->doubleToString(a, prec, form, fieldWidth, flags);
 
     QString locale_arg;
     if (d.locale_occurrences > 0) {
         QLocale locale;
 
-        QLocalePrivate::DoubleForm form = QLocalePrivate::DFDecimal;
-        uint flags = 0;
-
-        if (qIsUpper(fmt))
-            flags = QLocalePrivate::CapitalEorX;
-        fmt = qToLower(fmt);
-
-        switch (fmt) {
-            case 'f':
-                form = QLocalePrivate::DFDecimal;
-                break;
-            case 'e':
-                form = QLocalePrivate::DFExponent;
-                break;
-            case 'g':
-                form = QLocalePrivate::DFSignificantDigits;
-                break;
-            default:
-#if defined(QT_CHECK_RANGE)
-                qWarning("QString::arg: Invalid format char '%c'", fmt);
-#endif
-                break;
-        }
-
         flags |= QLocalePrivate::ThousandsGroup;
-
-        locale_arg = locale.d()->doubleToString(a, prec, form, -1, flags);
+        locale_arg = locale.d()->doubleToString(a, prec, form, fieldWidth, flags);
     }
 
     return replaceArgEscapes(*this, d, fieldWidth, arg, locale_arg, fillChar);
@@ -6201,8 +6699,6 @@ QString QString::multiArg(int numArgs, const QString **args) const
     }
     return result;
 }
-
-
 
 /*! \internal
  */
@@ -6494,7 +6990,7 @@ QString QString::fromRawData(const QChar *unicode, int size)
 /*!
     \fn bool QLatin1String::operator!=(const char *other) const
     \since 4.3
-    \overload
+    \overload operator!=()
 
     The \a other const char pointer is converted to a QLatin1String using
     the QString::fromAscii() function.
@@ -6842,7 +7338,23 @@ QDataStream &operator>>(QDataStream &in, QString &str)
 */
 
 /*!
+    \fn int QString::find(QRegExp &rx, int i=0) const
+    \internal
+    \since 4.5
+
+    Use indexOf() instead.
+*/
+
+/*!
     \fn int QString::findRev(const QRegExp &rx, int i=-1) const
+
+    Use lastIndexOf() instead.
+*/
+
+/*!
+    \fn int QString::findRev(QRegExp &rx, int i=0) const
+    \internal
+    \since 4.5
 
     Use lastIndexOf() instead.
 */
@@ -7225,7 +7737,7 @@ bool operator==(const QLatin1String &s1, const QStringRef &s2)
 */
 bool operator<(const QStringRef &s1,const QStringRef &s2)
 {
-    return ucstrcmp(s1, s2) < 0;
+    return ucstrcmp(s1.constData(), s1.length(), s2.constData(), s2.length()) < 0;
 }
 
 /*!\fn bool operator<=(const QStringRef &s1,const QStringRef &s2)
@@ -7325,6 +7837,156 @@ QStringRef QStringRef::appendTo(QString *string) const
 }
 
 /*!
+    \fn int QStringRef::compare(const QStringRef &s1, const QString &s2, Qt::CaseSensitivity cs = Qt::CaseSensitive)
+    \since 4.5
+
+    Compares the string \a s1 with the string \a s2 and returns an
+    integer less than, equal to, or greater than zero if \a s1
+    is less than, equal to, or greater than \a s2.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+*/
+
+/*!
+    \fn int QStringRef::compare(const QStringRef &s1, const QStringRef &s2, Qt::CaseSensitivity cs = Qt::CaseSensitive)
+    \since 4.5
+    \overload
+
+    Compares the string \a s1 with the string \a s2 and returns an
+    integer less than, equal to, or greater than zero if \a s1
+    is less than, equal to, or greater than \a s2.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+*/
+
+/*!
+    \fn int QStringRef::compare(const QStringRef &s1, QLatin1String s2, Qt::CaseSensitivity cs = Qt::CaseSensitive)
+    \since 4.5
+    \overload
+
+    Compares the string \a s1 with the string \a s2 and returns an
+    integer less than, equal to, or greater than zero if \a s1
+    is less than, equal to, or greater than \a s2.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+*/
+
+/*!
+    \overload
+    \fn int QStringRef::compare(const QString &other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    \since 4.5
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+
+    Equivalent to \c {compare(*this, other, cs)}.
+
+    \sa QString::compare()
+*/
+
+/*!
+    \overload
+    \fn int QStringRef::compare(const QStringRef &other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    \since 4.5
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+
+    Equivalent to \c {compare(*this, other, cs)}.
+
+    \sa QString::compare()
+*/
+
+/*!
+    \overload
+    \fn int QStringRef::compare(QLatin1String other, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+    \since 4.5
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    If \a cs is Qt::CaseSensitive, the comparison is case sensitive;
+    otherwise the comparison is case insensitive.
+
+    Equivalent to \c {compare(*this, other, cs)}.
+
+    \sa QString::compare()
+*/
+
+/*!
+    \fn int QStringRef::localeAwareCompare(const QStringRef &s1, const QString & s2)
+    \since 4.5
+
+    Compares \a s1 with \a s2 and returns an integer less than, equal
+    to, or greater than zero if \a s1 is less than, equal to, or
+    greater than \a s2.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+
+    On Mac OS X, this function compares according the
+    "Order for sorted lists" setting in the International prefereces panel.
+
+    \sa compare(), QTextCodec::locale()
+*/
+
+/*!
+    \fn int QStringRef::localeAwareCompare(const QStringRef &s1, const QStringRef & s2)
+    \since 4.5
+    \overload
+
+    Compares \a s1 with \a s2 and returns an integer less than, equal
+    to, or greater than zero if \a s1 is less than, equal to, or
+    greater than \a s2.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+
+*/
+
+/*!
+    \fn int QStringRef::localeAwareCompare(const QString &other) const
+    \since 4.5
+    \overload
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+*/
+
+/*!
+    \fn int QStringRef::localeAwareCompare(const QStringRef &other) const
+    \since 4.5
+    \overload
+
+    Compares this string with the \a other string and returns an
+    integer less than, equal to, or greater than zero if this string
+    is less than, equal to, or greater than the \a other string.
+
+    The comparison is performed in a locale- and also
+    platform-dependent manner. Use this function to present sorted
+    lists of strings to the user.
+*/
+
+/*!
     \fn QString &QString::append(const QStringRef &reference)
     \since 4.4
 
@@ -7388,12 +8050,13 @@ QStringRef QString::rightRef(int n) const
     Returns a substring reference to \a n characters of this string,
     starting at the specified \a position.
 
-    If the \a position exceeds the length of the string, an empty reference is
-    returned.
+    If the \a position exceeds the length of the string, an empty
+    reference is returned.
 
-    If there are less than \a n characters available in the string, starting at
-    the given \a position, or if \a n is -1 (the default), the function returns
-    all characters from the specified \a position onwards.
+    If there are less than \a n characters available in the string,
+    starting at the given \a position, or if \a n is -1 (default), the
+    function returns all characters from the specified \a position
+    onwards.
 
     Example:
 

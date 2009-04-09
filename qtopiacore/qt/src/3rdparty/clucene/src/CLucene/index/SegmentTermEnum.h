@@ -131,7 +131,7 @@ private:
     /** 
 	 * Instantiate a buffer of length length+1
 	 */
-	void growBuffer(const uint32_t length);
+	void growBuffer(const uint32_t length, bool force_copy);
 
 };
 CL_NS_END

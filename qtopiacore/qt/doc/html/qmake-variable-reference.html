@@ -2,9 +2,9 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/qmake-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qmake-manual.qdoc -->
 <head>
-  <title>Qt 4.4: qmake Variable Reference</title>
+  <title>Qt 4.5: qmake Variable Reference</title>
   <link rel="prev" href="qmake-reference.html" />
   <link rel="contents" href="qmake-manual.html" />
   <link rel="next" href="qmake-function-reference.html" />
@@ -13,7 +13,7 @@
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [Previous: <a href="qmake-reference.html">qmake Reference</a>]
@@ -39,6 +39,7 @@
 <li><a href="#dsp-template">DSP_TEMPLATE</a></li>
 <li><a href="#forms">FORMS</a></li>
 <li><a href="#forms3">FORMS3</a></li>
+<li><a href="#guid">GUID</a></li>
 <li><a href="#headers">HEADERS</a></li>
 <li><a href="#includepath">INCLUDEPATH</a></li>
 <li><a href="#installs">INSTALLS</a></li>
@@ -56,6 +57,8 @@
 <li><a href="#post-targetdeps">POST_TARGETDEPS</a></li>
 <li><a href="#pre-targetdeps">PRE_TARGETDEPS</a></li>
 <li><a href="#precompiled-header">PRECOMPILED_HEADER</a></li>
+<li><a href="#pwd">PWD</a></li>
+<li><a href="#out-pwd">OUT_PWD</a></li>
 <li><a href="#qmake">QMAKE</a></li>
 <li><a href="#qmakespec">QMAKESPEC</a></li>
 <li><a href="#qmake-app-flag">QMAKE_APP_FLAG</a></li>
@@ -98,6 +101,8 @@
 <li><a href="#qmake-ext-obj">QMAKE_EXT_OBJ</a></li>
 <li><a href="#qmake-ext-cpp">QMAKE_EXT_CPP</a></li>
 <li><a href="#qmake-ext-h">QMAKE_EXT_H</a></li>
+<li><a href="#qmake-extra-compilers">QMAKE_EXTRA_COMPILERS</a></li>
+<li><a href="#qmake-extra-targets">QMAKE_EXTRA_TARGETS</a></li>
 <li><a href="#qmake-failed-requirements">QMAKE_FAILED_REQUIREMENTS</a></li>
 <li><a href="#qmake-filetags">QMAKE_FILETAGS</a></li>
 <li><a href="#qmake-framework-bundle-name">QMAKE_FRAMEWORK_BUNDLE_NAME</a></li>
@@ -107,6 +112,7 @@
 <li><a href="#qmake-incdir-qt">QMAKE_INCDIR_QT</a></li>
 <li><a href="#qmake-incdir-thread">QMAKE_INCDIR_THREAD</a></li>
 <li><a href="#qmake-incdir-x11">QMAKE_INCDIR_X11</a></li>
+<li><a href="#qmake-info-plist">QMAKE_INFO_PLIST</a></li>
 <li><a href="#qmake-lflags">QMAKE_LFLAGS</a></li>
 <li><a href="#qmake-lflags-console">QMAKE_LFLAGS_CONSOLE</a></li>
 <li><a href="#qmake-lflags-console-dll">QMAKE_LFLAGS_CONSOLE_DLL</a></li>
@@ -191,6 +197,8 @@
 <li><a href="#yaccimpls">YACCIMPLS</a></li>
 <li><a href="#yaccobjects">YACCOBJECTS</a></li>
 <li><a href="#yaccsources">YACCSOURCES</a></li>
+<li><a href="#pro-file">_PRO_FILE_</a></li>
+<li><a href="#pro-file-pwd">_PRO_FILE_PWD_</a></li>
 </ul>
 </td></tr></table></p>
 <a name="config"></a><a name="config"></a>
@@ -204,8 +212,9 @@
 <tr valign="top" class="odd"><td>debug_and_release</td><td>The project is built in <i>both</i> debug and release modes. This can have some unexpected side effects (see below for more information).</td></tr>
 <tr valign="top" class="even"><td>build_all</td><td>If <tt>debug_and_release</tt> is specified, the project is built in both debug and release modes by default.</td></tr>
 <tr valign="top" class="odd"><td>ordered</td><td>When using the <tt>subdirs</tt> template, this option specifies that the directories listed should be processed in the order in which they are given.</td></tr>
-<tr valign="top" class="even"><td>warn_on</td><td>The compiler should output as many warnings as possible. This is ignored if <tt>warn_off</tt> is specified.</td></tr>
-<tr valign="top" class="odd"><td>warn_off</td><td>The compiler should output as few warnings as possible.</td></tr>
+<tr valign="top" class="even"><td>precompile_header</td><td>Enables support for the use of <a href="qmake-precompiledheaders.html">precompiled headers</a> in projects.</td></tr>
+<tr valign="top" class="odd"><td>warn_on</td><td>The compiler should output as many warnings as possible. This is ignored if <tt>warn_off</tt> is specified.</td></tr>
+<tr valign="top" class="even"><td>warn_off</td><td>The compiler should output as few warnings as possible.</td></tr>
 </table></p>
 <p>Since the <tt>debug</tt> option overrides the <tt>release</tt> option when both are defined in the <tt>CONFIG</tt> variable, it is necessary to use the <tt>debug_and_release</tt> option if you want to allow both debug and release versions of a project to be built. In such a case, the Makefile that <tt>qmake</tt> generates includes a rule that builds both versions, and this can be invoked in the following way:</p>
 <pre> make all</pre>
@@ -220,13 +229,13 @@
 <p><table width="95%" align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Option</th><th>Description</th></tr></thead>
 <tr valign="top" class="odd"><td>qt</td><td>The target is a Qt application/library and requires the Qt library and header files. The proper include and library paths for the Qt library will automatically be added to the project. This is defined by default, and can be fine-tuned with the <tt>\l{#qt}{QT}</tt> variable.</td></tr>
-<tr valign="top" class="even"><td>opengl</td><td>The target requires the OpenGL (or Mesa) headers/libraries. The proper include and library paths for these libraries will automatically be added to the project.</td></tr>
-<tr valign="top" class="odd"><td>thread</td><td>The target is a multi-threaded application or library. The proper defines and compiler flags will automatically be added to the project.</td></tr>
-<tr valign="top" class="even"><td>x11</td><td>The target is a X11 application or library. The proper include paths and libraries will automatically be added to the project.</td></tr>
-<tr valign="top" class="odd"><td>windows</td><td>The target is a Win32 window application (app only). The proper include paths,compiler flags and libraries will automatically be added to the project.</td></tr>
-<tr valign="top" class="even"><td>console</td><td>The target is a Win32 console application (app only). The proper include paths, compiler flags and libraries will automatically be added to the project.</td></tr>
-<tr valign="top" class="odd"><td>shared</td><td rowspan="2">The target is a shared object/DLL. The proper include paths, compiler flags and libraries will automatically be added to the project.</td></tr>
-<tr valign="top" class="even"><td>dll</td><td></td></tr>
+<tr valign="top" class="even"><td>thread</td><td>The target is a multi-threaded application or library. The proper defines and compiler flags will automatically be added to the project.</td></tr>
+<tr valign="top" class="odd"><td>x11</td><td>The target is a X11 application or library. The proper include paths and libraries will automatically be added to the project.</td></tr>
+<tr valign="top" class="even"><td>windows</td><td>The target is a Win32 window application (app only). The proper include paths, compiler flags and libraries will automatically be added to the project.</td></tr>
+<tr valign="top" class="odd"><td>console</td><td>The target is a Win32 console application (app only). The proper include paths, compiler flags and libraries will automatically be added to the project.</td></tr>
+<tr valign="top" class="even"><td>shared</td><td rowspan="3">The target is a shared object/DLL. The proper include paths, compiler flags and libraries will automatically be added to the project.</td></tr>
+<tr valign="top" class="odd"><td>dll</td><td></td></tr>
+<tr valign="top" class="even"><td>dylib</td><td></td></tr>
 <tr valign="top" class="odd"><td>static</td><td rowspan="2">The target is a static library (lib only). The proper compiler flags will automatically be added to the project.</td></tr>
 <tr valign="top" class="even"><td>staticlib</td><td></td></tr>
 <tr valign="top" class="odd"><td>plugin</td><td>The target is a plugin (lib only). This enables dll as well.</td></tr>
@@ -238,16 +247,21 @@
 <p>These options are used to set the compiler flags:</p>
 <p><table width="95%" align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Option</th><th>Description</th></tr></thead>
-<tr valign="top" class="odd"><td>exceptions</td><td>Exception support is enabled.</td></tr>
+<tr valign="top" class="odd"><td>3dnow</td><td>AMD 3DNow! instruction support is enabled.</td></tr>
+<tr valign="top" class="even"><td>exceptions</td><td>Exception support is enabled.</td></tr>
+<tr valign="top" class="odd"><td>mmx</td><td>Intel MMX instruction support is enabled.</td></tr>
 <tr valign="top" class="even"><td>rtti</td><td>RTTI support is enabled.</td></tr>
 <tr valign="top" class="odd"><td>stl</td><td>STL support is enabled.</td></tr>
+<tr valign="top" class="even"><td>sse</td><td>SSE support is enabled.</td></tr>
+<tr valign="top" class="odd"><td>sse2</td><td>SSE2 support is enabled.</td></tr>
 </table></p>
-<p>These options define specific things on Windows only:</p>
+<p>These options define specific features on Windows only:</p>
 <p><table width="95%" align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Option</th><th>Description</th></tr></thead>
 <tr valign="top" class="odd"><td>flat</td><td>When using the vcapp template this will put all the source files into the source group and the header files into the header group regardless of what directory they reside in. Turning this option off will group the files within the source/header group depending on the directory they reside. This is turned on by default.</td></tr>
 <tr valign="top" class="even"><td>embed_manifest_dll</td><td>Embeds a manifest file in the DLL created as part of a library project.</td></tr>
 <tr valign="top" class="odd"><td>embed_manifest_exe</td><td>Embeds a manifest file in the DLL created as part of an application project.</td></tr>
+<tr valign="top" class="even"><td>incremental</td><td>Used to enable or disable incremental linking in Visual C++, depending on whether this feature is enabled or disabled by default.</td></tr>
 </table></p>
 <p>See <a href="qmake-platform-notes.html#visual-studio-2005-manifest-files">qmake Platform Notes</a> for more information on the options for embedding manifest files.</p>
 <p>These options only have an effect on Mac OS X:</p>
@@ -259,6 +273,12 @@
 <tr valign="top" class="even"><td>lib_bundle</td><td>Puts the library into a library bundle.</td></tr>
 </table></p>
 <p>The build process for bundles is also influenced by the contents of the <a href="#qmake-bundle-data">QMAKE_BUNDLE_DATA</a> variable.</p>
+<p>These options have an effect on Linux/Unix platforms:</p>
+<p><table width="95%" align="center" cellpadding="2" cellspacing="1" border="0">
+<thead><tr valign="top" class="qt-style"><th>Option</th><th>Description</th></tr></thead>
+<tr valign="top" class="odd"><td>largefile</td><td>Includes support for large files.</td></tr>
+<tr valign="top" class="even"><td>separate_debug_info</td><td>Puts debugging information for libraries in separate files.</td></tr>
+</table></p>
 <p>The <tt>CONFIG</tt> variable will also be checked when resolving scopes. You may assign anything to this variable.</p>
 <p>For example:</p>
 <pre> CONFIG += qt console newstuff
@@ -282,7 +302,8 @@
 <a name="deployment"></a><a name="deployment"></a>
 <h2>DEPLOYMENT</h2>
 <p><i>This is only used on Windows CE.</i></p>
-<p>Specifies which additional files will be deployed.</p>
+<p>Specifies which additional files will be deployed. Deployment means the transfer of files from the development system to the target device or emulator.</p>
+<p>Files can be deployed by either creating a Visual Studio project or using the <a href="qtestlib-manual.html#using-qtestlib-remotely-on-windows-ce">cetest</a> executable.</p>
 <p>For example:</p>
 <pre> myFiles.sources = path\*.png
  DEPLOYMENT += myFiles</pre>
@@ -301,6 +322,9 @@
 <p><i>This is only used on Windows CE.</i></p>
 <p>This variable specifies the Qt plugins that will be deployed. All plugins available in Qt can be explicitly deployed to the device. See <a href="plugins-howto.html#static-plugins">Static Plugins</a> for a complete list.</p>
 <p><b>Note:</b> No plugins will be deployed automatically. If the application depends on plugins, these plugins have to be specified manually.</p>
+<p>For example:</p>
+<pre> DEPLOYMENT_PLUGIN += qjpeg</pre>
+<p>This will upload the jpeg imageformat plugin to the plugins directory on the Windows CE device.</p>
 <a name="destdir"></a><a name="destdir"></a>
 <h2>DESTDIR</h2>
 <p>Specifies where to put the <a href="#target">target</a> file.</p>
@@ -335,6 +359,10 @@
 <pre> FORMS3 = my_uic3_dialog.ui \
       my_uic3_widget.ui \
           my_uic3_config.ui</pre>
+<a name="guid"></a><a name="guid"></a>
+<h2>GUID</h2>
+<p>Specifies the GUID that is set inside a <tt>.vcproj</tt> file. The GUID is usually randomly determined. However, should you require a fixed GUID, it can be set using this variable.</p>
+<p>This variable is specific to <tt>.vcproj</tt> files only; it is ignored otherwise.</p>
 <a name="headers"></a><a name="headers"></a>
 <h2>HEADERS</h2>
 <p>Defines the header files for the project.</p>
@@ -420,12 +448,19 @@
 <p>This variable indicates the header file for creating a precompiled header file, to increase the compilation speed of a project. Precompiled headers are currently only supported on some platforms (Windows - all MSVC project types, Mac OS X - Xcode, Makefile, Unix - gcc 3.3 and up).</p>
 <p>On other platforms, this variable has different meaning, as noted below.</p>
 <p>This variable contains a list of header files that require some sort of pre-compilation step (such as with moc). The value of this variable is typically handled by <tt>qmake</tt> or <a href="#qmakespec">qmake.conf</a> and rarely needs to be modified.</p>
+<a name="pwd"></a><a name="pwd"></a>
+<h2>PWD</h2>
+<p>This variable contains the full path leading to the directory where the <tt>qmake</tt> project file (project.pro) is located.</p>
+<a name="out-pwd"></a><a name="out-pwd"></a>
+<h2>OUT_PWD</h2>
+<p>This variable contains the full path leading to the directory where <tt>qmake</tt> places the generated Makefile.</p>
 <a name="qmake-systemvariable"></a><a name="qmake"></a>
 <h2>QMAKE</h2>
 <p>This variable contains the name of the <tt>qmake</tt> program itself and is placed in generated Makefiles. The value of this variable is typically handled by <tt>qmake</tt> or <a href="#qmakespec">qmake.conf</a> and rarely needs to be modified.</p>
 <a name="qmakespec-systemvariable"></a><a name="qmakespec"></a>
 <h2>QMAKESPEC</h2>
-<p>This variable contains the name of the <tt>qmake</tt> configuration to use when generating Makefiles. The value of this variable is typically handled by <tt>qmake</tt> and rarely needs to be modified. Use the <tt>QMAKESPEC</tt> environment variable instead.</p>
+<p>This variable contains the name of the <tt>qmake</tt> configuration to use when generating Makefiles. The value of this variable is typically handled by <tt>qmake</tt> and rarely needs to be modified.</p>
+<p>Use the <tt>QMAKESPEC</tt> environment variable to override the <tt>qmake</tt> configuration. Note that, due to the way <tt>qmake</tt> reads project files, setting the <tt>QMAKESPEC</tt> environment variable from within a project file will have no effect.</p>
 <a name="qmake-app-flag"></a><a name="qmake-app-flag"></a>
 <h2>QMAKE_APP_FLAG</h2>
 <p>This variable is empty unless the <tt>app</tt> <a href="#template">TEMPLATE</a> is specified. The value of this variable is typically handled by <tt>qmake</tt> or <a href="#qmakespec">qmake.conf</a> and rarely needs to be modified. Use the following instead:</p>
@@ -573,6 +608,14 @@
 <h2>QMAKE_EXT_H</h2>
 <p>This variable changes the interpretation of all suffixes in this list of values as files of type C header files.</p>
 <p>See also <a href="qmake-environment-reference.html#extensions">File Extensions</a>.</p>
+<a name="qmake-extra-compilers"></a>
+<h2>QMAKE_EXTRA_COMPILERS</h2>
+<p>This variable contains the extra compilers/preprocessors that have been added</p>
+<p>See also <a href="qmake-environment-reference.html#customizing">Customizing Makefile Output</a></p>
+<a name="qmake-extra-targets"></a>
+<h2>QMAKE_EXTRA_TARGETS</h2>
+<p>This variable contains the extra targets that have been added</p>
+<p>See also <a href="qmake-environment-reference.html#customizing">Customizing Makefile Output</a></p>
 <a name="qmake-failed-requirements"></a><a name="qmake-failed-requirements"></a>
 <h2>QMAKE_FAILED_REQUIREMENTS</h2>
 <p>This variable contains the list of requirements that were failed to be met when <tt>qmake</tt> was used. For example, the sql module is needed and wasn't compiled into Qt. The value of this variable is typically handled by <tt>qmake</tt> or <a href="#qmakespec">qmake.conf</a> and rarely needs to be modified.</p>
@@ -607,6 +650,12 @@
 <h2>QMAKE_INCDIR_X11</h2>
 <p><i>This is used on Unix platforms only.</i></p>
 <p>This variable contains the location of X11 header file paths to be added to INCLUDEPATH when building a X11 application. The value of this variable is typically handled by <tt>qmake</tt> or <a href="#qmakespec">qmake.conf</a> and rarely needs to be modified.</p>
+<a name="qmake-info-plist"></a><a name="qmake-info-plist"></a>
+<h2>QMAKE_INFO_PLIST</h2>
+<p><i>This is used on Mac OS X platforms only.</i></p>
+<p>This variable contains the name of the property list file, <tt>.plist</tt>, you would like to include in your Mac OS X application bundle.</p>
+<p>In the <tt>.plist</tt> file, you can define some variables, e.g&#x2e;, @EXECUTABLE@, which qmake will replace with the actual executable name. Other variables include <a href="stylesheet-reference.html#icon">@ICON@</a>, @TYPEINFO@, <a href="qmake-common-projects.html#library">@LIBRARY@</a>, and @SHORT_VERSION@.</p>
+<p><b>Note:</b> Most of the time, the default <tt>Info.plist</tt> is good enough.</p>
 <a name="qmake-lflags"></a>
 <h2>QMAKE_LFLAGS</h2>
 <p>This variable contains a general set of flags that are passed to the linker. If you need to change the flags used for a particular platform or type of project, use one of the specialized variables for that purpose instead of this variable.</p>
@@ -873,8 +922,8 @@
 <p>This variable contains the name of the template to use when generating the project. The allowed values are:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Option</th><th>Description</th></tr></thead>
-<tr valign="top" class="odd"><td>app</td><td>Creates a Makefile for building applications (the default).</td></tr>
-<tr valign="top" class="even"><td>lib</td><td>Creates a Makefile for building libraries.</td></tr>
+<tr valign="top" class="odd"><td>app</td><td>Creates a Makefile for building applications (the default). (See <a href="qmake-common-projects.html#application">qmake Common Projects</a> for more information.)</td></tr>
+<tr valign="top" class="even"><td>lib</td><td>Creates a Makefile for building libraries. (See <a href="qmake-common-projects.html#library">qmake Common Projects</a> for more information.)</td></tr>
 <tr valign="top" class="odd"><td>subdirs</td><td>Creates a Makefile for building targets in subdirectories. The subdirectories are specified using the <a href="#subdirs">SUBDIRS</a> variable.</td></tr>
 <tr valign="top" class="even"><td>vcapp</td><td><i>Windows only</i> Creates an application project for Visual Studio. (See <a href="qmake-platform-notes.html#creating-visual-studio-project-files">qmake Platform Notes</a> for more information.)</td></tr>
 <tr valign="top" class="odd"><td>vclib</td><td><i>Windows only</i> Creates a library project for Visual Studio. (See <a href="qmake-platform-notes.html#creating-visual-studio-project-files">qmake Platform Notes</a> for more information.)</td></tr>
@@ -941,6 +990,16 @@
 <p>This variable contains a list of yacc source files to be included in the project. All dependencies, headers and source files will automatically be included in the project.</p>
 <p>For example:</p>
 <pre> YACCSOURCES = moc.y</pre>
+<a name="pro-file"></a>
+<h2>_PRO_FILE_</h2>
+<p>This variable contains the path to the project file in use.</p>
+<p>For example, the following line causes the location of the project file to be written to the console:</p>
+<pre> message($$_PRO_FILE_)</pre>
+<a name="pro-file-pwd"></a>
+<h2>_PRO_FILE_PWD_</h2>
+<p>This variable contains the path to the directory containing the project file in use.</p>
+<p>For example, the following line causes the location of the directory containing the project file to be written to the console:</p>
+<pre> message($$_PRO_FILE_PWD_)</pre>
 <p>
 [Previous: <a href="qmake-reference.html">qmake Reference</a>]
 [<a href="qmake-manual.html">Contents</a>]
@@ -948,8 +1007,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

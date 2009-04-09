@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -501,7 +505,7 @@ QDBusMessage QDBusConnection::call(const QDBusMessage &message, QDBus::CallMode 
 {
     if (!d || !d->connection) {
         QDBusError err = QDBusError(QDBusError::Disconnected,
-                                    QLatin1String("Not connected to D-BUS server"));
+                                    QLatin1String("Not connected to D-Bus server"));
         if (d)
             d->lastError = err;
 
@@ -515,6 +519,28 @@ QDBusMessage QDBusConnection::call(const QDBusMessage &message, QDBus::CallMode 
     QDBusMessage retval;
     retval << QVariant(); // add one argument (to avoid .at(0) problems)
     return retval;
+}
+
+/*!
+    \since 4.5
+    Sends the \a message over this connection and returns
+    immediately. This function is suitable for method calls only. It
+    returns an object of type QDBusPendingCall which can be used to
+    track the status of the reply. The \a timeout parameter is used to
+    determine when an auto-generated error reply may be emitted and is
+    also the upper limit for waiting in QDBusPendingCall::waitForFinished().
+
+    See the QDBusInterface::asyncCall() function for a more friendly way
+    of placing calls.
+*/
+QDBusPendingCall QDBusConnection::asyncCall(const QDBusMessage &message, int timeout) const
+{
+    if (!d || !d->connection) {
+        return QDBusPendingCall(0); // null pointer -> disconnected
+    }
+
+    QDBusPendingCallPrivate *priv = d->sendWithReplyAsync(message, timeout);
+    return QDBusPendingCall(priv);
 }
 
 /*!
@@ -863,6 +889,28 @@ QString QDBusConnection::baseService() const
 }
 
 /*!
+    \since 4.5
+
+    Returns the connection name for this connection, as given as the
+    name parameter to connectToBus().
+
+    The connection name can be used to uniquely identify actual
+    underlying connections to buses.  Copies made from a single
+    connection will always implicitly share the underlying connection,
+    and hence will have the same connection name.
+
+    Inversely, two connections having different connection names will
+    always either be connected to different buses, or have a different
+    unique name (as returned by baseService()) on that bus.
+
+    \sa connectToBus(), disconnectFromBus()
+*/
+QString QDBusConnection::name() const
+{
+    return d ? d->name : QString();
+}
+
+/*!
     Attempts to register the \a serviceName on the D-Bus server and
     returns true if the registration succeded. The registration will
     fail if the name is already registered by another application.
@@ -962,7 +1010,8 @@ void QDBusConnectionPrivate::setBusService(const QDBusConnection &connection)
                      this, SIGNAL(serviceOwnerChanged(QString,QString,QString)));
 
     QObject::connect(this, SIGNAL(callWithCallbackFailed(QDBusError,QDBusMessage)),
-                     busService, SIGNAL(callWithCallbackFailed(QDBusError,QDBusMessage)));
+                     busService, SIGNAL(callWithCallbackFailed(QDBusError,QDBusMessage)),
+                     Qt::QueuedConnection);
 
 }
 

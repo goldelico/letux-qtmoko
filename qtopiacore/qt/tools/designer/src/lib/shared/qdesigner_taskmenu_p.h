@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,9 +54,8 @@
 #define QDESIGNER_TASKMENU_H
 
 #include "shared_global_p.h"
+#include "extensionfactory_p.h"
 #include <QtDesigner/QDesignerTaskMenuExtension>
-
-#include <QtDesigner/default_extensionfactory.h>
 
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
@@ -61,6 +64,7 @@
 QT_BEGIN_NAMESPACE
 
 class QDesignerFormWindowInterface;
+class QDesignerFormEditorInterface;
 
 class QWidget;
 class QSignalMapper;
@@ -80,13 +84,26 @@ public:
 
     virtual QList<QAction*> taskActions() const;
 
-protected:
     enum PropertyMode { CurrentWidgetMode, MultiSelectionMode };
+
+    static bool isSlotNavigationEnabled(const QDesignerFormEditorInterface *core);
+    static void navigateToSlot(QDesignerFormEditorInterface *core, QObject *o,
+                               const QString &defaultSignal = QString());
+
+protected:
 
     QDesignerFormWindowInterface *formWindow() const;
     void changeTextProperty(const QString &propertyName, const QString &windowTitle, PropertyMode pm, Qt::TextFormat desiredFormat);
 
     QAction *createSeparator();
+
+    /* Retrieve the list of objects the task menu is supposed to act on. Note that a task menu can be invoked for
+     * an unmanaged widget [as of 4.5], in which case it must not use the cursor selection,
+     * but the unmanaged selection of the object inspector. */
+    QObjectList applicableObjects(const QDesignerFormWindowInterface *fw, PropertyMode pm) const;
+    QList<QWidget *> applicableWidgets(const QDesignerFormWindowInterface *fw, PropertyMode pm) const;
+
+    void setProperty(QDesignerFormWindowInterface *fw, PropertyMode pm, const QString &name, const QVariant &newValue);
 
 private slots:
     void changeObjectName();
@@ -99,21 +116,14 @@ private slots:
     void removeStatusBar();
     void changeScript();
     void containerFakeMethods();
+    void slotNavigateToSlot();
     void applySize(QAction *a);
 
 private:
     QDesignerTaskMenuPrivate *d;
 };
 
-class QDESIGNER_SHARED_EXPORT QDesignerTaskMenuFactory: public QExtensionFactory
-{
-    Q_OBJECT
-public:
-    QDesignerTaskMenuFactory(QExtensionManager *extensionManager = 0);
-
-protected:
-    virtual QObject *createExtension(QObject *object, const QString &iid, QObject *parent) const;
-};
+typedef ExtensionFactory<QDesignerTaskMenuExtension, QWidget, QDesignerTaskMenu>  QDesignerTaskMenuFactory;
 
 } // namespace qdesigner_internal
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -131,6 +135,12 @@ Configure::Configure( int& argc, char** argv )
     const QString installPath = buildPath;
 #endif
     if(sourceDir != buildDir) { //shadow builds!
+        if (!findFile("perl") && !findFile("perl.exe")) {
+            cout << "Error: Creating a shadow build of Qt requires" << endl
+                 << "perl to be in the PATH environment";
+            exit(0); // Exit cleanly for Ctrl+C
+        }
+
         cout << "Preparing build tree..." << endl;
         QDir(buildPath).mkpath("bin");
 
@@ -238,10 +248,12 @@ Configure::Configure( int& argc, char** argv )
     dictionary[ "CE_CRT" ]          = "no";
     dictionary[ "CETEST" ]          = "auto";
     dictionary[ "CE_SIGNATURE" ]    = "no";
+    dictionary[ "SCRIPTTOOLS" ]     = "yes";
     dictionary[ "XMLPATTERNS" ]     = "auto";
     dictionary[ "PHONON" ]          = "auto";
+    dictionary[ "PHONON_BACKEND" ]  = "yes";
+    dictionary[ "DIRECTSHOW" ]      = "no";
     dictionary[ "WEBKIT" ]          = "auto";
-    dictionary[ "ASSISTANT_WEBKIT" ] = "no";
     dictionary[ "PLUGIN_MANIFESTS" ] = "yes";
 
     QString version;
@@ -311,6 +323,7 @@ Configure::Configure( int& argc, char** argv )
     dictionary[ "STYLE_WINDOWSMOBILE" ] = "no";
     dictionary[ "STYLE_MOTIF" ]     = "yes";
     dictionary[ "STYLE_CDE" ]       = "yes";
+    dictionary[ "STYLE_GTK" ]       = "no";
 
     dictionary[ "SQL_MYSQL" ]       = "no";
     dictionary[ "SQL_ODBC" ]        = "no";
@@ -322,6 +335,7 @@ Configure::Configure( int& argc, char** argv )
     dictionary[ "SQL_SQLITE_LIB" ]  = "qt";
     dictionary[ "SQL_SQLITE2" ]     = "no";
     dictionary[ "SQL_IBASE" ]       = "no";
+    dictionary[ "GRAPHICS_SYSTEM" ] = "raster";
 
     QString tmp = dictionary[ "QMAKESPEC" ];
     if (tmp.contains("\\")) {
@@ -466,8 +480,10 @@ void Configure::parseCmdLine()
             if (i==argCount)
                 break;
             dictionary[ "ARCHITECTURE" ] = configCmdLine.at(i);
-            if (configCmdLine.at(i) == "boundschecker")
-                dictionary[ "ARCHITECTURE" ] = "generic";   // Backwards compatible configure option
+            if (configCmdLine.at(i) == "boundschecker") {
+                dictionary[ "ARCHITECTURE" ] = "generic";   // Boundschecker uses the generic arch,
+                qtConfig += "boundschecker";                // but also needs this CONFIG option
+            }
         } else if( configCmdLine.at(i) == "-embedded" ) {
             dictionary[ "EMBEDDED" ] = "yes";
         } else if( configCmdLine.at(i) == "-xplatform") {
@@ -763,10 +779,16 @@ void Configure::parseCmdLine()
             dictionary[ "MMX" ] = "yes";
         else if (configCmdLine.at(i) == "-no-3dnow")
             dictionary[ "3DNOW" ] = "no";
+        else if (configCmdLine.at(i) == "-3dnow")
+            dictionary[ "3DNOW" ] = "yes";
         else if (configCmdLine.at(i) == "-no-sse")
             dictionary[ "SSE" ] = "no";
+        else if (configCmdLine.at(i) == "-sse")
+            dictionary[ "SSE" ] = "yes";
         else if (configCmdLine.at(i) == "-no-sse2")
             dictionary[ "SSE2" ] = "no";
+        else if (configCmdLine.at(i) == "-sse2")
+            dictionary[ "SSE2" ] = "yes";
         else if (configCmdLine.at(i) == "-no-iwmmxt")
             dictionary[ "IWMMXT" ] = "no";
         else if (configCmdLine.at(i) == "-iwmmxt")
@@ -792,6 +814,10 @@ void Configure::parseCmdLine()
             dictionary[ "DBUS" ] = "yes";
         } else if( configCmdLine.at(i) == "-dbus-linked" ) {
             dictionary[ "DBUS" ] = "linked";
+        } else if( configCmdLine.at(i) == "-no-scripttools" ) {
+            dictionary[ "SCRIPTTOOLS" ] = "no";
+        } else if( configCmdLine.at(i) == "-scripttools" ) {
+            dictionary[ "SCRIPTTOOLS" ] = "yes";
         } else if( configCmdLine.at(i) == "-no-xmlpatterns" ) {
             dictionary[ "XMLPATTERNS" ] = "no";
         } else if( configCmdLine.at(i) == "-xmlpatterns" ) {
@@ -800,14 +826,16 @@ void Configure::parseCmdLine()
             dictionary[ "PHONON" ] = "no";
         } else if( configCmdLine.at(i) == "-phonon" ) {
             dictionary[ "PHONON" ] = "yes";
+        } else if( configCmdLine.at(i) == "-no-phonon-backend" ) {
+            dictionary[ "PHONON_BACKEND" ] = "no";
+        } else if( configCmdLine.at(i) == "-phonon-backend" ) {
+            dictionary[ "PHONON_BACKEND" ] = "yes";
+        } else if( configCmdLine.at(i) == "-phonon-wince-ds9" ) {
+            dictionary[ "DIRECTSHOW" ] = "yes";
         } else if( configCmdLine.at(i) == "-no-webkit" ) {
             dictionary[ "WEBKIT" ] = "no";
         } else if( configCmdLine.at(i) == "-webkit" ) {
             dictionary[ "WEBKIT" ] = "yes";
-        } else if( configCmdLine.at(i) == "-no-assistant-webkit" ) {
-            dictionary[ "ASSISTANT_WEBKIT" ] = "no";
-        } else if( configCmdLine.at(i) == "-assistant-webkit" ) {
-            dictionary[ "ASSISTANT_WEBKIT" ] = "yes";
         } else if( configCmdLine.at(i) == "-no-plugin-manifests" ) {
             dictionary[ "PLUGIN_MANIFESTS" ] = "no";
         } else if( configCmdLine.at(i) == "-plugin-manifests" ) {
@@ -865,9 +893,6 @@ void Configure::parseCmdLine()
                 break;
             qmakeLibs += QString("-l" + configCmdLine.at(i));
         } else if (configCmdLine.at(i).startsWith("OPENSSL_LIBS=")) {
-            ++i;
-            if (i==argCount)
-                break;
             opensslLibs = configCmdLine.at(i);
         }
 
@@ -887,6 +912,13 @@ void Configure::parseCmdLine()
 
         else if (configCmdLine.at(i) == "-confirm-license") {
             dictionary["LICENSE_CONFIRMED"] = "yes";
+        }
+
+        else if (configCmdLine.at(i) == "-nomake") {
+            ++i;
+            if (i==argCount)
+                break;
+            disabledBuildParts += configCmdLine.at(i);
         }
 
         // Directories ----------------------------------------------
@@ -972,6 +1004,15 @@ void Configure::parseCmdLine()
             if(i==argCount)
                 break;
             dictionary[ "MAKE" ] = configCmdLine.at(i);
+        }
+
+        else if (configCmdLine.at(i) == "-graphicssystem") {
+            ++i;
+            if (i == argCount)
+                break;
+            QString system = configCmdLine.at(i);
+            if (system == QLatin1String("raster") || system == QLatin1String("opengl"))
+                dictionary["GRAPHICS_SYSTEM"] = configCmdLine.at(i);
         }
 
         else if( configCmdLine.at(i).indexOf( QRegExp( "^-(en|dis)able-" ) ) != -1 ) {
@@ -1253,12 +1294,13 @@ void Configure::applySpecSpecifics()
         dictionary[ "CE_CRT" ]              = "yes";
         dictionary[ "DIRECT3D" ]            = "no";
         dictionary[ "WEBKIT" ]              = "no";
-        dictionary[ "ASSISTANT_WEBKIT" ]    = "no";
-        dictionary[ "PHONON" ]              = "no";
+        dictionary[ "PHONON" ]              = "yes";
+        dictionary[ "DIRECTSHOW" ]          = "no";
         // We only apply MMX/IWMMXT for mkspecs we know they work
         if (dictionary[ "XQMAKESPEC" ].startsWith("wincewm")) {
             dictionary[ "MMX" ]    = "yes";
             dictionary[ "IWMMXT" ] = "yes";
+            dictionary[ "DIRECTSHOW" ] = "yes";
         }
         dictionary[ "QT_HOST_PREFIX" ]      = dictionary[ "QT_INSTALL_PREFIX" ];
         dictionary[ "QT_INSTALL_PREFIX" ]   = "";
@@ -1347,12 +1389,15 @@ bool Configure::displayHelp()
                     "[-qt-zlib] [-system-zlib] [-no-gif] [-qt-gif] [-no-libpng]\n"
                     "[-qt-libpng] [-system-libpng] [-no-libtiff] [-qt-libtiff]\n"
                     "[-system-libtiff] [-no-libjpeg] [-qt-libjpeg] [-system-libjpeg]\n"
-                    "[-no-libmng] [-qt-libmng] [-system-libmng] [-no-qt3support]\n"
-                    "[-mmx] [-no-mmx] [-no-3dnow] [-no-sse] [-no-sse2]\n"
+                    "[-no-libmng] [-qt-libmng] [-system-libmng] [-no-qt3support] [-mmx]\n"
+                    "[-no-mmx] [-3dnow] [-no-3dnow] [-sse] [-no-sse] [-sse2] [-no-sse2]\n"
                     "[-no-iwmmxt] [-iwmmxt] [-direct3d] [-openssl] [-openssl-linked]\n"
                     "[-no-openssl] [-no-dbus] [-dbus] [-dbus-linked] [-platform <spec>]\n"
                     "[-qtnamespace <namespace>] [-no-phonon] [-phonon]\n"
-                    "[-no-webkit] [-webkit] [-no-assistant-webkit] [-assistant-webkit]\n\n", 0, 7);
+                    "[-no-phonon-backend] [-phonon-backend]\n"
+                    "[-no-webkit] [-webkit]\n"
+                    "[-no-scripttools] [-scripttools]\n"
+                    "[-graphicssystem raster|opengl]\n\n", 0, 7);
 
         desc("Installation options:\n\n");
 
@@ -1438,6 +1483,11 @@ bool Configure::displayHelp()
         desc(                   "-L <librarypath>",     "Add an explicit library path.");
         desc(                   "-l <libraryname>",     "Add an explicit library name, residing in a librarypath.\n");
 #endif
+        desc(                   "-graphicssystem <sys>",   "Specify which graphicssystem should be used.\n"
+                                "Available values for <sys>:");
+        desc("GRAPHICS_SYSTEM", "raster", "", "  raster - Software rasterizer", ' ');
+        desc("GRAPHICS_SYSTEM", "opengl", "", "  opengl - Using OpenGL accelleration, experimental!", ' ');
+
 
         desc(                   "-help, -h, -?",        "Display this information.\n");
 
@@ -1480,8 +1530,8 @@ bool Configure::displayHelp()
         desc("INCREDIBUILD_XGE", "no", "-no-incredibuild-xge", "Do not add IncrediBuild XGE distribution commands to custom build steps.");
         desc("INCREDIBUILD_XGE", "yes", "-incredibuild-xge",   "Add IncrediBuild XGE distribution commands to custom build steps. This will distribute MOC and UIC steps, and other custom buildsteps which are added to the INCREDIBUILD_XGE variable.\n(The IncrediBuild distribution commands are only added to Visual Studio projects)\n");
 
-        desc("PLUGIN_MANIFESTS", "no", "-no-plugin-manifest", "Do not embed manifests in plugins.");
-        desc("PLUGIN_MANIFESTS", "yes", "-plugin-manifest",   "Embed manifests in plugins.\n");
+        desc("PLUGIN_MANIFESTS", "no", "-no-plugin-manifests", "Do not embed manifests in plugins.");
+        desc("PLUGIN_MANIFESTS", "yes", "-plugin-manifests",   "Embed manifests in plugins.\n");
 
 #if !defined(EVAL)
         desc("BUILD_QMAKE", "no", "-no-qmake",          "Do not compile qmake.");
@@ -1495,8 +1545,11 @@ bool Configure::displayHelp()
         desc("MMX", "no",       "-no-mmx",              "Do not compile with use of MMX instructions");
         desc("MMX", "yes",      "-mmx",                 "Compile with use of MMX instructions");
         desc("3DNOW", "no",     "-no-3dnow",            "Do not compile with use of 3DNOW instructions");
+        desc("3DNOW", "yes",    "-3dnow",               "Compile with use of 3DNOW instructions");
         desc("SSE", "no",       "-no-sse",              "Do not compile with use of SSE instructions");
+        desc("SSE", "yes",      "-sse",                 "Compile with use of SSE instructions");
         desc("SSE2", "no",      "-no-sse2",             "Do not compile with use of SSE2 instructions");
+        desc("SSE2", "yes",      "-sse2",               "Compile with use of SSE2 instructions");
         desc("DIRECT3D", "yes",  "-direct3d",           "Compile in Direct3D support (experimental - see INSTALL for more info)");
         desc("OPENSSL", "no",    "-no-openssl",         "Do not compile in OpenSSL support");
         desc("OPENSSL", "yes",   "-openssl",            "Compile in run-time OpenSSL support");
@@ -1505,16 +1558,19 @@ bool Configure::displayHelp()
         desc("DBUS", "yes",      "-dbus",               "Compile in D-Bus support and load libdbus-1 dynamically");
         desc("DBUS", "linked",   "-dbus-linked",        "Compile in D-Bus support and link to libdbus-1");
         desc("PHONON", "no",    "-no-phonon",           "Do not compile in the Phonon module");
-        desc("PHONON", "yes",   "-phonon",              "Compile in the Phonon module (Phonon is built if a decent C++ compiler is used.)");
+        desc("PHONON", "yes",   "-phonon",              "Compile the Phonon module (Phonon is built if a decent C++ compiler is used.)");
+        desc("PHONON_BACKEND","no", "-no-phonon-backend","Do not compile the platform-specific Phonon backend-plugin");
+        desc("PHONON_BACKEND","yes","-phonon-backend",  "Compile in the platform-specific Phonon backend-plugin");
         desc("WEBKIT", "no",    "-no-webkit",           "Do not compile in the WebKit module");
         desc("WEBKIT", "yes",   "-webkit",              "Compile in the WebKit module (WebKit is built if a decent C++ compiler is used.)");
-        desc("ASSISTANT_WEBKIT", "no", "-no-assistant-webkit", "Do not use WebKit as html rendering engine in Assistant.");
-        desc("ASSISTANT_WEBKIT", "yes", "-assistant-webkit", "Use WebKit as html rendering engine in Assistant. (This is only available if WebKit is built.)");
+        desc("SCRIPTTOOLS", "no", "-no-scripttools",    "Do not build the QtScriptTools module.");
+        desc("SCRIPTTOOLS", "yes", "-scripttools",      "Build the QtScriptTools module.");
 
         desc(                   "-arch <arch>",         "Specify an architecture.\n"
                                                         "Available values for <arch>:");
         desc("ARCHITECTURE","windows",       "",        "  windows", ' ');
         desc("ARCHITECTURE","windowsce",     "",        "  windowsce", ' ');
+        desc("ARCHITECTURE","boundschecker",     "",    "  boundschecker", ' ');
         desc("ARCHITECTURE","generic", "",              "  generic\n", ' ');
 
         desc(                   "-no-style-<style>",    "Disable <style> entirely.");
@@ -1554,6 +1610,8 @@ bool Configure::displayHelp()
         desc(                      "-signature <file>",    "Use file for signing the target project");
         desc("OPENGL_ES_CM", "no", "-opengl-es-cm",        "Enable support for OpenGL ES Common");
         desc("OPENGL_ES_CL", "no", "-opengl-es-cl",        "Enable support for OpenGL ES Common Lite");
+        desc("DIRECTSHOW", "no",   "-phonon-wince-ds9",    "Enable Phonon Direct Show 9 backend for Windows CE");
+
         return true;
     }
     return false;
@@ -1705,6 +1763,8 @@ bool Configure::checkAvailability(const QString &part)
         available = (dictionary[ "ARCHITECTURE" ]  == "windowsce");
     else if (part == "OPENGL_ES_CL")
         available = (dictionary[ "ARCHITECTURE" ]  == "windowsce");
+    else if (part == "DIRECTSHOW")
+        available = (dictionary[ "ARCHITECTURE" ]  == "windowsce");
     else if (part == "SSE2")
         available = (dictionary.value("QMAKESPEC") != "win32-msvc") && (dictionary.value("QMAKESPEC") != "win32-g++");
     else if (part == "3DNOW" )
@@ -1785,8 +1845,8 @@ bool Configure::checkAvailability(const QString &part)
         }
     } else if (part == "WEBKIT") {
         available = (dictionary.value("QMAKESPEC") == "win32-msvc2005") || (dictionary.value("QMAKESPEC") == "win32-msvc2008") || (dictionary.value("QMAKESPEC") == "win32-g++");
-    } else if (part == "ASSISTANT_WEBKIT") {
-        available = dictionary.value("WEBKIT") == "yes";
+    } else if (part == "SCRIPTTOOLS") {
+        available = true;
     }
 
     return available;
@@ -1863,6 +1923,8 @@ void Configure::autoDetection()
         dictionary["OPENSSL"] = checkAvailability("OPENSSL") ? "yes" : "no";
     if (dictionary["DBUS"] == "auto")
         dictionary["DBUS"] = checkAvailability("DBUS") ? "yes" : "no";
+    if (dictionary["SCRIPTTOOLS"] == "auto")
+        dictionary["SCRIPTTOOLS"] = checkAvailability("SCRIPTTOOLS") ? "yes" : "no";
     if (dictionary["XMLPATTERNS"] == "auto")
         dictionary["XMLPATTERNS"] = checkAvailability("XMLPATTERNS") ? "yes" : "no";
     if (dictionary["DIRECT3D"] == "auto")
@@ -1913,14 +1975,6 @@ bool Configure::verifyConfiguration()
         cout << "(Press any key to continue..)";
         if(_getch() == 3) // _Any_ keypress w/no echo(eat <Enter> for stdout)
             exit(0);      // Exit cleanly for Ctrl+C
-    }
-    if (dictionary["ASSISTANT_WEBKIT"] == "yes" && dictionary["WEBKIT"] == "no") {
-        cout << "WARNING: WebKit cannot be used in Qt Assistant, since the Qt WebKit module" << endl
-             << "won't be built with the current configuration." << endl;
-        cout << "(Press any key to continue..)";
-        if(_getch() == 3) // _Any_ keypress w/no echo(eat <Enter> for stdout)
-            exit(0);      // Exit cleanly for Ctrl+C
-        dictionary["ASSISTANT_WEBKIT"] = "no";
     }
 
     return true;
@@ -2184,11 +2238,16 @@ void Configure::generateOutputVars()
     if (dictionary[ "OPENGL" ] == "yes")
         qtConfig += "opengl";
 
-    if ( dictionary["OPENGL_ES_CM"] == "yes" )
-        qtConfig += "opengl_es_cm";
+    if ( dictionary["OPENGL_ES_CM"] == "yes" ) {
+        qtConfig += "opengles1";
+    }
 
-    if ( dictionary["OPENGL_ES_CL"] == "yes" )
-        qtConfig += "opengl_es_cl";
+    if ( dictionary["OPENGL_ES_CL"] == "yes" ) {
+        qtConfig += "opengles1cl";
+    }
+
+     if ( dictionary["DIRECTSHOW"] == "yes" )
+        qtConfig += "directshow";
 
     if (dictionary[ "DIRECT3D" ] == "yes")
         qtConfig += "direct3d";
@@ -2211,17 +2270,20 @@ void Configure::generateOutputVars()
     if (dictionary[ "CETEST" ] == "yes")
         qtConfig += "cetest";
 
+    if (dictionary[ "SCRIPTTOOLS" ] == "yes")
+        qtConfig += "scripttools";
+
     if (dictionary[ "XMLPATTERNS" ] == "yes")
         qtConfig += "xmlpatterns";
 
-    if (dictionary["PHONON"] == "yes")
+    if (dictionary["PHONON"] == "yes") {
         qtConfig += "phonon";
+        if (dictionary["PHONON_BACKEND"] == "yes")
+            qtConfig += "phonon-backend";
+    }
 
     if (dictionary["WEBKIT"] == "yes")
         qtConfig += "webkit";
-
-    if (dictionary["ASSISTANT_WEBKIT"] == "yes")
-        qtConfig += "assistant_webkit";
 
     // We currently have no switch for QtSvg, so add it unconditionally.
     qtConfig += "svg";
@@ -2337,7 +2399,14 @@ void Configure::generateCachefile()
             cacheStream << (*var) << endl;
         }
         cacheStream << "CONFIG         += " << qmakeConfig.join( " " ) << " incremental create_prl link_prl depend_includepath QTDIR_build" << endl;
-        cacheStream << "QT_BUILD_PARTS  = libs tools examples demos docs translations" << endl;
+
+        QStringList buildParts;
+        buildParts << "libs" << "tools" << "examples" << "demos" << "docs" << "translations";
+        foreach(QString item, disabledBuildParts) {
+            buildParts.removeAll(item);
+        }
+        cacheStream << "QT_BUILD_PARTS  = " << buildParts.join( " " ) << endl;
+
         QString targetSpec = dictionary.contains("XQMAKESPEC") ? dictionary[ "XQMAKESPEC" ] : dictionary[ "QMAKESPEC" ];
         QString mkspec_path = fixSeparators(sourcePath + "/mkspecs/" + targetSpec);
         if(QFile::exists(mkspec_path))
@@ -2394,6 +2463,8 @@ void Configure::generateCachefile()
             configStream << " stl";
         if ( dictionary[ "EXCEPTIONS" ] == "yes" )
             configStream << " exceptions";
+        if ( dictionary[ "EXCEPTIONS" ] == "no" )
+            configStream << " exceptions_off";
         if ( dictionary[ "RTTI" ] == "yes" )
             configStream << " rtti";
         if ( dictionary[ "MMX" ] == "yes" )
@@ -2536,12 +2607,14 @@ void Configure::generateConfigfiles()
         if(dictionary["STYLE_WINDOWS"] != "yes")     qconfigList += "QT_NO_STYLE_WINDOWS";
         if(dictionary["STYLE_PLASTIQUE"] != "yes")   qconfigList += "QT_NO_STYLE_PLASTIQUE";
         if(dictionary["STYLE_CLEANLOOKS"] != "yes")   qconfigList += "QT_NO_STYLE_CLEANLOOKS";
-        if(dictionary["STYLE_WINDOWSXP"] != "yes")   qconfigList += "QT_NO_STYLE_WINDOWSXP";
+        if(dictionary["STYLE_WINDOWSXP"] != "yes" && dictionary["STYLE_WINDOWSVISTA"] != "yes")
+            qconfigList += "QT_NO_STYLE_WINDOWSXP";
         if(dictionary["STYLE_WINDOWSVISTA"] != "yes")   qconfigList += "QT_NO_STYLE_WINDOWSVISTA";
         if(dictionary["STYLE_MOTIF"] != "yes")       qconfigList += "QT_NO_STYLE_MOTIF";
         if(dictionary["STYLE_CDE"] != "yes")         qconfigList += "QT_NO_STYLE_CDE";
         if(dictionary["STYLE_WINDOWSCE"] != "yes")   qconfigList += "QT_NO_STYLE_WINDOWSCE";
         if(dictionary["STYLE_WINDOWSMOBILE"] != "yes")   qconfigList += "QT_NO_STYLE_WINDOWSMOBILE";
+        if(dictionary["STYLE_GTK"] != "yes")         qconfigList += "QT_NO_STYLE_GTK";
 
         if(dictionary["GIF"] == "yes")              qconfigList += "QT_BUILTIN_GIF_READER=1";
         if(dictionary["PNG"] == "no")               qconfigList += "QT_NO_IMAGEFORMAT_PNG";
@@ -2565,9 +2638,13 @@ void Configure::generateConfigfiles()
         if(dictionary["WEBKIT"] == "no")            qconfigList += "QT_NO_WEBKIT";
         if(dictionary["PHONON"] == "no")            qconfigList += "QT_NO_PHONON";
         if(dictionary["XMLPATTERNS"] == "no")       qconfigList += "QT_NO_XMLPATTERNS";
+        if(dictionary["SCRIPTTOOLS"] == "no")       qconfigList += "QT_NO_SCRIPTTOOLS";
 
-        if(dictionary["OPENGL_ES_CM"] == "yes")     qconfigList += "QT_OPENGL_ES_CM";
-        if(dictionary["OPENGL_ES_CL"] == "yes")     qconfigList += "QT_OPENGL_ES_CL";
+        if(dictionary["OPENGL_ES_CM"] == "yes" ||
+           dictionary["OPENGL_ES_CL"] == "yes")     qconfigList += "QT_OPENGL_ES";
+
+        if(dictionary["OPENGL_ES_CM"] == "yes")     qconfigList += "QT_OPENGL_ES_1";
+        if(dictionary["OPENGL_ES_CL"] == "yes")     qconfigList += "QT_OPENGL_ES_1_CL";
 
         if(dictionary["SQL_MYSQL"] == "yes")        qconfigList += "QT_SQL_MYSQL";
         if(dictionary["SQL_ODBC"] == "yes")         qconfigList += "QT_SQL_ODBC";
@@ -2578,6 +2655,9 @@ void Configure::generateConfigfiles()
         if(dictionary["SQL_SQLITE"] == "yes")       qconfigList += "QT_SQL_SQLITE";
         if(dictionary["SQL_SQLITE2"] == "yes")      qconfigList += "QT_SQL_SQLITE2";
         if(dictionary["SQL_IBASE"] == "yes")        qconfigList += "QT_SQL_IBASE";
+
+        if (dictionary["GRAPHICS_SYSTEM"] == "opengl") qconfigList += "QT_GRAPHICSSYSTEM_OPENGL";
+        if (dictionary["GRAPHICS_SYSTEM"] == "raster") qconfigList += "QT_GRAPHICSSYSTEM_RASTER";
 
         qconfigList.sort();
         for (int i = 0; i < qconfigList.count(); ++i)
@@ -2772,9 +2852,9 @@ void Configure::displayConfig()
     if (dictionary["EDITION"] == "Trolltech") {
         cout << "Trolltech license file used (" << dictionary["LICENSE FILE"] << ")" << endl;
     } else if (dictionary["EDITION"] == "OpenSource") {
-        cout << "You are licensed to use this software under the terms of the GNU GPL version 2 or 3." << endl;
-        cout << "See " << dictionary["LICENSE FILE"] << "2" << endl
-             << " or " << dictionary["LICENSE FILE"] << "3" << endl << endl;
+        cout << "You are licensed to use this software under the terms of the GNU LGPL version 2.1 or the GNU GPL version 3." << endl;
+        cout << "See " << dictionary["LICENSE FILE"] << ".LGPL" << endl
+             << " or " << dictionary["LICENSE FILE"] << ".GPL3" << endl << endl;
     } else {
         QString l1 = licenseInfo[ "LICENSEE" ];
         QString l2 = licenseInfo[ "LICENSEID" ];
@@ -2815,6 +2895,8 @@ void Configure::displayConfig()
     cout << "QtXmlPatterns support......." << dictionary[ "XMLPATTERNS" ] << endl;
     cout << "Phonon support.............." << dictionary[ "PHONON" ] << endl;
     cout << "WebKit support.............." << dictionary[ "WEBKIT" ] << endl;
+    cout << "QtScriptTools support......." << dictionary[ "SCRIPTTOOLS" ] << endl;
+    cout << "Graphics System............." << dictionary[ "GRAPHICS_SYSTEM" ] << endl;
     cout << "Qt3 compatibility..........." << dictionary[ "QT3SUPPORT" ] << endl << endl;
 
     cout << "Third Party Libraries:" << endl;
@@ -3005,6 +3087,7 @@ void Configure::buildHostTools()
     QString pwd = QDir::currentPath();
     QStringList hostToolsDirs;
     hostToolsDirs
+        << "src/tools/bootstrap"
         << "src/tools/moc"
         << "src/tools/rcc"
         << "src/tools/uic"
@@ -3179,10 +3262,16 @@ void Configure::generateMakefiles()
                     QString dirPath = fixSeparators( it->directory + "/" );
                     QString projectName = it->proFile;
                     QString makefileName = buildPath + "/" + dirPath + it->target;
+
+                    // For shadowbuilds, we need to create the path first
+                    QDir buildPathDir(buildPath);
+                    if (sourcePath != buildPath && !buildPathDir.exists(dirPath))
+                        buildPathDir.mkpath(dirPath);
+
                     QStringList args;
 
                     args << fixSeparators( buildPath + "/bin/qmake" );
-                    args << projectName;
+                    args << sourcePath + "/" + dirPath + projectName;
                     args << dictionary[ "QMAKE_ALL_ARGS" ];
 
                     cout << "For " << qPrintable(dirPath + projectName) << endl;
@@ -3269,7 +3358,7 @@ bool Configure::showLicense(QString orgLicenseFile)
     QString licenseFile = orgLicenseFile;
     QString theLicense;
     if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
-        theLicense = "GNU General Public License (GPL) version 2 or 3";
+        theLicense = "GNU Lesser Public License (LGPL) version 2.1 or GNU General Public License (GPL) version 3";
     } else {
         // the first line of the license file tells us which license it is
         QFile file(licenseFile);
@@ -3286,7 +3375,7 @@ bool Configure::showLicense(QString orgLicenseFile)
              << "the " << theLicense << "." << endl
              << endl;
         if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
-            cout << "Type '2' to view the GNU General Public License version 2 (GPLv2)." << endl;
+            cout << "Type 'L' to view the GNU Lesser General Public License version 2.1 (LGPLv2.1)." << endl;
             cout << "Type '3' to view the GNU General Public License version 3 (GPLv3)." << endl;
         } else {
             cout << "Type '?' to view the " << theLicense << "." << endl;
@@ -3305,9 +3394,9 @@ bool Configure::showLicense(QString orgLicenseFile)
         } else {
             if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
                 if (accept == '3')
-                    licenseFile = orgLicenseFile + "3";
+                    licenseFile = orgLicenseFile + ".GPL3";
                 else
-                    licenseFile = orgLicenseFile + "2";
+                    licenseFile = orgLicenseFile + ".LGPL";
             }
             // Get console line height, to fill the screen properly
             int i = 0, screenHeight = 25; // default
@@ -3344,8 +3433,8 @@ void Configure::readLicense()
                                       && (dictionary.value("QMAKESPEC").startsWith("wince") || dictionary.value("XQMAKESPEC").startsWith("wince")))
                                         ? "Qt for Windows CE" : "Qt for Windows";
 
-    dictionary["LICENSE FILE"] = sourcePath + "/LICENSE.GPL";
-    if (QFile::exists(dictionary["LICENSE FILE"] + "2") || QFile::exists(dictionary["LICENSE FILE"] + "3")) {
+    dictionary["LICENSE FILE"] = sourcePath + "/LICENSE";
+    if (QFile::exists(dictionary["LICENSE FILE"] + ".LGPL") || QFile::exists(dictionary["LICENSE FILE"] + ".GPL3")) {
         cout << endl << "This is the " << dictionary["PLATFORM NAME"] << " Open Source Edition." << endl;
         licenseInfo["LICENSEE"] = "Open Source";
         dictionary["EDITION"] = "OpenSource";
@@ -3360,7 +3449,7 @@ void Configure::readLicense()
     }
 #ifndef COMMERCIAL_VERSION
     else {
-        cout << endl << "Cannot find the GPL license files!" << endl;
+        cout << endl << "Cannot find the LGPL/GPL license files!" << endl;
         dictionary["DONE"] = "error";
     }
 #else

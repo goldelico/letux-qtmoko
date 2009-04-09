@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -76,6 +80,7 @@
 #include <qdialog.h>
 #include <private/qwidget_p.h>
 #include <QAbstractSpinBox>
+#include <QLabel>
 
 #include <limits.h>
 
@@ -93,9 +98,10 @@ public:
 
 
 static QHash<const QWidget *, QVector<StyleRule> > *styleRulesCache = 0;
-typedef QHash<QString, QHash<quint64, QRenderRule> > QRenderRules;
+static QHash<const QWidget *, QHash<int, bool> > *hasStyleRuleCache = 0;
+typedef QHash<int, QHash<quint64, QRenderRule> > QRenderRules;
 static QHash<const QWidget *, QRenderRules> *renderRulesCache = 0;
-static QHash<const QWidget *, int> *customPaletteWidgets = 0; // widgets whose palette we tampered
+static QHash<const QWidget *, QPalette> *customPaletteWidgets = 0; // widgets whose palette we tampered
 static QHash<const void *, StyleSheet> *styleSheetCache = 0; // parsed style sheets
 static QSet<const QWidget *> *autoFillDisabledWidgets = 0;
 
@@ -206,6 +212,7 @@ enum PseudoElement {
     PseudoElement_ViewItemIcon,
     PseudoElement_ViewItemText,
     PseudoElement_ViewItemIndicator,
+    PseudoElement_ScrollAreaCorner,
     NumPseudoElements
 };
 
@@ -292,7 +299,8 @@ static const PseudoElementInfo knownPseudoElements[NumPseudoElements] = {
     { QStyle::SC_None, "item" },
     { QStyle::SC_None, "icon" },
     { QStyle::SC_None, "text" },
-    { QStyle::SC_None, "indicator" }
+    { QStyle::SC_None, "indicator" } ,
+    { QStyle::SC_None, "corner" }
 };
 
 
@@ -364,6 +372,24 @@ struct QStyleSheetBorderData : public QSharedData
     bool hasBorderImage() const { return bi!=0; }
 
     QSharedDataPointer<QStyleSheetBorderImageData> bi;
+
+    bool isOpaque() const
+    {
+        for (int i = 0; i < 4; i++) {
+            if (styles[i] == QCss::BorderStyle_Native || styles[i] == QCss::BorderStyle_None)
+                continue;
+            if (styles[i] >= QCss::BorderStyle_Dotted && styles[i] <= QCss::BorderStyle_DotDotDash
+                && styles[i] != BorderStyle_Solid)
+                return false;
+            if (!colors[i].isOpaque())
+                return false;
+            if (!radii[i].isEmpty())
+                return false;
+        }
+        if (bi != 0 && bi->pixmap.hasAlpha())
+            return false;
+        return true;
+    }
 };
 
 
@@ -499,8 +525,10 @@ public:
     }
 
     bool baseStyleCanDraw() const {
-        if (!hasBackground() || background()->brush.style() == Qt::NoBrush)
+        if (!hasBackground() || (background()->brush.style() == Qt::NoBrush && bg->pixmap.isNull()))
             return true;
+        if (bg && !bg->pixmap.isNull())
+            return false;
         if (hasGradientBackground())
             return features & StyleFeature_BackgroundGradient;
         return features & StyleFeature_BackgroundColor;
@@ -511,7 +539,7 @@ public:
     bool hasOutline() const { return ou != 0; }
     bool hasPosition() const { return p != 0; }
     bool hasGeometry() const { return geo != 0; }
-    bool hasDrawable() const { return hasBorder() || hasBackground() || hasImage(); }
+    bool hasDrawable() const { return !hasNativeBorder() || hasBackground() || hasImage(); }
     bool hasImage() const { return img != 0; }
 
     QSize minimumContentsSize() const
@@ -908,13 +936,13 @@ QRenderRule::QRenderRule(const QVector<Declaration> &declarations, const QWidget
     hasFont = v.extractFont(&font, &adj);
 
 #ifndef QT_NO_TOOLTIP
-    if (widget && (QString::fromLatin1(widget->metaObject()->className()) == QLatin1String("QTipLabel")))
+    if (widget && qstrcmp(widget->metaObject()->className(), "QTipLabel") == 0)
         palette = QToolTip::palette();
 #endif
 
     for (int i = 0; i < declarations.count(); i++) {
         const Declaration& decl = declarations.at(i);
-        if (decl.propertyId == BorderImage) {
+        if (decl.d->propertyId == BorderImage) {
             QString uri;
             QCss::TileMode horizStretch, vertStretch;
             int cuts[4];
@@ -936,19 +964,19 @@ QRenderRule::QRenderRule(const QVector<Declaration> &declarations, const QWidget
                 bi->horizStretch = horizStretch;
                 bi->vertStretch = vertStretch;
             }
-        } else if (decl.propertyId == QtBackgroundRole) {
+        } else if (decl.d->propertyId == QtBackgroundRole) {
             if (bg && bg->brush.style() != Qt::NoBrush)
                 continue;
-            int role = decl.values.first().variant.toInt();
+            int role = decl.d->values.at(0).variant.toInt();
             if (role >= Value_FirstColorRole && role <= Value_LastColorRole)
                 defaultBackground = palette.color((QPalette::ColorRole)(role-Value_FirstColorRole));
-        } else if (decl.property.startsWith(QLatin1String("qproperty-"), Qt::CaseInsensitive)) {
+        } else if (decl.d->property.startsWith(QLatin1String("qproperty-"), Qt::CaseInsensitive)) {
             // intentionally left blank...
-        } else if (decl.propertyId == UnknownProperty) {
+        } else if (decl.d->propertyId == UnknownProperty) {
             bool knownStyleHint = false;
             for (int i = 0; i < numKnownStyleHints; i++) {
                 QLatin1String styleHint(knownStyleHints[i]);
-                if (decl.property.compare(styleHint) == 0) {
+                if (decl.d->property.compare(styleHint) == 0) {
                    QString hintName = QString(styleHint);
                    QVariant hintValue;
                    if (hintName.endsWith(QLatin1String("alignment"))) {
@@ -960,20 +988,20 @@ QRenderRule::QRenderRule(const QVector<Declaration> &declarations, const QWidget
                    } else if (hintName.endsWith(QLatin1String("icon"))) {
                        hintValue = decl.iconValue();
                    } else if (hintName == QLatin1String("button-layout")
-                              && decl.values.count() != 0 && decl.values.first().type == Value::String) {
-                       hintValue = subControlLayout(decl.values.first().variant.toString());
+                              && decl.d->values.count() != 0 && decl.d->values.at(0).type == Value::String) {
+                       hintValue = subControlLayout(decl.d->values.at(0).variant.toString());
                    } else {
                        int integer;
                        decl.intValue(&integer);
                        hintValue = integer;
                    }
-                   styleHints[decl.property] = hintValue;
+                   styleHints[decl.d->property] = hintValue;
                    knownStyleHint = true;
                    break;
                 }
             }
             if (!knownStyleHint)
-                qDebug("Unknown property %s", qPrintable(decl.property));
+                qDebug("Unknown property %s", qPrintable(decl.d->property));
         }
     }
 
@@ -1037,7 +1065,7 @@ QRect QRenderRule::boxRect(const QRect& cr, int flags) const
             r.adjust(-p[LeftEdge], -p[TopEdge], p[RightEdge], p[BottomEdge]);
         }
     }
-    if (hasBorder() && (flags & Border)) {
+    if (!hasNativeBorder() && (flags & Border)) {
         const int *b = border()->borders;
         r.adjust(-b[LeftEdge], -b[TopEdge], b[RightEdge], b[BottomEdge]);
     }
@@ -1184,10 +1212,14 @@ void QRenderRule::drawBorderImage(QPainter *p, const QRect& rect)
         }
         break;
     case TileMode_Repeat:
-        if (!bi->topEdge.isNull())
-            qDrawCenterTiledPixmap(p, topEdgeRect, bi->topEdge);
-        if (!bi->bottomEdge.isNull())
-            qDrawCenterTiledPixmap(p, bottomEdgeRect, bi->bottomEdge);
+        if (!bi->topEdge.isNull() && !topEdgeRect.isEmpty()) {
+            QPixmap scaled = bi->topEdge.scaled(bi->topEdge.width(), t);
+            qDrawCenterTiledPixmap(p, topEdgeRect, scaled);
+        }
+        if (!bi->bottomEdge.isNull() && !bottomEdgeRect.isEmpty()) {
+            QPixmap scaled = bi->bottomEdge.scaled(bi->bottomEdge.width(), b);
+            qDrawCenterTiledPixmap(p, bottomEdgeRect, scaled);
+        }
         if (bi->middleRect.isValid()) {
             if (bi->vertStretch == TileMode_Repeat) {
                 qDrawCenterTiledPixmap(p, pr, bi->middle);
@@ -1228,10 +1260,14 @@ void QRenderRule::drawBorderImage(QPainter *p, const QRect& rect)
             p->drawPixmap(rightEdgeRect, pix, bi->rightEdgeRect);
         break;
     case TileMode_Repeat:
-        if (!bi->leftEdge.isNull())
-            qDrawCenterTiledPixmap(p, leftEdgeRect, bi->leftEdge);
-        if (!bi->rightEdge.isNull())
-            qDrawCenterTiledPixmap(p, rightEdgeRect, bi->rightEdge);
+        if (!bi->leftEdge.isNull() && !leftEdgeRect.isEmpty()) {
+            QPixmap scaled = bi->leftEdge.scaled(l, bi->leftEdge.height());
+            qDrawCenterTiledPixmap(p, leftEdgeRect, scaled);
+        }
+        if (!bi->rightEdge.isNull() && !rightEdgeRect.isEmpty()) {
+            QPixmap scaled = bi->rightEdge.scaled(r, bi->rightEdge.height());
+            qDrawCenterTiledPixmap(p, rightEdgeRect, scaled);
+        }
         break;
     case TileMode_Round:
         if (!bi->leftEdge.isNull()) {
@@ -1390,6 +1426,9 @@ QPainterPath QRenderRule::borderClip(QRect r)
     return path;
 }
 
+/*! \internal
+  Clip the painter to the border (in case we are using radius border)
+ */
 void QRenderRule::setClip(QPainter *p, const QRect &rect)
 {
     if (clipset++)
@@ -1397,7 +1436,7 @@ void QRenderRule::setClip(QPainter *p, const QRect &rect)
     clipPath = borderClip(rect);
     if (!clipPath.isEmpty()) {
         p->save();
-        p->setClipPath(clipPath);
+        p->setClipPath(clipPath, Qt::IntersectClip);
     }
 }
 
@@ -1480,7 +1519,7 @@ void QRenderRule::configurePalette(QPalette *p, QPalette::ColorGroup cg, const Q
     const bool isReadOnlyCombo = qobject_cast<const QComboBox *>(w) != 0;
 #endif
 
-    if (bg && bg->brush.style() == Qt::SolidPattern) {
+    if (bg && bg->brush.style() != Qt::NoBrush) {
         if (isReadOnlyCombo) {
             p->setBrush(cg, QPalette::Base, bg->brush); // for windows, windowxp
             p->setBrush(cg, QPalette::Button, bg->brush); // for plastique
@@ -1522,62 +1561,95 @@ void QRenderRule::configurePalette(QPalette *p, QPalette::ColorGroup cg, const Q
 // Style rules
 #define WIDGET(x) (static_cast<QWidget *>(x.ptr))
 
+static inline QWidget *parentWidget(const QWidget *w)
+{
+    if(qobject_cast<const QLabel *>(w) && qstrcmp(w->metaObject()->className(), "QTipLabel") == 0) {
+        QWidget *p = qvariant_cast<QWidget *>(w->property("_q_stylesheet_parent"));
+        if (p)
+            return p;
+    }
+    return w->parentWidget();
+}
+
 class QStyleSheetStyleSelector : public StyleSelector
 {
 public:
     QStyleSheetStyleSelector() { }
 
-    bool nodeNameEquals(NodePtr node, const QString& name) const
+    QStringList nodeNames(NodePtr node) const
     {
         if (isNullNode(node))
-            return false;
-        const bool checkNs = name.contains(QLatin1Char('-'));
+            return QStringList();
         const QMetaObject *metaObject = WIDGET(node)->metaObject();
+#ifndef QT_NO_TOOLTIP
+        if (qstrcmp(metaObject->className(), "QTipLabel") == 0)
+            return QStringList(QLatin1String("QToolTip"));
+#endif
+        QStringList result;
         do {
-            if (name.compare(QLatin1String(metaObject->className())) == 0)
-                return true;
-            if (checkNs) {
-                QString className = QString::fromUtf8(metaObject->className());
-                className.replace(QLatin1Char(':'), QLatin1Char('-'));
-                if (className == name)
-                    return true;
-            }
+            result += QString::fromLatin1(metaObject->className()).replace(QLatin1Char(':'), QLatin1Char('-'));
             metaObject = metaObject->superClass();
         } while (metaObject != 0);
-
-#ifndef QT_NO_TOOLTIP
-        if (name == QLatin1String("QToolTip")
-            && QString::fromLatin1("QTipLabel")== QString::fromLatin1(WIDGET(node)->metaObject()->className()))
-            return true;
-#endif
-        return false;
+        return result;
     }
     QString attribute(NodePtr node, const QString& name) const
     {
         if (isNullNode(node))
             return QString();
+
+        QHash<QString, QString> &cache = m_attributeCache[WIDGET(node)];
+        QHash<QString, QString>::const_iterator cacheIt = cache.constFind(name);
+        if (cacheIt != cache.constEnd())
+            return cacheIt.value();
+
         QVariant value = WIDGET(node)->property(name.toLatin1());
         if (!value.isValid()) {
             if (name == QLatin1String("class")) {
                 QString className = QString::fromLatin1(WIDGET(node)->metaObject()->className());
                 if (className.contains(QLatin1Char(':')))
                     className.replace(QLatin1Char(':'), QLatin1Char('-'));
+                cache[name] = className;
                 return className;
             } else if (name == QLatin1String("style")) {
                 QStyleSheetStyle *proxy = qobject_cast<QStyleSheetStyle *>(WIDGET(node)->style());
-                if (proxy)
-                    return QString::fromLatin1(proxy->baseStyle()->metaObject()->className());
+                if (proxy) {
+                    QString styleName = QString::fromLatin1(proxy->baseStyle()->metaObject()->className());
+                    cache[name] = styleName;
+                    return styleName;
+                }
             }
         }
+        QString valueStr;
         if(value.type() == QVariant::StringList || value.type() == QVariant::List)
-            return value.toStringList().join(QLatin1String(" "));
-        return value.toString();
+            valueStr = value.toStringList().join(QLatin1String(" "));
+        else
+            valueStr = value.toString();
+        cache[name] = valueStr;
+        return valueStr;
     }
-    bool hasAttribute(NodePtr node, const QString& name) const
-    { return name == QLatin1String("class")
-             || name == QLatin1String("style")
-             || (!isNullNode(node) && (WIDGET(node)->metaObject()->indexOfProperty(name.toLatin1()) != -1))
-             || (!isNullNode(node) && (WIDGET(node)->dynamicPropertyNames().contains(name.toLatin1()))); }
+    bool nodeNameEquals(NodePtr node, const QString& nodeName) const
+    {
+        if (isNullNode(node))
+            return false;
+        const QMetaObject *metaObject = WIDGET(node)->metaObject();
+#ifndef QT_NO_TOOLTIP
+        if (qstrcmp(metaObject->className(), "QTipLabel") == 0)
+            return nodeName == QLatin1String("QToolTip");
+#endif
+        do {
+            const ushort *uc = (const ushort *)nodeName.constData();
+            const ushort *e = uc + nodeName.length();
+            const uchar *c = (uchar *)metaObject->className();
+            while (*c && uc != e && (*uc == *c || (*c == ':' && *uc == '-'))) {
+                ++uc;
+                ++c;
+            }
+            if (uc == e && !*c)
+                return true;
+            metaObject = metaObject->superClass();
+        } while (metaObject != 0);
+        return false;
+    }
     bool hasAttributes(NodePtr) const
     { return true; }
     QStringList nodeIds(NodePtr node) const
@@ -1585,89 +1657,44 @@ public:
     bool isNullNode(NodePtr node) const
     { return node.ptr == 0; }
     NodePtr parentNode(NodePtr node) const
-    { NodePtr n; n.ptr = isNullNode(node) ? 0 : WIDGET(node)->parentWidget(); return n; }
+    { NodePtr n; n.ptr = isNullNode(node) ? 0 : parentWidget(WIDGET(node)); return n; }
     NodePtr previousSiblingNode(NodePtr) const
     { NodePtr n; n.ptr = 0; return n; }
     NodePtr duplicateNode(NodePtr node) const
     { return node; }
     void freeNode(NodePtr) const
     { }
+
+private:
+    mutable QHash<const QWidget *, QHash<QString, QString> > m_attributeCache;
 };
-
-static bool unstylable(const QWidget *w)
-{
-    if (w->windowType() == Qt::Desktop)
-        return true;
-
-    if (!w->styleSheet().isEmpty())
-        return false;
-
-#ifndef QT_NO_SCROLLAREA
-    if (const QAbstractScrollArea *sa = qobject_cast<const QAbstractScrollArea *>(w->parentWidget())) {
-        if (sa->viewport() == w)
-            return true;
-    }
-#endif
-#ifndef QT_NO_LINEEDIT
-    else if (qobject_cast<const QLineEdit *>(w)) {
-        if (0
-#ifndef QT_NO_COMBOBOX
-            || qobject_cast<const QComboBox *>(w->parentWidget())
-#endif
-#ifndef QT_NO_SPINBOX
-            || qobject_cast<const QAbstractSpinBox *>(w->parentWidget())
-#endif
-            )
-            return true;
-    }
-#endif
-#ifndef QT_NO_FRAME
-    // detect QComboBoxPrivateContainer
-    else if (qobject_cast<const QFrame *>(w)) {
-        if (0
-#ifndef QT_NO_COMBOBOX
-            || qobject_cast<const QComboBox *>(w->parentWidget())
-#endif
-           )
-            return true;
-    }
-#endif
-    return false;
-}
 
 QVector<QCss::StyleRule> QStyleSheetStyle::styleRules(const QWidget *w) const
 {
-    if (styleRulesCache->contains(w))
-        return styleRulesCache->value(w);
+    QHash<const QWidget *, QVector<StyleRule> >::const_iterator cacheIt = styleRulesCache->constFind(w);
+    if (cacheIt != styleRulesCache->constEnd())
+        return cacheIt.value();
 
-    if (w) {
-        QObject::disconnect(w, SIGNAL(destroyed(QObject*)), this, SLOT(widgetDestroyed(QObject*)));
-        QObject::connect(w, SIGNAL(destroyed(QObject*)), this, SLOT(widgetDestroyed(QObject*)));
-    }
-
-    if (w && unstylable(w)) {
-        QVector<StyleRule> emptyRule;
-        styleRulesCache->insert(w, emptyRule);
-        return emptyRule;
+    if (!initWidget(w)) {
+        return QVector<StyleRule>();
     }
 
     QStyleSheetStyleSelector styleSelector;
 
     StyleSheet defaultSs;
-    if (!styleSheetCache->contains(0)) {
-        parser.init(QLatin1String(":/trolltech/stylesheet/default.qss"), true);
-        if (!parser.parse(&defaultSs))
-            qWarning("Could not parse default stylesheet");
-        defaultSs.origin = StyleSheetOrigin_UserAgent;
-        styleSheetCache->insert(0, defaultSs);
+    QHash<const void *, StyleSheet>::const_iterator defaultCacheIt = styleSheetCache->constFind(baseStyle());
+    if (defaultCacheIt == styleSheetCache->constEnd()) {
+        defaultSs = getDefaultStyleSheet();
+        styleSheetCache->insert(baseStyle(), defaultSs);
     } else {
-        defaultSs = styleSheetCache->value(0);
+        defaultSs = defaultCacheIt.value();
     }
     styleSelector.styleSheets += defaultSs;
 
     if (!qApp->styleSheet().isEmpty()) {
         StyleSheet appSs;
-        if (!styleSheetCache->contains(qApp)) {
+        QHash<const void *, StyleSheet>::const_iterator appCacheIt = styleSheetCache->constFind(qApp);
+        if (appCacheIt == styleSheetCache->constEnd()) {
             QString ss = qApp->styleSheet();
             if (ss.startsWith(QLatin1String("file:///")))
                 ss.remove(0, 8);
@@ -1678,17 +1705,18 @@ QVector<QCss::StyleRule> QStyleSheetStyle::styleRules(const QWidget *w) const
             appSs.depth = 1;
             styleSheetCache->insert(qApp, appSs);
         } else {
-            appSs = styleSheetCache->value(qApp);
+            appSs = appCacheIt.value();
         }
         styleSelector.styleSheets += appSs;
     }
 
     QVector<QCss::StyleSheet> widgetSs;
-    for (const QWidget *wid = w; wid; wid = wid->parentWidget()) {
-        if(wid->styleSheet().isEmpty())
+    for (const QWidget *wid = w; wid; wid = parentWidget(wid)) {
+        if (wid->styleSheet().isEmpty())
             continue;
         StyleSheet ss;
-        if (!styleSheetCache->contains(wid)) {
+        QHash<const void *, StyleSheet>::const_iterator widCacheIt = styleSheetCache->constFind(wid);
+        if (widCacheIt == styleSheetCache->constEnd()) {
             parser.init(wid->styleSheet());
             if (!parser.parse(&ss)) {
                 parser.init(QLatin1String("* {") + wid->styleSheet() + QLatin1String("}"));
@@ -1698,21 +1726,20 @@ QVector<QCss::StyleRule> QStyleSheetStyle::styleRules(const QWidget *w) const
             ss.origin = StyleSheetOrigin_Inline;
             styleSheetCache->insert(wid, ss);
         } else {
-            ss = styleSheetCache->value(wid);
+            ss = widCacheIt.value();
         }
-        widgetSs.prepend(ss);
+        widgetSs.append(ss);
     }
 
     for (int i = 0; i < widgetSs.count(); i++)
-        widgetSs[i].depth = i + 2;
+        widgetSs[i].depth = widgetSs.count() - i + 2;
 
     styleSelector.styleSheets += widgetSs;
 
     StyleSelector::NodePtr n;
     n.ptr = (void *)w;
     QVector<QCss::StyleRule> rules = styleSelector.styleRulesForNode(n);
-    if (!w || w->property("_q_stylesheet_polished").toBool() == true)
-        styleRulesCache->insert(w, rules);
+    styleRulesCache->insert(w, rules);
     return rules;
 }
 
@@ -1759,8 +1786,14 @@ int QStyleSheetStyle::nativeFrameWidth(const QWidget *w)
     if (qobject_cast<const QMenuBar *>(w))
         return base->pixelMetric(QStyle::PM_MenuBarPanelWidth, 0, w);
 #endif
+#ifndef QT_NO_FRAME
+    if (const QFrame *frame = qobject_cast<const QFrame *>(w)) {
+        if (frame->frameShape() == QFrame::NoFrame)
+            return 0;
+    }
+#endif
 
-    if (QString::fromLatin1(w->metaObject()->className()) == QLatin1String("QTipLabel"))
+    if (qstrcmp(w->metaObject()->className(), "QTipLabel") == 0)
         return base->pixelMetric(QStyle::PM_ToolTipLabelFrameWidth, 0, w);
 
     return base->pixelMetric(QStyle::PM_DefaultFrameWidth, 0, w);
@@ -1821,7 +1854,7 @@ static void qt_check_if_internal_widget(const QWidget **w, int *element)
     Q_UNUSED(w);
     Q_UNUSED(element);
 #else
-    if (*w && QString::fromLatin1((*w)->metaObject()->className()) == QLatin1String("QDockWidgetTitleButton")) {
+    if (*w && qstrcmp((*w)->metaObject()->className(), "QDockWidgetTitleButton") == 0) {
         if ((*w)->objectName() == QLatin1String("qt_dockwidget_closebutton")) {
             *element = PseudoElement_DockWidgetCloseButton;
         } else if ((*w)->objectName() == QLatin1String("qt_dockwidget_floatbutton")) {
@@ -1835,18 +1868,37 @@ static void qt_check_if_internal_widget(const QWidget **w, int *element)
 QRenderRule QStyleSheetStyle::renderRule(const QWidget *w, int element, quint64 state) const
 {
     qt_check_if_internal_widget(&w, &element);
-    const QString part = QLatin1String(knownPseudoElements[element].name);
-    if (renderRulesCache->contains(w)) {
-        QHash<quint64, QRenderRule> &renderRules = (*renderRulesCache)[w][part];
+    QHash<quint64, QRenderRule> &cache = (*renderRulesCache)[w][element];
+    QHash<quint64, QRenderRule>::const_iterator cacheIt = cache.constFind(state);
+    if (cacheIt != cache.constEnd())
+        return cacheIt.value();
 
-        if (renderRules.contains(state))
-            return renderRules[state]; // already computed before
+    if (!initWidget(w))
+        return QRenderRule();
+
+    quint64 stateMask = 0;
+    const QVector<StyleRule> rules = styleRules(w);
+    for (int i = 0; i < rules.count(); i++) {
+        const Selector& selector = rules.at(i).selectors.at(0);
+        quint64 negated = 0;
+        stateMask |= selector.pseudoClass(&negated);
+        stateMask |= negated;
     }
 
-    QVector<Declaration> decls = declarations(styleRules(w), part, state);
+    cacheIt = cache.constFind(state & stateMask);
+    if (cacheIt != cache.constEnd()) {
+        const QRenderRule &newRule = cacheIt.value();
+        cache[state] = newRule;
+        return newRule;
+    }
+
+
+    const QString part = QLatin1String(knownPseudoElements[element].name);
+    QVector<Declaration> decls = declarations(rules, part, state);
     QRenderRule newRule(decls, w);
-    if (!w || w->property("_q_stylesheet_polished").toBool() == true)
-        (*renderRulesCache)[w][part][state] = newRule;
+    cache[state] = newRule;
+    if ((state & stateMask) != state)
+        cache[state&stateMask] = newRule;
     return newRule;
 }
 
@@ -2124,19 +2176,33 @@ QRenderRule QStyleSheetStyle::renderRule(const QWidget *w, const QStyleOption *o
 
 bool QStyleSheetStyle::hasStyleRule(const QWidget *w, int part) const
 {
-    const QVector<StyleRule> &rules = styleRules(w);
-    if (part == PseudoElement_None)
-        return w && !rules.isEmpty();
+    QHash<int, bool> &cache = (*hasStyleRuleCache)[w];
+    QHash<int, bool>::const_iterator cacheIt = cache.constFind(part);
+    if (cacheIt != cache.constEnd())
+        return cacheIt.value();
 
-    // ### cache the result
+    if (!initWidget(w))
+        return false;
+
+
+    const QVector<StyleRule> &rules = styleRules(w);
+    if (part == PseudoElement_None) {
+        bool result = w && !rules.isEmpty();
+        cache[part] = result;
+        return result;
+    }
+
     QString pseudoElement = QLatin1String(knownPseudoElements[part].name);
     QVector<Declaration> declarations;
     for (int i = 0; i < rules.count(); i++) {
         const Selector& selector = rules.at(i).selectors.at(0);
-        if (pseudoElement.compare(selector.pseudoElement(), Qt::CaseInsensitive) == 0)
+        if (pseudoElement.compare(selector.pseudoElement(), Qt::CaseInsensitive) == 0) {
+            cache[part] = true;
             return true;
+        }
     }
 
+    cache[part] = false;
     return false;
 }
 
@@ -2398,6 +2464,11 @@ QRect QStyleSheetStyle::positionRect(const QWidget *w, const QRenderRule& rule1,
     return positionRect(w, rule2, pe, originRect, dir);
 }
 
+
+/** \internal
+   For widget that have an embedded widget (such as combobox) return that embedded widget.
+   otherwise return the widget itself
+ */
 static QWidget *embeddedWidget(QWidget *w)
 {
 #ifndef QT_NO_COMBOBOX
@@ -2422,20 +2493,81 @@ static QWidget *embeddedWidget(QWidget *w)
     return w;
 }
 
-static quint64 extendedPseudoClass(QWidget *w)
+/** \internal
+  in case w is an embedded widget, return the container widget
+  (i.e, the widget for which the rules actualy apply)
+  (exemple, if w is a lineedit embedded in a combobox, return the combobox)
+
+  if w is not embedded, return w itself
+*/
+static QWidget *containerWidget(const QWidget *w)
+{
+#ifndef QT_NO_LINEEDIT
+    if (qobject_cast<const QLineEdit *>(w)) {
+        //if the QLineEdit is an embeddedWidget, we need the rule of the real widget
+#ifndef QT_NO_COMBOBOX
+        if (qobject_cast<const QComboBox *>(w->parentWidget()))
+            return w->parentWidget();
+#endif
+#ifndef QT_NO_SPINBOX
+        if (qobject_cast<const QAbstractSpinBox *>(w->parentWidget()))
+            return w->parentWidget();
+#endif
+    }
+#endif // QT_NO_LINEEDIT
+
+#ifndef QT_NO_SCROLLAREA
+    if (const QAbstractScrollArea *sa = qobject_cast<const QAbstractScrollArea *>(w->parentWidget())) {
+        if (sa->viewport() == w)
+            return w->parentWidget();
+    }
+#endif
+
+    return const_cast<QWidget *>(w);
+}
+
+/** \internal
+    returns true if the widget can NOT be styled directly
+ */
+static bool unstylable(const QWidget *w)
+{
+    if (w->windowType() == Qt::Desktop)
+        return true;
+
+    if (!w->styleSheet().isEmpty())
+        return false;
+
+    if (containerWidget(w) != w)
+        return true;
+
+#ifndef QT_NO_FRAME
+    // detect QComboBoxPrivateContainer
+    else if (qobject_cast<const QFrame *>(w)) {
+        if (0
+#ifndef QT_NO_COMBOBOX
+            || qobject_cast<const QComboBox *>(w->parentWidget())
+#endif
+           )
+            return true;
+    }
+#endif
+    return false;
+}
+
+static quint64 extendedPseudoClass(const QWidget *w)
 {
     quint64 pc = w->isWindow() ? quint64(PseudoClass_Window) : 0;
-    if (QAbstractSlider *slider = qobject_cast<QAbstractSlider *>(w)) {
+    if (const QAbstractSlider *slider = qobject_cast<const QAbstractSlider *>(w)) {
         pc |= ((slider->orientation() == Qt::Vertical) ? PseudoClass_Vertical : PseudoClass_Horizontal);
     } else
 #ifndef QT_NO_COMBOBOX
-    if (QComboBox *combo = qobject_cast<QComboBox *>(w)) {
+    if (const QComboBox *combo = qobject_cast<const QComboBox *>(w)) {
         if (combo->isEditable())
         pc |= (combo->isEditable() ? PseudoClass_Editable : PseudoClass_ReadOnly);
     } else
 #endif
 #ifndef QT_NO_LINEEDIT
-    if (QLineEdit *edit = qobject_cast<QLineEdit *>(w)) {
+    if (const QLineEdit *edit = qobject_cast<const QLineEdit *>(w)) {
         pc |= (edit->isReadOnly() ? PseudoClass_ReadOnly : PseudoClass_Editable);
     } else
 #endif
@@ -2446,7 +2578,7 @@ static quint64 extendedPseudoClass(QWidget *w)
 // sets up the geometry of the widget. We set a dynamic property when
 // we modify the min/max size of the widget. The min/max size is restored
 // to their original value when a new stylesheet that does not contain
-// the CSS properies is set and when the widget has this dynamic property set.
+// the CSS properties is set and when the widget has this dynamic property set.
 // This way we don't trample on users who had setup a min/max size in code and
 // don't use stylesheets at all.
 void QStyleSheetStyle::setGeometry(QWidget *w)
@@ -2504,8 +2636,8 @@ void QStyleSheetStyle::setProperties(QWidget *w)
 
     // run through the declarations in order
     for (int i = 0; i < decls.count(); i++) {
-        Declaration decl = decls.at(i);
-        QString property = decl.property;
+        const Declaration &decl = decls.at(i);
+        QString property = decl.d->property;
         if (!property.startsWith(QLatin1String("qproperty-"), Qt::CaseInsensitive))
             continue;
         property.remove(0, 10); // strip "qproperty-"
@@ -2531,16 +2663,16 @@ void QStyleSheetStyle::setProperties(QWidget *w)
         case QVariant::Color: v = decl.colorValue(); break;
         case QVariant::Brush: v = decl.brushValue(); break;
 #ifndef QT_NO_SHORTCUT
-        case QVariant::KeySequence: v = QKeySequence(decl.values.first().variant.toString());
+        case QVariant::KeySequence: v = QKeySequence(decl.d->values.at(0).variant.toString());
 #endif
-        default: v = decl.values.first().variant; break;
+        default: v = decl.d->values.at(0).variant; break;
         }
         propertyHash[property] = v;
     }
     // apply the values
     const QList<QString> properties = propertyHash.keys();
     for (int i = 0; i < properties.count(); i++) {
-        const QString property = properties.at(i);
+        const QString &property = properties.at(i);
         w->setProperty(property.toLatin1(), propertyHash[property]);
     }
 }
@@ -2566,29 +2698,27 @@ void QStyleSheetStyle::setPalette(QWidget *w)
                 saveWidgetFont(w, w->font());
             }
             updateStyleSheetFont(w);
-
-            if (ew->autoFillBackground() &&
-                (rule.hasBackground()
-                 || (rule.hasBorder() && rule.border()->hasBorderImage()
-                     && rule.border()->borderImage()->middleRect.isValid()))) {
-                ew->setAutoFillBackground(false);
-                autoFillDisabledWidgets->insert(w);
-            }
+            if (ew != w)
+                updateStyleSheetFont(ew);
         }
 
         rule.configurePalette(&p, map[i].group, ew, ew != w);
     }
 
-    customPaletteWidgets->insert(w, w->palette().resolve());
+    customPaletteWidgets->insert(w, w->palette());
     w->setPalette(p);
+    if (ew != w)
+        ew->setPalette(p);
 }
 
 void QStyleSheetStyle::unsetPalette(QWidget *w)
 {
     if (customPaletteWidgets->contains(w)) {
-        QPalette p = w->palette();
-        p.resolve(customPaletteWidgets->value(w));
+        QPalette p = customPaletteWidgets->value(w);
         w->setPalette(p);
+        QWidget *ew = embeddedWidget(w);
+        if (ew != w)
+            ew->setPalette(p);
         customPaletteWidgets->remove(w);
     }
     QVariant oldFont = w->property("_q_styleSheetWidgetFont");
@@ -2603,10 +2733,13 @@ void QStyleSheetStyle::unsetPalette(QWidget *w)
 
 static void updateWidgets(const QList<const QWidget *>& widgets)
 {
-    for (int i = 0; i < widgets.size(); ++i) {
-        const QWidget *widget = widgets.at(i);
-        styleRulesCache->remove(widget);
-        renderRulesCache->remove(widget);
+    if (!styleRulesCache->isEmpty() || !hasStyleRuleCache->isEmpty() || !renderRulesCache->isEmpty()) {
+        for (int i = 0; i < widgets.size(); ++i) {
+            const QWidget *widget = widgets.at(i);
+            styleRulesCache->remove(widget);
+            hasStyleRuleCache->remove(widget);
+            renderRulesCache->remove(widget);
+        }
     }
     for (int i = 0; i < widgets.size(); ++i) {
         QWidget *widget = const_cast<QWidget *>(widgets.at(i));
@@ -2630,8 +2763,9 @@ QStyleSheetStyle::QStyleSheetStyle(QStyle *base)
     ++numinstances;
     if (numinstances == 1) {
         styleRulesCache = new QHash<const QWidget *, QVector<StyleRule> >;
+        hasStyleRuleCache = new QHash<const QWidget *, QHash<int, bool> >;
         renderRulesCache = new QHash<const QWidget *, QRenderRules>;
-        customPaletteWidgets = new QHash<const QWidget *, int>;
+        customPaletteWidgets = new QHash<const QWidget *, QPalette>;
         styleSheetCache = new QHash<const void *, StyleSheet>;
         autoFillDisabledWidgets = new QSet<const QWidget *>;
     }
@@ -2643,6 +2777,8 @@ QStyleSheetStyle::~QStyleSheetStyle()
     if (numinstances == 0) {
         delete styleRulesCache;
         styleRulesCache = 0;
+        delete hasStyleRuleCache;
+        hasStyleRuleCache = 0;
         delete renderRulesCache;
         renderRulesCache = 0;
         delete customPaletteWidgets;
@@ -2665,10 +2801,30 @@ QStyle *QStyleSheetStyle::baseStyle() const
 void QStyleSheetStyle::widgetDestroyed(QObject *o)
 {
     styleRulesCache->remove((const QWidget *)o);
+    hasStyleRuleCache->remove((const QWidget *)o);
     renderRulesCache->remove((const QWidget *)o);
     customPaletteWidgets->remove((const QWidget *)o);
     styleSheetCache->remove((const QWidget *)o);
     autoFillDisabledWidgets->remove((const QWidget *)o);
+}
+
+/*!
+ *  Make sure that the cache will be clean by connecting destroyed if needed.
+ *  return false if the widget is not stylable;
+ */
+bool QStyleSheetStyle::initWidget(const QWidget *w) const
+{
+    if (!w)
+        return false;
+    if(w->testAttribute(Qt::WA_StyleSheet))
+        return true;
+
+    if(unstylable(w))
+        return false;
+
+    const_cast<QWidget *>(w)->setAttribute(Qt::WA_StyleSheet, true);
+    QObject::connect(w, SIGNAL(destroyed(QObject*)), this, SLOT(widgetDestroyed(QObject*)));
+    return true;
 }
 
 void QStyleSheetStyle::polish(QWidget *w)
@@ -2676,29 +2832,43 @@ void QStyleSheetStyle::polish(QWidget *w)
     baseStyle()->polish(w);
     RECURSION_GUARD(return)
 
-    w->setProperty("_q_stylesheet_polished", true);
-    w->setAttribute(Qt::WA_StyleSheet, !unstylable(w));
+    if (!initWidget(w))
+        return;
 
-    // Legacy code alert: following code is redundant since we don't cache unpolished widgets
-    if (styleSheetCache->contains(w)) {
+    if (styleRulesCache->contains(w)) {
         // the widget accessed its style pointer before polish (or repolish)
-        // and the stylesheet could have changed behind our back
-        styleSheetCache->remove(w);
+        // (exemple: the QAbstractSpinBox constructor ask for the stylehint)
         styleRulesCache->remove(w);
+        hasStyleRuleCache->remove(w);
         renderRulesCache->remove(w);
     }
-
     setGeometry(w);
     setProperties(w);
     unsetPalette(w);
     setPalette(w);
-    w->setAttribute(Qt::WA_Hover);
+
+    //set the WA_Hover attribute if one of the selector depends of the hover state
+    QVector<StyleRule> rules = styleRules(w);
+    for (int i = 0; i < rules.count(); i++) {
+        const Selector& selector = rules.at(i).selectors.at(0);
+        quint64 negated = 0;
+        quint64 cssClass = selector.pseudoClass(&negated);
+        if ( cssClass & PseudoClass_Hover || negated & PseudoClass_Hover) {
+            w->setAttribute(Qt::WA_Hover);
+            embeddedWidget(w)->setAttribute(Qt::WA_Hover);
+        }
+    }
+
 
 #ifndef QT_NO_SCROLLAREA
     if (QAbstractScrollArea *sa = qobject_cast<QAbstractScrollArea *>(w)) {
         QRenderRule rule = renderRule(sa, PseudoElement_None, PseudoClass_Enabled);
         if ((rule.hasBorder() && rule.border()->hasBorderImage())
             || (rule.hasBackground() && !rule.background()->pixmap.isNull())) {
+            QObject::disconnect(sa->horizontalScrollBar(), SIGNAL(valueChanged(int)),
+                             sa, SLOT(update()));
+            QObject::disconnect(sa->verticalScrollBar(), SIGNAL(valueChanged(int)),
+                             sa, SLOT(update()));
             QObject::connect(sa->horizontalScrollBar(), SIGNAL(valueChanged(int)),
                              sa, SLOT(update()));
             QObject::connect(sa->verticalScrollBar(), SIGNAL(valueChanged(int)),
@@ -2707,29 +2877,15 @@ void QStyleSheetStyle::polish(QWidget *w)
     }
 #endif
 
-#ifndef QT_NO_FRAME
-    if (QFrame *frame = qobject_cast<QFrame *>(w)) {
-        QRenderRule rule = renderRule(frame, PseudoElement_None, PseudoClass_Enabled);
-        if (rule.hasBox() || !rule.hasNativeBorder()) {
-            if (!frame->property("_q_stylesheet_framestyle").isValid())
-                frame->setProperty("_q_stylesheet_framestyle", frame->frameStyle());
-            frame->setFrameStyle(QFrame::StyledPanel);
-        } else if (frame->property("_q_stylesheet_framestyle").isValid()) {
-            frame->setFrameStyle(frame->property("_q_stylesheet_framestyle").toInt());
-            frame->setProperty("_q_stylesheet_framestyle", QVariant());
-        }
-    }
-#endif
-
 #ifndef QT_NO_PROGRESSBAR
     if (QProgressBar *pb = qobject_cast<QProgressBar *>(w)) {
-        QRenderRule rule = renderRule(w, PseudoElement_ProgressBarChunk);
         QWindowsStyle::polish(pb);
     }
 #endif
 
-    const QMetaObject *me = w->metaObject();
-    bool on = QString::fromLocal8Bit(me->className()) == QLatin1String("QWidget")
+    QRenderRule rule = renderRule(w, PseudoElement_None, PseudoClass_Any);
+    if (rule.hasDrawable() || rule.hasBox()) {
+        if (w->metaObject() == &QWidget::staticMetaObject
 #ifndef QT_NO_MENUBAR
               || qobject_cast<QMenuBar *>(w)
 #endif
@@ -2751,10 +2907,18 @@ void QStyleSheetStyle::polish(QWidget *w)
 #ifndef QT_NO_MDIAREA
               || qobject_cast<QMdiSubWindow *>(w)
 #endif
-              || qobject_cast<QDialog *>(w);
-
-    w->setAttribute(Qt::WA_StyledBackground, on);
-    w->setAttribute(Qt::WA_OpaquePaintEvent, false);
+              || qobject_cast<QDialog *>(w)) {
+            w->setAttribute(Qt::WA_StyledBackground, true);
+        }
+        QWidget *ew = embeddedWidget(w);
+        if (ew->autoFillBackground()) {
+            ew->setAutoFillBackground(false);
+            autoFillDisabledWidgets->insert(w);
+        }
+        if (!rule.hasBackground() || rule.background()->isTransparent() || rule.hasBox()
+            || (!rule.hasNativeBorder() && !rule.border()->isOpaque()))
+            w->setAttribute(Qt::WA_OpaquePaintEvent, false);
+    }
 }
 
 void QStyleSheetStyle::polish(QApplication *app)
@@ -2778,16 +2942,23 @@ void QStyleSheetStyle::repolish(QWidget *w)
 void QStyleSheetStyle::repolish(QApplication *app)
 {
     Q_UNUSED(app);
+    const QList<const QWidget*> allWidgets = styleRulesCache->keys();
     styleSheetCache->remove(qApp);
-    updateWidgets(styleRulesCache->keys());
+    styleRulesCache->clear();
+    hasStyleRuleCache->clear();
+    renderRulesCache->clear();
+    updateWidgets(allWidgets);
 }
 
 void QStyleSheetStyle::unpolish(QWidget *w)
 {
-    baseStyle()->unpolish(w);
-    RECURSION_GUARD(return)
+    if (!w || !w->testAttribute(Qt::WA_StyleSheet)) {
+        baseStyle()->unpolish(w);
+        return;
+    }
 
     styleRulesCache->remove(w);
+    hasStyleRuleCache->remove(w);
     renderRulesCache->remove(w);
     styleSheetCache->remove(w);
     unsetPalette(w);
@@ -2795,13 +2966,8 @@ void QStyleSheetStyle::unpolish(QWidget *w)
     w->setProperty("_q_stylesheet_minh", QVariant());
     w->setProperty("_q_stylesheet_maxw", QVariant());
     w->setProperty("_q_stylesheet_maxh", QVariant());
-    if (w->property("_q_stylesheet_framestyle").isValid()) {
-        (static_cast<QFrame *>(w))->setFrameStyle(w->property("_q_stylesheet_framestyle").toInt());
-        w->setProperty("_q_stylesheet_framestyle", QVariant());
-    }
     w->setAttribute(Qt::WA_StyleSheet, false);
-    QObject::disconnect(w, SIGNAL(destroyed(QObject*)),
-                      this, SLOT(widgetDestroyed(QObject*)));
+    QObject::disconnect(w, 0, this, 0);
 #ifndef QT_NO_SCROLLAREA
     if (QAbstractScrollArea *sa = qobject_cast<QAbstractScrollArea *>(w)) {
         QObject::disconnect(sa->horizontalScrollBar(), SIGNAL(valueChanged(int)),
@@ -2814,6 +2980,7 @@ void QStyleSheetStyle::unpolish(QWidget *w)
     if (QProgressBar *pb = qobject_cast<QProgressBar *>(w))
         QWindowsStyle::unpolish(pb);
 #endif
+    baseStyle()->unpolish(w);
 }
 
 void QStyleSheetStyle::unpolish(QApplication *app)
@@ -2821,6 +2988,7 @@ void QStyleSheetStyle::unpolish(QApplication *app)
     baseStyle()->unpolish(app);
     RECURSION_GUARD(return)
     styleRulesCache->clear();
+    hasStyleRuleCache->clear();
     renderRulesCache->clear();
     styleSheetCache->remove(qApp);
 }
@@ -2847,7 +3015,7 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
         if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             QStyleOptionComboBox cmbOpt(*cmb);
             cmbOpt.rect = rule.borderRect(opt->rect);
-            if (rule.baseStyleCanDraw() && rule.hasNativeBorder()) {
+            if (rule.hasNativeBorder()) {
                 rule.drawBackgroundImage(p, cmbOpt.rect);
                 rule.configurePalette(&cmbOpt.palette, QPalette::ButtonText, QPalette::Button);
                 bool customDropDown = (opt->subControls & QStyle::SC_ComboBoxArrow)
@@ -2887,6 +3055,7 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
     case CC_SpinBox:
         if (const QStyleOptionSpinBox *spin = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             QStyleOptionSpinBox spinOpt(*spin);
+            rule.configurePalette(&spinOpt.palette, QPalette::ButtonText, QPalette::Button);
             spinOpt.rect = rule.borderRect(opt->rect);
             bool customUp = true, customDown = true;
             QRenderRule upRule = renderRule(w, opt, PseudoElement_SpinBoxUpButton);
@@ -2948,16 +3117,24 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
 
     case CC_GroupBox:
         if (const QStyleOptionGroupBox *gb = qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
-            rule.drawBackground(p, opt->rect);
 
             QRect labelRect, checkBoxRect, titleRect, frameRect;
             bool hasTitle = (gb->subControls & QStyle::SC_GroupBoxCheckBox) || !gb->text.isEmpty();
-            QRenderRule titleRule = renderRule(w, opt, PseudoElement_GroupBoxTitle);
 
+            if (!rule.hasDrawable() && (!hasTitle || !hasStyleRule(w, PseudoElement_GroupBoxTitle))
+                && !hasStyleRule(w, PseudoElement_Indicator) && !rule.hasBox() && !rule.hasFont && !rule.hasPalette()) {
+                // let the native style draw the combobox if there is no style for it.
+                break;
+            }
+            rule.drawBackground(p, opt->rect);
+
+            QRenderRule titleRule = renderRule(w, opt, PseudoElement_GroupBoxTitle);
             bool clipSet = false;
 
             if (hasTitle) {
                 labelRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w);
+                //Some native style (such as mac) may return a too small rectangle (because they use smaller fonts),  so we may need to expand it a little bit.
+                labelRect.setSize(labelRect.size().expandedTo(ParentStyle::subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w).size()));
                 if (gb->subControls & QStyle::SC_GroupBoxCheckBox) {
                     checkBoxRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxCheckBox, w);
                     titleRect = titleRule.boxRect(checkBoxRect.united(labelRect));
@@ -3021,7 +3198,19 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
             bool customArrow = (tool->features & (QStyleOptionToolButton::HasMenu | QStyleOptionToolButton::MenuButtonPopup));
             bool customDropDown = tool->features & QStyleOptionToolButton::MenuButtonPopup;
             if (rule.hasNativeBorder()) {
-                rule.drawBackground(p, toolOpt.rect);
+                if (tool->subControls & SC_ToolButton) {
+                    //in some case (eg. the button is "auto raised") the style doesn't draw the background
+                    //so we need to draw the background.
+                    // use the same condition as in QCommonStyle
+                    State bflags = tool->state & ~State_Sunken;
+                    if (bflags & State_AutoRaise && (!(bflags & State_MouseOver) || !(bflags & State_Enabled)))
+                            bflags &= ~State_Raised;
+                    if (tool->state & State_Sunken && tool->activeSubControls & SC_ToolButton)
+                            bflags |= State_Sunken;
+                    if (!(bflags & (State_Sunken | State_On | State_Raised)))
+                        rule.drawBackground(p, toolOpt.rect);
+                }
+                rule.configurePalette(&toolOpt.palette, QPalette::ButtonText, QPalette::Button);
                 customArrow = customArrow && hasStyleRule(w, PseudoElement_ToolButtonDownArrow);
                 if (customArrow)
                     toolOpt.features &= ~QStyleOptionToolButton::HasMenu;
@@ -3560,7 +3749,11 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
                     mi.palette.setColor(QPalette::Window, Qt::transparent);
                     mi.palette.setColor(QPalette::Button, Qt::transparent);
                 }
-                baseStyle()->drawControl(ce, &mi, p, w);
+                if (rule.baseStyleCanDraw() && subRule.baseStyleCanDraw()) {
+                    baseStyle()->drawControl(ce, &mi, p, w);
+                } else {
+                    ParentStyle::drawControl(ce, &mi, p, w);
+                }
             }
 
             if (subRule.hasFont)
@@ -3624,9 +3817,20 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
 #endif // QT_NO_COMBOBOX
 
     case CE_Header:
-        ParentStyle::drawControl(ce, opt, p, w);
-        return;
-
+        if (hasStyleRule(w, PseudoElement_HeaderViewUpArrow)
+            || hasStyleRule(w, PseudoElement_HeaderViewDownArrow)) {
+            ParentStyle::drawControl(ce, opt, p, w);
+            return;
+        }
+        if(hasStyleRule(w, PseudoElement_HeaderViewSection)) {
+            QRenderRule subRule = renderRule(w, opt, PseudoElement_HeaderViewSection);
+            if (!subRule.hasNativeBorder() || !subRule.baseStyleCanDraw()
+                || subRule.hasBackground() || subRule.hasPalette()) {
+                ParentStyle::drawControl(ce, opt, p, w);
+                return;
+            }
+        }
+        break;
     case CE_HeaderSection:
         if (const QStyleOptionHeader *header = qstyleoption_cast<const QStyleOptionHeader *>(opt)) {
             QRenderRule subRule = renderRule(w, opt, PseudoElement_HeaderViewSection);
@@ -3672,7 +3876,7 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
         return;
 
     case CE_ProgressBarGroove:
-        if (rule.hasBorder()) {
+        if (!rule.hasNativeBorder()) {
             rule.drawRule(p, rule.boxRect(opt->rect, Margin));
             return;
         }
@@ -3702,8 +3906,8 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
                 bool reverse = ((!vertical && (pb->direction == Qt::RightToLeft)) || vertical);
                 if (inverted)
                     reverse = !reverse;
-                const bool indeterminate = (pb->minimum == 0 && pb->maximum == 0);
-                qreal fillRatio = indeterminate ? 0.50 : qreal(progress - minimum)/maximum - minimum;
+                const bool indeterminate = pb->minimum == pb->maximum;
+                qreal fillRatio = indeterminate ? 0.50 : qreal(progress - minimum)/(maximum - minimum);
                 int fillWidth = int(rect.width() * fillRatio);
                 int chunkWidth = fillWidth;
                 if (subRule.hasContentsSize()) {
@@ -3884,7 +4088,7 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
     case CE_TabBarTabLabel:
     case CE_TabBarTabShape:
         if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
-            QStyleOptionTabV2 tabCopy(*tab);
+            QStyleOptionTabV3 tabCopy(*tab);
             QRenderRule subRule = renderRule(w, opt, PseudoElement_TabBarTab);
             QRect r = positionRect(w, subRule, PseudoElement_TabBarTab, opt->rect, opt->direction);
             if (ce == CE_TabBarTabShape && subRule.hasDrawable()) {
@@ -3960,6 +4164,19 @@ void QStyleSheetStyle::drawControl(ControlElement ce, const QStyleOption *opt, Q
            return;
         }
         break;
+    case CE_ShapedFrame:
+        if (const QStyleOptionFrame *frm = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
+            if (rule.hasNativeBorder()) {
+                QStyleOptionFrameV3 frmOpt(*frm);
+                rule.configurePalette(&frmOpt.palette, QPalette::Text, QPalette::Base);
+                frmOpt.rect = rule.borderRect(frmOpt.rect);
+                baseStyle()->drawControl(ce, &frmOpt, p, w);
+            } else {
+                rule.drawBorder(p, rule.borderRect(opt->rect));
+            }
+        }
+        return;
+
 
     default:
         break;
@@ -4052,6 +4269,14 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
 
     case PE_PanelButtonTool:
     case PE_PanelButtonCommand:
+        if (qobject_cast<const QAbstractButton *>(w) && rule.hasBackground() && rule.hasNativeBorder()) {
+            //the window style will draw the borders
+            ParentStyle::drawPrimitive(pe, opt, p, w);
+            if (!rule.background()->pixmap.isNull() || rule.hasImage()) {
+                rule.drawRule(p, rule.boxRect(opt->rect, QRenderRule::Margin).adjusted(1,1,-1,-1));
+            }
+            return;
+        }
         if (!rule.hasNativeBorder()) {
             rule.drawRule(p, rule.boxRect(opt->rect, QRenderRule::Margin));
             return;
@@ -4080,9 +4305,10 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
     case PE_Frame:
         if (const QStyleOptionFrame *frm = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             if (rule.hasNativeBorder()) {
-                QStyleOptionFrame frmOpt(*frm);
+                QStyleOptionFrameV2 frmOpt(*frm);
                 rule.configurePalette(&frmOpt.palette, QPalette::Text, QPalette::Base);
-                frmOpt.rect = rule.borderRect(frmOpt.rect);
+                if (!qstyleoption_cast<const QStyleOptionFrameV3 *>(opt)) //if it comes from  CE_ShapedFrame, the margins are already sustracted
+                    frmOpt.rect = rule.borderRect(frmOpt.rect);
                 baseStyle()->drawPrimitive(pe, &frmOpt, p, w);
             } else {
                 rule.drawBorder(p, rule.borderRect(opt->rect));
@@ -4108,7 +4334,8 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
                     baseStyle()->drawPrimitive(pe, &frmOpt, p, w);
                 } else {
                     rule.drawBackground(p, opt->rect);
-                    baseStyle()->drawPrimitive(PE_FrameLineEdit, &frmOpt, p, w);
+                    if (frmOpt.lineWidth > 0)
+                        baseStyle()->drawPrimitive(PE_FrameLineEdit, &frmOpt, p, w);
                 }
             } else {
                 rule.drawRule(p, opt->rect);
@@ -4117,6 +4344,9 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
         return;
 
     case PE_Widget:
+        if (!rule.hasBackground())
+            break;
+
 #ifndef QT_NO_SCROLLAREA
         if (const QAbstractScrollArea *sa = qobject_cast<const QAbstractScrollArea *>(w)) {
             const QAbstractScrollAreaPrivate *sap = sa->d_func();
@@ -4131,12 +4361,9 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
 
     case PE_FrameMenu:
     case PE_PanelMenuBar:
-        {
-            QRenderRule subRule = renderRule(w, opt, PseudoElement_Item);
-            if (rule.hasDrawable() && subRule.hasDrawable()) {
-                rule.drawBorder(p, rule.borderRect(opt->rect));
-                return;
-            }
+        if (!rule.hasNativeBorder()) {
+            rule.drawBorder(p, rule.borderRect(opt->rect));
+            return;
         }
         break;
 
@@ -4278,6 +4505,10 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
         pseudoElement = PseudoElement_ViewItem;
         break;
 
+    case PE_PanelScrollAreaCorner:
+        pseudoElement = PseudoElement_ScrollAreaCorner;
+        break;
+
     default:
         break;
     }
@@ -4335,7 +4566,7 @@ QStyle::SubControl QStyleSheetStyle::hitTestComplexControl(ComplexControl cc, co
 
     case CC_ScrollBar: {
         QRenderRule rule = renderRule(w, opt);
-        if (!rule.hasDrawable())
+        if (!rule.hasDrawable() && !rule.hasBox())
             break;
                        }
         // intentionally falls through
@@ -4396,11 +4627,11 @@ int QStyleSheetStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const 
         if (qobject_cast<const QComboBox *>(w)) {
             QAbstractItemView *view = qFindChild<QAbstractItemView *>(w);
             QRenderRule subRule = renderRule(view, PseudoElement_None);
-            if (subRule.hasBorder())
+            if (!subRule.hasNativeBorder())
                 return subRule.border()->borders[TopEdge] + (subRule.hasBox() ? subRule.box()->paddings[TopEdge] : 0);
         } else
 #endif
-        if (rule.hasBorder())
+        if (!rule.hasNativeBorder())
             return rule.border()->borders[LeftEdge];
         break;
 
@@ -4658,11 +4889,21 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
         return rule.baseStyleCanDraw() ? baseStyle()->sizeFromContents(ct, opt, sz, w)
                                        : QWindowsStyle::sizeFromContents(ct, opt, sz, w);
     case CT_ToolButton:
-        sz += QSize(3, 3); // ### broken QToolButton
+        if (rule.hasBox() || !rule.hasNativeBorder() || !rule.baseStyleCanDraw())
+            sz += QSize(3, 3); // ### broken QToolButton
+        //fall thought
     case CT_ComboBox:
     case CT_PushButton:
-        if (rule.hasBox() || !rule.hasNativeBorder())
+        if (rule.hasBox() || !rule.hasNativeBorder()) {
+            if(ct == CT_ComboBox) {
+                //add some space for the drop down.
+                QRenderRule subRule = renderRule(w, opt, PseudoElement_ComboBoxDropDown);
+                QRect comboRect = positionRect(w, rule, subRule, PseudoElement_ComboBoxDropDown, opt->rect, opt->direction);
+                //+2 because there is hardcoded margins in QCommonStyle::drawControl(CE_ComboBoxLabel)
+                sz += QSize(comboRect.width() + 2, 0);
+            }
             return rule.boxSize(sz);
+        }
         sz = rule.baseStyleCanDraw() ? baseStyle()->sizeFromContents(ct, opt, sz, w)
                                      : QWindowsStyle::sizeFromContents(ct, opt, sz, w);
         return rule.boxSize(sz, Margin);
@@ -4740,8 +4981,10 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
                 return QSize(sz.width(), subRule.size().height());
             } else if ((pe == PseudoElement_Item) && (subRule.hasBox() || subRule.hasBorder())) {
                 int width = csz.width(), height = qMax(csz.height(), mi->fontMetrics.height());
-                if (!mi->icon.isNull())
-                    height = qMax(height, mi->icon.pixmap(pixelMetric(PM_SmallIconSize), QIcon::Normal).height());
+                if (!mi->icon.isNull()) {
+                    int iconExtent = pixelMetric(PM_SmallIconSize);
+                    height = qMax(height, mi->icon.actualSize(QSize(iconExtent, iconExtent)).height());
+                }
                 width += mi->tabWidth;
                return subRule.boxSize(csz.expandedTo(subRule.minimumContentsSize()));
             }
@@ -4772,9 +5015,7 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
 #ifndef QT_NO_TABBAR
     case CT_TabBarTab: {
         QRenderRule subRule = renderRule(w, opt, PseudoElement_TabBarTab);
-        sz = subRule.adjustSize(csz);
-        if (subRule.hasBox() || subRule.hasBorder()) {
-            sz = subRule.boxSize(sz);
+        if (subRule.hasBox() || !subRule.hasNativeBorder()) {
             int spaceForIcon = 0;
             bool vertical = false;
             if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
@@ -4782,10 +5023,19 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
                     spaceForIcon = 6 /* icon offset */ + 4 /* spacing */ + 2 /* magic */; // ###: hardcoded to match with common style
                 vertical = verticalTabs(tab->shape);
             }
-            return sz + QSize(vertical ? 0 : spaceForIcon, vertical ? spaceForIcon : 0);
+            sz = csz + QSize(vertical ? 0 : spaceForIcon, vertical ? spaceForIcon : 0);
+            return subRule.boxSize(subRule.adjustSize(sz));
         }
+#ifdef Q_WS_MAC
+        if (baseStyle()->inherits("QMacStyle")) {
+            //adjust the size after the call to the style because the mac style ignore the size arguments anyway.
+            //this might cause the (max-){width,height} property to include the native style border while they should not.
+            return subRule.adjustSize(baseStyle()->sizeFromContents(ct, opt, csz, w));
+        }
+#endif
+        sz = subRule.adjustSize(csz);
         break;
-                       }
+    }
 #endif // QT_NO_TABBAR
 
     case CT_MdiControls:
@@ -5227,21 +5477,33 @@ QRect QStyleSheetStyle::subControlRect(ComplexControl cc, const QStyleOptionComp
 #ifndef QT_NO_SCROLLBAR
     case CC_ScrollBar:
         if (const QStyleOptionSlider *sb = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
-            if (rule.hasDrawable()) {
-                QRenderRule subRule;
+            QStyleOptionSlider styleOptionSlider(*sb);
+            styleOptionSlider.rect = rule.borderRect(opt->rect);
+            if (rule.hasDrawable() || rule.hasBox()) {
+                QRect grooveRect;
+                if (!rule.hasBox()) {
+                    grooveRect = rule.baseStyleCanDraw() ? baseStyle()->subControlRect(cc, sb, SC_ScrollBarGroove, w)
+                                 : QWindowsStyle::subControlRect(cc, sb, SC_ScrollBarGroove, w);
+                } else {
+                    grooveRect = rule.contentsRect(opt->rect);
+                }
+
                 PseudoElement pe = PseudoElement_None;
+
                 switch (sc) {
                 case SC_ScrollBarGroove:
-                    return rule.contentsRect(opt->rect);
+                    return grooveRect;
                 case SC_ScrollBarAddPage:
                 case SC_ScrollBarSubPage:
                 case SC_ScrollBarSlider: {
-                    subRule = renderRule(w, opt, PseudoElement_ScrollBarSlider);
-                    Origin origin = subRule.hasPosition() ? subRule.position()->origin : defaultOrigin(PseudoElement_ScrollBarSlider);
-                    QRect cr = rule.originRect(opt->rect, origin);
-                    int maxlen = (sb->orientation == Qt::Horizontal) ? cr.width() : cr.height();
+                    QRect contentRect = grooveRect;
+                    if (hasStyleRule(w, PseudoElement_ScrollBarSlider)) {
+                        QRenderRule sliderRule = renderRule(w, opt, PseudoElement_ScrollBarSlider);
+                        Origin origin = sliderRule.hasPosition() ? sliderRule.position()->origin : defaultOrigin(PseudoElement_ScrollBarSlider);
+                        contentRect = rule.originRect(opt->rect, origin);
+                    }
+                    int maxlen = (styleOptionSlider.orientation == Qt::Horizontal) ? contentRect.width() : contentRect.height();
                     int sliderlen;
-
                     if (sb->maximum != sb->minimum) {
                         uint range = sb->maximum - sb->minimum;
                         sliderlen = (qint64(sb->pageStep) * maxlen) / (range + sb->pageStep);
@@ -5255,44 +5517,43 @@ QRect QStyleSheetStyle::subControlRect(ComplexControl cc, const QStyleOptionComp
                         sliderlen = maxlen;
                     }
 
-                    int sliderstart = (sb->orientation == Qt::Horizontal ? cr.left() : cr.top())
+                    int sliderstart = (styleOptionSlider.orientation == Qt::Horizontal ? contentRect.left() : contentRect.top())
                         + sliderPositionFromValue(sb->minimum, sb->maximum, sb->sliderPosition,
                                                   maxlen - sliderlen, sb->upsideDown);
 
                     QRect sr = (sb->orientation == Qt::Horizontal)
-                               ? QRect(sliderstart, cr.top(), sliderlen, cr.height())
-                               : QRect(cr.left(), sliderstart, cr.width(), sliderlen);
+                               ? QRect(sliderstart, contentRect.top(), sliderlen, contentRect.height())
+                               : QRect(contentRect.left(), sliderstart, contentRect.width(), sliderlen);
                     if (sc == SC_ScrollBarSlider) {
                         return sr;
                     } else if (sc == SC_ScrollBarSubPage) {
-                        return QRect(cr.topLeft(), sb->orientation == Qt::Horizontal ? sr.bottomLeft() : sr.topRight());
+                        return QRect(contentRect.topLeft(), sb->orientation == Qt::Horizontal ? sr.bottomLeft() : sr.topRight());
                     } else { // SC_ScrollBarAddPage
-                        return QRect(sb->orientation == Qt::Horizontal ? sr.topRight() : sr.bottomLeft(), cr.bottomRight());
+                        return QRect(sb->orientation == Qt::Horizontal ? sr.topRight() : sr.bottomLeft(), contentRect.bottomRight());
                     }
                     break;
                 }
                 case SC_ScrollBarAddLine: pe = PseudoElement_ScrollBarAddLine; break;
                 case SC_ScrollBarSubLine: pe = PseudoElement_ScrollBarSubLine; break;
-                case SC_ScrollBarFirst:
-                    if (!hasStyleRule(w, PseudoElement_ScrollBarFirst))
-                        return QRect();
-                    pe = PseudoElement_ScrollBarFirst;
-                    break;
-                case SC_ScrollBarLast:
-                    if (!hasStyleRule(w, PseudoElement_ScrollBarLast))
-                        return QRect();
-                    pe = PseudoElement_ScrollBarLast;
-                    break;
+                case SC_ScrollBarFirst: pe = PseudoElement_ScrollBarFirst;  break;
+                case SC_ScrollBarLast: pe = PseudoElement_ScrollBarLast; break;
                 default: break;
                 }
-                subRule = renderRule(w, opt, pe);
-                return positionRect(w, rule, subRule, pe, opt->rect, opt->direction);
+                if (hasStyleRule(w,pe)) {
+                    QRenderRule subRule = renderRule(w, opt, pe);
+                    if (subRule.hasPosition() || subRule.hasGeometry() || subRule.hasBox()) {
+                        const QStyleSheetPositionData *pos = subRule.position();
+                        QRect originRect = grooveRect;
+                        if (rule.hasBox()) {
+                            Origin origin = (pos && pos->origin != Origin_Unknown) ? pos->origin : defaultOrigin(pe);
+                            originRect = rule.originRect(opt->rect, origin);
+                        }
+                        return positionRect(w, subRule, pe, originRect, styleOptionSlider.direction);
+                    }
+                }
             }
-
-            QStyleOptionSlider scrollBar(*sb);
-            scrollBar.rect = rule.borderRect(opt->rect);
-            return rule.baseStyleCanDraw() ? baseStyle()->subControlRect(cc, &scrollBar, sc, w)
-                                           : QWindowsStyle::subControlRect(cc, &scrollBar, sc, w);
+            return rule.baseStyleCanDraw() ? baseStyle()->subControlRect(cc, &styleOptionSlider, sc, w)
+                                           : QWindowsStyle::subControlRect(cc, &styleOptionSlider, sc, w);
         }
         break;
 #endif // QT_NO_SCROLLBAR
@@ -5401,6 +5662,7 @@ QRect QStyleSheetStyle::subElementRect(SubElement se, const QStyleOption *opt, c
 
     case SE_LineEditContents:
     case SE_FrameContents:
+    case SE_ShapedFrameContents:
         if (rule.hasBox() || !rule.hasNativeBorder()) {
             return visualRect(opt->direction, opt->rect, rule.contentsRect(opt->rect));
         }
@@ -5465,10 +5727,12 @@ QRect QStyleSheetStyle::subElementRect(SubElement se, const QStyleOption *opt, c
             PseudoElement pe = PseudoElement_None;
             if (se == SE_ItemViewItemText || se == SE_ItemViewItemFocusRect)
                 pe = PseudoElement_ViewItemText;
-            else if (se == SE_ItemViewItemDecoration)
+            else if (se == SE_ItemViewItemDecoration && vopt->features & QStyleOptionViewItemV2::HasDecoration)
                 pe = PseudoElement_ViewItemIcon;
-            else if (se == SE_ItemViewItemCheckIndicator)
+            else if (se == SE_ItemViewItemCheckIndicator && vopt->features & QStyleOptionViewItemV2::HasCheckIndicator)
                 pe = PseudoElement_ViewItemIndicator;
+            else
+                break;
             QRenderRule subRule2 = renderRule(w, opt, pe);
             return positionRect(w, subRule2, pe, rect, opt->direction);
          }
@@ -5493,7 +5757,7 @@ QRect QStyleSheetStyle::subElementRect(SubElement se, const QStyleOption *opt, c
     case SE_ProgressBarContents:
     case SE_ProgressBarLabel:
         if (const QStyleOptionProgressBarV2 *pb = qstyleoption_cast<const QStyleOptionProgressBarV2 *>(opt)) {
-            if (rule.hasBox() || rule.hasBorder() || rule.hasPosition() || hasStyleRule(w, PseudoElement_ProgressBarChunk)) {
+            if (rule.hasBox() || !rule.hasNativeBorder() || rule.hasPosition() || hasStyleRule(w, PseudoElement_ProgressBarChunk)) {
                 if (se == SE_ProgressBarGroove)
                     return rule.borderRect(pb->rect);
                 else if (se == SE_ProgressBarContents)
@@ -5583,13 +5847,21 @@ QRect QStyleSheetStyle::subElementRect(SubElement se, const QStyleOption *opt, c
     return baseStyle()->subElementRect(se, opt, w);
 }
 
+bool QStyleSheetStyle::event(QEvent *e)
+{
+    return baseStyle()->event(e) || ParentStyle::event(e);
+}
+
 void QStyleSheetStyle::updateStyleSheetFont(QWidget* w) const
 {
-    QRenderRule rule = renderRule(w, PseudoElement_None,
-            PseudoClass_Active | PseudoClass_Enabled | extendedPseudoClass(w));
+    QWidget *container = containerWidget(w);
+    QRenderRule rule = renderRule(container, PseudoElement_None,
+            PseudoClass_Active | PseudoClass_Enabled | extendedPseudoClass(container));
     QFont font = rule.font.resolve(w->font());
 
-    if (isNaturalChild(w) && qobject_cast<QWidget *>(w->parent())) {
+    if ((!w->isWindow() || w->testAttribute(Qt::WA_WindowPropagation))
+        && isNaturalChild(w) && qobject_cast<QWidget *>(w->parent())) {
+
         font = font.resolve(static_cast<QWidget *>(w->parent())->font());
     }
 
@@ -5633,19 +5905,16 @@ bool QStyleSheetStyle::focusPalette(const QWidget* w, const QStyleOption* opt, Q
     if (!w || !opt || !pal)
         return false;
 
-#ifndef QT_NO_LINEEDIT
-    if (qobject_cast<const QLineEdit*>(w)) {
-        RECURSION_GUARD(return false)
-        QRenderRule rule = renderRule(w, PseudoElement_None, pseudoClass(opt->state));
-        if (!rule.hasPalette())
-            return false;
+    RECURSION_GUARD(return false)
 
-        rule.configurePalette(pal, QPalette::NoRole, QPalette::NoRole);
-        return true;
-    }
-#endif // QT_NO_LINEEDIT
+    w = containerWidget(w);
 
-    return false;
+    QRenderRule rule = renderRule(w, PseudoElement_None, pseudoClass(opt->state) | extendedPseudoClass(w));
+    if (!rule.hasPalette())
+        return false;
+
+    rule.configurePalette(pal, QPalette::NoRole, QPalette::NoRole);
+    return true;
 }
 
 Qt::Alignment QStyleSheetStyle::resolveAlignment(Qt::LayoutDirection layDir, Qt::Alignment src)
@@ -5677,7 +5946,6 @@ bool QStyleSheetStyle::isNaturalChild(const QWidget *w)
 
     return false;
 }
-
 
 QT_END_NAMESPACE
 

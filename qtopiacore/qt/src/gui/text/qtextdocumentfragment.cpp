@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -86,7 +90,7 @@ int QTextCopyHelper::appendFragment(int pos, int endPos, int objectIndex)
     const QTextFragmentData * const frag = fragIt.value();
 
     Q_ASSERT(objectIndex == -1
-             || (frag->size == 1 && src->formatCollection()->format(frag->format).objectIndex() != -1));
+             || (frag->size_array[0] == 1 && src->formatCollection()->format(frag->format).objectIndex() != -1));
 
     int charFormatIndex;
     if (forceCharFormat)
@@ -95,7 +99,7 @@ int QTextCopyHelper::appendFragment(int pos, int endPos, int objectIndex)
        charFormatIndex = convertFormatIndex(frag->format, objectIndex);
 
     const int inFragmentOffset = qMax(0, pos - fragIt.position());
-    int charsToCopy = qMin(int(frag->size - inFragmentOffset), endPos - pos);
+    int charsToCopy = qMin(int(frag->size_array[0] - inFragmentOffset), endPos - pos);
 
     QTextBlock nextBlock = src->blocksFind(pos + 1);
 
@@ -120,8 +124,12 @@ int QTextCopyHelper::appendFragment(int pos, int endPos, int objectIndex)
         if (nextBlock.textList()) {
             QTextBlock dstBlock = dst->blocksFind(insertPos);
             if (!dstBlock.textList()) {
-                blockIdx = convertFormatIndex(nextBlock.blockFormat());
-                dst->insertBlock(insertPos, blockIdx, charFormatIndex);
+                // insert a new text block with the block and char format from the
+                // source block to make sure that the following text fragments
+                // end up in a list as they should
+                int listBlockFormatIndex = convertFormatIndex(nextBlock.blockFormat());
+                int listCharFormatIndex = convertFormatIndex(nextBlock.charFormat());
+                dst->insertBlock(insertPos, listBlockFormatIndex, listCharFormatIndex);
                 ++insertPos;
             }
         }
@@ -428,13 +436,19 @@ QTextHtmlImporter::QTextHtmlImporter(QTextDocument *_doc, const QString &_html, 
     QString html = _html;
     const int startFragmentPos = html.indexOf(QLatin1String("<!--StartFragment-->"));
     if (startFragmentPos != -1) {
+        QString qt3RichTextHeader(QLatin1String("<meta name=\"qrichtext\" content=\"1\" />"));
+
+        // Hack for Qt3
+        const bool hasQtRichtextMetaTag = html.contains(qt3RichTextHeader);
+
         const int endFragmentPos = html.indexOf(QLatin1String("<!--EndFragment-->"));
         if (startFragmentPos < endFragmentPos)
             html = html.mid(startFragmentPos, endFragmentPos - startFragmentPos);
         else
             html = html.mid(startFragmentPos);
 
-        html.prepend(QLatin1String("<meta name=\"qrichtext\" content=\"1\" />"));
+        if (hasQtRichtextMetaTag)
+            html.prepend(qt3RichTextHeader);
     }
 
     parse(html, resourceProvider ? resourceProvider : doc);
@@ -702,9 +716,9 @@ QTextHtmlImporter::ProcessNodeResult QTextHtmlImporter::processSpecialNodes()
 
             fmt.merge(currentNode->charFormat);
 
-            if (currentNode->imageWidth >= 0)
+            if (currentNode->imageWidth != -1)
                 fmt.setWidth(currentNode->imageWidth);
-            if (currentNode->imageHeight >= 0)
+            if (currentNode->imageHeight != -1)
                 fmt.setHeight(currentNode->imageHeight);
 
             cursor.insertImage(fmt, QTextFrameFormat::Position(currentNode->cssFloat));

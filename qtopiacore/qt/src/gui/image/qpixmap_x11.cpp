@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -71,6 +75,29 @@
 #endif
 
 QT_BEGIN_NAMESPACE
+
+QPixmap qt_toX11Pixmap(const QImage &image)
+{
+    QPixmapData *data =
+        new QX11PixmapData(image.depth() == 1
+                           ? QPixmapData::BitmapType
+                           : QPixmapData::PixmapType);
+
+    data->fromImage(image, Qt::AutoColor);
+
+    return QPixmap(data);
+}
+
+QPixmap qt_toX11Pixmap(const QPixmap &pixmap)
+{
+    if (pixmap.isNull())
+        return QPixmap();
+
+    if (QPixmap(pixmap).data_ptr()->classId() == QPixmapData::X11Class)
+        return pixmap;
+
+    return qt_toX11Pixmap(pixmap.toImage());
+}
 
 // For thread-safety:
 //   image->data does not belong to X11, so we must free it ourselves.
@@ -286,8 +313,8 @@ int Q_GUI_EXPORT qt_x11_preferred_pixmap_depth = 0;
 
 QX11PixmapData::QX11PixmapData(PixelType type)
     : QPixmapData(type, X11Class), hd(0), w(0), h(0), d(0),
-      uninit(true), x11_mask(0), picture(0), mask_picture(0), hd2(0),
-      pengine(0)
+      uninit(true), read_only(false), x11_mask(0), picture(0), mask_picture(0), hd2(0),
+      share_mode(QPixmap::ImplicitlyShared), pengine(0)
 {
 }
 
@@ -315,11 +342,14 @@ void QX11PixmapData::resize(int width, int height)
     if (qt_x11_preferred_pixmap_depth)
         dd = qt_x11_preferred_pixmap_depth;
 
-    bool make_null = w == 0 || h == 0;                // create null pixmap
+    bool make_null = w <= 0 || h <= 0;                // create null pixmap
     d = (pixelType() == BitmapType ? 1 : dd);
-    if (make_null || w < 0 || h < 0 || d == 0) {
+    if (make_null || d == 0) {
+        w = 0;
+        h = 0;
         hd = 0;
         picture = 0;
+        d = 0;
         if (!make_null)
             qWarning("QPixmap: Invalid pixmap parameters");
         return;
@@ -1115,7 +1145,10 @@ void QX11PixmapData::fill(const QColor &fillColor)
 {
     if (fillColor.alpha() != 255) {
 #ifndef QT_NO_XRENDER
-        if (picture && d == 32) {
+        if (X11->use_xrender) {
+            if (!picture || d != 32)
+                convertToARGB32(/*preserveContents = */false);
+
             ::Picture src  = X11->getSolidFill(xinfo.screen(), fillColor);
             XRenderComposite(X11->display, PictOpSrc, src, 0, picture,
                              0, 0, width(), height(),
@@ -1154,7 +1187,7 @@ void QX11PixmapData::release()
     delete pengine;
     pengine = 0;
 
-    if (!qApp)
+    if (!X11)
         return;
 
     if (x11_mask) {
@@ -1179,7 +1212,8 @@ void QX11PixmapData::release()
             XFreePixmap(xinfo.display(), hd2);
             hd2 = 0;
         }
-        XFreePixmap(xinfo.display(), hd);
+        if (!read_only)
+            XFreePixmap(xinfo.display(), hd);
         hd = 0;
     }
 }
@@ -1894,6 +1928,9 @@ void QPixmap::x11SetScreen(int screen)
         return;
     }
 
+    if (data->classId() != QPixmapData::X11Class)
+        return;
+
     if (screen < 0)
         screen = QX11Info::appScreen();
 
@@ -1917,12 +1954,8 @@ void QPixmap::x11SetScreen(int screen)
     qDebug("QPixmap::x11SetScreen for %p from %d to %d. Size is %d/%d", x11Data, x11Data->xinfo.screen(), screen, width(), height());
 #endif
 
-    QImage img = toImage();
     x11SetDefaultScreen(screen);
-    if (img.depth() == 1)
-        (*this) = QBitmap::fromImage(img);
-    else
-        (*this) = fromImage(img);
+    *this = qt_toX11Pixmap(toImage());
 }
 
 QPixmap QPixmap::grabWindow(WId window, int x, int y, int w, int h)
@@ -1970,15 +2003,16 @@ QPixmap QPixmap::grabWindow(WId window, int x, int y, int w, int h)
         window_attr = root_attr;
     }
 
-    QPixmap pm(w, h);
+    QX11PixmapData *data = new QX11PixmapData(QPixmapData::PixmapType);
 
-    // if the default depth of a pixmap is not the same as the
-    // depth of the window we're trying to grab - bail out
-    if (window_attr.depth != pm.depth())
-        return QPixmap();
+    void qt_x11_getX11InfoForWindow(QX11Info * xinfo, const XWindowAttributes &a);
+    qt_x11_getX11InfoForWindow(&data->xinfo,window_attr);
 
-    QX11PixmapData *x11Data = static_cast<QX11PixmapData*>(pm.data);
-    x11Data->uninit = false;
+    data->resize(w, h);
+
+    QPixmap pm(data);
+
+    data->uninit = false;
     pm.x11SetScreen(scr);
 
     GC gc = XCreateGC(dpy, pm.handle(), 0, 0);
@@ -2004,12 +2038,55 @@ bool QX11PixmapData::hasAlphaChannel() const
 */
 const QX11Info &QPixmap::x11Info() const
 {
-    return static_cast<QX11PixmapData*>(data)->xinfo;
+    if (data->classId() == QPixmapData::X11Class)
+        return static_cast<QX11PixmapData*>(data)->xinfo;
+    else {
+        static QX11Info nullX11Info;
+        return nullX11Info;
+    }
 }
+
+#if !defined(QT_NO_XRENDER)
+static XRenderPictFormat *qt_renderformat_for_depth(const QX11Info &xinfo, int depth)
+{
+    if (depth == 1)
+        return XRenderFindStandardFormat(X11->display, PictStandardA1);
+    else if (depth == 32)
+        return XRenderFindStandardFormat(X11->display, PictStandardARGB32);
+    else
+        return XRenderFindVisualFormat(X11->display, (Visual *)xinfo.visual());
+}
+#endif
 
 QPaintEngine* QX11PixmapData::paintEngine() const
 {
     QX11PixmapData *that = const_cast<QX11PixmapData*>(this);
+
+    if (read_only && share_mode == QPixmap::ImplicitlyShared) {
+        // if someone wants to draw onto us, copy the shared contents
+        // and turn it into a fully fledged QPixmap
+        ::Pixmap hd_copy = XCreatePixmap(X11->display, RootWindow(X11->display, xinfo.screen()),
+                                         w, h, d);
+#if !defined(QT_NO_XRENDER)
+        XRenderPictFormat *format = qt_renderformat_for_depth(xinfo, d);
+        ::Picture picture_copy = XRenderCreatePicture(X11->display, hd_copy, format, 0, 0);
+
+        if (picture && d == 32) {
+            XRenderComposite(X11->display, PictOpSrc, picture, 0, picture_copy,
+                             0, 0, 0, 0, 0, 0, w, h);
+            XRenderFreePicture(X11->display, picture);
+            that->picture = picture_copy;
+        } else
+#endif
+        {
+            GC gc = XCreateGC(X11->display, hd_copy, 0, 0);
+            XCopyArea(X11->display, hd, hd_copy, gc, 0, 0, w, h, 0, 0);
+            XFreeGC(X11->display, gc);
+        }
+        that->hd = hd_copy;
+        that->read_only = false;
+    }
+
     if (!that->pengine)
         that->pengine = new QX11PaintEngine;
     return that->pengine;
@@ -2032,7 +2109,10 @@ QPaintEngine* QX11PixmapData::paintEngine() const
 Qt::HANDLE QPixmap::x11PictureHandle() const
 {
 #ifndef QT_NO_XRENDER
-    return static_cast<QX11PixmapData*>(data)->picture;
+    if (data->classId() == QPixmapData::X11Class)
+        return static_cast<QX11PixmapData*>(data)->picture;
+    else
+        return 0;
 #else
     return 0;
 #endif // QT_NO_XRENDER
@@ -2120,20 +2200,27 @@ void QX11PixmapData::copy(const QPixmapData *data, const QRect &rect)
 }
 
 #if !defined(QT_NO_XRENDER)
-void QX11PixmapData::convertToARGB32()
+void QX11PixmapData::convertToARGB32(bool preserveContents)
 {
     if (!X11->use_xrender)
         return;
 
     // Q_ASSERT(count == 1);
+    if (read_only && share_mode == QPixmap::ExplicitlyShared)
+        return;
 
     Pixmap pm = XCreatePixmap(X11->display, RootWindow(X11->display, xinfo.screen()),
                               w, h, 32);
     Picture p = XRenderCreatePicture(X11->display, pm,
                                      XRenderFindStandardFormat(X11->display, PictStandardARGB32), 0, 0);
-    XRenderComposite(X11->display, PictOpSrc, picture, 0, p, 0, 0, 0, 0, 0, 0, w, h);
-    XRenderFreePicture(X11->display, picture);
-    XFreePixmap(X11->display, hd);
+    if (picture) {
+        if (preserveContents)
+            XRenderComposite(X11->display, PictOpSrc, picture, 0, p, 0, 0, 0, 0, 0, 0, w, h);
+        if (!read_only)
+            XRenderFreePicture(X11->display, picture);
+    }
+    if (hd && !read_only)
+        XFreePixmap(X11->display, hd);
     if (x11_mask) {
         XFreePixmap(X11->display, x11_mask);
         if (mask_picture)
@@ -2146,5 +2233,59 @@ void QX11PixmapData::convertToARGB32()
     d = 32;
 }
 #endif
+
+QPixmap QPixmap::fromX11Pixmap(Qt::HANDLE pixmap, QPixmap::ShareMode mode)
+{
+    Window root;
+    int x;
+    int y;
+    uint width;
+    uint height;
+    uint border_width;
+    uint depth;
+    XWindowAttributes win_attribs;
+    int num_screens = ScreenCount(X11->display);
+    int screen = 0;
+
+    XGetGeometry(X11->display, pixmap, &root, &x, &y, &width, &height, &border_width, &depth);
+    XGetWindowAttributes(X11->display, root, &win_attribs);
+
+    for (; screen < num_screens; ++screen) {
+        if (win_attribs.screen == ScreenOfDisplay(X11->display, screen))
+            break;
+    }
+
+    QX11PixmapData *data = new QX11PixmapData(depth == 1 ? QPixmapData::BitmapType : QPixmapData::PixmapType);
+    data->setSerialNumber(++qt_pixmap_serial);
+    data->read_only = true;
+    data->share_mode = mode;
+    data->uninit = false;
+    data->w = width;
+    data->h = height;
+    data->d = depth;
+    data->hd = pixmap;
+
+    if (defaultScreen >= 0 && defaultScreen != screen) {
+        QX11InfoData* xd = data->xinfo.getX11Data(true);
+        xd->screen = defaultScreen;
+        xd->depth = QX11Info::appDepth(xd->screen);
+        xd->cells = QX11Info::appCells(xd->screen);
+        xd->colormap = QX11Info::appColormap(xd->screen);
+        xd->defaultColormap = QX11Info::appDefaultColormap(xd->screen);
+        xd->visual = (Visual *)QX11Info::appVisual(xd->screen);
+        xd->defaultVisual = QX11Info::appDefaultVisual(xd->screen);
+        data->xinfo.setX11Data(xd);
+    }
+
+#ifndef QT_NO_XRENDER
+    if (X11->use_xrender) {
+        XRenderPictFormat *format = qt_renderformat_for_depth(data->xinfo, depth);
+        data->picture = XRenderCreatePicture(X11->display, data->hd, format, 0, 0);
+    }
+#endif // QT_NO_XRENDER
+
+    return QPixmap(data);
+}
+
 
 QT_END_NAMESPACE

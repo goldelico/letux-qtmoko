@@ -23,107 +23,91 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegLinetoVerticalRel.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPathSegLinetoVertical.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegLinetoVerticalRel)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegLinetoVerticalRelTableEntries[] =
+static const HashTableValue JSSVGPathSegLinetoVerticalRelTableValues[2] =
 {
-    { "y", JSSVGPathSegLinetoVerticalRel::YAttrNum, DontDelete, 0, 0 }
+    { "y", DontDelete, (intptr_t)jsSVGPathSegLinetoVerticalRelY, (intptr_t)setJSSVGPathSegLinetoVerticalRelY },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegLinetoVerticalRelTable = 
-{
-    2, 1, JSSVGPathSegLinetoVerticalRelTableEntries, 1
-};
+static const HashTable JSSVGPathSegLinetoVerticalRelTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegLinetoVerticalRelTableValues, 0 };
+#else
+    { 2, 1, JSSVGPathSegLinetoVerticalRelTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegLinetoVerticalRelPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegLinetoVerticalRelPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegLinetoVerticalRelPrototypeTable = 
-{
-    2, 1, JSSVGPathSegLinetoVerticalRelPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPathSegLinetoVerticalRelPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegLinetoVerticalRelPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGPathSegLinetoVerticalRelPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegLinetoVerticalRelPrototype::info = { "SVGPathSegLinetoVerticalRelPrototype", 0, &JSSVGPathSegLinetoVerticalRelPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegLinetoVerticalRelPrototype::s_info = { "SVGPathSegLinetoVerticalRelPrototype", 0, &JSSVGPathSegLinetoVerticalRelPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegLinetoVerticalRelPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegLinetoVerticalRelPrototype>(exec, "[[JSSVGPathSegLinetoVerticalRel.prototype]]");
+    return getDOMPrototype<JSSVGPathSegLinetoVerticalRel>(exec);
 }
 
-const ClassInfo JSSVGPathSegLinetoVerticalRel::info = { "SVGPathSegLinetoVerticalRel", &JSSVGPathSeg::info, &JSSVGPathSegLinetoVerticalRelTable, 0 };
+const ClassInfo JSSVGPathSegLinetoVerticalRel::s_info = { "SVGPathSegLinetoVerticalRel", &JSSVGPathSeg::s_info, &JSSVGPathSegLinetoVerticalRelTable, 0 };
 
-JSSVGPathSegLinetoVerticalRel::JSSVGPathSegLinetoVerticalRel(ExecState* exec, SVGPathSegLinetoVerticalRel* impl)
-    : JSSVGPathSeg(exec, impl)
+JSSVGPathSegLinetoVerticalRel::JSSVGPathSegLinetoVerticalRel(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegLinetoVerticalRel> impl, SVGElement* context)
+    : JSSVGPathSeg(structure, impl, context)
 {
-    setPrototype(JSSVGPathSegLinetoVerticalRelPrototype::self(exec));
+}
+
+JSObject* JSSVGPathSegLinetoVerticalRel::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegLinetoVerticalRelPrototype(JSSVGPathSegLinetoVerticalRelPrototype::createStructure(JSSVGPathSegPrototype::self(exec)));
 }
 
 bool JSSVGPathSegLinetoVerticalRel::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSegLinetoVerticalRel, JSSVGPathSeg>(exec, &JSSVGPathSegLinetoVerticalRelTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSegLinetoVerticalRel, Base>(exec, &JSSVGPathSegLinetoVerticalRelTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegLinetoVerticalRel::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegLinetoVerticalRelY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case YAttrNum: {
-        SVGPathSegLinetoVerticalRel* imp = static_cast<SVGPathSegLinetoVerticalRel*>(impl());
-
-        return jsNumber(imp->y());
-    }
-    }
-    return 0;
+    SVGPathSegLinetoVerticalRel* imp = static_cast<SVGPathSegLinetoVerticalRel*>(static_cast<JSSVGPathSegLinetoVerticalRel*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->y());
 }
 
-void JSSVGPathSegLinetoVerticalRel::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+void JSSVGPathSegLinetoVerticalRel::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    lookupPut<JSSVGPathSegLinetoVerticalRel, JSSVGPathSeg>(exec, propertyName, value, attr, &JSSVGPathSegLinetoVerticalRelTable, this);
+    lookupPut<JSSVGPathSegLinetoVerticalRel, Base>(exec, propertyName, value, &JSSVGPathSegLinetoVerticalRelTable, this, slot);
 }
 
-void JSSVGPathSegLinetoVerticalRel::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void setJSSVGPathSegLinetoVerticalRelY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    switch (token) {
-    case YAttrNum: {
-        SVGPathSegLinetoVerticalRel* imp = static_cast<SVGPathSegLinetoVerticalRel*>(impl());
-
-        imp->setY(value->toFloat(exec));
-        break;
-    }
-    }
-    SVGPathSegLinetoVerticalRel* imp = static_cast<SVGPathSegLinetoVerticalRel*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGPathSeg>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGPathSeg>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+    SVGPathSegLinetoVerticalRel* imp = static_cast<SVGPathSegLinetoVerticalRel*>(static_cast<JSSVGPathSegLinetoVerticalRel*>(thisObject)->impl());
+    imp->setY(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegLinetoVerticalRel*>(thisObject)->context())
+        static_cast<JSSVGPathSegLinetoVerticalRel*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegLinetoVerticalRel*>(thisObject)->impl()->associatedAttributeName());
 }
 
 

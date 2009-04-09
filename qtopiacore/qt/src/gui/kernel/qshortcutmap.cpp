@@ -1,43 +1,49 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qshortcutmap_p.h"
 #include "private/qobject_p.h"
 #include "qkeysequence.h"
+#include "qgraphicsscene.h"
+#include "qgraphicsview.h"
 #include "qdebug.h"
 #include "qevent.h"
 #include "qwidget.h"
@@ -49,6 +55,7 @@
 #include "qapplication_p.h"
 #include <private/qaction_p.h>
 #include <private/qkeymapper_p.h>
+#include <private/qwidget_p.h>
 
 #ifndef QT_NO_SHORTCUT
 
@@ -325,7 +332,7 @@ QKeySequence::SequenceMatch QShortcutMap::state()
     Shortcut, and dispatchEvent() is found an identical.
     \sa nextState dispatchEvent
 */
-bool QShortcutMap::tryShortcutEvent(QWidget *w, QKeyEvent *e)
+bool QShortcutMap::tryShortcutEvent(QObject *o, QKeyEvent *e)
 {
     Q_D(QShortcutMap);
 
@@ -335,7 +342,7 @@ bool QShortcutMap::tryShortcutEvent(QWidget *w, QKeyEvent *e)
         ushort orgType = e->t;
         e->t = QEvent::ShortcutOverride;
         e->ignore();
-        QApplication::sendEvent(w, e);
+        QApplication::sendEvent(o, e);
         e->t = orgType;
         e->spont = wasSpontaneous;
         if (e->isAccepted()) {
@@ -409,6 +416,27 @@ QKeySequence::SequenceMatch QShortcutMap::nextState(QKeyEvent *e)
     qDebug().nospace() << "QShortcutMap::nextState(" << e << ") = " << result;
 #endif
     return result;
+}
+
+
+/*! \internal
+    Determines if an enabled shortcut has a matcing key sequence.
+*/
+bool QShortcutMap::hasShortcutForKeySequence(const QKeySequence &seq) const
+{
+    Q_D(const QShortcutMap);
+    QShortcutEntry entry(seq); // needed for searching
+    QList<QShortcutEntry>::ConstIterator itEnd = d->sequences.constEnd();
+    QList<QShortcutEntry>::ConstIterator it = qLowerBound(d->sequences.constBegin(), itEnd, entry);
+
+    for (;it != itEnd; ++it) {
+        if (matches(entry.keyseq, (*it).keyseq) == QKeySequence::ExactMatch && correctContext(*it) && (*it).enabled) {
+            return true;
+        }
+    }
+
+    //end of the loop: we didn't find anything
+    return false;
 }
 
 /*! \internal
@@ -599,7 +627,7 @@ QKeySequence::SequenceMatch QShortcutMap::matches(const QKeySequence &seq1,
     Returns true if the widget \a w is a logical sub window of the current
     top-level widget.
 */
-bool QShortcutMap::correctContext(const QShortcutEntry &item) {
+bool QShortcutMap::correctContext(const QShortcutEntry &item) const {
     Q_ASSERT_X(item.owner, "QShortcutMap", "Shortcut has no owner. Illegal map state!");
 
     QWidget *active_window = qApp->activeWindow();
@@ -616,15 +644,19 @@ bool QShortcutMap::correctContext(const QShortcutEntry &item) {
     if (QAction *a = qobject_cast<QAction *>(item.owner))
         return correctContext(item.context, a, active_window);
 #endif
+#ifndef QT_NO_GRAPHICSVIEW
+    if (QGraphicsWidget *gw = qobject_cast<QGraphicsWidget *>(item.owner))
+        return correctGraphicsWidgetContext(item.context, gw, active_window);
+#endif
     QWidget *w = qobject_cast<QWidget *>(item.owner);
     if (!w) {
         QShortcut *s = qobject_cast<QShortcut *>(item.owner);
         w = s->parentWidget();
     }
-    return correctContext(item.context, w, active_window);
+    return correctWidgetContext(item.context, w, active_window);
 }
 
-bool QShortcutMap::correctContext(Qt::ShortcutContext context, QWidget *w, QWidget *active_window)
+bool QShortcutMap::correctWidgetContext(Qt::ShortcutContext context, QWidget *w, QWidget *active_window) const
 {
     bool visible = w->isVisible();    
 #ifdef Q_WS_MAC
@@ -650,6 +682,14 @@ bool QShortcutMap::correctContext(Qt::ShortcutContext context, QWidget *w, QWidg
 
     // Below is Qt::WindowShortcut context
     QWidget *tlw = w->window();
+#ifndef QT_NO_GRAPHICSVIEW
+    if (QWExtra *topData = tlw->d_func()->extra) {
+        if (topData->proxyWidget) {
+            bool res = correctGraphicsWidgetContext(context, (QGraphicsWidget *)topData->proxyWidget, active_window);
+            return res;
+        }
+    }
+#endif
 
     /* if a floating tool window is active, keep shortcuts on the
      * parent working */
@@ -678,8 +718,67 @@ bool QShortcutMap::correctContext(Qt::ShortcutContext context, QWidget *w, QWidg
     return true;
 }
 
+#ifndef QT_NO_GRAPHICSVIEW
+bool QShortcutMap::correctGraphicsWidgetContext(Qt::ShortcutContext context, QGraphicsWidget *w, QWidget *active_window) const
+{
+    bool visible = w->isVisible();
+#ifdef Q_WS_MAC
+    if (!qt_mac_no_native_menubar && qobject_cast<QMenuBar *>(w))
+        visible = true;
+#endif
+
+    if (!visible || !w->isEnabled() || !w->scene())
+        return false;
+
+    if (context == Qt::ApplicationShortcut) {
+        // Applicationwide shortcuts are always reachable unless their owner
+        // is shadowed by modality. In QGV there's no modality concept, but we
+        // must still check if all views are shadowed.
+        QList<QGraphicsView *> views = w->scene()->views();
+        for (int i = 0; i < views.size(); ++i) {
+            if (QApplicationPrivate::tryModalHelper(views.at(i), 0))
+                return true;
+        }
+        return false;
+    }
+
+    if (context == Qt::WidgetShortcut)
+        return static_cast<QGraphicsItem *>(w) == w->scene()->focusItem();
+
+    if (context == Qt::WidgetWithChildrenShortcut) {
+        const QGraphicsItem *ti = w->scene()->focusItem();
+        if (ti && ti->isWidget()) {
+            const QGraphicsWidget *tw = static_cast<const QGraphicsWidget *>(ti);
+            while (tw && tw != w && (tw->windowType() == Qt::Widget || tw->windowType() == Qt::Popup))
+                tw = tw->parentWidget();
+            return tw == w;
+        }
+    }
+
+    // Below is Qt::WindowShortcut context
+
+    // Find the active view (if any).
+    QList<QGraphicsView *> views = w->scene()->views();
+    QGraphicsView *activeView = 0;
+    for (int i = 0; i < views.size(); ++i) {
+        QGraphicsView *view = views.at(i);
+        if (view->window() == active_window) {
+            activeView = view;
+            break;
+        }
+    }
+    if (!activeView)
+        return false;
+
+    // The shortcut is reachable if owned by a windowless widget, or if the
+    // widget's window is the same as the focus item's window.
+    QGraphicsWidget *a = w->scene()->activeWindow();
+    return !w->window() || a == w->window();
+}
+#endif
+
 #ifndef QT_NO_ACTION
-bool QShortcutMap::correctContext(Qt::ShortcutContext context, QAction *a, QWidget *active_window)
+bool QShortcutMap::correctContext(Qt::ShortcutContext context, QAction *a, QWidget *active_window) const
 {
     const QList<QWidget *> &widgets = a->d_func()->widgets;
 #if defined(DEBUG_QSHORTCUTMAP)
@@ -695,9 +794,22 @@ bool QShortcutMap::correctContext(Qt::ShortcutContext context, QAction *a, QWidg
                 return true;
         } else
 #endif
-            if (correctContext(context, w, active_window))
+            if (correctWidgetContext(context, w, active_window))
                 return true;
     }
+
+#ifndef QT_NO_GRAPHICSVIEW
+    const QList<QGraphicsWidget *> &graphicsWidgets = a->d_func()->graphicsWidgets;
+#if defined(DEBUG_QSHORTCUTMAP)
+    if (graphicsWidgets.isEmpty())
+        qDebug() << a << "not connected to any widgets; won't trigger";
+#endif
+    for (int i = 0; i < graphicsWidgets.size(); ++i) {
+        QGraphicsWidget *w = graphicsWidgets.at(i);
+        if (correctGraphicsWidgetContext(context, w, active_window))
+            return true;
+    }
+#endif
     return false;
 }
 #endif // QT_NO_ACTION

@@ -1,39 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include <QStack>
+#include <QStringList>
 
 #include "qanyuri_p.h"
 #include "qboolean_p.h"
@@ -41,7 +48,7 @@
 #include "qcommonvalues_p.h"
 #include "qemptysequence_p.h"
 #include "qitemmappingiterator_p.h"
-#include "qnodesortexpression_p.h"
+#include "qnodesort_p.h"
 #include "qpatternistlocale_p.h"
 #include "private/qxmlutils_p.h"
 
@@ -55,15 +62,118 @@ IdFN::IdFN() : m_hasCreatedSorter(false)
 {
 }
 
-Item IdFN::mapToItem(const Item &id,
+Item IdFN::mapToItem(const QString &id,
                      const IDContext &context) const
 {
-    const QString ncName(id.stringValue());
+    return context.second->elementById(context.first->namePool()->allocateQName(QString(), id));
+}
 
-    if(QXmlUtils::isNCName(ncName))
-        return context.second->elementById(context.first->namePool()->allocateQName(QString(), ncName));
-    else
-        return Item();
+/**
+ * @short Helper class for StringSplitter
+ *
+ * Needed by the QAbstractXmlForwardIterator sub-class.
+ *
+ * @relates StringSplitter
+ */
+static bool qIsForwardIteratorEnd(const QString &unit)
+{
+    return unit.isNull();
+}
+
+/**
+ * @short Helper class for IdFN.
+ *
+ * StringSplitter takes an Iterator which delivers strings of this kind:
+ *
+ * "a", "b c", "%invalidNCName", "  ", "d"
+ *
+ * and we deliver instead:
+ *
+ * "a", "b", "c", "d"
+ *
+ * That is, we:
+ * - Remove invalid @c NCName
+ * - Split IDREFs into individual NCNames
+ *
+ * @author Frans Englich
+ */
+class StringSplitter : public QAbstractXmlForwardIterator<QString>
+{
+public:
+    StringSplitter(const Item::Iterator::Ptr &source);
+    virtual QString next();
+    virtual QString current() const;
+    virtual qint64 position() const;
+private:
+    QString loadNext();
+    const Item::Iterator::Ptr   m_source;
+    QStack<QString>             m_buffer;
+    QString                     m_current;
+    qint64                      m_position;
+    bool                        m_sourceAtEnd;
+};
+
+StringSplitter::StringSplitter(const Item::Iterator::Ptr &source) : m_source(source)
+                                                                  , m_position(0)
+                                                                  , m_sourceAtEnd(false)
+{
+    Q_ASSERT(m_source);
+    m_buffer.push(loadNext());
+}
+
+QString StringSplitter::next()
+{
+    /* We also check m_position, we want to load on our first run. */
+    if(!m_buffer.isEmpty())
+    {
+        ++m_position;
+        m_current = m_buffer.pop();
+        return m_current;
+    }
+    else if(m_sourceAtEnd)
+    {
+        m_current.clear();
+        m_position = -1;
+        return QString();
+    }
+
+    return loadNext();
+}
+
+QString StringSplitter::loadNext()
+{
+    const Item sourceNext(m_source->next());
+
+    if(sourceNext.isNull())
+    {
+        m_sourceAtEnd = true;
+        /* We might have strings in m_buffer, let's empty it. */
+        return next();
+    }
+
+    const QStringList candidates(sourceNext.stringValue().simplified().split(QLatin1Char(' ')));
+    const int count = candidates.length();
+
+    for(int i = 0; i < count; ++i)
+    {
+        const QString &at = candidates.at(i);
+
+        if(QXmlUtils::isNCName(at))
+            m_buffer.push(at);
+    }
+
+    /* So, now we have populated m_buffer, let's start from the beginning. */
+    return next();
+}
+
+QString StringSplitter::current() const
+{
+    return m_current;
+}
+
+qint64 StringSplitter::position() const
+{
+    return m_position;
 }
 
 Item::Iterator::Ptr IdFN::evaluateSequence(const DynamicContext::Ptr &context) const
@@ -71,16 +181,15 @@ Item::Iterator::Ptr IdFN::evaluateSequence(const DynamicContext::Ptr &context) c
     const Item::Iterator::Ptr idrefs(m_operands.first()->evaluateSequence(context));
     const Item node(m_operands.last()->evaluateSingleton(context));
 
-    checkTargetNode(node.asNode(), context);
+    checkTargetNode(node.asNode(), context, ReportContext::FODC0001);
 
     return makeItemMappingIterator<Item,
-                                   Item,
+                                   QString,
                                    IdFN::ConstPtr,
                                    IDContext>(ConstPtr(this),
-                                              idrefs,
+                                              StringSplitter::Ptr(new StringSplitter(idrefs)),
                                               qMakePair(context, node.asNode().model()));
 }
-
 
 Expression::Ptr IdFN::typeCheck(const StaticContext::Ptr &context,
                                 const SequenceType::Ptr &reqType)
@@ -96,19 +205,6 @@ Expression::Ptr IdFN::typeCheck(const StaticContext::Ptr &context,
     }
 }
 
-void IdFN::checkTargetNode(const QXmlNodeModelIndex &node, const DynamicContext::Ptr &context) const
-{
-    if(node.root().kind() != QXmlNodeModelIndex::Document)
-    {
-        context->error(QtXmlPatterns::tr("The root node of the second argument "
-                                         "to function %1 must be a document "
-                                         "node. %2 is not a document node.")
-                       .arg(formatFunction(context->namePool(), signature()),
-                            formatData(node)),
-                       ReportContext::FODC0001, this);
-    }
-}
-
 Item::Iterator::Ptr IdrefFN::evaluateSequence(const DynamicContext::Ptr &context) const
 {
     const Item::Iterator::Ptr ids(m_operands.first()->evaluateSequence(context));
@@ -118,7 +214,7 @@ Item::Iterator::Ptr IdrefFN::evaluateSequence(const DynamicContext::Ptr &context
         return CommonValues::emptyIterator;
 
     const Item node(m_operands.last()->evaluateSingleton(context));
-    checkTargetNode(node.asNode(), context);
+    checkTargetNode(node.asNode(), context, ReportContext::FODC0001);
 
     return CommonValues::emptyIterator; /* TODO Haven't implemented further. */
 }
@@ -173,13 +269,6 @@ bool DocAvailableFN::evaluateEBV(const DynamicContext::Ptr &context) const
     return context->resourceLoader()->isDocumentAvailable(uri);
 }
 
-Expression::Ptr DocAvailableFN::typeCheck(const StaticContext::Ptr &context,
-                                          const SequenceType::Ptr &reqType)
-{
-    prepareStaticBaseURI(context);
-    return FunctionCall::typeCheck(context, reqType);
-}
-
 Item::Iterator::Ptr CollectionFN::evaluateSequence(const DynamicContext::Ptr &context) const
 {
     // TODO resolve with URI resolve
@@ -199,7 +288,7 @@ Item::Iterator::Ptr CollectionFN::evaluateSequence(const DynamicContext::Ptr &co
             const QUrl uri(AnyURI::toQUrl<ReportContext::FODC0004>(itemURI.stringValue(), context, this));
 
             // TODO 2. Resolve against static context base URI(store base URI at compile time)
-            context->error(QtXmlPatterns::tr("%1 cannot be retrieved").arg(formatURI(uri)),
+            context->error(QtXmlPatterns::tr("%1 cannot be retrieved").arg(formatResourcePath(uri)),
                            ReportContext::FODC0004, this);
             return CommonValues::emptyIterator;
         }

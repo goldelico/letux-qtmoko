@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -166,6 +170,8 @@ Type Moc::parseType()
             case Q_SCRIPTABLE_TOKEN:
             case Q_SIGNALS_TOKEN:
             case Q_SLOTS_TOKEN:
+            case Q_SIGNAL_TOKEN:
+            case Q_SLOT_TOKEN:
                 type.name += lexem();
                 return type;
             default:
@@ -313,6 +319,12 @@ bool Moc::testFunctionAttribute(Token tok, FunctionDef *def)
         case Q_INVOKABLE_TOKEN:
             def->isInvokable = true;
             return true;
+        case Q_SIGNAL_TOKEN:
+            def->isSignal = true;
+            return true;
+        case Q_SLOT_TOKEN:
+            def->isSlot = true;
+            return true;
         case Q_SCRIPTABLE_TOKEN:
             def->isInvokable = def->isScriptable = true;
             return true;
@@ -397,7 +409,7 @@ bool Moc::parseFunction(FunctionDef *def, bool inMacro)
             ;
         else if ((def->inlineCode = test(LBRACE)))
             until(RBRACE);
-        else if (test(EQ))
+        else if ((def->isAbstract = test(EQ)))
             until(SEMIC);
         else
             error();
@@ -414,14 +426,15 @@ bool Moc::parseFunction(FunctionDef *def, bool inMacro)
 }
 
 // like parseFunction, but never aborts with an error
-bool Moc::parseMaybeFunction(FunctionDef *def)
+bool Moc::parseMaybeFunction(const ClassDef *cdef, FunctionDef *def)
 {
     def->isVirtual = false;
-    while (test(INLINE) || test(STATIC) || test(VIRTUAL)
+    while (test(EXPLICIT) || test(INLINE) || test(STATIC) || test(VIRTUAL)
            || testFunctionAttribute(def)) {
         if (lookup() == VIRTUAL)
             def->isVirtual = true;
     }
+    bool tilde = test(TILDE);
     def->type = parseType();
     if (def->type.name.isEmpty())
         return false;
@@ -429,7 +442,13 @@ bool Moc::parseMaybeFunction(FunctionDef *def)
     if (test(LPAREN)) {
         def->name = def->type.name;
         scopedFunctionName = def->type.isScoped;
-        def->type = Type("int");
+        if (def->name == cdef->classname) {
+            def->isDestructor = tilde;
+            def->isConstructor = !tilde;
+            def->type = Type();
+        } else {
+            def->type = Type("int");
+        }
     } else {
         Type tempType = parseType();;
         while (!tempType.name.isEmpty() && lookup() != LPAREN) {
@@ -650,29 +669,42 @@ void Moc::parse()
                     FunctionDef funcDef;
                     funcDef.access = access;
                     int rewind = index;
-                    if (parseMaybeFunction(&funcDef)) {
-                        if (access == FunctionDef::Public)
-                            def.publicList += funcDef;
-                        if (funcDef.isSlot) {
-                            def.slotList += funcDef;
-                            while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
-                                funcDef.wasCloned = true;
-                                funcDef.arguments.removeLast();
+                    if (parseMaybeFunction(&def, &funcDef)) {
+                        if (funcDef.isConstructor) {
+                            if ((access == FunctionDef::Public) && funcDef.isInvokable) {
+                                def.constructorList += funcDef;
+                                while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
+                                    funcDef.wasCloned = true;
+                                    funcDef.arguments.removeLast();
+                                    def.constructorList += funcDef;
+                                }
+                            }
+                        } else if (funcDef.isDestructor) {
+                            // don't care about destructors
+                        } else {
+                            if (access == FunctionDef::Public)
+                                def.publicList += funcDef;
+                            if (funcDef.isSlot) {
                                 def.slotList += funcDef;
-                            }
-                        } else if (funcDef.isSignal) {
-                            def.signalList += funcDef;
-                            while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
-                                funcDef.wasCloned = true;
-                                funcDef.arguments.removeLast();
+                                while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
+                                    funcDef.wasCloned = true;
+                                    funcDef.arguments.removeLast();
+                                    def.slotList += funcDef;
+                                }
+                            } else if (funcDef.isSignal) {
                                 def.signalList += funcDef;
-                            }
-                        } else if (funcDef.isInvokable) {
-                            def.methodList += funcDef;
-                            while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
-                                funcDef.wasCloned = true;
-                                funcDef.arguments.removeLast();
+                                while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
+                                    funcDef.wasCloned = true;
+                                    funcDef.arguments.removeLast();
+                                    def.signalList += funcDef;
+                                }
+                            } else if (funcDef.isInvokable) {
                                 def.methodList += funcDef;
+                                while (funcDef.arguments.size() > 0 && funcDef.arguments.last().isDefault) {
+                                    funcDef.wasCloned = true;
+                                    funcDef.arguments.removeLast();
+                                    def.methodList += funcDef;
+                                }
                             }
                         }
                     } else {
@@ -683,7 +715,7 @@ void Moc::parse()
 
             next(RBRACE);
 
-            if (!def.hasQObject && def.signalList.isEmpty() && def.slotList.isEmpty()
+            if (!def.hasQObject && !def.hasQGadget && def.signalList.isEmpty() && def.slotList.isEmpty()
                 && def.propertyList.isEmpty() && def.enumDeclarations.isEmpty())
                 continue; // no meta object code required
 
@@ -910,6 +942,7 @@ void Moc::parseProperty(ClassDef *def)
             propDef.editable = v + v2;
             break;
         case 'N': if (l != "NOTIFY") error(2);
+            propDef.notify = v;
             break;
         case 'U': if (l != "USER") error(2);
             propDef.user = v + v2;
@@ -919,6 +952,16 @@ void Moc::parseProperty(ClassDef *def)
         }
     }
     next(RPAREN);
+    if (propDef.read.isNull()) {
+        QByteArray msg;
+        msg += "Property declaration ";
+        msg += propDef.name;
+        msg += " has no READ accessor function. The property will be invalid.";
+        warning(msg.constData());
+    }
+    if(!propDef.notify.isEmpty()) 
+        def->notifyableProperties++;
+
     def->propertyList += propDef;
 }
 

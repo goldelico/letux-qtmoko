@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/kernel/qapplication.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/kernel/qapplication.cpp -->
 <head>
-  <title>Qt 4.4: QApplication Class Reference</title>
+  <title>Qt 4.5: QApplication Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QApplication Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -23,174 +23,179 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qapplication.html#ColorSpec-enum">ColorSpec</a></b> { NormalColor, CustomColor, ManyColor }</li>
-<li><div class="fn"/>enum <b><a href="qapplication.html#Type-enum">Type</a></b> { Tty, GuiClient, GuiServer }</li>
+<li><div class="fn"></div>enum <b><a href="qapplication.html#ColorSpec-enum">ColorSpec</a></b> { NormalColor, CustomColor, ManyColor }</li>
+<li><div class="fn"></div>enum <b><a href="qapplication.html#Type-enum">Type</a></b> { Tty, GuiClient, GuiServer }</li>
 </ul>
 <a name="properties"></a>
 <h3>Properties</h3>
 <p><table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr><td width="45%" valign="top"><ul>
-<li><div class="fn"/><b><a href="qapplication.html#autoMaximizeThreshold-prop">autoMaximizeThreshold</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#cursorFlashTime-prop">cursorFlashTime</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#doubleClickInterval-prop">doubleClickInterval</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#globalStrut-prop">globalStrut</a></b> : QSize</li>
-<li><div class="fn"/><b><a href="qapplication.html#keyboardInputInterval-prop">keyboardInputInterval</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#layoutDirection-prop">layoutDirection</a></b> : Qt::LayoutDirection</li>
+<li><div class="fn"></div><b><a href="qapplication.html#autoMaximizeThreshold-prop">autoMaximizeThreshold</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#autoSipEnabled-prop">autoSipEnabled</a></b> : bool</li>
+<li><div class="fn"></div><b><a href="qapplication.html#cursorFlashTime-prop">cursorFlashTime</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#doubleClickInterval-prop">doubleClickInterval</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#globalStrut-prop">globalStrut</a></b> : QSize</li>
+<li><div class="fn"></div><b><a href="qapplication.html#keyboardInputInterval-prop">keyboardInputInterval</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#layoutDirection-prop">layoutDirection</a></b> : Qt::LayoutDirection</li>
 </ul></td><td valign="top"><ul>
-<li><div class="fn"/><b><a href="qapplication.html#quitOnLastWindowClosed-prop">quitOnLastWindowClosed</a></b> : bool</li>
-<li><div class="fn"/><b><a href="qapplication.html#startDragDistance-prop">startDragDistance</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#startDragTime-prop">startDragTime</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#styleSheet-prop">styleSheet</a></b> : QString</li>
-<li><div class="fn"/><b><a href="qapplication.html#wheelScrollLines-prop">wheelScrollLines</a></b> : int</li>
-<li><div class="fn"/><b><a href="qapplication.html#windowIcon-prop">windowIcon</a></b> : QIcon</li>
+<li><div class="fn"></div><b><a href="qapplication.html#quitOnLastWindowClosed-prop">quitOnLastWindowClosed</a></b> : bool</li>
+<li><div class="fn"></div><b><a href="qapplication.html#startDragDistance-prop">startDragDistance</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#startDragTime-prop">startDragTime</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#styleSheet-prop">styleSheet</a></b> : QString</li>
+<li><div class="fn"></div><b><a href="qapplication.html#wheelScrollLines-prop">wheelScrollLines</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qapplication.html#windowIcon-prop">windowIcon</a></b> : QIcon</li>
 </ul>
 </td></tr>
 </table></p>
 <ul>
-<li><div class="fn"/>4 properties inherited from <a href="qcoreapplication.html#properties">QCoreApplication</a></li>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>4 properties inherited from <a href="qcoreapplication.html#properties">QCoreApplication</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qapplication.html#QApplication">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i> )</li>
-<li><div class="fn"/><b><a href="qapplication.html#QApplication-2">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i>, bool <i>GUIenabled</i> )</li>
-<li><div class="fn"/><b><a href="qapplication.html#QApplication-3">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i>, Type <i>type</i> )</li>
-<li><div class="fn"/><b><a href="qapplication.html#QApplication-4">QApplication</a></b> ( Display * <i>display</i>, Qt::HANDLE <i>visual</i> = 0, Qt::HANDLE <i>colormap</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qapplication.html#QApplication-5">QApplication</a></b> ( Display * <i>display</i>, int &amp; <i>argc</i>, char ** <i>argv</i>, Qt::HANDLE <i>visual</i> = 0, Qt::HANDLE <i>colormap</i> = 0 )</li>
-<li><div class="fn"/>virtual <b><a href="qapplication.html#dtor.QApplication">~QApplication</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qapplication.html#commitData">commitData</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
-<li><div class="fn"/>QInputContext * <b><a href="qapplication.html#inputContext">inputContext</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#isSessionRestored">isSessionRestored</a></b> () const</li>
-<li><div class="fn"/>virtual bool <b><a href="qapplication.html#macEventFilter">macEventFilter</a></b> ( EventHandlerCallRef, EventRef )</li>
-<li><div class="fn"/>virtual bool <b><a href="qapplication.html#qwsEventFilter">qwsEventFilter</a></b> ( QWSEvent * <i>event</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#qwsSetCustomColors">qwsSetCustomColors</a></b> ( QRgb * <i>colorTable</i>, int <i>start</i>, int <i>numColors</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qapplication.html#saveState">saveState</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
-<li><div class="fn"/>QString <b><a href="qapplication.html#sessionId">sessionId</a></b> () const</li>
-<li><div class="fn"/>QString <b><a href="qapplication.html#sessionKey">sessionKey</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setInputContext">setInputContext</a></b> ( QInputContext * <i>inputContext</i> )</li>
-<li><div class="fn"/>QString <b><a href="qapplication.html#styleSheet-prop">styleSheet</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#winFocus">winFocus</a></b> ( QWidget *, bool )</li>
-<li><div class="fn"/>virtual bool <b><a href="qapplication.html#x11EventFilter">x11EventFilter</a></b> ( XEvent * <i>event</i> )</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#x11ProcessEvent">x11ProcessEvent</a></b> ( XEvent * <i>event</i> )</li>
+<li><div class="fn"></div><b><a href="qapplication.html#QApplication">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i> )</li>
+<li><div class="fn"></div><b><a href="qapplication.html#QApplication-2">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i>, bool <i>GUIenabled</i> )</li>
+<li><div class="fn"></div><b><a href="qapplication.html#QApplication-3">QApplication</a></b> ( int &amp; <i>argc</i>, char ** <i>argv</i>, Type <i>type</i> )</li>
+<li><div class="fn"></div><b><a href="qapplication.html#QApplication-4">QApplication</a></b> ( Display * <i>display</i>, Qt::HANDLE <i>visual</i> = 0, Qt::HANDLE <i>colormap</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qapplication.html#QApplication-5">QApplication</a></b> ( Display * <i>display</i>, int &amp; <i>argc</i>, char ** <i>argv</i>, Qt::HANDLE <i>visual</i> = 0, Qt::HANDLE <i>colormap</i> = 0 )</li>
+<li><div class="fn"></div>virtual <b><a href="qapplication.html#dtor.QApplication">~QApplication</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qapplication.html#commitData">commitData</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
+<li><div class="fn"></div>QInputContext * <b><a href="qapplication.html#inputContext">inputContext</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#isSessionRestored">isSessionRestored</a></b> () const</li>
+<li><div class="fn"></div>virtual bool <b><a href="qapplication.html#macEventFilter">macEventFilter</a></b> ( EventHandlerCallRef, EventRef )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qapplication.html#qwsEventFilter">qwsEventFilter</a></b> ( QWSEvent * <i>event</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#qwsSetCustomColors">qwsSetCustomColors</a></b> ( QRgb * <i>colorTable</i>, int <i>start</i>, int <i>numColors</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qapplication.html#saveState">saveState</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
+<li><div class="fn"></div>QString <b><a href="qapplication.html#sessionId">sessionId</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qapplication.html#sessionKey">sessionKey</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setInputContext">setInputContext</a></b> ( QInputContext * <i>inputContext</i> )</li>
+<li><div class="fn"></div>QString <b><a href="qapplication.html#styleSheet-prop">styleSheet</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#winFocus">winFocus</a></b> ( QWidget *, bool )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qapplication.html#x11EventFilter">x11EventFilter</a></b> ( XEvent * <i>event</i> )</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#x11ProcessEvent">x11ProcessEvent</a></b> ( XEvent * <i>event</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>4 public functions inherited from <a href="qcoreapplication.html#public-functions">QCoreApplication</a></li>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>4 public functions inherited from <a href="qcoreapplication.html#public-functions">QCoreApplication</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qapplication.html#aboutQt">aboutQt</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#autoMaximizeThreshold-prop">autoMaximizeThreshold</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#closeAllWindows">closeAllWindows</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#autoMaximizeThreshold-prop">setAutoMaximizeThreshold</a></b> ( const int <i>threshold</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#styleSheet-prop">setStyleSheet</a></b> ( const QString &amp; <i>sheet</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#aboutQt">aboutQt</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#autoMaximizeThreshold-prop">autoMaximizeThreshold</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#autoSipEnabled-prop">autoSipEnabled</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#closeAllWindows">closeAllWindows</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#autoMaximizeThreshold-prop">setAutoMaximizeThreshold</a></b> ( const int <i>threshold</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#autoSipEnabled-prop">setAutoSipEnabled</a></b> ( const bool <i>enabled</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#styleSheet-prop">setStyleSheet</a></b> ( const QString &amp; <i>sheet</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 public slot inherited from <a href="qcoreapplication.html#public-slots">QCoreApplication</a></li>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qcoreapplication.html#public-slots">QCoreApplication</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qapplication.html#commitDataRequest">commitDataRequest</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#focusChanged">focusChanged</a></b> ( QWidget * <i>old</i>, QWidget * <i>now</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#lastWindowClosed">lastWindowClosed</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#saveStateRequest">saveStateRequest</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#commitDataRequest">commitDataRequest</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#focusChanged">focusChanged</a></b> ( QWidget * <i>old</i>, QWidget * <i>now</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#fontDatabaseChanged">fontDatabaseChanged</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#lastWindowClosed">lastWindowClosed</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#saveStateRequest">saveStateRequest</a></b> ( QSessionManager &amp; <i>manager</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 signal inherited from <a href="qcoreapplication.html#signals">QCoreApplication</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qcoreapplication.html#signals">QCoreApplication</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#activeModalWidget">activeModalWidget</a></b> ()</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#activePopupWidget">activePopupWidget</a></b> ()</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#activeWindow">activeWindow</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#alert">alert</a></b> ( QWidget * <i>widget</i>, int <i>msec</i> = 0 )</li>
-<li><div class="fn"/>QWidgetList <b><a href="qapplication.html#allWidgets">allWidgets</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#beep">beep</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#changeOverrideCursor">changeOverrideCursor</a></b> ( const QCursor &amp; <i>cursor</i> )</li>
-<li><div class="fn"/>QClipboard * <b><a href="qapplication.html#clipboard">clipboard</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#colorSpec">colorSpec</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#cursorFlashTime-prop">cursorFlashTime</a></b> ()</li>
-<li><div class="fn"/>QDesktopWidget * <b><a href="qapplication.html#desktop">desktop</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#desktopSettingsAware">desktopSettingsAware</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#doubleClickInterval-prop">doubleClickInterval</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#exec">exec</a></b> ()</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#focusWidget">focusWidget</a></b> ()</li>
-<li><div class="fn"/>QFont <b><a href="qapplication.html#font">font</a></b> ()</li>
-<li><div class="fn"/>QFont <b><a href="qapplication.html#font-2">font</a></b> ( const QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>QFont <b><a href="qapplication.html#font-3">font</a></b> ( const char * <i>className</i> )</li>
-<li><div class="fn"/>QFontMetrics <b><a href="qapplication.html#fontMetrics">fontMetrics</a></b> ()</li>
-<li><div class="fn"/>QSize <b><a href="qapplication.html#globalStrut-prop">globalStrut</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#isEffectEnabled">isEffectEnabled</a></b> ( Qt::UIEffect <i>effect</i> )</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#isLeftToRight">isLeftToRight</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#isRightToLeft">isRightToLeft</a></b> ()</li>
-<li><div class="fn"/>Qt::LayoutDirection <b><a href="qapplication.html#keyboardInputDirection">keyboardInputDirection</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#keyboardInputInterval-prop">keyboardInputInterval</a></b> ()</li>
-<li><div class="fn"/>QLocale <b><a href="qapplication.html#keyboardInputLocale">keyboardInputLocale</a></b> ()</li>
-<li><div class="fn"/>Qt::KeyboardModifiers <b><a href="qapplication.html#keyboardModifiers">keyboardModifiers</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#keypadNavigationEnabled">keypadNavigationEnabled</a></b> ()</li>
-<li><div class="fn"/>Qt::LayoutDirection <b><a href="qapplication.html#layoutDirection-prop">layoutDirection</a></b> ()</li>
-<li><div class="fn"/>Qt::MouseButtons <b><a href="qapplication.html#mouseButtons">mouseButtons</a></b> ()</li>
-<li><div class="fn"/>QCursor * <b><a href="qapplication.html#overrideCursor">overrideCursor</a></b> ()</li>
-<li><div class="fn"/>QPalette <b><a href="qapplication.html#palette">palette</a></b> ()</li>
-<li><div class="fn"/>QPalette <b><a href="qapplication.html#palette-2">palette</a></b> ( const QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>QPalette <b><a href="qapplication.html#palette-3">palette</a></b> ( const char * <i>className</i> )</li>
-<li><div class="fn"/>bool <b><a href="qapplication.html#quitOnLastWindowClosed-prop">quitOnLastWindowClosed</a></b> ()</li>
-<li><div class="fn"/>QDecoration &amp; <b><a href="qapplication.html#qwsDecoration">qwsDecoration</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#qwsSetDecoration">qwsSetDecoration</a></b> ( QDecoration * <i>decoration</i> )</li>
-<li><div class="fn"/>QDecoration * <b><a href="qapplication.html#qwsSetDecoration-2">qwsSetDecoration</a></b> ( const QString &amp; <i>decoration</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#restoreOverrideCursor">restoreOverrideCursor</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setActiveWindow">setActiveWindow</a></b> ( QWidget * <i>active</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setColorSpec">setColorSpec</a></b> ( int <i>spec</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#cursorFlashTime-prop">setCursorFlashTime</a></b> ( int )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setDesktopSettingsAware">setDesktopSettingsAware</a></b> ( bool <i>on</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#doubleClickInterval-prop">setDoubleClickInterval</a></b> ( int )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setEffectEnabled">setEffectEnabled</a></b> ( Qt::UIEffect <i>effect</i>, bool <i>enable</i> = true )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setFont">setFont</a></b> ( const QFont &amp; <i>font</i>, const char * <i>className</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#globalStrut-prop">setGlobalStrut</a></b> ( const QSize &amp; )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#keyboardInputInterval-prop">setKeyboardInputInterval</a></b> ( int )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setKeypadNavigationEnabled">setKeypadNavigationEnabled</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#layoutDirection-prop">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setOverrideCursor">setOverrideCursor</a></b> ( const QCursor &amp; <i>cursor</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setPalette">setPalette</a></b> ( const QPalette &amp; <i>palette</i>, const char * <i>className</i> = 0 )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#quitOnLastWindowClosed-prop">setQuitOnLastWindowClosed</a></b> ( bool <i>quit</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#startDragDistance-prop">setStartDragDistance</a></b> ( int <i>l</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#startDragTime-prop">setStartDragTime</a></b> ( int <i>ms</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#setStyle">setStyle</a></b> ( QStyle * <i>style</i> )</li>
-<li><div class="fn"/>QStyle * <b><a href="qapplication.html#setStyle-2">setStyle</a></b> ( const QString &amp; <i>style</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#wheelScrollLines-prop">setWheelScrollLines</a></b> ( int )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#windowIcon-prop">setWindowIcon</a></b> ( const QIcon &amp; <i>icon</i> )</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#startDragDistance-prop">startDragDistance</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#startDragTime-prop">startDragTime</a></b> ()</li>
-<li><div class="fn"/>QStyle * <b><a href="qapplication.html#style">style</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#syncX">syncX</a></b> ()</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#topLevelAt">topLevelAt</a></b> ( const QPoint &amp; <i>point</i> )</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#topLevelAt-2">topLevelAt</a></b> ( int <i>x</i>, int <i>y</i> )</li>
-<li><div class="fn"/>QWidgetList <b><a href="qapplication.html#topLevelWidgets">topLevelWidgets</a></b> ()</li>
-<li><div class="fn"/>Type <b><a href="qapplication.html#type">type</a></b> ()</li>
-<li><div class="fn"/>int <b><a href="qapplication.html#wheelScrollLines-prop">wheelScrollLines</a></b> ()</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#widgetAt">widgetAt</a></b> ( const QPoint &amp; <i>point</i> )</li>
-<li><div class="fn"/>QWidget * <b><a href="qapplication.html#widgetAt-4">widgetAt</a></b> ( int <i>x</i>, int <i>y</i> )</li>
-<li><div class="fn"/>void <b><a href="qapplication.html#winMouseButtonUp">winMouseButtonUp</a></b> ()</li>
-<li><div class="fn"/>QIcon <b><a href="qapplication.html#windowIcon-prop">windowIcon</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#activeModalWidget">activeModalWidget</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#activePopupWidget">activePopupWidget</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#activeWindow">activeWindow</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#alert">alert</a></b> ( QWidget * <i>widget</i>, int <i>msec</i> = 0 )</li>
+<li><div class="fn"></div>QWidgetList <b><a href="qapplication.html#allWidgets">allWidgets</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#beep">beep</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#changeOverrideCursor">changeOverrideCursor</a></b> ( const QCursor &amp; <i>cursor</i> )</li>
+<li><div class="fn"></div>QClipboard * <b><a href="qapplication.html#clipboard">clipboard</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#colorSpec">colorSpec</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#cursorFlashTime-prop">cursorFlashTime</a></b> ()</li>
+<li><div class="fn"></div>QDesktopWidget * <b><a href="qapplication.html#desktop">desktop</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#desktopSettingsAware">desktopSettingsAware</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#doubleClickInterval-prop">doubleClickInterval</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#exec">exec</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#focusWidget">focusWidget</a></b> ()</li>
+<li><div class="fn"></div>QFont <b><a href="qapplication.html#font">font</a></b> ()</li>
+<li><div class="fn"></div>QFont <b><a href="qapplication.html#font-2">font</a></b> ( const QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>QFont <b><a href="qapplication.html#font-3">font</a></b> ( const char * <i>className</i> )</li>
+<li><div class="fn"></div>QFontMetrics <b><a href="qapplication.html#fontMetrics">fontMetrics</a></b> ()</li>
+<li><div class="fn"></div>QSize <b><a href="qapplication.html#globalStrut-prop">globalStrut</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#isEffectEnabled">isEffectEnabled</a></b> ( Qt::UIEffect <i>effect</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#isLeftToRight">isLeftToRight</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#isRightToLeft">isRightToLeft</a></b> ()</li>
+<li><div class="fn"></div>Qt::LayoutDirection <b><a href="qapplication.html#keyboardInputDirection">keyboardInputDirection</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#keyboardInputInterval-prop">keyboardInputInterval</a></b> ()</li>
+<li><div class="fn"></div>QLocale <b><a href="qapplication.html#keyboardInputLocale">keyboardInputLocale</a></b> ()</li>
+<li><div class="fn"></div>Qt::KeyboardModifiers <b><a href="qapplication.html#keyboardModifiers">keyboardModifiers</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#keypadNavigationEnabled">keypadNavigationEnabled</a></b> ()</li>
+<li><div class="fn"></div>Qt::LayoutDirection <b><a href="qapplication.html#layoutDirection-prop">layoutDirection</a></b> ()</li>
+<li><div class="fn"></div>Qt::MouseButtons <b><a href="qapplication.html#mouseButtons">mouseButtons</a></b> ()</li>
+<li><div class="fn"></div>QCursor * <b><a href="qapplication.html#overrideCursor">overrideCursor</a></b> ()</li>
+<li><div class="fn"></div>QPalette <b><a href="qapplication.html#palette">palette</a></b> ()</li>
+<li><div class="fn"></div>QPalette <b><a href="qapplication.html#palette-2">palette</a></b> ( const QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>QPalette <b><a href="qapplication.html#palette-3">palette</a></b> ( const char * <i>className</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qapplication.html#quitOnLastWindowClosed-prop">quitOnLastWindowClosed</a></b> ()</li>
+<li><div class="fn"></div>QDecoration &amp; <b><a href="qapplication.html#qwsDecoration">qwsDecoration</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#qwsSetDecoration">qwsSetDecoration</a></b> ( QDecoration * <i>decoration</i> )</li>
+<li><div class="fn"></div>QDecoration * <b><a href="qapplication.html#qwsSetDecoration-2">qwsSetDecoration</a></b> ( const QString &amp; <i>decoration</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#restoreOverrideCursor">restoreOverrideCursor</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setActiveWindow">setActiveWindow</a></b> ( QWidget * <i>active</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setColorSpec">setColorSpec</a></b> ( int <i>spec</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#cursorFlashTime-prop">setCursorFlashTime</a></b> ( int )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setDesktopSettingsAware">setDesktopSettingsAware</a></b> ( bool <i>on</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#doubleClickInterval-prop">setDoubleClickInterval</a></b> ( int )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setEffectEnabled">setEffectEnabled</a></b> ( Qt::UIEffect <i>effect</i>, bool <i>enable</i> = true )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setFont">setFont</a></b> ( const QFont &amp; <i>font</i>, const char * <i>className</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#globalStrut-prop">setGlobalStrut</a></b> ( const QSize &amp; )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setGraphicsSystem">setGraphicsSystem</a></b> ( const QString &amp; <i>system</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#keyboardInputInterval-prop">setKeyboardInputInterval</a></b> ( int )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setKeypadNavigationEnabled">setKeypadNavigationEnabled</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#layoutDirection-prop">setLayoutDirection</a></b> ( Qt::LayoutDirection <i>direction</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setOverrideCursor">setOverrideCursor</a></b> ( const QCursor &amp; <i>cursor</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setPalette">setPalette</a></b> ( const QPalette &amp; <i>palette</i>, const char * <i>className</i> = 0 )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#quitOnLastWindowClosed-prop">setQuitOnLastWindowClosed</a></b> ( bool <i>quit</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#startDragDistance-prop">setStartDragDistance</a></b> ( int <i>l</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#startDragTime-prop">setStartDragTime</a></b> ( int <i>ms</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#setStyle">setStyle</a></b> ( QStyle * <i>style</i> )</li>
+<li><div class="fn"></div>QStyle * <b><a href="qapplication.html#setStyle-2">setStyle</a></b> ( const QString &amp; <i>style</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#wheelScrollLines-prop">setWheelScrollLines</a></b> ( int )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#windowIcon-prop">setWindowIcon</a></b> ( const QIcon &amp; <i>icon</i> )</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#startDragDistance-prop">startDragDistance</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#startDragTime-prop">startDragTime</a></b> ()</li>
+<li><div class="fn"></div>QStyle * <b><a href="qapplication.html#style">style</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#syncX">syncX</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#topLevelAt">topLevelAt</a></b> ( const QPoint &amp; <i>point</i> )</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#topLevelAt-2">topLevelAt</a></b> ( int <i>x</i>, int <i>y</i> )</li>
+<li><div class="fn"></div>QWidgetList <b><a href="qapplication.html#topLevelWidgets">topLevelWidgets</a></b> ()</li>
+<li><div class="fn"></div>Type <b><a href="qapplication.html#type">type</a></b> ()</li>
+<li><div class="fn"></div>int <b><a href="qapplication.html#wheelScrollLines-prop">wheelScrollLines</a></b> ()</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#widgetAt">widgetAt</a></b> ( const QPoint &amp; <i>point</i> )</li>
+<li><div class="fn"></div>QWidget * <b><a href="qapplication.html#widgetAt-4">widgetAt</a></b> ( int <i>x</i>, int <i>y</i> )</li>
+<li><div class="fn"></div>void <b><a href="qapplication.html#winMouseButtonUp">winMouseButtonUp</a></b> ()</li>
+<li><div class="fn"></div>QIcon <b><a href="qapplication.html#windowIcon-prop">windowIcon</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>38 static public members inherited from <a href="qcoreapplication.html#static-public-members">QCoreApplication</a></li>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>38 static public members inherited from <a href="qcoreapplication.html#static-public-members">QCoreApplication</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="macros"></a>
 <h3>Macros</h3>
 <ul>
-<li><div class="fn"/><b><a href="qapplication.html#qApp">qApp</a></b></li>
+<li><div class="fn"></div><b><a href="qapplication.html#qApp">qApp</a></b></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -258,8 +263,18 @@
 <p>This property was introduced in Qt 4.4.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int autoMaximizeThreshold () const</b></li>
-<li><div class="fn"/><b>void setAutoMaximizeThreshold ( const int <i>threshold</i> )</b></li>
+<li><div class="fn"></div><b>int autoMaximizeThreshold () const</b></li>
+<li><div class="fn"></div><b>void setAutoMaximizeThreshold ( const int <i>threshold</i> )</b></li>
+</ul>
+<h3 class="fn"><a name="autoSipEnabled-prop"></a>autoSipEnabled : bool</h3>
+<p>This property holds toggles automatic SIP (software input panel) visibility.</p>
+<p>The auto SIP property is only available as part of Qt for Windows CE.</p>
+<p>Set this property to true to automatically display the SIP when entering widgets that accept keyboard input. This only affects widgets that have the attribute WA_InputMethodEnabled set.</p>
+<p>This property was introduced in Qt 4.5.</p>
+<p>Access functions:</p>
+<ul>
+<li><div class="fn"></div><b>bool autoSipEnabled () const</b></li>
+<li><div class="fn"></div><b>void setAutoSipEnabled ( const bool <i>enabled</i> )</b></li>
 </ul>
 <h3 class="fn"><a name="cursorFlashTime-prop"></a>cursorFlashTime : int</h3>
 <p>This property holds the text cursor's flash (blink) time in milliseconds.</p>
@@ -268,8 +283,8 @@
 <p>Note that on Microsoft Windows, setting this property sets the cursor flash time for all applications.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int cursorFlashTime ()</b></li>
-<li><div class="fn"/><b>void setCursorFlashTime ( int )</b></li>
+<li><div class="fn"></div><b>int cursorFlashTime ()</b></li>
+<li><div class="fn"></div><b>void setCursorFlashTime ( int )</b></li>
 </ul>
 <h3 class="fn"><a name="doubleClickInterval-prop"></a>doubleClickInterval : int</h3>
 <p>This property holds the time limit in milliseconds that distinguishes a double click from two consecutive mouse clicks.</p>
@@ -277,8 +292,8 @@
 <p>On Microsoft Windows, calling this function sets the double click interval for all applications.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int doubleClickInterval ()</b></li>
-<li><div class="fn"/><b>void setDoubleClickInterval ( int )</b></li>
+<li><div class="fn"></div><b>int doubleClickInterval ()</b></li>
+<li><div class="fn"></div><b>void setDoubleClickInterval ( int )</b></li>
 </ul>
 <h3 class="fn"><a name="globalStrut-prop"></a>globalStrut : <a href="qsize.html">QSize</a></h3>
 <p>This property holds the minimum size that any GUI element that the user can interact with should have.</p>
@@ -291,8 +306,8 @@
 <p>By default, this property contains a <a href="qsize.html">QSize</a> object with zero width and height.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QSize globalStrut ()</b></li>
-<li><div class="fn"/><b>void setGlobalStrut ( const QSize &amp; )</b></li>
+<li><div class="fn"></div><b>QSize globalStrut ()</b></li>
+<li><div class="fn"></div><b>void setGlobalStrut ( const QSize &amp; )</b></li>
 </ul>
 <h3 class="fn"><a name="keyboardInputInterval-prop"></a>keyboardInputInterval : int</h3>
 <p>This property holds the time limit in milliseconds that distinguishes a key press from two consecutive key presses.</p>
@@ -300,16 +315,16 @@
 <p>This property was introduced in Qt 4.2.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int keyboardInputInterval ()</b></li>
-<li><div class="fn"/><b>void setKeyboardInputInterval ( int )</b></li>
+<li><div class="fn"></div><b>int keyboardInputInterval ()</b></li>
+<li><div class="fn"></div><b>void setKeyboardInputInterval ( int )</b></li>
 </ul>
 <h3 class="fn"><a name="layoutDirection-prop"></a>layoutDirection : <a href="qt.html#LayoutDirection-enum">Qt::LayoutDirection</a></h3>
 <p>This property holds the default layout direction for this application.</p>
 <p>On system start-up, the default layout direction depends on the application's language.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>Qt::LayoutDirection layoutDirection ()</b></li>
-<li><div class="fn"/><b>void setLayoutDirection ( Qt::LayoutDirection <i>direction</i> )</b></li>
+<li><div class="fn"></div><b>Qt::LayoutDirection layoutDirection ()</b></li>
+<li><div class="fn"></div><b>void setLayoutDirection ( Qt::LayoutDirection <i>direction</i> )</b></li>
 </ul>
 <p>See also <a href="qwidget.html#layoutDirection-prop">QWidget::layoutDirection</a>, <a href="qapplication.html#isLeftToRight">isLeftToRight</a>(), and <a href="qapplication.html#isRightToLeft">isRightToLeft</a>().</p>
 <h3 class="fn"><a name="quitOnLastWindowClosed-prop"></a>quitOnLastWindowClosed : bool</h3>
@@ -318,8 +333,8 @@
 <p>If this property is true, the applications quits when the last visible primary window (i.e&#x2e; window with no parent) with the <a href="qt.html#WidgetAttribute-enum">Qt::WA_QuitOnClose</a> attribute set is closed. By default this attribute is set for all widgets except for sub-windows. Refer to <a href="qt.html#WindowType-enum">Qt::WindowType</a> for a detailed list of <a href="qt.html#WindowType-enum">Qt::Window</a> objects.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>bool quitOnLastWindowClosed ()</b></li>
-<li><div class="fn"/><b>void setQuitOnLastWindowClosed ( bool <i>quit</i> )</b></li>
+<li><div class="fn"></div><b>bool quitOnLastWindowClosed ()</b></li>
+<li><div class="fn"></div><b>void setQuitOnLastWindowClosed ( bool <i>quit</i> )</b></li>
 </ul>
 <p>See also <a href="qcoreapplication.html#quit">quit</a>() and <a href="qwidget.html#close">QWidget::close</a>().</p>
 <h3 class="fn"><a name="startDragDistance-prop"></a>startDragDistance : int</h3>
@@ -332,8 +347,8 @@
 <p>The default value is 4 pixels.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int startDragDistance ()</b></li>
-<li><div class="fn"/><b>void setStartDragDistance ( int <i>l</i> )</b></li>
+<li><div class="fn"></div><b>int startDragDistance ()</b></li>
+<li><div class="fn"></div><b>void setStartDragDistance ( int <i>l</i> )</b></li>
 </ul>
 <p>See also <a href="qapplication.html#startDragTime-prop">startDragTime</a>(), <a href="qpoint.html#manhattanLength">QPoint::manhattanLength</a>(), and <a href="dnd.html">Drag and Drop</a>.</p>
 <h3 class="fn"><a name="startDragTime-prop"></a>startDragTime : int</h3>
@@ -343,8 +358,8 @@
 <p>The default value is 500 ms.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int startDragTime ()</b></li>
-<li><div class="fn"/><b>void setStartDragTime ( int <i>ms</i> )</b></li>
+<li><div class="fn"></div><b>int startDragTime ()</b></li>
+<li><div class="fn"></div><b>void setStartDragTime ( int <i>ms</i> )</b></li>
 </ul>
 <p>See also <a href="qapplication.html#startDragDistance-prop">startDragDistance</a>() and <a href="dnd.html">Drag and Drop</a>.</p>
 <h3 class="fn"><a name="styleSheet-prop"></a>styleSheet : <a href="qstring.html">QString</a></h3>
@@ -353,8 +368,8 @@
 <p>This property was introduced in Qt 4.2.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QString styleSheet () const</b></li>
-<li><div class="fn"/><b>void setStyleSheet ( const QString &amp; <i>sheet</i> )</b></li>
+<li><div class="fn"></div><b>QString styleSheet () const</b></li>
+<li><div class="fn"></div><b>void setStyleSheet ( const QString &amp; <i>sheet</i> )</b></li>
 </ul>
 <p>See also <a href="qwidget.html#setStyle">QWidget::setStyle</a>() and <a href="stylesheet.html">Qt Style Sheets</a>.</p>
 <h3 class="fn"><a name="wheelScrollLines-prop"></a>wheelScrollLines : int</h3>
@@ -363,22 +378,22 @@
 <p>By default, this property has a value of 3.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int wheelScrollLines ()</b></li>
-<li><div class="fn"/><b>void setWheelScrollLines ( int )</b></li>
+<li><div class="fn"></div><b>int wheelScrollLines ()</b></li>
+<li><div class="fn"></div><b>void setWheelScrollLines ( int )</b></li>
 </ul>
 <h3 class="fn"><a name="windowIcon-prop"></a>windowIcon : <a href="qicon.html">QIcon</a></h3>
 <p>This property holds the default window icon.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QIcon windowIcon ()</b></li>
-<li><div class="fn"/><b>void setWindowIcon ( const QIcon &amp; <i>icon</i> )</b></li>
+<li><div class="fn"></div><b>QIcon windowIcon ()</b></li>
+<li><div class="fn"></div><b>void setWindowIcon ( const QIcon &amp; <i>icon</i> )</b></li>
 </ul>
 <p>See also <a href="qwidget.html#windowIcon-prop">QWidget::setWindowIcon</a>() and <a href="appicon.html">Setting the Application Icon</a>.</p>
 <hr />
 <h2>Member Function Documentation</h2>
 <h3 class="fn"><a name="QApplication"></a>QApplication::QApplication ( int &amp; <i>argc</i>, char ** <i>argv</i> )</h3>
 <p>Initializes the window system and constructs an application object with <i>argc</i> command line arguments in <i>argv</i>.</p>
-<p><b>Warning:</b> The data pointed to by <i>argc</i> and <i>argv</i> must stay valid for the entire lifetime of the <a href="qapplication.html">QApplication</a> object.</p>
+<p><b>Warning:</b> The data referred to by <i>argc</i> and <i>argv</i> must stay valid for the entire lifetime of the <a href="qapplication.html">QApplication</a> object. In addition, <i>argc</i> must be greater than zero and <i>argv</i> must contain at least one valid character string.</p>
 <p>The global <tt>qApp</tt> pointer refers to this application object. Only one application object should be created.</p>
 <p>This application object must be constructed before any <a href="qpaintdevice.html">paint devices</a> (including widgets, pixmaps, bitmaps etc.)&#x2e;</p>
 <p>Note that <i>argc</i> and <i>argv</i> might be changed. Qt removes command line arguments that it recognizes.</p>
@@ -399,6 +414,7 @@
 <li>-session <i>session</i>, is the same as listed above.</li>
 <li>-widgetcount, prints debug message at the end about number of widgets left undestroyed and maximum number of widgets existed at the same time</li>
 <li>-reverse, sets the application's layout direction to <a href="qt.html#LayoutDirection-enum">Qt::RightToLeft</a></li>
+<li>-graphicssystem, sets the backend to be used for on-screen widgets and QPixmaps. Available options are <tt>raster</tt> and <tt>opengl</tt>.</li>
 </ul>
 <p>The Windows version of Qt also support one additional command line option, if Direct3D support has been compiled into Qt:</p>
 <ul>
@@ -418,12 +434,12 @@
 <li>-ncols <i>count</i>, limits the number of colors allocated in the color cube on an 8-bit display, if the application is using the <a href="qapplication.html#ColorSpec-enum">QApplication::ManyColor</a> color specification. If <i>count</i> is 216 then a 6x6x6 color cube is used (i.e&#x2e; 6 levels of red, 6 of green, and 6 of blue); for other values, a cube approximately proportional to a 2x3x1 cube is used.</li>
 <li>-cmap, causes the application to install a private color map on an 8-bit display.</li>
 <li>-im, sets the input method server (equivalent to setting the XMODIFIERS environment variable)</li>
-<li>-noxim, disables the input method framework (&quot;no X input method&quot;).</li>
 <li>-inputstyle, defines how the input is inserted into the given widget. E.g&#x2e;, <tt>onTheSpot</tt> makes the input appear directly in the widget, while <tt>overTheSpot</tt> makes the input appear in a box floating over the widget and is not inserted until the editing is done.</li>
 </ul>
 <p>See also <a href="qcoreapplication.html#arguments">arguments</a>().</p>
 <h3 class="fn"><a name="QApplication-2"></a>QApplication::QApplication ( int &amp; <i>argc</i>, char ** <i>argv</i>, bool <i>GUIenabled</i> )</h3>
 <p>Constructs an application object with <i>argc</i> command line arguments in <i>argv</i>. If <i>GUIenabled</i> is true, a GUI application is constructed, otherwise a non-GUI (console) application is created.</p>
+<p><b>Warning:</b> The data referred to by <i>argc</i> and <i>argv</i> must stay valid for the entire lifetime of the <a href="qapplication.html">QApplication</a> object. In addition, <i>argc</i> must be greater than zero and <i>argv</i> must contain at least one valid character string.</p>
 <p>Set <i>GUIenabled</i> to false for programs without a graphical user interface that should be able to run without a window system.</p>
 <p>On X11, the window system is initialized if <i>GUIenabled</i> is true. If <i>GUIenabled</i> is false, the application does not connect to the X server. On Windows and Macintosh, currently the window system is always initialized, regardless of the value of GUIenabled. This may change in future versions of Qt.</p>
 <p>The following example shows how to create an application that uses a graphical interface when available.</p>
@@ -447,6 +463,7 @@
  }</pre>
 <h3 class="fn"><a name="QApplication-3"></a>QApplication::QApplication ( int &amp; <i>argc</i>, char ** <i>argv</i>, <a href="qapplication.html#Type-enum">Type</a> <i>type</i> )</h3>
 <p>Constructs an application object with <i>argc</i> command line arguments in <i>argv</i>.</p>
+<p><b>Warning:</b> The data referred to by <i>argc</i> and <i>argv</i> must stay valid for the entire lifetime of the <a href="qapplication.html">QApplication</a> object. In addition, <i>argc</i> must be greater than zero and <i>argv</i> must contain at least one valid character string.</p>
 <p>With Qt for Embedded Linux, passing <a href="qapplication.html#Type-enum">QApplication::GuiServer</a> for <i>type</i> makes this application the server (equivalent to running with the <tt>-qws</tt> option).</p>
 <h3 class="fn"><a name="QApplication-4"></a>QApplication::QApplication ( Display * <i>display</i>, <a href="qt.html#HANDLE-typedef">Qt::HANDLE</a> <i>visual</i> = 0, <a href="qt.html#HANDLE-typedef">Qt::HANDLE</a> <i>colormap</i> = 0 )</h3>
 <p>Create an application, given an already open display <i>display</i>. If <i>visual</i> and <i>colormap</i> are non-zero, the application will use those as the default Visual and Colormap contexts.</p>
@@ -501,6 +518,7 @@
 <p>See also <a href="qapplication.html#setOverrideCursor">setOverrideCursor</a>(), <a href="qapplication.html#overrideCursor">overrideCursor</a>(), <a href="qapplication.html#restoreOverrideCursor">restoreOverrideCursor</a>(), and <a href="qwidget.html#cursor-prop">QWidget::setCursor</a>().</p>
 <h3 class="fn"><a name="clipboard"></a><a href="qclipboard.html">QClipboard</a> * QApplication::clipboard ()&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns a pointer to the application global clipboard.</p>
+<p><b>Note:</b> The <a href="qapplication.html">QApplication</a> object should already be constructed before accessing the clipboard.</p>
 <h3 class="fn"><a name="closeAllWindows"></a>void QApplication::closeAllWindows ()&nbsp;&nbsp;<tt> [static slot]</tt></h3>
 <p>Closes all top-level windows.</p>
 <p>This function is particularly useful for applications with many top-level windows. It could, for example, be connected to a <b>Exit</b> entry in the <b>File</b> menu:</p>
@@ -540,6 +558,7 @@
 <p>It is necessary to call this function to start event handling. The main event loop receives events from the window system and dispatches these to the application widgets.</p>
 <p>Generally speaking, no user interaction can take place before calling exec(). As a special case, modal widgets like <a href="qmessagebox.html">QMessageBox</a> can be used before calling exec(), because modal widgets call exec() to start a local event loop.</p>
 <p>To make your application perform idle processing, i.e&#x2e; executing a special function whenever there are no pending events, use a <a href="qtimer.html">QTimer</a> with 0 timeout. More advanced idle processing schemes can be achieved using <a href="qcoreapplication.html#processEvents">processEvents</a>().</p>
+<p>We recommend that you connect clean-up code to the <a href="qcoreapplication.html#aboutToQuit">aboutToQuit()</a> signal, instead of putting it in your application's <tt>main()</tt> function because on some platforms the QApplication::exec() call may not return. For example, on Windows when the user logs off, the system terminates the process after Qt closes all top-level windows. Hence, there is no guarantee that the application will have time to exit its event loop and execute code at the end of the <tt>main()</tt> function after the QApplication::exec() call.</p>
 <p>See also <a href="qapplication.html#quitOnLastWindowClosed-prop">quitOnLastWindowClosed</a>, <a href="qcoreapplication.html#quit">quit</a>(), <a href="qcoreapplication.html#exit">exit</a>(), <a href="qcoreapplication.html#processEvents">processEvents</a>(), and <a href="qcoreapplication.html#exec">QCoreApplication::exec</a>().</p>
 <h3 class="fn"><a name="focusChanged"></a>void QApplication::focusChanged ( <a href="qwidget.html">QWidget</a> * <i>old</i>, <a href="qwidget.html">QWidget</a> * <i>now</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the widget that has keyboard focus changed from <i>old</i> to <i>now</i>, i.e&#x2e; because the user pressed the tab-key, clicked into a widget or changed the active window. Note that both <i>old</i> and <i>now</i> can be the null-pointer.</p>
@@ -560,6 +579,10 @@
 <p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns the font for widgets of the given <i>className</i>.</p>
 <p>See also <a href="qapplication.html#setFont">setFont</a>() and <a href="qwidget.html#font-prop">QWidget::font</a>().</p>
+<h3 class="fn"><a name="fontDatabaseChanged"></a>void QApplication::fontDatabaseChanged ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
+<p>This signal is emitted when application fonts are loaded or removed.</p>
+<p>This function was introduced in Qt 4.5.</p>
+<p>See also <a href="qfontdatabase.html#addApplicationFont">QFontDatabase::addApplicationFont</a>(), <a href="qfontdatabase.html#addApplicationFontFromData">QFontDatabase::addApplicationFontFromData</a>(), <a href="qfontdatabase.html#removeAllApplicationFonts">QFontDatabase::removeAllApplicationFonts</a>(), and <a href="qfontdatabase.html#removeApplicationFont">QFontDatabase::removeApplicationFont</a>().</p>
 <h3 class="fn"><a name="fontMetrics"></a><a href="qfontmetrics.html">QFontMetrics</a> QApplication::fontMetrics ()&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns display (screen) font metrics for the application font.</p>
 <p>See also <a href="qapplication.html#font">font</a>(), <a href="qapplication.html#setFont">setFont</a>(), <a href="qwidget.html#fontMetrics">QWidget::fontMetrics</a>(), and <a href="qpainter.html#fontMetrics">QPainter::fontMetrics</a>().</p>
@@ -724,6 +747,12 @@
 <p>On application start-up, the default font depends on the window system. It can vary depending on both the window system version and the locale. This function lets you override the default font; but overriding may be a bad idea because, for example, some locales need extra large fonts to support their special characters.</p>
 <p><b>Warning:</b> Do not use this function in conjunction with <a href="stylesheet.html">Qt Style Sheets</a>. The font of an application can be customized using the &quot;font&quot; style sheet property. To set a bold font for all QPushButtons, set the application <a href="qapplication.html#styleSheet-prop">styleSheet</a>() as &quot;<a href="qpushbutton.html">QPushButton</a> { font: bold }&quot;</p>
 <p>See also <a href="qapplication.html#font">font</a>(), <a href="qapplication.html#fontMetrics">fontMetrics</a>(), and <a href="qwidget.html#font-prop">QWidget::setFont</a>().</p>
+<h3 class="fn"><a name="setGraphicsSystem"></a>void QApplication::setGraphicsSystem ( const <a href="qstring.html">QString</a> &amp; <i>system</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
+<p>Sets the default graphics backend to be used for on-screen widgets and QPixmaps. Available options are <tt>&quot;native&quot;</tt>, <tt>&quot;raster&quot;</tt> and <tt>&quot;opengl&quot;</tt>.</p>
+<p>Note that this function call overrides both the application commandline <tt>-graphicssystem</tt> switch and the configure <tt>-graphicssystem</tt> switch.</p>
+<p><b>Warning:</b> This function must be called before the <a href="qapplication.html">QApplication</a> constructor is called.</p>
+<p>The <tt>&quot;opengl&quot;</tt> option is currently considered experimental.</p>
+<p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="setInputContext"></a>void QApplication::setInputContext ( <a href="qinputcontext.html">QInputContext</a> * <i>inputContext</i> )</h3>
 <p>This function replaces the <a href="qinputcontext.html">QInputContext</a> instance used by the application with <i>inputContext</i>.</p>
 <p>See also <a href="qapplication.html#inputContext">inputContext</a>().</p>
@@ -814,8 +843,8 @@
 <p>See also <a href="qcoreapplication.html#instance">QCoreApplication::instance</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

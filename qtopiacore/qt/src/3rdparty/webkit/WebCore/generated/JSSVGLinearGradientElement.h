@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGLinearGradientElement_H
-#define JSSVGLinearGradientElement_H
+#ifndef JSSVGLinearGradientElement_h
+#define JSSVGLinearGradientElement_h
 
 
 #if ENABLE(SVG)
@@ -31,28 +31,36 @@ namespace WebCore {
 class SVGLinearGradientElement;
 
 class JSSVGLinearGradientElement : public JSSVGGradientElement {
+    typedef JSSVGGradientElement Base;
 public:
-    JSSVGLinearGradientElement(KJS::ExecState*, SVGLinearGradientElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGLinearGradientElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGLinearGradientElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        X1AttrNum, Y1AttrNum, X2AttrNum, Y2AttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
 };
 
 
-class JSSVGLinearGradientElementPrototype : public KJS::JSObject {
+class JSSVGLinearGradientElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGLinearGradientElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGGradientElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGLinearGradientElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGLinearGradientElementX1(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLinearGradientElementY1(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLinearGradientElementX2(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGLinearGradientElementY2(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

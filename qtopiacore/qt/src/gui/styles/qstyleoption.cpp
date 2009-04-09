@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -281,7 +285,7 @@ QStyleOption &QStyleOption::operator=(const QStyleOption &other)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -354,7 +358,7 @@ QStyleOption &QStyleOption::operator=(const QStyleOption &other)
 
     This value can be used by subclasses to implement extensions
     without breaking compatibility. If you use the qstyleoption_cast()
-    function, you normally don't need to check it.
+    function, you normally do not need to check it.
 
     The default value is 1.
 */
@@ -421,7 +425,7 @@ QStyleOptionFocusRect::QStyleOptionFocusRect(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -451,8 +455,9 @@ QStyleOptionFocusRect::QStyleOptionFocusRect(int version)
     describe the parameters necessary for drawing a frame in Qt 4.1 or
     above, you must use the QStyleOptionFrameV2 subclass.
 
-    An instance of the QStyleOptionFrame class has \l type SO_Frame
-    and \l version 1.
+    An instance of the QStyleOptionFrame class has
+    \l{QStyleOption::type} {type} SO_Frame and \l{QStyleOption::version}
+    {version} 1.
 
     The type is used internally by QStyleOption, its subclasses, and
     qstyleoption_cast() to determine the type of style option. In
@@ -460,7 +465,7 @@ QStyleOptionFocusRect::QStyleOptionFocusRect(int version)
     create your own QStyleOption subclass and your own styles.  The
     version is used by QStyleOption subclasses to implement extensions
     without breaking compatibility. If you use qstyleoption_cast(),
-    you normally don't need to check it.
+    you normally do not need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionFrame and QStyleOptionFrameV2.
@@ -521,7 +526,7 @@ QStyleOptionFrame::QStyleOptionFrame(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -557,14 +562,16 @@ QStyleOptionFrame::QStyleOptionFrame(int version)
     drawing several built-in Qt widgets, including QFrame, QGroupBox,
     QLineEdit, and QMenu.
 
-    An instance of the QStyleOptionFrameV2 class has \l type SO_Frame
-    and \l version 2.  The type is used internally by QStyleOption,
-    its subclasses, and qstyleoption_cast() to determine the type of
-    style option. In general you do not need to worry about this
-    unless you want to create your own QStyleOption subclass and your
-    own styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptionFrameV2 class has
+    \l{QStyleOption::type} {type} SO_Frame and
+    \l{QStyleOption::version} {version} 2.  The type is used
+    internally by QStyleOption, its subclasses, and
+    qstyleoption_cast() to determine the type of style option. In
+    general you do not need to worry about this unless you want to
+    create your own QStyleOption subclass and your own styles. The
+    version is used by QStyleOption subclasses to implement extensions
+    without breaking compatibility. If you use qstyleoption_cast(),
+    you normally do not need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionFrame and QStyleOptionFrameV2. One way to achieve this
@@ -665,14 +672,119 @@ QStyleOptionFrameV2 &QStyleOptionFrameV2::operator=(const QStyleOptionFrame &oth
 /*!
     \enum QStyleOptionFrameV2::StyleOptionVersion
 
-    This enum is used to hold information about the version of the style option, and
-    is defined for each QStyleOption subclass.
+    This enum is used to hold information about the version of the
+    style option, and is defined for each QStyleOption subclass.
 
     \value Version 2
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
+
+    \sa StyleOptionType
+*/
+
+/*!
+    \class QStyleOptionFrameV3
+    \brief The QStyleOptionFrameV3 class is used to describe the
+    parameters necessary for drawing a frame in Qt 4.1 or above.
+
+    \since 4.5
+
+    QStyleOptionFrameV3 inherits QStyleOptionFrameV2
+
+    An instance of the QStyleOptionFrameV3 class has
+    \l{QStyleOption::type} {type} SO_Frame and
+    \l{QStyleOption::version} {version} 3.  The type is used
+    internally by QStyleOption, its subclasses, and
+    qstyleoption_cast() to determine the type of style option. In
+    general you do not need to worry about this unless you want to
+    create your own QStyleOption subclass and your own styles. The
+    version is used by QStyleOption subclasses to implement extensions
+    without breaking compatibility. If you use qstyleoption_cast(),
+    you normally do not need to check it.
+
+    \sa QStyleOptionFrameV2, QStyleOption
+*/
+
+/*!
+    Constructs a QStyleOptionFrameV3 object.
+*/
+QStyleOptionFrameV3::QStyleOptionFrameV3()
+    : QStyleOptionFrameV2(Version), frameShape(QFrame::NoFrame)
+{
+}
+
+/*!
+    \fn QStyleOptionFrameV3::QStyleOptionFrameV3(const QStyleOptionFrameV3 &other)
+
+    Constructs a QStyleOptionFrameV3 copy of the \a other style option.
+*/
+
+/*!
+    \internal
+*/
+QStyleOptionFrameV3::QStyleOptionFrameV3(int version)
+    : QStyleOptionFrameV2(version), frameShape(QFrame::NoFrame)
+{
+}
+
+/*!
+    Constructs a QStyleOptionFrameV3 copy of the \a other style option
+    which can be either of the QStyleOptionFrameV3 or
+    QStyleOptionFrame types.
+
+    If the \a other style option's version is 1, the new style
+    option's \l FrameFeature value is set to
+    \l{QStyleOptionFrameV2::None}. If its version is 2 or lower,
+    \l{QStyleOptionFrameV3::frameShape} value is QFrame::NoFrame
+
+    \sa version
+*/
+QStyleOptionFrameV3::QStyleOptionFrameV3(const QStyleOptionFrame &other)
+{
+    operator=(other);
+}
+
+/*!
+    Assigns the \a other style option to this style option. The \a
+    other style option can be either of the QStyleOptionFrameV3,
+    QStyleOptionFrameV2 or QStyleOptionFrame types.
+
+    If the \a other style option's version is 1, the new style
+    option's \l FrameFeature value is set to
+    \l{QStyleOptionFrameV2::None}. If its version is 2 or lower,
+    \l{QStyleOptionFrameV3::frameShape} value is QFrame::NoFrame
+*/
+QStyleOptionFrameV3 &QStyleOptionFrameV3::operator=(const QStyleOptionFrame &other)
+{
+    QStyleOptionFrameV2::operator=(other);
+
+    const QStyleOptionFrameV3 *f3 = qstyleoption_cast<const QStyleOptionFrameV3 *>(&other);
+    frameShape = f3 ? f3->frameShape : QFrame::NoFrame;
+    version = Version;
+    return *this;
+}
+
+
+/*!
+    \variable QStyleOptionFrameV3::frameShape
+    \brief This property holds the frame shape value of the frame.
+
+    \sa QFrame::frameShape
+*/
+
+/*!
+    \enum QStyleOptionFrameV3::StyleOptionVersion
+
+    This enum is used to hold information about the version of the style option, and
+    is defined for each QStyleOption subclass.
+
+    \value Version 3
+
+    The version is used by QStyleOption subclasses to implement
+    extensions without breaking compatibility. If you use
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -685,14 +797,16 @@ QStyleOptionFrameV2 &QStyleOptionFrameV2::operator=(const QStyleOptionFrame &oth
 
     QStyleOptionViewItemV2 inherits QStyleOptionViewItem.
 
-    An instance of the QStyleOptionViewItemV2 class has \l type SO_ViewItem
-    and \l version 2. The type is used internally by QStyleOption,
-    its subclasses, and qstyleoption_cast() to determine the type of
-    style option. In general you do not need to worry about this
-    unless you want to create your own QStyleOption subclass and your
-    own styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptionViewItemV2 class has
+    \l{QStyleOption::type} {type} SO_ViewItem and
+    \l{QStyleOption::version} {version} 2. The type is used internally
+    by QStyleOption, its subclasses, and qstyleoption_cast() to
+    determine the type of style option. In general you do not need to
+    worry about this unless you want to create your own QStyleOption
+    subclass and your own styles. The version is used by QStyleOption
+    subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not
+    need to check it.
 
     See QStyleOptionFrameV2's detailed description for a discussion
     of how to handle "V2" classes.
@@ -710,7 +824,7 @@ QStyleOptionFrameV2 &QStyleOptionFrameV2::operator=(const QStyleOptionFrame &oth
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -794,17 +908,75 @@ QStyleOptionViewItemV2 &QStyleOptionViewItemV2::operator=(const QStyleOptionView
     \value HasDecoration     Indicates that the item has a decoration role.
 */
 
+
+
+/*!
+    \class QStyleOptionViewItemV3
+    \brief The QStyleOptionViewItemV3 class is used to describe the
+    parameters necessary for drawing a frame in Qt 4.3 or above.
+    \since 4.3
+
+    QStyleOptionViewItemV3 inherits QStyleOptionViewItem.
+
+    An instance of the QStyleOptionViewItemV3 class has
+    \l{QStyleOption::type} {type} SO_ViewItem and \l{QStyleOption::version}
+    {version} 3. The type is used internally by QStyleOption, its subclasses,
+    and qstyleoption_cast() to determine the type of style option. In general
+    you do not need to worry about this unless you want to create your own
+    QStyleOption subclass and your own styles. The version is used by
+    QStyleOption subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not need to
+    check it.
+
+    See QStyleOptionFrameV2's detailed description for a discussion
+    of how to handle "V2" and other versioned classes.
+
+    \sa QStyleOptionViewItem, QStyleOption
+*/
+
+/*!
+    \enum QStyleOptionViewItemV3::StyleOptionVersion
+
+    This enum is used to hold information about the version of the
+    style option, and is defined for each QStyleOption subclass.
+
+    \value Version 3
+
+    The version is used by QStyleOption subclasses to implement
+    extensions without breaking compatibility. If you use
+    qstyleoption_cast(), you normally do not need to check it.
+
+    \sa StyleOptionType
+*/
+
+/*!
+    Constructs a QStyleOptionViewItemV3 object.
+*/
 QStyleOptionViewItemV3::QStyleOptionViewItemV3()
     : QStyleOptionViewItemV2(Version)
 {
 }
 
+/*!
+    Constructs a copy of \a other.
+*/
 QStyleOptionViewItemV3::QStyleOptionViewItemV3(const QStyleOptionViewItem &other)
     : QStyleOptionViewItemV2(Version)
 {
     (void)QStyleOptionViewItemV3::operator=(other);
 }
 
+/*!
+    \fn QStyleOptionViewItemV3::QStyleOptionViewItemV3(const QStyleOptionViewItemV3 &other)
+
+    Constructs a copy of \a other.
+*/
+
+/*!
+    Assigns the \a other style option to this style option. The \a
+    other style option can be an instance of the QStyleOptionViewItemV2,
+    QStyleOptionViewItemV3 or QStyleOptionViewItem types.
+*/
 QStyleOptionViewItemV3 &QStyleOptionViewItemV3::operator = (const QStyleOptionViewItem &other)
 {
     QStyleOptionViewItemV2::operator=(other);
@@ -814,6 +986,9 @@ QStyleOptionViewItemV3 &QStyleOptionViewItemV3::operator = (const QStyleOptionVi
     return *this;
 }
 
+/*!
+    \internal
+*/
 QStyleOptionViewItemV3::QStyleOptionViewItemV3(int version)
     : QStyleOptionViewItemV2(version)
 {
@@ -829,19 +1004,64 @@ QStyleOptionViewItemV3::QStyleOptionViewItemV3(int version)
 
     QStyleOptionViewItemV4 inherits QStyleOptionViewItemV3.
 
-    An instance of the QStyleOptionViewItemV4 class has \l type SO_ViewItem
-    and \l version 4. The type is used internally by QStyleOption,
-    its subclasses, and qstyleoption_cast() to determine the type of
-    style option. In general you do not need to worry about this
-    unless you want to create your own QStyleOption subclass and your
-    own styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptionViewItemV4 class has
+    \l{QStyleOption::type} {type} SO_ViewItem and
+    \l{QStyleOption::version} {version} 4. The type is used internally
+    by QStyleOption, its subclasses, and qstyleoption_cast() to
+    determine the type of style option. In general you do not need to
+    worry about this unless you want to create your own QStyleOption
+    subclass and your own styles. The version is used by QStyleOption
+    subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not
+    need to check it.
 
     See QStyleOptionViewItemV3's detailed description for a discussion
     of how to handle "V3" classes.
 
     \sa QStyleOptionViewItem, QStyleOption
+*/
+
+/*!
+    \variable QStyleOptionViewItemV4::index
+
+    The model index that is to be drawn.
+*/
+
+/*!
+    \variable QStyleOptionViewItemV4::checkState
+
+    If this view item is checkable, i.e.,
+    ViewItemFeature::HasCheckIndicator is true, \c checkState is true
+    if the item is checked; otherwise, it is false.
+
+*/
+
+/*!
+    \variable QStyleOptionViewItemV4::icon
+
+    The icon (if any) to be drawn in the view item.
+*/
+
+
+/*!
+    \variable QStyleOptionViewItemV4::text
+
+    The text (if any) to be drawn in the view item.
+*/
+
+/*!
+    \variable QStyleOptionViewItemV4::backgroundBrush
+
+    The QBrush that should be used to paint the view items
+    background.
+*/
+
+/*!
+    \variable QStyleOptionViewItemV4::viewItemPosition
+
+    Gives the position of this view item relative to other items. See
+    the \l{QStyleOptionViewItemV4::}{ViewItemPosition} enum for the
+    details.
 */
 
 /*!
@@ -854,7 +1074,7 @@ QStyleOptionViewItemV3::QStyleOptionViewItemV3(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -917,6 +1137,8 @@ QStyleOptionViewItemV4 &QStyleOptionViewItemV4::operator = (const QStyleOptionVi
         checkState = v4->checkState;
         text = v4->text;
         viewItemPosition = v4->viewItemPosition;
+        backgroundBrush = v4->backgroundBrush;
+        icon = v4->icon;
     } else {
         viewItemPosition = QStyleOptionViewItemV4::Invalid;
         checkState = Qt::Unchecked;
@@ -984,7 +1206,7 @@ QStyleOptionViewItemV4::QStyleOptionViewItemV4(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -1154,7 +1376,7 @@ QStyleOptionHeader::QStyleOptionHeader(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -1339,7 +1561,7 @@ QStyleOptionButton::QStyleOptionButton(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -1531,10 +1753,11 @@ QStyleOptionToolBar::QStyleOptionToolBar(int version)
 /*!
     \enum QStyleOptionToolBar::StyleOptionType
 
-    This enum is used to hold information about the type of the style option, and
-    is defined for each QStyleOption subclass.
+    This enum is used to hold information about the type of the style
+    option, and is defined for each QStyleOption subclass.
 
-    \value Type The type of style option provided (\l{SO_ToolBar} for this class).
+    \value Type The type of style option provided (\l{SO_ToolBar} for
+    this class).
 
     The type is used internally by QStyleOption, its subclasses, and
     qstyleoption_cast() to determine the type of style option. In
@@ -1547,18 +1770,17 @@ QStyleOptionToolBar::QStyleOptionToolBar(int version)
 /*!
     \enum QStyleOptionToolBar::StyleOptionVersion
 
-    This enum is used to hold information about the version of the style option, and
-    is defined for each QStyleOption subclass.
+    This enum is used to hold information about the version of the
+    style option, and is defined for each QStyleOption subclass.
 
     \value Version 1
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
-
 
 #endif
 
@@ -1573,14 +1795,16 @@ QStyleOptionToolBar::QStyleOptionToolBar(int version)
     that to describe the parameters necessary for drawing a frame in
     Qt 4.1 or above, you must use the QStyleOptionFrameV2 subclass.
 
-    An instance of the QStyleOptiontabV2 class has type \l SO_Tab and
-    \l version 1. The type is used internally by QStyleOption, its
-    subclasses, and qstyleoption_cast() to determine the type of style
-    option. In general you do not need to worry about this unless you
-    want to create your own QStyleOption subclass and your own
-    styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptiontabV2 class has
+    \l{QStyleOption::type} {type} \l SO_Tab and
+    \l{QStyleOption::version} {version} 1. The type is used internally
+    by QStyleOption, its subclasses, and qstyleoption_cast() to
+    determine the type of style option. In general you do not need to
+    worry about this unless you want to create your own QStyleOption
+    subclass and your own styles. The version is used by QStyleOption
+    subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not
+    need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionTab and QStyleOptionTabV2.
@@ -1649,7 +1873,7 @@ QStyleOptionTab::QStyleOptionTab(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -1757,14 +1981,16 @@ QStyleOptionTab::QStyleOptionTab(int version)
 
     \since 4.1
 
-    An instance of the QStyleOptionTabV2 class has type \l SO_Tab and
-    \l version 2. The type is used internally by QStyleOption, its
-    subclasses, and qstyleoption_cast() to determine the type of style
-    option. In general you do not need to worry about this unless you
-    want to create your own QStyleOption subclass and your own
-    styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptionTabV2 class has
+    \l{QStyleOption::type} {type} \l SO_Tab and
+    \l{QStyleOption::version} {version} 2. The type is used internally
+    by QStyleOption, its subclasses, and qstyleoption_cast() to
+    determine the type of style option. In general you do not need to
+    worry about this unless you want to create your own QStyleOption
+    subclass and your own styles. The version is used by QStyleOption
+    subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not
+    need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionTab and QStyleOptionTabV2. One way to achieve this is
@@ -1793,7 +2019,7 @@ QStyleOptionTab::QStyleOptionTab(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -1870,6 +2096,153 @@ QStyleOptionTabV2 &QStyleOptionTabV2::operator=(const QStyleOptionTab &other)
     return *this;
 }
 
+/*!
+    \class QStyleOptionTabV3
+    \brief The QStyleOptionTabV3 class is used to describe the
+    parameters necessary for drawing a tabs in Qt 4.5 or above.
+
+    \since 4.5
+
+    An instance of the QStyleOptionTabV3 class has
+    \l{QStyleOption::type} {type} \l SO_Tab and
+    \l{QStyleOption::version} {version} 3. The type is used internally
+    by QStyleOption, its subclasses, and qstyleoption_cast() to
+    determine the type of style option. In general you do not need to
+    worry about this unless you want to create your own QStyleOption
+    subclass and your own styles. The version is used by QStyleOption
+    subclasses to implement extensions without breaking
+    compatibility. If you use qstyleoption_cast(), you normally do not
+    need to check it.
+
+    If you create your own QStyle subclass, you should handle both
+    QStyleOptionTab, QStyleOptionTabV2 and QStyleOptionTabV3.
+    One way to achieve this is to use the QStyleOptionTabV3 copy
+    constructor. For example:
+
+    \snippet doc/src/snippets/qstyleoption/main.cpp 3
+
+    In the example above: If \c tabOption's version is 1, the extra
+    member (\l{QStyleOptionTabV2::iconSize}{iconSize}) will be set to
+    an invalid size for \c tabV2.  If \c tabOption's version is 2, the
+    constructor will simply copy the \c tab's iconSize.
+
+    For an example demonstrating how style options can be used, see
+    the \l {widgets/styles}{Styles} example.
+
+    \sa QStyleOptionTab, QStyleOption
+*/
+
+/*!
+    \enum QStyleOptionTabV3::StyleOptionVersion
+
+    This enum is used to hold information about the version of the style option, and
+    is defined for each QStyleOption subclass.
+
+    \value Version 3
+
+    The version is used by QStyleOption subclasses to implement
+    extensions without breaking compatibility. If you use
+    qstyleoption_cast(), you normally do not need to check it.
+
+    \sa StyleOptionType
+*/
+
+/*!
+    \variable QStyleOptionTabV3::documentMode
+    \brief whether the tabbar is in document mode.
+
+    The default value is false;
+*/
+
+/*!
+    \variable QStyleOptionTabV3::leftButtonSize
+    \brief the size for the left widget on the tab.
+
+    The default value is QSize(-1, -1), i.e. an invalid size;
+*/
+
+/*!
+    \variable QStyleOptionTabV3::rightButtonSize
+    \brief the size for the right widget on the tab.
+
+    The default value is QSize(-1, -1), i.e. an invalid size;
+*/
+
+/*!
+    Constructs a QStyleOptionTabV3.
+*/
+
+QStyleOptionTabV3::QStyleOptionTabV3()
+    : QStyleOptionTabV2(Version)
+    , documentMode(false)
+{
+}
+
+/*!
+    \internal
+*/
+QStyleOptionTabV3::QStyleOptionTabV3(int version)
+    : QStyleOptionTabV2(version)
+{
+}
+
+/*!
+    \fn QStyleOptionTabV3::QStyleOptionTabV3(const QStyleOptionTabV3 &other)
+
+    Constructs a copy of the \a other style option.
+*/
+
+/*!
+    \fn QStyleOptionTabV3::QStyleOptionTabV3(const QStyleOptionTabV2 &other)
+
+    Constructs a copy of the \a other style option.
+*/
+
+/*!
+    Constructs a QStyleOptionTabV3 copy of the \a other style option
+    which can be either of the QStyleOptionTabV3, QStyleOptionTabV2
+    or QStyleOptionTab types.
+
+    If the other style option's version is 1 or 2, the new style option's
+    \c leftButtonSize and \c rightButtonSize is set to an invalid value.  If
+    its version is 3, its \c leftButtonSize and \c rightButtonSize values
+    are simply copied to the new style option.
+*/
+QStyleOptionTabV3::QStyleOptionTabV3(const QStyleOptionTab &other)
+    : QStyleOptionTabV2(Version)
+{
+    if (const QStyleOptionTabV3 *tab = qstyleoption_cast<const QStyleOptionTabV3 *>(&other)) {
+        *this = *tab;
+    } else {
+        *((QStyleOptionTabV2 *)this) = other;
+        version = Version;
+    }
+}
+
+/*!
+    Assigns the \a other style option to this QStyleOptionTabV3. The
+    \a other style option can be either of the QStyleOptionTabV3,
+    QStyleOptionTabV2 or QStyleOptionTab types.
+
+    If the other style option's version is 1 or 2, the new style option's
+    \c leftButtonSize and \c rightButtonSize is set to an invalid value.  If
+    its version is 3, its \c leftButtonSize and \c rightButtonSize values
+    are simply copied to the new style option.
+*/
+QStyleOptionTabV3 &QStyleOptionTabV3::operator=(const QStyleOptionTab &other)
+{
+    QStyleOptionTabV2::operator=(other);
+
+    if (const QStyleOptionTabV3 *tab = qstyleoption_cast<const QStyleOptionTabV3 *>(&other)) {
+        leftButtonSize = tab->leftButtonSize;
+        rightButtonSize = tab->rightButtonSize;
+    } else {
+        leftButtonSize = QSize();
+        rightButtonSize = QSize();
+        documentMode = false;
+    }
+    return *this;
+}
 
 #endif // QT_NO_TABBAR
 
@@ -1890,7 +2263,7 @@ QStyleOptionTabV2 &QStyleOptionTabV2::operator=(const QStyleOptionTab &other)
     create your own QStyleOption subclass and your own styles.  The
     version is used by QStyleOption subclasses to implement extensions
     without breaking compatibility. If you use qstyleoption_cast(),
-    you normally don't need to check it.
+    you normally do not need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionProgressBar and QStyleOptionProgressBarV2.
@@ -1953,7 +2326,7 @@ QStyleOptionProgressBar::QStyleOptionProgressBar(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2026,8 +2399,8 @@ QStyleOptionProgressBar::QStyleOptionProgressBar(int version)
 
     \since 4.1
 
-    An instance of this class has \l type SO_ProgressBar and \l
-    version 2.
+    An instance of this class has \l{QStyleOption::type} {type}
+    SO_ProgressBar and \l{QStyleOption::version} {version} 2.
 
     The type is used internally by QStyleOption, its subclasses, and
     qstyleoption_cast() to determine the type of style option. In
@@ -2035,7 +2408,7 @@ QStyleOptionProgressBar::QStyleOptionProgressBar(int version)
     create your own QStyleOption subclass and your own styles. The
     version is used by QStyleOption subclasses to implement extensions
     without breaking compatibility. If you use qstyleoption_cast(),
-    you normally don't need to check it.
+    you normally do not need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionProgressBar and QStyleOptionProgressBarV2. One way
@@ -2182,7 +2555,7 @@ QStyleOptionProgressBarV2 &QStyleOptionProgressBarV2::operator=(const QStyleOpti
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2260,7 +2633,7 @@ QStyleOptionMenuItem::QStyleOptionMenuItem(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2447,7 +2820,7 @@ QStyleOptionComplex::QStyleOptionComplex(int version, int type)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2548,7 +2921,7 @@ QStyleOptionSlider::QStyleOptionSlider(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2741,7 +3114,7 @@ QStyleOptionSpinBox::QStyleOptionSpinBox(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2862,7 +3235,7 @@ QStyleOptionQ3ListViewItem::QStyleOptionQ3ListViewItem(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -2982,7 +3355,7 @@ QStyleOptionQ3ListView::QStyleOptionQ3ListView(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3124,7 +3497,7 @@ QStyleOptionQ3DockWindow::QStyleOptionQ3DockWindow(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3240,7 +3613,7 @@ QStyleOptionDockWidgetV2::QStyleOptionDockWidgetV2(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3360,7 +3733,7 @@ QStyleOptionToolButton::QStyleOptionToolButton(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3504,7 +3877,7 @@ QStyleOptionComboBox::QStyleOptionComboBox(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3630,7 +4003,7 @@ QStyleOptionToolBox::QStyleOptionToolBox(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3658,14 +4031,16 @@ QStyleOptionToolBox::QStyleOptionToolBox(int version)
     QStyleOptionToolBoxV2 inherits QStyleOptionToolBox which is used for
     drawing the tabs in a QToolBox.
 
-    An instance of the QStyleOptionToolBoxV2 class has \l type SO_ToolBox
-    and \l version 2.  The type is used internally by QStyleOption,
-    its subclasses, and qstyleoption_cast() to determine the type of
-    style option. In general you do not need to worry about this
-    unless you want to create your own QStyleOption subclass and your
-    own styles. The version is used by QStyleOption subclasses to
-    implement extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    An instance of the QStyleOptionToolBoxV2 class has
+    \l{QStyleOption::type} {type} SO_ToolBox and
+    \l{QStyleOption::version} {version} 2.  The type is used
+    internally by QStyleOption, its subclasses, and
+    qstyleoption_cast() to determine the type of style option. In
+    general you do not need to worry about this unless you want to
+    create your own QStyleOption subclass and your own styles. The
+    version is used by QStyleOption subclasses to implement extensions
+    without breaking compatibility. If you use qstyleoption_cast(),
+    you normally do not need to check it.
 
     If you create your own QStyle subclass, you should handle both
     QStyleOptionToolBox and QStyleOptionToolBoxV2.
@@ -3700,11 +4075,12 @@ QStyleOptionToolBoxV2::QStyleOptionToolBoxV2(int version)
     which can be either of the QStyleOptionToolBoxV2 or
     QStyleOptionToolBox types.
 
-    If the \a other style option's version is 1, the new style option's \l
-    position value is set to \l QStyleOptionToolBoxV2::Beginning and \l
-    selectedPosition is set to \l QStyleOptionToolBoxV2::NotAdjacent. If its
-    version is 2, the \l position selectedPosition values are simply copied to
-    the new style option.
+    If the \a other style option's version is 1, the new style
+    option's \l{QStyleOptionTab::position} {position} value is set to
+    \l QStyleOptionToolBoxV2::Beginning and \l selectedPosition is set
+    to \l QStyleOptionToolBoxV2::NotAdjacent. If its version is 2, the
+    \l{QStyleOptionTab::position} {position} selectedPosition values
+    are simply copied to the new style option.
 
     \sa version
 */
@@ -3723,11 +4099,12 @@ QStyleOptionToolBoxV2::QStyleOptionToolBoxV2(const QStyleOptionToolBox &other)
     other style option can be either of the QStyleOptionToolBoxV2 or
     QStyleOptionToolBox types.
 
-    If the \a{other} style option's version is 1, this style option's \l
-    position and \l selectedPosition values are set to \l
-    QStyleOptionToolBoxV2::Beginning and \l QStyleOptionToolBoxV2::NotAdjacent
-    respectively. If its version is 2, these values are simply copied to this
-    style option.
+    If the \a{other} style option's version is 1, this style option's
+    \l{QStyleOptionTab::position} {position} and \l selectedPosition
+    values are set to \l QStyleOptionToolBoxV2::Beginning and \l
+    QStyleOptionToolBoxV2::NotAdjacent respectively. If its
+    \l{QStyleOption::version} {version} is 2, these values are simply
+    copied to this style option.
 */
 QStyleOptionToolBoxV2 &QStyleOptionToolBoxV2::operator=(const QStyleOptionToolBox &other)
 {
@@ -3853,7 +4230,7 @@ QStyleOptionRubberBand::QStyleOptionRubberBand(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -3935,7 +4312,7 @@ QStyleOptionTitleBar::QStyleOptionTitleBar()
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4095,7 +4472,7 @@ QStyleOptionViewItem::QStyleOptionViewItem(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4232,7 +4609,7 @@ QStyleOptionTabWidgetFrame::QStyleOptionTabWidgetFrame(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4351,7 +4728,7 @@ QStyleOptionTabBarBase::QStyleOptionTabBarBase(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4379,6 +4756,97 @@ QStyleOptionTabBarBase::QStyleOptionTabBarBase(int version)
     value is a null rectangle, i.e. a rectangle with both the width
     and the height set to 0.
 */
+
+
+/*!
+    \class QStyleOptionTabBarBaseV2
+    \brief The QStyleOptionTabBarBaseV2 class is used to describe
+    the base of a tab bar, i.e. the part that the tab bar usually
+    overlaps with.
+    \since 4.5
+
+    QStyleOptionTabBarBase  contains all the information that QStyle
+    functions need to draw the tab bar base.
+
+    For performance reasons, the access to the member variables is
+    direct (i.e., using the \c . or \c -> operator). This low-level feel
+    makes the structures straightforward to use and emphasizes that
+    these are simply parameters used by the style functions.
+
+    For an example demonstrating how style options can be used, see
+    the \l {widgets/styles}{Styles} example.
+
+    \sa QStyleOption, QTabBar::drawBase()
+*/
+
+/*!
+    \enum QStyleOptionTabBarBaseV2::StyleOptionVersion
+
+    This enum is used to hold information about the version of the style option, and
+    is defined for each QStyleOption subclass.
+
+    \value Version 2
+
+    The version is used by QStyleOption subclasses to implement
+    extensions without breaking compatibility. If you use
+    qstyleoption_cast(), you normally do not need to check it.
+
+    \sa StyleOptionType
+*/
+
+/*!
+    \variable QStyleOptionTabBarBaseV2::documentMode
+    \brief whether the tabbar is in document mode.
+
+    The default value is false;
+*/
+
+/*!
+    Construct a QStyleOptionTabBarBaseV2, initializing the members
+    vaiables to their default values.
+*/
+QStyleOptionTabBarBaseV2::QStyleOptionTabBarBaseV2()
+    : QStyleOptionTabBarBase(Version)
+    , documentMode(false)
+{
+}
+
+/*!
+    \fn QStyleOptionTabBarBaseV2::QStyleOptionTabBarBaseV2(const QStyleOptionTabBarBaseV2 &other)
+
+    Constructs a copy of \a other.
+*/
+
+/*!
+    Constructs a copy of \a other.
+*/
+QStyleOptionTabBarBaseV2::QStyleOptionTabBarBaseV2(const QStyleOptionTabBarBase &other)
+    : QStyleOptionTabBarBase(Version)
+{
+    (void)QStyleOptionTabBarBaseV2::operator=(other);
+}
+
+/*!
+    Constructs a QStyleOptionTabBarBaseV2 copy of the \a other style option
+    which can be either of the QStyleOptionTabBarBaseV2, or QStyleOptionTabBarBase types.
+
+    If the other style option's version is not 1, the new style option's
+    \c documentMode is set to false.  If its version is 2, its \c documentMode value
+    is simply copied to the new style option.
+*/
+QStyleOptionTabBarBaseV2 &QStyleOptionTabBarBaseV2::operator = (const QStyleOptionTabBarBase &other)
+{
+    QStyleOptionTabBarBase::operator=(other);
+    const QStyleOptionTabBarBaseV2 *v2 = qstyleoption_cast<const QStyleOptionTabBarBaseV2*>(&other);
+    documentMode = v2 ? v2->documentMode : false;
+    return *this;
+}
+
+/*! \internal */
+QStyleOptionTabBarBaseV2::QStyleOptionTabBarBaseV2(int version)
+    : QStyleOptionTabBarBase(version)
+{
+}
 
 #endif // QT_NO_TABBAR
 
@@ -4457,7 +4925,7 @@ QStyleOptionSizeGrip::QStyleOptionSizeGrip(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4507,7 +4975,7 @@ QStyleOptionSizeGrip::QStyleOptionSizeGrip(int version)
 
     The version is used by QStyleOption subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4628,7 +5096,7 @@ QStyleOptionGraphicsItem::QStyleOptionGraphicsItem(int version)
 
     The version is used by QStyleHintReturn subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4646,7 +5114,7 @@ QStyleOptionGraphicsItem::QStyleOptionGraphicsItem(int version)
 
     This value can be used by subclasses to implement extensions
     without breaking compatibility. If you use qstyleoption_cast<T>(), you
-    normally don't need to check it.
+    normally do not need to check it.
 */
 
 /*!
@@ -4725,7 +5193,7 @@ QStyleHintReturnMask::QStyleHintReturnMask() : QStyleHintReturn(Version, Type)
 
     The version is used by QStyleHintReturn subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */
@@ -4777,7 +5245,7 @@ QStyleHintReturnVariant::QStyleHintReturnVariant() : QStyleHintReturn(Version, T
 
     The version is used by QStyleHintReturn subclasses to implement
     extensions without breaking compatibility. If you use
-    qstyleoption_cast(), you normally don't need to check it.
+    qstyleoption_cast(), you normally do not need to check it.
 
     \sa StyleOptionType
 */

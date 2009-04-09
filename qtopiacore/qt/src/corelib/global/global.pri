@@ -1,4 +1,5 @@
 # Qt kernel library base module
+linux-g++*:QMAKE_LFLAGS += -Wl,-e,qt_core_init_boilerplate
 
 HEADERS +=  \
 	global/qglobal.h \

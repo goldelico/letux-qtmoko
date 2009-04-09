@@ -33,20 +33,17 @@
 #include "CanvasStyle.h"
 #include "Chrome.h"
 #include "Document.h"
+#include "ExceptionCode.h"
 #include "Frame.h"
 #include "GraphicsContext.h"
 #include "HTMLNames.h"
+#include "ImageBuffer.h"
+#include "MIMETypeRegistry.h"
 #include "Page.h"
 #include "RenderHTMLCanvas.h"
 #include "Settings.h"
 #include <math.h>
-
-#if PLATFORM(QT)
-#include <QPainter>
-#include <QPixmap>
-#elif PLATFORM(CAIRO)
-#include <cairo.h>
-#endif
+#include <stdio.h>
 
 namespace WebCore {
 
@@ -59,35 +56,24 @@ static const int defaultHeight = 150;
 // Firefox limits width/height to 32767 pixels, but slows down dramatically before it 
 // reaches that limit. We limit by area instead, giving us larger maximum dimensions,
 // in exchange for a smaller maximum canvas size.
-static const float maxCanvasArea = 32768 * 8192; // Maximum canvas area in CSS pixels
+const float HTMLCanvasElement::MaxCanvasArea = 32768 * 8192; // Maximum canvas area in CSS pixels
 
-HTMLCanvasElement::HTMLCanvasElement(Document* doc)
-    : HTMLElement(canvasTag, doc)
+HTMLCanvasElement::HTMLCanvasElement(const QualifiedName& tagName, Document* doc)
+    : HTMLElement(tagName, doc)
     , m_size(defaultWidth, defaultHeight)
-    , m_createdDrawingContext(false)
-    , m_data(0)
-#if PLATFORM(QT)
-    , m_painter(0)
-#endif
-    , m_drawingContext(0)
+    , m_observer(0)
+    , m_originClean(true)
+    , m_ignoreReset(false)
+    , m_createdImageBuffer(false)
 {
+    ASSERT(hasTagName(canvasTag));
 }
 
 HTMLCanvasElement::~HTMLCanvasElement()
 {
-    if (m_2DContext)
-        m_2DContext->detachCanvas();
-#if PLATFORM(CG)
-    fastFree(m_data);
-#elif PLATFORM(QT)
-    delete m_painter;
-    delete m_data;
-#elif PLATFORM(CAIRO)
-    cairo_surface_destroy(m_surface);
-    fastFree(m_data);
-#endif
-    delete m_drawingContext;
 }
+
+#if ENABLE(DASHBOARD_SUPPORT)
 
 HTMLTagStatus HTMLCanvasElement::endTagRequirement() const 
 {
@@ -106,6 +92,8 @@ int HTMLCanvasElement::tagPriority() const
 
     return HTMLElement::tagPriority();
 }
+
+#endif
 
 void HTMLCanvasElement::parseMappedAttribute(MappedAttribute* attr)
 {
@@ -137,28 +125,56 @@ void HTMLCanvasElement::setWidth(int value)
     setAttribute(widthAttr, String::number(value));
 }
 
+String HTMLCanvasElement::toDataURL(const String& mimeType, ExceptionCode& ec)
+{
+    if (!m_originClean) {
+        ec = SECURITY_ERR;
+        return String();
+    }
+
+    if (m_size.isEmpty())
+        return String("data:,");
+
+    if (mimeType.isNull() || !MIMETypeRegistry::isSupportedImageMIMETypeForEncoding(mimeType))
+        return buffer()->toDataURL("image/png");
+
+    return buffer()->toDataURL(mimeType);
+}
+
 CanvasRenderingContext* HTMLCanvasElement::getContext(const String& type)
 {
     if (type == "2d") {
         if (!m_2DContext)
-            m_2DContext = new CanvasRenderingContext2D(this);
+            m_2DContext.set(new CanvasRenderingContext2D(this));
         return m_2DContext.get();
     }
     return 0;
 }
 
-void HTMLCanvasElement::willDraw(const FloatRect&)
+void HTMLCanvasElement::willDraw(const FloatRect& rect)
 {
-    // FIXME: Change to repaint just the dirty rect for speed.
-    // Until we start doing this, we won't know if the rects passed in are
-    // accurate. Also don't forget to take into account the transform
-    // on the context when determining what needs to be repainted.
-    if (renderer())
-        renderer()->repaint();
+    m_imageBuffer->clearImage();
+    
+    if (RenderObject* ro = renderer()) {
+        FloatRect destRect = ro->contentBox();
+        FloatRect r = mapRect(rect, FloatRect(0, 0, m_size.width(), m_size.height()), destRect);
+        r.intersect(destRect);
+        if (m_dirtyRect.contains(r))
+            return;
+
+        m_dirtyRect.unite(r);
+        ro->repaintRectangle(enclosingIntRect(m_dirtyRect));
+    }
+    
+    if (m_observer)
+        m_observer->canvasChanged(this, rect);
 }
 
 void HTMLCanvasElement::reset()
 {
+    if (m_ignoreReset)
+        return;
+
     bool ok;
     int w = getAttribute(widthAttr).toInt(&ok);
     if (!ok)
@@ -170,20 +186,9 @@ void HTMLCanvasElement::reset()
     IntSize oldSize = m_size;
     m_size = IntSize(w, h);
 
-    bool hadDrawingContext = m_createdDrawingContext;
-    m_createdDrawingContext = false;
-#if PLATFORM(CG)
-    fastFree(m_data);
-#elif PLATFORM(QT)
-    delete m_painter;
-    m_painter = 0;
-    delete m_data;
-#elif PLATFORM(CAIRO)
-    fastFree(m_data);
-#endif
-    m_data = 0;
-    delete m_drawingContext;
-    m_drawingContext = 0;
+    bool hadImageBuffer = m_createdImageBuffer;
+    m_createdImageBuffer = false;
+    m_imageBuffer.clear();
     if (m_2DContext)
         m_2DContext->reset();
 
@@ -191,141 +196,93 @@ void HTMLCanvasElement::reset()
         if (m_rendererIsCanvas) {
             if (oldSize != m_size)
                 static_cast<RenderHTMLCanvas*>(ro)->canvasSizeChanged();
-            if (hadDrawingContext)
+            if (hadImageBuffer)
                 ro->repaint();
         }
+        
+    if (m_observer)
+        m_observer->canvasResized(this);
 }
 
-void HTMLCanvasElement::paint(GraphicsContext* p, const IntRect& r)
+void HTMLCanvasElement::paint(GraphicsContext* context, const IntRect& r)
 {
-    if (p->paintingDisabled())
+    // Clear the dirty rect
+    m_dirtyRect = FloatRect();
+
+    if (context->paintingDisabled())
         return;
-#if PLATFORM(CG)
-    if (CGImageRef image = createPlatformImage()) {
-        CGContextDrawImage(p->platformContext(), p->roundToDevicePixels(r), image);
-        CGImageRelease(image);
+    
+    if (m_imageBuffer) {
+        Image* image = m_imageBuffer->image();
+        if (image)
+            context->drawImage(image, r);
     }
-#elif PLATFORM(QT)
-    if (m_data) {
-        QPen currentPen = m_painter->pen();
-        qreal currentOpacity = m_painter->opacity();
-        QBrush currentBrush = m_painter->brush();
-        if (m_painter->isActive())
-            m_painter->end();
-        static_cast<QPainter*>(p->platformContext())->drawImage(r, *m_data);
-        m_painter->begin(m_data);
-        m_painter->setPen(currentPen);
-        m_painter->setBrush(currentBrush);
-        m_painter->setOpacity(currentOpacity);
-    }
-#elif PLATFORM(CAIRO)
-    if (m_data) {
-        cairo_t* cr = p->platformContext();
-        cairo_save(cr);
-        cairo_translate(cr, r.x(), r.y());
-        cairo_set_source_surface(cr, m_surface, 0, 0);
-        cairo_rectangle(cr, 0, 0, r.width(), r.height());
-        cairo_fill(cr);
-        cairo_restore(cr);
-    }
-#endif
 }
 
-void HTMLCanvasElement::createDrawingContext() const
+IntRect HTMLCanvasElement::convertLogicalToDevice(const FloatRect& logicalRect) const
 {
-    ASSERT(!m_createdDrawingContext);
-    ASSERT(!m_data);
+    return IntRect(convertLogicalToDevice(logicalRect.location()), convertLogicalToDevice(logicalRect.size()));
+}
 
-    m_createdDrawingContext = true;
-
-    float unscaledWidth = width();
-    float unscaledHeight = height();
+IntSize HTMLCanvasElement::convertLogicalToDevice(const FloatSize& logicalSize) const
+{
     float pageScaleFactor = document()->frame() ? document()->frame()->page()->chrome()->scaleFactor() : 1.0f;
-    float wf = ceilf(unscaledWidth * pageScaleFactor);
-    float hf = ceilf(unscaledHeight * pageScaleFactor);
+    float wf = ceilf(logicalSize.width() * pageScaleFactor);
+    float hf = ceilf(logicalSize.height() * pageScaleFactor);
+    
+    if (!(wf >= 1 && hf >= 1 && wf * hf <= MaxCanvasArea))
+        return IntSize();
 
-    if (!(wf >= 1 && hf >= 1 && wf * hf <= maxCanvasArea))
-        return;
+    return IntSize(static_cast<unsigned>(wf), static_cast<unsigned>(hf));
+}
 
-    unsigned w = static_cast<unsigned>(wf);
-    unsigned h = static_cast<unsigned>(hf);
+IntPoint HTMLCanvasElement::convertLogicalToDevice(const FloatPoint& logicalPos) const
+{
+    float pageScaleFactor = document()->frame() ? document()->frame()->page()->chrome()->scaleFactor() : 1.0f;
+    float xf = logicalPos.x() * pageScaleFactor;
+    float yf = logicalPos.y() * pageScaleFactor;
+    
+    return IntPoint(static_cast<unsigned>(xf), static_cast<unsigned>(yf));
+}
 
-#if PLATFORM(CG)
-    size_t bytesPerRow = w * 4;
-    if (bytesPerRow / 4 != w) // check for overflow
-        return;
-    m_data = fastCalloc(h, bytesPerRow);
-    if (!m_data)
-        return;
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef bitmapContext = CGBitmapContextCreate(m_data, w, h, 8, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
-    CGContextScaleCTM(bitmapContext, w / unscaledWidth, h / unscaledHeight);
-    CGColorSpaceRelease(colorSpace);
-    m_drawingContext = new GraphicsContext(bitmapContext);
-    CGContextRelease(bitmapContext);
-#elif PLATFORM(QT)
-    m_data = new QImage(w, h, QImage::Format_ARGB32_Premultiplied);
-    m_data->fill(0);
-    m_painter = new QPainter(m_data);
-    m_painter->setRenderHint(QPainter::Antialiasing);
-    m_drawingContext = new GraphicsContext(m_painter);
-#elif PLATFORM(CAIRO)
-    // FIXME: this bit is not complete
-    size_t bytesPerRow = w * 4;
-    if (bytesPerRow / 4 != w) // check for overflow
-        return;
-    m_data = fastCalloc(h, bytesPerRow);
-    if (!m_data)
+void HTMLCanvasElement::createImageBuffer() const
+{
+    ASSERT(!m_imageBuffer);
+
+    m_createdImageBuffer = true;
+    
+    FloatSize unscaledSize(width(), height());
+    IntSize size = convertLogicalToDevice(unscaledSize);
+    if (!size.width() || !size.height())
         return;
 
-    m_surface = cairo_image_surface_create_for_data((unsigned char*)m_data, CAIRO_FORMAT_ARGB32, w, h, bytesPerRow);
-    cairo_t* cr = cairo_create(m_surface);
-    cairo_scale(cr, w / unscaledWidth, h / unscaledHeight);
-    m_drawingContext = new GraphicsContext(cr);
-    cairo_destroy(cr);
-#endif
+    m_imageBuffer.set(ImageBuffer::create(size, false).release());
+    m_imageBuffer->context()->scale(FloatSize(size.width() / unscaledSize.width(), size.height() / unscaledSize.height()));
+    m_imageBuffer->context()->setShadowsIgnoreTransforms(true);
 }
 
 GraphicsContext* HTMLCanvasElement::drawingContext() const
 {
-    if (!m_createdDrawingContext)
-        createDrawingContext();
-    return m_drawingContext;
+    return buffer() ? m_imageBuffer->context() : 0;
 }
 
-#if PLATFORM(CG)
-
-CGImageRef HTMLCanvasElement::createPlatformImage() const
+ImageBuffer* HTMLCanvasElement::buffer() const
 {
-    GraphicsContext* context = drawingContext();
-    if (!context)
-        return 0;
-
-    CGContextRef contextRef = context->platformContext();
-    if (!contextRef)
-        return 0;
-
-    CGContextFlush(contextRef);
-
-    return CGBitmapContextCreateImage(contextRef);
+    if (!m_createdImageBuffer)
+        createImageBuffer();
+    return m_imageBuffer.get();
 }
-
-#elif PLATFORM(QT)
-
-QImage HTMLCanvasElement::createPlatformImage() const
+    
+TransformationMatrix HTMLCanvasElement::baseTransform() const
 {
-    if (m_data)
-        return *m_data;
-    return QImage();
+    ASSERT(m_createdImageBuffer);
+    FloatSize unscaledSize(width(), height());
+    IntSize size = convertLogicalToDevice(unscaledSize);
+    TransformationMatrix transform;
+    if (size.width() && size.height())
+        transform.scale(size.width() / unscaledSize.width(), size.height() / unscaledSize.height());
+    transform.multiply(m_imageBuffer->baseTransform());
+    return transform;
 }
-
-#elif PLATFORM(CAIRO)
-cairo_surface_t* HTMLCanvasElement::createPlatformImage() const
-{
-    // FIXME: we should ensure that the surface has been created
-    return m_surface;
-}
-
-#endif
 
 }

@@ -24,274 +24,374 @@
 
 #include <wtf/GetPtr.h>
 
+#include "Element.h"
 #include "HTMLCollection.h"
 #include "HTMLElement.h"
+#include "JSElement.h"
 #include "JSHTMLCollection.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLElementTableEntries[] =
+static const HashTableValue JSHTMLElementTableValues[15] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "innerText", JSHTMLElement::InnerTextAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSHTMLElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "outerHTML", JSHTMLElement::OuterHTMLAttrNum, DontDelete, 0, &JSHTMLElementTableEntries[15] },
-    { "id", JSHTMLElement::IdAttrNum, DontDelete, 0, 0 },
-    { "isContentEditable", JSHTMLElement::IsContentEditableAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "dir", JSHTMLElement::DirAttrNum, DontDelete, 0, 0 },
-    { "title", JSHTMLElement::TitleAttrNum, DontDelete, 0, &JSHTMLElementTableEntries[14] },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSHTMLElement::ClassNameAttrNum, DontDelete, 0, &JSHTMLElementTableEntries[13] },
-    { "contentEditable", JSHTMLElement::ContentEditableAttrNum, DontDelete, 0, 0 },
-    { "lang", JSHTMLElement::LangAttrNum, DontDelete, 0, 0 },
-    { "innerHTML", JSHTMLElement::InnerHTMLAttrNum, DontDelete, 0, 0 },
-    { "outerText", JSHTMLElement::OuterTextAttrNum, DontDelete, 0, 0 },
-    { "children", JSHTMLElement::ChildrenAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "id", DontDelete, (intptr_t)jsHTMLElementId, (intptr_t)setJSHTMLElementId },
+    { "title", DontDelete, (intptr_t)jsHTMLElementTitle, (intptr_t)setJSHTMLElementTitle },
+    { "lang", DontDelete, (intptr_t)jsHTMLElementLang, (intptr_t)setJSHTMLElementLang },
+    { "dir", DontDelete, (intptr_t)jsHTMLElementDir, (intptr_t)setJSHTMLElementDir },
+    { "className", DontDelete, (intptr_t)jsHTMLElementClassName, (intptr_t)setJSHTMLElementClassName },
+    { "tabIndex", DontDelete, (intptr_t)jsHTMLElementTabIndex, (intptr_t)setJSHTMLElementTabIndex },
+    { "innerHTML", DontDelete, (intptr_t)jsHTMLElementInnerHTML, (intptr_t)setJSHTMLElementInnerHTML },
+    { "innerText", DontDelete, (intptr_t)jsHTMLElementInnerText, (intptr_t)setJSHTMLElementInnerText },
+    { "outerHTML", DontDelete, (intptr_t)jsHTMLElementOuterHTML, (intptr_t)setJSHTMLElementOuterHTML },
+    { "outerText", DontDelete, (intptr_t)jsHTMLElementOuterText, (intptr_t)setJSHTMLElementOuterText },
+    { "children", DontDelete|ReadOnly, (intptr_t)jsHTMLElementChildren, (intptr_t)0 },
+    { "contentEditable", DontDelete, (intptr_t)jsHTMLElementContentEditable, (intptr_t)setJSHTMLElementContentEditable },
+    { "isContentEditable", DontDelete|ReadOnly, (intptr_t)jsHTMLElementIsContentEditable, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLElementTable = 
-{
-    2, 16, JSHTMLElementTableEntries, 13
-};
+static const HashTable JSHTMLElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 511, JSHTMLElementTableValues, 0 };
+#else
+    { 34, 31, JSHTMLElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLElementConstructorTable = 
-{
-    2, 1, JSHTMLElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLElementConstructor : public DOMObject {
 public:
     JSHTMLElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLElementConstructor::info = { "HTMLElementConstructor", 0, &JSHTMLElementConstructorTable, 0 };
+const ClassInfo JSHTMLElementConstructor::s_info = { "HTMLElementConstructor", 0, &JSHTMLElementConstructorTable, 0 };
 
 bool JSHTMLElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLElementConstructor, DOMObject>(exec, &JSHTMLElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLElementPrototypeTableValues[6] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "blur", DontDelete|Function, (intptr_t)jsHTMLElementPrototypeFunctionBlur, (intptr_t)0 },
+    { "focus", DontDelete|Function, (intptr_t)jsHTMLElementPrototypeFunctionFocus, (intptr_t)0 },
+    { "insertAdjacentElement", DontDelete|Function, (intptr_t)jsHTMLElementPrototypeFunctionInsertAdjacentElement, (intptr_t)2 },
+    { "insertAdjacentHTML", DontDelete|Function, (intptr_t)jsHTMLElementPrototypeFunctionInsertAdjacentHTML, (intptr_t)2 },
+    { "insertAdjacentText", DontDelete|Function, (intptr_t)jsHTMLElementPrototypeFunctionInsertAdjacentText, (intptr_t)2 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLElementPrototypeTable = 
-{
-    2, 1, JSHTMLElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLElementPrototypeTableValues, 0 };
+#else
+    { 16, 15, JSHTMLElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLElementPrototype::info = { "HTMLElementPrototype", 0, &JSHTMLElementPrototypeTable, 0 };
+const ClassInfo JSHTMLElementPrototype::s_info = { "HTMLElementPrototype", 0, &JSHTMLElementPrototypeTable, 0 };
 
 JSObject* JSHTMLElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLElementPrototype>(exec, "[[JSHTMLElement.prototype]]");
+    return getDOMPrototype<JSHTMLElement>(exec);
 }
 
-const ClassInfo JSHTMLElement::info = { "HTMLElement", &JSElement::info, &JSHTMLElementTable, 0 };
-
-JSHTMLElement::JSHTMLElement(ExecState* exec, HTMLElement* impl)
-    : JSElement(exec, impl)
+bool JSHTMLElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSHTMLElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSHTMLElement::s_info = { "HTMLElement", &JSElement::s_info, &JSHTMLElementTable, 0 };
+
+JSHTMLElement::JSHTMLElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLElement> impl)
+    : JSElement(structure, impl)
+{
+}
+
+JSObject* JSHTMLElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLElementPrototype(JSHTMLElementPrototype::createStructure(JSElementPrototype::self(exec)));
 }
 
 bool JSHTMLElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLElement, JSElement>(exec, &JSHTMLElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLElement, Base>(exec, &JSHTMLElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLElementId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case IdAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->id());
-    }
-    case TitleAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->title());
-    }
-    case LangAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->lang());
-    }
-    case DirAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->dir());
-    }
-    case ClassNameAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->className());
-    }
-    case InnerHTMLAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->innerHTML());
-    }
-    case InnerTextAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->innerText());
-    }
-    case OuterHTMLAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->outerHTML());
-    }
-    case OuterTextAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->outerText());
-    }
-    case ChildrenAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->children()));
-    }
-    case ContentEditableAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsString(imp->contentEditable());
-    }
-    case IsContentEditableAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        return jsBoolean(imp->isContentEditable());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->id());
 }
 
-void JSHTMLElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLElementTitle(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLElement, JSElement>(exec, propertyName, value, attr, &JSHTMLElementTable, this);
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->title());
 }
 
-void JSHTMLElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLElementLang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case IdAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setId(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TitleAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setTitle(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case LangAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setLang(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DirAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setDir(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ClassNameAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setClassName(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case InnerHTMLAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setInnerHTML(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case InnerTextAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setInnerText(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case OuterHTMLAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setOuterHTML(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case OuterTextAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setOuterText(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case ContentEditableAttrNum: {
-        HTMLElement* imp = static_cast<HTMLElement*>(impl());
-
-        imp->setContentEditable(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->lang());
 }
 
-JSValue* JSHTMLElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLElementDir(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLElementConstructor>(exec, "[[HTMLElement.constructor]]");
-}
-HTMLElement* toHTMLElement(KJS::JSValue* val)
-{
-    return val->isObject(&JSHTMLElement::info) ? static_cast<JSHTMLElement*>(val)->impl() : 0;
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->dir());
 }
 
-HTMLElement* JSHTMLElement::impl() const
+JSValuePtr jsHTMLElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return static_cast<HTMLElement*>(JSElement::impl());
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->className());
+}
+
+JSValuePtr jsHTMLElementTabIndex(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->tabIndex());
+}
+
+JSValuePtr jsHTMLElementInnerHTML(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->innerHTML());
+}
+
+JSValuePtr jsHTMLElementInnerText(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->innerText());
+}
+
+JSValuePtr jsHTMLElementOuterHTML(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->outerHTML());
+}
+
+JSValuePtr jsHTMLElementOuterText(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->outerText());
+}
+
+JSValuePtr jsHTMLElementChildren(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->children()));
+}
+
+JSValuePtr jsHTMLElementContentEditable(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->contentEditable());
+}
+
+JSValuePtr jsHTMLElementIsContentEditable(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->isContentEditable());
+}
+
+JSValuePtr jsHTMLElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLElement, Base>(exec, propertyName, value, &JSHTMLElementTable, this, slot);
+}
+
+void setJSHTMLElementId(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setId(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLElementTitle(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setTitle(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLElementLang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setLang(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLElementDir(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setDir(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLElementClassName(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setClassName(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLElementTabIndex(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setTabIndex(value->toInt32(exec));
+}
+
+void setJSHTMLElementInnerHTML(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setInnerHTML(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSHTMLElementInnerText(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setInnerText(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSHTMLElementOuterHTML(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setOuterHTML(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSHTMLElementOuterText(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setOuterText(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+void setJSHTMLElementContentEditable(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLElement* imp = static_cast<HTMLElement*>(static_cast<JSHTMLElement*>(thisObject)->impl());
+    imp->setContentEditable(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLElementConstructor>(exec);
+}
+
+JSValuePtr jsHTMLElementPrototypeFunctionBlur(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLElement* castedThisObj = static_cast<JSHTMLElement*>(asObject(thisValue));
+    HTMLElement* imp = static_cast<HTMLElement*>(castedThisObj->impl());
+
+    imp->blur();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLElementPrototypeFunctionFocus(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLElement* castedThisObj = static_cast<JSHTMLElement*>(asObject(thisValue));
+    HTMLElement* imp = static_cast<HTMLElement*>(castedThisObj->impl());
+
+    imp->focus();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLElementPrototypeFunctionInsertAdjacentElement(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLElement* castedThisObj = static_cast<JSHTMLElement*>(asObject(thisValue));
+    HTMLElement* imp = static_cast<HTMLElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& where = args.at(exec, 0)->toString(exec);
+    Element* element = toElement(args.at(exec, 1));
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->insertAdjacentElement(where, element, ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsHTMLElementPrototypeFunctionInsertAdjacentHTML(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLElement* castedThisObj = static_cast<JSHTMLElement*>(asObject(thisValue));
+    HTMLElement* imp = static_cast<HTMLElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& where = args.at(exec, 0)->toString(exec);
+    const UString& html = args.at(exec, 1)->toString(exec);
+
+    imp->insertAdjacentHTML(where, html, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLElementPrototypeFunctionInsertAdjacentText(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLElement* castedThisObj = static_cast<JSHTMLElement*>(asObject(thisValue));
+    HTMLElement* imp = static_cast<HTMLElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& where = args.at(exec, 0)->toString(exec);
+    const UString& text = args.at(exec, 1)->toString(exec);
+
+    imp->insertAdjacentText(where, text, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
+HTMLElement* toHTMLElement(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSHTMLElement::s_info) ? static_cast<JSHTMLElement*>(asObject(value))->impl() : 0;
 }
 
 }

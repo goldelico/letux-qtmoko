@@ -1,43 +1,48 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qcommonstyle.h"
 #include "qcommonstyle_p.h"
 
+#include <qfile.h>
 #include <qapplication.h>
 #include <qbitmap.h>
 #include <qcache.h>
@@ -58,16 +63,26 @@
 #include <qtoolbar.h>
 #include <qtoolbutton.h>
 #include <qrubberband.h>
+#include <private/qapplication_p.h>
 #include <private/qcommonstylepixmaps_p.h>
 #include <private/qmath_p.h>
 #include <qdebug.h>
 #include <qtextformat.h>
 #include <qwizard.h>
+#include <qtabbar.h>
+#include <qfileinfo.h>
+#include <qdir.h>
+#include <qsettings.h>
+#include <qpixmapcache.h>
 
 #include <limits.h>
 
 #ifndef QT_NO_ITEMVIEWS
 #   include "private/qtextengine_p.h"
+#endif
+
+#ifdef Q_WS_X11
+#   include <private/qt_x11_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -123,6 +138,7 @@ QCommonStyle::~QCommonStyle()
 void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p,
                                  const QWidget *widget) const
 {
+    Q_D(const QCommonStyle);
     switch (pe) {
     case PE_FrameButtonBevel:
     case PE_FrameButtonTool:
@@ -243,7 +259,9 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
         }
 
         break;
-   case PE_PanelToolBar:
+   case PE_PanelMenu:
+        break;
+    case PE_PanelToolBar:
        break;
 #endif // QT_NO_TOOLBAR
 #ifndef QT_NO_PROGRESSBAR
@@ -443,10 +461,7 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
     case PE_FrameTabBarBase:
         if (const QStyleOptionTabBarBase *tbb
                 = qstyleoption_cast<const QStyleOptionTabBarBase *>(opt)) {
-            QRegion region(tbb->rect);
-            region -= tbb->selectedTabRect;
             p->save();
-            p->setClipRegion(region);
             switch (tbb->shape) {
             case QTabBar::RoundedNorth:
             case QTabBar::TriangularNorth:
@@ -476,6 +491,33 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
             p->restore();
         }
         break;
+    case PE_IndicatorTabClose: {
+        if (d->tabBarcloseButtonIcon.isNull()) {
+            d->tabBarcloseButtonIcon.addPixmap(QPixmap(
+                        QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-closetab-16.png")),
+                        QIcon::Normal, QIcon::Off);
+            d->tabBarcloseButtonIcon.addPixmap(QPixmap(
+                        QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-closetab-down-16.png")),
+                        QIcon::Normal, QIcon::On);
+            d->tabBarcloseButtonIcon.addPixmap(QPixmap(
+                        QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-closetab-hover-16.png")),
+                        QIcon::Active, QIcon::Off);
+        }
+
+        int size = pixelMetric(QStyle::PM_SmallIconSize);
+        QIcon::Mode mode = opt->state & State_Enabled ?
+                            (opt->state & State_Raised ? QIcon::Active : QIcon::Normal)
+                            : QIcon::Disabled;
+        if (!(opt->state & State_Raised)
+            && !(opt->state & State_Sunken)
+            && !(opt->state & QStyle::State_Selected))
+            mode = QIcon::Disabled;
+
+        QIcon::State state = opt->state & State_Sunken ? QIcon::On : QIcon::Off;
+        QPixmap pixmap = d->tabBarcloseButtonIcon.pixmap(size, mode, state);
+        drawItemPixmap(p, opt->rect, Qt::AlignCenter, pixmap);
+        break;
+    }
 #endif // QT_NO_TABBAR
     case PE_FrameTabWidget:
     case PE_FrameWindow:
@@ -754,6 +796,10 @@ void QCommonStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, Q
         }
         break;
 #endif //QT_NO_ITEMVIEWS
+    case PE_PanelScrollAreaCorner: {
+        const QBrush brush(opt->palette.brush(QPalette::Window));
+        p->fillRect(opt->rect, brush);
+        } break;
     default:
         break;
     }
@@ -789,7 +835,170 @@ static void drawArrow(const QStyle *style, const QStyleOptionToolButton *toolbut
 #endif // QT_NO_TOOLBUTTON
 
 
+
+#ifdef Q_WS_X11 // These functions are used to parse the X11 freedesktop icon spec
+
+void QCommonStylePrivate::lookupIconTheme() const
+{
+    if (!themeName.isEmpty())
+        return;
+
+    QString dataDirs = QString::fromLocal8Bit(getenv("XDG_DATA_DIRS"));
+    if (dataDirs.isEmpty())
+        dataDirs = QLatin1String("/usr/local/share/:/usr/share/");
+    dataDirs += QLatin1Char(':') + QApplicationPrivate::kdeHome() + QLatin1String("/share");
+    dataDirs.prepend(QDir::homePath() + QLatin1String("/:"));
+    QStringList kdeDirs = QString::fromLocal8Bit(getenv("KDEDIRS")).split(QLatin1Char(':'));
+    foreach (const QString &dirName, kdeDirs)
+        dataDirs.append(QLatin1String(":") + dirName + QLatin1String("/share"));
+    iconDirs = dataDirs.split(QLatin1Char(':'));
+
+    QFileInfo fileInfo(QLatin1String("/usr/share/icons/default.kde"));
+    QDir dir(fileInfo.canonicalFilePath());
+    int kdeVersion = qgetenv("KDE_SESSION_VERSION").toInt();
+    QString kdeDefault = kdeVersion >= 4 ? QString::fromLatin1("oxygen") : QString::fromLatin1("crystalsvg");
+    QString defaultTheme = fileInfo.exists() ? dir.dirName() : kdeDefault;
+    QSettings settings(QApplicationPrivate::kdeHome() +
+                       QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
+    settings.beginGroup(QLatin1String("Icons"));
+    themeName = settings.value(QLatin1String("Theme"), defaultTheme).toString();
+}
+
+QIconTheme QCommonStylePrivate::parseIndexFile(const QString &themeName) const
+{
+    Q_Q(const QCommonStyle);
+    QIconTheme theme;
+    QFile themeIndex;
+    QStringList parents;
+    QHash <int, QString> dirList;
+
+    for ( int i = 0 ; i < iconDirs.size() && !themeIndex.exists() ; ++i) {
+          QString contentDir = QLatin1String(iconDirs[i].startsWith(QDir::homePath()) ?
+                                "/.icons/" : "/icons/");
+          themeIndex.setFileName(iconDirs[i] + contentDir +
+                                 themeName + QLatin1String("/index.theme"));
+    }
+
+    if (themeIndex.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
+        QTextStream in(&themeIndex);
+
+        while (!in.atEnd()) {
+
+            QString line = in.readLine();
+
+            if (line.startsWith(QLatin1String("Inherits="))) {
+                line = line.right(line.length() - 9);
+                parents = line.split(QLatin1Char(','));
+            }
+
+            if (line.startsWith(QLatin1String("["))) {
+                line = line.trimmed();
+                line.chop(1);
+                QString dirName = line.right(line.length() - 1);
+                if (!in.atEnd()) {
+                    line = in.readLine();
+                    int size;
+                    if (line.startsWith(QLatin1String("Size="))) {
+                        size = line.right(line.length() - 5).toInt();
+                        if (size)
+                            dirList.insertMulti(size, dirName);
+                    }
+                }
+            }
+        }
+    }
+
+    if (q->inherits("QPlastiqueStyle")) {
+        QFileInfo fileInfo(QLatin1String("/usr/share/icons/default.kde"));
+        QDir dir(fileInfo.canonicalFilePath());
+        QString defaultKDETheme = dir.exists() ? dir.dirName() : QString::fromLatin1("crystalsvg");
+        if (!parents.contains(defaultKDETheme) && themeName != defaultKDETheme)
+            parents.append(defaultKDETheme);
+    } else if (parents.isEmpty() && themeName != QLatin1String("hicolor")) {
+        parents.append(QLatin1String("hicolor"));
+    }
+    theme = QIconTheme(dirList, parents);
+    return theme;
+}
+
+QPixmap QCommonStylePrivate::findIconHelper(int size,
+                                                   const QString &themeName,
+                                                   const QString &iconName,
+                                                   QStringList &visited) const
+{
+    QPixmap pixmap;
+
+    if (!themeName.isEmpty()) {
+
+        visited << themeName;
+        QIconTheme theme = themeList.value(themeName);
+
+        if (!theme.isValid()) {
+            theme = parseIndexFile(themeName);
+            themeList.insert(themeName, theme);
+        }
+
+        if (!theme.isValid())
+            return QPixmap();
+
+        QList <QString> subDirs = theme.dirList().values(size);
+
+        for ( int i = 0 ; i < iconDirs.size() ; ++i) {
+            for ( int j = 0 ; j < subDirs.size() ; ++j) {
+                QString contentDir = (iconDirs[i].startsWith(QDir::homePath())) ?
+                                     QLatin1String("/.icons/") : QLatin1String("/icons/");
+                QString fileName = iconDirs[i] + contentDir + themeName + QLatin1Char('/') + subDirs[j] + QLatin1Char('/') + iconName;
+                QFile file(fileName);
+                if (file.exists())
+                    pixmap.load(fileName);
+                if (!pixmap.isNull())
+                    break;
+            }
+        }
+
+        if (pixmap.isNull()) {
+            QStringList parents = theme.parents();
+            //search recursively through inherited themes
+            for (int i = 0 ; pixmap.isNull() && i < parents.size() ; ++i) {
+               QString parentTheme = parents[i].trimmed();
+               if (!visited.contains(parentTheme)) //guard against endless recursion
+                  pixmap = findIconHelper(size, parentTheme, iconName, visited);
+            }
+        }
+    }
+    return pixmap;
+}
+
+QPixmap QCommonStylePrivate::findIcon(int size, const QString &name) const
+{
+    QPixmap pixmap;
+    QString pixmapName = QLatin1String("$qt") + name + QString::number(size);
+
+    if (QPixmapCache::find(pixmapName, pixmap))
+        return pixmap;
+
+    if (!themeName.isEmpty()) {
+        QStringList visited;
+        pixmap = findIconHelper(size, themeName, name, visited);
+    }
+    QPixmapCache::insert(pixmapName, pixmap);
+    return pixmap;
+}
+
+QIcon QCommonStylePrivate::createIcon(const QString &name) const
+{
+    QIcon icon;
+    icon.addPixmap(findIcon(16, name));
+    icon.addPixmap(findIcon(24, name));
+    icon.addPixmap(findIcon(32, name));
+    return icon;
+}
+
+#endif //Q_WS_X11
+
 #ifndef QT_NO_ITEMVIEWS
+
 
 QSize QCommonStylePrivate::viewItemSize(const QStyleOptionViewItemV4 *option, int role) const
 {
@@ -994,7 +1203,7 @@ void QCommonStylePrivate::viewItemLayout(const QStyleOptionViewItemV4 *opt,  QRe
         if (opt->direction == Qt::RightToLeft) {
             check.setRect(x + w - cw, y, cw, h);
         } else {
-            check.setRect(x + checkMargin, y, cw, h);
+            check.setRect(x, y, cw, h);
         }
     }
 
@@ -1484,8 +1693,7 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
 
                     if (toolbutton->toolButtonStyle == Qt::ToolButtonTextUnderIcon) {
                         pr.setHeight(pmSize.height() + 6);
-
-                        tr.adjust(0, pr.bottom(), 0, -3);
+                        tr.adjust(0, pr.height(), 0, -3);
                         pr.translate(shiftX, shiftY);
                         if (!hasArrow) {
                             drawItemPixmap(p, pr, Qt::AlignCenter, pm);
@@ -1495,7 +1703,7 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
                         alignment |= Qt::AlignCenter;
                     } else {
                         pr.setWidth(pmSize.width() + 8);
-                        tr.adjust(pr.right(), 0, 0, 0);
+                        tr.adjust(pr.width(), 0, 0, 0);
                         pr.translate(shiftX, shiftY);
                         if (!hasArrow) {
                             drawItemPixmap(p, QStyle::visualRect(opt->direction, rect, pr), Qt::AlignCenter, pm);
@@ -1728,22 +1936,27 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
         break;
     case CE_TabBarTabLabel:
         if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
-            QStyleOptionTabV2 tabV2(*tab);
+            // ### consider merging this with SE_TabBarTabText
+            QStyleOptionTabV3 tabV2(*tab);
             QRect tr = tabV2.rect;
             bool verticalTabs = tabV2.shape == QTabBar::RoundedEast
                                 || tabV2.shape == QTabBar::RoundedWest
                                 || tabV2.shape == QTabBar::TriangularEast
                                 || tabV2.shape == QTabBar::TriangularWest;
-            bool selected = tabV2.state & State_Selected;
+
+            int alignment = Qt::AlignCenter | Qt::TextShowMnemonic;
+            if (!styleHint(SH_UnderlineShortcut, opt, widget))
+                alignment |= Qt::TextHideMnemonic;
+
             if (verticalTabs) {
                 p->save();
                 int newX, newY, newRot;
                 if (tabV2.shape == QTabBar::RoundedEast || tabV2.shape == QTabBar::TriangularEast) {
-                    newX = tr.width();
+                    newX = tr.width() + tr.x();
                     newY = tr.y();
                     newRot = 90;
                 } else {
-                    newX = 0;
+                    newX = tr.x();
                     newY = tr.y() + tr.height();
                     newRot = -90;
                 }
@@ -1753,31 +1966,32 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
                 m.rotate(newRot);
                 p->setTransform(m, true);
             }
-            tr.adjust(0, 0, pixelMetric(QStyle::PM_TabBarTabShiftHorizontal, tab, widget),
-                            pixelMetric(QStyle::PM_TabBarTabShiftVertical, tab, widget));
+            tr = subElementRect(SE_TabBarTabText, opt, widget);
 
-            if (selected)
-            {
-                tr.setBottom(tr.bottom() - pixelMetric(QStyle::PM_TabBarTabShiftVertical, tab,
-                                                    widget));
-                tr.setRight(tr.right() - pixelMetric(QStyle::PM_TabBarTabShiftHorizontal, tab,
-                                                    widget));
-            }
-
-            int alignment = Qt::AlignCenter | Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, widget))
-                alignment |= Qt::TextHideMnemonic;
             if (!tabV2.icon.isNull()) {
                 QSize iconSize = tabV2.iconSize;
                 if (!iconSize.isValid()) {
                     int iconExtent = pixelMetric(PM_SmallIconSize);
                     iconSize = QSize(iconExtent, iconExtent);
                 }
+                QSize tabIconSize = tabV2.icon.actualSize(iconSize,
+                                                          (tabV2.state & State_Enabled) ? QIcon::Normal
+                                                          : QIcon::Disabled);
                 QPixmap tabIcon = tabV2.icon.pixmap(iconSize,
                                                     (tabV2.state & State_Enabled) ? QIcon::Normal
                                                                                   : QIcon::Disabled);
-                p->drawPixmap(tr.left() + 6, tr.center().y() - tabIcon.height() / 2, tabIcon);
-                tr.setLeft(tr.left() + iconSize.width() + 4);
+
+                int offset = 4;
+                int left = opt->rect.left();
+                if (tabV2.leftButtonSize.isEmpty())
+                    offset += 2;
+                else
+                    left += tabV2.leftButtonSize.width() + (6 + 2) + 2;
+                QRect iconRect = QRect(left + offset, tr.center().y() - tabIcon.height() / 2,
+                            tabIconSize.width(), tabIconSize.height());
+                if (!verticalTabs)
+                    iconRect = visualRect(opt->direction, opt->rect, iconRect);
+                p->drawPixmap(iconRect.x(), iconRect.y(), tabIcon);
             }
 
             drawItemText(p, tr, alignment, tab->palette, tab->state & State_Enabled, tab->text, QPalette::WindowText);
@@ -2120,6 +2334,78 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt,
         break;
 
 #endif // QT_NO_ITEMVIEWS
+#ifndef QT_NO_FRAME
+    case CE_ShapedFrame:
+        if (const QStyleOptionFrameV3 *f = qstyleoption_cast<const QStyleOptionFrameV3 *>(opt)) {
+            int frameShape  = f->frameShape;
+            int frameShadow = QFrame::Plain;
+            if (f->state & QStyle::State_Sunken) {
+                frameShadow = QFrame::Sunken;
+            } else if (f->state & QStyle::State_Raised) {
+                frameShadow = QFrame::Raised;
+            }
+
+            int lw = f->lineWidth;
+            int mlw = f->midLineWidth;
+            QPalette::ColorRole foregroundRole = QPalette::WindowText;
+            if (widget)
+                foregroundRole = widget->foregroundRole();
+
+            switch (frameShape) {
+            case QFrame::Box:
+                if (frameShadow == QFrame::Plain) {
+                    qDrawPlainRect(p, f->rect, f->palette.color(foregroundRole), lw);
+                } else {
+                    qDrawShadeRect(p, f->rect, f->palette, frameShadow == QFrame::Sunken, lw, mlw);
+                }
+                break;
+            case QFrame::StyledPanel:
+                //keep the compatibility with Qt 4.4 if there is a proxy style.
+                //be sure to call drawPrimitive(QStyle::PE_Frame) on the proxy style
+                if (widget) {
+                    widget->style()->drawPrimitive(QStyle::PE_Frame, opt, p, widget);
+                } else {
+                    drawPrimitive(QStyle::PE_Frame, opt, p, widget);
+                }
+                break;
+            case QFrame::Panel:
+                if (frameShadow == QFrame::Plain) {
+                    qDrawPlainRect(p, f->rect, f->palette.color(foregroundRole), lw);
+                } else {
+                    qDrawShadePanel(p, f->rect, f->palette, frameShadow == QFrame::Sunken, lw);
+                }
+                break;
+            case QFrame::WinPanel:
+                if (frameShadow == QFrame::Plain) {
+                    qDrawPlainRect(p, f->rect, f->palette.color(foregroundRole), lw);
+                } else {
+                    qDrawWinPanel(p, f->rect, f->palette, frameShadow == QFrame::Sunken);
+                }
+                break;
+            case QFrame::HLine:
+            case QFrame::VLine: {
+                QPoint p1, p2;
+                if (frameShape == QFrame::HLine) {
+                    p1 = QPoint(opt->rect.x(), opt->rect.height() / 2);
+                    p2 = QPoint(opt->rect.x() + opt->rect.width(), p1.y());
+                } else {
+                    p1 = QPoint(opt->rect.x()+opt->rect.width() / 2, 0);
+                    p2 = QPoint(p1.x(), opt->rect.height());
+                }
+                if (frameShadow == QFrame::Plain) {
+                    QPen oldPen = p->pen();
+                    p->setPen(QPen(opt->palette.brush(foregroundRole), lw));
+                    p->drawLine(p1, p2);
+                    p->setPen(oldPen);
+                } else {
+                    qDrawShadeLine(p, p1, p2, f->palette, frameShadow == QFrame::Sunken, lw, mlw);
+                }
+                break;
+                }
+            }
+        }
+        break;
+#endif
     default:
         break;
     }
@@ -2323,7 +2609,8 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
     case SE_ComboBoxFocusRect:
         if (const QStyleOptionComboBox *cb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             int margin = cb->frame ? 3 : 0;
-            r.setRect(margin, margin, opt->rect.width() - 2*margin - 16, opt->rect.height() - 2*margin);
+            r.setRect(opt->rect.left() + margin, opt->rect.top() + margin,
+                      opt->rect.width() - 2*margin - 16, opt->rect.height() - 2*margin);
             r = visualRect(opt->direction, opt->rect, r);
         }
         break;
@@ -2483,6 +2770,8 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
             QStyleOptionTab tabopt;
             tabopt.shape = twf->shape;
             int overlap = pixelMetric(PM_TabBarBaseOverlap, &tabopt, widget);
+            if (twf->lineWidth == 0)
+                overlap = 0;
             switch (twf->shape) {
             case QTabBar::RoundedNorth:
             case QTabBar::TriangularNorth:
@@ -2503,7 +2792,7 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
                           QSize(qMin(twf->rect.width() - twf->tabBarSize.width() + overlap, twf->rect.width()), twf->rect.height()));
                 break;
             }
-            if (sr == SE_TabWidgetTabContents)
+            if (sr == SE_TabWidgetTabContents && twf->lineWidth > 0)
                r.adjust(2, 2, -2, -2);
         }
         break;
@@ -2547,6 +2836,125 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
            r = visualRect(twf->direction, twf->rect, r);
         }
         break;
+    case SE_TabBarTabText:
+        // ### consider merging this with CE_TabBarTabLabel
+        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+            QStyleOptionTabV3 tabV2(*tab);
+            QRect tr = tabV2.rect;
+            bool verticalTabs = tabV2.shape == QTabBar::RoundedEast
+                                || tabV2.shape == QTabBar::RoundedWest
+                                || tabV2.shape == QTabBar::TriangularEast
+                                || tabV2.shape == QTabBar::TriangularWest;
+            if (verticalTabs)
+                tr.setRect(0, 0, tr.height(), tr.width());
+            int verticalShift = pixelMetric(QStyle::PM_TabBarTabShiftVertical, tab, widget);
+            int horizontalShift = pixelMetric(QStyle::PM_TabBarTabShiftHorizontal, tab, widget);
+            if (tabV2.shape == QTabBar::RoundedSouth || tabV2.shape == QTabBar::TriangularSouth)
+                verticalShift = -verticalShift;
+            tr.adjust(0, 0, horizontalShift, verticalShift);
+            bool selected = tabV2.state & State_Selected;
+            if (selected) {
+                tr.setBottom(tr.bottom() - verticalShift);
+                tr.setRight(tr.right() - horizontalShift);
+            }
+
+            // left widget
+            if (!tabV2.leftButtonSize.isEmpty()) {
+                tr.setLeft(tr.left() + 6 + 2 +
+                    (verticalTabs ? tabV2.leftButtonSize.height() : tabV2.leftButtonSize.width()));
+            }
+
+            // icon
+            if (!tabV2.icon.isNull()) {
+                QSize iconSize = tabV2.iconSize;
+                if (!iconSize.isValid()) {
+                    int iconExtent = pixelMetric(PM_SmallIconSize);
+                    iconSize = QSize(iconExtent, iconExtent);
+                }
+                QSize tabIconSize = tabV2.icon.actualSize(iconSize,
+                                                          (tabV2.state & State_Enabled) ? QIcon::Normal
+                                                          : QIcon::Disabled);
+                int offset = 4;
+                if (tabV2.leftButtonSize.isEmpty())
+                    offset += 2;
+
+                QRect iconRect = QRect(tr.left() + offset, tr.center().y() - tabIconSize.height() / 2,
+                            tabIconSize.width(), tabIconSize .height());
+                if (!verticalTabs)
+                    iconRect = visualRect(opt->direction, opt->rect, iconRect);
+                tr.setLeft(tr.left() + tabIconSize.width() + offset + 2);
+            }
+
+            // right widget
+            if (!tabV2.rightButtonSize.isEmpty()) {
+                tr.setRight(tr.right() - 6 - 2 -
+                    (verticalTabs ? tabV2.rightButtonSize.height() : tabV2.rightButtonSize.width()));
+            }
+
+            if (!verticalTabs)
+                tr = visualRect(opt->direction, opt->rect, tr);
+            r = tr;
+        }
+        break;
+    case SE_TabBarTabLeftButton:
+    case SE_TabBarTabRightButton:
+        if (const QStyleOptionTabV3 *tab = qstyleoption_cast<const QStyleOptionTabV3 *>(opt)) {
+            bool selected = tab->state & State_Selected;
+            int verticalShift = pixelMetric(QStyle::PM_TabBarTabShiftVertical, tab, widget);
+            int horizontalShift = pixelMetric(QStyle::PM_TabBarTabShiftHorizontal, tab, widget);
+
+            bool verticalTabs = tab->shape == QTabBar::RoundedEast
+                    || tab->shape == QTabBar::RoundedWest
+                    || tab->shape == QTabBar::TriangularEast
+                    || tab->shape == QTabBar::TriangularWest;
+
+            QRect tr = tab->rect;
+            if (tab->shape == QTabBar::RoundedSouth || tab->shape == QTabBar::TriangularSouth)
+                verticalShift = -verticalShift;
+            if (verticalTabs) {
+                qSwap(horizontalShift, verticalShift);
+                horizontalShift *= -1;
+                verticalShift *= -1;
+            }
+            tr.adjust(0, 0, horizontalShift, verticalShift);
+            if (selected)
+            {
+                tr.setBottom(tr.bottom() - verticalShift);
+                tr.setRight(tr.right() - horizontalShift);
+            }
+
+            QSize size = (sr == SE_TabBarTabLeftButton) ? tab->leftButtonSize : tab->rightButtonSize;
+            int w = size.width();
+            int h = size.height();
+            int midHeight = static_cast<int>(ceil(float(tr.height() - h) / 2));
+            int midWidth = ((tr.width() - w) / 2);
+
+            bool atTheTop = true;
+            switch (tab->shape) {
+            case QTabBar::RoundedWest:
+            case QTabBar::TriangularWest:
+                atTheTop = (sr == SE_TabBarTabLeftButton);
+                break;
+            case QTabBar::RoundedEast:
+            case QTabBar::TriangularEast:
+                atTheTop = (sr == SE_TabBarTabRightButton);
+                break;
+            default:
+                if (sr == SE_TabBarTabLeftButton)
+                    r = QRect(6 + tab->rect.x(), midHeight, w, h);
+                else
+                    r = QRect(tab->rect.right() - 6 - w, midHeight, w, h);
+                r = visualRect(tab->direction, tab->rect, r);
+            }
+            if (verticalTabs) {
+                if (atTheTop)
+                    r = QRect(midWidth, tr.y() + tab->rect.height() - 6 - h, w, h);
+                else
+                    r = QRect(midWidth, tr.y() + 6, w, h);
+            }
+        }
+
+        break;
 #endif // QT_NO_TABWIDGET
 #ifndef QT_NO_TABBAR
     case SE_TabBarTearIndicator:
@@ -2587,6 +2995,63 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
             r = visualRect(opt->direction, opt->rect, r);
         }
         break;
+    case SE_ShapedFrameContents:
+        if (const QStyleOptionFrameV3 *f = qstyleoption_cast<const QStyleOptionFrameV3 *>(opt)) {
+            int frameShape  = f->frameShape;
+            int frameShadow = QFrame::Plain;
+            if (f->state & QStyle::State_Sunken) {
+                frameShadow = QFrame::Sunken;
+            } else if (f->state & QStyle::State_Raised) {
+                frameShadow = QFrame::Raised;
+            }
+
+            int frameWidth = 0;
+
+            switch (frameShape) {
+            case QFrame::NoFrame:
+                frameWidth = 0;
+                break;
+
+            case QFrame::Box:
+            case QFrame::HLine:
+            case QFrame::VLine:
+                switch (frameShadow) {
+                case QFrame::Plain:
+                    frameWidth = f->lineWidth;
+                    break;
+                case QFrame::Raised:
+                case QFrame::Sunken:
+                    frameWidth = (short)(f->lineWidth*2 + f->midLineWidth);
+                    break;
+                }
+                break;
+
+            case QFrame::StyledPanel:
+                //keep the compatibility with Qt 4.4 if there is a proxy style.
+                //be sure to call drawPrimitive(QStyle::SE_FrameContents) on the proxy style
+                if (widget)
+                    return widget->style()->subElementRect(QStyle::SE_FrameContents, opt, widget);
+                else
+                    return subElementRect(QStyle::SE_FrameContents, opt, widget);
+                break;
+
+            case QFrame::WinPanel:
+                frameWidth = 2;
+                break;
+
+            case QFrame::Panel:
+                switch (frameShadow) {
+                case QFrame::Plain:
+                case QFrame::Raised:
+                case QFrame::Sunken:
+                    frameWidth = f->lineWidth;
+                    break;
+                }
+                break;
+            }
+            r = f->rect.adjusted(frameWidth, frameWidth, -frameWidth, -frameWidth);
+        }
+        break;
 #ifndef QT_NO_DOCKWIDGET
     case SE_DockWidgetCloseButton:
     case SE_DockWidgetFloatButton:
@@ -2621,9 +3086,9 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
 
             QRect closeRect;
             if (canClose) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarCloseButton,
-                                            opt, widget).pixmap(iconSize);
-                QSize sz = pm.size() + QSize(buttonMargin, buttonMargin);
+                QSize sz = standardIcon(QStyle::SP_TitleBarCloseButton,
+                                        opt, widget).actualSize(QSize(iconSize, iconSize));
+                sz += QSize(buttonMargin, buttonMargin);
                 if (verticalTitleBar)
                     sz.transpose();
                 closeRect = QRect(right - sz.width(),
@@ -2638,9 +3103,9 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
 
             QRect floatRect;
             if (canFloat) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarNormalButton,
-                                            opt, widget).pixmap(iconSize);
-                QSize sz = pm.size() + QSize(buttonMargin, buttonMargin);
+                QSize sz = standardIcon(QStyle::SP_TitleBarNormalButton,
+                                        opt, widget).actualSize(QSize(iconSize, iconSize));
+                sz += QSize(buttonMargin, buttonMargin);
                 if (verticalTitleBar)
                     sz.transpose();
                 floatRect = QRect(right - sz.width(),
@@ -2660,7 +3125,7 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
                     icon = dw->windowIcon();
                 if (!icon.isNull()
                         && icon.cacheKey() != qApp->windowIcon().cacheKey()) {
-                    QSize sz = icon.pixmap(r.height()).size();
+                    QSize sz = icon.actualSize(QSize(r.height(), r.height()));
                     if (verticalTitleBar)
                         sz.transpose();
                     iconRect = QRect(left, rect.center().y() - sz.height()/2,
@@ -2726,14 +3191,14 @@ QRect QCommonStyle::subElementRect(SubElement sr, const QStyleOption *opt,
 #ifndef QT_NO_DIAL
 static qreal angle(const QPointF &p1, const QPointF &p2)
 {
-    static const qreal rad_factor = 180.0 / Q_PI;
-    qreal _angle = 0.0;
+    static const qreal rad_factor = 180 / Q_PI;
+    qreal _angle = 0;
 
     if (p1.x() == p2.x()) {
         if (p1.y() < p2.y())
-            _angle = 270.0;
+            _angle = 270;
         else
-            _angle = 90.0;
+            _angle = 90;
     } else  {
         qreal x1, x2, y1, y2;
 
@@ -2749,7 +3214,7 @@ static qreal angle(const QPointF &p1, const QPointF &p2)
         _angle = atan(m) *  rad_factor;
 
         if (p1.x() < p2.x())
-            _angle = 180.0 - _angle;
+            _angle = 180 - _angle;
         else
             _angle = -_angle;
     }
@@ -2772,6 +3237,7 @@ static QPolygonF calcArrow(const QStyleOptionSlider *dial, qreal &a)
     int height = dial->rect.height();
     int r = qMin(width, height) / 2;
     int currentSliderPosition = dial->upsideDown ? dial->sliderPosition : (dial->maximum - dial->sliderPosition);
+
     if (dial->maximum == dial->minimum)
         a = Q_PI / 2;
     else if (dial->dialWrapping)
@@ -2804,15 +3270,21 @@ static QPolygonF calcLines(const QStyleOptionSlider *dial, const QWidget *)
     QPolygonF poly;
     int width = dial->rect.width();
     int height = dial->rect.height();
-    qreal r = qMin(width, height) / 2.0;
+    qreal r = qMin(width, height) / 2;
     int bigLineSize = calcBigLineSize(int(r));
 
-    qreal xc = width / 2.0;
-    qreal yc = height / 2.0;
+    qreal xc = width / 2;
+    qreal yc = height / 2;
     int ns = dial->tickInterval;
     int notches = (dial->maximum + ns - 1 - dial->minimum) / ns;
     if (notches <= 0)
         return poly;
+    if (dial->maximum < dial->minimum
+        || dial->maximum - dial->minimum > 1000) {
+        int maximum = dial->minimum + 1000;
+        notches = (maximum + ns - 1 - dial->minimum) / ns;
+    }
+
     poly.resize(2 + 2 * notches);
     int smallLineSize = bigLineSize / 2;
     for (int i = 0; i <= notches; ++i) {
@@ -3067,19 +3539,19 @@ void QCommonStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCompl
             button = subControlRect(cc, toolbutton, SC_ToolButton, widget);
             menuarea = subControlRect(cc, toolbutton, SC_ToolButtonMenu, widget);
 
-            State bflags = toolbutton->state;
+            State bflags = toolbutton->state & ~State_Sunken;
 
             if (bflags & State_AutoRaise) {
-                if (!(bflags & State_MouseOver)) {
+                if (!(bflags & State_MouseOver) || !(bflags & State_Enabled)) {
                     bflags &= ~State_Raised;
                 }
             }
             State mflags = bflags;
-
-            if (toolbutton->activeSubControls & SC_ToolButton)
-                bflags |= State_Sunken;
-            if (toolbutton->activeSubControls & SC_ToolButtonMenu)
+            if (toolbutton->state & State_Sunken) {
+                if (toolbutton->activeSubControls & SC_ToolButton)
+                    bflags |= State_Sunken;
                 mflags |= State_Sunken;
+            }
 
             QStyleOption tool(0);
             tool.palette = toolbutton->palette;
@@ -3101,6 +3573,7 @@ void QCommonStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCompl
                 drawPrimitive(PE_FrameFocusRect, &fr, p, widget);
             }
             QStyleOptionToolButton label = *toolbutton;
+            label.state = bflags;
             int fw = pixelMetric(PM_DefaultFrameWidth, opt, widget);
             label.rect = button.adjusted(fw, fw, -fw, -fw);
             drawControl(CE_ToolButtonLabel, &label, p, widget);
@@ -3311,10 +3784,10 @@ void QCommonStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCompl
 
             int width = dial->rect.width();
             int height = dial->rect.height();
-            qreal r = qMin(width, height) / 2.0;
-            qreal d_ = r / 6.0;
-            qreal dx = dial->rect.x() + d_ + (width - 2 * r) / 2.0 + 1;
-            qreal dy = dial->rect.y() + d_ + (height - 2 * r) / 2.0 + 1;
+            qreal r = qMin(width, height) / 2;
+            qreal d_ = r / 6;
+            qreal dx = dial->rect.x() + d_ + (width - 2 * r) / 2 + 1;
+            qreal dy = dial->rect.y() + d_ + (height - 2 * r) / 2 + 1;
             QRect br = QRect(int(dx), int(dy), int(r * 2 - 2 * d_ - 2), int(r * 2 - 2 * d_ - 2));
 
             QPalette pal = opt->palette;
@@ -3560,6 +4033,22 @@ QStyle::SubControl QCommonStyle::hitTestComplexControl(ComplexControl cc, const 
         }
         break;
 #endif // QT_NO_SCROLLBAR
+#ifndef QT_NO_TOOLBUTTON
+    case CC_ToolButton:
+        if (const QStyleOptionToolButton *toolbutton = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
+            QRect r;
+            uint ctrl = SC_ToolButton;
+            while (ctrl <= SC_ToolButtonMenu) {
+                r = subControlRect(cc, toolbutton, QStyle::SubControl(ctrl), widget);
+                if (r.isValid() && r.contains(pt)) {
+                    sc = QStyle::SubControl(ctrl);
+                    break;
+                }
+                ctrl <<= 1;
+            }
+        }
+        break;
+#endif // QT_NO_TOOLBUTTON
 #ifdef QT3_SUPPORT
     case CC_Q3ListView:
         if (const QStyleOptionQ3ListView *lv = qstyleoption_cast<const QStyleOptionQ3ListView *>(opt)) {
@@ -3964,7 +4453,7 @@ QRect QCommonStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex 
                 int topMargin = 0;
                 int topHeight = 0;
                 int verticalAlignment = styleHint(SH_GroupBox_TextLabelVerticalAlignment, groupBox, widget);
-                if (groupBox->text.size()) {
+                if (groupBox->text.size() || (groupBox->subControls & QStyle::SC_GroupBoxCheckBox)) {
                     topHeight = groupBox->fontMetrics.height();
                     if (verticalAlignment & Qt::AlignVCenter)
                         topMargin = topHeight / 2;
@@ -4414,6 +4903,16 @@ int QCommonStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QWid
     case PM_TabBar_ScrollButtonOverlap:
         ret = 1;
         break;
+    case PM_TabCloseIndicatorWidth:
+    case PM_TabCloseIndicatorHeight:
+        ret = 16;
+        break;
+    case PM_ScrollView_ScrollBarSpacing:
+        ret = 2 * pixelMetric(PM_DefaultFrameWidth, opt, widget);
+        break;
+    case PM_SubMenuOverlap:
+        ret = -pixelMetric(QStyle::PM_MenuPanelWidth, opt, widget);
+        break;
     default:
         ret = 0;
         break;
@@ -4477,8 +4976,10 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                 h = 2;
             } else {
                 h =  mi->fontMetrics.height() + 8;
-                if (!mi->icon.isNull())
-                    h = qMax(h, mi->icon.pixmap(pixelMetric(PM_SmallIconSize), QIcon::Normal).height() + 4);
+                if (!mi->icon.isNull()) {
+                    int iconExtent = pixelMetric(PM_SmallIconSize);
+                    h = qMax(h, mi->icon.actualSize(QSize(iconExtent, iconExtent)).height() + 4);
+                }
             }
             if (mi->text.contains(QLatin1Char('\t')))
                 w += 12;
@@ -4767,6 +5268,12 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget
         break;
     case SH_DialogButtonLayout:
         ret = QDialogButtonBox::WinLayout;
+#ifdef Q_WS_X11
+        if (X11->desktopEnvironment == DE_KDE)
+            ret = QDialogButtonBox::KdeLayout;
+        else if (X11->desktopEnvironment == DE_GNOME)
+            ret = QDialogButtonBox::GnomeLayout;
+#endif
         break;
     case SH_ComboBox_PopupFrameStyle:
         ret = QFrame::StyledPanel | QFrame::Plain;
@@ -4826,6 +5333,17 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget
     case SH_ItemView_ArrowKeysNavigateIntoChildren:
         ret = false;
         break;
+    case SH_ItemView_DrawDelegateFrame:
+        ret = 0;
+        break;
+#ifndef QT_NO_TABBAR
+    case SH_TabBar_CloseButtonPosition:
+        ret = QTabBar::RightSide;
+        break;
+#endif
+    case SH_DockWidget_ButtonsHaveFrame:
+        ret = true;
+        break;
     default:
         ret = 0;
         break;
@@ -4841,8 +5359,296 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
 #ifdef QT_NO_IMAGEFORMAT_PNG
     Q_UNUSED(option);
     Q_UNUSED(widget);
-#endif
+    Q_UNUSED(sp);
+#else
+#ifdef Q_WS_X11
+    Q_D(const QCommonStyle);
+    QPixmap pixmap;
+    if (qApp->desktopSettingsAware()) {
+        d->lookupIconTheme();
+        switch (sp) {
+        case SP_DirHomeIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("folder_home.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MessageBoxInformation:
+            {
+                pixmap = d->findIcon(32, QLatin1String("messagebox_info.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MessageBoxWarning:
+            {
+                pixmap = d->findIcon(32, QLatin1String("messagebox_warning.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MessageBoxCritical:
+            {
+                pixmap = d->findIcon(32, QLatin1String("messagebox_critical.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MessageBoxQuestion:
+            {
+                pixmap = d->findIcon(32, QLatin1String("help.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_DialogOpenButton:
+        case SP_DirOpenIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("folder-open.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("folder_open.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_FileIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("text-x-generic.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("empty.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_FileLinkIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("link_overlay.png"));
+                if (!pixmap.isNull()) {
+                    QPixmap fileIcon = d->findIcon(16, QLatin1String("text-x-generic.png"));
+                    if (fileIcon.isNull())
+                        fileIcon = d->findIcon(16, QLatin1String("empty.png"));
+                    if (!fileIcon.isNull()) {
+                        QPainter painter(&fileIcon);
+                        painter.drawPixmap(0, 0, 16, 16, pixmap);
+                        return fileIcon;
+                    }
+                }
+                break;
+           }
+        case SP_DirClosedIcon:
+        case SP_DirIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("folder.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_DirLinkIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("link_overlay.png"));
+                if (!pixmap.isNull()) {
+                    QPixmap dirIcon = d->findIcon(16, QLatin1String("folder.png"));
+                    if (!dirIcon.isNull()) {
+                        QPainter painter(&dirIcon);
+                        painter.drawPixmap(0, 0, 16, 16, pixmap);
+                        return dirIcon;
+                    }
+                }
+                break;
+           }
+        case SP_DriveFDIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("media-floppy.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("3floppy_unmount.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_ComputerIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("computer.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("system.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_DesktopIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("user-desktop.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("desktop.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_TrashIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("user-trash.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("trashcan_empty.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_DriveCDIcon:
+        case SP_DriveDVDIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("media-optical.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("cdrom_unmount.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_DriveHDIcon:
+            {
+                pixmap = d->findIcon(16, QLatin1String("drive-harddisk.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(16, QLatin1String("hdd_unmount.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_FileDialogToParent:
+            {
+                pixmap = d->findIcon(32, QLatin1String("go-up.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(32, QLatin1String("up.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_FileDialogNewFolder:
+            {
+                pixmap = d->findIcon(16, QLatin1String("folder_new.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_ArrowUp:
+            {
+                pixmap = d->findIcon(32, QLatin1String("go-up.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(32, QLatin1String("up.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_ArrowDown:
+            {
+                pixmap = d->findIcon(32, QLatin1String("go-down.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(32, QLatin1String("down.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_ArrowRight:
+            {
+                pixmap = d->findIcon(32, QLatin1String("go-next.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(32, QLatin1String("forward.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_ArrowLeft:
+            {
+                pixmap = d->findIcon(32, QLatin1String("go-previous.png"));
+                if (pixmap.isNull())
+                    pixmap = d->findIcon(32, QLatin1String("back.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_FileDialogDetailedView:
+            {
+                pixmap = d->findIcon(16, QLatin1String("view_detailed.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
 
+        case SP_FileDialogListView:
+            {
+                pixmap = d->findIcon(16, QLatin1String("view_icon.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_BrowserReload:
+            {
+                pixmap = d->findIcon(32, QLatin1String("reload.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_BrowserStop:
+            {
+                pixmap = d->findIcon(32, QLatin1String("stop.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaPlay:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_play.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaPause:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_pause.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaStop:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_stop.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaSeekForward:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_fwd.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaSeekBackward:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_rew.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaSkipForward:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_end.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+        case SP_MediaSkipBackward:
+            {
+                pixmap = d->findIcon(16, QLatin1String("player_start.png"));
+                if (!pixmap.isNull())
+                    return pixmap;
+                break;
+            }
+
+        default:
+            break;
+        }
+    }
+#endif //Q_WS_X11
+#endif //QT_NO_IMAGEFORMAT_PNG
     switch (sp) {
 #ifndef QT_NO_IMAGEFORMAT_XPM
     case SP_ToolBarHorizontalExtensionButton:
@@ -4858,7 +5664,7 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
         return QPixmap(filedialog_start_xpm);
     case SP_FileDialogEnd:
         return QPixmap(filedialog_end_xpm);
-#endif // QT_NO_IMAGEFORMAT_XPM
+#endif
 #ifndef QT_NO_IMAGEFORMAT_PNG
     case SP_CommandLink:
     case SP_ArrowForward:
@@ -4934,9 +5740,9 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
     case SP_DialogApplyButton:
         return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-apply-16.png"));
     case SP_DialogResetButton:
-        return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-reset-16.png"));
+        return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-clear-16.png"));
     case SP_DialogDiscardButton:
-        return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-discard-16.png"));
+        return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-delete-16.png"));
     case SP_DialogYesButton:
         return QPixmap(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-yes-16.png"));
     case SP_DialogNoButton:
@@ -4977,14 +5783,261 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
                                                const QWidget *widget) const
 {
     QIcon icon;
+#ifdef Q_WS_X11
+    Q_D(const QCommonStyle);
+    if (qApp->desktopSettingsAware()) {
+        d->lookupIconTheme();
+        QPixmap pixmap;
+        switch (standardIcon) {
+        case SP_DirHomeIcon:
+            {
+                icon = d->createIcon(QLatin1String("folder_home.png"));
+                break;
+            }
+        case SP_MessageBoxInformation:
+            {
+                icon = d->createIcon(QLatin1String("dialog-information.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("messagebox_info.png"));
+                break;
+            }
+        case SP_MessageBoxWarning:
+            {
+                icon = d->createIcon(QLatin1String("dialog-warning.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("messagebox_warning.png"));
+                break;
+            }
+        case SP_MessageBoxCritical:
+            {
+                icon = d->createIcon(QLatin1String("dialog-error.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("messagebox_critical.png"));
+                break;
+            }
+        case SP_MessageBoxQuestion:
+            {
+                icon = d->createIcon(QLatin1String("help.png"));
+                break;
+            }
+        case SP_DialogOpenButton:
+        case SP_DirOpenIcon:
+            {
+                icon = d->createIcon(QLatin1String("folder-open.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("folder_open.png"));
+                break;
+            }
+        case SP_FileIcon:
+            {
+                icon = d->createIcon(QLatin1String("text-x-generic.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("empty.png"));
+                break;
+            }
+        case SP_DirClosedIcon:
+        case SP_DirIcon:
+            {
+                icon = d->createIcon(QLatin1String("folder.png"));
+                break;
+            }
+        case SP_DriveFDIcon:
+            {
+                icon = d->createIcon(QLatin1String("floppy_unmount.png"));
+                break;
+            }
+        case SP_ComputerIcon:
+            {
+                icon = d->createIcon(QLatin1String("computer.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("system.png"));
+                break;
+            }
+        case SP_DesktopIcon:
+            {
+                icon = d->createIcon(QLatin1String("user-desktop.png"));
+                break;
+            }
+        case SP_TrashIcon:
+            {
+                icon = d->createIcon(QLatin1String("user-trash.png"));
+                break;
+            }
+        case SP_DriveCDIcon:
+        case SP_DriveDVDIcon:
+            {
+                icon = d->createIcon(QLatin1String("media-optical.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("cdrom_unmount.png"));
+                break;
+            }
+        case SP_DriveHDIcon:
+            {
+                icon = d->createIcon(QLatin1String("drive-harddisk.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("hdd_unmount.png"));
+                break;
+            }
+        case SP_FileDialogToParent:
+            {
+                icon = d->createIcon(QLatin1String("go-up.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("up.png"));
+                break;
+            }
+        case SP_FileDialogNewFolder:
+            {
+                icon = d->createIcon(QLatin1String("folder_new.png"));
+                break;
+            }
+        case SP_ArrowUp:
+            {
+                icon = d->createIcon(QLatin1String("go-up.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("up.png"));
+                break;
+            }
+        case SP_ArrowDown:
+            {
+                icon = d->createIcon(QLatin1String("go-down.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("down.png"));
+                break;
+            }
+        case SP_ArrowRight:
+            {
+                icon = d->createIcon(QLatin1String("go-next.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("forward.png"));
+                break;
+            }
+        case SP_ArrowLeft:
+            {
+                icon = d->createIcon(QLatin1String("go-previous.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("back.png"));
+                break;
+            }
+        case SP_FileDialogDetailedView:
+            {
+                icon = d->createIcon(QLatin1String("view-list-details.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("view_detailed.png"));
+                break;
+            }
+        case SP_FileDialogListView:
+            {
+                icon = d->createIcon(QLatin1String("view-list-icons.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("view_icon.png"));
+                break;
+            }
+        case SP_BrowserReload:
+            {
+                icon = d->createIcon(QLatin1String("view-refresh.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("reload.png"));
+                break;
+            }
+        case SP_BrowserStop:
+            {
+                icon = d->createIcon(QLatin1String("process-stop.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("stop.png"));
+                break;
+            }
+        case SP_MediaPlay:
+            {
+                icon = d->createIcon(QLatin1String("media-playback-start.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_play.png"));
+                break;
+            }
+        case SP_MediaPause:
+            {
+                icon = d->createIcon(QLatin1String("media-playback-pause.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_pause.png"));
+                break;
+            }
+        case SP_MediaStop:
+            {
+                icon = d->createIcon(QLatin1String("media-playback-stop.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_stop.png"));
+                break;
+            }
+        case SP_MediaSeekForward:
+            {
+                icon = d->createIcon(QLatin1String("media-skip-forward.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_fwd.png"));
+                break;
+            }
+        case SP_MediaSeekBackward:
+            {
+                icon = d->createIcon(QLatin1String("media-skip-backward.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_rew.png"));
+                break;
+            }
+        case SP_MediaSkipForward:
+            {
+                icon = d->createIcon(QLatin1String("media-skip-forward.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_end.png"));
+                break;
+            }
+        case SP_MediaSkipBackward:
+            {
+                icon = d->createIcon(QLatin1String("media-skip-backward.png"));
+                if (icon.isNull())
+                    icon = d->createIcon(QLatin1String("player_start.png"));
+                break;
+            }
+
+        case SP_FileLinkIcon: {
+            icon = QIcon(standardPixmap(standardIcon, option, widget));
+            QPixmap pixmap = d->findIcon(32, QLatin1String("link_overlay.png"));
+            if (!pixmap.isNull()) {
+                QPixmap fileIcon = d->findIcon(32, QLatin1String("text-x-generic.png"));
+                if (fileIcon.isNull())
+                    fileIcon = d->findIcon(32, QLatin1String("empty.png"));
+                if (!fileIcon.isNull()) {
+                    QPainter painter(&fileIcon);
+                    painter.drawPixmap(0, 0, 32, 32, pixmap);
+                    icon.addPixmap(fileIcon);
+                }
+            }
+        }
+        break;
+        case SP_DirLinkIcon: {
+            icon = QIcon(standardPixmap(standardIcon, option, widget));
+            QPixmap pixmap = d->findIcon(32, QLatin1String("link_overlay.png"));
+            if (!pixmap.isNull()) {
+                QPixmap fileIcon = d->findIcon(32, QLatin1String("folder.png"));
+                if (!fileIcon.isNull()) {
+                    QPainter painter(&fileIcon);
+                    painter.drawPixmap(0, 0, 32, 32, pixmap);
+                    icon.addPixmap(fileIcon);
+                }
+            }
+        }
+        break;
+        default:
+            break;
+        }
+        if (!icon.isNull())
+            return icon;
+    }
+#endif//Q_WS_X11
+
     switch (standardIcon) {
 #ifndef QT_NO_IMAGEFORMAT_PNG
      case SP_FileDialogNewFolder:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/newdirectory-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/newdirectory-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/newdirectory-128.png"));
-#endif
         break;
     case SP_FileDialogBack:
         return standardIconImplementation(SP_ArrowBack, option, widget);
@@ -4992,108 +6045,78 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
         return standardIconImplementation(SP_ArrowUp, option, widget);
     case SP_FileDialogDetailedView:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewdetailed-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewdetailed-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewdetailed-128.png"));
-#endif
         break;
     case SP_FileDialogInfoView:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/fileinfo-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/fileinfo-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/fileinfo-128.png"));
-#endif
         break;
     case SP_FileDialogContentsView:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filecontents-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filecontents-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filecontents-128.png"));
-#endif
         break;
     case SP_FileDialogListView:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewlist-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewlist-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/viewlist-128.png"));
-#endif
         break;
     case SP_DialogOkButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-ok-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-ok-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-ok-128.png"));
-#endif
         break;
     case SP_DialogCancelButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-cancel-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-cancel-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-cancel-128.png"));
-#endif
         break;
     case SP_DialogHelpButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-help-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-help-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-help-128.png"));
-#endif
         break;
     case SP_DialogOpenButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-open-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-open-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-open-128.png"));
-#endif
         break;
     case SP_DialogSaveButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-save-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-save-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-save-128.png"));
-#endif
         break;
     case SP_DialogCloseButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-close-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-close-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-close-128.png"));
-#endif
         break;
     case SP_DialogApplyButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-apply-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-apply-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-apply-128.png"));
-#endif
         break;
     case SP_DialogResetButton:
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-reset-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-reset-32.png"));
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-reset-128.png"));
-#endif
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-clear-16.png"));
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-clear-32.png"));
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-clear-128.png"));
         break;
     case SP_DialogDiscardButton:
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-discard-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-discard-32.png"));
-        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-discard-128.png"));
-#endif
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-delete-16.png"));
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-delete-32.png"));
+        icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-delete-128.png"));
         break;
     case SP_DialogYesButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-yes-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-yes-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-yes-128.png"));
-#endif
         break;
     case SP_DialogNoButton:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-no-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-no-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/standardbutton-no-128.png"));
-#endif
         break;
     case SP_ArrowForward:
         if (QApplication::layoutDirection() == Qt::RightToLeft)
@@ -5105,31 +6128,23 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
         return standardIconImplementation(SP_ArrowLeft, option, widget);
     case SP_ArrowLeft:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/left-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/left-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/left-128.png"));
-#endif
         break;
     case SP_ArrowRight:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/right-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/right-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/right-128.png"));
-#endif
         break;
     case SP_ArrowUp:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/up-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/up-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/up-128.png"));
-#endif
         break;
     case SP_ArrowDown:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/down-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/down-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/down-128.png"));
-#endif
         break;
    case SP_DirHomeIcon:
    case SP_DirIcon:
@@ -5137,7 +6152,6 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
                      QSize(), QIcon::Normal, QIcon::Off);
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/diropen-16.png"),
                      QSize(), QIcon::Normal, QIcon::On);
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/dirclosed-32.png"),
                      QSize(32, 32), QIcon::Normal, QIcon::Off);
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/diropen-32.png"),
@@ -5146,44 +6160,32 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
                      QSize(128, 128), QIcon::Normal, QIcon::Off);
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/diropen-128.png"),
                      QSize(128, 128), QIcon::Normal, QIcon::On);
-#endif
         break;
     case SP_DriveCDIcon:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/cdr-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/cdr-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/cdr-128.png"));
-#endif
         break;
     case SP_DriveDVDIcon:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/dvd-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/dvd-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/dvd-128.png"));
-#endif
         break;
     case SP_FileIcon:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/file-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/file-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/file-128.png"));
-#endif
         break;
     case SP_FileLinkIcon:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filelink-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filelink-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/filelink-128.png"));
-#endif
         break;
     case SP_TrashIcon:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/trash-16.png"));
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/trash-32.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/trash-128.png"));
-#endif
         break;
-#ifndef Q_OS_WINCE  // ### Qt 4.5 remove
     case SP_BrowserReload:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/refresh-24.png"));
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/refresh-32.png"));
@@ -5226,7 +6228,6 @@ QIcon QCommonStyle::standardIconImplementation(StandardPixmap standardIcon, cons
     case SP_MediaVolumeMuted:
         icon.addFile(QLatin1String(":/trolltech/styles/commonstyle/images/media-volume-muted-16.png"));
         break;
-#endif // !Q_OS_WINCE
 #endif // QT_NO_IMAGEFORMAT_PNG
     default:
         icon.addPixmap(standardPixmap(standardIcon, option, widget));
@@ -5309,5 +6310,48 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
     }
     return pixmap;
 }
+
+/*!
+  \reimp
+*/
+void QCommonStyle::polish(QPalette &pal)
+{
+    QStyle::polish(pal);
+}
+
+/*!
+    \reimp
+ */
+void QCommonStyle::polish(QWidget *widget)
+{
+    QStyle::polish(widget);
+}
+
+/*!
+    \reimp
+ */
+void QCommonStyle::unpolish(QWidget *widget)
+{
+    QStyle::unpolish(widget);
+}
+
+/*!
+  \reimp
+*/
+void QCommonStyle::polish(QApplication *app)
+{
+    QStyle::polish(app);
+}
+
+/*!
+    \reimp
+ */
+void QCommonStyle::unpolish(QApplication *application)
+{
+    Q_D(const QCommonStyle);
+    d->tabBarcloseButtonIcon = QIcon();
+    QStyle::unpolish(application);
+}
+
 
 QT_END_NAMESPACE

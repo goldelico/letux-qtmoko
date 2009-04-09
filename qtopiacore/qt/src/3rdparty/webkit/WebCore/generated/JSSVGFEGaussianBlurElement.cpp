@@ -21,292 +21,196 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEGaussianBlurElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedNumber.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEGaussianBlurElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEGaussianBlurElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEGaussianBlurElementTableEntries[] =
+static const HashTableValue JSSVGFEGaussianBlurElementTableValues[11] =
 {
-    { "stdDeviationY", JSSVGFEGaussianBlurElement::StdDeviationYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFEGaussianBlurElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEGaussianBlurElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "stdDeviationX", JSSVGFEGaussianBlurElement::StdDeviationXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEGaussianBlurElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEGaussianBlurElementTableEntries[10] },
-    { "height", JSSVGFEGaussianBlurElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEGaussianBlurElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFEGaussianBlurElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEGaussianBlurElementTableEntries[11] },
-    { "className", JSSVGFEGaussianBlurElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEGaussianBlurElementTableEntries[12] },
-    { "style", JSSVGFEGaussianBlurElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "in1", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementIn1, (intptr_t)0 },
+    { "stdDeviationX", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementStdDeviationX, (intptr_t)0 },
+    { "stdDeviationY", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementStdDeviationY, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEGaussianBlurElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEGaussianBlurElementTable = 
-{
-    2, 13, JSSVGFEGaussianBlurElementTableEntries, 10
-};
+static const HashTable JSSVGFEGaussianBlurElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEGaussianBlurElementTableValues, 0 };
+#else
+    { 34, 31, JSSVGFEGaussianBlurElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEGaussianBlurElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEGaussianBlurElementPrototypeTableValues[3] =
 {
-    { "setStdDeviation", JSSVGFEGaussianBlurElement::SetStdDeviationFuncNum, DontDelete|Function, 2, 0 }
+    { "setStdDeviation", DontDelete|Function, (intptr_t)jsSVGFEGaussianBlurElementPrototypeFunctionSetStdDeviation, (intptr_t)2 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEGaussianBlurElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEGaussianBlurElementPrototypeTable = 
-{
-    2, 1, JSSVGFEGaussianBlurElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEGaussianBlurElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGFEGaussianBlurElementPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSSVGFEGaussianBlurElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEGaussianBlurElementPrototype::info = { "SVGFEGaussianBlurElementPrototype", 0, &JSSVGFEGaussianBlurElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEGaussianBlurElementPrototype::s_info = { "SVGFEGaussianBlurElementPrototype", 0, &JSSVGFEGaussianBlurElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEGaussianBlurElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEGaussianBlurElementPrototype>(exec, "[[JSSVGFEGaussianBlurElement.prototype]]");
+    return getDOMPrototype<JSSVGFEGaussianBlurElement>(exec);
 }
 
 bool JSSVGFEGaussianBlurElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGFEGaussianBlurElementPrototypeFunction, JSObject>(exec, &JSSVGFEGaussianBlurElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEGaussianBlurElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGFEGaussianBlurElement::info = { "SVGFEGaussianBlurElement", &JSSVGElement::info, &JSSVGFEGaussianBlurElementTable, 0 };
+const ClassInfo JSSVGFEGaussianBlurElement::s_info = { "SVGFEGaussianBlurElement", &JSSVGElement::s_info, &JSSVGFEGaussianBlurElementTable, 0 };
 
-JSSVGFEGaussianBlurElement::JSSVGFEGaussianBlurElement(ExecState* exec, SVGFEGaussianBlurElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGFEGaussianBlurElement::JSSVGFEGaussianBlurElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEGaussianBlurElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGFEGaussianBlurElementPrototype::self(exec));
+}
+
+JSObject* JSSVGFEGaussianBlurElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEGaussianBlurElementPrototype(JSSVGFEGaussianBlurElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEGaussianBlurElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEGaussianBlurElement, JSSVGElement>(exec, &JSSVGFEGaussianBlurElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEGaussianBlurElement, Base>(exec, &JSSVGFEGaussianBlurElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEGaussianBlurElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEGaussianBlurElementIn1(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StdDeviationXAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->stdDeviationXAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StdDeviationYAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->stdDeviationYAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->in1Animated();
+    return toJS(exec, obj.get(), imp);
 }
 
-JSValue* JSSVGFEGaussianBlurElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGFEGaussianBlurElementStdDeviationX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSSVGFEGaussianBlurElement::info))
-      return throwError(exec, TypeError);
-
-    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGFEGaussianBlurElement::SetStdDeviationFuncNum: {
-        float stdDeviationX = args[0]->toFloat(exec);
-        float stdDeviationY = args[1]->toFloat(exec);
-
-        imp->setStdDeviation(stdDeviationX, stdDeviationY);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->stdDeviationXAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
+JSValuePtr jsSVGFEGaussianBlurElementStdDeviationY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->stdDeviationYAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+JSValuePtr jsSVGFEGaussianBlurElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(static_cast<JSSVGFEGaussianBlurElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementPrototypeFunctionSetStdDeviation(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEGaussianBlurElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEGaussianBlurElement* castedThisObj = static_cast<JSSVGFEGaussianBlurElement*>(asObject(thisValue));
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(castedThisObj->impl());
+    float stdDeviationX = args.at(exec, 0)->toFloat(exec);
+    float stdDeviationY = args.at(exec, 1)->toFloat(exec);
+
+    imp->setStdDeviation(stdDeviationX, stdDeviationY);
+    return jsUndefined();
+}
+
+JSValuePtr jsSVGFEGaussianBlurElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEGaussianBlurElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEGaussianBlurElement* castedThisObj = static_cast<JSSVGFEGaussianBlurElement*>(asObject(thisValue));
+    SVGFEGaussianBlurElement* imp = static_cast<SVGFEGaussianBlurElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
+
+
+}
+
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

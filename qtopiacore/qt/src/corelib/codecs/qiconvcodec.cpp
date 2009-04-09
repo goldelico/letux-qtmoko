@@ -1,43 +1,49 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qiconvcodec_p.h"
+#include "qtextcodec_p.h"
 #include <qlibrary.h>
 #include <qdebug.h>
+#include <qthreadstorage.h>
 
 #include <errno.h>
 #include <locale.h>
@@ -67,7 +73,7 @@
 #  define UTF16 "UTF-16"
 #endif
 
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
 #ifndef GNU_LIBICONV
 #define GNU_LIBICONV
 #endif
@@ -82,6 +88,8 @@ static Ptr_iconv_close ptr_iconv_close = 0;
 
 QT_BEGIN_NAMESPACE
 
+extern bool qt_locale_initialized;
+
 QIconvCodec::QIconvCodec()
     : utf16Codec(0)
 {
@@ -93,20 +101,20 @@ QIconvCodec::QIconvCodec()
         fprintf(stderr, "QIconvCodec::convertToUnicode: internal error, UTF-16 codec not found\n");
         utf16Codec = reinterpret_cast<QTextCodec *>(~0);
     }
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MAC)
     if (ptr_iconv_open == 0) {
         QLibrary libiconv(QLatin1String("/usr/lib/libiconv"));
         libiconv.setLoadHints(QLibrary::ExportExternalSymbolsHint);
 
-        ptr_iconv_open = reinterpret_cast<Ptr_iconv_open>(libiconv.resolve("libiconv_open")); 
-        if (!ptr_iconv_open) 
-            ptr_iconv_open = reinterpret_cast<Ptr_iconv_open>(libiconv.resolve("iconv_open")); 
-        ptr_iconv = reinterpret_cast<Ptr_iconv>(libiconv.resolve("libiconv")); 
-        if (!ptr_iconv) 
-            ptr_iconv = reinterpret_cast<Ptr_iconv>(libiconv.resolve("iconv")); 
-        ptr_iconv_close = reinterpret_cast<Ptr_iconv_close>(libiconv.resolve("libiconv_close")); 
-        if (!ptr_iconv_close) 
-            ptr_iconv_close = reinterpret_cast<Ptr_iconv_close>(libiconv.resolve("iconv_close")); 
+        ptr_iconv_open = reinterpret_cast<Ptr_iconv_open>(libiconv.resolve("libiconv_open"));
+        if (!ptr_iconv_open)
+            ptr_iconv_open = reinterpret_cast<Ptr_iconv_open>(libiconv.resolve("iconv_open"));
+        ptr_iconv = reinterpret_cast<Ptr_iconv>(libiconv.resolve("libiconv"));
+        if (!ptr_iconv)
+            ptr_iconv = reinterpret_cast<Ptr_iconv>(libiconv.resolve("iconv"));
+        ptr_iconv_close = reinterpret_cast<Ptr_iconv_close>(libiconv.resolve("libiconv_close"));
+        if (!ptr_iconv_close)
+            ptr_iconv_close = reinterpret_cast<Ptr_iconv_close>(libiconv.resolve("iconv_close"));
 
         Q_ASSERT_X(ptr_iconv_open && ptr_iconv && ptr_iconv_close,
         "QIconvCodec::QIconvCodec()",
@@ -126,73 +134,221 @@ QIconvCodec::~QIconvCodec()
 {
 }
 
-QString QIconvCodec::convertToUnicode(const char* chars, int len, ConverterState *) const
+QIconvCodec::IconvState::IconvState(iconv_t x)
+    : buffer(array), bufferLen(sizeof array), cd(x)
+{
+}
+
+QIconvCodec::IconvState::~IconvState()
+{
+    if (cd != reinterpret_cast<iconv_t>(-1))
+        iconv_close(cd);
+    if (buffer != array)
+        delete[] buffer;
+}
+
+void QIconvCodec::IconvState::saveChars(const char *c, int count)
+{
+    if (count > bufferLen) {
+        if (buffer != array)
+            delete[] buffer;
+        buffer = new char[bufferLen = count];
+    }
+
+    memcpy(buffer, c, count);
+}
+
+static void qIconvCodecStateFree(QTextCodec::ConverterState *state)
+{
+    delete reinterpret_cast<QIconvCodec::IconvState *>(state->d);
+}
+
+Q_GLOBAL_STATIC(QThreadStorage<QIconvCodec::IconvState *>, toUnicodeState)
+
+QString QIconvCodec::convertToUnicode(const char* chars, int len, ConverterState *convState) const
 {
     if (utf16Codec == reinterpret_cast<QTextCodec *>(~0))
         return QString::fromAscii(chars, len);
 
-    iconv_t cd = createIconv_t(UTF16, 0);
-    if (cd == reinterpret_cast<iconv_t>(-1)) {
-        static int reported = 0;
-        if (!reported++) {
-            fprintf(stderr,
-                    "QIconvCodec::convertToUnicode: using ASCII for conversion, iconv_open failed\n");
+    int invalidCount = 0;
+    int remainingCount = 0;
+    char *remainingBuffer = 0;
+    IconvState **pstate;
+
+    if (convState) {
+        // stateful conversion
+        pstate = reinterpret_cast<IconvState **>(&convState->d);
+        if (convState->d) {
+            // restore state
+            remainingCount = convState->remainingChars;
+            remainingBuffer = (*pstate)->buffer;
+        } else {
+            // first time
+            convState->flags |= FreeFunction;
+            QTextCodecUnalignedPointer::encode(convState->state_data, qIconvCodecStateFree);
         }
-        return QString::fromAscii(chars, len);
+    } else {
+        QThreadStorage<QIconvCodec::IconvState *> *ts = toUnicodeState();
+        if (!qt_locale_initialized || !ts) {
+            // we're running after the Q_GLOBAL_STATIC has been deleted
+            // or before the QCoreApplication initialization
+            // bad programmer, no cookie for you
+            return QString::fromLatin1(chars, len);
+        }
+
+        // stateless conversion -- use thread-local data
+        pstate = &toUnicodeState()->localData();
     }
 
+    if (!*pstate) {
+        // first time, create the state
+        iconv_t cd = QIconvCodec::createIconv_t(UTF16, 0);
+        if (cd == reinterpret_cast<iconv_t>(-1)) {
+            static int reported = 0;
+            if (!reported++) {
+                fprintf(stderr,
+                        "QIconvCodec::convertToUnicode: using ASCII for conversion, iconv_open failed\n");
+            }
+            return QString::fromAscii(chars, len);
+        }
+
+        *pstate = new IconvState(cd);
+    }
+
+    IconvState *state = *pstate;
     size_t inBytesLeft = len;
     // best case assumption, each byte is converted into one UTF-16 character, plus 2 bytes for the BOM
-    QByteArray ba;
-    size_t outBytesLeft = len * 2 + 2;
-    ba.resize(outBytesLeft);
 #ifdef GNU_LIBICONV
     // GNU doesn't disagree with POSIX :/
     const char *inBytes = chars;
 #else
     char *inBytes = const_cast<char *>(chars);
 #endif
-    char *outBytes = ba.data();
 
+    QByteArray in;
+    if (remainingCount) {
+        // we have to prepend the remaining bytes from the previous conversion
+        inBytesLeft += remainingCount;
+        in.resize(inBytesLeft);
+        inBytes = in.data();
+
+        memcpy(in.data(), remainingBuffer, remainingCount);
+        memcpy(in.data() + remainingCount, chars, len);
+
+        remainingCount = 0;
+    }
+
+    QByteArray ba;
+    size_t outBytesLeft = len * 2 + 2;
+    ba.resize(outBytesLeft);
+    char *outBytes = ba.data();
     do {
-        size_t ret = iconv(cd, &inBytes, &inBytesLeft, &outBytes, &outBytesLeft);
+        size_t ret = iconv(state->cd, &inBytes, &inBytesLeft, &outBytes, &outBytesLeft);
         if (ret == (size_t) -1) {
-            switch (errno) {
-            case EILSEQ:
-            case EINVAL:
-                {
-                    ++inBytes;
-                    --inBytesLeft;
-                    break;
-                }
-            case E2BIG:
-                {
-                    int offset = ba.size() - outBytesLeft;
-                    ba.resize(ba.size() * 2);
-                    outBytes = ba.data() + offset;
-                    outBytesLeft = ba.size() - offset;
-                    break;
-                }
-            default:
-                {
-                    // note, cannot use qWarning() since we are implementing the codecForLocale :)
-                    perror("QIconvCodec::convertToUnicode: using ASCII for conversion, iconv failed");
-                    iconv_close(cd);
-                    return QString::fromAscii(chars, len);
-                }
+            if (errno == E2BIG) {
+                int offset = ba.size() - outBytesLeft;
+                ba.resize(ba.size() * 2);
+                outBytes = ba.data() + offset;
+                outBytesLeft = ba.size() - offset;
+
+                continue;
             }
+
+            if (errno == EILSEQ) {
+                // conversion stopped because of an invalid character in the sequence
+                ++invalidCount;
+            } else if (errno == EINVAL && convState) {
+                // conversion stopped because the remaining inBytesLeft make up
+                // an incomplete multi-byte sequence; save them for later
+                state->saveChars(inBytes, inBytesLeft);
+                remainingCount = inBytesLeft;
+                break;
+            }
+
+            if (errno == EILSEQ || errno == EINVAL) {
+                // skip the next character
+                ++inBytes;
+                --inBytesLeft;
+                continue;
+            }
+
+            // some other error
+            // note, cannot use qWarning() since we are implementing the codecForLocale :)
+            perror("QIconvCodec::convertToUnicode: using ASCII for conversion, iconv failed");
+
+            if (!convState) {
+                // reset state
+                iconv(state->cd, 0, &inBytesLeft, 0, &outBytesLeft);
+            }
+
+            return QString::fromAscii(chars, len);
         }
     } while (inBytesLeft != 0);
 
     QString s = utf16Codec->toUnicode(ba.constData(), ba.size() - outBytesLeft);
-    iconv_close(cd);
+
+    if (convState) {
+        convState->invalidChars = invalidCount;
+        convState->remainingChars = remainingCount;
+    } else {
+        // reset state
+        iconv(state->cd, 0, &inBytesLeft, 0, &outBytesLeft);
+    }
+
     return s;
 }
 
-QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterState *) const
+Q_GLOBAL_STATIC(QThreadStorage<QIconvCodec::IconvState *>, fromUnicodeState)
+
+QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterState *convState) const
 {
-    iconv_t cd = createIconv_t(0, UTF16);
-    if (cd == reinterpret_cast<iconv_t>(-1)) {
+    char *inBytes;
+    char *outBytes;
+    size_t inBytesLeft;
+
+#if defined(GNU_LIBICONV)
+    const char **inBytesPtr = const_cast<const char **>(&inBytes);
+#else
+    char **inBytesPtr = &inBytes;
+#endif
+
+    QThreadStorage<QIconvCodec::IconvState *> *ts = fromUnicodeState();
+    if (!qt_locale_initialized || !ts) {
+        // we're running after the Q_GLOBAL_STATIC has been deleted
+        // or before the QCoreApplication initialization
+        // bad programmer, no cookie for you
+        if (!len)
+            // this is a special case - zero-sized string should be
+            // translated to empty but not-null QByteArray.
+            return QByteArray("");
+        return QString::fromRawData(uc, len).toLatin1();
+    }
+    IconvState *&state = ts->localData();
+    if (!state) {
+        state = new IconvState(QIconvCodec::createIconv_t(0, UTF16));
+        if (state->cd != reinterpret_cast<iconv_t>(-1)) {
+            size_t outBytesLeft = len + 3; // +3 for the BOM
+            QByteArray ba;
+            ba.resize(outBytesLeft);
+            outBytes = ba.data();
+
+#if !defined(NO_BOM)
+            // give iconv() a BOM
+            QChar bom[] = { QChar(QChar::ByteOrderMark) };
+            inBytes = reinterpret_cast<char *>(bom);
+            inBytesLeft = sizeof(bom);
+            if (iconv(state->cd, inBytesPtr, &inBytesLeft, &outBytes, &outBytesLeft) == (size_t) -1) {
+                perror("QIconvCodec::convertFromUnicode: using ASCII for conversion, iconv failed for BOM");
+
+                iconv_close(state->cd);
+                state->cd = reinterpret_cast<iconv_t>(-1);
+
+                return QString(uc, len).toAscii();
+            }
+#endif // NO_BOM
+        }
+    }
+    if (state->cd == reinterpret_cast<iconv_t>(-1)) {
         static int reported = 0;
         if (!reported++) {
             fprintf(stderr,
@@ -200,52 +356,49 @@ QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterSt
         }
         return QString(uc, len).toAscii();
     }
-
+ 
     size_t outBytesLeft = len;
     QByteArray ba;
     ba.resize(outBytesLeft);
-    char *outBytes = ba.data();
-
-#if defined(GNU_LIBICONV)
-    const char *inBytes;
-#else
-    char *inBytes;
-#endif
-    size_t inBytesLeft;
-
-#if !defined(NO_BOM)
-    // give iconv() a BOM
-    QChar bom[] = { QChar(QChar::ByteOrderMark) };
-#ifdef GNU_LIBICONV
-    // GNU doesn't disagree with POSIX :/
-    inBytes = reinterpret_cast<const char *>(bom);
-#else
-    inBytes = reinterpret_cast<char *>(bom);
-#endif
-    inBytesLeft = sizeof(bom);
-    if (iconv(cd, &inBytes, &inBytesLeft, &outBytes, &outBytesLeft) == (size_t) -1) {
-        perror("QIconvCodec::convertFromUnicode: using ASCII for conversion, iconv failed for BOM");
-        return QString(uc, len).toAscii();
-    }
-#endif // NO_BOM
+    outBytes = ba.data();
 
     // now feed iconv() the real data
-#ifdef GNU_LIBICONV
-    // GNU doesn't disagree with POSIX :/
-    inBytes = reinterpret_cast<const char *>(uc);
-#else
     inBytes = const_cast<char *>(reinterpret_cast<const char *>(uc));
-#endif
     inBytesLeft = len * sizeof(QChar);
 
+    QByteArray in;
+    if (convState && convState->remainingChars) {
+        // we have one surrogate char to be prepended
+        in.resize(sizeof(QChar) + len);
+        inBytes = in.data();
+
+        QChar remaining = convState->state_data[0];
+        memcpy(in.data(), &remaining, sizeof(QChar));
+        memcpy(in.data() + sizeof(QChar), uc, inBytesLeft);
+
+        inBytesLeft += sizeof(QChar);
+        convState->remainingChars = 0;
+    }
+
+    int invalidCount = 0;
     do {
-        if (iconv(cd, &inBytes, &inBytesLeft, &outBytes, &outBytesLeft) == (size_t) -1) {
+        if (iconv(state->cd, inBytesPtr, &inBytesLeft, &outBytes, &outBytesLeft) == (size_t) -1) {
+            if (errno == EINVAL && convState) {
+                // buffer ends in a surrogate
+                Q_ASSERT(inBytesLeft == 2);
+                convState->remainingChars = 1;
+                convState->state_data[0] = uc[len - 1].unicode();
+                break;
+            }
+
             switch (errno) {
             case EILSEQ:
+                ++invalidCount;
+                // fall through
             case EINVAL:
                 {
-                    ++inBytes;
-                    --inBytesLeft;
+                    inBytes += sizeof(QChar);
+                    inBytesLeft -= sizeof(QChar);
                     break;
                 }
             case E2BIG:
@@ -260,15 +413,24 @@ QByteArray QIconvCodec::convertFromUnicode(const QChar *uc, int len, ConverterSt
                 {
                     // note, cannot use qWarning() since we are implementing the codecForLocale :)
                     perror("QIconvCodec::convertFromUnicode: using ASCII for conversion, iconv failed");
-                    iconv_close(cd);
+
+                    // reset to initial state
+                    iconv(state->cd, 0, &inBytesLeft, 0, &outBytesLeft);
+
                     return QString(uc, len).toAscii();
                 }
             }
         }
     } while (inBytesLeft != 0);
 
-    iconv_close(cd);
+    // reset to initial state
+    iconv(state->cd, 0, &inBytesLeft, 0, &outBytesLeft);
+
     ba.resize(ba.size() - outBytesLeft);
+
+    if (convState)
+        convState->invalidChars = invalidCount;
+
     return ba;
 }
 

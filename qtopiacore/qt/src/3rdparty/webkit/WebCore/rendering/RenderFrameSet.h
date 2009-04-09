@@ -1,9 +1,7 @@
 /*
- * This file is part of the KDE project.
- *
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 2000 Simon Hausmann <hausmann@kde.org>
- * Copyright (C) 2006 Apple Computer, Inc.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,10 +35,10 @@ enum FrameEdge { LeftFrameEdge, RightFrameEdge, TopFrameEdge, BottomFrameEdge };
 struct FrameEdgeInfo
 {
     FrameEdgeInfo(bool preventResize = false, bool allowBorder = true)
+        : m_preventResize(4)
+        , m_allowBorder(4)
     {
-        m_preventResize.resize(4);
         m_preventResize.fill(preventResize);
-        m_allowBorder.resize(4);
         m_allowBorder.fill(allowBorder);
     }
 
@@ -77,10 +75,6 @@ public:
 
     bool canResizeRow(const IntPoint&) const;
     bool canResizeColumn(const IntPoint&) const;
-
-#ifndef NDEBUG
-    virtual void dump(TextStream*, DeprecatedString ind = "") const;
-#endif
 
 private:
     static const int noSplit = -1;

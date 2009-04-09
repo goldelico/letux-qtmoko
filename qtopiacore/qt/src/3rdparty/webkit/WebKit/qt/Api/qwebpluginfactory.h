@@ -27,9 +27,9 @@
 
 QT_BEGIN_NAMESPACE
 class QUrl;
-class QWebPluginFactoryPrivate;
 class QString;
 QT_END_NAMESPACE
+class QWebPluginFactoryPrivate;
 
 class QWEBKIT_EXPORT QWebPluginFactory : public QObject
 {

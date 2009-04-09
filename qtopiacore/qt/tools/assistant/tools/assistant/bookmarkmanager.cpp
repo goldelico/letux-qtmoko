@@ -1,43 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "bookmarkmanager.h"
 #include "centralwidget.h"
-#include "mainwindow.h"
 
 #include <QtGui/QMenu>
 #include <QtGui/QIcon>
@@ -74,7 +77,7 @@ BookmarkDialog::BookmarkDialog(BookmarkManager *manager, const QString &title,
     ui.buttonBox->button(QDialogButtonBox::Ok)->setDefault(true);
     ui.bookmarkFolders->addItems(bookmarkManager->bookmarkFolders());
 
-    proxyModel = new QSortFilterProxyModel;
+    proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setFilterKeyColumn(0);
     proxyModel->setDynamicSortFilter(true);
     proxyModel->setFilterRole(Qt::UserRole + 10);
@@ -87,7 +90,7 @@ BookmarkDialog::BookmarkDialog(BookmarkManager *manager, const QString &title,
     ui.treeView->setVisible(false);
     ui.treeView->header()->setVisible(false);
     ui.treeView->setContextMenuPolicy(Qt::CustomContextMenu);
-    
+
     connect(ui.buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
     connect(ui.buttonBox, SIGNAL(accepted()), this, SLOT(addAccepted()));
     connect(ui.newFolderButton, SIGNAL(clicked()), this, SLOT(addNewFolder()));
@@ -117,7 +120,7 @@ void BookmarkDialog::addAccepted()
 {
     const QItemSelection selection = ui.treeView->selectionModel()->selection();
     const QModelIndexList list = selection.indexes();
-       
+
     QModelIndex index;
     if (!list.isEmpty())
         index = proxyModel->mapToSource(list.at(0));
@@ -130,7 +133,7 @@ void BookmarkDialog::addNewFolder()
 {
     const QItemSelection selection = ui.treeView->selectionModel()->selection();
     const QModelIndexList list = selection.indexes();
-       
+
     QModelIndex index;
     if (!list.isEmpty())
         index = list.at(0);
@@ -142,7 +145,7 @@ void BookmarkDialog::addNewFolder()
         const QModelIndex &index = proxyModel->mapFromSource(newFolder);
         ui.treeView->selectionModel()->setCurrentIndex(index,
             QItemSelectionModel::ClearAndSelect);
-        
+
         ui.bookmarkFolders->clear();
         ui.bookmarkFolders->addItems(bookmarkManager->bookmarkFolders());
 
@@ -295,7 +298,7 @@ bool BookmarkDialog::eventFilter(QObject *object, QEvent *e)
                     name = index.data().toString();
                 ui.bookmarkFolders->setCurrentIndex(ui.bookmarkFolders->findText(name));
             }   break;
-            
+
             default:
                 break;
         }
@@ -306,11 +309,14 @@ bool BookmarkDialog::eventFilter(QObject *object, QEvent *e)
 
 
 
-BookmarkWidget::BookmarkWidget(BookmarkManager *manager, QWidget *parent)
+BookmarkWidget::BookmarkWidget(BookmarkManager *manager, QWidget *parent,
+                               bool showButtons)
     : QWidget(parent)
+    , addButton(0)
+    , removeButton(0)
     , bookmarkManager(manager)
 {
-    setup();
+    setup(showButtons);
     installEventFilter(this);
 }
 
@@ -329,18 +335,20 @@ void BookmarkWidget::removeClicked()
 
 void BookmarkWidget::filterChanged()
 {
-    
     bool searchBookmarks = searchField->text().isEmpty();
     if (!searchBookmarks) {
         regExp.setPattern(searchField->text());
         filterBookmarkModel->setSourceModel(bookmarkManager->listBookmarkModel());
     } else {
-        regExp.setPattern("");
+        regExp.setPattern(QLatin1String(""));
         filterBookmarkModel->setSourceModel(bookmarkManager->treeBookmarkModel());
     }
 
-    addButton->setEnabled(searchBookmarks);
-    removeButton->setEnabled(searchBookmarks);
+    if (addButton)
+        addButton->setEnabled(searchBookmarks);
+
+    if (removeButton)
+        removeButton->setEnabled(searchBookmarks);
 
     filterBookmarkModel->setFilterRegExp(regExp);
 
@@ -422,7 +430,7 @@ void BookmarkWidget::customContextMenuRequested(const QPoint &point)
     }
 }
 
-void BookmarkWidget::setup()
+void BookmarkWidget::setup(bool showButtons)
 {
     regExp.setPatternSyntax(QRegExp::FixedString);
     regExp.setCaseSensitivity(Qt::CaseInsensitive);
@@ -430,7 +438,7 @@ void BookmarkWidget::setup()
     QLayout *vlayout = new QVBoxLayout(this);
     vlayout->setMargin(4);
 
-    QLabel *label = new QLabel(tr("Search for:"), this);
+    QLabel *label = new QLabel(tr("Filter:"), this);
     vlayout->addWidget(label);
 
     searchField = new QLineEdit(this);
@@ -446,30 +454,32 @@ void BookmarkWidget::setup()
     system = QLatin1String("mac");
 #endif
 
-    QLayout *hlayout = new QHBoxLayout();
-    vlayout->addItem(hlayout);
+    if (showButtons) {
+        QLayout *hlayout = new QHBoxLayout();
+        vlayout->addItem(hlayout);
 
-    hlayout->addItem(new QSpacerItem(40, 20, QSizePolicy::Expanding));
+        hlayout->addItem(new QSpacerItem(40, 20, QSizePolicy::Expanding));
 
-    addButton = new QToolButton(this);
-    addButton->setText(tr("Add"));
-    addButton->setIcon(QIcon(QString::fromUtf8(
-        ":/trolltech/assistant/images/%1/addtab.png").arg(system)));
-    addButton->setAutoRaise(true);
-    addButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    hlayout->addWidget(addButton);
-    connect(addButton, SIGNAL(clicked()), this, SIGNAL(addBookmark()));
+        addButton = new QToolButton(this);
+        addButton->setText(tr("Add"));
+        addButton->setIcon(QIcon(QString::fromUtf8(
+            ":/trolltech/assistant/images/%1/addtab.png").arg(system)));
+        addButton->setAutoRaise(true);
+        addButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        hlayout->addWidget(addButton);
+        connect(addButton, SIGNAL(clicked()), this, SIGNAL(addBookmark()));
 
-    removeButton = new QToolButton(this);
-    removeButton->setText(tr("Remove"));
-    removeButton->setIcon(QIcon(QString::fromUtf8(
-        ":/trolltech/assistant/images/%1/closetab.png").arg(system)));
-    removeButton->setAutoRaise(true);
-    removeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    hlayout->addWidget(removeButton);
-    connect(removeButton, SIGNAL(clicked()), this, SLOT(removeClicked()));
+        removeButton = new QToolButton(this);
+        removeButton->setText(tr("Remove"));
+        removeButton->setIcon(QIcon(QString::fromUtf8(
+            ":/trolltech/assistant/images/%1/closetab.png").arg(system)));
+        removeButton->setAutoRaise(true);
+        removeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        hlayout->addWidget(removeButton);
+        connect(removeButton, SIGNAL(clicked()), this, SLOT(removeClicked()));
+    }
 
-    filterBookmarkModel = new QSortFilterProxyModel;
+    filterBookmarkModel = new QSortFilterProxyModel(this);
     treeView->setModel(filterBookmarkModel);
 
     treeView->setDragEnabled(true);
@@ -489,7 +499,7 @@ void BookmarkWidget::setup()
     connect(treeView, SIGNAL(activated(const QModelIndex&)), this,
         SLOT(activated(const QModelIndex&)));
 
-    connect(treeView, SIGNAL(customContextMenuRequested(const QPoint&)), 
+    connect(treeView, SIGNAL(customContextMenuRequested(const QPoint&)),
         this, SLOT(customContextMenuRequested(const QPoint&)));
 
     filterBookmarkModel->setFilterKeyColumn(0);
@@ -502,9 +512,9 @@ void BookmarkWidget::setup()
 void BookmarkWidget::expandItems()
 {
     QStandardItemModel *model = bookmarkManager->treeBookmarkModel();
-    QList<QStandardItem*>list = model->findItems(QLatin1String("*"), 
+    QList<QStandardItem*>list = model->findItems(QLatin1String("*"),
         Qt::MatchWildcard | Qt::MatchRecursive, 0);
-    foreach(QStandardItem* item, list) {
+    foreach (const QStandardItem* item, list) {
         const QModelIndex& index = model->indexFromItem(item);
         treeView->setExpanded(filterBookmarkModel->mapFromSource(index),
             item->data(Qt::UserRole + 11).toBool());
@@ -564,9 +574,9 @@ bool BookmarkWidget::eventFilter(QObject *object, QEvent *e)
             }   break;
 
             case Qt::Key_Escape:
-                MainWindow::activateCurrentCentralWidgetTab();
+                emit escapePressed();
                 break;
-            
+
             default:
                 break;
         }
@@ -613,8 +623,8 @@ Qt::ItemFlags BookmarkModel::flags(const QModelIndex &index) const
 
 
 BookmarkManager::BookmarkManager(QHelpEngineCore* _helpEngine)
-    : treeModel(new BookmarkModel(0, 1))
-    , listModel(new BookmarkModel(0, 1))
+    : treeModel(new BookmarkModel(0, 1, this))
+    , listModel(new BookmarkModel(0, 1, this))
     , helpEngine(_helpEngine)
 {
     folderIcon = QApplication::style()->standardIcon(QStyle::SP_DirClosedIcon);
@@ -666,7 +676,7 @@ QStringList BookmarkManager::bookmarkFolders() const
 {
     QStringList folders(tr("Bookmarks"));
 
-    QList<QStandardItem*>list = treeModel->findItems(QLatin1String("*"), 
+    QList<QStandardItem*>list = treeModel->findItems(QLatin1String("*"),
         Qt::MatchWildcard | Qt::MatchRecursive, 0);
 
     QString data;
@@ -700,9 +710,9 @@ void BookmarkManager::removeBookmarkItem(QTreeView *treeView, const QModelIndex&
     if (item) {
         QString data = index.data(Qt::UserRole + 10).toString();
         if (data == QLatin1String("Folder") && item->rowCount() > 0) {
-            int value = QMessageBox::question(treeView, tr("Remove"), 
+            int value = QMessageBox::question(treeView, tr("Remove"),
                         tr("You are going to delete a Folder, this will also<br>"
-                        "remove it's content. Are you sure to continue?"), 
+                        "remove it's content. Are you sure to continue?"),
                         QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
             if (value == QMessageBox::Cancel)
@@ -711,7 +721,7 @@ void BookmarkManager::removeBookmarkItem(QTreeView *treeView, const QModelIndex&
 
         if (data != QLatin1String("Folder")) {
             QList<QStandardItem*>itemList = listModel->findItems(item->text());
-            foreach (QStandardItem *i, itemList) {
+            foreach (const QStandardItem *i, itemList) {
                 if (i->data(Qt::UserRole + 10) == data) {
                     listModel->removeRow(i->row());
                     break;
@@ -738,7 +748,7 @@ void BookmarkManager::addNewBookmark(const QModelIndex& index,
     item->setEditable(false);
     item->setData(false, Qt::UserRole + 11);
     item->setData(url, Qt::UserRole + 10);
-    
+
     if (index.isValid()) {
         treeModel->itemFromIndex(index)->appendRow(item);
         listModel->appendRow(item->clone());
@@ -811,11 +821,11 @@ void BookmarkManager::setupBookmarkModels()
 QString BookmarkManager::uniqueFolderName() const
 {
     QString folderName = tr("New Folder");
-    QList<QStandardItem*> list = treeModel->findItems(folderName, 
+    QList<QStandardItem*> list = treeModel->findItems(folderName,
         Qt::MatchContains | Qt::MatchRecursive, 0);
     if (!list.isEmpty()) {
         QStringList names;
-        foreach (QStandardItem *item, list)
+        foreach (const QStandardItem *item, list)
             names << item->text();
 
         for (int i = 1; i <= names.count(); ++i) {
@@ -836,7 +846,7 @@ void BookmarkManager::removeBookmarkFolderItems(QStandardItem *item)
 
         QString data = child->data(Qt::UserRole + 10).toString();
         QList<QStandardItem*>itemList = listModel->findItems(child->text());
-        foreach (QStandardItem *i, itemList) {
+        foreach (const QStandardItem *i, itemList) {
             if (i->data(Qt::UserRole + 10) == data) {
                 listModel->removeRow(i->row());
                 break;

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,8 @@ public:
     QStringMatcher();
     QStringMatcher(const QString &pattern,
                    Qt::CaseSensitivity cs = Qt::CaseSensitive);
+    QStringMatcher(const QChar *uc, int len,
+                   Qt::CaseSensitivity cs = Qt::CaseSensitive);
     QStringMatcher(const QStringMatcher &other);
     ~QStringMatcher();
 
@@ -63,21 +69,27 @@ public:
     void setCaseSensitivity(Qt::CaseSensitivity cs);
 
     int indexIn(const QString &str, int from = 0) const;
-    inline QString pattern() const { return q_pattern; }
+    int indexIn(const QChar *str, int length, int from = 0) const;
+    QString pattern() const;
     inline Qt::CaseSensitivity caseSensitivity() const { return q_cs; }
 
 private:
     QStringMatcherPrivate *d_ptr;
     QString q_pattern;
     Qt::CaseSensitivity q_cs;
-    uint q_skiptable[256];
+#ifdef Q_CC_RVCT
+// explicitely allow anonymous unions for RVCT to prevent compiler warnings
+#pragma anon_unions
+#endif
+    union {
+        uint q_data[256];
+        struct {
+            uchar q_skiptable[256];
+            const QChar *uc;
+            int len;
+        } p;
+    };
 };
-
-// internal
-int qFindString(const QChar *haystack, int haystackLen, int from,
-    const QChar *needle, int needleLen, Qt::CaseSensitivity cs);
-int qFindStringBoyerMoore(const QChar *haystack, int haystackLen, int from,
-    const QChar *needle, int needleLen, Qt::CaseSensitivity cs);
 
 QT_END_NAMESPACE
 

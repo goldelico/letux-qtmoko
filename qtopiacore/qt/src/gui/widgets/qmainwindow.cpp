@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,8 +60,9 @@
 #include "qwidgetanimator_p.h"
 #ifdef Q_WS_MAC
 #include <private/qt_mac_p.h>
+#include <private/qt_cocoa_helpers_mac_p.h>
 QT_BEGIN_NAMESPACE
-extern WindowRef qt_mac_window_for(const QWidget *); // qwidget_mac.cpp
+extern OSWindowRef qt_mac_window_for(const QWidget *); // qwidget_mac.cpp
 QT_END_NAMESPACE
 #endif
 
@@ -142,7 +147,7 @@ void QMainWindowPrivate::init()
 /*!
     \class QMainWindow
     \brief The QMainWindow class provides a main application
-	   window.
+           window.
     \ingroup application
     \mainclass
 
@@ -360,7 +365,8 @@ QMainWindow::~QMainWindow()
     \value VerticalTabs     The two vertical dock areas on the sides of the
                             main window show their tabs vertically. If this
                             option is not set, all dock areas show their tabs
-                            at the bottom. Implies AllowTabbedDocks.
+                            at the bottom. Implies AllowTabbedDocks. See also
+                            \l setTabPosition().
 
     These options only control how dock widgets may be dropped in a QMainWindow.
     They do not re-arrange the dock widgets to conform with the specified
@@ -437,9 +443,9 @@ QMenuBar *QMainWindow::menuBar() const
 {
     QMenuBar *menuBar = qobject_cast<QMenuBar *>(d_func()->layout->menuBar());
     if (!menuBar) {
-	QMainWindow *self = const_cast<QMainWindow *>(this);
-	menuBar = new QMenuBar(self);
-	self->setMenuBar(menuBar);
+        QMainWindow *self = const_cast<QMainWindow *>(this);
+        menuBar = new QMenuBar(self);
+        self->setMenuBar(menuBar);
     }
     return menuBar;
 }
@@ -516,10 +522,10 @@ QStatusBar *QMainWindow::statusBar() const
 {
     QStatusBar *statusbar = d_func()->layout->statusBar();
     if (!statusbar) {
-	QMainWindow *self = const_cast<QMainWindow *>(this);
-	statusbar = new QStatusBar(self);
+        QMainWindow *self = const_cast<QMainWindow *>(this);
+        statusbar = new QStatusBar(self);
         statusbar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
-	self->setStatusBar(statusbar);
+        self->setStatusBar(statusbar);
     }
     return statusbar;
 }
@@ -905,6 +911,81 @@ static bool checkDockWidgetArea(Qt::DockWidgetArea area, const char *where)
     return false;
 }
 
+#ifndef QT_NO_TABBAR
+/*! 
+    \property QMainWindow::documentMode
+    \brief whether the tab bar for tabbed dockwidgets is set to document mode.
+    \since 4.5
+
+    The default is false.
+
+    \sa QTabBar::documentMode
+*/
+bool QMainWindow::documentMode() const
+{
+    return d_func()->layout->documentMode();
+}
+
+void QMainWindow::setDocumentMode(bool enabled)
+{
+    d_func()->layout->setDocumentMode(enabled);
+}
+#endif // QT_NO_TABBAR
+
+#ifndef QT_NO_TABWIDGET
+/*! 
+    \property QMainWindow::tabShape
+    \brief the tab shape used for tabbed dock widgets.
+    \since 4.5
+
+    The default is \l QTabWidget::Rounded.
+
+    \sa setTabPosition()
+*/
+QTabWidget::TabShape QMainWindow::tabShape() const
+{
+    return d_func()->layout->tabShape();
+}
+
+void QMainWindow::setTabShape(QTabWidget::TabShape tabShape)
+{
+    d_func()->layout->setTabShape(tabShape);
+}
+
+/*!
+    \since 4.5
+
+    Returns the tab position for \a area.
+
+    \note The \l VerticalTabs dock option overrides the tab positions returned
+    by this function.
+
+    \sa setTabPosition(), tabShape()
+*/
+QTabWidget::TabPosition QMainWindow::tabPosition(Qt::DockWidgetArea area) const
+{
+    if (!checkDockWidgetArea(area, "QMainWindow::tabPosition"))
+        return QTabWidget::South;
+    return d_func()->layout->tabPosition(area);
+}
+
+/*!
+    \since 4.5
+
+    Sets the tab position for the given dock widget \a areas to the specified
+    \a tabPosition. By default, all dock areas show their tabs at the bottom.
+
+    \note The \l VerticalTabs dock option overrides the tab positions set by
+    this method.
+
+    \sa tabPosition(), setTabShape()
+*/
+void QMainWindow::setTabPosition(Qt::DockWidgetAreas areas, QTabWidget::TabPosition tabPosition)
+{
+    d_func()->layout->setTabPosition(areas, tabPosition);
+}
+#endif // QT_NO_TABWIDGET
+
 /*!
     Adds the given \a dockwidget to the specified \a area.
 */
@@ -926,6 +1007,7 @@ void QMainWindow::addDockWidget(Qt::DockWidgetArea area, QDockWidget *dockwidget
     addDockWidget(area, dockwidget, orientation);
 
 #ifdef Q_WS_MAC     //drawer support
+    QMacCocoaAutoReleasePool pool;
     extern bool qt_mac_is_macdrawer(const QWidget *); //qwidget_mac.cpp
     if (qt_mac_is_macdrawer(dockwidget)) {
         extern bool qt_mac_set_drawer_preferred_edge(QWidget *, Qt::DockWidgetArea); //qwidget_mac.cpp
@@ -997,11 +1079,47 @@ void QMainWindow::splitDockWidget(QDockWidget *after, QDockWidget *dockwidget,
 
     Moves \a second dock widget on top of \a first dock widget, creating a tabbed
     docked area in the main window.
+
+    \sa tabifiedDockWidgets()
 */
 void QMainWindow::tabifyDockWidget(QDockWidget *first, QDockWidget *second)
 {
     d_func()->layout->tabifyDockWidget(first, second);
 }
+
+
+/*!
+    \fn QList<QDockWidget*> QMainWindow::tabifiedDockWidgets(QDockWidget *dockwidget) const
+
+    Returns the dock widgets that are tabified together with \a dockwidget.
+
+    \since 4.5
+    \sa tabifyDockWidget()
+*/
+
+QList<QDockWidget*> QMainWindow::tabifiedDockWidgets(QDockWidget *dockwidget) const
+{
+    QList<QDockWidget*> ret;
+#if defined(QT_NO_TABBAR)
+    Q_UNUSED(dockwidget);
+#else
+    const QDockAreaLayoutInfo *info = d_func()->layout->layoutState.dockAreaLayout.info(dockwidget);
+    if (info && info->tabbed && info->tabBar) {
+        for(int i = 0; i < info->item_list.count(); ++i) {
+            const QDockAreaLayoutItem &item = info->item_list.at(i);
+            if (item.widgetItem) {
+                if (QDockWidget *dock = qobject_cast<QDockWidget*>(item.widgetItem->widget())) {
+                    if (dock != dockwidget) {
+                        ret += dock;
+                    }
+                }
+            }
+        }
+    }
+#endif
+    return ret;
+}
+
 
 /*!
     Removes the \a dockwidget from the main window layout and hides
@@ -1039,7 +1157,7 @@ Qt::DockWidgetArea QMainWindow::dockWidgetArea(QDockWidget *dockwidget) const
     To restore the saved state, pass the return value and \a version
     number to restoreState().
 
-    \sa restoreState()
+    \sa restoreState(), QWidget::saveGeometry(), QWidget::restoreGeometry()
 */
 QByteArray QMainWindow::saveState(int version) const
 {
@@ -1058,7 +1176,7 @@ QByteArray QMainWindow::saveState(int version) const
     unchanged, and this function returns \c false; otherwise, the state
     is restored, and this function returns \c true.
 
-    \sa saveState()
+    \sa saveState(), QWidget::saveGeometry(), QWidget::restoreGeometry()
 */
 bool QMainWindow::restoreState(const QByteArray &state, int version)
 {
@@ -1246,11 +1364,21 @@ bool QMainWindow::event(QEvent *event)
                 setIconSize(QSize());
             break;
 #ifdef Q_WS_MAC
-        case QEvent::Show: {
+        case QEvent::Show:
             if (unifiedTitleAndToolBarOnMac())
-                ShowHideWindowToolbar(qt_mac_window_for(this), true, false);
+                macWindowToolbarShow(this, true);
             break;
-       }
+#  ifdef QT_MAC_USE_COCOA
+       case QEvent::WindowStateChange:
+            {
+                // We need to update the HIToolbar status when we go out of or into fullscreen.
+                QWindowStateChangeEvent *wce = static_cast<QWindowStateChangeEvent *>(event);
+                if ((windowState() & Qt::WindowFullScreen) || (wce->oldState() & Qt::WindowFullScreen)) {
+                    d->layout->updateHIToolBarStatus();
+                }
+            }
+            break;
+#  endif // Cocoa
 #endif
 #if !defined(QT_NO_DOCKWIDGET) && !defined(QT_NO_CURSOR)
        case QEvent::CursorChange:
@@ -1305,6 +1433,10 @@ void QMainWindow::setUnifiedTitleAndToolBarOnMac(bool set)
     if (!isWindow() || d->useHIToolBar == set || QSysInfo::MacintoshVersion < QSysInfo::MV_10_3)
         return;
 
+    // ### Disable the unified toolbar when using anything but the native graphics system.
+    if (windowSurface())
+        return;
+
     d->useHIToolBar = set;
     createWinId(); // We need the hiview for down below.
 
@@ -1319,7 +1451,7 @@ void QMainWindow::setUnifiedTitleAndToolBarOnMac(bool set)
 bool QMainWindow::unifiedTitleAndToolBarOnMac() const
 {
 #ifdef Q_WS_MAC
-    return d_func()->useHIToolBar && !testAttribute(Qt::WA_MacBrushedMetal);
+    return d_func()->useHIToolBar && !testAttribute(Qt::WA_MacBrushedMetal) && !(windowFlags() & Qt::FramelessWindowHint);
 #endif
     return false;
 }

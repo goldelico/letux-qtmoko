@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -82,6 +86,7 @@ QSharedMemoryPrivate::makePlatformSafeKey(const QString &key,
 
 /*!
   \class QSharedMemory
+  \ingroup ipc
   \since 4.4
 
   \brief The QSharedMemory class provides access to a shared memory segment.
@@ -127,7 +132,7 @@ QSharedMemoryPrivate::makePlatformSafeKey(const QString &key,
  */
 
 /*!
-  \overload
+  \overload QSharedMemory()
 
   Constructs a shared memory object with the given \a parent.  The
   shared memory object's key is not set by the constructor, so the
@@ -416,7 +421,7 @@ const void* QSharedMemory::constData() const
 }
 
 /*!
-  \overload
+  \overload data()
  */
 const void *QSharedMemory::data() const
 {
@@ -427,17 +432,22 @@ const void *QSharedMemory::data() const
 #ifndef QT_NO_SYSTEMSEMAPHORE
 /*!
   This is a semaphore that locks the shared memory segment for access
-  by this process.  If another process has locked the segment, lock()
-  will block until the lock is released. It returns true if it obtains
-  the lock. It should always return true. If it returns false, it
-  means you have a program bug. If your code calls lock() when you
-  already have the lock, your process will block forever.
+  by this process and returns true. If another process has locked the
+  segment, this function blocks until the lock is released. Then it
+  acquires the lock and returns true. If this function returns false,
+  it means either that you have ignored a false return from create()
+  or attach(), or that QSystemSemaphore::acquire() failed due to an
+  unknown system error.
 
-  \sa unlock(), data()
+  \sa unlock(), data(), QSystemSemaphore::acquire()
  */
 bool QSharedMemory::lock()
 {
     Q_D(QSharedMemory);
+    if (d->lockedByMe) {
+        qWarning("QSharedMemory::lock: already locked");
+        return true;
+    }
     if (d->systemSemaphore.acquire()) {
         d->lockedByMe = true;
         return true;
@@ -491,7 +501,8 @@ bool QSharedMemory::unlock()
   with the specified key could not be found.
 
   \value LockError The attempt to lock() the shared memory segment
-  failed because the lock was held by another process.
+  failed because create() or attach() failed and returned false, or
+  because a system error occurred in QSystemSemaphore::acquire().
 
   \value OutOfResources A create() operation failed because there was
   not enough memory available to fill the request.

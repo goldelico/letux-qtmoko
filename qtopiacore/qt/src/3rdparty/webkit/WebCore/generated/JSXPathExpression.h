@@ -18,60 +18,64 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSXPathExpression_H
-#define JSXPathExpression_H
+#ifndef JSXPathExpression_h
+#define JSXPathExpression_h
 
 
 #if ENABLE(XPATH)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class XPathExpression;
 
-class JSXPathExpression : public KJS::DOMObject {
+class JSXPathExpression : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSXPathExpression(KJS::ExecState*, XPathExpression*);
+    JSXPathExpression(PassRefPtr<JSC::Structure>, PassRefPtr<XPathExpression>);
     virtual ~JSXPathExpression();
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Functions
-        EvaluateFuncNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     XPathExpression* impl() const { return m_impl.get(); }
+
 private:
     RefPtr<XPathExpression> m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, XPathExpression*);
-XPathExpression* toXPathExpression(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, XPathExpression*);
+XPathExpression* toXPathExpression(JSC::JSValuePtr);
 
-class JSXPathExpressionPrototype : public KJS::JSObject {
+class JSXPathExpressionPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSXPathExpressionPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSXPathExpressionPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSXPathExpressionPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSXPathExpressionPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsXPathExpressionPrototypeFunctionEvaluate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsXPathExpressionConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

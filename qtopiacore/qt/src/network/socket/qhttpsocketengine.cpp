@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #include "qtcpsocket.h"
 #include "qhostaddress.h"
 #include "qdatetime.h"
+#include "qurl.h"
 #include "qhttp.h"
 
 #if !defined(QT_NO_NETWORKPROXY) && !defined(QT_NO_HTTP)
@@ -69,9 +74,7 @@ bool QHttpSocketEngine::initialize(QAbstractSocket::SocketType type, QAbstractSo
 
     // Explicitly disable proxying on the proxy socket itself to avoid
     // unwanted recursion.
-    QNetworkProxy proxy;
-    proxy.setType(QNetworkProxy::NoProxy);
-    d->socket->setProxy(proxy);
+    d->socket->setProxy(QNetworkProxy::NoProxy);
 
     // Intercept all the signals.
     connect(d->socket, SIGNAL(connected()),
@@ -125,12 +128,13 @@ bool QHttpSocketEngine::isValid() const
     return d->socket;
 }
 
-bool QHttpSocketEngine::connectToHost(const QHostAddress &address, quint16 port)
+bool QHttpSocketEngine::connectInternal()
 {
     Q_D(QHttpSocketEngine);
 
     // If the handshake is done, enter ConnectedState state and return true.
     if (d->state == Connected) {
+        qWarning("QHttpSocketEngine::connectToHost: called when already connected");
         setState(QAbstractSocket::ConnectedState);
         return true;
     }
@@ -140,8 +144,6 @@ bool QHttpSocketEngine::connectToHost(const QHostAddress &address, quint16 port)
 
     // Handshake isn't done. If unconnected, start connecting.
     if (d->state == None && d->socket->state() == QAbstractSocket::UnconnectedState) {
-        setPeerAddress(address);
-        setPeerPort(port);
         setState(QAbstractSocket::ConnectingState);
         d->socket->connectToHost(d->proxy.hostName(), d->proxy.port());
     }
@@ -152,6 +154,28 @@ bool QHttpSocketEngine::connectToHost(const QHostAddress &address, quint16 port)
         slotSocketReadNotification();
 
     return d->socketState == QAbstractSocket::ConnectedState;
+}
+
+bool QHttpSocketEngine::connectToHost(const QHostAddress &address, quint16 port)
+{
+    Q_D(QHttpSocketEngine);
+
+    setPeerAddress(address);
+    setPeerPort(port);
+    d->peerName.clear();
+
+    return connectInternal();
+}
+
+bool QHttpSocketEngine::connectToHostByName(const QString &hostname, quint16 port)
+{
+    Q_D(QHttpSocketEngine);
+
+    setPeerAddress(QHostAddress());
+    setPeerPort(port);
+    d->peerName = hostname;
+
+    return connectInternal();
 }
 
 bool QHttpSocketEngine::bind(const QHostAddress &, quint16)
@@ -275,7 +299,7 @@ static int qt_timeout_value(int msecs, int elapsed)
     return timeout < 0 ? 0 : timeout;
 }
 
-bool QHttpSocketEngine::waitForRead(int msecs, bool *timedOut) const
+bool QHttpSocketEngine::waitForRead(int msecs, bool *timedOut)
 {
     Q_D(const QHttpSocketEngine);
 
@@ -313,7 +337,7 @@ bool QHttpSocketEngine::waitForRead(int msecs, bool *timedOut) const
     return true;
 }
 
-bool QHttpSocketEngine::waitForWrite(int msecs, bool *timedOut) const
+bool QHttpSocketEngine::waitForWrite(int msecs, bool *timedOut)
 {
     Q_D(const QHttpSocketEngine);
 
@@ -341,7 +365,7 @@ bool QHttpSocketEngine::waitForWrite(int msecs, bool *timedOut) const
 
     // Report any error that may occur.
     if (d->state != Connected) {
-        setError(d->socket->error(), d->socket->errorString());
+//        setError(d->socket->error(), d->socket->errorString());
         if (timedOut && d->socket->error() == QAbstractSocket::SocketTimeoutError)
             *timedOut = true;
     }
@@ -351,7 +375,7 @@ bool QHttpSocketEngine::waitForWrite(int msecs, bool *timedOut) const
 
 bool QHttpSocketEngine::waitForReadOrWrite(bool *readyToRead, bool *readyToWrite,
                                            bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut) const
+                                           int msecs, bool *timedOut)
 {
     Q_UNUSED(checkRead);
 
@@ -421,11 +445,12 @@ void QHttpSocketEngine::slotSocketConnected()
     Q_D(QHttpSocketEngine);
 
     // Send the greeting.
-    const char method[] = "CONNECT";
-    QByteArray peerAddress = d->peerAddress.toString().toLatin1();
+    const char method[] = "CONNECT ";
+    QByteArray peerAddress = d->peerName.isEmpty() ?
+                             d->peerAddress.toString().toLatin1() :
+                             QUrl::toAce(d->peerName);
     QByteArray path = peerAddress + ':' + QByteArray::number(d->peerPort);
     QByteArray data = method;
-    data += " ";
     data += path;
     data += " HTTP/1.1\r\n";
     data += "Proxy-Connection: keep-alive\r\n"
@@ -496,23 +521,61 @@ void QHttpSocketEngine::slotSocketReadNotification()
         return;
     }
 
+    if (!d->readBuffer.startsWith("HTTP/1.")) {
+        // protocol error, this isn't HTTP
+        d->readBuffer.clear();
+        d->socket->close();
+        setState(QAbstractSocket::UnconnectedState);
+        setError(QAbstractSocket::ProxyProtocolError, tr("Did not receive HTTP response from proxy"));
+        emitConnectionNotification();
+        return;
+    }
+
     QHttpResponseHeader responseHeader(QString::fromLatin1(d->readBuffer));
     d->readBuffer.clear();
 
     int statusCode = responseHeader.statusCode();
     if (statusCode == 200) {
         d->state = Connected;
-    } else if (statusCode == 503) {
-        // 503 Service Unavailable: Connection Refused
-        d->socket->close();
-        setState(QAbstractSocket::UnconnectedState);
-        setError(QAbstractSocket::ConnectionRefusedError, QAbstractSocket::tr("Connection refused"));
+        setLocalAddress(d->socket->localAddress());
+        setLocalPort(d->socket->localPort());
+        setState(QAbstractSocket::ConnectedState);
     } else if (statusCode == 407) {
         if (d->authenticator.isNull())
             d->authenticator.detach();
         QAuthenticatorPrivate *priv = QAuthenticatorPrivate::getPrivate(d->authenticator);
 
         priv->parseHttpResponse(responseHeader, true);
+
+        if (priv->phase == QAuthenticatorPrivate::Invalid) {
+            // problem parsing the reply
+            d->socket->close();
+            setState(QAbstractSocket::UnconnectedState);
+            setError(QAbstractSocket::ProxyProtocolError, tr("Error parsing authentication request from proxy"));
+            emitConnectionNotification();
+            return;
+        }
+
+        bool willClose;
+        QString proxyConnectionHeader = responseHeader.value(QLatin1String("Proxy-Connection"));
+        proxyConnectionHeader = proxyConnectionHeader.toLower();
+        if (proxyConnectionHeader == QLatin1String("close")) {
+            willClose = true;
+        } else if (proxyConnectionHeader == QLatin1String("keep-alive")) {
+            willClose = false;
+        } else {
+            // no Proxy-Connection header, so use the default
+            // HTTP 1.1's default behaviour is to keep persistent connections
+            // HTTP 1.0 or earlier, so we expect the server to close
+            willClose = (responseHeader.majorVersion() * 0x100 + responseHeader.minorVersion()) <= 0x0100;
+        }
+
+        if (willClose) {
+            // the server will disconnect, so let's avoid receiving an error
+            // especially since the signal below may trigger a new event loop
+            d->socket->disconnectFromHost();
+            d->socket->readAll();
+        }
 
         if (priv->phase == QAuthenticatorPrivate::Done)
             emit proxyAuthenticationRequired(d->proxy, &d->authenticator);
@@ -524,10 +587,7 @@ void QHttpSocketEngine::slotSocketReadNotification()
         } else {
             // close the connection if it isn't already and reconnect using the chosen authentication method
             d->state = SendAuthentication;
-            bool willClose = (responseHeader.value(QLatin1String("Proxy-Connection")).toLower() == QLatin1String("close"));
             if (willClose) {
-                d->socket->disconnectFromHost();
-                d->socket->readAll();
                 d->socket->connectToHost(d->proxy.hostName(), d->proxy.port());
             } else {
                 bool ok;
@@ -544,13 +604,27 @@ void QHttpSocketEngine::slotSocketReadNotification()
             return;
         }
     } else {
-        qWarning("UNEXPECTED RESPONSE: [%s]", responseHeader.toString().toLatin1().data());
-        d->socket->disconnectFromHost();
+        d->socket->close();
+        setState(QAbstractSocket::UnconnectedState);
+        if (statusCode == 403 || statusCode == 405) {
+            // 403 Forbidden
+            // 405 Method Not Allowed
+            setError(QAbstractSocket::SocketAccessError, tr("Proxy denied connection"));
+        } else if (statusCode == 404) {
+            // 404 Not Found: host lookup error
+            setError(QAbstractSocket::HostNotFoundError, QAbstractSocket::tr("Host not found"));
+        } else if (statusCode == 503) {
+            // 503 Service Unavailable: Connection Refused
+            setError(QAbstractSocket::ConnectionRefusedError, QAbstractSocket::tr("Connection refused"));
+        } else {
+            // Some other reply
+            //qWarning("UNEXPECTED RESPONSE: [%s]", responseHeader.toString().toLatin1().data());
+            setError(QAbstractSocket::ProxyProtocolError, tr("Error communicating with HTTP proxy"));
+        }
     }
 
-    // The handshake is done; request a new connection attempt by sending a write
-    // notification.
-    emitWriteNotification();
+    // The handshake is done; notify that we're connected (or failed to connect)
+    emitConnectionNotification();
 }
 
 void QHttpSocketEngine::slotSocketBytesWritten()
@@ -564,12 +638,34 @@ void QHttpSocketEngine::slotSocketError(QAbstractSocket::SocketError error)
 {
     Q_D(QHttpSocketEngine);
     d->readBuffer.clear();
-    if (d->state == SendAuthentication || d->state == ReadResponseContent)
+
+    if (d->state != Connected) {
+        // we are in proxy handshaking stages
+        if (error == QAbstractSocket::HostNotFoundError)
+            setError(QAbstractSocket::ProxyNotFoundError, tr("Proxy server not found"));
+        else if (error == QAbstractSocket::ConnectionRefusedError)
+            setError(QAbstractSocket::ProxyConnectionRefusedError, tr("Proxy connection refused"));
+        else if (error == QAbstractSocket::SocketTimeoutError)
+            setError(QAbstractSocket::ProxyConnectionTimeoutError, tr("Proxy server connection timed out"));
+        else if (error == QAbstractSocket::RemoteHostClosedError)
+            setError(QAbstractSocket::ProxyConnectionClosedError, tr("Proxy connection closed prematurely"));
+        else
+            setError(error, d->socket->errorString());
+        emitConnectionNotification();
         return;
+    }
+
+    // We're connected
+    if (error == QAbstractSocket::SocketTimeoutError)
+        return;                 // ignore this error
+
     d->state = None;
     setError(error, d->socket->errorString());
-    if (error == QAbstractSocket::RemoteHostClosedError)
+    if (error == QAbstractSocket::RemoteHostClosedError) {
         emitReadNotification();
+    } else {
+        qDebug() << "QHttpSocketEngine::slotSocketError: got weird error =" << error;
+    }
 }
 
 void QHttpSocketEngine::slotSocketStateChanged(QAbstractSocket::SocketState state)
@@ -593,6 +689,13 @@ void QHttpSocketEngine::emitPendingWriteNotification()
         emit writeNotification();
 }
 
+void QHttpSocketEngine::emitPendingConnectionNotification()
+{
+    Q_D(QHttpSocketEngine);
+    d->connectionNotificationPending = false;
+    emit connectionNotification();
+}
+
 void QHttpSocketEngine::emitReadNotification()
 {
     Q_D(QHttpSocketEngine);
@@ -613,6 +716,15 @@ void QHttpSocketEngine::emitWriteNotification()
     }
 }
 
+void QHttpSocketEngine::emitConnectionNotification()
+{
+    Q_D(QHttpSocketEngine);
+    if (!d->connectionNotificationPending) {
+        d->connectionNotificationPending = true;
+        QMetaObject::invokeMethod(this, "emitPendingConnectionNotification", Qt::QueuedConnection);
+    }
+}
+
 QHttpSocketEnginePrivate::QHttpSocketEnginePrivate()
     : readNotificationEnabled(false)
     , writeNotificationEnabled(false)
@@ -621,6 +733,7 @@ QHttpSocketEnginePrivate::QHttpSocketEnginePrivate()
     , writeNotificationActivated(false)
     , readNotificationPending(false)
     , writeNotificationPending(false)
+    , connectionNotificationPending(false)
 {
     socket = 0;
     state = QHttpSocketEngine::None;
@@ -630,26 +743,19 @@ QHttpSocketEnginePrivate::~QHttpSocketEnginePrivate()
 {
 }
 
-QAbstractSocketEngine *QHttpSocketEngineHandler::createSocketEngine(const QHostAddress &address,
-                                                                    QAbstractSocket::SocketType socketType,
+QAbstractSocketEngine *QHttpSocketEngineHandler::createSocketEngine(QAbstractSocket::SocketType socketType,
+                                                                    const QNetworkProxy &proxy,
                                                                     QObject *parent)
 {
     if (socketType != QAbstractSocket::TcpSocket)
         return 0;
 
-    if (address == QHostAddress::LocalHost || address == QHostAddress::LocalHostIPv6)
-        return 0;
-
-    // find proxy info
-    QAbstractSocket *abstractSocket = qobject_cast<QAbstractSocket *>(parent);
-    if (!abstractSocket)
-        return 0;
-
-    QNetworkProxy proxy = abstractSocket->proxy();
-    if (proxy.type() == QNetworkProxy::DefaultProxy)
-        proxy = QNetworkProxy::applicationProxy();
-
+    // proxy type must have been resolved by now
     if (proxy.type() != QNetworkProxy::HttpProxy)
+        return 0;
+
+    // we only accept active sockets
+    if (!qobject_cast<QAbstractSocket *>(parent))
         return 0;
 
     QHttpSocketEngine *engine = new QHttpSocketEngine(parent);

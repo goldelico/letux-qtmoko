@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -559,9 +563,8 @@ static QList<QFontDatabase::WritingSystem> determineWritingSystemsFromTrueTypeBi
 }
 #endif
 
-class QFontDatabasePrivate : public QObject
+class QFontDatabasePrivate
 {
-    Q_OBJECT
 public:
     QFontDatabasePrivate()
         : count(0), families(0), reregisterAppFonts(false)
@@ -591,6 +594,7 @@ public:
 #if defined(Q_OS_WIN)
         HANDLE handle;
         bool memoryFont;
+        QVector<FONTSIGNATURE> signatures;
 #elif defined(Q_WS_MAC)
         ATSFontContainerRef handle;
 #endif
@@ -617,16 +621,13 @@ public:
     QDataStream *stream;
     QStringList fallbackFamilies;
 #endif
-
-Q_SIGNALS:
-    void fontDatabaseChanged();
 };
 
 void QFontDatabasePrivate::invalidate()
 {
     QFontCache::instance()->clear();
     free();
-    emit fontDatabaseChanged();
+    emit static_cast<QApplication *>(QApplication::instance())->fontDatabaseChanged();
 }
 
 QtFontFamily *QFontDatabasePrivate::family(const QString &f, bool create)
@@ -710,7 +711,7 @@ static const int scriptForWritingSystem[] = {
 };
 
 
-#if defined Q_WS_QWS || (defined(Q_WS_X11) && !defined(QT_NO_FONTCONFIG))
+#if defined Q_WS_QWS || (defined(Q_WS_X11) && !defined(QT_NO_FONTCONFIG)) || defined(Q_WS_WIN)
 static inline bool requiresOpenType(int writingSystem)
 {
     return ((writingSystem >= QFontDatabase::Syriac && writingSystem <= QFontDatabase::Sinhala)
@@ -770,18 +771,19 @@ static void parseFontName(const QString &name, QString &foundry, QString &family
 
 struct QtFontDesc
 {
-    inline QtFontDesc() : family(0), foundry(0), style(0), size(0), encoding(0) {}
+    inline QtFontDesc() : family(0), foundry(0), style(0), size(0), encoding(0), familyIndex(-1) {}
     QtFontFamily *family;
     QtFontFoundry *foundry;
     QtFontStyle *style;
     QtFontSize *size;
     QtFontEncoding *encoding;
+    int familyIndex;
 };
 
 #if !defined(Q_WS_MAC)
 static void match(int script, const QFontDef &request,
                   const QString &family_name, const QString &foundry_name, int force_encoding_id,
-                  QtFontDesc *desc);
+                  QtFontDesc *desc, const QList<int> &blacklistedFamilies = QList<int>());
 
 #if defined(Q_WS_X11) || defined(Q_WS_QWS)
 static void initFontDef(const QtFontDesc &desc, const QFontDef &request, QFontDef *fontDef)
@@ -857,12 +859,6 @@ static QStringList familyList(const QFontDef &req)
 
 Q_GLOBAL_STATIC(QFontDatabasePrivate, privateDb)
 Q_GLOBAL_STATIC_WITH_ARGS(QMutex, fontDatabaseMutex, (QMutex::Recursive))
-
-// used in qfontcombobox.cpp
-QObject *qt_fontdatabase_private()
-{
-    return privateDb();
-}
 
 // used in qfontengine_x11.cpp
 QMutex *qt_fontdatabase_mutex()
@@ -1154,7 +1150,7 @@ unsigned int bestFoundry(int script, unsigned int score, int styleStrategy,
 */
 static void match(int script, const QFontDef &request,
                   const QString &family_name, const QString &foundry_name, int force_encoding_id,
-                  QtFontDesc *desc)
+                  QtFontDesc *desc, const QList<int> &blacklistedFamilies)
 {
     Q_UNUSED(force_encoding_id);
 
@@ -1185,6 +1181,7 @@ static void match(int script, const QFontDef &request,
     desc->style = 0;
     desc->size = 0;
     desc->encoding = 0;
+    desc->familyIndex = -1;
 
     unsigned int score = ~0u;
 
@@ -1192,8 +1189,11 @@ static void match(int script, const QFontDef &request,
 
     QFontDatabasePrivate *db = privateDb();
     for (int x = 0; x < db->count; ++x) {
+        if (blacklistedFamilies.contains(x))
+            continue;
         QtFontDesc test;
         test.family = db->families[x];
+        test.familyIndex = x;
 
         if (!family_name.isEmpty()
             && test.family->name.compare(family_name, Qt::CaseInsensitive) != 0
@@ -2433,4 +2433,3 @@ QStringList QFontDatabase::applicationFontFamilies(int id)
 
 QT_END_NAMESPACE
 
-#include "qfontdatabase.moc"

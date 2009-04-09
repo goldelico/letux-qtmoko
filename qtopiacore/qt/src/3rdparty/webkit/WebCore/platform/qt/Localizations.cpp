@@ -233,6 +233,11 @@ String contextMenuItemTagWritingDirectionMenu()
     return QCoreApplication::translate("QWebPage", "Direction", "Writing direction context sub-menu item");
 }
 
+String contextMenuItemTagTextDirectionMenu()
+{
+    return QCoreApplication::translate("QWebPage", "Text Direction", "Text direction context sub-menu item");
+}
+
 String contextMenuItemTagDefaultDirection()
 {
     return QCoreApplication::translate("QWebPage", "Default", "Default writing direction context menu item");
@@ -289,6 +294,51 @@ String AXImageMapText()
 }
 
 String AXHeadingText()
+{
+    return String();
+}
+
+String AXDefinitionListTermText()
+{
+    return String();
+}
+
+String AXDefinitionListDefinitionText()
+{
+    return String();
+}
+
+String AXButtonActionVerb()
+{
+    return String();
+}
+
+String AXRadioButtonActionVerb()
+{
+    return String();
+}
+
+String AXTextFieldActionVerb()
+{
+    return String();
+}
+
+String AXCheckedCheckBoxActionVerb()
+{
+    return String();
+}
+
+String AXUncheckedCheckBoxActionVerb()
+{
+    return String();
+}
+
+String AXLinkActionVerb()
+{
+    return String();
+}
+
+String multipleFileUploadText(unsigned)
 {
     return String();
 }

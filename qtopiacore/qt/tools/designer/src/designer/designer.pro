@@ -35,29 +35,18 @@ HEADERS += \
     qdesigner_formwindow.h \
     qdesigner_workbench.h \
     qdesigner_settings.h \
-    qdesigner_server.h \
-    qdesigner_widgetbox.h \
-    qdesigner_propertyeditor.h \
-    qdesigner_objectinspector.h \
-    qdesigner_actioneditor.h \
     qdesigner_actions.h \
-    qdesigner_resourceeditor.h \
+    qdesigner_server.h \
+    qdesigner_appearanceoptions.h \
     saveformastemplate.h \
     newform.h \
     versiondialog.h \
-    qdesigner_signalsloteditor.h \
-    formwindowsettings.h \
     plugindialog.h \
-    extra/cursor.h \
-    extra/fov.h \
-    extra/itemdialog.h \
-    extra/oubliette.h \
-    extra/oublietteplan.h \
-    extra/oublietteview.h \
     designer_enums.h \
+    appfontdialog.h \
     preferencesdialog.h \
-    preferences.h \
-    assistantclient.h
+    assistantclient.h \
+    mainwindow.h
 
 SOURCES += main.cpp \
     qdesigner.cpp \
@@ -66,39 +55,26 @@ SOURCES += main.cpp \
     qdesigner_workbench.cpp \
     qdesigner_settings.cpp \
     qdesigner_server.cpp \
-    qdesigner_widgetbox.cpp \
-    qdesigner_propertyeditor.cpp \
-    qdesigner_objectinspector.cpp \
-    qdesigner_actioneditor.cpp \
     qdesigner_actions.cpp \
-    qdesigner_resourceeditor.cpp \
+    qdesigner_appearanceoptions.cpp \
     saveformastemplate.cpp \
     newform.cpp \
     versiondialog.cpp \
-    qdesigner_signalsloteditor.cpp \
     plugindialog.cpp \
-    formwindowsettings.cpp \
-    extra/cursor.cpp \
-    extra/fov.cpp \
-    extra/itemdialog.cpp \
-    extra/oubliette.cpp \
-    extra/oublietteplan.cpp \
-    extra/oublietteview.cpp \
+    appfontdialog.cpp \
     preferencesdialog.cpp \
-    preferences.cpp \
-    assistantclient.cpp
+    assistantclient.cpp \
+    mainwindow.cpp
 
 PRECOMPILED_HEADER=qdesigner_pch.h
 
-FORMS += \
-    newform.ui \
-    plugindialog.ui \
+FORMS += plugindialog.ui \
     saveformastemplate.ui \
-    formwindowsettings.ui \
-    preferencesdialog.ui
+    preferencesdialog.ui \
+    qdesigner_appearanceoptions.ui
 
 win32 {
-   RC_FILE	= designer.rc
+   RC_FILE      = designer.rc
 }
 
 mac {

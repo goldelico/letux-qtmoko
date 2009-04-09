@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -95,9 +99,9 @@ namespace QPatternist
              * This must be identical to the amount of members in
              * StandardNamespaces.
              */
-            StandardNamespaceCount = 10,
+            StandardNamespaceCount = 11,
             StandardPrefixCount = 9,
-            StandardLocalNameCount = 128
+            StandardLocalNameCount = 141
         };
 
         QVector<QString> m_prefixes;
@@ -138,6 +142,19 @@ namespace QPatternist
 
     public:
         NamePool();
+
+        /**
+         * @short Allocates a namespace binding for @p prefix and @p uri.
+         *
+         * In the returned QXmlName, the local name is
+         * StandardLocalNames::empty, and QXmlName::prefix() and
+         * QXmlName::namespaceUri() returns @p prefix and @p uri, respectively.
+         *
+         * In older versions of this code, the class NamespaceBinding existed,
+         * but as part of having the public class QXmlName, it was dropped and
+         * a special interpretation/convention involving use of QXmlName was
+         * adopted.
+         */
         QXmlName allocateBinding(const QString &prefix, const QString &uri);
 
         QXmlName allocateQName(const QString &uri, const QString &localName, const QString &prefix = QString());
@@ -150,19 +167,19 @@ namespace QPatternist
 
         inline const QString &stringForLocalName(const QXmlName::LocalNameCode code) const
         {
-            const QReadLocker l(mutableLock());
+            const QReadLocker l(&lock);
             return m_localNames.at(code);
         }
 
         inline const QString &stringForPrefix(const QXmlName::PrefixCode code) const
         {
-            const QReadLocker l(mutableLock());
+            const QReadLocker l(&lock);
             return m_prefixes.at(code);
         }
 
         inline const QString &stringForNamespace(const QXmlName::NamespaceCode code) const
         {
-            const QReadLocker l(mutableLock());
+            const QReadLocker l(&lock);
             return m_namespaces.at(code);
         }
 
@@ -170,7 +187,7 @@ namespace QPatternist
 
         inline QString toLexical(const QXmlName qName) const
         {
-            const QReadLocker l(mutableLock());
+            const QReadLocker l(&lock);
             Q_ASSERT_X(!qName.isNull(), "", "It makes no sense to call toLexical() on a null name.");
 
             if(qName.hasPrefix())
@@ -200,6 +217,9 @@ namespace QPatternist
             return unlockedAllocatePrefix(prefix);
         }
 
+        QString toClarkName(const QXmlName &name) const;
+        QXmlName fromClarkName(const QString &clarkName);
+
     private:
         /**
          * @note This function can not be called concurrently.
@@ -225,12 +245,7 @@ namespace QPatternist
          */
         const QString &displayPrefix(const QXmlName::NamespaceCode nc) const;
 
-        inline QReadWriteLock *mutableLock() const
-        {
-            return const_cast<QReadWriteLock *>(&lock);
-        }
-
-        QReadWriteLock lock;
+        mutable QReadWriteLock lock;
     };
 
     /**
@@ -251,7 +266,7 @@ namespace QPatternist
     class StandardNamespaces
     {
     public:
-        enum
+        enum ID
         {
             /**
              * This does not mean empty in the sense of "empty", but
@@ -281,8 +296,13 @@ namespace QPatternist
              * Signals that a node shouldn't inherit namespaces from its parent. Must be used
              * with StandardPrefixes::StopNamespaceInheritance.
              */
-            StopNamespaceInheritance
+            StopNamespaceInheritance,
 
+            /**
+             * A namespace used to identify for instance @c \#all template
+             * mode in XSL-T.
+             */
+            InternalXSLT
         };
     };
 
@@ -296,6 +316,7 @@ namespace QPatternist
             adjust_dateTime_to_timezone,
             adjust_date_to_timezone,
             adjust_time_to_timezone,
+            all,
             arity,
             avg,
             base,
@@ -309,6 +330,7 @@ namespace QPatternist
             concat,
             contains,
             count,
+            current,
             current_date,
             current_dateTime,
             current_time,
@@ -318,11 +340,14 @@ namespace QPatternist
             day_from_dateTime,
             days_from_duration,
             deep_equal,
+            Default,
             default_collation,
             distinct_values,
             doc,
             doc_available,
+            document,
             document_uri,
+            element_available,
             empty,
             encode_for_uri,
             ends_with,
@@ -334,6 +359,8 @@ namespace QPatternist
             floor,
             function_available,
             function_name,
+            generate_id,
+            generic_string_join,
             hours_from_dateTime,
             hours_from_duration,
             hours_from_time,
@@ -345,6 +372,7 @@ namespace QPatternist
             insert_before,
             iri_to_uri,
             is_schema_aware,
+            key,
             lang,
             last,
             local_name,
@@ -409,7 +437,12 @@ namespace QPatternist
             trace,
             translate,
             True,
+            type_available,
             unordered,
+            unparsed_entity_public_id,
+            unparsed_entity_uri,
+            unparsed_text,
+            unparsed_text_available,
             upper_case,
             vendor,
             vendor_url,

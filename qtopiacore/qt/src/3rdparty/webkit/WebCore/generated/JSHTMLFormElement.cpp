@@ -24,113 +24,123 @@
 
 #include <wtf/GetPtr.h>
 
+#include <runtime/PropertyNameArray.h>
 #include "AtomicString.h"
 #include "HTMLCollection.h"
 #include "HTMLFormElement.h"
 #include "JSHTMLCollection.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLFormElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLFormElementTableEntries[] =
+static const HashTableValue JSHTMLFormElementTableValues[11] =
 {
-    { "action", JSHTMLFormElement::ActionAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "target", JSHTMLFormElement::TargetAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "method", JSHTMLFormElement::MethodAttrNum, DontDelete, 0, 0 },
-    { "length", JSHTMLFormElement::LengthAttrNum, DontDelete|ReadOnly, 0, &JSHTMLFormElementTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLFormElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "elements", JSHTMLFormElement::ElementsAttrNum, DontDelete|ReadOnly, 0, &JSHTMLFormElementTableEntries[12] },
-    { "name", JSHTMLFormElement::NameAttrNum, DontDelete, 0, &JSHTMLFormElementTableEntries[11] },
-    { "acceptCharset", JSHTMLFormElement::AcceptCharsetAttrNum, DontDelete, 0, 0 },
-    { "encoding", JSHTMLFormElement::EncodingAttrNum, DontDelete, 0, &JSHTMLFormElementTableEntries[13] },
-    { "enctype", JSHTMLFormElement::EnctypeAttrNum, DontDelete, 0, 0 }
+    { "elements", DontDelete|ReadOnly, (intptr_t)jsHTMLFormElementElements, (intptr_t)0 },
+    { "length", DontDelete|ReadOnly, (intptr_t)jsHTMLFormElementLength, (intptr_t)0 },
+    { "name", DontDelete, (intptr_t)jsHTMLFormElementName, (intptr_t)setJSHTMLFormElementName },
+    { "acceptCharset", DontDelete, (intptr_t)jsHTMLFormElementAcceptCharset, (intptr_t)setJSHTMLFormElementAcceptCharset },
+    { "action", DontDelete, (intptr_t)jsHTMLFormElementAction, (intptr_t)setJSHTMLFormElementAction },
+    { "encoding", DontDelete, (intptr_t)jsHTMLFormElementEncoding, (intptr_t)setJSHTMLFormElementEncoding },
+    { "enctype", DontDelete, (intptr_t)jsHTMLFormElementEnctype, (intptr_t)setJSHTMLFormElementEnctype },
+    { "method", DontDelete, (intptr_t)jsHTMLFormElementMethod, (intptr_t)setJSHTMLFormElementMethod },
+    { "target", DontDelete, (intptr_t)jsHTMLFormElementTarget, (intptr_t)setJSHTMLFormElementTarget },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLFormElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFormElementTable = 
-{
-    2, 14, JSHTMLFormElementTableEntries, 10
-};
+static const HashTable JSHTMLFormElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 4095, JSHTMLFormElementTableValues, 0 };
+#else
+    { 34, 31, JSHTMLFormElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLFormElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLFormElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFormElementConstructorTable = 
-{
-    2, 1, JSHTMLFormElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLFormElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLFormElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLFormElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLFormElementConstructor : public DOMObject {
 public:
     JSHTMLFormElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLFormElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLFormElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLFormElementConstructor::info = { "HTMLFormElementConstructor", 0, &JSHTMLFormElementConstructorTable, 0 };
+const ClassInfo JSHTMLFormElementConstructor::s_info = { "HTMLFormElementConstructor", 0, &JSHTMLFormElementConstructorTable, 0 };
 
 bool JSHTMLFormElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLFormElementConstructor, DOMObject>(exec, &JSHTMLFormElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFormElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLFormElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLFormElementPrototypeTableValues[3] =
 {
-    { "submit", JSHTMLFormElement::SubmitFuncNum, DontDelete|Function, 0, &JSHTMLFormElementPrototypeTableEntries[2] },
-    { 0, 0, 0, 0, 0 },
-    { "reset", JSHTMLFormElement::ResetFuncNum, DontDelete|Function, 0, 0 }
+    { "submit", DontDelete|Function, (intptr_t)jsHTMLFormElementPrototypeFunctionSubmit, (intptr_t)0 },
+    { "reset", DontDelete|Function, (intptr_t)jsHTMLFormElementPrototypeFunctionReset, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFormElementPrototypeTable = 
-{
-    2, 3, JSHTMLFormElementPrototypeTableEntries, 2
-};
+static const HashTable JSHTMLFormElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSHTMLFormElementPrototypeTableValues, 0 };
+#else
+    { 4, 3, JSHTMLFormElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLFormElementPrototype::info = { "HTMLFormElementPrototype", 0, &JSHTMLFormElementPrototypeTable, 0 };
+const ClassInfo JSHTMLFormElementPrototype::s_info = { "HTMLFormElementPrototype", 0, &JSHTMLFormElementPrototypeTable, 0 };
 
 JSObject* JSHTMLFormElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLFormElementPrototype>(exec, "[[JSHTMLFormElement.prototype]]");
+    return getDOMPrototype<JSHTMLFormElement>(exec);
 }
 
 bool JSHTMLFormElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLFormElementPrototypeFunction, JSObject>(exec, &JSHTMLFormElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLFormElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLFormElement::info = { "HTMLFormElement", &JSHTMLElement::info, &JSHTMLFormElementTable, 0 };
+const ClassInfo JSHTMLFormElement::s_info = { "HTMLFormElement", &JSHTMLElement::s_info, &JSHTMLFormElementTable, 0 };
 
-JSHTMLFormElement::JSHTMLFormElement(ExecState* exec, HTMLFormElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLFormElement::JSHTMLFormElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLFormElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLFormElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLFormElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLFormElementPrototype(JSHTMLFormElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLFormElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -139,9 +149,9 @@ bool JSHTMLFormElement::getOwnPropertySlot(ExecState* exec, const Identifier& pr
         slot.setCustom(this, nameGetter);
         return true;
     }
-    const HashEntry* entry = Lookup::findEntry(&JSHTMLFormElementTable, propertyName);
+    const HashEntry* entry = JSHTMLFormElementTable.entry(exec, propertyName);
     if (entry) {
-        slot.setStaticEntry(this, entry, staticValueGetter<JSHTMLFormElement>);
+        slot.setCustom(this, entry->propertyGetter());
         return true;
     }
     bool ok;
@@ -150,145 +160,152 @@ bool JSHTMLFormElement::getOwnPropertySlot(ExecState* exec, const Identifier& pr
         slot.setCustomIndex(this, index, indexGetter);
         return true;
     }
-    return JSHTMLElement::getOwnPropertySlot(exec, propertyName, slot);
+    return getStaticValueSlot<JSHTMLFormElement, Base>(exec, &JSHTMLFormElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFormElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLFormElementElements(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ElementsAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->elements()));
-    }
-    case LengthAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsNumber(imp->length());
-    }
-    case NameAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->name());
-    }
-    case AcceptCharsetAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->acceptCharset());
-    }
-    case ActionAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->action());
-    }
-    case EncodingAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->encoding());
-    }
-    case EnctypeAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->enctype());
-    }
-    case MethodAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->method());
-    }
-    case TargetAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        return jsString(imp->target());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->elements()));
 }
 
-void JSHTMLFormElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLFormElementLength(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLFormElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLFormElementTable, this);
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->length());
 }
 
-void JSHTMLFormElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLFormElementName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NameAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setName(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case AcceptCharsetAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setAcceptCharset(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ActionAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setAction(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case EncodingAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setEncoding(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case EnctypeAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setEnctype(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case MethodAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setMethod(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TargetAttrNum: {
-        HTMLFormElement* imp = static_cast<HTMLFormElement*>(impl());
-
-        imp->setTarget(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->name());
 }
 
-JSValue* JSHTMLFormElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLFormElementAcceptCharset(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLFormElementConstructor>(exec, "[[HTMLFormElement.constructor]]");
-}
-JSValue* JSHTMLFormElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
-{
-    if (!thisObj->inherits(&JSHTMLFormElement::info))
-      return throwError(exec, TypeError);
-
-    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLFormElement::SubmitFuncNum: {
-
-        imp->submit();
-        return jsUndefined();
-    }
-    case JSHTMLFormElement::ResetFuncNum: {
-
-        imp->reset();
-        return jsUndefined();
-    }
-    }
-    return 0;
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->acceptCharset());
 }
 
-JSValue* JSHTMLFormElement::indexGetter(ExecState* exec, JSObject* originalObject, const Identifier& propertyName, const PropertySlot& slot)
+JSValuePtr jsHTMLFormElementAction(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    JSHTMLFormElement* thisObj = static_cast<JSHTMLFormElement*>(slot.slotBase());
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->action());
+}
+
+JSValuePtr jsHTMLFormElementEncoding(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->encoding());
+}
+
+JSValuePtr jsHTMLFormElementEnctype(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->enctype());
+}
+
+JSValuePtr jsHTMLFormElementMethod(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->method());
+}
+
+JSValuePtr jsHTMLFormElementTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->target());
+}
+
+JSValuePtr jsHTMLFormElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLFormElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLFormElement, Base>(exec, propertyName, value, &JSHTMLFormElementTable, this, slot);
+}
+
+void setJSHTMLFormElementName(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setName(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementAcceptCharset(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setAcceptCharset(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementAction(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setAction(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementEncoding(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setEncoding(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementEnctype(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setEnctype(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementMethod(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setMethod(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFormElementTarget(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(static_cast<JSHTMLFormElement*>(thisObject)->impl());
+    imp->setTarget(valueToStringWithNullCheck(exec, value));
+}
+
+void JSHTMLFormElement::getPropertyNames(ExecState* exec, PropertyNameArray& propertyNames)
+{
+    for (unsigned i = 0; i < static_cast<HTMLFormElement*>(impl())->length(); ++i)
+        propertyNames.add(Identifier::from(exec, i));
+     Base::getPropertyNames(exec, propertyNames);
+}
+
+JSValuePtr JSHTMLFormElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLFormElementConstructor>(exec);
+}
+
+JSValuePtr jsHTMLFormElementPrototypeFunctionSubmit(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLFormElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLFormElement* castedThisObj = static_cast<JSHTMLFormElement*>(asObject(thisValue));
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(castedThisObj->impl());
+
+    imp->submit();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLFormElementPrototypeFunctionReset(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLFormElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLFormElement* castedThisObj = static_cast<JSHTMLFormElement*>(asObject(thisValue));
+    HTMLFormElement* imp = static_cast<HTMLFormElement*>(castedThisObj->impl());
+
+    imp->reset();
+    return jsUndefined();
+}
+
+
+JSValuePtr JSHTMLFormElement::indexGetter(ExecState* exec, const Identifier& propertyName, const PropertySlot& slot)
+{
+    JSHTMLFormElement* thisObj = static_cast<JSHTMLFormElement*>(asObject(slot.slotBase()));
     return toJS(exec, static_cast<HTMLFormElement*>(thisObj->impl())->item(slot.index()));
 }
 

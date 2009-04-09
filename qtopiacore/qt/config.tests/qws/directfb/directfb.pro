@@ -1,4 +1,5 @@
 SOURCES = directfb.cpp
 CONFIG -= qt
 
-include(directfb.pri)
+QMAKE_CXXFLAGS += $$QT_CFLAGS_DIRECTFB
+LIBS += $$QT_LIBS_DIRECTFB

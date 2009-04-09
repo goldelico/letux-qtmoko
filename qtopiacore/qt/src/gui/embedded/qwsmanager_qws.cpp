@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -69,7 +76,7 @@ QPoint QWSManagerPrivate::mousePos;
 
 QWSManagerPrivate::QWSManagerPrivate()
     : QObjectPrivate(), activeRegion(QDecoration::None), managed(0), popup(0),
-      previousRegionType(0), previousRegionRepainted(false)
+      previousRegionType(0), previousRegionRepainted(false), entireDecorationNeedsRepaint(false)
 {
     cached_region.regionType = 0;
 }
@@ -384,7 +391,13 @@ void QWSManagerPrivate::dirtyRegion(int decorationRegion,
                                     QDecoration::DecorationState state,
                                     const QRegion &clip)
 {
+    QTLWExtra *topextra = managed->d_func()->extra->topextra;
+    QWidgetBackingStore *bs = topextra->backingStore;
+    const bool pendingUpdateRequest = bs->isDirty();
+
     if (decorationRegion == QDecoration::All) {
+        if (clip.isEmpty())
+            entireDecorationNeedsRepaint = true;
         dirtyRegions.clear();
         dirtyStates.clear();
     }
@@ -396,67 +409,19 @@ void QWSManagerPrivate::dirtyRegion(int decorationRegion,
 
     dirtyRegions.append(decorationRegion);
     dirtyStates.append(state);
+    if (!entireDecorationNeedsRepaint)
+        dirtyClip += clip;
 
-    QTLWExtra *topextra = managed->d_func()->extra->topextra;
-    QWidgetBackingStore *bs = topextra->backingStore;
-    const QRect clipRect = managed->rect().translated(bs->topLevelOffset());
-    QDecoration &dec = QApplication::qwsDecoration();
-    QRegion decRegion = dec.region(managed, clipRect, decorationRegion);
-
-    decRegion.translate(-bs->topLevelOffset());
-    if (!clip.isEmpty())
-        decRegion &= clip;
-    managed->d_func()->dirtyWidget_sys(decRegion);
+    if (!pendingUpdateRequest)
+        QApplication::postEvent(managed, new QEvent(QEvent::UpdateRequest), Qt::LowEventPriority);
 }
 
-/*!
-    \internal
-
-    Paints all the dirty regions into \a pixmap.
-    Returns the regions that have been repainted.
-*/
-void QWSManagerPrivate::paint(QPaintDevice *paintDevice, const QRegion &region)
+void QWSManagerPrivate::clearDirtyRegions()
 {
-    if (dirtyRegions.empty() || !paintDevice || !paintDevice->paintEngine())
-        return;
-
-    QTLWExtra *topextra = managed->d_func()->extra->topextra;
-    Q_ASSERT(topextra && topextra->backingStore);
-    QWidgetBackingStore *bs = topextra->backingStore;
-
-    const QRect clipRect = managed->rect().translated(bs->topLevelOffset());
-    QDecoration &dec = QApplication::qwsDecoration();
-
-    QWSWindowSurface *surface;
-    surface = static_cast<QWSWindowSurface*>(bs->windowSurface);
-    const QRegion clippedRegion = region & surface->clipRegion();
-
-    const QRegion surfaceClip = clippedRegion.translated(bs->topLevelOffset());
-
-    paintDevice->paintEngine()->setSystemClip(surfaceClip);
-
-    QPainter *painter = 0;
-
-    const int numDirty = dirtyRegions.size();
-    for (int i = 0; i < numDirty; ++i) {
-        int r = dirtyRegions.at(i);
-        QDecoration::DecorationState state = dirtyStates.at(i);
-
-        QRegion clipRegion = dec.region(managed, clipRect, r);
-        if (!clipRegion.isEmpty()) {
-            if (!painter) {
-                painter = new QPainter(paintDevice);
-                painter->setFont(qApp->font());
-                painter->translate(bs->topLevelOffset());
-            }
-            clipRegion.translate(-bs->topLevelOffset());
-            painter->setClipRegion(clipRegion);
-            dec.paint(painter, managed, r, state);
-        }
-    }
     dirtyRegions.clear();
     dirtyStates.clear();
-    delete painter;
+    dirtyClip = QRegion();
+    entireDecorationNeedsRepaint = false;
 }
 
 bool QWSManager::repaintRegion(int decorationRegion, QDecoration::DecorationState state)
@@ -482,6 +447,7 @@ void QWSManager::menu(const QPoint &pos)
     connect(d->popup, SIGNAL(triggered(QAction*)), SLOT(menuTriggered(QAction*)));
 
     d->popup->popup(pos);
+    d->activeRegion = QDecoration::None;
 #endif // QT_NO_MENU
 }
 

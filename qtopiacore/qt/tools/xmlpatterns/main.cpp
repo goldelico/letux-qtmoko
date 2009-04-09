@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Patternist project on Trolltech Labs.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,6 +55,7 @@
 #include <QtXmlPatterns/QXmlQuery>
 #include <QtXmlPatterns/QXmlSerializer>
 
+#include "private/qautoptr_p.h"
 #include "qapplicationargument_p.h"
 #include "qapplicationargumentparser_p.h"
 #include "qcoloringmessagehandler_p.h"
@@ -94,9 +99,11 @@ Q_DECLARE_METATYPE(QIODevice *);
 class PatternistApplicationParser : public QApplicationArgumentParser
 {
 public:
-    inline PatternistApplicationParser(int argc, char **argv) : QApplicationArgumentParser(argc, argv)
+    inline PatternistApplicationParser(int argc, char **argv,
+                                       const QXmlNamePool &np) : QApplicationArgumentParser(argc, argv)
+                                                               , m_namePool(np)
 #ifdef Q_OS_WIN
-                                                              , m_stdout(0)
+                                                               , m_stdout(0)
 #endif
     {
     }
@@ -152,6 +159,17 @@ protected:
                 return QVariant();
             }
         }
+        else if(arg.name() == QLatin1String("initial-template"))
+        {
+            const QXmlName name(QXmlName::fromClarkName(input, m_namePool));
+            if(name.isNull())
+            {
+                message(QXmlPatternistCLI::tr("%1 is an invalid Clark Name").arg(input));
+                return QVariant();
+            }
+            else
+                return qVariantFromValue(name);
+        }
         else
             return QApplicationArgumentParser::convertToValue(arg, input);
     }
@@ -188,11 +206,29 @@ protected:
             return QApplicationArgumentParser::defaultValue(argument);
     }
 
-#ifdef Q_OS_WIN
 private:
-    mutable FILE *m_stdout;
+    QXmlNamePool    m_namePool;
+#ifdef Q_OS_WIN
+    mutable FILE *  m_stdout;
 #endif
 };
+
+static inline QUrl finalizeURI(const QApplicationArgumentParser &parser,
+                               const QApplicationArgument &isURI,
+                               const QApplicationArgument &arg)
+{
+    QUrl userURI;
+    {
+        const QString stringURI(parser.value(arg).toString());
+
+        if(parser.has(isURI))
+            userURI = QUrl::fromEncoded(stringURI.toLatin1());
+        else
+            userURI = QUrl::fromLocalFile(stringURI);
+    }
+
+    return QUrl::fromLocalFile(QDir::current().absolutePath() + QLatin1Char('/')).resolved(userURI);
+}
 
 int main(int argc, char **argv)
 {
@@ -209,18 +245,14 @@ int main(int argc, char **argv)
     const QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QLatin1String("xmlpatterns"));
 
-    PatternistApplicationParser parser(argc, argv);
+    QXmlNamePool namePool;
+    PatternistApplicationParser parser(argc, argv, namePool);
     parser.setApplicationDescription(QLatin1String("A tool for running XQuery queries."));
     parser.setApplicationVersion(QLatin1String("0.1"));
 
-    /* Is there a better way to do this? Probably not, but if the class becomes public, we probably
-     * want a helper function that wraps this hack. */
-    const int parameterType = qVariantFromValue(Parameter()).userType();
-    const int outputType = qVariantFromValue(static_cast<QIODevice *>(0)).userType();
-
     QApplicationArgument param(QLatin1String("param"),
                                QXmlPatternistCLI::tr("Binds an external variable. The value is directly available using the variable reference: $name."),
-                               parameterType);
+                               qMetaTypeId<Parameter>());
     param.setMaximumOccurrence(-1);
     parser.addArgument(param);
 
@@ -229,78 +261,119 @@ int main(int argc, char **argv)
     parser.addArgument(noformat);
 
     const QApplicationArgument isURI(QLatin1String("is-uri"),
-                                     QXmlPatternistCLI::tr("If specified, the filename is interpreted as a URI instead of a local filename."));
+                                     QXmlPatternistCLI::tr("If specified, all filenames on the command line are interpreted as URIs instead of a local filenames."));
     parser.addArgument(isURI);
 
+    const QApplicationArgument initialTemplateName(QLatin1String("initial-template"),
+                                                   QXmlPatternistCLI::tr("The name of the initial template to call as a Clark Name."),
+                                                   QVariant::String);
+    parser.addArgument(initialTemplateName);
+
     /* The temporary object is required to compile with g++ 3.3. */
-    QApplicationArgument queryURI = QApplicationArgument(QString(), /* Nameless. */
-                                                         QXmlPatternistCLI::tr("A local filename pointing to the query to run. "
-                                                                               "If the name ends with .xq it's assumed "
-                                                                               "to be an XQuery query. (In other cases too, but "
-                                                                               "that interpretation may change in a future release of Qt.)"),
-                                  QVariant::String);
+    QApplicationArgument queryURI = QApplicationArgument(QLatin1String("query/stylesheet"),
+                                                         QXmlPatternistCLI::tr("A local filename pointing to the query to run. If the name ends with .xsl it's assumed "
+                                                                               "to be an XSL-T stylesheet. If it ends with .xq, it's assumed to be an XQuery query. (In "
+                                                                               "other cases it's also assumed to be an XQuery query, but that interpretation may "
+                                                                               "change in a future release of Qt.)"),
+                                                         QVariant::String);
     queryURI.setMinimumOccurrence(1);
+    queryURI.setNameless(true);
     parser.addArgument(queryURI);
 
+    QApplicationArgument focus = QApplicationArgument(QLatin1String("focus"),
+                                                      QXmlPatternistCLI::tr("The document to use as focus. Mandatory "
+                                                                            "in case a stylesheet is used. This option is "
+                                                                            "also affected by the is-uris option."),
+                                                      QVariant::String);
+    focus.setMinimumOccurrence(0);
+    focus.setNameless(true);
+    parser.addArgument(focus);
+
     QApplicationArgument output(QLatin1String("output"),
-                                QXmlPatternistCLI::tr("A local file to which the output should be written. The file is overwritten, or if not exist, created. If absent, stdout is used."),
-                                outputType);
+                                QXmlPatternistCLI::tr("A local file to which the output should be written. "
+                                                      "The file is overwritten, or if not exist, created. "
+                                                      "If absent, stdout is used."),
+                                qMetaTypeId<QIODevice *>());
     parser.addArgument(output);
 
     if(!parser.parse())
         return parser.exitCode();
 
-    QXmlQuery query;
+    /* Get the query URI. */
+    const QUrl effectiveURI(finalizeURI(parser, isURI, queryURI));
+
+    QXmlQuery::QueryLanguage lang;
+
+    if(effectiveURI.toString().endsWith(QLatin1String(".xsl")))
+         lang = QXmlQuery::XSLT20;
+    else
+         lang = QXmlQuery::XQuery10;
+
+    if(lang == QXmlQuery::XQuery10 && parser.has(initialTemplateName))
+    {
+        parser.message(QXmlPatternistCLI::tr("An initial template name cannot be specified when running an XQuery."));
+        return QApplicationArgumentParser::ParseError;
+    }
+
+    QXmlQuery query(lang, namePool);
+
+    query.setInitialTemplateName(qVariantValue<QXmlName>(parser.value(initialTemplateName)));
 
     /* Bind external variables. */
     {
         const QVariantList parameters(parser.values(param));
         const int len = parameters.count();
 
+        /* For tracking duplicates. */
+        QSet<QString> usedParameters;
+
         for(int i = 0; i < len; ++i)
         {
             const Parameter p(qVariantValue<Parameter>(parameters.at(i)));
-            query.bindVariable(p.first, QXmlItem(p.second));
+
+            if(usedParameters.contains(p.first))
+            {
+                parser.message(QXmlPatternistCLI::tr("Each parameter must be unique, %1 is specified at least twice.").arg(p.first));
+                return QApplicationArgumentParser::ParseError;
+            }
+            else
+            {
+                usedParameters.insert(p.first);
+                query.bindVariable(p.first, QXmlItem(p.second));
+            }
         }
     }
 
-    /* The final preparations and execute the query. */
-    QPatternist::ColoringMessageHandler messageHandler;
-    query.setMessageHandler(&messageHandler);
-
-    /* Get the query URI. */
-    QUrl userURI;
+    if(parser.has(focus))
     {
-        const QString stringURI(parser.value(queryURI).toString());
-
-        if(parser.has(isURI))
-            userURI = QUrl::fromEncoded(stringURI.toLatin1());
-        else
-            userURI = QUrl::fromLocalFile(stringURI);
+        if(!query.setFocus(finalizeURI(parser, isURI, focus)))
+            return QueryFailure;
     }
-    const QUrl effectiveURI(QUrl::fromLocalFile(QDir::current().absolutePath() + QLatin1Char('/')).resolved(userURI));
-
-    Q_ASSERT_X(userURI.isValid(), Q_FUNC_INFO,
-               "QApplicationArgumentParser should promise us this.");
+    else if(lang == QXmlQuery::XSLT20 && !parser.has(initialTemplateName))
+    {
+        parser.message(QXmlPatternistCLI::tr("When a stylesheet is used, a "
+                                             "document must be specified as a focus, or an "
+                                             "initial template name must be specified, or both."));
+        return QApplicationArgumentParser::ParseError;
+    }
 
     query.setQuery(effectiveURI);
 
-    QIODevice *const outDevice = qVariantValue<QIODevice *>(parser.value(output));
+    const QPatternist::AutoPtr<QIODevice> outDevice(qVariantValue<QIODevice *>(parser.value(output)));
     Q_ASSERT(outDevice);
     Q_ASSERT(outDevice->isWritable());
 
     if(query.isValid())
     {
-        QAbstractXmlReceiver *receiver = 0;
+        typedef QPatternist::AutoPtr<QAbstractXmlReceiver> RecPtr;
+        RecPtr receiver;
 
         if(parser.has(noformat))
-            receiver = new QXmlSerializer(query, outDevice);
+            receiver = RecPtr(new QXmlSerializer(query, outDevice.data()));
         else
-            receiver = new QXmlFormatter(query, outDevice);
+            receiver = RecPtr(new QXmlFormatter(query, outDevice.data()));
 
-        const bool success = query.evaluateTo(receiver);
-        delete outDevice;
-        delete receiver;
+        const bool success = query.evaluateTo(receiver.data());
 
         if(success)
             return parser.exitCode();
@@ -308,9 +381,6 @@ int main(int argc, char **argv)
             return QueryFailure;
     }
     else
-    {
-        delete outDevice;
         return QueryFailure;
-    }
 }
 

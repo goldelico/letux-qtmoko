@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -415,7 +419,7 @@ void IconTiler::rearrange(QList<QWidget *> &widgets, const QRect &domain) const
 int MinOverlapPlacer::accumulatedOverlap(const QRect &source, const QList<QRect> &rects)
 {
     int accOverlap = 0;
-    foreach (QRect rect, rects) {
+    foreach (const QRect &rect, rects) {
         QRect intersection = source.intersected(rect);
         accOverlap += intersection.width() * intersection.height();
     }
@@ -432,7 +436,7 @@ QRect MinOverlapPlacer::findMinOverlapRect(const QList<QRect> &source, const QLi
 {
     int minAccOverlap = -1;
     QRect minAccOverlapRect;
-    foreach (QRect srcRect, source) {
+    foreach (const QRect &srcRect, source) {
         const int accOverlap = accumulatedOverlap(srcRect, rects);
         if (accOverlap < minAccOverlap || minAccOverlap == -1) {
             minAccOverlap = accOverlap;
@@ -455,7 +459,7 @@ void MinOverlapPlacer::getCandidatePlacements(const QSize &size, const QList<QRe
     yset << domain.top();
     if (domain.bottom() - size.height() + 1 >= 0)
         yset << domain.bottom() - size.height() + 1;
-    foreach (QRect rect, rects) {
+    foreach (const QRect &rect, rects) {
         xset << rect.right() + 1;
         yset << rect.bottom() + 1;
     }
@@ -497,7 +501,7 @@ void MinOverlapPlacer::findMaxOverlappers(const QRect &domain, const QList<QRect
                                           QList<QRect> &result)
 {
     int maxOverlap = -1;
-    foreach (QRect srcRect, source) {
+    foreach (const QRect &srcRect, source) {
         QRect intersection = domain.intersected(srcRect);
         const int overlap = intersection.width() * intersection.height();
         if (overlap >= maxOverlap || maxOverlap == -1) {
@@ -542,7 +546,7 @@ QPoint MinOverlapPlacer::place(const QSize &size, const QList<QRect> &rects,
 {
     if (size.isEmpty() || !domain.isValid())
         return QPoint();
-    foreach (QRect rect, rects) {
+    foreach (const QRect &rect, rects) {
         if (!rect.isValid())
             return QPoint();
     }
@@ -551,7 +555,6 @@ QPoint MinOverlapPlacer::place(const QSize &size, const QList<QRect> &rects,
     getCandidatePlacements(size, rects, domain, candidates);
     return findBestPlacement(domain, rects, candidates);
 }
-
 
 #ifndef QT_NO_TABBAR
 class QMdiAreaTabBar : public QTabBar
@@ -669,6 +672,9 @@ QMdiAreaPrivate::QMdiAreaPrivate()
 #endif
       activationOrder(QMdiArea::CreationOrder),
       viewMode(QMdiArea::SubWindowView),
+#ifndef QT_NO_TABBAR
+      documentMode(false),
+#endif
 #ifndef QT_NO_TABWIDGET
       tabShape(QTabWidget::Rounded),
       tabPosition(QTabWidget::North),
@@ -904,7 +910,7 @@ void QMdiAreaPrivate::rearrange(Rearranger *rearranger)
         if (!sanityCheck(child, "QMdiArea::rearrange") || !child->isVisible())
             continue;
         if (rearranger->type() == Rearranger::IconTiler) {
-            if (child->isMinimized() && !child->isShaded())
+            if (child->isMinimized() && !child->isShaded() && !(child->windowFlags() & Qt::FramelessWindowHint))
                 widgets.append(child);
         } else {
             if (child->isMinimized() && !child->isShaded())
@@ -1512,6 +1518,7 @@ void QMdiAreaPrivate::setViewMode(QMdiArea::ViewMode mode)
     if (mode == QMdiArea::TabbedView) {
         Q_ASSERT(!tabBar);
         tabBar = new QMdiAreaTabBar(q);
+        tabBar->setDocumentMode(documentMode);
 #ifndef QT_NO_TABWIDGET
         tabBar->setShape(tabBarShapeFrom(tabShape, tabPosition));
 #endif
@@ -1628,6 +1635,7 @@ void QMdiAreaPrivate::refreshTabBar()
     if (!tabBar)
         return;
 
+    tabBar->setDocumentMode(documentMode);
 #ifndef QT_NO_TABWIDGET
     tabBar->setShape(tabBarShapeFrom(tabShape, tabPosition));
 #endif
@@ -1642,7 +1650,6 @@ void QMdiAreaPrivate::refreshTabBar()
 QMdiArea::QMdiArea(QWidget *parent)
     : QAbstractScrollArea(*new QMdiAreaPrivate, parent)
 {
-    setBackgroundRole(QPalette::Dark);
     setBackground(palette().brush(QPalette::Dark));
     setFrameStyle(QFrame::NoFrame);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -2004,6 +2011,7 @@ void QMdiArea::setBackground(const QBrush &brush)
     Q_D(QMdiArea);
     if (d->background != brush) {
         d->background = brush;
+        d->viewport->setAttribute(Qt::WA_OpaquePaintEvent, brush.isOpaque());
         update();
     }
 }
@@ -2079,6 +2087,33 @@ void QMdiArea::setViewMode(ViewMode mode)
     d->setViewMode(mode);
 }
 
+#ifndef QT_NO_TABBAR
+/*!
+    \property QMdiArea::documentMode
+    \brief whether the tab bar is set to document mode in tabbed view mode.
+    \since 4.5
+
+    Document mode is disabled by default.
+
+    \sa QTabBar::documentMode, setViewMode()
+*/
+bool QMdiArea::documentMode() const
+{
+    Q_D(const QMdiArea);
+    return d->documentMode;
+}
+
+void QMdiArea::setDocumentMode(bool enabled)
+{
+    Q_D(QMdiArea);
+    if (d->documentMode == enabled)
+        return;
+
+    d->documentMode = enabled;
+    d->refreshTabBar();
+}
+#endif // QT_NO_TABBAR
+
 #ifndef QT_NO_TABWIDGET
 /*!
     \property QMdiArea::tabShape
@@ -2088,7 +2123,7 @@ void QMdiArea::setViewMode(ViewMode mode)
     Possible values for this property are QTabWidget::Rounded
     (default) or QTabWidget::Triangular.
 
-    \sa QTabWidget::tabShape(), setViewMode()
+    \sa QTabWidget::TabShape, setViewMode()
 */
 QTabWidget::TabShape QMdiArea::tabShape() const
 {
@@ -2530,8 +2565,8 @@ bool QMdiArea::eventFilter(QObject *object, QEvent *event)
 void QMdiArea::paintEvent(QPaintEvent *paintEvent)
 {
     Q_D(QMdiArea);
-    QPainter painter(viewport());
-    const QVector<QRect> exposedRects = paintEvent->region().rects();
+    QPainter painter(d->viewport);
+    const QVector<QRect> &exposedRects = paintEvent->region().rects();
     for (int i = 0; i < exposedRects.size(); ++i)
         painter.fillRect(exposedRects.at(i), d->background);
 }
@@ -2545,7 +2580,10 @@ void QMdiArea::paintEvent(QPaintEvent *paintEvent)
 */
 void QMdiArea::setupViewport(QWidget *viewport)
 {
-    foreach (QMdiSubWindow *child, d_func()->childWindows) {
+    Q_D(QMdiArea);
+    if (viewport)
+        viewport->setAttribute(Qt::WA_OpaquePaintEvent, d->background.isOpaque());
+    foreach (QMdiSubWindow *child, d->childWindows) {
         if (!sanityCheck(child, "QMdiArea::setupViewport"))
             continue;
         child->setParent(viewport, child->windowFlags());

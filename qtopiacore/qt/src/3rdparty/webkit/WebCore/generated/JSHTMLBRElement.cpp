@@ -25,132 +25,134 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLBRElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLBRElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLBRElementTableEntries[] =
+static const HashTableValue JSHTMLBRElementTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "clear", JSHTMLBRElement::ClearAttrNum, DontDelete, 0, &JSHTMLBRElementTableEntries[2] },
-    { "constructor", JSHTMLBRElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "clear", DontDelete, (intptr_t)jsHTMLBRElementClear, (intptr_t)setJSHTMLBRElementClear },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLBRElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBRElementTable = 
-{
-    2, 3, JSHTMLBRElementTableEntries, 2
-};
+static const HashTable JSHTMLBRElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSHTMLBRElementTableValues, 0 };
+#else
+    { 4, 3, JSHTMLBRElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLBRElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLBRElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBRElementConstructorTable = 
-{
-    2, 1, JSHTMLBRElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLBRElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLBRElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLBRElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLBRElementConstructor : public DOMObject {
 public:
     JSHTMLBRElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLBRElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLBRElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLBRElementConstructor::info = { "HTMLBRElementConstructor", 0, &JSHTMLBRElementConstructorTable, 0 };
+const ClassInfo JSHTMLBRElementConstructor::s_info = { "HTMLBRElementConstructor", 0, &JSHTMLBRElementConstructorTable, 0 };
 
 bool JSHTMLBRElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLBRElementConstructor, DOMObject>(exec, &JSHTMLBRElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLBRElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLBRElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLBRElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLBRElementPrototypeTable = 
-{
-    2, 1, JSHTMLBRElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLBRElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLBRElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLBRElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLBRElementPrototype::info = { "HTMLBRElementPrototype", 0, &JSHTMLBRElementPrototypeTable, 0 };
+const ClassInfo JSHTMLBRElementPrototype::s_info = { "HTMLBRElementPrototype", 0, &JSHTMLBRElementPrototypeTable, 0 };
 
 JSObject* JSHTMLBRElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLBRElementPrototype>(exec, "[[JSHTMLBRElement.prototype]]");
+    return getDOMPrototype<JSHTMLBRElement>(exec);
 }
 
-const ClassInfo JSHTMLBRElement::info = { "HTMLBRElement", &JSHTMLElement::info, &JSHTMLBRElementTable, 0 };
+const ClassInfo JSHTMLBRElement::s_info = { "HTMLBRElement", &JSHTMLElement::s_info, &JSHTMLBRElementTable, 0 };
 
-JSHTMLBRElement::JSHTMLBRElement(ExecState* exec, HTMLBRElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLBRElement::JSHTMLBRElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLBRElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLBRElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLBRElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLBRElementPrototype(JSHTMLBRElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLBRElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLBRElement, JSHTMLElement>(exec, &JSHTMLBRElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLBRElement, Base>(exec, &JSHTMLBRElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLBRElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLBRElementClear(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ClearAttrNum: {
-        HTMLBRElement* imp = static_cast<HTMLBRElement*>(impl());
-
-        return jsString(imp->clear());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLBRElement* imp = static_cast<HTMLBRElement*>(static_cast<JSHTMLBRElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->clear());
 }
 
-void JSHTMLBRElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLBRElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLBRElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLBRElementTable, this);
+    return static_cast<JSHTMLBRElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-void JSHTMLBRElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSHTMLBRElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case ClearAttrNum: {
-        HTMLBRElement* imp = static_cast<HTMLBRElement*>(impl());
-
-        imp->setClear(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    lookupPut<JSHTMLBRElement, Base>(exec, propertyName, value, &JSHTMLBRElementTable, this, slot);
 }
 
-JSValue* JSHTMLBRElement::getConstructor(ExecState* exec)
+void setJSHTMLBRElementClear(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSHTMLBRElementConstructor>(exec, "[[HTMLBRElement.constructor]]");
+    HTMLBRElement* imp = static_cast<HTMLBRElement*>(static_cast<JSHTMLBRElement*>(thisObject)->impl());
+    imp->setClear(valueToStringWithNullCheck(exec, value));
 }
+
+JSValuePtr JSHTMLBRElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLBRElementConstructor>(exec);
+}
+
 
 }

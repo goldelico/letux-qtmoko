@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,8 +48,67 @@
 
 QT_BEGIN_NAMESPACE
 
-static QBasicAtomicInt timerId = Q_BASIC_ATOMIC_INITIALIZER(1);
+// we allow for 2^24 = 8^8 = 16777216 simultaneously running timers
+enum { NumberOfBuckets = 8, FirstBucketSize = 8 };
 
+static const int BucketSize[NumberOfBuckets] =
+    { 8, 64, 512, 4096, 32768, 262144, 2097152, 16777216 - 2396744 };
+static const int BucketOffset[NumberOfBuckets] =
+    { 0,  8,  72,  584,  4680,  37448,  299592,  2396744 };
+
+static int FirstBucket[FirstBucketSize] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+static QBasicAtomicPointer<int> timerIds[NumberOfBuckets] =
+    { Q_BASIC_ATOMIC_INITIALIZER(FirstBucket),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0),
+      Q_BASIC_ATOMIC_INITIALIZER(0) };
+
+static void timerIdsDestructorFunction()
+{
+    // start at one, the first bucket is pre-allocated
+    for (int i = 1; i < NumberOfBuckets; ++i)
+        delete [] static_cast<int *>(timerIds[i]);
+}
+Q_DESTRUCTOR_FUNCTION(timerIdsDestructorFunction)
+
+static QBasicAtomicInt nextFreeTimerId = Q_BASIC_ATOMIC_INITIALIZER(1);
+
+// avoid the ABA-problem by using 7 of the top 8 bits of the timerId as a serial number
+static inline int prepareNewValueWithSerialNumber(int oldId, int newId)
+{
+    return (newId & 0x00FFFFFF) | ((oldId + 0x01000000) & 0x7f000000);
+}
+
+static inline int bucketOffset(int timerId)
+{
+    for (int i = 0; i < NumberOfBuckets; ++i) {
+        if (timerId < BucketSize[i])
+            return i;
+        timerId -= BucketSize[i];
+    }
+    qFatal("QAbstractEventDispatcher: INTERNAL ERROR, timer ID %d is too large", timerId);
+    return -1;
+}
+
+static inline int bucketIndex(int bucket, int timerId)
+{
+    return timerId - BucketOffset[bucket];
+}
+
+static inline int *allocateBucket(int bucket)
+{
+    // allocate a new bucket
+    const int size = BucketSize[bucket];
+    const int offset = BucketOffset[bucket];
+    int *b = new int[size];
+    for (int i = 0; i != size; ++i)
+        b[i] = offset + i + 1;
+    return b;
+}
 
 void QAbstractEventDispatcherPrivate::init()
 {
@@ -57,6 +120,49 @@ void QAbstractEventDispatcherPrivate::init()
     }
 }
 
+int QAbstractEventDispatcherPrivate::allocateTimerId()
+{
+    int timerId, newTimerId;
+    do {
+        timerId = nextFreeTimerId;
+
+        // which bucket are we looking in?
+        int which = timerId & 0x00ffffff;
+        int bucket = bucketOffset(which);
+        int at = bucketIndex(bucket, which);
+        int *b = timerIds[bucket];
+
+        if (!b) {
+            // allocate a new bucket
+            b = allocateBucket(bucket);
+            if (!timerIds[bucket].testAndSetRelease(0, b)) {
+                // another thread won the race to allocate the bucket
+                delete [] b;
+                b = timerIds[bucket];
+            }
+        }
+
+        newTimerId = b[at];
+    } while (!nextFreeTimerId.testAndSetRelaxed(timerId, newTimerId));
+
+    return timerId;
+}
+
+void QAbstractEventDispatcherPrivate::releaseTimerId(int timerId)
+{
+    int which = timerId & 0x00ffffff;
+    int bucket = bucketOffset(which);
+    int at = bucketIndex(bucket, which);
+    int *b = timerIds[bucket];
+
+    int freeId, newTimerId;
+    do {
+        freeId = nextFreeTimerId;
+        b[at] = freeId & 0x00ffffff;
+
+        newTimerId = prepareNewValueWithSerialNumber(freeId, timerId);
+    } while (!nextFreeTimerId.testAndSetRelease(freeId, newTimerId));
+}
 
 /*!
     \class QAbstractEventDispatcher
@@ -203,7 +309,7 @@ QAbstractEventDispatcher *QAbstractEventDispatcher::instance(QThread *thread)
 */
 int QAbstractEventDispatcher::registerTimer(int interval, QObject *object)
 {
-    int id = timerId.fetchAndAddRelaxed(1);
+    int id = QAbstractEventDispatcherPrivate::allocateTimerId();
     registerTimer(id, interval, object);
     return id;
 }

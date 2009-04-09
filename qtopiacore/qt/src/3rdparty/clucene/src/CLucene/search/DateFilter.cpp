@@ -27,8 +27,13 @@ CL_NS_DEF(search)
     <code>from</code> and <code>to</code>. */
   DateFilter::DateFilter(const TCHAR* f, int64_t from, int64_t to)
   {
-    start = _CLNEW Term(f, DateField::timeToString(from));
-    end = _CLNEW Term(start, DateField::timeToString(to));
+    TCHAR* tmp = DateField::timeToString(from);
+    start = _CLNEW Term(f, tmp);
+    _CLDELETE_CARRAY(tmp);
+
+    tmp = DateField::timeToString(to);
+    end = _CLNEW Term(start, tmp);
+    _CLDELETE_CARRAY(tmp);
   }
 
   /** Constructs a filter for field <code>f</code> matching times before

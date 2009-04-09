@@ -23,146 +23,149 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGRect.h"
 
 #include <wtf/GetPtr.h>
 
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGRect)
+
 /* Hash table */
 
-static const HashEntry JSSVGRectTableEntries[] =
+static const HashTableValue JSSVGRectTableValues[5] =
 {
-    { "y", JSSVGRect::YAttrNum, DontDelete, 0, 0 },
-    { "x", JSSVGRect::XAttrNum, DontDelete, 0, &JSSVGRectTableEntries[4] },
-    { 0, 0, 0, 0, 0 },
-    { "width", JSSVGRect::WidthAttrNum, DontDelete, 0, 0 },
-    { "height", JSSVGRect::HeightAttrNum, DontDelete, 0, 0 }
+    { "x", DontDelete, (intptr_t)jsSVGRectX, (intptr_t)setJSSVGRectX },
+    { "y", DontDelete, (intptr_t)jsSVGRectY, (intptr_t)setJSSVGRectY },
+    { "width", DontDelete, (intptr_t)jsSVGRectWidth, (intptr_t)setJSSVGRectWidth },
+    { "height", DontDelete, (intptr_t)jsSVGRectHeight, (intptr_t)setJSSVGRectHeight },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGRectTable = 
-{
-    2, 5, JSSVGRectTableEntries, 4
-};
+static const HashTable JSSVGRectTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGRectTableValues, 0 };
+#else
+    { 9, 7, JSSVGRectTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGRectPrototypeTableEntries[] =
+static const HashTableValue JSSVGRectPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGRectPrototypeTable = 
-{
-    2, 1, JSSVGRectPrototypeTableEntries, 1
-};
+static const HashTable JSSVGRectPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGRectPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGRectPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGRectPrototype::info = { "SVGRectPrototype", 0, &JSSVGRectPrototypeTable, 0 };
+const ClassInfo JSSVGRectPrototype::s_info = { "SVGRectPrototype", 0, &JSSVGRectPrototypeTable, 0 };
 
 JSObject* JSSVGRectPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGRectPrototype>(exec, "[[JSSVGRect.prototype]]");
+    return getDOMPrototype<JSSVGRect>(exec);
 }
 
-const ClassInfo JSSVGRect::info = { "SVGRect", 0, &JSSVGRectTable, 0 };
+const ClassInfo JSSVGRect::s_info = { "SVGRect", 0, &JSSVGRectTable, 0 };
 
-JSSVGRect::JSSVGRect(ExecState* exec, JSSVGPODTypeWrapper<FloatRect>* impl)
-    : m_impl(impl)
+JSSVGRect::JSSVGRect(PassRefPtr<Structure> structure, PassRefPtr<JSSVGPODTypeWrapper<FloatRect> > impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGRectPrototype::self(exec));
 }
 
 JSSVGRect::~JSSVGRect()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    JSSVGDynamicPODTypeWrapperCache<FloatRect, SVGAnimatedRect>::forgetWrapper(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGRect::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGRectPrototype(JSSVGRectPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGRect::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGRect, KJS::DOMObject>(exec, &JSSVGRectTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGRect, Base>(exec, &JSSVGRectTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGRect::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGRectX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        FloatRect& imp(*impl());
-
-        return jsNumber(imp.x());
-    }
-    case YAttrNum: {
-        FloatRect& imp(*impl());
-
-        return jsNumber(imp.y());
-    }
-    case WidthAttrNum: {
-        FloatRect& imp(*impl());
-
-        return jsNumber(imp.width());
-    }
-    case HeightAttrNum: {
-        FloatRect& imp(*impl());
-
-        return jsNumber(imp.height());
-    }
-    }
-    return 0;
+    FloatRect imp(*static_cast<JSSVGRect*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.x());
 }
 
-void JSSVGRect::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGRectY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGRect, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGRectTable, this);
+    FloatRect imp(*static_cast<JSSVGRect*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.y());
 }
 
-void JSSVGRect::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGRectWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        FloatRect& imp(*impl());
-
-        imp.setX(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    case YAttrNum: {
-        FloatRect& imp(*impl());
-
-        imp.setY(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    case WidthAttrNum: {
-        FloatRect& imp(*impl());
-
-        imp.setWidth(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    case HeightAttrNum: {
-        FloatRect& imp(*impl());
-
-        imp.setHeight(value->toFloat(exec));
-        m_impl->commitChange(exec);
-        break;
-    }
-    }
+    FloatRect imp(*static_cast<JSSVGRect*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.width());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, JSSVGPODTypeWrapper<FloatRect>* obj)
+JSValuePtr jsSVGRectHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheDOMObject<JSSVGPODTypeWrapper<FloatRect>, JSSVGRect>(exec, obj);
+    FloatRect imp(*static_cast<JSSVGRect*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp.height());
 }
-FloatRect toSVGRect(KJS::JSValue* val)
+
+void JSSVGRect::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return val->isObject(&JSSVGRect::info) ? (FloatRect) *static_cast<JSSVGRect*>(val)->impl() : FloatRect();
+    lookupPut<JSSVGRect, Base>(exec, propertyName, value, &JSSVGRectTable, this, slot);
+}
+
+void setJSSVGRectX(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    FloatRect imp(*static_cast<JSSVGRect*>(thisObject)->impl());
+    imp.setX(value->toFloat(exec));
+        static_cast<JSSVGRect*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGRect*>(thisObject)->context());
+}
+
+void setJSSVGRectY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    FloatRect imp(*static_cast<JSSVGRect*>(thisObject)->impl());
+    imp.setY(value->toFloat(exec));
+        static_cast<JSSVGRect*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGRect*>(thisObject)->context());
+}
+
+void setJSSVGRectWidth(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    FloatRect imp(*static_cast<JSSVGRect*>(thisObject)->impl());
+    imp.setWidth(value->toFloat(exec));
+        static_cast<JSSVGRect*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGRect*>(thisObject)->context());
+}
+
+void setJSSVGRectHeight(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    FloatRect imp(*static_cast<JSSVGRect*>(thisObject)->impl());
+    imp.setHeight(value->toFloat(exec));
+        static_cast<JSSVGRect*>(thisObject)->impl()->commitChange(imp, static_cast<JSSVGRect*>(thisObject)->context());
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, JSSVGPODTypeWrapper<FloatRect>* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGRect, JSSVGPODTypeWrapper<FloatRect> >(exec, object, context);
+}
+FloatRect toSVGRect(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGRect::s_info) ? (FloatRect) *static_cast<JSSVGRect*>(asObject(value))->impl() : FloatRect();
 }
 
 }

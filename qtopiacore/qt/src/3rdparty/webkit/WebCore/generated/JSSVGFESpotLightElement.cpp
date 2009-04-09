@@ -21,13 +21,9 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFESpotLightElement.h"
 
 #include <wtf/GetPtr.h>
@@ -35,223 +31,130 @@
 #include "JSSVGAnimatedNumber.h"
 #include "SVGFESpotLightElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFESpotLightElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFESpotLightElementTableEntries[] =
+static const HashTableValue JSSVGFESpotLightElementTableValues[9] =
 {
-    { "pointsAtZ", JSSVGFESpotLightElement::PointsAtZAttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpotLightElementTableEntries[9] },
-    { "x", JSSVGFESpotLightElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "pointsAtX", JSSVGFESpotLightElement::PointsAtXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "y", JSSVGFESpotLightElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFESpotLightElementTableEntries[8] },
-    { "specularExponent", JSSVGFESpotLightElement::SpecularExponentAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "z", JSSVGFESpotLightElement::ZAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "pointsAtY", JSSVGFESpotLightElement::PointsAtYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "limitingConeAngle", JSSVGFESpotLightElement::LimitingConeAngleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementY, (intptr_t)0 },
+    { "z", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementZ, (intptr_t)0 },
+    { "pointsAtX", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementPointsAtX, (intptr_t)0 },
+    { "pointsAtY", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementPointsAtY, (intptr_t)0 },
+    { "pointsAtZ", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementPointsAtZ, (intptr_t)0 },
+    { "specularExponent", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementSpecularExponent, (intptr_t)0 },
+    { "limitingConeAngle", DontDelete|ReadOnly, (intptr_t)jsSVGFESpotLightElementLimitingConeAngle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFESpotLightElementTable = 
-{
-    2, 10, JSSVGFESpotLightElementTableEntries, 8
-};
+static const HashTable JSSVGFESpotLightElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFESpotLightElementTableValues, 0 };
+#else
+    { 16, 15, JSSVGFESpotLightElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFESpotLightElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFESpotLightElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFESpotLightElementPrototypeTable = 
-{
-    2, 1, JSSVGFESpotLightElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFESpotLightElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFESpotLightElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGFESpotLightElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFESpotLightElementPrototype::info = { "SVGFESpotLightElementPrototype", 0, &JSSVGFESpotLightElementPrototypeTable, 0 };
+const ClassInfo JSSVGFESpotLightElementPrototype::s_info = { "SVGFESpotLightElementPrototype", 0, &JSSVGFESpotLightElementPrototypeTable, 0 };
 
 JSObject* JSSVGFESpotLightElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFESpotLightElementPrototype>(exec, "[[JSSVGFESpotLightElement.prototype]]");
+    return getDOMPrototype<JSSVGFESpotLightElement>(exec);
 }
 
-const ClassInfo JSSVGFESpotLightElement::info = { "SVGFESpotLightElement", &JSSVGElement::info, &JSSVGFESpotLightElementTable, 0 };
+const ClassInfo JSSVGFESpotLightElement::s_info = { "SVGFESpotLightElement", &JSSVGElement::s_info, &JSSVGFESpotLightElementTable, 0 };
 
-JSSVGFESpotLightElement::JSSVGFESpotLightElement(ExecState* exec, SVGFESpotLightElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGFESpotLightElement::JSSVGFESpotLightElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFESpotLightElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGFESpotLightElementPrototype::self(exec));
+}
+
+JSObject* JSSVGFESpotLightElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFESpotLightElementPrototype(JSSVGFESpotLightElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFESpotLightElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFESpotLightElement, JSSVGElement>(exec, &JSSVGFESpotLightElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFESpotLightElement, Base>(exec, &JSSVGFESpotLightElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFESpotLightElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFESpotLightElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpotLightElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpotLightElementZ(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->zAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
+JSValuePtr jsSVGFESpotLightElementPointsAtX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->pointsAtXAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFESpotLightElementPointsAtY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->pointsAtYAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedNumber> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFESpotLightElementPointsAtZ(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->pointsAtZAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case ZAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
+JSValuePtr jsSVGFESpotLightElementSpecularExponent(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->specularExponentAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->zAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case PointsAtXAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->pointsAtXAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case PointsAtYAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->pointsAtYAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case PointsAtZAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->pointsAtZAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case SpecularExponentAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->specularExponentAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case LimitingConeAngleAttrNum: {
-        SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedNumber> obj = imp->limitingConeAngleAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedNumber>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedNumber>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedNumber>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+JSValuePtr jsSVGFESpotLightElementLimitingConeAngle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFESpotLightElement* imp = static_cast<SVGFESpotLightElement*>(static_cast<JSSVGFESpotLightElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedNumber> obj = imp->limitingConeAngleAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

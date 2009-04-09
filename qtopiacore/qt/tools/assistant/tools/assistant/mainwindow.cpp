@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -90,7 +94,7 @@ MainWindow::MainWindow(CmdLineParser *cmdLine, QWidget *parent)
     , m_connectedInitSignals(false)
 {
     if (usesDefaultCollection()) {
-        MainWindow::collectionFileDirectory(true);        
+        MainWindow::collectionFileDirectory(true);
         m_helpEngine = new QHelpEngine(MainWindow::defaultHelpCollectionFileName(),
             this);
     } else {
@@ -107,15 +111,15 @@ MainWindow::MainWindow(CmdLineParser *cmdLine, QWidget *parent)
     addDockWidget(Qt::LeftDockWidgetArea, indexDock);
 
     m_contentWindow = new ContentWindow(m_helpEngine);
-	QDockWidget *contentDock = new QDockWidget(tr("Contents"), this);
+    QDockWidget *contentDock = new QDockWidget(tr("Contents"), this);
     contentDock->setObjectName(QLatin1String("ContentWindow"));
-	contentDock->setWidget(m_contentWindow);
-	addDockWidget(Qt::LeftDockWidgetArea, contentDock);
+    contentDock->setWidget(m_contentWindow);
+    addDockWidget(Qt::LeftDockWidgetArea, contentDock);
 
-	QDockWidget *bookmarkDock = new QDockWidget(tr("Bookmarks"), this);
+    QDockWidget *bookmarkDock = new QDockWidget(tr("Bookmarks"), this);
     bookmarkDock->setObjectName(QLatin1String("BookmarkWindow"));
-	bookmarkDock->setWidget(setupBookmarkWidget());
-	addDockWidget(Qt::LeftDockWidgetArea, bookmarkDock);
+    bookmarkDock->setWidget(setupBookmarkWidget());
+    addDockWidget(Qt::LeftDockWidgetArea, bookmarkDock);
 
     QHelpSearchEngine *searchEngine = m_helpEngine->searchEngine();
     connect(searchEngine, SIGNAL(indexingStarted()), this, SLOT(indexingStarted()));
@@ -188,7 +192,7 @@ MainWindow::MainWindow(CmdLineParser *cmdLine, QWidget *parent)
         } else {
             updateApplicationFont();
         }
-        
+
         updateAboutMenuText();
 
         QTimer::singleShot(0, this, SLOT(insertLastPages()));
@@ -221,7 +225,7 @@ MainWindow::MainWindow(CmdLineParser *cmdLine, QWidget *parent)
             showIndex();
         else if (m_cmdLine->bookmarks() == CmdLineParser::Activate)
             showBookmarks();
-        
+
         if (usesDefaultCollection())
             QTimer::singleShot(0, this, SLOT(lookForNewQtDocumentation()));
         else
@@ -256,45 +260,50 @@ bool MainWindow::initHelpDB()
         return false;
 
     bool assistantInternalDocRegistered = false;
-    foreach (QString ns, m_helpEngine->registeredDocumentations()) {
-        if (ns.startsWith(QLatin1String("com.trolltech.com.assistantinternal_"))) {
+    QString intern(QLatin1String("com.trolltech.com.assistantinternal_"));
+    foreach (const QString &ns, m_helpEngine->registeredDocumentations()) {
+        if (ns.startsWith(intern)) {
+            intern = ns;
             assistantInternalDocRegistered = true;
             break;
         }
     }
 
-    bool needsSetup = false;
-    if (!assistantInternalDocRegistered) {
-        QFileInfo fi(m_helpEngine->collectionFile());
-        const QString helpFile = fi.absolutePath() 
-            + QDir::separator() + QLatin1String("assistant.qch");
-        if (!QFile::exists(helpFile)) {
-            QFile file(helpFile);
-            if (file.open(QIODevice::WriteOnly)) {
-                QResource res(QLatin1String(":/trolltech/assistant/assistant.qch"));
-                if (file.write((const char*)res.data(), res.size()) != res.size())
-                    qDebug() << QLatin1String("could not write assistant.qch...");
+    const QString &collectionFile = m_helpEngine->collectionFile();
 
-                file.close();
-            }
-        }        
+    QFileInfo fi(collectionFile);
+    QString helpFile;
+    QTextStream(&helpFile) << fi.absolutePath() << QDir::separator()
+        << QLatin1String("assistant.qch.") << (QT_VERSION >> 16)
+        << QLatin1Char('.') << ((QT_VERSION >> 8) & 0xFF);
+
+    bool needsSetup = false;
+    if (!assistantInternalDocRegistered || !QFile::exists(helpFile)) {
+        QFile file(helpFile);
+        if (file.open(QIODevice::WriteOnly)) {
+            QResource res(QLatin1String(":/trolltech/assistant/assistant.qch"));
+            if (file.write((const char*)res.data(), res.size()) != res.size())
+                qDebug() << QLatin1String("could not write assistant.qch...");
+
+            file.close();
+        }
         QHelpEngineCore hc(fi.absoluteFilePath());
         hc.setupData();
+        hc.unregisterDocumentation(intern);
         hc.registerDocumentation(helpFile);
         needsSetup = true;
     }
 
-    int i = m_helpEngine->customValue(
-        QLatin1String("UnfilteredFilterInserted")).toInt();
-    if (i != 1) {
+    const QLatin1String unfiltered("UnfilteredFilterInserted");
+    if (1 != m_helpEngine->customValue(unfiltered).toInt()) {
         {
-            QHelpEngineCore hc(m_helpEngine->collectionFile());
+            QHelpEngineCore hc(collectionFile);
             hc.setupData();
             hc.addCustomFilter(tr("Unfiltered"), QStringList());
-            hc.setCustomValue(QLatin1String("UnfilteredFilterInserted"), 1);
+            hc.setCustomValue(unfiltered, 1);
         }
         m_helpEngine->blockSignals(true);
-        m_helpEngine->setCurrentFilter(tr("Unfiltered"));        
+        m_helpEngine->setCurrentFilter(tr("Unfiltered"));
         m_helpEngine->blockSignals(false);
         needsSetup = true;
     }
@@ -311,7 +320,7 @@ void MainWindow::lookForNewQtDocumentation()
         this, SLOT(displayInstallationError(const QString&)));
     connect(m_qtDocInstaller, SIGNAL(docsInstalled(bool)),
         this, SLOT(qtDocumentationInstalled(bool)));
-    
+
     QString versionKey = QString(QLatin1String("qtVersion%1$$$qt")).
         arg(QLatin1String(QT_VERSION_STR));
     if (m_helpEngine->customValue(versionKey, 0).toInt() != 1)
@@ -352,7 +361,7 @@ void MainWindow::checkInitState()
             disconnect(m_helpEngine->indexModel(), 0, this, 0);
         }
         emit initDone();
-    }    
+    }
 }
 
 void MainWindow::insertLastPages()
@@ -385,7 +394,7 @@ void MainWindow::setupActions()
 
     menu->addSeparator();
 
-    m_newTabAction = menu->addAction(tr("New &Tab"), m_centralWidget, SLOT(newEmptyTab()));
+    m_newTabAction = menu->addAction(tr("New &Tab"), m_centralWidget, SLOT(newTab()));
     m_newTabAction->setShortcut(tr("CTRL+T"));
     m_closeTabAction = menu->addAction(tr("&Close Tab"), m_centralWidget, SLOT(closeTab()));
     m_closeTabAction->setShortcut(tr("CTRL+W"));
@@ -393,7 +402,7 @@ void MainWindow::setupActions()
     QAction *tmp = menu->addAction(tr("&Quit"), this, SLOT(close()));
     tmp->setShortcut(tr("CTRL+Q"));
     tmp->setMenuRole(QAction::QuitRole);
-    
+
     menu = menuBar()->addMenu(tr("&Edit"));
     m_copyAction = menu->addAction(tr("&Copy selected Text"),
         m_centralWidget, SLOT(copySelection()));
@@ -411,13 +420,13 @@ void MainWindow::setupActions()
 
     QAction *findNextAction = menu->addAction(tr("Find &Next"),
         m_centralWidget, SLOT(findNext()));
-    findNextAction->setShortcut(tr("F3"));
-    findNextAction->setShortcut(QKeySequence::FindNext);
+    findNextAction->setShortcuts(QList<QKeySequence>() << QKeySequence(tr("F3"))
+        << QKeySequence::FindNext);
 
     QAction *findPreviousAction = menu->addAction(tr("Find &Previous"),
         m_centralWidget, SLOT(findPrevious()));
-    findPreviousAction->setShortcut(tr("Shift+F3"));
-    findPreviousAction->setShortcut(QKeySequence::FindPrevious);
+    findPreviousAction->setShortcuts(QList<QKeySequence>() <<
+        QKeySequence(tr("Shift+F3")) << QKeySequence::FindPrevious);
 
     menu->addSeparator();
     tmp = menu->addAction(tr("Preferences..."), this, SLOT(showPreferences()));
@@ -463,14 +472,16 @@ void MainWindow::setupActions()
     m_backAction = menu->addAction(tr("&Back"),
         m_centralWidget, SLOT(backward()));
     m_backAction->setEnabled(false);
-    m_backAction->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Left));
+    m_backAction->setShortcuts(QList<QKeySequence>()
+        << QKeySequence(Qt::CTRL|Qt::Key_Left) << QKeySequence::Back);
     m_backAction->setIcon(QIcon(
         QString::fromUtf8(":/trolltech/assistant/images/%1/previous.png").arg(system)));
 
     m_nextAction = menu->addAction(tr("&Forward"),
         m_centralWidget, SLOT(forward()));
     m_nextAction->setEnabled(false);
-    m_nextAction->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Right));
+    m_nextAction->setShortcuts(QList<QKeySequence>()
+        << QKeySequence(Qt::CTRL|Qt::Key_Right) << QKeySequence::Forward);
     m_nextAction->setIcon(QIcon(
         QString::fromUtf8(":/trolltech/assistant/images/%1/next.png").arg(system)));
 
@@ -482,11 +493,13 @@ void MainWindow::setupActions()
     menu->addSeparator();
 
     tmp = menu->addAction(tr("Next Page"), m_centralWidget, SLOT(nextPage()));
-    tmp->setShortcut(tr("Ctrl+Alt+Right"));
+    tmp->setShortcuts(QList<QKeySequence>() << QKeySequence(tr("Ctrl+Alt+Right"))
+        << QKeySequence(Qt::CTRL + Qt::Key_PageDown));
 
     tmp = menu->addAction(tr("Previous Page"),
         m_centralWidget, SLOT(previousPage()));
-    tmp->setShortcut(tr("Ctrl+Alt+Left"));
+    tmp->setShortcuts(QList<QKeySequence>() << QKeySequence(tr("Ctrl+Alt+Left"))
+        << QKeySequence(Qt::CTRL + Qt::Key_PageUp));
 
     menu = menuBar()->addMenu(tr("&Bookmarks"));
     tmp = menu->addAction(tr("Add Bookmark..."), this, SLOT(addBookmark()));
@@ -543,16 +556,22 @@ void MainWindow::setupActions()
     // bookmarks
     connect(m_bookmarkWidget, SIGNAL(requestShowLink(const QUrl&)),
         m_centralWidget, SLOT(setSource(const QUrl&)));
+    connect(m_bookmarkWidget, SIGNAL(escapePressed()),
+        this, SLOT(activateCurrentCentralWidgetTab()));
 
     // index window
     connect(m_indexWindow, SIGNAL(linkActivated(const QUrl&)),
         m_centralWidget, SLOT(setSource(const QUrl&)));
     connect(m_indexWindow, SIGNAL(linksActivated(const QMap<QString, QUrl>&, const QString&)),
             this, SLOT(showTopicChooser(const QMap<QString, QUrl>&, const QString&)));
+    connect(m_indexWindow, SIGNAL(escapePressed()),
+        this, SLOT(activateCurrentCentralWidgetTab()));
 
     // content window
-	connect(m_contentWindow, SIGNAL(linkActivated(const QUrl&)),
+    connect(m_contentWindow, SIGNAL(linkActivated(const QUrl&)),
         m_centralWidget, SLOT(setSource(const QUrl&)));
+    connect(m_contentWindow, SIGNAL(escapePressed()),
+        this, SLOT(activateCurrentCentralWidgetTab()));
 
 #if defined(QT_NO_PRINTER)
         m_pageSetupAction->setVisible(false);
@@ -684,6 +703,7 @@ void MainWindow::updateNavigationItems()
     m_nextAction->setEnabled(m_centralWidget->isForwardAvailable());
     m_backAction->setEnabled(m_centralWidget->isBackwardAvailable());
     m_closeTabAction->setEnabled(hasCurrentViewer);
+    m_newTabAction->setEnabled(hasCurrentViewer);
 }
 
 void MainWindow::showTopicChooser(const QMap<QString, QUrl> &links,
@@ -697,8 +717,8 @@ void MainWindow::showTopicChooser(const QMap<QString, QUrl> &links,
 
 void MainWindow::showPreferences()
 {
-    PreferencesDialog dia(m_helpEngine, this,
-        usesDefaultCollection());
+    PreferencesDialog dia(m_helpEngine, this);
+
     connect(&dia, SIGNAL(updateApplicationFont()),
         this, SLOT(updateApplicationFont()));
     connect(&dia, SIGNAL(updateBrowserFont()),
@@ -780,8 +800,8 @@ void MainWindow::showAboutDialog()
             "Qt is a comprehensive C++ framework for cross-platform application "
             "development.");
         QString moreInfo = tr("You need a commercial Qt license for development of proprietary (closed "
-            "source) applications. Please see <a href=\"http://trolltech.com/company/about/businessmodel"
-            "\">http://trolltech.com/company/about/businessmodel</a> for an overview of Qt licensing.");
+            "source) applications. Please see <a href=\"http://qtsoftware.com/company/about/businessmodel"
+            "\">http://qtsoftware.com/company/about/businessmodel</a> for an overview of Qt licensing.");
 #else
         QString edition;
         QString info;
@@ -796,7 +816,7 @@ void MainWindow::showAboutDialog()
             "<p>Version %2 %3</p></center>"
             "<p>%4</p>"
             "<p>%5</p>"
-            "<p>Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).</p>"
+            "<p>Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).</p>"
             "<p>The program is provided AS IS with NO WARRANTY OF ANY KIND,"
             " INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A"
             " PARTICULAR PURPOSE.<p/>")
@@ -843,7 +863,7 @@ void MainWindow::hideIndex()
 
 void MainWindow::hideBookmarks()
 {
-    m_bookmarkWidget->parentWidget()->parentWidget()->hide();
+    m_bookmarkWidget->parentWidget()->hide();
 }
 
 void MainWindow::setIndexString(const QString &str)
@@ -861,10 +881,7 @@ void MainWindow::activateCurrentBrowser()
 
 void MainWindow::activateCurrentCentralWidgetTab()
 {
-    CentralWidget *cw = CentralWidget::instance();
-    if (cw) {
-        cw->activateTab();
-    }
+    m_centralWidget->activateTab();
 }
 
 void MainWindow::showSearch()
@@ -931,7 +948,7 @@ void MainWindow::indexingStarted()
     progressBar->setRange(0, 0);
     progressBar->setTextVisible(false);
     progressBar->setSizePolicy(sizePolicy);
-    
+
     hlayout->setSpacing(6);
     hlayout->setMargin(0);
     hlayout->addWidget(progressBar);
@@ -950,7 +967,8 @@ QWidget* MainWindow::setupBookmarkWidget()
 {
     m_bookmarkManager = new BookmarkManager(m_helpEngine);
     m_bookmarkWidget = new BookmarkWidget(m_bookmarkManager, this);
-    connect(m_bookmarkWidget, SIGNAL(addBookmark()), this, SLOT(addBookmark()));
+    connect(m_bookmarkWidget, SIGNAL(addBookmark()),
+        this, SLOT(addBookmark()));
     return m_bookmarkWidget;
 }
 

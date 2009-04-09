@@ -21,6 +21,10 @@ include(canvas/canvas.pri)
 include(network/network.pri)
 include(painting/painting.pri)
 
+unix {
+   QMAKE_PKGCONFIG_CFLAGS += -DQT3_SUPPORT
+   QMAKE_PKGCONFIG_REQUIRES = QtCore QtGui QtNetwork QtSql
+}
 mac:LIBS += -framework Carbon
 
 QMAKE_LIBS += $$QMAKE_LIBS_COMPAT $$QMAKE_LIBS_NETWORK
@@ -29,3 +33,7 @@ DEFINES += QT3_SUPPORT
 MOCDIR = .moc
 
 *-g++*: QMAKE_CXXFLAGS += -fno-strict-aliasing
+
+CONFIG -= separate_debug_info
+CONFIG += no_debug_info
+

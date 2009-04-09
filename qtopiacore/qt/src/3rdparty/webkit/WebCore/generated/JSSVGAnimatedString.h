@@ -18,47 +18,58 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedString_H
-#define JSSVGAnimatedString_H
+#ifndef JSSVGAnimatedString_h
+#define JSSVGAnimatedString_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
-class JSSVGAnimatedString : public KJS::DOMObject {
+class JSSVGAnimatedString : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGAnimatedString(KJS::ExecState*, SVGAnimatedString*);
+    JSSVGAnimatedString(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimatedString>, SVGElement* context);
     virtual ~JSSVGAnimatedString();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        BaseValAttrNum, AnimValAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     SVGAnimatedString* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGAnimatedString> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGAnimatedString > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGAnimatedString*);
-SVGAnimatedString* toSVGAnimatedString(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGAnimatedString*, SVGElement* context);
+SVGAnimatedString* toSVGAnimatedString(JSC::JSValuePtr);
 
-class JSSVGAnimatedStringPrototype : public KJS::JSObject {
+class JSSVGAnimatedStringPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGAnimatedStringPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGAnimatedStringPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGAnimatedStringBaseVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGAnimatedStringBaseVal(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGAnimatedStringAnimVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,38 +76,42 @@ private:
     QFontDef request;
 };
 
+/**
+ * \internal The font engine for X Logical Font Description (XLFD) fonts, which is for X11 systems without freetype.
+ */
 class QFontEngineXLFD : public QFontEngine
 {
 public:
     QFontEngineXLFD(XFontStruct *f, const QByteArray &name, int mib);
     ~QFontEngineXLFD();
 
-    QFontEngine::FaceId faceId() const;
+    virtual QFontEngine::FaceId faceId() const;
     QFontEngine::Properties properties() const;
-    void getUnscaledGlyph(glyph_t glyph, QPainterPath *path, glyph_metrics_t *metrics);
-    bool getSfntTableData(uint tag, uchar *buffer, uint *length) const;
-    int synthesized() const;
+    virtual void getUnscaledGlyph(glyph_t glyph, QPainterPath *path, glyph_metrics_t *metrics);
+    virtual bool getSfntTableData(uint tag, uchar *buffer, uint *length) const;
+    virtual int synthesized() const;
 
-    bool stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs,
+    virtual bool stringToCMap(const QChar *str, int len, QGlyphLayout *glyphs, int *nglyphs,
                       QTextEngine::ShaperFlags flags) const;
-    void recalcAdvances(int , QGlyphLayout *, QTextEngine::ShaperFlags) const;
+    virtual void recalcAdvances(QGlyphLayout *, QTextEngine::ShaperFlags) const;
 
-    glyph_metrics_t boundingBox(const QGlyphLayout *glyphs, int numGlyphs);
-    glyph_metrics_t boundingBox(glyph_t glyph);
+    virtual glyph_metrics_t boundingBox(const QGlyphLayout &glyphs);
+    virtual glyph_metrics_t boundingBox(glyph_t glyph);
 
-    void addOutlineToPath(qreal x, qreal y, const QGlyphLayout *glyphs, int numGlyphs, QPainterPath *path, QTextItem::RenderFlags);
-    QFixed ascent() const;
-    QFixed descent() const;
-    QFixed leading() const;
-    qreal maxCharWidth() const;
-    qreal minLeftBearing() const;
-    qreal minRightBearing() const;
+    virtual void addOutlineToPath(qreal x, qreal y, const QGlyphLayout &glyphs, QPainterPath *path, QTextItem::RenderFlags);
+    virtual QFixed ascent() const;
+    virtual QFixed descent() const;
+    virtual QFixed leading() const;
+    virtual qreal maxCharWidth() const;
+    virtual qreal minLeftBearing() const;
+    virtual qreal minRightBearing() const;
+    virtual QImage alphaMapForGlyph(glyph_t);
 
-    inline Type type() const
+    virtual inline Type type() const
     { return QFontEngine::XLFD; }
 
-    bool canRender(const QChar *string, int len);
-    const char *name() const;
+    virtual bool canRender(const QChar *string, int len);
+    virtual const char *name() const;
 
     inline XFontStruct *fontStruct() const
     { return _fs; }
@@ -115,6 +123,8 @@ public:
     uint toUnicode(glyph_t g) const;
 
 private:
+    QBitmap bitmapForGlyphs(const QGlyphLayout &glyphs, const glyph_metrics_t &metrics, QTextItem::RenderFlags flags = 0);
+
     XFontStruct *_fs;
     QByteArray _name;
     QTextCodec *_codec;
@@ -130,7 +140,7 @@ private:
 class Q_GUI_EXPORT QFontEngineMultiFT : public QFontEngineMulti
 {
 public:
-    QFontEngineMultiFT(QFontEngine *fe, FcPattern *p, int s, const QFontDef &request);
+    QFontEngineMultiFT(QFontEngine *fe, FcPattern *firstEnginePattern, FcPattern *p, int s, const QFontDef &request);
     ~QFontEngineMultiFT();
 
     void loadEngine(int at);
@@ -138,8 +148,10 @@ public:
 private:
     QFontDef request;
     FcPattern *pattern;
+    FcPattern *firstEnginePattern;
     FcFontSet *fontSet;
     int screen;
+    int firstFontIndex; // first font in fontset
 };
 
 class Q_GUI_EXPORT QFontEngineX11FT : public QFontEngineFT

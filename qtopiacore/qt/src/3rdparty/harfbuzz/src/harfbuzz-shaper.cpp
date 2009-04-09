@@ -1,18 +1,31 @@
-/*******************************************************************
+/*
+ * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  *
- *  Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+ * This is part of HarfBuzz, an OpenType Layout engine library.
  *
- *  This is part of HarfBuzz, an OpenType Layout engine library.
+ * Permission is hereby granted, without written agreement and without
+ * license or royalty fees, to use, copy, modify, and distribute this
+ * software and its documentation for any purpose, provided that the
+ * above copyright notice and the following two paragraphs appear in
+ * all copies of this software.
  *
- *  See the file name COPYING for licensing information.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
+ * ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN
+ * IF THE COPYRIGHT HOLDER HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGE.
  *
- ******************************************************************/
+ * THE COPYRIGHT HOLDER SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING,
+ * BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ */
 
 #include "harfbuzz-shaper.h"
 #include "harfbuzz-shaper-private.h"
 
-#include "harfbuzz-global.h"
-#include "harfbuzz-impl.h"
+#include "harfbuzz-stream-private.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -570,8 +583,6 @@ HB_Bool HB_BasicShape(HB_ShaperItem *shaper_item)
     return true;
 }
 
-static HB_AttributeFunction thai_attributes = 0;
-
 const HB_ScriptEngine HB_ScriptEngines[] = {
     // Common
     { HB_BasicShape, 0},
@@ -610,7 +621,7 @@ const HB_ScriptEngine HB_ScriptEngines[] = {
     // Sinhala
     { HB_IndicShape, HB_IndicAttributes },
     // Thai
-    { HB_BasicShape, thai_attributes },
+    { HB_BasicShape, HB_ThaiAttributes },
     // Lao
     { HB_BasicShape, 0 },
     // Tibetan
@@ -927,7 +938,7 @@ static HB_Stream getTableStream(void *font, HB_GetFontTableFunc tableFunc, HB_Ta
     stream->base = (HB_Byte*)malloc(length);
     error = tableFunc(font, tag, stream->base, &length);
     if (error) {
-        HB_close_stream(stream);
+        _hb_close_stream(stream);
         return 0;
     }
     stream->size = length;
@@ -965,22 +976,22 @@ HB_Face HB_NewFace(void *font, HB_GetFontTableFunc tableFunc)
     stream = getTableStream(font, tableFunc, TTAG_GSUB);
     if (!stream || (error = HB_Load_GSUB_Table(stream, &face->gsub, face->gdef, gdefStream))) {
         face->gsub = 0;
-        if (error != HB_Err_Table_Missing) {
+        if (error != HB_Err_Not_Covered) {
             //DEBUG("error loading gsub table: %d", error);
         } else {
             //DEBUG("face doesn't have a gsub table");
         }
     }
-    HB_close_stream(stream);
+    _hb_close_stream(stream);
 
     stream = getTableStream(font, tableFunc, TTAG_GPOS);
     if (!stream || (error = HB_Load_GPOS_Table(stream, &face->gpos, face->gdef, gdefStream))) {
         face->gpos = 0;
         DEBUG("error loading gpos table: %d", error);
     }
-    HB_close_stream(stream);
+    _hb_close_stream(stream);
 
-    HB_close_stream(gdefStream);
+    _hb_close_stream(gdefStream);
 
     for (unsigned int i = 0; i < HB_ScriptCount; ++i)
         face->supported_scripts[i] = checkScript(face, i);
@@ -1159,7 +1170,8 @@ HB_Bool HB_OpenTypePosition(HB_ShaperItem *item, int availableGlyphs, HB_Bool do
 
     bool glyphs_positioned = false;
     if (face->gpos) {
-        memset(face->buffer->positions, 0, face->buffer->in_length*sizeof(HB_PositionRec));
+        if (face->buffer->positions)
+            memset(face->buffer->positions, 0, face->buffer->in_length*sizeof(HB_PositionRec));
         // #### check that passing "false,false" is correct
         glyphs_positioned = HB_GPOS_Apply_String(item->font, face->gpos, face->current_flags, face->buffer, false, false) != HB_Err_Not_Covered;
     }
@@ -1186,11 +1198,13 @@ HB_Bool HB_OpenTypePosition(HB_ShaperItem *item, int availableGlyphs, HB_Bool do
     }
     item->num_glyphs = face->buffer->in_length;
 
-    if (doLogClusters) {
+    if (doLogClusters && face->glyphs_substituted) {
         // we can't do this for indic, as we pass the stuf in syllables and it's easier to do it in the shaper.
         unsigned short *logClusters = item->log_clusters;
         int clusterStart = 0;
         int oldCi = 0;
+        // #### the reconstruction of the logclusters currently does not work if the original string
+        // contains surrogate pairs
         for (unsigned int i = 0; i < face->buffer->in_length; ++i) {
             int ci = face->buffer->in_string[i].cluster;
             //         DEBUG("   ci[%d] = %d mark=%d, cmb=%d, cs=%d",

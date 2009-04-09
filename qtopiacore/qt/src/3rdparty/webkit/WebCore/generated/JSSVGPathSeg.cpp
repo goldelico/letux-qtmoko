@@ -23,148 +23,137 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSeg.h"
 
 #include <wtf/GetPtr.h>
 
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGPathSeg.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSeg)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegTableEntries[] =
+static const HashTableValue JSSVGPathSegTableValues[4] =
 {
-    { "constructor", JSSVGPathSeg::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "pathSegType", JSSVGPathSeg::PathSegTypeAttrNum, DontDelete|ReadOnly, 0, &JSSVGPathSegTableEntries[3] },
-    { 0, 0, 0, 0, 0 },
-    { "pathSegTypeAsLetter", JSSVGPathSeg::PathSegTypeAsLetterAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "pathSegType", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPathSegType, (intptr_t)0 },
+    { "pathSegTypeAsLetter", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPathSegTypeAsLetter, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGPathSegConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegTable = 
-{
-    2, 4, JSSVGPathSegTableEntries, 3
-};
+static const HashTable JSSVGPathSegTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSSVGPathSegTableValues, 0 };
+#else
+    { 8, 7, JSSVGPathSegTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSSVGPathSegConstructorTableEntries[] =
+static const HashTableValue JSSVGPathSegConstructorTableValues[21] =
 {
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_MOVETO_REL", SVGPathSeg::PATHSEG_MOVETO_REL, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[21] },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_LINETO_VERTICAL_REL", SVGPathSeg::PATHSEG_LINETO_VERTICAL_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CLOSEPATH", SVGPathSeg::PATHSEG_CLOSEPATH, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_ARC_ABS", SVGPathSeg::PATHSEG_ARC_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[23] },
-    { "PATHSEG_CURVETO_CUBIC_ABS", SVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_ABS", SVGPathSeg::PATHSEG_LINETO_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[22] },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_CURVETO_CUBIC_REL", SVGPathSeg::PATHSEG_CURVETO_CUBIC_REL, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_ABS", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[24] },
-    { "PATHSEG_UNKNOWN", SVGPathSeg::PATHSEG_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[20] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_MOVETO_ABS", SVGPathSeg::PATHSEG_MOVETO_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[27] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_LINETO_REL", SVGPathSeg::PATHSEG_LINETO_REL, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[25] },
-    { "PATHSEG_CURVETO_QUADRATIC_REL", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_ARC_REL", SVGPathSeg::PATHSEG_ARC_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_HORIZONTAL_ABS", SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegConstructorTableEntries[26] },
-    { "PATHSEG_LINETO_HORIZONTAL_REL", SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_VERTICAL_ABS", SVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, DontDelete|ReadOnly, 0, 0 }
+    { "PATHSEG_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_UNKNOWN, (intptr_t)0 },
+    { "PATHSEG_CLOSEPATH", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CLOSEPATH, (intptr_t)0 },
+    { "PATHSEG_MOVETO_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_MOVETO_ABS, (intptr_t)0 },
+    { "PATHSEG_MOVETO_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_MOVETO_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_REL, (intptr_t)0 },
+    { "PATHSEG_ARC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_ARC_ABS, (intptr_t)0 },
+    { "PATHSEG_ARC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_ARC_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_VERTICAL_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_VERTICAL_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegConstructorTable = 
-{
-    2, 28, JSSVGPathSegConstructorTableEntries, 20
-};
+static const HashTable JSSVGPathSegConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 2047, JSSVGPathSegConstructorTableValues, 0 };
+#else
+    { 70, 63, JSSVGPathSegConstructorTableValues, 0 };
+#endif
 
 class JSSVGPathSegConstructor : public DOMObject {
 public:
     JSSVGPathSegConstructor(ExecState* exec)
+        : DOMObject(JSSVGPathSegConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSSVGPathSegPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSSVGPathSegConstructor::info = { "SVGPathSegConstructor", 0, &JSSVGPathSegConstructorTable, 0 };
+const ClassInfo JSSVGPathSegConstructor::s_info = { "SVGPathSegConstructor", 0, &JSSVGPathSegConstructorTable, 0 };
 
 bool JSSVGPathSegConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSSVGPathSegConstructor, DOMObject>(exec, &JSSVGPathSegConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegPrototypeTableValues[21] =
 {
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_MOVETO_REL", SVGPathSeg::PATHSEG_MOVETO_REL, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[21] },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_LINETO_VERTICAL_REL", SVGPathSeg::PATHSEG_LINETO_VERTICAL_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CLOSEPATH", SVGPathSeg::PATHSEG_CLOSEPATH, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_ARC_ABS", SVGPathSeg::PATHSEG_ARC_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[23] },
-    { "PATHSEG_CURVETO_CUBIC_ABS", SVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_ABS", SVGPathSeg::PATHSEG_LINETO_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[22] },
-    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", SVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_CURVETO_CUBIC_REL", SVGPathSeg::PATHSEG_CURVETO_CUBIC_REL, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_ABS", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[24] },
-    { "PATHSEG_UNKNOWN", SVGPathSeg::PATHSEG_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[20] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_MOVETO_ABS", SVGPathSeg::PATHSEG_MOVETO_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[27] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "PATHSEG_LINETO_REL", SVGPathSeg::PATHSEG_LINETO_REL, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[25] },
-    { "PATHSEG_CURVETO_QUADRATIC_REL", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_ARC_REL", SVGPathSeg::PATHSEG_ARC_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_HORIZONTAL_ABS", SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS, DontDelete|ReadOnly, 0, &JSSVGPathSegPrototypeTableEntries[26] },
-    { "PATHSEG_LINETO_HORIZONTAL_REL", SVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_LINETO_VERTICAL_ABS", SVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, DontDelete|ReadOnly, 0, 0 },
-    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", SVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, DontDelete|ReadOnly, 0, 0 }
+    { "PATHSEG_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_UNKNOWN, (intptr_t)0 },
+    { "PATHSEG_CLOSEPATH", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CLOSEPATH, (intptr_t)0 },
+    { "PATHSEG_MOVETO_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_MOVETO_ABS, (intptr_t)0 },
+    { "PATHSEG_MOVETO_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_MOVETO_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_REL, (intptr_t)0 },
+    { "PATHSEG_ARC_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_ARC_ABS, (intptr_t)0 },
+    { "PATHSEG_ARC_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_ARC_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_HORIZONTAL_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_HORIZONTAL_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_REL, (intptr_t)0 },
+    { "PATHSEG_LINETO_VERTICAL_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_VERTICAL_ABS, (intptr_t)0 },
+    { "PATHSEG_LINETO_VERTICAL_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_LINETO_VERTICAL_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_CUBIC_SMOOTH_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_REL, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS, (intptr_t)0 },
+    { "PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_REL, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegPrototypeTable = 
-{
-    2, 28, JSSVGPathSegPrototypeTableEntries, 20
-};
+static const HashTable JSSVGPathSegPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 2047, JSSVGPathSegPrototypeTableValues, 0 };
+#else
+    { 70, 63, JSSVGPathSegPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegPrototype::info = { "SVGPathSegPrototype", 0, &JSSVGPathSegPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegPrototype::s_info = { "SVGPathSegPrototype", 0, &JSSVGPathSegPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegPrototype>(exec, "[[JSSVGPathSeg.prototype]]");
+    return getDOMPrototype<JSSVGPathSeg>(exec);
 }
 
 bool JSSVGPathSegPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -172,57 +161,157 @@ bool JSSVGPathSegPrototype::getOwnPropertySlot(ExecState* exec, const Identifier
     return getStaticValueSlot<JSSVGPathSegPrototype, JSObject>(exec, &JSSVGPathSegPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegPrototype::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
+const ClassInfo JSSVGPathSeg::s_info = { "SVGPathSeg", 0, &JSSVGPathSegTable, 0 };
 
-const ClassInfo JSSVGPathSeg::info = { "SVGPathSeg", 0, &JSSVGPathSegTable, 0 };
-
-JSSVGPathSeg::JSSVGPathSeg(ExecState* exec, SVGPathSeg* impl)
-    : m_impl(impl)
+JSSVGPathSeg::JSSVGPathSeg(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSeg> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGPathSegPrototype::self(exec));
 }
 
 JSSVGPathSeg::~JSSVGPathSeg()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGPathSeg>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGPathSeg::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegPrototype(JSSVGPathSegPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGPathSeg::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSeg, KJS::DOMObject>(exec, &JSSVGPathSegTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSeg, Base>(exec, &JSSVGPathSegTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSeg::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegPathSegType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case PathSegTypeAttrNum: {
-        SVGPathSeg* imp = static_cast<SVGPathSeg*>(impl());
-
-        return jsNumber(imp->pathSegType());
-    }
-    case PathSegTypeAsLetterAttrNum: {
-        SVGPathSeg* imp = static_cast<SVGPathSeg*>(impl());
-
-        return jsString(imp->pathSegTypeAsLetter());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    SVGPathSeg* imp = static_cast<SVGPathSeg*>(static_cast<JSSVGPathSeg*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->pathSegType());
 }
 
-JSValue* JSSVGPathSeg::getConstructor(ExecState* exec)
+JSValuePtr jsSVGPathSegPathSegTypeAsLetter(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegConstructor>(exec, "[[SVGPathSeg.constructor]]");
+    SVGPathSeg* imp = static_cast<SVGPathSeg*>(static_cast<JSSVGPathSeg*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->pathSegTypeAsLetter());
 }
-SVGPathSeg* toSVGPathSeg(KJS::JSValue* val)
+
+JSValuePtr jsSVGPathSegConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSSVGPathSeg::info) ? static_cast<JSSVGPathSeg*>(val)->impl() : 0;
+    return static_cast<JSSVGPathSeg*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSSVGPathSeg::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSSVGPathSegConstructor>(exec);
+}
+
+// Constant getters
+
+JSValuePtr jsSVGPathSegPATHSEG_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CLOSEPATH(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_MOVETO_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_MOVETO_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(6));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(7));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(8));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(9));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_ARC_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(10));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_ARC_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(11));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(12));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_HORIZONTAL_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(13));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_VERTICAL_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(14));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_LINETO_VERTICAL_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(15));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(16));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_CUBIC_SMOOTH_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(17));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(18));
+}
+
+JSValuePtr jsSVGPathSegPATHSEG_CURVETO_QUADRATIC_SMOOTH_REL(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(19));
+}
+
+SVGPathSeg* toSVGPathSeg(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGPathSeg::s_info) ? static_cast<JSSVGPathSeg*>(asObject(value))->impl() : 0;
 }
 
 }

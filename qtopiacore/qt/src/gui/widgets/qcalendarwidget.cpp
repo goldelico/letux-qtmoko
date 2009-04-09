@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -327,9 +331,9 @@ QString QCalendarMonthValidator::text(const QDate &date, int repeat) const
             str += QLatin1String("0");
         return str + QString::number(date.month());
     } else if (repeat == 3) {
-        return m_locale.monthName(date.month(), QLocale::ShortFormat);
+        return m_locale.standaloneMonthName(date.month(), QLocale::ShortFormat);
     } else if (repeat >= 4) {
-        return m_locale.monthName(date.month(), QLocale::LongFormat);
+        return m_locale.standaloneMonthName(date.month(), QLocale::LongFormat);
     }
     return QString();
 }
@@ -904,6 +908,7 @@ public:
     virtual void keyboardSearch(const QString & search) { Q_UNUSED(search) }
 
 signals:
+    void showDate(const QDate &date);
     void changeDate(const QDate &date, bool changeMonth);
     void clicked(const QDate &date);
     void editingFinished();
@@ -913,6 +918,9 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+#ifndef QT_NO_WHEELEVENT
+    void wheelEvent(QWheelEvent *event);
+#endif
     void keyPressEvent(QKeyEvent *event);
     bool event(QEvent *event);
 
@@ -1048,16 +1056,12 @@ void QCalendarModel::cellForDate(const QDate &date, int *row, int *column) const
 QString QCalendarModel::dayName(Qt::DayOfWeek day) const
 {
     switch (m_horizontalHeaderFormat) {
-        case QCalendarWidget::SingleLetterDayNames:
-            if (m_view->locale().language() == QLocale::Chinese) {
-                return m_view->locale().dayName(day, QLocale::ShortFormat).right(1);
-            } else if (m_view->locale().language() == QLocale::Arabic) {
-                //some Arabic locales have the same letter at beginning which
-                //makes the various days indistinguishable
-                QLocale l(QLocale::Arabic, QLocale::Egypt);
-                return l.dayName(day, QLocale::ShortFormat).left(1);
-            }
-            return m_view->locale().dayName(day, QLocale::ShortFormat).left(1);
+        case QCalendarWidget::SingleLetterDayNames: {
+            QString standaloneDayName = m_view->locale().standaloneDayName(day, QLocale::NarrowFormat);
+            if (standaloneDayName == m_view->locale().dayName(day, QLocale::NarrowFormat))
+                return standaloneDayName.left(1);
+            return standaloneDayName;
+        }
         case QCalendarWidget::ShortDayNames:
             return m_view->locale().dayName(day, QLocale::ShortFormat);
         case QCalendarWidget::LongDayNames:
@@ -1369,6 +1373,18 @@ void QCalendarView::keyPressEvent(QKeyEvent *event)
     QTableView::keyPressEvent(event);
 }
 
+#ifndef QT_NO_WHEELEVENT
+void QCalendarView::wheelEvent(QWheelEvent *event)
+{
+    const int numDegrees = event->delta() / 8;
+    const int numSteps = numDegrees / 15;
+    const QModelIndex index = currentIndex();
+    QDate currentDate = static_cast<QCalendarModel*>(model())->dateForCell(index.row(), index.column());
+    currentDate = currentDate.addMonths(-numSteps);
+    emit showDate(currentDate);
+}
+#endif
+
 bool QCalendarView::event(QEvent *event)
 {
 #ifdef QT_KEYPAD_NAVIGATION
@@ -1568,6 +1584,7 @@ public:
     void update();
     void paintCell(QPainter *painter, const QRect &rect, const QDate &date) const;
 
+    void _q_slotShowDate(const QDate &date);
     void _q_slotChangeDate(const QDate &date);
     void _q_slotChangeDate(const QDate &date, bool changeMonth);
     void _q_editingFinished();
@@ -1582,7 +1599,7 @@ public:
     void updateMonthMenu();
     void updateMonthMenuNames();
     void updateNavigationBar();
-    void updateCurrentPage(QDate &newDate);
+    void updateCurrentPage(const QDate &newDate);
     inline QDate getCurrentDate();
     void setNavigatorEnabled(bool enable);
 
@@ -1605,6 +1622,7 @@ public:
 
     bool navBarVisible;
     mutable QSize cachedSizeHint;
+    Qt::FocusPolicy oldFocusPolicy;
 };
 
 void QCalendarDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option,
@@ -1640,6 +1658,7 @@ QCalendarWidgetPrivate::QCalendarWidgetPrivate()
     m_navigator = 0;
     m_dateEditEnabled = false;
     navBarVisible = true;
+    oldFocusPolicy = Qt::StrongFocus;
 }
 
 void QCalendarWidgetPrivate::setNavigatorEnabled(bool enable)
@@ -1685,9 +1704,6 @@ void QCalendarWidgetPrivate::createNavigationBar(QWidget *widget)
     updateButtonIcons();
     prevMonth->setAutoRepeat(true);
     nextMonth->setAutoRepeat(true);
-    prevMonth->setFocusProxy(m_view);
-    nextMonth->setFocusProxy(m_view);
-
 
     monthButton = new QCalToolButton(navBarBackground);
     monthButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
@@ -1695,7 +1711,7 @@ void QCalendarWidgetPrivate::createNavigationBar(QWidget *widget)
     monthButton->setPopupMode(QToolButton::InstantPopup);
     monthMenu = new QMenu(monthButton);
     for (int i = 1; i <= 12; i++) {
-        QString monthName(q->locale().monthName(i, QLocale::LongFormat));
+        QString monthName(q->locale().standaloneMonthName(i, QLocale::LongFormat));
         QAction *act = monthMenu->addAction(monthName);
         act->setData(i);
         monthToAction[i] = act;
@@ -1782,15 +1798,16 @@ void QCalendarWidgetPrivate::updateMonthMenuNames()
     Q_Q(QCalendarWidget);
 
     for (int i = 1; i <= 12; i++) {
-        QString monthName(q->locale().monthName(i, QLocale::LongFormat));
+        QString monthName(q->locale().standaloneMonthName(i, QLocale::LongFormat));
         monthToAction[i]->setText(monthName);
     }
 }
 
-void QCalendarWidgetPrivate::updateCurrentPage(QDate &newDate)
+void QCalendarWidgetPrivate::updateCurrentPage(const QDate &date)
 {
     Q_Q(QCalendarWidget);
 
+    QDate newDate = date;
     QDate minDate = q->minimumDate();
     QDate maxDate = q->maximumDate();
     if (minDate.isValid()&& minDate.daysTo(newDate) < 0)
@@ -1835,8 +1852,11 @@ void QCalendarWidgetPrivate::_q_nextMonthClicked()
 
 void QCalendarWidgetPrivate::_q_yearEditingFinished()
 {
+    Q_Q(QCalendarWidget);
     yearButton->setText(yearEdit->text());
     yearEdit->hide();
+    q->setFocusPolicy(oldFocusPolicy);
+    qApp->removeEventFilter(q);
     spaceHolder->changeSize(0, 0);
     yearButton->show();
     QDate currentDate = getCurrentDate();
@@ -1846,12 +1866,16 @@ void QCalendarWidgetPrivate::_q_yearEditingFinished()
 
 void QCalendarWidgetPrivate::_q_yearClicked()
 {
+    Q_Q(QCalendarWidget);
     //show the spinbox on top of the button
     yearEdit->setGeometry(yearButton->x(), yearButton->y(),
                           yearEdit->sizeHint().width(), yearButton->height());
     spaceHolder->changeSize(yearButton->width(), 0);
     yearButton->hide();
+    oldFocusPolicy = q->focusPolicy();
+    q->setFocusPolicy(Qt::NoFocus);
     yearEdit->show();
+    qApp->installEventFilter(q);
     yearEdit->raise();
     yearEdit->selectAll();
     yearEdit->setFocus(Qt::MouseFocusReason);
@@ -1875,7 +1899,7 @@ void QCalendarWidgetPrivate::updateNavigationBar()
 {
     Q_Q(QCalendarWidget);
 
-    QString monthName = q->locale().monthName(m_model->m_shownMonth, QLocale::LongFormat);
+    QString monthName = q->locale().standaloneMonthName(m_model->m_shownMonth, QLocale::LongFormat);
 
     monthButton->setText(monthName);
     yearButton->setText(QString::number(m_model->m_shownYear));
@@ -1899,6 +1923,11 @@ void QCalendarWidgetPrivate::paintCell(QPainter *painter, const QRect &rect, con
 {
     Q_Q(const QCalendarWidget);
     q->paintCell(painter, rect, date);
+}
+
+void QCalendarWidgetPrivate::_q_slotShowDate(const QDate &date)
+{
+    updateCurrentPage(date);
 }
 
 void QCalendarWidgetPrivate::_q_slotChangeDate(const QDate &date)
@@ -2052,6 +2081,8 @@ QCalendarWidget::QCalendarWidget(QWidget *parent)
     setFocusProxy(d->m_view);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
+    connect(d->m_view, SIGNAL(showDate(QDate)),
+            this, SLOT(_q_slotShowDate(QDate)));
     connect(d->m_view, SIGNAL(changeDate(QDate,bool)),
             this, SLOT(_q_slotChangeDate(QDate,bool)));
     connect(d->m_view, SIGNAL(clicked(QDate)),
@@ -2130,6 +2161,13 @@ QSize QCalendarWidget::minimumSizeHint() const
     if (verticalHeaderFormat() == QCalendarWidget::NoVerticalHeader) {
         cols = 7;
         startCol = 1;
+    } else {
+        for (int i = 1; i <= 6; i++) {
+            QFontMetrics fm(d->m_model->formatForCell(i, 0).font());
+            for (int j = 1; j < end; j++)
+                w = qMax(w, fm.width(QString::number(j)) + marginH);
+            h = qMax(h, fm.height());
+        }
     }
 
     QFontMetrics fm(d->m_model->formatForCell(1, 1).font());
@@ -2161,7 +2199,7 @@ QSize QCalendarWidget::minimumSizeHint() const
         QFontMetrics fm = d->monthButton->fontMetrics();
         int monthW = 0;
         for (int i = 1; i < 12; i++) {
-            QString monthName = locale().monthName(i, QLocale::LongFormat);
+            QString monthName = locale().standaloneMonthName(i, QLocale::LongFormat);
             monthW = qMax(monthW, fm.boundingRect(monthName).width());
         }
         const int buttonDecoMargin = d->monthButton->sizeHint().width() - fm.boundingRect(d->monthButton->text()).width();
@@ -2549,11 +2587,12 @@ QCalendarWidget::HorizontalHeaderFormat QCalendarWidget::horizontalHeaderFormat(
 }
 
 
-/*! \enum QCalendarWidget::VerticalHeaderFormat
+/*! 
+    \enum QCalendarWidget::VerticalHeaderFormat
 
     This enum type defines the various formats the vertical header can display.
 
-    \value ISOWeekNumbers The header displays a ISO week numbers \l QDate::weekNumber().
+    \value ISOWeekNumbers The header displays ISO week numbers as described by \l QDate::weekNumber().
     \value NoVerticalHeader The header is hidden.
 
     \sa verticalHeaderFormat(), HorizontalHeaderFormat
@@ -2896,9 +2935,12 @@ void QCalendarWidget::updateCells()
 /*!
     \fn void QCalendarWidget::clicked(const QDate &date)
 
-    This signal is emitted when a mouse button is clicked. The date the
-    mouse was clicked on is specified by \a date. The signal is only
-    emitted when clicked on a valid date.
+    This signal is emitted when a mouse button is clicked. The date
+    the mouse was clicked on is specified by \a date. The signal is
+    only emitted when clicked on a valid date, e.g., dates are not
+    outside the minimumDate() and maximumDate(). If the selection mode
+    is NoSelection, this signal will not be emitted.
+
 */
 
 /*!
@@ -2983,6 +3025,21 @@ bool QCalendarWidget::event(QEvent *event)
             break;
     }
     return QWidget::event(event);
+}
+
+/*!
+  \reimp
+*/
+bool QCalendarWidget::eventFilter(QObject *watched, QEvent *event)
+{
+    Q_D(QCalendarWidget);
+    if (event->type() == QEvent::MouseButtonPress && d->yearEdit->hasFocus() && !QRect(d->yearEdit->mapToGlobal(QPoint(0, 0)), d->yearEdit->size()).contains(static_cast<QMouseEvent *>(event)->globalPos())) {
+        event->accept();
+        d->_q_yearEditingFinished();
+        setFocus();
+        return true;
+    }
+    return QWidget::eventFilter(watched, event);
 }
 
 /*!

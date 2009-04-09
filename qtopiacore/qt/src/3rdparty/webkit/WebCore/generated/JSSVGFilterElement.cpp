@@ -21,382 +21,247 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFilterElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
-#include "ExceptionCode.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedEnumeration.h"
 #include "JSSVGAnimatedInteger.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGFilterElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFilterElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFilterElementTableEntries[] =
+static const HashTableValue JSSVGFilterElementTableValues[15] =
 {
-    { "xmlspace", JSSVGFilterElement::XmlspaceAttrNum, DontDelete, 0, 0 },
-    { "width", JSSVGFilterElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFilterElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "filterResY", JSSVGFilterElement::FilterResYAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "filterUnits", JSSVGFilterElement::FilterUnitsAttrNum, DontDelete|ReadOnly, 0, &JSSVGFilterElementTableEntries[15] },
-    { 0, 0, 0, 0, 0 },
-    { "className", JSSVGFilterElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "x", JSSVGFilterElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFilterElementTableEntries[14] },
-    { 0, 0, 0, 0, 0 },
-    { "primitiveUnits", JSSVGFilterElement::PrimitiveUnitsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFilterElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "filterResX", JSSVGFilterElement::FilterResXAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "height", JSSVGFilterElement::HeightAttrNum, DontDelete|ReadOnly, 0, &JSSVGFilterElementTableEntries[17] },
-    { "href", JSSVGFilterElement::HrefAttrNum, DontDelete|ReadOnly, 0, &JSSVGFilterElementTableEntries[16] },
-    { "xmllang", JSSVGFilterElement::XmllangAttrNum, DontDelete, 0, 0 },
-    { "externalResourcesRequired", JSSVGFilterElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "filterUnits", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementFilterUnits, (intptr_t)0 },
+    { "primitiveUnits", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementPrimitiveUnits, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementHeight, (intptr_t)0 },
+    { "filterResX", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementFilterResX, (intptr_t)0 },
+    { "filterResY", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementFilterResY, (intptr_t)0 },
+    { "href", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementHref, (intptr_t)0 },
+    { "xmllang", DontDelete, (intptr_t)jsSVGFilterElementXmllang, (intptr_t)setJSSVGFilterElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGFilterElementXmlspace, (intptr_t)setJSSVGFilterElementXmlspace },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementExternalResourcesRequired, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFilterElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFilterElementTable = 
-{
-    2, 18, JSSVGFilterElementTableEntries, 14
-};
+static const HashTable JSSVGFilterElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 511, JSSVGFilterElementTableValues, 0 };
+#else
+    { 35, 31, JSSVGFilterElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFilterElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFilterElementPrototypeTableValues[3] =
 {
-    { "setFilterRes", JSSVGFilterElement::SetFilterResFuncNum, DontDelete|Function, 2, 0 }
+    { "setFilterRes", DontDelete|Function, (intptr_t)jsSVGFilterElementPrototypeFunctionSetFilterRes, (intptr_t)2 },
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFilterElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFilterElementPrototypeTable = 
-{
-    2, 1, JSSVGFilterElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFilterElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGFilterElementPrototypeTableValues, 0 };
+#else
+    { 5, 3, JSSVGFilterElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFilterElementPrototype::info = { "SVGFilterElementPrototype", 0, &JSSVGFilterElementPrototypeTable, 0 };
+const ClassInfo JSSVGFilterElementPrototype::s_info = { "SVGFilterElementPrototype", 0, &JSSVGFilterElementPrototypeTable, 0 };
 
 JSObject* JSSVGFilterElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFilterElementPrototype>(exec, "[[JSSVGFilterElement.prototype]]");
+    return getDOMPrototype<JSSVGFilterElement>(exec);
 }
 
 bool JSSVGFilterElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGFilterElementPrototypeFunction, JSObject>(exec, &JSSVGFilterElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFilterElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGFilterElement::info = { "SVGFilterElement", &JSSVGElement::info, &JSSVGFilterElementTable, 0 };
+const ClassInfo JSSVGFilterElement::s_info = { "SVGFilterElement", &JSSVGElement::s_info, &JSSVGFilterElementTable, 0 };
 
-JSSVGFilterElement::JSSVGFilterElement(ExecState* exec, SVGFilterElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGFilterElement::JSSVGFilterElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFilterElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGFilterElementPrototype::self(exec));
+}
+
+JSObject* JSSVGFilterElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFilterElementPrototype(JSSVGFilterElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFilterElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFilterElement, JSSVGElement>(exec, &JSSVGFilterElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFilterElement, Base>(exec, &JSSVGFilterElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFilterElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFilterElementFilterUnits(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case FilterUnitsAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedEnumeration> obj = imp->filterUnitsAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case PrimitiveUnitsAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedEnumeration> obj = imp->primitiveUnitsAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedEnumeration>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedEnumeration>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedEnumeration>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case FilterResXAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedInteger> obj = imp->filterResXAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedInteger>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedInteger>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedInteger>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case FilterResYAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedInteger> obj = imp->filterResYAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedInteger>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedInteger>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedInteger>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HrefAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XmllangAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->filterUnitsAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGFilterElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGFilterElementPrimitiveUnits(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGFilterElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGFilterElementTable, this);
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedEnumeration> obj = imp->primitiveUnitsAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGFilterElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGFilterElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGFilterElement* imp = static_cast<SVGFilterElement*>(impl());
-
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-JSValue* JSSVGFilterElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGFilterElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSSVGFilterElement::info))
-      return throwError(exec, TypeError);
-
-    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGFilterElement::SetFilterResFuncNum: {
-        bool filterResXOk;
-        unsigned filterResX = args[0]->toInt32(exec, filterResXOk);
-        if (!filterResXOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool filterResYOk;
-        unsigned filterResY = args[1]->toInt32(exec, filterResYOk);
-        if (!filterResYOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->setFilterRes(filterResX, filterResY);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
+JSValuePtr jsSVGFilterElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+JSValuePtr jsSVGFilterElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementFilterResX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedInteger> obj = imp->filterResXAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementFilterResY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedInteger> obj = imp->filterResYAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
+}
+
+JSValuePtr jsSVGFilterElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
+}
+
+JSValuePtr jsSVGFilterElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFilterElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
+
+void JSSVGFilterElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGFilterElement, Base>(exec, propertyName, value, &JSSVGFilterElementTable, this, slot);
+}
+
+void setJSSVGFilterElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGFilterElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(static_cast<JSSVGFilterElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr jsSVGFilterElementPrototypeFunctionSetFilterRes(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFilterElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFilterElement* castedThisObj = static_cast<JSSVGFilterElement*>(asObject(thisValue));
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(castedThisObj->impl());
+    unsigned filterResX = args.at(exec, 0)->toInt32(exec);
+    unsigned filterResY = args.at(exec, 1)->toInt32(exec);
+
+    imp->setFilterRes(filterResX, filterResY);
+    return jsUndefined();
+}
+
+JSValuePtr jsSVGFilterElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFilterElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFilterElement* castedThisObj = static_cast<JSSVGFilterElement*>(asObject(thisValue));
+    SVGFilterElement* imp = static_cast<SVGFilterElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
+}
+
+
+}
+
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

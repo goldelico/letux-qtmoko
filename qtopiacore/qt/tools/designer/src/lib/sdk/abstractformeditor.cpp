@@ -1,43 +1,49 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "abstractformeditor.h"
 #include "abstractdialoggui_p.h"
 #include "abstractintrospection_p.h"
+#include "abstractsettings_p.h"
+#include "abstractoptionspage_p.h"
 
 #include <QtDesigner/QDesignerWidgetBoxInterface>
 #include <QtDesigner/QDesignerPropertyEditorInterface>
@@ -54,7 +60,16 @@
 #include <pluginmanager_p.h>
 #include <qtresourcemodel_p.h>
 #include <qtgradientmanager.h>
+#include <widgetfactory_p.h>
+#include <shared_settings_p.h>
+#include <formwindowbase_p.h>
+#include <grid_p.h>
 #include <QtDesigner/QDesignerPromotionInterface>
+
+static void initResources()
+{
+    Q_INIT_RESOURCE(shared);
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -77,15 +92,18 @@ public:
     QPointer<QDesignerIntegrationInterface> m_integration;
     QPointer<QDesignerIconCacheInterface> m_iconCache;
     QPointer<QDesignerActionEditorInterface> m_actionEditor;
+    QDesignerSettingsInterface *m_settingsManager;
     QDesignerPluginManager *m_pluginManager;
     QDesignerPromotionInterface *m_promotion;
     QDesignerIntrospectionInterface *m_introspection;
     QDesignerDialogGuiInterface *m_dialogGui;
     QPointer<QtResourceModel> m_resourceModel;
     QPointer<QtGradientManager> m_gradientManager; // instantiated and deleted by designer_integration
+    QList<QDesignerOptionsPageInterface*> m_optionsPages;
 };
 
 QDesignerFormEditorInterfacePrivate::QDesignerFormEditorInterfacePrivate() :
+    m_settingsManager(0),
     m_pluginManager(0),
     m_promotion(0),
     m_introspection(0),
@@ -97,12 +115,15 @@ QDesignerFormEditorInterfacePrivate::QDesignerFormEditorInterfacePrivate() :
 
 QDesignerFormEditorInterfacePrivate::~QDesignerFormEditorInterfacePrivate()
 {
+    delete m_settingsManager;
     delete m_formWindowManager;
     delete m_promotion;
     delete m_introspection;
     delete m_dialogGui;
     delete m_resourceModel;
+    qDeleteAll(m_optionsPages);
 }
+
 /*!
     \class QDesignerFormEditorInterface
 
@@ -134,6 +155,11 @@ QDesignerFormEditorInterfacePrivate::~QDesignerFormEditorInterfacePrivate()
     box. These are only useful if you want to provide your own custom
     components.
 
+    If designer is embedded in another program, one could to provide its
+    own settings manager. The manager is used by the components of \QD
+    to store/retrieve persistent configuration settings. The default
+    manager uses QSettings as the backend.
+
     Finally, QDesignerFormEditorInterface provides the topLevel()
     function that returns \QD's top-level widget.
 
@@ -147,8 +173,9 @@ QDesignerFormEditorInterfacePrivate::~QDesignerFormEditorInterfacePrivate()
 
 QDesignerFormEditorInterface::QDesignerFormEditorInterface(QObject *parent)
     : QObject(parent),
-      d(new QDesignerFormEditorInterfacePrivate)
+      d(new QDesignerFormEditorInterfacePrivate())
 {
+    initResources();
 }
 
 /*!
@@ -422,6 +449,27 @@ void QDesignerFormEditorInterface::setIconCache(QDesignerIconCacheInterface *cac
 
 /*!
     \internal
+    \since 4.5
+    Returns the list of options pages that allow the user to configure \QD components.
+*/
+QList<QDesignerOptionsPageInterface*> QDesignerFormEditorInterface::optionsPages() const
+{
+    return d->m_optionsPages;
+}
+
+/*!
+    \internal
+    \since 4.5
+    Sets the list of options pages that allow the user to configure \QD components.
+*/
+void QDesignerFormEditorInterface::setOptionsPages(const QList<QDesignerOptionsPageInterface*> &optionsPages)
+{
+    d->m_optionsPages = optionsPages;
+}
+
+
+/*!
+    \internal
 
     Returns the plugin manager used by the form editor.
 */
@@ -481,6 +529,33 @@ QtGradientManager *QDesignerFormEditorInterface::gradientManager() const
 void QDesignerFormEditorInterface::setGradientManager(QtGradientManager *gradientManager)
 {
     d->m_gradientManager = gradientManager;
+}
+
+/*!
+    \internal
+    \since 4.5
+    Returns the settings manager used by the components to store persistent settings.
+*/
+QDesignerSettingsInterface *QDesignerFormEditorInterface::settingsManager() const
+{
+    return d->m_settingsManager;
+}
+
+/*!
+    \internal
+    \since 4.5
+    Sets the settings manager used to store/retrieve the persistent settings of the components.
+*/
+void QDesignerFormEditorInterface::setSettingsManager(QDesignerSettingsInterface *settingsManager)
+{
+    if (d->m_settingsManager)
+        delete d->m_settingsManager;
+    d->m_settingsManager = settingsManager;
+
+    // This is a (hopefully) safe place to perform settings-dependent
+    // initializations.
+    const qdesigner_internal::QDesignerSharedSettings settings(this);
+    qdesigner_internal::FormWindowBase::setDefaultDesignerGrid(settings.defaultGrid());
 }
 
 /*!

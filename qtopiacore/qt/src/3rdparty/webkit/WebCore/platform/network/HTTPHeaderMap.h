@@ -1,4 +1,3 @@
-// -*- mode: c++; c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
  *
@@ -27,12 +26,14 @@
 #ifndef HTTPHeaderMap_h
 #define HTTPHeaderMap_h
 
+#include "AtomicString.h"
+#include "AtomicStringHash.h"
 #include "StringHash.h"
 #include <wtf/HashMap.h>
 
 namespace WebCore {
 
-    typedef HashMap<String, String, CaseInsensitiveHash<String> > HTTPHeaderMap;
+    typedef HashMap<AtomicString, String, CaseFoldingHash> HTTPHeaderMap;
 
 } // namespace WebCore
 

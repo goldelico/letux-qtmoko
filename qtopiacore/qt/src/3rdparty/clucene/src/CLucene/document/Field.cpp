@@ -160,8 +160,8 @@ bool	Field::isStorePositionWithTermVector() { return (config & TERMVECTOR_YES) !
 bool Field::getOmitNorms() { return omitNorms; }
 void Field::setOmitNorms(bool omitNorms) { this->omitNorms=omitNorms; }
 
-void Field::setBoost(float_t boost) { this->boost = boost; }
-float_t Field::getBoost() { return boost; }
+void Field::setBoost(qreal boost) { this->boost = boost; }
+qreal Field::getBoost() { return boost; }
 
 void Field::setConfig(int x){
 	int newConfig=0;

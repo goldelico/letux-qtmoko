@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -201,6 +205,9 @@ public:
 
         PE_PanelStatusBar,
 
+        PE_IndicatorTabClose,
+        PE_PanelMenu,
+
         // do not add any values below/greater this
         PE_CustomBase = 0xf000000
     };
@@ -269,6 +276,8 @@ public:
         CE_ColumnViewGrip,
 
         CE_ItemViewItem,
+
+        CE_ShapedFrame,
 
         // do not add any values below/greater than this
         CE_CustomBase = 0xf0000000
@@ -357,6 +366,12 @@ public:
         SE_ItemViewItemDecoration,
         SE_ItemViewItemText,
         SE_ItemViewItemFocusRect,
+
+        SE_TabBarTabLeftButton,
+        SE_TabBarTabRightButton,
+        SE_TabBarTabText,
+
+        SE_ShapedFrameContents,
 
         // do not add any values below/greater than this
         SE_CustomBase = 0xf0000000
@@ -568,6 +583,12 @@ public:
 
         PM_TextCursorWidth,
 
+        PM_TabCloseIndicatorWidth,
+        PM_TabCloseIndicatorHeight,
+
+        PM_ScrollView_ScrollBarSpacing,
+        PM_SubMenuOverlap,
+
         // do not add any values below/greater than this
         PM_CustomBase = 0xf0000000
     };
@@ -703,6 +724,9 @@ public:
         SH_FormLayoutFieldGrowthPolicy,
         SH_FormLayoutFormAlignment,
         SH_FormLayoutLabelAlignment,
+        SH_ItemView_DrawDelegateFrame,
+        SH_TabBar_CloseButtonPosition,
+        SH_DockWidget_ButtonsHaveFrame,
 
         // Add new style hint values here
 

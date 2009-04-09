@@ -12,11 +12,19 @@ win32 {
 DOCS_GENERATION_DEFINES = -Dqtopiacore
 GENERATOR = $$QT_BUILD_TREE/bin/qhelpgenerator
 
-win32:isEmpty(QMAKE_SH) {
-        QDOC = cd $$QT_SOURCE_TREE/tools/qdoc3/test && set QT_BUILD_TREE=$$QT_BUILD_TREE&& set QT_SOURCE_TREE=$$QT_SOURCE_TREE&& $$QT_BUILD_TREE/tools/qdoc3/$${QT_WINCONFIG}qdoc3 $$DOCS_GENERATION_DEFINES
-        QDOC = $$replace(QDOC, "/", "\\\\")
+win32:!win32-g++ {
+    unixstyle = false
+} else :win32-g++:isEmpty(QMAKE_SH) {
+    unixstyle = false
 } else {
+    unixstyle = true
+}
+
+$$unixstyle {
     QDOC = cd $$QT_SOURCE_TREE/tools/qdoc3/test && QT_BUILD_TREE=$$QT_BUILD_TREE QT_SOURCE_TREE=$$QT_SOURCE_TREE $$QT_BUILD_TREE/tools/qdoc3/$${QT_WINCONFIG}qdoc3 $$DOCS_GENERATION_DEFINES
+} else {
+    QDOC = cd $$QT_SOURCE_TREE/tools/qdoc3/test && set QT_BUILD_TREE=$$QT_BUILD_TREE&& set QT_SOURCE_TREE=$$QT_SOURCE_TREE&& $$QT_BUILD_TREE/tools/qdoc3/$${QT_WINCONFIG}qdoc3.exe $$DOCS_GENERATION_DEFINES
+    QDOC = $$replace(QDOC, "/", "\\\\")
 }
 macx {
     ADP_DOCS_QDOCCONF_FILE = qt-build-docs-with-xcode.qdocconf

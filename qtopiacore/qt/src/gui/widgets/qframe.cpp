@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,7 +58,7 @@ QFramePrivate::QFramePrivate()
       lineWidth(1),
       midLineWidth(0),
       frameWidth(0),
-      leftFrameWidth(0), rightFrameWidth(0), 
+      leftFrameWidth(0), rightFrameWidth(0),
       topFrameWidth(0), bottomFrameWidth(0),
       oldFrameStyle(QFrame::NoFrame | QFrame::Plain)
 {
@@ -158,8 +162,9 @@ inline void QFramePrivate::init()
     a 3D effect to frames.
 
     \value Plain  the frame and contents appear level with the
-    surroundings; draws using the palette foreground color (without
-    any 3D effect)
+    surroundings; draws using the palette QPalette::WindowText color
+    (without any 3D effect)
+
     \value Raised the frame and contents appear raised; draws a 3D
     raised line using the light and dark colors of the current color
     group
@@ -389,14 +394,18 @@ int QFrame::midLineWidth() const
 void QFramePrivate::updateStyledFrameWidths()
 {
     Q_Q(const QFrame);
-    QStyleOptionFrameV2 opt;
+    QStyleOptionFrameV3 opt;
     opt.initFrom(q);
-    QRect cr = q->style()->subElementRect(QStyle::SE_FrameContents, &opt, q);
+    opt.lineWidth = lineWidth;
+    opt.midLineWidth = midLineWidth;
+    opt.frameShape = QFrame::Shape(frameStyle & QFrame::Shape_Mask);
+
+    QRect cr = q->style()->subElementRect(QStyle::SE_ShapedFrameContents, &opt, q);
     leftFrameWidth = cr.left() - opt.rect.left();
     topFrameWidth = cr.top() - opt.rect.top();
-    rightFrameWidth = opt.rect.right() - cr.right(), 
+    rightFrameWidth = opt.rect.right() - cr.right(),
     bottomFrameWidth = opt.rect.bottom() - cr.bottom();
-    frameWidth = qMax(qMax(leftFrameWidth, rightFrameWidth), 
+    frameWidth = qMax(qMax(leftFrameWidth, rightFrameWidth),
                       qMax(topFrameWidth, bottomFrameWidth));
 }
 
@@ -409,56 +418,8 @@ void QFramePrivate::updateFrameWidth()
 {
     Q_Q(QFrame);
     QRect fr = q->frameRect();
-
-    int frameShape  = frameStyle & QFrame::Shape_Mask;
-    int frameShadow = frameStyle & QFrame::Shadow_Mask;
-
-    frameWidth = -1;
-
-    switch (frameShape) {
-
-    case QFrame::NoFrame:
-        frameWidth = 0;
-        break;
-
-    case QFrame::Box:
-    case QFrame::HLine:
-    case QFrame::VLine:
-        switch (frameShadow) {
-        case QFrame::Plain:
-            frameWidth = lineWidth;
-            break;
-        case QFrame::Raised:
-        case QFrame::Sunken:
-            frameWidth = (short)(lineWidth*2 + midLineWidth);
-            break;
-        }
-        break;
-
-    case QFrame::StyledPanel:
-        updateStyledFrameWidths();
-        break;
-
-    case QFrame::WinPanel:
-        frameWidth = 2;
-        break;
-
-    case QFrame::Panel:
-        switch (frameShadow) {
-        case QFrame::Plain:
-        case QFrame::Raised:
-        case QFrame::Sunken:
-            frameWidth = lineWidth;
-            break;
-        }
-        break;
-    }
-
-    if (frameWidth == -1)                                // invalid style
-        frameWidth = 0;
-
+    updateStyledFrameWidths();
     q->setFrameRect(fr);
-
     setLayoutItemMargins(QStyle::SE_FrameLayoutItem);
 }
 
@@ -498,10 +459,7 @@ QRect QFrame::frameRect() const
 {
     Q_D(const QFrame);
     QRect fr = contentsRect();
-    if ((d->oldFrameStyle & QFrame::Shape_Mask) == QFrame::StyledPanel) {
-        fr.adjust(-d->leftFrameWidth, -d->topFrameWidth, d->rightFrameWidth, d->bottomFrameWidth);
-    } else
-        fr.adjust(-d->frameWidth, -d->frameWidth, d->frameWidth, d->frameWidth);
+    fr.adjust(-d->leftFrameWidth, -d->topFrameWidth, d->rightFrameWidth, d->bottomFrameWidth);
     return fr;
 }
 
@@ -509,10 +467,7 @@ void QFrame::setFrameRect(const QRect &r)
 {
     Q_D(QFrame);
     QRect cr = r.isValid() ? r : rect();
-    if ((d->frameStyle & QFrame::Shape_Mask) == StyledPanel) {
-        cr.adjust(d->leftFrameWidth, d->topFrameWidth, -d->rightFrameWidth, -d->bottomFrameWidth);
-    } else
-        cr.adjust(d->frameWidth, d->frameWidth, -d->frameWidth, -d->frameWidth);
+    cr.adjust(d->leftFrameWidth, d->topFrameWidth, -d->rightFrameWidth, -d->bottomFrameWidth);
     setContentsMargins(cr.left(), cr.top(), rect().right() - cr.right(), rect().bottom() - cr.bottom());
 }
 
@@ -551,81 +506,34 @@ void QFrame::paintEvent(QPaintEvent *)
 void QFrame::drawFrame(QPainter *p)
 {
     Q_D(QFrame);
-    QPoint      p1, p2;
-    QStyleOptionFrame opt;
+    QStyleOptionFrameV3 opt;
     opt.init(this);
     int frameShape  = d->frameStyle & QFrame::Shape_Mask;
     int frameShadow = d->frameStyle & QFrame::Shadow_Mask;
-
-    int lw = 0;
-    int mlw = 0;
+    opt.frameShape = Shape(int(opt.frameShape) | frameShape);
     opt.rect = frameRect();
     switch (frameShape) {
-    case QFrame::Box:
-    case QFrame::HLine:
-    case QFrame::VLine:
-    case QFrame::StyledPanel:
-        lw = d->lineWidth;
-        mlw = d->midLineWidth;
-        break;
-    default:
-        // most frame styles do not handle customized line and midline widths
-        // (see updateFrameWidth()).
-        lw = d->frameWidth;
-        break;
+        case QFrame::Box:
+        case QFrame::HLine:
+        case QFrame::VLine:
+        case QFrame::StyledPanel:
+        case QFrame::Panel:
+            opt.lineWidth = d->lineWidth;
+            opt.midLineWidth = d->midLineWidth;
+            break;
+        default:
+            // most frame styles do not handle customized line and midline widths
+            // (see updateFrameWidth()).
+            opt.lineWidth = d->frameWidth;
+            break;
     }
-    opt.lineWidth = lw;
-    opt.midLineWidth = mlw;
+
     if (frameShadow == Sunken)
         opt.state |= QStyle::State_Sunken;
     else if (frameShadow == Raised)
         opt.state |= QStyle::State_Raised;
 
-    switch (frameShape) {
-    case Box:
-        if (frameShadow == Plain)
-            qDrawPlainRect(p, opt.rect, opt.palette.foreground().color(), lw);
-        else
-            qDrawShadeRect(p, opt.rect, opt.palette, frameShadow == Sunken, lw, mlw);
-        break;
-
-
-    case StyledPanel:
-        style()->drawPrimitive(QStyle::PE_Frame, &opt, p, this);
-        break;
-
-    case Panel:
-        if (frameShadow == Plain)
-            qDrawPlainRect(p, opt.rect, opt.palette.foreground().color(), lw);
-        else
-            qDrawShadePanel(p, opt.rect, opt.palette, frameShadow == Sunken, lw);
-        break;
-
-    case WinPanel:
-        if (frameShadow == Plain)
-            qDrawPlainRect(p, opt.rect, opt.palette.foreground().color(), lw);
-        else
-            qDrawWinPanel(p, opt.rect, opt.palette, frameShadow == Sunken);
-        break;
-    case HLine:
-    case VLine:
-        if (frameShape == HLine) {
-            p1 = QPoint(opt.rect.x(), opt.rect.height() / 2);
-            p2 = QPoint(opt.rect.x() + opt.rect.width(), p1.y());
-        } else {
-            p1 = QPoint(opt.rect.x()+opt.rect.width() / 2, 0);
-            p2 = QPoint(p1.x(), opt.rect.height());
-        }
-        if (frameShadow == Plain) {
-            QPen oldPen = p->pen();
-            p->setPen(QPen(opt.palette.foreground().color(), lw));
-            p->drawLine(p1, p2);
-            p->setPen(oldPen);
-        } else {
-            qDrawShadeLine(p, p1, p2, opt.palette, frameShadow == Sunken, lw, mlw);
-        }
-        break;
-    }
+    style()->drawControl(QStyle::CE_ShapedFrame, &opt, p, this);
 }
 
 
@@ -648,7 +556,11 @@ bool QFrame::event(QEvent *e)
 {
     if (e->type() == QEvent::ParentChange)
         d_func()->updateFrameWidth();
-    return QWidget::event(e);
+    bool result = QWidget::event(e);
+    //this has to be done after the widget has been polished
+    if (e->type() == QEvent::Polish)
+        d_func()->updateFrameWidth();
+    return result;
 }
 
 QT_END_NAMESPACE

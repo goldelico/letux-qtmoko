@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -42,6 +46,7 @@
 #include "qpainterpath.h"
 #include "qapplication.h"
 #include "qdockwidget.h"
+#include "qtoolbar.h"
 #include "qpaintengine.h"
 #include "qpainter.h"
 #include "qstyleoption.h"
@@ -83,10 +88,17 @@ void QWindowsCEStyle::drawPrimitive(PrimitiveElement element, const QStyleOption
 
     switch (element) {
     case PE_PanelButtonTool: {
-        if (!(option->state & State_AutoRaise) || (option->state & (State_Sunken | State_On)))
-           QWindowsCEStylePrivate::drawWinCEButton(painter, option->rect.adjusted(0, 0, 0, 0),
-                                                   option->palette, option->state & (State_Sunken | State_On),
-            &option->palette.button());
+        if (
+#ifndef QT_NO_TOOLBAR
+             (widget && qobject_cast<QToolBar*>(widget->parentWidget())) ||
+#endif
+#ifndef QT_NO_DOCKWIDGET
+             (widget && widget->inherits("QDockWidgetTitleButton")) ||
+#endif
+            (option->state & (State_Sunken | State_On)))
+               QWindowsCEStylePrivate::drawWinCEButton(painter, option->rect.adjusted(0, 0, 0, 0),
+                  option->palette, option->state & (State_Sunken | State_On),
+                  &option->palette.button());
         if (option->state & (State_On)){
             QBrush fill = QBrush(option->palette.midlight().color(), Qt::Dense4Pattern);
             painter->fillRect(option->rect.adjusted(windowsItemFrame , windowsItemFrame ,
@@ -991,7 +1003,6 @@ void QWindowsCEStyle::drawControl(ControlElement element, const QStyleOption *op
         break;
 #endif // QT_NO_TABBAR
 
-#ifndef QT_NO_SCROLLBAR
     case CE_ToolBar: {
         QRect rect = option->rect;
         painter->setPen(QPen(option->palette.dark().color()));
@@ -1014,6 +1025,7 @@ void QWindowsCEStyle::drawControl(ControlElement element, const QStyleOption *op
             rect.topRight().y());
 
         break; }
+#ifndef QT_NO_SCROLLBAR
     case CE_ScrollBarSubLine:
     case CE_ScrollBarAddLine: {
         if (option->state & State_Sunken) {
@@ -1054,7 +1066,10 @@ void QWindowsCEStyle::drawControl(ControlElement element, const QStyleOption *op
                 painter->setBrush(br);
             } else {
                 QPixmap pm = option->palette.brush(QPalette::Light).texture();
-                br = !pm.isNull() ? QBrush(pm) : QBrush(option->palette.button().color(), Qt::Dense4Pattern);
+                if (option->state & State_Enabled)
+                    br = !pm.isNull() ? QBrush(pm) : QBrush(option->palette.button().color(), Qt::Dense4Pattern);
+                else
+                    br = !pm.isNull() ? QBrush(pm) : QBrush(option->palette.light().color(), Qt::Dense4Pattern);
                 painter->setBackground(option->palette.base().color());
                 painter->setBrush(br);
             }
@@ -1064,12 +1079,16 @@ void QWindowsCEStyle::drawControl(ControlElement element, const QStyleOption *op
             break; }
     case CE_ScrollBarSlider:
         if (!(option->state & State_Enabled)) {
+            QStyleOptionButton buttonOpt;
+            buttonOpt.QStyleOption::operator=(*option);
+            buttonOpt.state = State_Enabled | State_Raised;
+            drawPrimitive(PE_PanelButtonBevel, &buttonOpt, painter, widget);
             QPixmap pm = option->palette.brush(QPalette::Light).texture();
             QBrush br = !pm.isNull() ? QBrush(pm) : QBrush(option->palette.light().color(), Qt::Dense4Pattern);
             painter->setPen(Qt::NoPen);
             painter->setBrush(br);
             painter->setBackgroundMode(Qt::OpaqueMode);
-            painter->drawRect(option->rect);
+            painter->drawRect(option->rect.adjusted(2, 2, -2, -2));
         } else {
             QStyleOptionButton buttonOpt;
             buttonOpt.QStyleOption::operator=(*option);
@@ -1395,8 +1414,20 @@ void QWindowsCEStyle::drawComplexControl(ComplexControl control, const QStyleOpt
         if (const QStyleOptionToolButton *toolbutton
                 = qstyleoption_cast<const QStyleOptionToolButton *>(option)) {
             QRect button, menuarea;
+
+#ifndef QT_NO_TOOLBAR
+            bool flat = !(widget ? qobject_cast<QToolBar*>(widget->parentWidget()) : 0);
+#else
+            bool flat = true;
+#endif
+
             button = subControlRect(control, toolbutton, SC_ToolButton, widget);
             menuarea = subControlRect(control, toolbutton, SC_ToolButtonMenu, widget);
+
+            if (flat && (toolbutton->subControls & SC_ToolButtonMenu)) {
+                menuarea.setLeft(menuarea.left() - 4);
+                button.setRight(button.right() - 4);
+            }
 
             State bflags = toolbutton->state;
 
@@ -1425,50 +1456,60 @@ void QWindowsCEStyle::drawComplexControl(ComplexControl control, const QStyleOpt
                 tool.state = bflags;
                 drawPrimitive(PE_IndicatorButtonDropDown, &tool, painter, widget);
 
-                //connect buttons
-                painter->save();
-                painter->setPen(tool.palette.button().color());
-                painter->drawLine(tool.rect.x() - 2, tool.rect.y(), tool.rect.x() - 2, tool.rect.y() + tool.rect.height());
-                painter->drawLine(tool.rect.x() - 1, tool.rect.y(), tool.rect.x() - 1, tool.rect.y() + tool.rect.height());
-                painter->drawLine(tool.rect.x(), tool.rect.y(), tool.rect.x(), tool.rect.y() + tool.rect.height());
-                painter->drawLine(tool.rect.x() + 1, tool.rect.y(), tool.rect.x() + 1, tool.rect.y() + tool.rect.height());
+                if (!flat) {
 
-                if (tool.state & State_Sunken)
-                {
-                    painter->setPen(tool.palette.midlight().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height() - 2,
-                                      tool.rect.x() + 1, tool.rect.y() + tool.rect.height() -2 );
-                    painter->setPen(tool.palette.shadow().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y() + 1,tool.rect.x() + 1, tool.rect.y() + 1);
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y(), tool.rect.x() + 1, tool.rect.y());
-                    painter->setPen(tool.palette.light().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height() - 1,
-                                      tool.rect.x() + 1, tool.rect.y() + tool.rect.height() - 1);
+                    //connect buttons
+                    painter->save();
+                    painter->setPen(tool.palette.button().color());
+                    painter->drawLine(tool.rect.x() - 2, tool.rect.y(), tool.rect.x() - 2, tool.rect.y() + tool.rect.height());
+                    painter->drawLine(tool.rect.x() - 1, tool.rect.y(), tool.rect.x() - 1, tool.rect.y() + tool.rect.height());
+                    painter->drawLine(tool.rect.x(), tool.rect.y(), tool.rect.x(), tool.rect.y() + tool.rect.height());
+                    painter->drawLine(tool.rect.x() + 1, tool.rect.y(), tool.rect.x() + 1, tool.rect.y() + tool.rect.height());
+
+                    if (tool.state & State_Sunken)
+                    {
+                        painter->setPen(tool.palette.midlight().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height() - 2,
+                            tool.rect.x() + 1, tool.rect.y() + tool.rect.height() -2 );
+                        painter->setPen(tool.palette.shadow().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y() + 1,tool.rect.x() + 1, tool.rect.y() + 1);
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y(), tool.rect.x() + 1, tool.rect.y());
+                        painter->setPen(tool.palette.light().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height() - 1,
+                            tool.rect.x() + 1, tool.rect.y() + tool.rect.height() - 1);
+                    }
+                    else
+                    {
+                        painter->setPen(tool.palette.dark().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y(),tool.rect.x() + 1, tool.rect.y());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y()+tool.rect.height() - 2,tool.rect.x() + 1,
+                            tool.rect.y() + tool.rect.height() - 2);
+                        painter->setPen(tool.palette.midlight().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y() + 1,tool.rect.x() + 1, tool.rect.y() + 1);
+                        painter->setPen(tool.palette.shadow().color());
+                        painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height() - 1,
+                            tool.rect.x() + 1, tool.rect.y() + tool.rect.height() - 1);
+                    }
+                    painter->restore();
                 }
-                else
-                {
-                    painter->setPen(tool.palette.dark().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y(),tool.rect.x() + 1, tool.rect.y());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y()+tool.rect.height() - 2,tool.rect.x() + 1,
-                                      tool.rect.y() + tool.rect.height() - 2);
-                    painter->setPen(tool.palette.midlight().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y() + 1,tool.rect.x() + 1, tool.rect.y() + 1);
-                    painter->setPen(tool.palette.shadow().color());
-                    painter->drawLine(tool.rect.x() - 2, tool.rect.y() + tool.rect.height()-1,
-                                      tool.rect.x()+1, tool.rect.y()+tool.rect.height()-1);
+
+
+                if (!flat) {
+                    tool.rect.adjust(-3,0,-3,0);
+                    painter->save();
+                    painter->setPen(tool.palette.button().color());
+                    if (tool.state & State_Sunken)
+                        painter->drawLine(tool.rect.x() + 2, tool.rect.y() + 10,
+                        tool.rect.x() + tool.rect.width(), tool.rect.y() + 10);
+                    else
+                        painter->drawLine(tool.rect.x() + 1, tool.rect.y() + 9, tool.rect.x() +
+                        tool.rect.width() - 1, tool.rect.y() + 9);
+                    painter->restore();
+                } else {
+                    tool.rect.adjust(-1,0,-1,0);
                 }
-                painter->restore();
-                tool.rect.adjust(-3,0,-3,0);
+
                 drawPrimitive(PE_IndicatorArrowDown, &tool, painter, widget);
-                painter->save();
-                painter->setPen(tool.palette.button().color());
-                if (tool.state & State_Sunken)
-                    painter->drawLine(tool.rect.x() + 2, tool.rect.y() + 10,
-                                      tool.rect.x() + tool.rect.width(), tool.rect.y() + 10);
-                else
-                    painter->drawLine(tool.rect.x() + 1, tool.rect.y() + 9, tool.rect.x() +
-                                      tool.rect.width() - 1, tool.rect.y() + 9);
-                painter->restore();
             }
 
             if (toolbutton->state & State_HasFocus) {
@@ -1628,6 +1669,8 @@ void QWindowsCEStyle::drawComplexControl(ComplexControl control, const QStyleOpt
             shadePal.setColor(QPalette::Button, option->palette.light().color());
             shadePal.setColor(QPalette::Light, option->palette.button().color());
 
+            bool reverse = QApplication::layoutDirection() == Qt::RightToLeft;
+
             if (sb->subControls & SC_SpinBoxUp) {
                 copy.subControls = SC_SpinBoxUp;
                 QPalette pal2 = sb->palette;
@@ -1643,8 +1686,12 @@ void QWindowsCEStyle::drawComplexControl(ComplexControl control, const QStyleOpt
                     copy.state |= State_Raised;
                     copy.state &= ~State_Sunken;
                 }
-                pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinPlus
-                                                                       : PE_IndicatorSpinUp);
+                if (reverse)
+                    pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinMinus
+                    : PE_IndicatorSpinDown);
+                else
+                    pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinPlus
+                    : PE_IndicatorSpinUp);
                 copy.rect = subControlRect(CC_SpinBox, sb, SC_SpinBoxUp, widget);
                 QWindowsCEStylePrivate::drawWinCEButton(painter, copy.rect, option->palette, copy.state & (State_Sunken | State_On),
                                 &copy.palette.brush(QPalette::Button));
@@ -1668,8 +1715,12 @@ void QWindowsCEStyle::drawComplexControl(ComplexControl control, const QStyleOpt
                     copy.state |= State_Raised;
                     copy.state &= ~State_Sunken;
                 }
-                pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinMinus
-                                                                       : PE_IndicatorSpinDown);
+                if (reverse)
+                    pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinPlus
+                    : PE_IndicatorSpinUp);
+                else
+                    pe = (sb->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinMinus
+                    : PE_IndicatorSpinDown);
                 copy.rect = subControlRect(CC_SpinBox, sb, SC_SpinBoxDown, widget);
                 QWindowsCEStylePrivate::drawWinCEButton(painter, copy.rect, shadePal, copy.state & (State_Sunken | State_On),
                                 &copy.palette.brush(QPalette::Button));
@@ -1900,7 +1951,7 @@ QRect QWindowsCEStyle::subControlRect(ComplexControl control, const QStyleOption
                 rect = QRect(x, y , bs.width(), bs.height());
                 break;
           case SC_SpinBoxEditField:
-                    rect = QRect(lx, fw, rx-2, spinbox->rect.height() - 2*fw);
+                rect = QRect(lx, fw, rx-2, spinbox->rect.height() - 2*fw);
                 break;
           case SC_SpinBoxFrame:
                 rect = spinbox->rect;

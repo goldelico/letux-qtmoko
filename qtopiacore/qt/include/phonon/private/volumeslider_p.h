@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/volumeslider_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/volumeslider_p.h"

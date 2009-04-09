@@ -21,12 +21,12 @@ CL_NS_DEF(search)
   // class FuzzyQuery implements the fuzzy search query
   class FuzzyQuery: public MultiTermQuery {
     private:
-	  float_t minimumSimilarity;
+	  qreal minimumSimilarity;
 	  size_t prefixLength;
   protected:
 	  FuzzyQuery(const FuzzyQuery& clone);
    public:
-	  static float_t defaultMinSimilarity;
+	  static qreal defaultMinSimilarity;
 
      /**
 	* Create a new FuzzyQuery that will match terms with a similarity 
@@ -44,7 +44,7 @@ CL_NS_DEF(search)
 	* @throws IllegalArgumentException if minimumSimilarity is &gt; 1 or &lt; 0
 	* or if prefixLength &lt; 0 or &gt; <code>term.text().length()</code>.
 	*/
-     FuzzyQuery(CL_NS(index)::Term* term, float_t minimumSimilarity=defaultMinSimilarity, size_t prefixLength=0);
+     FuzzyQuery(CL_NS(index)::Term* term, qreal minimumSimilarity=defaultMinSimilarity, size_t prefixLength=0);
 	 //Destructor
      ~FuzzyQuery();
 
@@ -62,7 +62,7 @@ CL_NS_DEF(search)
 		* Returns the minimum similarity that is required for this query to match.
 		* @return float value between 0.0 and 1.0
 		*/
-		float_t getMinSimilarity() const;
+		qreal getMinSimilarity() const;
 
 		/**
 		* Returns the prefix length, i.e. the number of characters at the start
@@ -83,7 +83,7 @@ CL_NS_DEF(search)
   */
   class FuzzyTermEnum: public FilteredTermEnum {
   private:
-		float_t distance;
+		qreal distance;
 		bool _endEnum;
 
 		CL_NS(index)::Term* searchTerm; 
@@ -91,7 +91,7 @@ CL_NS_DEF(search)
 		size_t textLen;
 		TCHAR* prefix;
 		size_t prefixLength;
-		float_t minimumSimilarity;
+		qreal minimumSimilarity;
 		double scale_factor;
 
 		
@@ -135,9 +135,9 @@ CL_NS_DEF(search)
 		* @param reader
 		* @param term
 		* @throws IOException
-		* @see #FuzzyTermEnum(IndexReader, Term, float_t, int32_t)
+		* @see #FuzzyTermEnum(IndexReader, Term, qreal, int32_t)
 		*/
-		FuzzyTermEnum(const CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, float_t minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
+		FuzzyTermEnum(const CL_NS(index)::IndexReader* reader, CL_NS(index)::Term* term, qreal minSimilarity=FuzzyQuery::defaultMinSimilarity, size_t prefixLength=0);
 		/** Destructor */
 		~FuzzyTermEnum();
 		/** Close the enumeration */
@@ -146,7 +146,7 @@ CL_NS_DEF(search)
 		/** Returns the difference between the distance and the fuzzy threshold
 		*  multiplied by the scale factor
 		*/
-		float_t difference();
+		qreal difference();
 
 		
 		const char* getObjectName(){ return FuzzyTermEnum::getClassName(); }

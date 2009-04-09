@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -99,7 +103,7 @@ QVariant domPropertyToVariant(QAbstractFormBuilder *afb,const QMetaObject *meta,
         const QByteArray pname = p->attributeName().toUtf8();
         const int index = meta->indexOfProperty(pname);
         if (index == -1) {
-            uiLibWarning(QObject::tr("The set-type property %1 could not be read.").arg(p->attributeName()));
+            uiLibWarning(QCoreApplication::translate("QFormBuilder", "The set-type property %1 could not be read.").arg(p->attributeName()));
             return QVariant();
         }
 
@@ -122,7 +126,7 @@ QVariant domPropertyToVariant(QAbstractFormBuilder *afb,const QMetaObject *meta,
                 && (pname == QByteArray("orientation"))) {
                 return QVariant(enumValue == QFormBuilderStrings::instance().horizontalPostFix ? QFrame::HLine : QFrame::VLine);
             } else {
-                uiLibWarning(QObject::tr("The enumeration-type property %1 could not be read.").arg(p->attributeName()));
+                uiLibWarning(QCoreApplication::translate("QFormBuilder", "The enumeration-type property %1 could not be read.").arg(p->attributeName()));
                 return QVariant();
             }
         }
@@ -312,7 +316,7 @@ QVariant domPropertyToVariant(const DomProperty *p)
         return QVariant(p->elementStringList()->elementString());
 
     default:
-        uiLibWarning(QObject::tr("Reading properties of the type %1 is not supported yet.").arg(p->kind()));
+        uiLibWarning(QCoreApplication::translate("QFormBuilder", "Reading properties of the type %1 is not supported yet.").arg(p->kind()));
         break;
     }
 
@@ -578,24 +582,33 @@ static bool applySimpleProperty(const QVariant &v, bool translateString, DomProp
 }
 static QString msgCannotWriteProperty(const QString &pname, const QVariant &v)
 {
-    return QObject::tr("The property %1 could not be written. The type %2 is not supported yet.").
-                       arg(pname).arg(v.typeName());
+    return QCoreApplication::translate("QFormBuilder", "The property %1 could not be written. The type %2 is not supported yet.").
+                       arg(pname).arg(QLatin1String(v.typeName()));
 
 }
 
-static bool isTranslatable(const QString &pname, const QVariant &v, QObject *o)
+static bool isOfType(const QMetaObject *what, const QMetaObject *type)
+{
+    do {
+        if (what == type)
+            return true;
+    } while ((what = what->superClass()));
+    return false;
+}
+
+static bool isTranslatable(const QString &pname, const QVariant &v, const QMetaObject *meta)
 {
     const QFormBuilderStrings &strings = QFormBuilderStrings::instance();
     if (pname == strings.objectNameProperty)
         return false;
-    if (pname == strings.styleSheetProperty && v.type() == QVariant::String && qobject_cast<QWidget *>(o))
+    if (pname == strings.styleSheetProperty && v.type() == QVariant::String && isOfType(meta, &QWidget::staticMetaObject))
         return false;
     return true;
 }
 
 // Convert complex variant types to DOM properties with the help of  QAbstractFormBuilder
 // Does not perform a check using  QAbstractFormBuilder::checkProperty().
-DomProperty *variantToDomProperty(QAbstractFormBuilder *afb, QObject *obj,
+DomProperty *variantToDomProperty(QAbstractFormBuilder *afb, const QMetaObject *meta,
                                   const QString &pname, const QVariant &v)
 {
     const QFormBuilderStrings &strings = QFormBuilderStrings::instance();
@@ -603,16 +616,23 @@ DomProperty *variantToDomProperty(QAbstractFormBuilder *afb, QObject *obj,
     DomProperty *dom_prop = new DomProperty();
     dom_prop->setAttributeName(pname);
 
-    const QMetaObject *meta = obj->metaObject();
     const int pindex = meta->indexOfProperty(pname.toLatin1());
     if (pindex != -1) {
         QMetaProperty meta_property = meta->property(pindex);
-        if (!meta_property.hasStdCppSet() || (qobject_cast<QAbstractScrollArea *>(obj) && pname == strings.cursorProperty))
+        if ((v.type() == QVariant::Int || v.type() == QVariant::UInt) && meta_property.isEnumType()) {
+            const QMetaEnum e = meta_property.enumerator();
+            if (e.isFlag())
+                dom_prop->setElementSet(QString::fromAscii(e.valueToKeys(v.toInt())));
+            else
+                dom_prop->setElementEnum(QString::fromAscii(e.valueToKey(v.toInt())));
+            return dom_prop;
+        }
+        if (!meta_property.hasStdCppSet() || (isOfType(meta, &QAbstractScrollArea::staticMetaObject) && pname == strings.cursorProperty))
             dom_prop->setAttributeStdset(0);
     }
 
     // Try simple properties
-    if (applySimpleProperty(v, isTranslatable(pname, v, obj), dom_prop))
+    if (applySimpleProperty(v, isTranslatable(pname, v, meta), dom_prop))
         return dom_prop;
 
     // Complex properties

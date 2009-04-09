@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,7 +49,7 @@ const uchar qt_pixmap_bit_mask[] = { 0x01, 0x02, 0x04, 0x08,
                                      0x10, 0x20, 0x40, 0x80 };
 
 QPixmapData::QPixmapData(PixelType pixelType, int objectId)
-    : ref(0), detach_no(0), type(pixelType), id(objectId), ser_no(0)
+    : ref(0), detach_no(0), type(pixelType), id(objectId), ser_no(0), is_cached(false)
 {
 
 }
@@ -112,25 +116,26 @@ void QPixmapData::setMask(const QBitmap &mask)
 
 QBitmap QPixmapData::mask() const
 {
-    QImage image = toImage();
-    if (!image.hasAlphaChannel())
+    if (!hasAlphaChannel())
         return QBitmap();
 
+    const QImage img = toImage();
+    const QImage image = (img.depth() < 32 ? img.convertToFormat(QImage::Format_ARGB32_Premultiplied) : img);
     const int w = image.width();
     const int h = image.height();
 
     QImage mask(w, h, QImage::Format_MonoLSB);
+    if (mask.isNull()) // allocation failed
+        return QBitmap();
+
     mask.setNumColors(2);
     mask.setColor(0, QColor(Qt::color0).rgba());
     mask.setColor(1, QColor(Qt::color1).rgba());
 
     const int bpl = mask.bytesPerLine();
 
-    if (image.depth() < 32)
-        image = image.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
     for (int y = 0; y < h; ++y) {
-        QRgb *src = (QRgb *)image.scanLine(y);
+        const QRgb *src = reinterpret_cast<const QRgb*>(image.scanLine(y));
         uchar *dest = mask.scanLine(y);
         memset(dest, 0, bpl);
         for (int x = 0; x < w; ++x) {

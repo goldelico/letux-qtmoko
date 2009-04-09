@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,9 +57,9 @@
 #endif
 #if defined(Q_OS_WINCE)
 #include "qt_windows.h"
-#include "qguifunctions_wince.h"
 #include "qmenubar.h"
 #include "qpointer.h"
+#include "qguifunctions_wince.h"
 extern bool qt_wince_is_mobile();     //defined in qguifunctions_wce.cpp
 extern bool qt_wince_is_smartphone(); //is defined in qguifunctions_wce.cpp
 #elif defined(Q_WS_X11)
@@ -345,6 +349,21 @@ void QDialogPrivate::hideDefault()
     }
 }
 
+void QDialogPrivate::resetModalitySetByOpen()
+{
+    Q_Q(QDialog);
+    if (resetModalityTo != -1 && !q->testAttribute(Qt::WA_SetWindowModality)) {
+        // open() changed the window modality and the user didn't touch it afterwards; restore it
+        q->setWindowModality(Qt::WindowModality(resetModalityTo));
+        q->setAttribute(Qt::WA_SetWindowModality, wasModalitySet);
+#ifdef Q_WS_MAC
+        Q_ASSERT(resetModalityTo != Qt::WindowModal);
+        q->setParent(q->parentWidget(), Qt::Dialog);
+#endif
+    }
+    resetModalityTo = -1;
+}
+
 #ifdef Q_OS_WINCE
 #ifdef Q_OS_WINCE_WM
 void QDialogPrivate::_q_doneAction()
@@ -394,6 +413,32 @@ void QDialog::setResult(int r)
     d->rescode = r;
 }
 
+/*!
+    \since 4.5
+
+    Shows the dialog as a \l{QDialog#Modal Dialogs}{window modal dialog},
+    returning immediately.
+
+    \sa exec(), show(), result(), setWindowModality()
+*/
+void QDialog::open()
+{
+    Q_D(QDialog);
+
+    Qt::WindowModality modality = windowModality();
+    if (modality != Qt::WindowModal) {
+        d->resetModalityTo = modality;
+        d->wasModalitySet = testAttribute(Qt::WA_SetWindowModality);
+        setWindowModality(Qt::WindowModal);
+        setAttribute(Qt::WA_SetWindowModality, false);
+#ifdef Q_WS_MAC
+        setParent(parentWidget(), Qt::Sheet);
+#endif
+    }
+
+    setResult(0);
+    show();
+}
 
 /*!
     Shows the dialog as a \l{QDialog#Modal Dialogs}{modal dialog},
@@ -404,15 +449,15 @@ void QDialog::setResult(int r)
     interact with any other window in the same application until they close
     the dialog. If the dialog is \l{Qt::ApplicationModal}{window modal}, only
     interaction with the parent window is blocked while the dialog is open.
-
     By default, the dialog is application modal.
 
-    \sa show(), result(), setWindowModality()
+    \sa open(), show(), result(), setWindowModality()
 */
 
 int QDialog::exec()
 {
     Q_D(QDialog);
+
     if (d->eventLoop) {
         qWarning("QDialog::exec: Recursive call detected");
         return -1;
@@ -420,6 +465,8 @@ int QDialog::exec()
 
     bool deleteOnClose = testAttribute(Qt::WA_DeleteOnClose);
     setAttribute(Qt::WA_DeleteOnClose, false);
+
+    d->resetModalitySetByOpen();
 
     bool wasShowModal = testAttribute(Qt::WA_ShowModal);
     setAttribute(Qt::WA_ShowModal, true);
@@ -441,10 +488,14 @@ int QDialog::exec()
 
     show();
 
+#ifdef Q_WS_MAC
+    d->mac_nativeDialogModalHelp();
+#endif
+
     QEventLoop eventLoop;
     d->eventLoop = &eventLoop;
     QPointer<QDialog> guard = this;
-    (void) eventLoop.exec();
+    (void) eventLoop.exec(QEventLoop::DialogExec);
     if (guard.isNull())
         return QDialog::Rejected;
     d->eventLoop = 0;
@@ -464,7 +515,8 @@ int QDialog::exec()
 }
 
 
-/*! Closes the dialog and sets its result code to \a r. If this dialog
+/*!
+  Closes the dialog and sets its result code to \a r. If this dialog
   is shown with exec(), done() causes the local event loop to finish,
   and exec() to return \a r.
 
@@ -482,7 +534,10 @@ void QDialog::done(int r)
     Q_D(QDialog);
     hide();
     setResult(r);
+
     d->close_helper(QWidgetPrivate::CloseNoEvent);
+    d->resetModalitySetByOpen();
+
     emit finished(r);
     if (r == Accepted)
         emit accepted();

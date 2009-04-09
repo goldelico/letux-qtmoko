@@ -39,23 +39,20 @@ public:
     RenderTableSection(Node*);
     ~RenderTableSection();
 
-    virtual const char* renderName() const { return "RenderTableSection"; }
+    virtual const char* renderName() const { return isAnonymous() ? "RenderTableSection (anonymous)" : "RenderTableSection"; }
 
     virtual bool isTableSection() const { return true; }
 
     virtual void destroy();
 
-    virtual void setStyle(RenderStyle*);
-
     virtual void addChild(RenderObject* child, RenderObject* beforeChild = 0);
 
-    virtual short lineHeight(bool firstLine, bool isRootLineBox = false) const { return 0; }
-    virtual void position(InlineBox*) { }
+    virtual int getBaselineOfFirstLineBox() const;
 
     void addCell(RenderTableCell*, RenderObject* row);
 
     void setCellWidths();
-    void calcRowHeight();
+    int calcRowHeight();
     int layoutRows(int height);
 
     RenderTable* table() const { return static_cast<RenderTable*>(parent()); }
@@ -101,7 +98,7 @@ public:
     int outerBorderRight() const { return m_outerBorderRight; }
 
     virtual void paint(PaintInfo&, int tx, int ty);
-    virtual void imageChanged(CachedImage*);
+    virtual void imageChanged(WrappedImagePtr, const IntRect* = 0);
 
     int numRows() const { return m_gridRows; }
     int numColumns() const;
@@ -125,11 +122,10 @@ public:
 
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, int x, int y, int tx, int ty, HitTestAction);
 
-#ifndef NDEBUG
-    virtual void dump(TextStream*, DeprecatedString ind = "") const;
-#endif
+private:
+    virtual int lineHeight(bool, bool) const { return 0; }
+    virtual void position(InlineBox*) { }
 
-protected:
     bool ensureRows(int);
     void clearGrid();
 

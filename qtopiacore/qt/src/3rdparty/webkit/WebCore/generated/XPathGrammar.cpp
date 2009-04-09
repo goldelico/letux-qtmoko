@@ -91,7 +91,7 @@
      DOTDOT = 272,
      SLASHSLASH = 273,
      NAMETEST = 274,
-     ERROR = 275
+     XPATH_ERROR = 275
    };
 #endif
 /* Tokens.  */
@@ -112,7 +112,7 @@
 #define DOTDOT 272
 #define SLASHSLASH 273
 #define NAMETEST 274
-#define ERROR 275
+#define XPATH_ERROR 275
 
 
 
@@ -191,8 +191,8 @@ typedef union YYSTYPE
 #line 69 "../xml/XPathGrammar.y"
 
 
-int xpathyylex(YYSTYPE *yylval) { return Parser::current()->lex(yylval); }
-void xpathyyerror(const char *str) { }
+int xpathyylex(YYSTYPE* yylval) { return Parser::current()->lex(yylval); }
+void xpathyyerror(const char*) { }
     
 
 
@@ -521,10 +521,10 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "MULOP", "RELOP", "EQOP", "MINUS",
   "PLUS", "AND", "OR", "AXISNAME", "NODETYPE", "PI", "FUNCTIONNAME",
   "LITERAL", "VARIABLEREFERENCE", "NUMBER", "DOTDOT", "SLASHSLASH",
-  "NAMETEST", "ERROR", "'/'", "'@'", "'('", "')'", "'['", "']'", "'.'",
-  "','", "'|'", "$accept", "Expr", "LocationPath", "AbsoluteLocationPath",
-  "RelativeLocationPath", "Step", "AxisSpecifier", "NodeTest",
-  "OptionalPredicateList", "PredicateList", "Predicate",
+  "NAMETEST", "XPATH_ERROR", "'/'", "'@'", "'('", "')'", "'['", "']'",
+  "'.'", "','", "'|'", "$accept", "Expr", "LocationPath",
+  "AbsoluteLocationPath", "RelativeLocationPath", "Step", "AxisSpecifier",
+  "NodeTest", "OptionalPredicateList", "PredicateList", "Predicate",
   "DescendantOrSelf", "AbbreviatedStep", "PrimaryExpr", "FunctionCall",
   "ArgumentList", "Argument", "UnionExpr", "PathExpr", "FilterExpr",
   "OrExpr", "AndExpr", "EqualityExpr", "RelationalExpr", "AdditiveExpr",

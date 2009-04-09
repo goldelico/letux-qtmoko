@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2007 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,6 +34,9 @@
 
 namespace WebCore {
 
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+    class ApplicationCache;
+#endif
     class FormState;
     class ResourceRequest;
 
@@ -56,6 +59,10 @@ namespace WebCore {
         void handleDataLoadNow(Timer<MainResourceLoader>*);
 
         bool isLoadingMultipartContent() const { return m_loadingMultipartContent; }
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        ApplicationCache* applicationCache() const { return m_applicationCache.get(); }
+#endif
 
     private:
         MainResourceLoader(Frame*);
@@ -84,6 +91,11 @@ namespace WebCore {
         ResourceRequest m_initialRequest;
         SubstituteData m_substituteData;
         Timer<MainResourceLoader> m_dataLoadTimer;
+
+#if ENABLE(OFFLINE_WEB_APPLICATIONS)
+        // The application cache that the main resource was loaded from (if any).
+        RefPtr<ApplicationCache> m_applicationCache;
+#endif
 
         bool m_loadingMultipartContent;
         bool m_waitingForContentPolicy;

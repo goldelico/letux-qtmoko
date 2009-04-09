@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,8 +68,19 @@ bool QXmlUtils::rangeContains(RangeIter begin, RangeIter end, const QChar c)
 {
     const ushort cp(c.unicode());
 
-    if (cp < begin->min)
+    // check the first two ranges "manually" as characters in that
+    // range are checked very often and we avoid the binary search below.
+ 
+    if (cp <= begin->max)
+        return cp >= begin->min;
+
+    ++begin;
+
+    if (begin == end)
         return false;
+
+    if (cp <= begin->max)
+        return cp >= begin->min;
 
     while (begin != end) {
         int delta = (end - begin) / 2;
@@ -252,10 +267,10 @@ bool QXmlUtils::isLetter(const QChar c)
  */
 bool QXmlUtils::isChar(const QChar c)
 {
-    return c.unicode() == 0x0009
+    return (c.unicode() >= 0x0020 && c.unicode() <= 0xD7FF)
+           || c.unicode() == 0x0009
            || c.unicode() == 0x000A
            || c.unicode() == 0x000D
-           || (c.unicode() >= 0x0020 && c.unicode() <= 0xD7FF)
            || (c.unicode() >= 0xE000 && c.unicode() <= 0xFFFD);
 }
 
@@ -271,7 +286,7 @@ bool QXmlUtils::isChar(const QChar c)
  */
 bool QXmlUtils::isNameChar(const QChar c)
 {
-    return isLetter(c)
+    return isBaseChar(c)
            || isDigit(c)
            || c.unicode() == '.'
            || c.unicode() == '-'

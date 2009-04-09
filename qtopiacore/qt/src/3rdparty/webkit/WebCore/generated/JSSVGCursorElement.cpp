@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGCursorElement.h"
 
 #include <wtf/GetPtr.h>
@@ -39,183 +35,138 @@
 #include "SVGCursorElement.h"
 #include "SVGStringList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGCursorElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGCursorElementTableEntries[] =
+static const HashTableValue JSSVGCursorElementTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "requiredFeatures", JSSVGCursorElement::RequiredFeaturesAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "x", JSSVGCursorElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGCursorElementTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { "requiredExtensions", JSSVGCursorElement::RequiredExtensionsAttrNum, DontDelete|ReadOnly, 0, &JSSVGCursorElementTableEntries[7] },
-    { "y", JSSVGCursorElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "href", JSSVGCursorElement::HrefAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "systemLanguage", JSSVGCursorElement::SystemLanguageAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "externalResourcesRequired", JSSVGCursorElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementY, (intptr_t)0 },
+    { "href", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementHref, (intptr_t)0 },
+    { "requiredFeatures", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementRequiredFeatures, (intptr_t)0 },
+    { "requiredExtensions", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementRequiredExtensions, (intptr_t)0 },
+    { "systemLanguage", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementSystemLanguage, (intptr_t)0 },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGCursorElementExternalResourcesRequired, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGCursorElementTable = 
-{
-    2, 9, JSSVGCursorElementTableEntries, 7
-};
+static const HashTable JSSVGCursorElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSSVGCursorElementTableValues, 0 };
+#else
+    { 17, 15, JSSVGCursorElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGCursorElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGCursorElementPrototypeTableValues[2] =
 {
-    { "hasExtension", JSSVGCursorElement::HasExtensionFuncNum, DontDelete|Function, 1, 0 }
+    { "hasExtension", DontDelete|Function, (intptr_t)jsSVGCursorElementPrototypeFunctionHasExtension, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGCursorElementPrototypeTable = 
-{
-    2, 1, JSSVGCursorElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGCursorElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGCursorElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGCursorElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGCursorElementPrototype::info = { "SVGCursorElementPrototype", 0, &JSSVGCursorElementPrototypeTable, 0 };
+const ClassInfo JSSVGCursorElementPrototype::s_info = { "SVGCursorElementPrototype", 0, &JSSVGCursorElementPrototypeTable, 0 };
 
 JSObject* JSSVGCursorElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGCursorElementPrototype>(exec, "[[JSSVGCursorElement.prototype]]");
+    return getDOMPrototype<JSSVGCursorElement>(exec);
 }
 
 bool JSSVGCursorElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGCursorElementPrototypeFunction, JSObject>(exec, &JSSVGCursorElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGCursorElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGCursorElement::info = { "SVGCursorElement", &JSSVGElement::info, &JSSVGCursorElementTable, 0 };
+const ClassInfo JSSVGCursorElement::s_info = { "SVGCursorElement", &JSSVGElement::s_info, &JSSVGCursorElementTable, 0 };
 
-JSSVGCursorElement::JSSVGCursorElement(ExecState* exec, SVGCursorElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGCursorElement::JSSVGCursorElement(PassRefPtr<Structure> structure, PassRefPtr<SVGCursorElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGCursorElementPrototype::self(exec));
+}
+
+JSObject* JSSVGCursorElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGCursorElementPrototype(JSSVGCursorElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGCursorElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGCursorElement, JSSVGElement>(exec, &JSSVGCursorElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGCursorElement, Base>(exec, &JSSVGCursorElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGCursorElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGCursorElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HrefAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case RequiredFeaturesAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredFeatures()));
-    }
-    case RequiredExtensionsAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->requiredExtensions()));
-    }
-    case SystemLanguageAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->systemLanguage()));
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGCursorElement* imp = static_cast<SVGCursorElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    }
-    return 0;
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-JSValue* JSSVGCursorElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGCursorElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSSVGCursorElement::info))
-      return throwError(exec, TypeError);
-
-    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGCursorElement::HasExtensionFuncNum: {
-        String extension = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = jsBoolean(imp->hasExtension(extension));
-        return result;
-    }
-    }
-    return 0;
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
 }
+
+JSValuePtr jsSVGCursorElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGCursorElementRequiredFeatures(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredFeatures()), imp);
+}
+
+JSValuePtr jsSVGCursorElementRequiredExtensions(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->requiredExtensions()), imp);
+}
+
+JSValuePtr jsSVGCursorElementSystemLanguage(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->systemLanguage()), imp);
+}
+
+JSValuePtr jsSVGCursorElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(static_cast<JSSVGCursorElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGCursorElementPrototypeFunctionHasExtension(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGCursorElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGCursorElement* castedThisObj = static_cast<JSSVGCursorElement*>(asObject(thisValue));
+    SVGCursorElement* imp = static_cast<SVGCursorElement*>(castedThisObj->impl());
+    const UString& extension = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasExtension(extension));
+    return result;
+}
+
 
 }
 

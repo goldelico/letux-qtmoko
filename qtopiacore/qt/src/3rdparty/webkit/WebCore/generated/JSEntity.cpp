@@ -25,128 +25,136 @@
 #include <wtf/GetPtr.h>
 
 #include "Entity.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSEntity)
+
 /* Hash table */
 
-static const HashEntry JSEntityTableEntries[] =
+static const HashTableValue JSEntityTableValues[5] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "notationName", JSEntity::NotationNameAttrNum, DontDelete|ReadOnly, 0, &JSEntityTableEntries[5] },
-    { "publicId", JSEntity::PublicIdAttrNum, DontDelete|ReadOnly, 0, &JSEntityTableEntries[4] },
-    { 0, 0, 0, 0, 0 },
-    { "systemId", JSEntity::SystemIdAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSEntity::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "publicId", DontDelete|ReadOnly, (intptr_t)jsEntityPublicId, (intptr_t)0 },
+    { "systemId", DontDelete|ReadOnly, (intptr_t)jsEntitySystemId, (intptr_t)0 },
+    { "notationName", DontDelete|ReadOnly, (intptr_t)jsEntityNotationName, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsEntityConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityTable = 
-{
-    2, 6, JSEntityTableEntries, 4
-};
+static const HashTable JSEntityTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSEntityTableValues, 0 };
+#else
+    { 10, 7, JSEntityTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSEntityConstructorTableEntries[] =
+static const HashTableValue JSEntityConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityConstructorTable = 
-{
-    2, 1, JSEntityConstructorTableEntries, 1
-};
+static const HashTable JSEntityConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSEntityConstructorTableValues, 0 };
+#else
+    { 1, 0, JSEntityConstructorTableValues, 0 };
+#endif
 
 class JSEntityConstructor : public DOMObject {
 public:
     JSEntityConstructor(ExecState* exec)
+        : DOMObject(JSEntityConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSEntityPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSEntityConstructor::info = { "EntityConstructor", 0, &JSEntityConstructorTable, 0 };
+const ClassInfo JSEntityConstructor::s_info = { "EntityConstructor", 0, &JSEntityConstructorTable, 0 };
 
 bool JSEntityConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSEntityConstructor, DOMObject>(exec, &JSEntityConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSEntityConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSEntityPrototypeTableEntries[] =
+static const HashTableValue JSEntityPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityPrototypeTable = 
-{
-    2, 1, JSEntityPrototypeTableEntries, 1
-};
+static const HashTable JSEntityPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSEntityPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSEntityPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSEntityPrototype::info = { "EntityPrototype", 0, &JSEntityPrototypeTable, 0 };
+const ClassInfo JSEntityPrototype::s_info = { "EntityPrototype", 0, &JSEntityPrototypeTable, 0 };
 
 JSObject* JSEntityPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSEntityPrototype>(exec, "[[JSEntity.prototype]]");
+    return getDOMPrototype<JSEntity>(exec);
 }
 
-const ClassInfo JSEntity::info = { "Entity", &JSNode::info, &JSEntityTable, 0 };
+const ClassInfo JSEntity::s_info = { "Entity", &JSNode::s_info, &JSEntityTable, 0 };
 
-JSEntity::JSEntity(ExecState* exec, Entity* impl)
-    : JSNode(exec, impl)
+JSEntity::JSEntity(PassRefPtr<Structure> structure, PassRefPtr<Entity> impl)
+    : JSNode(structure, impl)
 {
-    setPrototype(JSEntityPrototype::self(exec));
+}
+
+JSObject* JSEntity::createPrototype(ExecState* exec)
+{
+    return new (exec) JSEntityPrototype(JSEntityPrototype::createStructure(JSNodePrototype::self(exec)));
 }
 
 bool JSEntity::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSEntity, JSNode>(exec, &JSEntityTable, this, propertyName, slot);
+    return getStaticValueSlot<JSEntity, Base>(exec, &JSEntityTable, this, propertyName, slot);
 }
 
-JSValue* JSEntity::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsEntityPublicId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case PublicIdAttrNum: {
-        Entity* imp = static_cast<Entity*>(impl());
-
-        return jsStringOrNull(imp->publicId());
-    }
-    case SystemIdAttrNum: {
-        Entity* imp = static_cast<Entity*>(impl());
-
-        return jsStringOrNull(imp->systemId());
-    }
-    case NotationNameAttrNum: {
-        Entity* imp = static_cast<Entity*>(impl());
-
-        return jsStringOrNull(imp->notationName());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Entity* imp = static_cast<Entity*>(static_cast<JSEntity*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->publicId());
 }
 
-JSValue* JSEntity::getConstructor(ExecState* exec)
+JSValuePtr jsEntitySystemId(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSEntityConstructor>(exec, "[[Entity.constructor]]");
+    Entity* imp = static_cast<Entity*>(static_cast<JSEntity*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->systemId());
 }
+
+JSValuePtr jsEntityNotationName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Entity* imp = static_cast<Entity*>(static_cast<JSEntity*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->notationName());
+}
+
+JSValuePtr jsEntityConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSEntity*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSEntity::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSEntityConstructor>(exec);
+}
+
 
 }

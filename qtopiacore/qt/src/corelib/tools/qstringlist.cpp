@@ -1,41 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include <qstringlist.h>
+#include <qset.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -308,10 +313,9 @@ QStringList QtPrivate::QStringList_filter(const QStringList *that, const QString
 QBool QtPrivate::QStringList_contains(const QStringList *that, const QString &str,
                                       Qt::CaseSensitivity cs)
 {
-    QStringMatcher matcher(str, cs);
     for (int i = 0; i < that->size(); ++i) {
         const QString & string = that->at(i);
-        if (string.length() == str.length() && matcher.indexIn(string) == 0)
+        if (string.length() == str.length() && str.compare(string, cs) == 0)
             return QBool(true);
     }
     return QBool(false);
@@ -507,6 +511,30 @@ QString QtPrivate::QStringList_join(const QStringList *that, const QString &sep)
 
 
 #ifndef QT_NO_REGEXP
+static int indexOfMutating(const QStringList *that, QRegExp &rx, int from)
+{
+    if (from < 0)
+        from = qMax(from + that->size(), 0);
+    for (int i = from; i < that->size(); ++i) {
+        if (rx.exactMatch(that->at(i)))
+            return i;
+    }
+    return -1;
+}
+
+static int lastIndexOfMutating(const QStringList *that, QRegExp &rx, int from)
+{
+    if (from < 0)
+        from += that->size();
+    else if (from >= that->size())
+        from = that->size() - 1;
+    for (int i = from; i >= 0; --i) {
+        if (rx.exactMatch(that->at(i)))
+            return i;
+        }
+    return -1;
+}
+
 /*!
     \fn int QStringList::indexOf(const QRegExp &rx, int from) const
 
@@ -520,13 +548,29 @@ QString QtPrivate::QStringList_join(const QStringList *that, const QString &sep)
 */
 int QtPrivate::QStringList_indexOf(const QStringList *that, const QRegExp &rx, int from)
 {
-   if (from < 0)
-       from = qMax(from + that->size(), 0);
-   for (int i = from; i < that->size(); ++i) {
-        if (rx.exactMatch(that->at(i)))
-            return i;
-    }
-    return -1;
+    QRegExp rx2(rx);
+    return indexOfMutating(that, rx2, from);
+}
+
+/*!
+    \fn int QStringList::indexOf(QRegExp &rx, int from) const
+    \overload indexOf()
+    \since 4.5
+
+    Returns the index position of the first exact match of \a rx in
+    the list, searching forward from index position \a from. Returns
+    -1 if no item matched.
+
+    By default, this function is case sensitive.
+
+    If an item matched, the \a rx regular expression will contain the
+    matched objects (see QRegExp::matchedLength, QRegExp::cap).
+
+    \sa lastIndexOf(), contains(), QRegExp::exactMatch()
+*/
+int QtPrivate::QStringList_indexOf(const QStringList *that, QRegExp &rx, int from)
+{
+    return indexOfMutating(that, rx, from);
 }
 
 /*!
@@ -543,15 +587,30 @@ int QtPrivate::QStringList_indexOf(const QStringList *that, const QRegExp &rx, i
 */
 int QtPrivate::QStringList_lastIndexOf(const QStringList *that, const QRegExp &rx, int from)
 {
-    if (from < 0)
-        from += that->size();
-    else if (from >= that->size())
-        from = that->size() - 1;
-    for (int i = from; i >= 0; --i) {
-        if (rx.exactMatch(that->at(i)))
-            return i;
-        }
-    return -1;
+    QRegExp rx2(rx);
+    return lastIndexOfMutating(that, rx2, from);
+}
+
+/*!
+    \fn int QStringList::lastIndexOf(QRegExp &rx, int from) const
+    \overload lastIndexOf()
+    \since 4.5
+
+    Returns the index position of the last exact match of \a rx in
+    the list, searching backward from index position \a from. If \a
+    from is -1 (the default), the search starts at the last item.
+    Returns -1 if no item matched.
+
+    By default, this function is case sensitive.
+
+    If an item matched, the \a rx regular expression will contain the
+    matched objects (see QRegExp::matchedLength, QRegExp::cap).
+
+    \sa indexOf(), contains(), QRegExp::exactMatch()
+*/
+int QtPrivate::QStringList_lastIndexOf(const QStringList *that, QRegExp &rx, int from)
+{
+    return lastIndexOfMutating(that, rx, from);
 }
 #endif
 
@@ -579,5 +638,36 @@ int QtPrivate::QStringList_lastIndexOf(const QStringList *that, const QRegExp &r
 
     \sa indexOf(), QList::lastIndexOf()
 */
+
+/*!
+    \fn int QStringList::removeDuplicates()
+
+    \since  4.5
+
+    This function removes duplicate entries from a list.
+    The entries do not have to be sorted. They will retain their
+    original order.
+
+    Returns the number of removed entries.
+*/
+int QtPrivate::QStringList_removeDuplicates(QStringList *that)
+{
+    int n = that->size();
+    int j = 0;
+    QSet<QString> seen;
+    seen.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        const QString &s = that->at(i);
+        if (seen.contains(s))
+            continue;
+        seen.insert(s);
+        if (j != i)
+            (*that)[j] = s;
+        ++j;
+    }
+    if (n != j)
+        that->erase(that->begin() + j, that->end());
+    return n - j;
+}
 
 QT_END_NAMESPACE

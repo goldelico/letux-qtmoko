@@ -23,136 +23,165 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegList.h"
 
 #include <wtf/GetPtr.h>
 
+#include "SVGPathSeg.h"
 #include "SVGPathSegList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegList)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegListTableEntries[] =
+static const HashTableValue JSSVGPathSegListTableValues[2] =
 {
-    { "numberOfItems", JSSVGPathSegList::NumberOfItemsAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "numberOfItems", DontDelete|ReadOnly, (intptr_t)jsSVGPathSegListNumberOfItems, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegListTable = 
-{
-    2, 1, JSSVGPathSegListTableEntries, 1
-};
+static const HashTable JSSVGPathSegListTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegListTableValues, 0 };
+#else
+    { 2, 1, JSSVGPathSegListTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegListPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegListPrototypeTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "clear", JSSVGPathSegList::ClearFuncNum, DontDelete|Function, 0, &JSSVGPathSegListPrototypeTableEntries[9] },
-    { "getItem", JSSVGPathSegList::GetItemFuncNum, DontDelete|Function, 1, &JSSVGPathSegListPrototypeTableEntries[7] },
-    { "insertItemBefore", JSSVGPathSegList::InsertItemBeforeFuncNum, DontDelete|Function, 2, &JSSVGPathSegListPrototypeTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "initialize", JSSVGPathSegList::InitializeFuncNum, DontDelete|Function, 1, 0 },
-    { "replaceItem", JSSVGPathSegList::ReplaceItemFuncNum, DontDelete|Function, 2, 0 },
-    { "removeItem", JSSVGPathSegList::RemoveItemFuncNum, DontDelete|Function, 1, 0 },
-    { "appendItem", JSSVGPathSegList::AppendItemFuncNum, DontDelete|Function, 1, 0 }
+    { "clear", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionClear, (intptr_t)0 },
+    { "initialize", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionInitialize, (intptr_t)1 },
+    { "getItem", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionGetItem, (intptr_t)1 },
+    { "insertItemBefore", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionInsertItemBefore, (intptr_t)2 },
+    { "replaceItem", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionReplaceItem, (intptr_t)2 },
+    { "removeItem", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionRemoveItem, (intptr_t)1 },
+    { "appendItem", DontDelete|Function, (intptr_t)jsSVGPathSegListPrototypeFunctionAppendItem, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegListPrototypeTable = 
-{
-    2, 10, JSSVGPathSegListPrototypeTableEntries, 7
-};
+static const HashTable JSSVGPathSegListPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSSVGPathSegListPrototypeTableValues, 0 };
+#else
+    { 18, 15, JSSVGPathSegListPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegListPrototype::info = { "SVGPathSegListPrototype", 0, &JSSVGPathSegListPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegListPrototype::s_info = { "SVGPathSegListPrototype", 0, &JSSVGPathSegListPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegListPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegListPrototype>(exec, "[[JSSVGPathSegList.prototype]]");
+    return getDOMPrototype<JSSVGPathSegList>(exec);
 }
 
 bool JSSVGPathSegListPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSSVGPathSegListPrototypeFunction, JSObject>(exec, &JSSVGPathSegListPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGPathSegListPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSSVGPathSegList::info = { "SVGPathSegList", 0, &JSSVGPathSegListTable, 0 };
+const ClassInfo JSSVGPathSegList::s_info = { "SVGPathSegList", 0, &JSSVGPathSegListTable, 0 };
 
-JSSVGPathSegList::JSSVGPathSegList(ExecState* exec, SVGPathSegList* impl)
-    : m_impl(impl)
+JSSVGPathSegList::JSSVGPathSegList(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegList> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGPathSegListPrototype::self(exec));
 }
 
 JSSVGPathSegList::~JSSVGPathSegList()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGPathSegList::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegListPrototype(JSSVGPathSegListPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGPathSegList::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSegList, KJS::DOMObject>(exec, &JSSVGPathSegListTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSegList, Base>(exec, &JSSVGPathSegListTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegList::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegListNumberOfItems(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NumberOfItemsAttrNum: {
-        SVGPathSegList* imp = static_cast<SVGPathSegList*>(impl());
-
-        return jsNumber(imp->numberOfItems());
-    }
-    }
-    return 0;
+    SVGPathSegList* imp = static_cast<SVGPathSegList*>(static_cast<JSSVGPathSegList*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->numberOfItems());
 }
 
-JSValue* JSSVGPathSegListPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsSVGPathSegListPrototypeFunctionClear(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    if (!thisObj->inherits(&JSSVGPathSegList::info))
-      return throwError(exec, TypeError);
-
-    SVGPathSegList* imp = static_cast<SVGPathSegList*>(static_cast<JSSVGPathSegList*>(thisObj)->impl());
-
-    switch (id) {
-    case JSSVGPathSegList::ClearFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->clear(exec, args);
-    }
-    case JSSVGPathSegList::InitializeFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->initialize(exec, args);
-    }
-    case JSSVGPathSegList::GetItemFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->getItem(exec, args);
-    }
-    case JSSVGPathSegList::InsertItemBeforeFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->insertItemBefore(exec, args);
-    }
-    case JSSVGPathSegList::ReplaceItemFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->replaceItem(exec, args);
-    }
-    case JSSVGPathSegList::RemoveItemFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->removeItem(exec, args);
-    }
-    case JSSVGPathSegList::AppendItemFuncNum: {
-        return static_cast<JSSVGPathSegList*>(thisObj)->appendItem(exec, args);
-    }
-    }
-    (void)imp;
-    return 0;
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->clear(exec, args);
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGPathSegList* obj)
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionInitialize(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheDOMObject<SVGPathSegList, JSSVGPathSegList>(exec, obj);
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->initialize(exec, args);
 }
-SVGPathSegList* toSVGPathSegList(KJS::JSValue* val)
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionGetItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return val->isObject(&JSSVGPathSegList::info) ? static_cast<JSSVGPathSegList*>(val)->impl() : 0;
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->getItem(exec, args);
+}
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionInsertItemBefore(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->insertItemBefore(exec, args);
+}
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionReplaceItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->replaceItem(exec, args);
+}
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionRemoveItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->removeItem(exec, args);
+}
+
+JSValuePtr jsSVGPathSegListPrototypeFunctionAppendItem(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGPathSegList::s_info))
+        return throwError(exec, TypeError);
+    JSSVGPathSegList* castedThisObj = static_cast<JSSVGPathSegList*>(asObject(thisValue));
+    return castedThisObj->appendItem(exec, args);
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGPathSegList* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGPathSegList>(exec, object, context);
+}
+SVGPathSegList* toSVGPathSegList(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGPathSegList::s_info) ? static_cast<JSSVGPathSegList*>(asObject(value))->impl() : 0;
 }
 
 }

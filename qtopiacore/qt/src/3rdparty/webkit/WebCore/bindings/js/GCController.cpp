@@ -26,16 +26,34 @@
 #include "config.h"
 #include "GCController.h"
 
-#include <kjs/collector.h>
-#include <kjs/JSLock.h>
+#include "JSDOMWindow.h"
+#include <runtime/JSGlobalData.h>
+#include <runtime/JSLock.h>
+#include <runtime/Collector.h>
+#include <wtf/StdLibExtras.h>
 
-using namespace KJS;
+#if USE(PTHREADS)
+#include <pthread.h>
+#endif
+
+using namespace JSC;
 
 namespace WebCore {
 
+#if USE(PTHREADS)
+
+static void* collect(void*)
+{
+    JSLock lock(false);
+    JSDOMWindow::commonJSGlobalData()->heap.collect();
+    return 0;
+}
+
+#endif
+
 GCController& gcController()
 {
-    static GCController staticGCController;
+    DEFINE_STATIC_LOCAL(GCController, staticGCController, ());
     return staticGCController;
 }
 
@@ -52,8 +70,25 @@ void GCController::garbageCollectSoon()
 
 void GCController::gcTimerFired(Timer<GCController>*)
 {
-    JSLock lock;
-    Collector::collect();
+    JSLock lock(false);
+    JSDOMWindow::commonJSGlobalData()->heap.collect();
 }
-    
+
+void GCController::garbageCollectNow()
+{
+    JSLock lock(false);
+    JSDOMWindow::commonJSGlobalData()->heap.collect();
+}
+
+void GCController::garbageCollectOnAlternateThreadForDebugging(bool waitUntilDone)
+{
+#if USE(PTHREADS)
+    pthread_t thread;
+    pthread_create(&thread, NULL, collect, NULL);
+
+    if (waitUntilDone)
+        pthread_join(thread, NULL);
+#endif
+}
+
 } // namespace WebCore

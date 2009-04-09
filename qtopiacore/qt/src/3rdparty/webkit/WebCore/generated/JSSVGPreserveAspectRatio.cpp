@@ -23,127 +23,123 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPreserveAspectRatio.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPreserveAspectRatio.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPreserveAspectRatio)
+
 /* Hash table */
 
-static const HashEntry JSSVGPreserveAspectRatioTableEntries[] =
+static const HashTableValue JSSVGPreserveAspectRatioTableValues[4] =
 {
-    { "meetOrSlice", JSSVGPreserveAspectRatio::MeetOrSliceAttrNum, DontDelete, 0, &JSSVGPreserveAspectRatioTableEntries[3] },
-    { 0, 0, 0, 0, 0 },
-    { "align", JSSVGPreserveAspectRatio::AlignAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSSVGPreserveAspectRatio::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "align", DontDelete, (intptr_t)jsSVGPreserveAspectRatioAlign, (intptr_t)setJSSVGPreserveAspectRatioAlign },
+    { "meetOrSlice", DontDelete, (intptr_t)jsSVGPreserveAspectRatioMeetOrSlice, (intptr_t)setJSSVGPreserveAspectRatioMeetOrSlice },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPreserveAspectRatioTable = 
-{
-    2, 4, JSSVGPreserveAspectRatioTableEntries, 3
-};
+static const HashTable JSSVGPreserveAspectRatioTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSSVGPreserveAspectRatioTableValues, 0 };
+#else
+    { 8, 7, JSSVGPreserveAspectRatioTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSSVGPreserveAspectRatioConstructorTableEntries[] =
+static const HashTableValue JSSVGPreserveAspectRatioConstructorTableValues[15] =
 {
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_NONE", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioConstructorTableEntries[17] },
-    { "SVG_PRESERVEASPECTRATIO_UNKNOWN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioConstructorTableEntries[14] },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_MEETORSLICE_UNKNOWN", SVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_MEETORSLICE_SLICE", SVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioConstructorTableEntries[16] },
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioConstructorTableEntries[15] },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_MEETORSLICE_MEET", SVGPreserveAspectRatio::SVG_MEETORSLICE_MEET, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_PRESERVEASPECTRATIO_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_UNKNOWN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_NONE", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_NONE, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMAX, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMAX, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMAX, (intptr_t)0 },
+    { "SVG_MEETORSLICE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_UNKNOWN, (intptr_t)0 },
+    { "SVG_MEETORSLICE_MEET", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_MEET, (intptr_t)0 },
+    { "SVG_MEETORSLICE_SLICE", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_SLICE, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPreserveAspectRatioConstructorTable = 
-{
-    2, 18, JSSVGPreserveAspectRatioConstructorTableEntries, 14
-};
+static const HashTable JSSVGPreserveAspectRatioConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGPreserveAspectRatioConstructorTableValues, 0 };
+#else
+    { 35, 31, JSSVGPreserveAspectRatioConstructorTableValues, 0 };
+#endif
 
 class JSSVGPreserveAspectRatioConstructor : public DOMObject {
 public:
     JSSVGPreserveAspectRatioConstructor(ExecState* exec)
+        : DOMObject(JSSVGPreserveAspectRatioConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSSVGPreserveAspectRatioPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSSVGPreserveAspectRatioConstructor::info = { "SVGPreserveAspectRatioConstructor", 0, &JSSVGPreserveAspectRatioConstructorTable, 0 };
+const ClassInfo JSSVGPreserveAspectRatioConstructor::s_info = { "SVGPreserveAspectRatioConstructor", 0, &JSSVGPreserveAspectRatioConstructorTable, 0 };
 
 bool JSSVGPreserveAspectRatioConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSSVGPreserveAspectRatioConstructor, DOMObject>(exec, &JSSVGPreserveAspectRatioConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPreserveAspectRatioConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPreserveAspectRatioPrototypeTableEntries[] =
+static const HashTableValue JSSVGPreserveAspectRatioPrototypeTableValues[15] =
 {
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_NONE", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioPrototypeTableEntries[17] },
-    { "SVG_PRESERVEASPECTRATIO_UNKNOWN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioPrototypeTableEntries[14] },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "SVG_MEETORSLICE_UNKNOWN", SVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_MEETORSLICE_SLICE", SVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioPrototypeTableEntries[16] },
-    { "SVG_PRESERVEASPECTRATIO_XMAXYMIN", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMINYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID, DontDelete|ReadOnly, 0, &JSSVGPreserveAspectRatioPrototypeTableEntries[15] },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMID", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_PRESERVEASPECTRATIO_XMIDYMAX", SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_MEETORSLICE_MEET", SVGPreserveAspectRatio::SVG_MEETORSLICE_MEET, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_PRESERVEASPECTRATIO_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_UNKNOWN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_NONE", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_NONE, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMIN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMIN, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMID", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMID, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMINYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMAX, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMIDYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMAX, (intptr_t)0 },
+    { "SVG_PRESERVEASPECTRATIO_XMAXYMAX", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMAX, (intptr_t)0 },
+    { "SVG_MEETORSLICE_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_UNKNOWN, (intptr_t)0 },
+    { "SVG_MEETORSLICE_MEET", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_MEET, (intptr_t)0 },
+    { "SVG_MEETORSLICE_SLICE", DontDelete|ReadOnly, (intptr_t)jsSVGPreserveAspectRatioSVG_MEETORSLICE_SLICE, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPreserveAspectRatioPrototypeTable = 
-{
-    2, 18, JSSVGPreserveAspectRatioPrototypeTableEntries, 14
-};
+static const HashTable JSSVGPreserveAspectRatioPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSSVGPreserveAspectRatioPrototypeTableValues, 0 };
+#else
+    { 35, 31, JSSVGPreserveAspectRatioPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPreserveAspectRatioPrototype::info = { "SVGPreserveAspectRatioPrototype", 0, &JSSVGPreserveAspectRatioPrototypeTable, 0 };
+const ClassInfo JSSVGPreserveAspectRatioPrototype::s_info = { "SVGPreserveAspectRatioPrototype", 0, &JSSVGPreserveAspectRatioPrototypeTable, 0 };
 
 JSObject* JSSVGPreserveAspectRatioPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPreserveAspectRatioPrototype>(exec, "[[JSSVGPreserveAspectRatio.prototype]]");
+    return getDOMPrototype<JSSVGPreserveAspectRatio>(exec);
 }
 
 bool JSSVGPreserveAspectRatioPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -151,83 +147,152 @@ bool JSSVGPreserveAspectRatioPrototype::getOwnPropertySlot(ExecState* exec, cons
     return getStaticValueSlot<JSSVGPreserveAspectRatioPrototype, JSObject>(exec, &JSSVGPreserveAspectRatioPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPreserveAspectRatioPrototype::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
+const ClassInfo JSSVGPreserveAspectRatio::s_info = { "SVGPreserveAspectRatio", 0, &JSSVGPreserveAspectRatioTable, 0 };
 
-const ClassInfo JSSVGPreserveAspectRatio::info = { "SVGPreserveAspectRatio", 0, &JSSVGPreserveAspectRatioTable, 0 };
-
-JSSVGPreserveAspectRatio::JSSVGPreserveAspectRatio(ExecState* exec, SVGPreserveAspectRatio* impl)
-    : m_impl(impl)
+JSSVGPreserveAspectRatio::JSSVGPreserveAspectRatio(PassRefPtr<Structure> structure, PassRefPtr<SVGPreserveAspectRatio> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGPreserveAspectRatioPrototype::self(exec));
 }
 
 JSSVGPreserveAspectRatio::~JSSVGPreserveAspectRatio()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGPreserveAspectRatio::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPreserveAspectRatioPrototype(JSSVGPreserveAspectRatioPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGPreserveAspectRatio::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPreserveAspectRatio, KJS::DOMObject>(exec, &JSSVGPreserveAspectRatioTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPreserveAspectRatio, Base>(exec, &JSSVGPreserveAspectRatioTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPreserveAspectRatio::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPreserveAspectRatioAlign(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AlignAttrNum: {
-        SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(impl());
-
-        return jsNumber(imp->align());
-    }
-    case MeetOrSliceAttrNum: {
-        SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(impl());
-
-        return jsNumber(imp->meetOrSlice());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(static_cast<JSSVGPreserveAspectRatio*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->align());
 }
 
-void JSSVGPreserveAspectRatio::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPreserveAspectRatioMeetOrSlice(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPreserveAspectRatio, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGPreserveAspectRatioTable, this);
+    SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(static_cast<JSSVGPreserveAspectRatio*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->meetOrSlice());
 }
 
-void JSSVGPreserveAspectRatio::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGPreserveAspectRatioConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AlignAttrNum: {
-        SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(impl());
-
-        imp->setAlign(value->toInt32(exec));
-        break;
-    }
-    case MeetOrSliceAttrNum: {
-        SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(impl());
-
-        imp->setMeetOrSlice(value->toInt32(exec));
-        break;
-    }
-    }
+    return static_cast<JSSVGPreserveAspectRatio*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSSVGPreserveAspectRatio::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGPreserveAspectRatio, Base>(exec, propertyName, value, &JSSVGPreserveAspectRatioTable, this, slot);
 }
 
-JSValue* JSSVGPreserveAspectRatio::getConstructor(ExecState* exec)
+void setJSSVGPreserveAspectRatioAlign(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSSVGPreserveAspectRatioConstructor>(exec, "[[SVGPreserveAspectRatio.constructor]]");
+    SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(static_cast<JSSVGPreserveAspectRatio*>(thisObject)->impl());
+    imp->setAlign(value->toInt32(exec));
+    if (static_cast<JSSVGPreserveAspectRatio*>(thisObject)->context())
+        static_cast<JSSVGPreserveAspectRatio*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPreserveAspectRatio*>(thisObject)->impl()->associatedAttributeName());
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGPreserveAspectRatio* obj)
+
+void setJSSVGPreserveAspectRatioMeetOrSlice(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<SVGPreserveAspectRatio, JSSVGPreserveAspectRatio>(exec, obj);
+    SVGPreserveAspectRatio* imp = static_cast<SVGPreserveAspectRatio*>(static_cast<JSSVGPreserveAspectRatio*>(thisObject)->impl());
+    imp->setMeetOrSlice(value->toInt32(exec));
+    if (static_cast<JSSVGPreserveAspectRatio*>(thisObject)->context())
+        static_cast<JSSVGPreserveAspectRatio*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPreserveAspectRatio*>(thisObject)->impl()->associatedAttributeName());
 }
-SVGPreserveAspectRatio* toSVGPreserveAspectRatio(KJS::JSValue* val)
+
+JSValuePtr JSSVGPreserveAspectRatio::getConstructor(ExecState* exec)
 {
-    return val->isObject(&JSSVGPreserveAspectRatio::info) ? static_cast<JSSVGPreserveAspectRatio*>(val)->impl() : 0;
+    return getDOMConstructor<JSSVGPreserveAspectRatioConstructor>(exec);
+}
+
+// Constant getters
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_NONE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMIN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMIN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMIN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMID(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(5));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMID(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(6));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMID(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(7));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMINYMAX(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(8));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMIDYMAX(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(9));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_PRESERVEASPECTRATIO_XMAXYMAX(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(10));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_MEETORSLICE_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_MEETORSLICE_MEET(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsSVGPreserveAspectRatioSVG_MEETORSLICE_SLICE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGPreserveAspectRatio* object, SVGElement* context)
+{
+    return getDOMObjectWrapper<JSSVGPreserveAspectRatio>(exec, object, context);
+}
+SVGPreserveAspectRatio* toSVGPreserveAspectRatio(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGPreserveAspectRatio::s_info) ? static_cast<JSSVGPreserveAspectRatio*>(asObject(value))->impl() : 0;
 }
 
 }

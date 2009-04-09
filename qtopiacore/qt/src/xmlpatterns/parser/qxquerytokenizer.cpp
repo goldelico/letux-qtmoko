@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,7 +49,8 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QPatternist {
+namespace QPatternist
+{
 
 #define handleWhitespace()                      \
 {                                               \
@@ -55,14 +60,15 @@ namespace QPatternist {
 }
 
 XQueryTokenizer::XQueryTokenizer(const QString &query,
-                                 const QUrl &location) : m_data(query)
-                                                       , m_length(query.length())
-                                                       , m_location(location)
-                                                       , m_state(Default)
-                                                       , m_pos(0)
-                                                       , m_line(1)
-                                                       , m_columnOffset(0)
-                                                       , m_scanOnly(false)
+                                 const QUrl &location,
+                                 const State startingState) : Tokenizer(location)
+                                                            , m_data(query)
+                                                            , m_length(query.length())
+                                                            , m_state(startingState)
+                                                            , m_pos(0)
+                                                            , m_line(1)
+                                                            , m_columnOffset(0)
+                                                            , m_scanOnly(false)
 {
     Q_ASSERT(location.isValid() || location.isEmpty());
 }
@@ -433,12 +439,12 @@ bool XQueryTokenizer::isTypeToken(const TokenType t)
     }
 }
 
-Tokenizer::Token XQueryTokenizer::tokenizeNCNameOrQXmlName()
+Tokenizer::Token XQueryTokenizer::tokenizeNCNameOrQName()
 {
     const int start = m_pos;
 
     const Token t1 = tokenizeNCName();
-    if(t1.type == ERROR)
+    if(t1.hasError())
         return t1;
 
     if(peekCurrent() != ':' || peekAhead() == '=')
@@ -447,7 +453,7 @@ Tokenizer::Token XQueryTokenizer::tokenizeNCNameOrQXmlName()
     ++m_pos;
 
     const Token t2 = tokenizeNCName();
-    if(t2.type == ERROR)
+    if(t2.hasError())
         return t2;
     else
         return Token(QNAME, m_data.mid(start, m_pos - start));
@@ -917,7 +923,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                         m_pos += 2; /* Consume *:. */
                         const Token nc = tokenizeNCName();
 
-                        if(nc.type == ERROR)
+                        if(nc.hasError())
                             return error();
                         else
                             return tokenAndChangeState(ANY_PREFIX, nc.value, Operator);
@@ -934,7 +940,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                         case ':':
                             return tokenAndChangeState(COLONCOLON, Default, 2);
                         default:
-                            return tokenAndChangeState(COLON, Default);
+                            return error();
                     }
                 }
                 case '!':
@@ -1164,8 +1170,37 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                     }
                     default:
                     {
+                        /* We have read in a token which is for instance
+                         * "return", and now it can be an element
+                         * test("element") a node kind test("element()"), or a
+                         * computed element constructor("element name {...").
+                         * We need to do a two-token lookahead here, because
+                         * "element return" can be an element test followed by
+                         * the return keyword, but it can also be an element
+                         * constructor("element return {"). */
                         if(isNCNameStart(current()))
-                            return Token(keyword->token);
+                        {
+                            const int currentPos = m_pos;
+                            const Token token2 = tokenizeNCNameOrQName();
+
+                            if(token2.hasError())
+                                return token2;
+
+                            handleWhitespace();
+
+                            if(peekCurrent() == '{')
+                            {
+                                /* An element constructor. */
+                                m_tokenStack.push(token2);
+                                return Token(keyword->token);
+                            }
+
+                            /* We jump back in the stream, we need to tokenize token2 according
+                             * to the state. */
+                            m_pos = currentPos;
+                            setState(Operator);
+                            return Token(NCNAME, QLatin1String(keyword->name));
+                        }
                     }
                 }
             }
@@ -1366,7 +1401,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                 return tokenAndAdvance(DOLLAR);
 
             setState(Operator);
-            return tokenizeNCNameOrQXmlName();
+            return tokenizeNCNameOrQName();
             Q_ASSERT(false);
         }
         case ItemType:
@@ -1379,10 +1414,11 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                     return tokenAndChangeState(DOLLAR, VarName);
             }
 
-            const Token name(tokenizeNCNameOrQXmlName());
+            const Token name(tokenizeNCNameOrQName());
 
-            if(name.type == ERROR)
+            if(name.hasError())
                 return error();
+
             else if(name.type == QNAME)
             {
                 setState(OccurrenceIndicator);
@@ -1420,14 +1456,16 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                     return tokenAndAdvance(COMMA);
                 case '*':
                     return tokenAndAdvance(STAR);
+                case '?':
+                    return tokenAndAdvance(QUESTION);
                 case '\'':
                 /* Fallthrough. */
                 case '"':
                     return tokenizeStringLiteral();
             }
 
-            const Token nc(tokenizeNCNameOrQXmlName());
-            if(nc.type != NCNAME && nc.type != QNAME)
+            const Token nc(tokenizeNCNameOrQName());
+            if(nc.hasError())
                 return nc;
 
             const TokenType ws = consumeWhitespace();
@@ -1555,7 +1593,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                 case '"':
                     return tokenAndChangeState(QUOTE, QuotAttributeContent);
                 default:
-                    return tokenizeNCNameOrQXmlName();
+                    return tokenizeNCNameOrQName();
             }
             Q_ASSERT(false);
         }
@@ -1577,7 +1615,16 @@ Tokenizer::Token XQueryTokenizer::nextToken()
             while(true)
             {
                 if(atEnd())
-                    return Token(END_OF_FILE);
+                {
+                    /* In the case that the XSL-T tokenizer invokes us with
+                     * default state QuotAttributeContent, we need to be able
+                     * to return a single string, in case that is all we have
+                     * accumulated. */
+                    if(result.isEmpty())
+                        return Token(END_OF_FILE);
+                    else
+                        return Token(STRING_LITERAL, result);
+                }
 
                 const QChar curr(current());
 
@@ -1893,7 +1940,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                 return tokenAndAdvance(G_GT);
             }
             else
-                return tokenizeNCNameOrQXmlName();
+                return tokenizeNCNameOrQName();
             Q_ASSERT(false);
         }
         case XMLComment:
@@ -1925,8 +1972,7 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                 return Token(END_OF_FILE);
 
             setState(PragmaContent);
-            return tokenizeNCNameOrQXmlName();
-            Q_ASSERT(false);
+            return tokenizeNCNameOrQName();
         }
         case PragmaContent:
         {
@@ -2132,11 +2178,6 @@ Tokenizer::Token XQueryTokenizer::nextToken(YYLTYPE *const sourceLocator)
     }
 }
 
-QUrl XQueryTokenizer::uri() const
-{
-    return m_location;
-}
-
 int XQueryTokenizer::commenceScanOnly()
 {
     m_scanOnly = true;
@@ -2147,6 +2188,10 @@ void XQueryTokenizer::resumeTokenizationFrom(const int pos)
 {
     m_scanOnly = false;
     m_pos = pos;
+}
+
+void XQueryTokenizer::setParserContext(const ParserContext::Ptr &)
+{
 }
 
 #undef handleWhitespace

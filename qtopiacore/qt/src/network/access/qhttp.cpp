@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,7 @@
 # include "qauthenticator.h"
 # include "qauthenticator_p.h"
 # include "qdebug.h"
+# include "qtimer.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -67,7 +72,7 @@ class QHttpNormalRequest;
 class QHttpRequest
 {
 public:
-    QHttpRequest()
+    QHttpRequest() : finished(false)
     { id = idCounter.fetchAndAddRelaxed(1); }
     virtual ~QHttpRequest()
     { }
@@ -80,6 +85,7 @@ public:
     virtual QIODevice *destinationDevice() = 0;
 
     int id;
+    bool finished;
 
 private:
     static QBasicAtomicInt idCounter;
@@ -95,7 +101,7 @@ public:
           deleteSocket(0), state(QHttp::Unconnected),
           error(QHttp::NoError), port(0), mode(QHttp::ConnectionModeHttp),
           toDevice(0), postDevice(0), bytesDone(0), chunkedSize(-1),
-          repost(false)
+          repost(false), pendingPost(false)
     {
     }
 
@@ -117,6 +123,7 @@ public:
     void _q_slotBytesWritten(qint64 numBytes);
     void _q_slotDoFinished();
     void _q_slotSendRequest();
+    void _q_continuePost();
 
     int addRequest(QHttpNormalRequest *);
     int addRequest(QHttpRequest *);
@@ -163,6 +170,9 @@ public:
 #endif
     QAuthenticator authenticator;
     bool repost;
+    bool hasFinishedWithError;
+    bool pendingPost;
+    QTimer post100ContinueTimer;
 };
 
 QBasicAtomicInt QHttpRequest::idCounter = Q_BASIC_ATOMIC_INITIALIZER(1);
@@ -506,7 +516,7 @@ public:
     \brief The QHttpHeader class contains header information for HTTP.
 
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     In most cases you should use the more specialized derivatives of
     this class, QHttpResponseHeader and QHttpRequestHeader, rather
@@ -664,7 +674,7 @@ bool QHttpHeader::parse(const QString &str)
 
     QStringList lines;
     QStringList::Iterator it = lst.begin();
-    for(; it != lst.end(); ++it) {
+    for (; it != lst.end(); ++it) {
         if (!(*it).isEmpty()) {
             if ((*it)[0].isSpace()) {
                 if (!lines.isEmpty()) {
@@ -679,7 +689,7 @@ bool QHttpHeader::parse(const QString &str)
 
     int number = 0;
     it = lines.begin();
-    for(; it != lines.end(); ++it) {
+    for (; it != lines.end(); ++it) {
         if (!parseLine(*it, number++)) {
             d->valid = false;
             return false;
@@ -1000,7 +1010,7 @@ public:
     \brief The QHttpResponseHeader class contains response header information for HTTP.
 
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     This class is used by the QHttp class to report the header
     information that the client received from the server.
@@ -1204,7 +1214,7 @@ public:
     \brief The QHttpRequestHeader class contains request header information for HTTP.
 
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     This class is used in the QHttp class to report the header
     information if the client requests something from the server.
@@ -1408,7 +1418,7 @@ QString QHttpRequestHeader::toString() const
     \brief The QHttp class provides an implementation of the HTTP protocol.
 
     \ingroup io
-    \module network
+    \inmodule QtNetwork
     \mainclass
 
     This class provides a direct interface to HTTP that allows you to
@@ -1438,7 +1448,7 @@ QString QHttpRequestHeader::toString() const
     To make an HTTP request you must set up suitable HTTP headers. The
     following example demonstrates, how to request the main HTML page
     from the Trolltech home page (i.e., the URL
-    \c http://www.trolltech.com/index.html):
+    \c http://qtsoftware.com/index.html):
 
     \snippet doc/src/snippets/code/src_network_access_qhttp.cpp 2
 
@@ -1563,6 +1573,8 @@ void QHttpPrivate::init()
     Q_Q(QHttp);
     errorString = QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Unknown error"));
     QMetaObject::invokeMethod(q, "_q_slotDoFinished", Qt::QueuedConnection);
+    post100ContinueTimer.setSingleShot(true);
+    QObject::connect(&post100ContinueTimer, SIGNAL(timeout()), q, SLOT(_q_continuePost()));
 }
 
 /*!
@@ -2145,7 +2157,7 @@ int QHttp::setProxy(const QNetworkProxy &proxy)
     as specified in the constructor.
 
     \a path must be a absolute path like \c /index.html or an
-    absolute URI like \c http://www.trolltech.com/index.html and
+    absolute URI like \c http://qtsoftware.com/index.html and
     must be encoded with either QUrl::toPercentEncoding() or
     QUrl::encodedPath().
 
@@ -2184,7 +2196,7 @@ int QHttp::get(const QString &path, QIODevice *to)
     as specified in the constructor.
 
     \a path must be an absolute path like \c /index.html or an
-    absolute URI like \c http://www.trolltech.com/index.html and
+    absolute URI like \c http://qtsoftware.com/index.html and
     must be encoded with either QUrl::toPercentEncoding() or
     QUrl::encodedPath().
 
@@ -2235,7 +2247,7 @@ int QHttp::post(const QString &path, const QByteArray &data, QIODevice *to)
     or as specified in the constructor.
 
     \a path must be an absolute path like \c /index.html or an
-    absolute URI like \c http://www.trolltech.com/index.html.
+    absolute URI like \c http://qtsoftware.com/index.html.
 
     The function does not block; instead, it returns immediately. The request
     is scheduled, and its execution is performed asynchronously. The
@@ -2497,7 +2509,19 @@ void QHttpPrivate::finishedWithSuccess()
         return;
     QHttpRequest *r = pending.first();
 
+    // did we recurse?
+    if (r->finished)
+        return;
+    r->finished = true;
+    hasFinishedWithError = false;
+
     emit q->requestFinished(r->id, false);
+    if (hasFinishedWithError) {
+        // we recursed and changed into an error. The finishedWithError function
+        // below has emitted the done(bool) signal and cleared the queue by now.
+        return;
+    }
+
     pending.removeFirst();
     delete r;
 
@@ -2514,14 +2538,20 @@ void QHttpPrivate::finishedWithError(const QString &detail, int errorCode)
     if (pending.isEmpty())
         return;
     QHttpRequest *r = pending.first();
+    hasFinishedWithError = true;
 
     error = QHttp::Error(errorCode);
     errorString = detail;
-    emit q->requestFinished(r->id, true);
+
+    // did we recurse?
+    if (!r->finished) {
+        r->finished = true;
+        emit q->requestFinished(r->id, true);
+    }
 
     while (!pending.isEmpty())
         delete pending.takeFirst();
-    emit q->done(true);
+    emit q->done(hasFinishedWithError);
 }
 
 void QHttpPrivate::_q_slotClosed()
@@ -2545,6 +2575,15 @@ void QHttpPrivate::_q_slotClosed()
     QMetaObject::invokeMethod(q, "_q_slotDoFinished", Qt::QueuedConnection);
 }
 
+void QHttpPrivate::_q_continuePost()
+{
+    if (pendingPost) {
+        pendingPost = false;
+        setState(QHttp::Sending);
+        _q_slotBytesWritten(0);
+    }
+}
+
 void QHttpPrivate::_q_slotConnected()
 {
     if (state != QHttp::Sending) {
@@ -2562,6 +2601,12 @@ void QHttpPrivate::_q_slotConnected()
     if (postDevice) {
         postDevice->seek(0);    // reposition the device
         bytesTotal += postDevice->size();
+        //check for 100-continue
+        if (header.value(QLatin1String("expect")).contains(QLatin1String("100-continue"), Qt::CaseInsensitive)) {
+            //create a time out for 2 secs.
+            pendingPost = true;
+            post100ContinueTimer.start(2000);
+        }
     } else {
         bytesTotal += buffer.size();
         socket->write(buffer, buffer.size());
@@ -2612,6 +2657,9 @@ void QHttpPrivate::_q_slotBytesWritten(qint64 written)
     Q_Q(QHttp);
     bytesDone += written;
     emit q->dataSendProgress(bytesDone, bytesTotal);
+
+    if (pendingPost)
+        return;
 
     if (!postDevice)
         return;
@@ -2732,10 +2780,19 @@ void QHttpPrivate::_q_slotReadyRead()
             buffer.clear();
         }
 
-        // The 100-continue header is ignored, because when using the
-        // POST method, we send both the request header and data in
+        if (response.statusCode() == 100 && pendingPost) {
+            // if we have pending POST, start sending data otherwise ignore
+            post100ContinueTimer.stop();
+            QMetaObject::invokeMethod(q, "_q_continuePost", Qt::QueuedConnection); 
+            return;
+        }
+
+        // The 100-continue header is ignored (in case of no 'expect:100-continue' header),
+        // because when using the POST method, we send both the request header and data in
         // one chunk.
         if (response.statusCode() != 100) {
+            post100ContinueTimer.stop();
+            pendingPost = false;
             readHeader = false;
             if (response.hasKey(QLatin1String("transfer-encoding")) &&
                 response.value(QLatin1String("transfer-encoding")).toLower().contains(QLatin1String("chunked")))
@@ -2838,7 +2895,7 @@ void QHttpPrivate::_q_slotReadyRead()
             }
         } else if (response.hasContentLength()) {
             if (repost && (n < response.contentLength())) {
-                // wait for the content to be available fully 
+                // wait for the content to be available fully
                 // if repost is required, the content is ignored
                 return;
             }
@@ -2860,13 +2917,19 @@ void QHttpPrivate::_q_slotReadyRead()
         if (arr && !repost) {
             n = arr->size();
             if (toDevice) {
-                toDevice->write(*arr, n);
+                qint64 bytesWritten;
+                bytesWritten = toDevice->write(*arr, n);
                 delete arr;
                 arr = 0;
-                bytesDone += n;
+                // if writing to the device does not succeed, quit with error
+                if (bytesWritten == -1 || bytesWritten < n) {
+                    finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Error writing response to device")), QHttp::UnknownError);
+                } else {
+                    bytesDone += bytesWritten;
 #if defined(QHTTP_DEBUG)
                 qDebug("QHttp::_q_slotReadyRead(): read %lld bytes (%lld bytes done)", n, bytesDone);
 #endif
+                }
                 if (response.hasContentLength())
                     emit q->dataReadProgress(bytesDone, response.contentLength());
                 else

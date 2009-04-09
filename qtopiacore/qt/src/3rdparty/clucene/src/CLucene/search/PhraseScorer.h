@@ -21,13 +21,13 @@ CL_NS_DEF(search)
 	class PhraseScorer: public Scorer {
 	private:
 		Weight* weight;
-		float_t freq;
+		qreal freq;
 		bool firstTime;
 		bool more;
 
 	protected:
 		uint8_t* norms;
-		float_t value;
+		qreal value;
 
 		PhraseQueue* pq;        //is used to order the list point to by first and last
 		PhrasePositions* first; //Points to the first in the list of PhrasePositions
@@ -41,14 +41,14 @@ CL_NS_DEF(search)
 
 		int32_t doc() const { return first->doc; }
 		bool next();
-		float_t score();
+		qreal score();
 		bool skipTo(int32_t target);
 
 
 		void explain(int32_t doc, Explanation* ret);
 		TCHAR* toString();
 	protected:
-		virtual float_t phraseFreq() =0;
+		virtual qreal phraseFreq() =0;
 
         //Transfers the PhrasePositions from the PhraseQueue pq to
         //the PhrasePositions list with first as its first element

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -309,7 +313,7 @@ static int unpackControlTypes(QSizePolicy::ControlTypes controls, QSizePolicy::C
     information on custom delegates.
 
     The drawing of item view headers is also done by the style, giving
-    control over size of header items and row and column sizes. 
+    control over size of header items and row and column sizes.
 
     \sa QStyleOption, QStylePainter, {Styles Example},
         {Implementing Styles and Style Aware Widgets}, QStyledItemDelegate
@@ -585,7 +589,7 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
                                      and toolbar contents.
     \value PE_IndicatorDockWidgetResizeHandle  Resize handle for dock windows.
 
-    \value PE_Frame  Generic frame; see also QFrame.
+    \value PE_Frame  Generic frame
     \value PE_FrameMenu  Frame for popup windows/menus; see also QMenu.
     \value PE_PanelMenuBar  Panel for menu bars.
     \value PE_PanelScrollAreaCorner  Panel at the bottom-right (or
@@ -619,7 +623,7 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PE_IndicatorToolBarSeparator  The separator in a toolbar.
     \value PE_PanelToolBar  The panel for a toolbar.
     \value PE_PanelTipLabel The panel for a tip label.
-    \value PE_FrameTabBarBase The frame that is drawn for a tab bar, usually drawn for a tab bar that isn't part of a tab widget.
+    \value PE_FrameTabBarBase The frame that is drawn for a tab bar, ususally drawn for a tab bar that isn't part of a tab widget.
     \value PE_IndicatorTabTear An indicator that a tab is partially scrolled out of the visible tab bar when there are many tabs.
     \value PE_IndicatorColumnViewArrow An arrow in a QColumnView.
 
@@ -635,6 +639,9 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PE_PanelItemViewRow The background of a row in an item view.
 
     \value PE_PanelStatusBar The panel for a status bar.
+
+    \value PE_IndicatorTabClose The close button on a tab bar.
+    \value PE_PanelMenu The panel for a menu.
 
     \sa drawPrimitive()
 */
@@ -662,7 +669,7 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value State_Active Indicates that the widget is active.
     \value State_AutoRaise Used to indicate if auto-raise appearance should be usd on a tool button.
     \value State_Children Used to indicate if an item view branch has children.
-    \value State_DownArrow Used to indicate if a down arrow should be visible on the widget. 
+    \value State_DownArrow Used to indicate if a down arrow should be visible on the widget.
     \value State_Editing Used to indicate if an editor is opened on the widget.
     \value State_Enabled Used to indicate if the widget is enabled.
     \value State_HasEditFocus Used to indicate if the widget currently has edit focus.
@@ -840,6 +847,8 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value CE_ToolBoxTabLabel  The toolbox's tab label.
     \value CE_HeaderEmptyArea  The area of a header view where there are no header sections.
 
+    \value CE_ShapedFrame The frame with the shape specified in the QStyleOptionFrameV3; see QFrame.
+
     \omitvalue CE_ColumnViewGrip
 
     \sa drawControl()
@@ -987,6 +996,7 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \omitvalue SE_ViewItemCheckIndicator
 
     \value SE_FrameContents  Area for a frame's contents.
+    \value SE_ShapedFrameContents Area for a frame's contents using the shape in QStyleOptionFrameV3; see QFrame
     \value SE_FrameLayoutItem  Area that counts for the parent layout.
 
     \value SE_HeaderArrow Area for the sort indicator for a header.
@@ -1033,6 +1043,10 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value SE_ItemViewItemDecoration Area for a view item's decoration (icon).
     \value SE_ItemViewItemText Area for a view item's text.
     \value SE_ItemViewItemFocusRect Area for a view item's focus rect.
+
+    \value SE_TabBarTabLeftButton Area for a widget on the left side of a tab in a tab bar.
+    \value SE_TabBarTabRightButton Area for a widget on the right side of a tab in a tab bar.
+    \value SE_TabBarTabText Area for the text on a tab in a tab bar.
 
     \sa subElementRect()
 */
@@ -1395,9 +1409,9 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PM_CheckListControllerSize  Area (width/height) of the
         controller in a Q3CheckListItem.
 
-    \value PM_DialogButtonsSeparator  Distance between buttons in a dialog buttons widget.
-    \value PM_DialogButtonsButtonWidth  Minimum width of a button in a dialog buttons widget.
-    \value PM_DialogButtonsButtonHeight  Minimum height of a button in a dialog buttons widget.
+    \omitvalue PM_DialogButtonsSeparator
+    \omitvalue PM_DialogButtonsButtonWidth
+    \omitvalue PM_DialogButtonsButtonHeight
 
     \value PM_HeaderMarkSize The size of the sort indicator in a header.
     \value PM_HeaderGripMargin The size of the resize grip in a header.
@@ -1422,7 +1436,9 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PM_ButtonIconSize The default size of button icons
     \value PM_TextCursorWidth The width of the cursor in a line edit or text edit
     \value PM_TabBar_ScrollButtonOverlap The distance between the left and right buttons in a tab bar.
-    
+
+    \value PM_TabCloseIndicatorWidth The default width of a close button on a tab in a tab bar.
+    \value PM_TabCloseIndicatorHeight The default height of a close button on a tab in a tab bar.
 
     \value PM_CustomBase Base value for custom pixel metrics.  Custom
     values must be greater than this value.
@@ -1440,6 +1456,11 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PM_DefaultLayoutSpacing  Use PM_LayoutHorizontalSpacing
                                     and PM_LayoutVerticalSpacing
                                     instead.
+
+    \value PM_ScrollView_ScrollBarSpacing  Distance between frame and scrollbar
+                                                with SH_ScrollView_FrameOnlyAroundContents set.
+    \value PM_SubMenuOverlap The horizontal overlap between a submenu and its parent.
+
 
     \sa pixelMetric()
 */
@@ -1814,14 +1835,20 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
 
     \value SH_Menu_FlashTriggeredItem Flash triggered item.
     \value SH_Menu_FadeOutOnHide Fade out the menu instead of hiding it immediately.
-    
+
     \value SH_TabWidget_DefaultTabPosition Default position of the tab bar in a tab widget.
-    
+
     \value SH_ToolBar_Movable Determines if the tool bar is movable by default.
 
     \value SH_ItemView_PaintAlternatingRowColorsForEmptyArea Whether QTreeView paints alternating row colors for the area that does not have any items.
 
     \value SH_Menu_Mask The mask for a popup menu.
+
+    \value SH_ItemView_DrawDelegateFrame Determines if there should be a frame for a delegate widget.
+
+    \value SH_TabBar_CloseButtonPosition Determines the position of the close button on a tab in a tab bar.
+
+    \value SH_DockWidget_ButtonsHaveFrame Determines if dockwidget buttons should have frames. Default is true.
 
     \omitvalue SH_UnderlineAccelerator
 
@@ -2087,10 +2114,8 @@ int QStyle::sliderPositionFromValue(int min, int max, int logicalValue, int span
     uint p = upsideDown ? max - logicalValue : logicalValue - min;
 
     if (range > (uint)INT_MAX/4096) {
-        const int scale = 4096*2;
-        return ((p / scale) * span) / (range / scale);
-        // ### the above line is probably not 100% correct
-        // ### but fixing it isn't worth the extreme pain...
+        double dpos = (double(p))/(double(range)/span);
+        return int(dpos);
     } else if (range > (uint)span) {
         return (2 * p * span + range) / (2*range);
     } else {
@@ -2299,7 +2324,7 @@ int QStyle::layoutSpacing(QSizePolicy::ControlType control1, QSizePolicy::Contro
     }
     if (d->layoutSpacingIndex < 0)
         return -1;
-    int result;
+    int result = -1;
     void *param[] = {&result, &control1, &control2, &orientation, &option, &widget};
 
     const_cast<QStyle *>(this)->qt_metacall(QMetaObject::InvokeMetaMethod,

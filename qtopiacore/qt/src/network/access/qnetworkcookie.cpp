@@ -1,45 +1,50 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qnetworkcookie.h"
+#include "qnetworkcookie_p.h"
+
 #include "qnetworkrequest.h"
 #include "qnetworkreply.h"
 #include "QtCore/qbytearray.h"
-#include "QtCore/qdatetime.h"
 #include "QtCore/qdebug.h"
 #include "QtCore/qlist.h"
 #include "QtCore/qlocale.h"
@@ -48,20 +53,6 @@
 #include "private/qobject_p.h"
 
 QT_BEGIN_NAMESPACE
-
-class QNetworkCookiePrivate: public QSharedData
-{
-public:
-    inline QNetworkCookiePrivate() : secure(false) { }
-
-    QDateTime expirationDate;
-    QString domain;
-    QString path;
-    QString comment;
-    QByteArray name;
-    QByteArray value;
-    bool secure;
-};
 
 /*!
     \class QNetworkCookie
@@ -93,12 +84,12 @@ public:
     function. However, when received in a QNetworkReply, the cookie is
     already parsed.
 
-    This class implements cookies as described by the initial cookie
-    specification by Netscape (see
-    http://wp.netscape.com/newsref/std/cookie_spec.html), which is
-    somewhat similar to the RFC 2109 specification. The more recent
-    RFC 2965 specification (which uses the Set-Cookie2 header) is not
-    supported.
+    This class implements cookies as described by the
+    \l{Netscape Cookie Specification}{initial cookie specification by
+    Netscape}, which is somewhat similar to the \l{RFC 2109} specification,
+    plus the \l{Mitigating Cross-site Scripting With HTTP-only Cookies}
+    {"HttpOnly" extension}. The more recent \l{RFC 2965} specification
+    (which uses the Set-Cookie2 header) is not supported.
 
     \sa QNetworkCookieJar, QNetworkRequest, QNetworkReply
 */
@@ -204,6 +195,32 @@ bool QNetworkCookie::isSecure() const
 void QNetworkCookie::setSecure(bool enable)
 {
     d->secure = enable;
+}
+
+/*!
+    \since 4.5
+
+    Returns true if the "HttpOnly" flag is enabled for this cookie.
+
+    A cookie that is "HttpOnly" is only set and retrieved by the
+    network requests and replies; i.e., the HTTP protocol. It is not
+    accessible from scripts running on browsers.
+
+    \sa isSecure()
+*/
+bool QNetworkCookie::isHttpOnly() const
+{
+    return d->httpOnly;
+}
+
+/*!
+    \since 4.5
+
+    Sets this cookie's "HttpOnly" flag to \a enable.
+*/
+void QNetworkCookie::setHttpOnly(bool enable)
+{
+    d->httpOnly = enable;
 }
 
 /*!
@@ -340,28 +357,7 @@ void QNetworkCookie::setValue(const QByteArray &value)
     d->value = value;
 }
 
-static inline bool isLWS(register char c)
-{
-    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-static int nextNonWhitespace(const QByteArray &text, int from)
-{
-    // RFC 2616 defines linear whitespace as:
-    //  LWS = [CRLF] 1*( SP | HT )
-    // We ignore the fact that CRLF must come as a pair at this point
-    // It's an invalid HTTP header if that happens.
-    while (from < text.length()) {
-        if (isLWS(text.at(from)))
-            ++from;
-        else
-            return from;        // non-whitespace
-    }
-
-    // reached the end
-    return text.length();
-}
-
+// ### move this to qnetworkcookie_p.h and share with qnetworkaccesshttpbackend
 static QPair<QByteArray, QByteArray> nextField(const QByteArray &text, int &position)
 {
     // format is one of:
@@ -498,6 +494,8 @@ QByteArray QNetworkCookie::toRawForm(RawForm form) const
         // same as above, but encoding everything back
         if (isSecure())
             result += "; secure";
+        if (isHttpOnly())
+            result += "; HttpOnly";
         if (!isSessionCookie()) {
             result += "; expires=";
             result += QLocale::c().toString(d->expirationDate.toUTC(),
@@ -598,6 +596,7 @@ QList<QNetworkCookie> QNetworkCookie::parseCookies(const QByteArray &cookieStrin
                         datestring.chop(6);
 
                     size_t i = 0;
+                    int j = 0;
                     QLocale cLocale = QLocale::c();
                     QDateTime dt;
                     do {
@@ -606,7 +605,19 @@ QList<QNetworkCookie> QNetworkCookie::parseCookies(const QByteArray &cookieStrin
 
 #ifndef QT_NO_DATESTRING
                         dt = cLocale.toDateTime(QString::fromLatin1(datestring), df);
+
+                        // some cookies are set with a two-digit year
+                        // (although this is not allowed); this is interpreted as a year
+                        // in the 20th century by QDateTime.
+                        // Work around this case here (assuming 00-69 is 21st century,
+                        //                                      70-99 is 20th century)
+                        QDate date = dt.date();
+                        if (j == 2 && date.year() >= 1900 && date.year() < 1970)
+                            dt = dt.addYears(100);
+                        if (date.year() >= 0 && date.year() < 100)
+                            dt = dt.addYears(1900);
 #endif
+                        j++;
                     } while (!dt.isValid() && i <= sizeof dateFormats - 1);
                     if (!dt.isValid())
                         // invalid cookie string
@@ -636,6 +647,8 @@ QList<QNetworkCookie> QNetworkCookie::parseCookies(const QByteArray &cookieStrin
                     cookie.setPath(path);
                 } else if (field.first == "secure") {
                     cookie.setSecure(true);
+                } else if (field.first == "httponly") {
+                    cookie.setHttpOnly(true);
                 } else if (field.first == "comment") {
                     //cookie.setComment(QString::fromUtf8(field.second));
                 } else if (field.first == "version") {
@@ -807,7 +820,8 @@ bool QNetworkCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieLis
 {
     Q_D(QNetworkCookieJar);
     QString defaultDomain = url.host();
-    QString defaultPath = url.path();
+    QString pathAndFileName = url.path();
+    QString defaultPath = pathAndFileName.left(pathAndFileName.lastIndexOf(QLatin1Char('/'))+1);
     if (defaultPath.isEmpty())
         defaultPath = QLatin1Char('/');
 
@@ -818,9 +832,10 @@ bool QNetworkCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieLis
                           cookie.expirationDate() < now;
 
         // validate the cookie & set the defaults if unset
+        // (RFC 2965: "The request-URI MUST path-match the Path attribute of the cookie.")
         if (cookie.path().isEmpty())
             cookie.setPath(defaultPath);
-        else if (!isParentPath(defaultPath, cookie.path()))
+        else if (!isParentPath(pathAndFileName, cookie.path()))
             continue;           // not accepted
 
         if (cookie.domain().isEmpty()) {

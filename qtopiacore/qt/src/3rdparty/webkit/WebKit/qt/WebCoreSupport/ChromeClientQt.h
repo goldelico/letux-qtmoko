@@ -30,7 +30,7 @@
 
 #include "ChromeClient.h"
 #include "FloatRect.h"
-#include "Shared.h"
+#include "RefCounted.h"
 #include "KURL.h"
 #include "PlatformString.h"
 
@@ -38,6 +38,7 @@ class QWebPage;
 
 namespace WebCore {
 
+    class FileChooser;
     class FloatRect;
     class Page;
     struct FrameLoadRequest;
@@ -62,8 +63,7 @@ namespace WebCore {
         virtual bool canTakeFocus(FocusDirection);
         virtual void takeFocus(FocusDirection);
 
-        virtual Page* createWindow(Frame*, const FrameLoadRequest&);
-        virtual Page* createModalDialog(Frame*, const FrameLoadRequest&);
+        virtual Page* createWindow(Frame*, const FrameLoadRequest&, const WindowFeatures&);
         virtual void show();
 
         virtual bool canRunModal();
@@ -100,15 +100,25 @@ namespace WebCore {
 
         virtual bool tabsToLinks() const;
         virtual IntRect windowResizerRect() const;
-        virtual void addToDirtyRegion(const IntRect&);
-        virtual void scrollBackingStore(int, int, const IntRect&, const IntRect&);
-        virtual void updateBackingStore();
+
+        virtual void repaint(const IntRect&, bool contentChanged, bool immediate = false, bool repaintContentOnly = false);
+        virtual void scroll(const IntSize& scrollDelta, const IntRect& rectToScroll, const IntRect& clipRect);
+        virtual IntPoint screenToWindow(const IntPoint&) const;
+        virtual IntRect windowToScreen(const IntRect&) const;
+        virtual PlatformWidget platformWindow() const;
+        virtual void contentsSizeChanged(Frame*, const IntSize&) const;
 
         virtual void mouseDidMoveOverElement(const HitTestResult&, unsigned modifierFlags);
 
         virtual void setToolTip(const String&);
 
         virtual void print(Frame*);
+
+        virtual void exceededDatabaseQuota(Frame*, const String&);
+
+        virtual void runOpenPanel(Frame*, PassRefPtr<FileChooser>);
+
+        virtual void formStateDidChange(const Node*) { }
 
         QWebPage* m_webPage;
         WebCore::KURL lastHoverURL;

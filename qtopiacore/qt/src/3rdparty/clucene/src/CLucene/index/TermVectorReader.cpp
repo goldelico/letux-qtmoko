@@ -1,9 +1,11 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #include "CLucene/StdHeader.h"
 #include "TermVector.h"
 #include "CLucene/util/StringBuffer.h"
@@ -11,22 +13,17 @@
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d, const char* segment, FieldInfos* fieldInfos){
-	char fbuf[CL_MAX_NAME];
-	strcpy(fbuf,segment);
-	char* fpbuf=fbuf+strlen(fbuf);
-
-	strcpy(fpbuf, TermVectorsWriter::LUCENE_TVX_EXTENSION);
-	if (d->fileExists(fbuf)) {
-      tvx = d->openInput(fbuf);
+TermVectorsReader::TermVectorsReader(CL_NS(store)::Directory* d,
+    const QString& segment, FieldInfos* fieldInfos)
+{
+	if (d->fileExists(segment + TermVectorsWriter::LUCENE_TVX_EXTENSION)) {
+      tvx = d->openInput(segment + TermVectorsWriter::LUCENE_TVX_EXTENSION);
       checkValidFormat(tvx);
 	  
-	  strcpy(fpbuf, TermVectorsWriter::LUCENE_TVD_EXTENSION);
-	  tvd = d->openInput(fbuf);
+	  tvd = d->openInput(segment + TermVectorsWriter::LUCENE_TVD_EXTENSION);
       tvdFormat = checkValidFormat(tvd);
 	  
-	  strcpy(fpbuf, TermVectorsWriter::LUCENE_TVF_EXTENSION);
-	  tvf = d->openInput(fbuf);
+	  tvf = d->openInput(segment + TermVectorsWriter::LUCENE_TVF_EXTENSION);
       tvfFormat = checkValidFormat(tvf);
 
       _size = tvx->length() / 8;
@@ -196,7 +193,8 @@ bool TermVectorsReader::get(int32_t docNum, Array<TermFreqVector*>& result){
 }
 
 
-int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
+int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in)
+{
 	int32_t format = in->readInt();
 	if (format > TermVectorsWriter::FORMAT_VERSION)
 	{
@@ -211,16 +209,21 @@ int32_t TermVectorsReader::checkValidFormat(CL_NS(store)::IndexInput* in){
 	return format;
 }
 
-void TermVectorsReader::readTermVectors(const TCHAR** fields, const int64_t* tvfPointers, const int32_t len, Array<TermFreqVector*>& result){
+void TermVectorsReader::readTermVectors(const TCHAR** fields,
+    const int64_t* tvfPointers, const int32_t len, Array<TermFreqVector*>& result)
+{
 	result.length = len;
 	result.values = _CL_NEWARRAY(TermFreqVector*,len);
     for (int32_t i = 0; i < len; ++i) {
       result.values[i] = readTermVector(fields[i], tvfPointers[i]);
     }
 }
-SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const int64_t tvfPointer){
-	//Now read the data from specified position
-    //We don't need to offset by the FORMAT here since the pointer already includes the offset
+
+SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field,
+    const int64_t tvfPointer)
+{
+	// Now read the data from specified position. We don't need to offset by
+    // the FORMAT here since the pointer already includes the offset
     tvf->seek(tvfPointer);
 
     int32_t numTerms = tvf->readVInt();
@@ -322,7 +325,8 @@ SegmentTermVector* TermVectorsReader::readTermVector(const TCHAR* field, const i
 	}
 }
 
-int64_t TermVectorsReader::size(){
+int64_t TermVectorsReader::size()
+{
     return _size;
 }
  
@@ -331,35 +335,44 @@ int64_t TermVectorsReader::size(){
 
 Array<TermVectorOffsetInfo> TermVectorOffsetInfo::EMPTY_OFFSET_INFO;
 
-TermVectorOffsetInfo::TermVectorOffsetInfo() {
+TermVectorOffsetInfo::TermVectorOffsetInfo()
+{
 	startOffset = 0;
 	endOffset=0;
 }
-TermVectorOffsetInfo::~TermVectorOffsetInfo() {
+
+TermVectorOffsetInfo::~TermVectorOffsetInfo()
+{
 }
 
-TermVectorOffsetInfo::TermVectorOffsetInfo(int32_t startOffset, int32_t endOffset) {
+TermVectorOffsetInfo::TermVectorOffsetInfo(int32_t startOffset, int32_t endOffset)
+{
 	this->endOffset = endOffset;
 	this->startOffset = startOffset;
 }
 
-int32_t TermVectorOffsetInfo::getEndOffset() const{
+int32_t TermVectorOffsetInfo::getEndOffset() const
+{
 	return endOffset;
 }
 
-void TermVectorOffsetInfo::setEndOffset(int32_t endOffset) {
+void TermVectorOffsetInfo::setEndOffset(int32_t endOffset)
+{
 	this->endOffset = endOffset;
 }
 
-int32_t TermVectorOffsetInfo::getStartOffset() const{
+int32_t TermVectorOffsetInfo::getStartOffset() const
+{
 	return startOffset;
 }
 
-void TermVectorOffsetInfo::setStartOffset(int32_t startOffset) {
+void TermVectorOffsetInfo::setStartOffset(int32_t startOffset)
+{
 	this->startOffset = startOffset;
 }
 
-bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo) {
+bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo)
+{
 	if (this == termVectorOffsetInfo) 
 		return true;
 
@@ -369,10 +382,12 @@ bool TermVectorOffsetInfo::equals(TermVectorOffsetInfo* termVectorOffsetInfo) {
 	return true;
 }
 
-size_t TermVectorOffsetInfo::hashCode() const{
+size_t TermVectorOffsetInfo::hashCode() const
+{
 	size_t result;
 	result = startOffset;
 	result = 29 * result + endOffset;
 	return result;
 }
+
 CL_NS_END

@@ -28,7 +28,7 @@
 
 
 #include "config.h"
-#ifdef AVOID_STATIC_CONSTRUCTORS
+#ifdef SKIP_STATIC_CONSTRUCTORS_ON_GCC
 #define DOM_HTMLNAMES_HIDE_GLOBALS 1
 #else
 #define QNAME_DEFAULT_CONSTRUCTOR 1
@@ -37,7 +37,9 @@
 #include "HTMLNames.h"
 
 #include "StaticConstructors.h"
-namespace WebCore { namespace HTMLNames {
+namespace WebCore {
+
+ namespace HTMLNames {
 
 using namespace WebCore;
 
@@ -49,6 +51,7 @@ DEFINE_GLOBAL(QualifiedName, acronymTag, nullAtom, "acronym", xhtmlNamespaceURI)
 DEFINE_GLOBAL(QualifiedName, addressTag, nullAtom, "address", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, appletTag, nullAtom, "applet", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, areaTag, nullAtom, "area", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, audioTag, nullAtom, "audio", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, bTag, nullAtom, "b", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, baseTag, nullAtom, "base", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, basefontTag, nullAtom, "basefont", xhtmlNamespaceURI);
@@ -79,13 +82,13 @@ DEFINE_GLOBAL(QualifiedName, fontTag, nullAtom, "font", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, formTag, nullAtom, "form", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, frameTag, nullAtom, "frame", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, framesetTag, nullAtom, "frameset", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, headTag, nullAtom, "head", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h1Tag, nullAtom, "h1", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h2Tag, nullAtom, "h2", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h3Tag, nullAtom, "h3", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h4Tag, nullAtom, "h4", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h5Tag, nullAtom, "h5", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, h6Tag, nullAtom, "h6", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, headTag, nullAtom, "head", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, hrTag, nullAtom, "hr", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, htmlTag, nullAtom, "html", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, iTag, nullAtom, "i", xhtmlNamespaceURI);
@@ -126,6 +129,7 @@ DEFINE_GLOBAL(QualifiedName, sampTag, nullAtom, "samp", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, scriptTag, nullAtom, "script", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, selectTag, nullAtom, "select", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, smallTag, nullAtom, "small", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, sourceTag, nullAtom, "source", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, spanTag, nullAtom, "span", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, strikeTag, nullAtom, "strike", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, strongTag, nullAtom, "strong", xhtmlNamespaceURI);
@@ -145,6 +149,7 @@ DEFINE_GLOBAL(QualifiedName, ttTag, nullAtom, "tt", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, uTag, nullAtom, "u", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, ulTag, nullAtom, "ul", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, varTag, nullAtom, "var", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, videoTag, nullAtom, "video", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, wbrTag, nullAtom, "wbr", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, xmpTag, nullAtom, "xmp", xhtmlNamespaceURI);
 
@@ -158,6 +163,7 @@ WebCore::QualifiedName** getHTMLTags(size_t* size)
         (WebCore::QualifiedName*)&addressTag,
         (WebCore::QualifiedName*)&appletTag,
         (WebCore::QualifiedName*)&areaTag,
+        (WebCore::QualifiedName*)&audioTag,
         (WebCore::QualifiedName*)&bTag,
         (WebCore::QualifiedName*)&baseTag,
         (WebCore::QualifiedName*)&basefontTag,
@@ -188,13 +194,13 @@ WebCore::QualifiedName** getHTMLTags(size_t* size)
         (WebCore::QualifiedName*)&formTag,
         (WebCore::QualifiedName*)&frameTag,
         (WebCore::QualifiedName*)&framesetTag,
-        (WebCore::QualifiedName*)&headTag,
         (WebCore::QualifiedName*)&h1Tag,
         (WebCore::QualifiedName*)&h2Tag,
         (WebCore::QualifiedName*)&h3Tag,
         (WebCore::QualifiedName*)&h4Tag,
         (WebCore::QualifiedName*)&h5Tag,
         (WebCore::QualifiedName*)&h6Tag,
+        (WebCore::QualifiedName*)&headTag,
         (WebCore::QualifiedName*)&hrTag,
         (WebCore::QualifiedName*)&htmlTag,
         (WebCore::QualifiedName*)&iTag,
@@ -235,6 +241,7 @@ WebCore::QualifiedName** getHTMLTags(size_t* size)
         (WebCore::QualifiedName*)&scriptTag,
         (WebCore::QualifiedName*)&selectTag,
         (WebCore::QualifiedName*)&smallTag,
+        (WebCore::QualifiedName*)&sourceTag,
         (WebCore::QualifiedName*)&spanTag,
         (WebCore::QualifiedName*)&strikeTag,
         (WebCore::QualifiedName*)&strongTag,
@@ -254,24 +261,37 @@ WebCore::QualifiedName** getHTMLTags(size_t* size)
         (WebCore::QualifiedName*)&uTag,
         (WebCore::QualifiedName*)&ulTag,
         (WebCore::QualifiedName*)&varTag,
+        (WebCore::QualifiedName*)&videoTag,
         (WebCore::QualifiedName*)&wbrTag,
         (WebCore::QualifiedName*)&xmpTag,
     };
-    *size = 104;
+    *size = 107;
     return HTMLTags;
 }
 
 // Attributes
 DEFINE_GLOBAL(QualifiedName, abbrAttr, nullAtom, "abbr", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, accept_charsetAttr, nullAtom, "accept_charset", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, acceptAttr, nullAtom, "accept", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, accept_charsetAttr, nullAtom, "accept_charset", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, accesskeyAttr, nullAtom, "accesskey", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, actionAttr, nullAtom, "action", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, alignAttr, nullAtom, "align", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, alinkAttr, nullAtom, "alink", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, altAttr, nullAtom, "alt", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, archiveAttr, nullAtom, "archive", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_activedescendantAttr, nullAtom, "aria_activedescendant", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_checkedAttr, nullAtom, "aria_checked", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_describedbyAttr, nullAtom, "aria_describedby", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_labeledbyAttr, nullAtom, "aria_labeledby", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_labelledbyAttr, nullAtom, "aria_labelledby", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_levelAttr, nullAtom, "aria_level", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_pressedAttr, nullAtom, "aria_pressed", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_valuemaxAttr, nullAtom, "aria_valuemax", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_valueminAttr, nullAtom, "aria_valuemin", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, aria_valuenowAttr, nullAtom, "aria_valuenow", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, autocompleteAttr, nullAtom, "autocomplete", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, autofocusAttr, nullAtom, "autofocus", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, autoplayAttr, nullAtom, "autoplay", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, autosaveAttr, nullAtom, "autosave", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, axisAttr, nullAtom, "axis", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, backgroundAttr, nullAtom, "background", xhtmlNamespaceURI);
@@ -280,14 +300,14 @@ DEFINE_GLOBAL(QualifiedName, bgcolorAttr, nullAtom, "bgcolor", xhtmlNamespaceURI
 DEFINE_GLOBAL(QualifiedName, bgpropertiesAttr, nullAtom, "bgproperties", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, borderAttr, nullAtom, "border", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, bordercolorAttr, nullAtom, "bordercolor", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, cellborderAttr, nullAtom, "cellborder", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, cellpaddingAttr, nullAtom, "cellpadding", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, cellspacingAttr, nullAtom, "cellspacing", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, charAttr, nullAtom, "char", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, challengeAttr, nullAtom, "challenge", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, charAttr, nullAtom, "char", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, charoffAttr, nullAtom, "charoff", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, charsetAttr, nullAtom, "charset", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, checkedAttr, nullAtom, "checked", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, cellborderAttr, nullAtom, "cellborder", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, citeAttr, nullAtom, "cite", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, classAttr, nullAtom, "class", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, classidAttr, nullAtom, "classid", xhtmlNamespaceURI);
@@ -302,6 +322,7 @@ DEFINE_GLOBAL(QualifiedName, compactAttr, nullAtom, "compact", xhtmlNamespaceURI
 DEFINE_GLOBAL(QualifiedName, compositeAttr, nullAtom, "composite", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, contentAttr, nullAtom, "content", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, contenteditableAttr, nullAtom, "contenteditable", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, controlsAttr, nullAtom, "controls", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, coordsAttr, nullAtom, "coords", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, dataAttr, nullAtom, "data", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, datetimeAttr, nullAtom, "datetime", xhtmlNamespaceURI);
@@ -311,6 +332,7 @@ DEFINE_GLOBAL(QualifiedName, dirAttr, nullAtom, "dir", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, directionAttr, nullAtom, "direction", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, disabledAttr, nullAtom, "disabled", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, enctypeAttr, nullAtom, "enctype", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, endAttr, nullAtom, "end", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, faceAttr, nullAtom, "face", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, forAttr, nullAtom, "for", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, frameAttr, nullAtom, "frame", xhtmlNamespaceURI);
@@ -329,12 +351,14 @@ DEFINE_GLOBAL(QualifiedName, keytypeAttr, nullAtom, "keytype", xhtmlNamespaceURI
 DEFINE_GLOBAL(QualifiedName, labelAttr, nullAtom, "label", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, langAttr, nullAtom, "lang", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, languageAttr, nullAtom, "language", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, leftAttr, nullAtom, "left", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, leftmarginAttr, nullAtom, "leftmargin", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, linkAttr, nullAtom, "link", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, longdescAttr, nullAtom, "longdesc", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, loopAttr, nullAtom, "loop", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, loopendAttr, nullAtom, "loopend", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, loopstartAttr, nullAtom, "loopstart", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, lowsrcAttr, nullAtom, "lowsrc", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, manifestAttr, nullAtom, "manifest", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, marginheightAttr, nullAtom, "marginheight", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, marginwidthAttr, nullAtom, "marginwidth", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, maxAttr, nullAtom, "max", xhtmlNamespaceURI);
@@ -389,15 +413,17 @@ DEFINE_GLOBAL(QualifiedName, onscrollAttr, nullAtom, "onscroll", xhtmlNamespaceU
 DEFINE_GLOBAL(QualifiedName, onsearchAttr, nullAtom, "onsearch", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onselectAttr, nullAtom, "onselect", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onselectstartAttr, nullAtom, "onselectstart", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onstorageAttr, nullAtom, "onstorage", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onsubmitAttr, nullAtom, "onsubmit", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onunloadAttr, nullAtom, "onunload", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, pagexAttr, nullAtom, "pagex", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, pageyAttr, nullAtom, "pagey", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onwebkitanimationendAttr, nullAtom, "onwebkitanimationend", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onwebkitanimationiterationAttr, nullAtom, "onwebkitanimationiteration", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onwebkitanimationstartAttr, nullAtom, "onwebkitanimationstart", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onwebkittransitionendAttr, nullAtom, "onwebkittransitionend", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, placeholderAttr, nullAtom, "placeholder", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, plainAttr, nullAtom, "plain", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, pluginpageAttr, nullAtom, "pluginpage", xhtmlNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, pluginspageAttr, nullAtom, "pluginspage", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, playcountAttr, nullAtom, "playcount", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, pluginurlAttr, nullAtom, "pluginurl", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, posterAttr, nullAtom, "poster", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, precisionAttr, nullAtom, "precision", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, profileAttr, nullAtom, "profile", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, promptAttr, nullAtom, "prompt", xhtmlNamespaceURI);
@@ -405,6 +431,7 @@ DEFINE_GLOBAL(QualifiedName, readonlyAttr, nullAtom, "readonly", xhtmlNamespaceU
 DEFINE_GLOBAL(QualifiedName, relAttr, nullAtom, "rel", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, resultsAttr, nullAtom, "results", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, revAttr, nullAtom, "rev", xhtmlNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, roleAttr, nullAtom, "role", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, rowsAttr, nullAtom, "rows", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, rowspanAttr, nullAtom, "rowspan", xhtmlNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, rulesAttr, nullAtom, "rules", xhtmlNamespaceURI);
@@ -447,15 +474,27 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
 {
     static WebCore::QualifiedName* HTMLAttr[] = {
         (WebCore::QualifiedName*)&abbrAttr,
-        (WebCore::QualifiedName*)&accept_charsetAttr,
         (WebCore::QualifiedName*)&acceptAttr,
+        (WebCore::QualifiedName*)&accept_charsetAttr,
         (WebCore::QualifiedName*)&accesskeyAttr,
         (WebCore::QualifiedName*)&actionAttr,
         (WebCore::QualifiedName*)&alignAttr,
         (WebCore::QualifiedName*)&alinkAttr,
         (WebCore::QualifiedName*)&altAttr,
         (WebCore::QualifiedName*)&archiveAttr,
+        (WebCore::QualifiedName*)&aria_activedescendantAttr,
+        (WebCore::QualifiedName*)&aria_checkedAttr,
+        (WebCore::QualifiedName*)&aria_describedbyAttr,
+        (WebCore::QualifiedName*)&aria_labeledbyAttr,
+        (WebCore::QualifiedName*)&aria_labelledbyAttr,
+        (WebCore::QualifiedName*)&aria_levelAttr,
+        (WebCore::QualifiedName*)&aria_pressedAttr,
+        (WebCore::QualifiedName*)&aria_valuemaxAttr,
+        (WebCore::QualifiedName*)&aria_valueminAttr,
+        (WebCore::QualifiedName*)&aria_valuenowAttr,
         (WebCore::QualifiedName*)&autocompleteAttr,
+        (WebCore::QualifiedName*)&autofocusAttr,
+        (WebCore::QualifiedName*)&autoplayAttr,
         (WebCore::QualifiedName*)&autosaveAttr,
         (WebCore::QualifiedName*)&axisAttr,
         (WebCore::QualifiedName*)&backgroundAttr,
@@ -464,14 +503,14 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&bgpropertiesAttr,
         (WebCore::QualifiedName*)&borderAttr,
         (WebCore::QualifiedName*)&bordercolorAttr,
+        (WebCore::QualifiedName*)&cellborderAttr,
         (WebCore::QualifiedName*)&cellpaddingAttr,
         (WebCore::QualifiedName*)&cellspacingAttr,
-        (WebCore::QualifiedName*)&charAttr,
         (WebCore::QualifiedName*)&challengeAttr,
+        (WebCore::QualifiedName*)&charAttr,
         (WebCore::QualifiedName*)&charoffAttr,
         (WebCore::QualifiedName*)&charsetAttr,
         (WebCore::QualifiedName*)&checkedAttr,
-        (WebCore::QualifiedName*)&cellborderAttr,
         (WebCore::QualifiedName*)&citeAttr,
         (WebCore::QualifiedName*)&classAttr,
         (WebCore::QualifiedName*)&classidAttr,
@@ -486,6 +525,7 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&compositeAttr,
         (WebCore::QualifiedName*)&contentAttr,
         (WebCore::QualifiedName*)&contenteditableAttr,
+        (WebCore::QualifiedName*)&controlsAttr,
         (WebCore::QualifiedName*)&coordsAttr,
         (WebCore::QualifiedName*)&dataAttr,
         (WebCore::QualifiedName*)&datetimeAttr,
@@ -495,6 +535,7 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&directionAttr,
         (WebCore::QualifiedName*)&disabledAttr,
         (WebCore::QualifiedName*)&enctypeAttr,
+        (WebCore::QualifiedName*)&endAttr,
         (WebCore::QualifiedName*)&faceAttr,
         (WebCore::QualifiedName*)&forAttr,
         (WebCore::QualifiedName*)&frameAttr,
@@ -513,12 +554,14 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&labelAttr,
         (WebCore::QualifiedName*)&langAttr,
         (WebCore::QualifiedName*)&languageAttr,
-        (WebCore::QualifiedName*)&leftAttr,
         (WebCore::QualifiedName*)&leftmarginAttr,
         (WebCore::QualifiedName*)&linkAttr,
         (WebCore::QualifiedName*)&longdescAttr,
         (WebCore::QualifiedName*)&loopAttr,
+        (WebCore::QualifiedName*)&loopendAttr,
+        (WebCore::QualifiedName*)&loopstartAttr,
         (WebCore::QualifiedName*)&lowsrcAttr,
+        (WebCore::QualifiedName*)&manifestAttr,
         (WebCore::QualifiedName*)&marginheightAttr,
         (WebCore::QualifiedName*)&marginwidthAttr,
         (WebCore::QualifiedName*)&maxAttr,
@@ -573,15 +616,17 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&onsearchAttr,
         (WebCore::QualifiedName*)&onselectAttr,
         (WebCore::QualifiedName*)&onselectstartAttr,
+        (WebCore::QualifiedName*)&onstorageAttr,
         (WebCore::QualifiedName*)&onsubmitAttr,
         (WebCore::QualifiedName*)&onunloadAttr,
-        (WebCore::QualifiedName*)&pagexAttr,
-        (WebCore::QualifiedName*)&pageyAttr,
+        (WebCore::QualifiedName*)&onwebkitanimationendAttr,
+        (WebCore::QualifiedName*)&onwebkitanimationiterationAttr,
+        (WebCore::QualifiedName*)&onwebkitanimationstartAttr,
+        (WebCore::QualifiedName*)&onwebkittransitionendAttr,
         (WebCore::QualifiedName*)&placeholderAttr,
-        (WebCore::QualifiedName*)&plainAttr,
-        (WebCore::QualifiedName*)&pluginpageAttr,
-        (WebCore::QualifiedName*)&pluginspageAttr,
+        (WebCore::QualifiedName*)&playcountAttr,
         (WebCore::QualifiedName*)&pluginurlAttr,
+        (WebCore::QualifiedName*)&posterAttr,
         (WebCore::QualifiedName*)&precisionAttr,
         (WebCore::QualifiedName*)&profileAttr,
         (WebCore::QualifiedName*)&promptAttr,
@@ -589,6 +634,7 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&relAttr,
         (WebCore::QualifiedName*)&resultsAttr,
         (WebCore::QualifiedName*)&revAttr,
+        (WebCore::QualifiedName*)&roleAttr,
         (WebCore::QualifiedName*)&rowsAttr,
         (WebCore::QualifiedName*)&rowspanAttr,
         (WebCore::QualifiedName*)&rulesAttr,
@@ -626,9 +672,14 @@ WebCore::QualifiedName** getHTMLAttrs(size_t* size)
         (WebCore::QualifiedName*)&widthAttr,
         (WebCore::QualifiedName*)&wrapAttr,
     };
-    *size = 179;
+    *size = 198;
     return HTMLAttr;
 }
+
+// Tags as strings
+
+// Attributes as strings
+char classAttrString[] = "class";
 
 void init()
 {
@@ -652,6 +703,7 @@ void init()
     const char *addressTagString = "address";
     const char *appletTagString = "applet";
     const char *areaTagString = "area";
+    const char *audioTagString = "audio";
     const char *bTagString = "b";
     const char *baseTagString = "base";
     const char *basefontTagString = "basefont";
@@ -682,13 +734,13 @@ void init()
     const char *formTagString = "form";
     const char *frameTagString = "frame";
     const char *framesetTagString = "frameset";
-    const char *headTagString = "head";
     const char *h1TagString = "h1";
     const char *h2TagString = "h2";
     const char *h3TagString = "h3";
     const char *h4TagString = "h4";
     const char *h5TagString = "h5";
     const char *h6TagString = "h6";
+    const char *headTagString = "head";
     const char *hrTagString = "hr";
     const char *htmlTagString = "html";
     const char *iTagString = "i";
@@ -729,6 +781,7 @@ void init()
     const char *scriptTagString = "script";
     const char *selectTagString = "select";
     const char *smallTagString = "small";
+    const char *sourceTagString = "source";
     const char *spanTagString = "span";
     const char *strikeTagString = "strike";
     const char *strongTagString = "strong";
@@ -748,15 +801,16 @@ void init()
     const char *uTagString = "u";
     const char *ulTagString = "ul";
     const char *varTagString = "var";
+    const char *videoTagString = "video";
     const char *wbrTagString = "wbr";
     const char *xmpTagString = "xmp";
-
     new ((void*)&aTag) QualifiedName(nullAtom, aTagString, xhtmlNS);
     new ((void*)&abbrTag) QualifiedName(nullAtom, abbrTagString, xhtmlNS);
     new ((void*)&acronymTag) QualifiedName(nullAtom, acronymTagString, xhtmlNS);
     new ((void*)&addressTag) QualifiedName(nullAtom, addressTagString, xhtmlNS);
     new ((void*)&appletTag) QualifiedName(nullAtom, appletTagString, xhtmlNS);
     new ((void*)&areaTag) QualifiedName(nullAtom, areaTagString, xhtmlNS);
+    new ((void*)&audioTag) QualifiedName(nullAtom, audioTagString, xhtmlNS);
     new ((void*)&bTag) QualifiedName(nullAtom, bTagString, xhtmlNS);
     new ((void*)&baseTag) QualifiedName(nullAtom, baseTagString, xhtmlNS);
     new ((void*)&basefontTag) QualifiedName(nullAtom, basefontTagString, xhtmlNS);
@@ -787,13 +841,13 @@ void init()
     new ((void*)&formTag) QualifiedName(nullAtom, formTagString, xhtmlNS);
     new ((void*)&frameTag) QualifiedName(nullAtom, frameTagString, xhtmlNS);
     new ((void*)&framesetTag) QualifiedName(nullAtom, framesetTagString, xhtmlNS);
-    new ((void*)&headTag) QualifiedName(nullAtom, headTagString, xhtmlNS);
     new ((void*)&h1Tag) QualifiedName(nullAtom, h1TagString, xhtmlNS);
     new ((void*)&h2Tag) QualifiedName(nullAtom, h2TagString, xhtmlNS);
     new ((void*)&h3Tag) QualifiedName(nullAtom, h3TagString, xhtmlNS);
     new ((void*)&h4Tag) QualifiedName(nullAtom, h4TagString, xhtmlNS);
     new ((void*)&h5Tag) QualifiedName(nullAtom, h5TagString, xhtmlNS);
     new ((void*)&h6Tag) QualifiedName(nullAtom, h6TagString, xhtmlNS);
+    new ((void*)&headTag) QualifiedName(nullAtom, headTagString, xhtmlNS);
     new ((void*)&hrTag) QualifiedName(nullAtom, hrTagString, xhtmlNS);
     new ((void*)&htmlTag) QualifiedName(nullAtom, htmlTagString, xhtmlNS);
     new ((void*)&iTag) QualifiedName(nullAtom, iTagString, xhtmlNS);
@@ -834,6 +888,7 @@ void init()
     new ((void*)&scriptTag) QualifiedName(nullAtom, scriptTagString, xhtmlNS);
     new ((void*)&selectTag) QualifiedName(nullAtom, selectTagString, xhtmlNS);
     new ((void*)&smallTag) QualifiedName(nullAtom, smallTagString, xhtmlNS);
+    new ((void*)&sourceTag) QualifiedName(nullAtom, sourceTagString, xhtmlNS);
     new ((void*)&spanTag) QualifiedName(nullAtom, spanTagString, xhtmlNS);
     new ((void*)&strikeTag) QualifiedName(nullAtom, strikeTagString, xhtmlNS);
     new ((void*)&strongTag) QualifiedName(nullAtom, strongTagString, xhtmlNS);
@@ -853,19 +908,32 @@ void init()
     new ((void*)&uTag) QualifiedName(nullAtom, uTagString, xhtmlNS);
     new ((void*)&ulTag) QualifiedName(nullAtom, ulTagString, xhtmlNS);
     new ((void*)&varTag) QualifiedName(nullAtom, varTagString, xhtmlNS);
+    new ((void*)&videoTag) QualifiedName(nullAtom, videoTagString, xhtmlNS);
     new ((void*)&wbrTag) QualifiedName(nullAtom, wbrTagString, xhtmlNS);
     new ((void*)&xmpTag) QualifiedName(nullAtom, xmpTagString, xhtmlNS);
     // Attributes
     const char *abbrAttrString = "abbr";
-    const char *accept_charsetAttrString = "accept_charset";
     const char *acceptAttrString = "accept";
+    const char *accept_charsetAttrString = "accept-charset";
     const char *accesskeyAttrString = "accesskey";
     const char *actionAttrString = "action";
     const char *alignAttrString = "align";
     const char *alinkAttrString = "alink";
     const char *altAttrString = "alt";
     const char *archiveAttrString = "archive";
+    const char *aria_activedescendantAttrString = "aria-activedescendant";
+    const char *aria_checkedAttrString = "aria-checked";
+    const char *aria_describedbyAttrString = "aria-describedby";
+    const char *aria_labeledbyAttrString = "aria-labeledby";
+    const char *aria_labelledbyAttrString = "aria-labelledby";
+    const char *aria_levelAttrString = "aria-level";
+    const char *aria_pressedAttrString = "aria-pressed";
+    const char *aria_valuemaxAttrString = "aria-valuemax";
+    const char *aria_valueminAttrString = "aria-valuemin";
+    const char *aria_valuenowAttrString = "aria-valuenow";
     const char *autocompleteAttrString = "autocomplete";
+    const char *autofocusAttrString = "autofocus";
+    const char *autoplayAttrString = "autoplay";
     const char *autosaveAttrString = "autosave";
     const char *axisAttrString = "axis";
     const char *backgroundAttrString = "background";
@@ -874,16 +942,15 @@ void init()
     const char *bgpropertiesAttrString = "bgproperties";
     const char *borderAttrString = "border";
     const char *bordercolorAttrString = "bordercolor";
+    const char *cellborderAttrString = "cellborder";
     const char *cellpaddingAttrString = "cellpadding";
     const char *cellspacingAttrString = "cellspacing";
-    const char *charAttrString = "char";
     const char *challengeAttrString = "challenge";
+    const char *charAttrString = "char";
     const char *charoffAttrString = "charoff";
     const char *charsetAttrString = "charset";
     const char *checkedAttrString = "checked";
-    const char *cellborderAttrString = "cellborder";
     const char *citeAttrString = "cite";
-    const char *classAttrString = "class";
     const char *classidAttrString = "classid";
     const char *clearAttrString = "clear";
     const char *codeAttrString = "code";
@@ -896,6 +963,7 @@ void init()
     const char *compositeAttrString = "composite";
     const char *contentAttrString = "content";
     const char *contenteditableAttrString = "contenteditable";
+    const char *controlsAttrString = "controls";
     const char *coordsAttrString = "coords";
     const char *dataAttrString = "data";
     const char *datetimeAttrString = "datetime";
@@ -905,6 +973,7 @@ void init()
     const char *directionAttrString = "direction";
     const char *disabledAttrString = "disabled";
     const char *enctypeAttrString = "enctype";
+    const char *endAttrString = "end";
     const char *faceAttrString = "face";
     const char *forAttrString = "for";
     const char *frameAttrString = "frame";
@@ -915,7 +984,7 @@ void init()
     const char *hrefAttrString = "href";
     const char *hreflangAttrString = "hreflang";
     const char *hspaceAttrString = "hspace";
-    const char *http_equivAttrString = "http_equiv";
+    const char *http_equivAttrString = "http-equiv";
     const char *idAttrString = "id";
     const char *incrementalAttrString = "incremental";
     const char *ismapAttrString = "ismap";
@@ -923,12 +992,14 @@ void init()
     const char *labelAttrString = "label";
     const char *langAttrString = "lang";
     const char *languageAttrString = "language";
-    const char *leftAttrString = "left";
     const char *leftmarginAttrString = "leftmargin";
     const char *linkAttrString = "link";
     const char *longdescAttrString = "longdesc";
     const char *loopAttrString = "loop";
+    const char *loopendAttrString = "loopend";
+    const char *loopstartAttrString = "loopstart";
     const char *lowsrcAttrString = "lowsrc";
+    const char *manifestAttrString = "manifest";
     const char *marginheightAttrString = "marginheight";
     const char *marginwidthAttrString = "marginwidth";
     const char *maxAttrString = "max";
@@ -983,15 +1054,17 @@ void init()
     const char *onsearchAttrString = "onsearch";
     const char *onselectAttrString = "onselect";
     const char *onselectstartAttrString = "onselectstart";
+    const char *onstorageAttrString = "onstorage";
     const char *onsubmitAttrString = "onsubmit";
     const char *onunloadAttrString = "onunload";
-    const char *pagexAttrString = "pagex";
-    const char *pageyAttrString = "pagey";
+    const char *onwebkitanimationendAttrString = "onwebkitanimationend";
+    const char *onwebkitanimationiterationAttrString = "onwebkitanimationiteration";
+    const char *onwebkitanimationstartAttrString = "onwebkitanimationstart";
+    const char *onwebkittransitionendAttrString = "onwebkittransitionend";
     const char *placeholderAttrString = "placeholder";
-    const char *plainAttrString = "plain";
-    const char *pluginpageAttrString = "pluginpage";
-    const char *pluginspageAttrString = "pluginspage";
+    const char *playcountAttrString = "playcount";
     const char *pluginurlAttrString = "pluginurl";
+    const char *posterAttrString = "poster";
     const char *precisionAttrString = "precision";
     const char *profileAttrString = "profile";
     const char *promptAttrString = "prompt";
@@ -999,6 +1072,7 @@ void init()
     const char *relAttrString = "rel";
     const char *resultsAttrString = "results";
     const char *revAttrString = "rev";
+    const char *roleAttrString = "role";
     const char *rowsAttrString = "rows";
     const char *rowspanAttrString = "rowspan";
     const char *rulesAttrString = "rules";
@@ -1035,19 +1109,28 @@ void init()
     const char *vspaceAttrString = "vspace";
     const char *widthAttrString = "width";
     const char *wrapAttrString = "wrap";
-    accept_charsetAttrString = "accept-charset";
-    http_equivAttrString = "http-equiv";
-
     new ((void*)&abbrAttr) QualifiedName(nullAtom, abbrAttrString, nullAtom);
-    new ((void*)&accept_charsetAttr) QualifiedName(nullAtom, accept_charsetAttrString, nullAtom);
     new ((void*)&acceptAttr) QualifiedName(nullAtom, acceptAttrString, nullAtom);
+    new ((void*)&accept_charsetAttr) QualifiedName(nullAtom, accept_charsetAttrString, nullAtom);
     new ((void*)&accesskeyAttr) QualifiedName(nullAtom, accesskeyAttrString, nullAtom);
     new ((void*)&actionAttr) QualifiedName(nullAtom, actionAttrString, nullAtom);
     new ((void*)&alignAttr) QualifiedName(nullAtom, alignAttrString, nullAtom);
     new ((void*)&alinkAttr) QualifiedName(nullAtom, alinkAttrString, nullAtom);
     new ((void*)&altAttr) QualifiedName(nullAtom, altAttrString, nullAtom);
     new ((void*)&archiveAttr) QualifiedName(nullAtom, archiveAttrString, nullAtom);
+    new ((void*)&aria_activedescendantAttr) QualifiedName(nullAtom, aria_activedescendantAttrString, nullAtom);
+    new ((void*)&aria_checkedAttr) QualifiedName(nullAtom, aria_checkedAttrString, nullAtom);
+    new ((void*)&aria_describedbyAttr) QualifiedName(nullAtom, aria_describedbyAttrString, nullAtom);
+    new ((void*)&aria_labeledbyAttr) QualifiedName(nullAtom, aria_labeledbyAttrString, nullAtom);
+    new ((void*)&aria_labelledbyAttr) QualifiedName(nullAtom, aria_labelledbyAttrString, nullAtom);
+    new ((void*)&aria_levelAttr) QualifiedName(nullAtom, aria_levelAttrString, nullAtom);
+    new ((void*)&aria_pressedAttr) QualifiedName(nullAtom, aria_pressedAttrString, nullAtom);
+    new ((void*)&aria_valuemaxAttr) QualifiedName(nullAtom, aria_valuemaxAttrString, nullAtom);
+    new ((void*)&aria_valueminAttr) QualifiedName(nullAtom, aria_valueminAttrString, nullAtom);
+    new ((void*)&aria_valuenowAttr) QualifiedName(nullAtom, aria_valuenowAttrString, nullAtom);
     new ((void*)&autocompleteAttr) QualifiedName(nullAtom, autocompleteAttrString, nullAtom);
+    new ((void*)&autofocusAttr) QualifiedName(nullAtom, autofocusAttrString, nullAtom);
+    new ((void*)&autoplayAttr) QualifiedName(nullAtom, autoplayAttrString, nullAtom);
     new ((void*)&autosaveAttr) QualifiedName(nullAtom, autosaveAttrString, nullAtom);
     new ((void*)&axisAttr) QualifiedName(nullAtom, axisAttrString, nullAtom);
     new ((void*)&backgroundAttr) QualifiedName(nullAtom, backgroundAttrString, nullAtom);
@@ -1056,14 +1139,14 @@ void init()
     new ((void*)&bgpropertiesAttr) QualifiedName(nullAtom, bgpropertiesAttrString, nullAtom);
     new ((void*)&borderAttr) QualifiedName(nullAtom, borderAttrString, nullAtom);
     new ((void*)&bordercolorAttr) QualifiedName(nullAtom, bordercolorAttrString, nullAtom);
+    new ((void*)&cellborderAttr) QualifiedName(nullAtom, cellborderAttrString, nullAtom);
     new ((void*)&cellpaddingAttr) QualifiedName(nullAtom, cellpaddingAttrString, nullAtom);
     new ((void*)&cellspacingAttr) QualifiedName(nullAtom, cellspacingAttrString, nullAtom);
-    new ((void*)&charAttr) QualifiedName(nullAtom, charAttrString, nullAtom);
     new ((void*)&challengeAttr) QualifiedName(nullAtom, challengeAttrString, nullAtom);
+    new ((void*)&charAttr) QualifiedName(nullAtom, charAttrString, nullAtom);
     new ((void*)&charoffAttr) QualifiedName(nullAtom, charoffAttrString, nullAtom);
     new ((void*)&charsetAttr) QualifiedName(nullAtom, charsetAttrString, nullAtom);
     new ((void*)&checkedAttr) QualifiedName(nullAtom, checkedAttrString, nullAtom);
-    new ((void*)&cellborderAttr) QualifiedName(nullAtom, cellborderAttrString, nullAtom);
     new ((void*)&citeAttr) QualifiedName(nullAtom, citeAttrString, nullAtom);
     new ((void*)&classAttr) QualifiedName(nullAtom, classAttrString, nullAtom);
     new ((void*)&classidAttr) QualifiedName(nullAtom, classidAttrString, nullAtom);
@@ -1078,6 +1161,7 @@ void init()
     new ((void*)&compositeAttr) QualifiedName(nullAtom, compositeAttrString, nullAtom);
     new ((void*)&contentAttr) QualifiedName(nullAtom, contentAttrString, nullAtom);
     new ((void*)&contenteditableAttr) QualifiedName(nullAtom, contenteditableAttrString, nullAtom);
+    new ((void*)&controlsAttr) QualifiedName(nullAtom, controlsAttrString, nullAtom);
     new ((void*)&coordsAttr) QualifiedName(nullAtom, coordsAttrString, nullAtom);
     new ((void*)&dataAttr) QualifiedName(nullAtom, dataAttrString, nullAtom);
     new ((void*)&datetimeAttr) QualifiedName(nullAtom, datetimeAttrString, nullAtom);
@@ -1087,6 +1171,7 @@ void init()
     new ((void*)&directionAttr) QualifiedName(nullAtom, directionAttrString, nullAtom);
     new ((void*)&disabledAttr) QualifiedName(nullAtom, disabledAttrString, nullAtom);
     new ((void*)&enctypeAttr) QualifiedName(nullAtom, enctypeAttrString, nullAtom);
+    new ((void*)&endAttr) QualifiedName(nullAtom, endAttrString, nullAtom);
     new ((void*)&faceAttr) QualifiedName(nullAtom, faceAttrString, nullAtom);
     new ((void*)&forAttr) QualifiedName(nullAtom, forAttrString, nullAtom);
     new ((void*)&frameAttr) QualifiedName(nullAtom, frameAttrString, nullAtom);
@@ -1105,12 +1190,14 @@ void init()
     new ((void*)&labelAttr) QualifiedName(nullAtom, labelAttrString, nullAtom);
     new ((void*)&langAttr) QualifiedName(nullAtom, langAttrString, nullAtom);
     new ((void*)&languageAttr) QualifiedName(nullAtom, languageAttrString, nullAtom);
-    new ((void*)&leftAttr) QualifiedName(nullAtom, leftAttrString, nullAtom);
     new ((void*)&leftmarginAttr) QualifiedName(nullAtom, leftmarginAttrString, nullAtom);
     new ((void*)&linkAttr) QualifiedName(nullAtom, linkAttrString, nullAtom);
     new ((void*)&longdescAttr) QualifiedName(nullAtom, longdescAttrString, nullAtom);
     new ((void*)&loopAttr) QualifiedName(nullAtom, loopAttrString, nullAtom);
+    new ((void*)&loopendAttr) QualifiedName(nullAtom, loopendAttrString, nullAtom);
+    new ((void*)&loopstartAttr) QualifiedName(nullAtom, loopstartAttrString, nullAtom);
     new ((void*)&lowsrcAttr) QualifiedName(nullAtom, lowsrcAttrString, nullAtom);
+    new ((void*)&manifestAttr) QualifiedName(nullAtom, manifestAttrString, nullAtom);
     new ((void*)&marginheightAttr) QualifiedName(nullAtom, marginheightAttrString, nullAtom);
     new ((void*)&marginwidthAttr) QualifiedName(nullAtom, marginwidthAttrString, nullAtom);
     new ((void*)&maxAttr) QualifiedName(nullAtom, maxAttrString, nullAtom);
@@ -1165,15 +1252,17 @@ void init()
     new ((void*)&onsearchAttr) QualifiedName(nullAtom, onsearchAttrString, nullAtom);
     new ((void*)&onselectAttr) QualifiedName(nullAtom, onselectAttrString, nullAtom);
     new ((void*)&onselectstartAttr) QualifiedName(nullAtom, onselectstartAttrString, nullAtom);
+    new ((void*)&onstorageAttr) QualifiedName(nullAtom, onstorageAttrString, nullAtom);
     new ((void*)&onsubmitAttr) QualifiedName(nullAtom, onsubmitAttrString, nullAtom);
     new ((void*)&onunloadAttr) QualifiedName(nullAtom, onunloadAttrString, nullAtom);
-    new ((void*)&pagexAttr) QualifiedName(nullAtom, pagexAttrString, nullAtom);
-    new ((void*)&pageyAttr) QualifiedName(nullAtom, pageyAttrString, nullAtom);
+    new ((void*)&onwebkitanimationendAttr) QualifiedName(nullAtom, onwebkitanimationendAttrString, nullAtom);
+    new ((void*)&onwebkitanimationiterationAttr) QualifiedName(nullAtom, onwebkitanimationiterationAttrString, nullAtom);
+    new ((void*)&onwebkitanimationstartAttr) QualifiedName(nullAtom, onwebkitanimationstartAttrString, nullAtom);
+    new ((void*)&onwebkittransitionendAttr) QualifiedName(nullAtom, onwebkittransitionendAttrString, nullAtom);
     new ((void*)&placeholderAttr) QualifiedName(nullAtom, placeholderAttrString, nullAtom);
-    new ((void*)&plainAttr) QualifiedName(nullAtom, plainAttrString, nullAtom);
-    new ((void*)&pluginpageAttr) QualifiedName(nullAtom, pluginpageAttrString, nullAtom);
-    new ((void*)&pluginspageAttr) QualifiedName(nullAtom, pluginspageAttrString, nullAtom);
+    new ((void*)&playcountAttr) QualifiedName(nullAtom, playcountAttrString, nullAtom);
     new ((void*)&pluginurlAttr) QualifiedName(nullAtom, pluginurlAttrString, nullAtom);
+    new ((void*)&posterAttr) QualifiedName(nullAtom, posterAttrString, nullAtom);
     new ((void*)&precisionAttr) QualifiedName(nullAtom, precisionAttrString, nullAtom);
     new ((void*)&profileAttr) QualifiedName(nullAtom, profileAttrString, nullAtom);
     new ((void*)&promptAttr) QualifiedName(nullAtom, promptAttrString, nullAtom);
@@ -1181,6 +1270,7 @@ void init()
     new ((void*)&relAttr) QualifiedName(nullAtom, relAttrString, nullAtom);
     new ((void*)&resultsAttr) QualifiedName(nullAtom, resultsAttrString, nullAtom);
     new ((void*)&revAttr) QualifiedName(nullAtom, revAttrString, nullAtom);
+    new ((void*)&roleAttr) QualifiedName(nullAtom, roleAttrString, nullAtom);
     new ((void*)&rowsAttr) QualifiedName(nullAtom, rowsAttrString, nullAtom);
     new ((void*)&rowspanAttr) QualifiedName(nullAtom, rowspanAttrString, nullAtom);
     new ((void*)&rulesAttr) QualifiedName(nullAtom, rulesAttrString, nullAtom);

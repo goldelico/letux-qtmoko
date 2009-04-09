@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,13 +53,25 @@
 // We mean it.
 //
 
-#include "QtGui/qpaintengine.h"
+#include <private/qpaintengineex_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QOpenGLPaintEnginePrivate;
 
-class QOpenGLPaintEngine : public QPaintEngine
+class QOpenGLPaintEngineState : public QPainterState
+{
+public:
+    QOpenGLPaintEngineState(QOpenGLPaintEngineState &other);
+    QOpenGLPaintEngineState();
+    ~QOpenGLPaintEngineState();
+
+    QRegion clipRegion;
+    bool hasClipping;
+    QRect fastClip;
+};
+
+class QOpenGLPaintEngine : public QPaintEngineEx
 {
     Q_DECLARE_PRIVATE(QOpenGLPaintEngine)
 public:
@@ -65,6 +81,30 @@ public:
     bool begin(QPaintDevice *pdev);
     bool end();
 
+    // new stuff
+    void clipEnabledChanged();
+    void penChanged();
+    void brushChanged();
+    void brushOriginChanged();
+    void opacityChanged();
+    void compositionModeChanged();
+    void renderHintsChanged();
+    void transformChanged();
+
+    void fill(const QVectorPath &path, const QBrush &brush);
+    void clip(const QVectorPath &path, Qt::ClipOperation op);
+
+    void setState(QPainterState *s);
+    QPainterState *createState(QPainterState *orig) const;
+    inline QOpenGLPaintEngineState *state() {
+        return static_cast<QOpenGLPaintEngineState *>(QPaintEngineEx::state());
+    }
+    inline const QOpenGLPaintEngineState *state() const {
+        return static_cast<const QOpenGLPaintEngineState *>(QPaintEngineEx::state());
+    }
+
+
+    // old stuff
     void updateState(const QPaintEngineState &state);
 
     void updatePen(const QPen &pen);
@@ -78,30 +118,23 @@ public:
     void drawRects(const QRectF *r, int rectCount);
     void drawLines(const QLineF *lines, int lineCount);
     void drawPoints(const QPointF *p, int pointCount);
-
-#ifdef Q_NO_USING_KEYWORD
-    inline void drawPoints(const QPoint *points, int pointCount) { QPaintEngine::drawPoints(points, pointCount); }
-    inline void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode)
-        { QPaintEngine::drawPolygon(points, pointCount, mode); }
-    inline void drawLines(const QLine *lines, int lineCount) { QPaintEngine::drawLines(lines, lineCount); }
-    inline void drawRects(const QRect *r, int rectCount) { QPaintEngine::drawRects(r, rectCount); }
-#else
-    using QPaintEngine::drawRects;
-    using QPaintEngine::drawPolygon;
-    using QPaintEngine::drawPoints;
-    using QPaintEngine::drawLines;
-#endif
+    void drawRects(const QRect *r, int rectCount);
+    void drawLines(const QLine *lines, int lineCount);
+    void drawPoints(const QPoint *p, int pointCount);
 
     void drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr);
 
     void drawPath(const QPainterPath &path);
     void drawPolygon(const QPointF *points, int pointCount, PolygonDrawMode mode);
+    void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode);
     void drawTiledPixmap(const QRectF &r, const QPixmap &pixmap, const QPointF &s);
     void drawImage(const QRectF &r, const QImage &image, const QRectF &sr,
                    Qt::ImageConversionFlags conversionFlags);
     void drawTextItem(const QPointF &p, const QTextItem &ti);
 
     void drawEllipse(const QRectF &rect);
+
+    QPixmapFilter *createPixmapFilter(int type) const;
 
 #ifdef Q_WS_WIN
     HDC handle() const;
@@ -115,6 +148,7 @@ private:
     void drawTextureRect(int tx_width, int tx_height, const QRectF &r, const QRectF &sr, GLenum target);
     Q_DISABLE_COPY(QOpenGLPaintEngine)
 };
+
 
 QT_END_NAMESPACE
 

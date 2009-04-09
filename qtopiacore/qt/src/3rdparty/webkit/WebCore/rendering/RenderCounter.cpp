@@ -29,6 +29,7 @@
 #include "RenderListItem.h"
 #include "RenderListMarker.h"
 #include "RenderStyle.h"
+#include <wtf/StdLibExtras.h>
 
 namespace WebCore {
 
@@ -41,7 +42,7 @@ static CounterNode* counter(RenderObject*, const AtomicString& counterName, bool
 
 static CounterMaps& counterMaps()
 {
-    static CounterMaps staticCounterMaps;
+    DEFINE_STATIC_LOCAL(CounterMaps, staticCounterMaps, ());
     return staticCounterMaps;
 }
 
@@ -219,7 +220,7 @@ const char* RenderCounter::renderName() const
     return "RenderCounter";
 }
 
-bool RenderCounter::isRenderCounter() const
+bool RenderCounter::isCounter() const
 {
     return true;
 }
@@ -263,6 +264,12 @@ void RenderCounter::calcPrefWidths(int lead)
     RenderText::calcPrefWidths(lead);
 }
 
+void RenderCounter::invalidate()
+{
+    m_counterNode = 0;
+    setNeedsLayoutAndPrefWidthsRecalc();
+}
+
 static void destroyCounterNodeChildren(AtomicStringImpl* identifier, CounterNode* node)
 {
     CounterNode* previous;
@@ -271,6 +278,7 @@ static void destroyCounterNodeChildren(AtomicStringImpl* identifier, CounterNode
         child->parent()->removeChild(child);
         ASSERT(counterMaps().get(child->renderer())->get(identifier) == child);
         counterMaps().get(child->renderer())->remove(identifier);
+        child->renderer()->invalidateCounters();
         delete child;
     }
 }

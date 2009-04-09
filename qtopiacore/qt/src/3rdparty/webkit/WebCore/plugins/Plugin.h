@@ -24,25 +24,16 @@
 #include <wtf/RefPtr.h>
 #include <wtf/RefCounted.h>
 
-namespace KJS {
-    class ExecState;
-    class JSValue;
-};
-
 namespace WebCore {
 
     class AtomicString;
     class Plugin;
-    class String;
-
-    // FIXME: Generated JSPlugin.cpp doesn't include JSMimeType.h for toJS
-    KJS::JSValue* toJS(KJS::ExecState*, MimeType*);
-
     class PluginData;
+    class String;
 
     class Plugin : public RefCounted<Plugin> {
     public:
-        Plugin(PluginData*, unsigned index);
+        static PassRefPtr<Plugin> create(PluginData* pluginData, unsigned index) { return adoptRef(new Plugin(pluginData, index)); }
         ~Plugin();
 
         String name() const;
@@ -53,13 +44,14 @@ namespace WebCore {
 
         PassRefPtr<MimeType> item(unsigned index);
         bool canGetItemsForName(const AtomicString& propertyName);
-        PassRefPtr<MimeType> nameGetter(const AtomicString& propertyName);
+        PassRefPtr<MimeType> namedItem(const AtomicString& propertyName);
 
     private:
+        Plugin(PluginData*, unsigned index);
         RefPtr<PluginData> m_pluginData;
         unsigned m_index;
     };
 
-}
+} // namespace WebCore
 
-#endif
+#endif // Plugin_h

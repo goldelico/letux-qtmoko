@@ -59,7 +59,7 @@ static VisiblePosition previousBoundary(const VisiblePosition &c, unsigned (*sea
 
     Position start = rangeCompliantEquivalent(Position(boundary, 0));
     Position end = rangeCompliantEquivalent(pos);
-    RefPtr<Range> searchRange = new Range(d);
+    RefPtr<Range> searchRange = Range::create(d);
     
     int exception = 0;
     searchRange->setStart(start.node(), start.offset(), exception);
@@ -257,12 +257,12 @@ static RootInlineBox *rootBoxForLine(const VisiblePosition &c)
     RenderObject *renderer = node->renderer();
     if (!renderer)
         return 0;
+
+    InlineBox* box;
+    int offset;
+    c.getInlineBoxAndOffset(box, offset);
     
-    InlineBox *box = renderer->inlineBox(p.offset(), c.affinity());
-    if (!box)
-        return 0;
-    
-    return box->root();
+    return box ? box->root() : 0;
 }
 
 static VisiblePosition positionAvoidingFirstPositionInTable(const VisiblePosition& c)
@@ -279,7 +279,7 @@ static VisiblePosition startPositionForLine(const VisiblePosition& c)
 {
     if (c.isNull())
         return VisiblePosition();
-        
+
     RootInlineBox *rootBox = rootBoxForLine(c);
     if (!rootBox) {
         // There are VisiblePositions at offset 0 in blocks without
@@ -347,7 +347,7 @@ static VisiblePosition endPositionForLine(const VisiblePosition& c)
 {
     if (c.isNull())
         return VisiblePosition();
-        
+
     RootInlineBox *rootBox = rootBoxForLine(c);
     if (!rootBox) {
         // There are VisiblePositions at offset 0 in blocks without
@@ -425,6 +425,19 @@ bool isEndOfLine(const VisiblePosition &p)
     return p.isNotNull() && p == endOfLine(p);
 }
 
+// The first leaf before node that has the same editability as node.
+static Node* previousLeafWithSameEditability(Node* node)
+{
+    bool editable = node->isContentEditable();
+    Node* n = node->previousLeafNode();
+    while (n) {
+        if (editable == n->isContentEditable())
+            return n;
+        n = n->previousLeafNode();
+    }
+    return 0;
+}
+
 VisiblePosition previousLinePosition(const VisiblePosition &visiblePosition, int x)
 {
     Position p = visiblePosition.deepEquivalent();
@@ -441,7 +454,9 @@ VisiblePosition previousLinePosition(const VisiblePosition &visiblePosition, int
 
     RenderBlock *containingBlock = 0;
     RootInlineBox *root = 0;
-    InlineBox *box = renderer->inlineBox(p.offset(), visiblePosition.affinity());
+    InlineBox* box;
+    int ignoredCaretOffset;
+    visiblePosition.getInlineBoxAndOffset(box, ignoredCaretOffset);
     if (box) {
         root = box->root()->prevRootBox();
         if (root)
@@ -453,16 +468,17 @@ VisiblePosition previousLinePosition(const VisiblePosition &visiblePosition, int
         // Need to move back to previous containing editable block in this root editable
         // block and find the last root line box in that block.
         Node* startBlock = enclosingBlock(node);
-        Node *n = node->previousEditable();
+        Node* n = previousLeafWithSameEditability(node);
         while (n && startBlock == enclosingBlock(n))
-            n = n->previousEditable();
+            n = previousLeafWithSameEditability(n);
         while (n) {
             if (highestEditableRoot(Position(n, 0)) != highestRoot)
                 break;
-            Position pos(n, n->caretMinOffset());
+            Position pos(n, caretMinOffset(n));
             if (pos.isCandidate()) {
                 ASSERT(n->renderer());
-                box = n->renderer()->inlineBox(n->caretMaxOffset());
+                Position maxPos(n, caretMaxOffset(n));
+                maxPos.getInlineBoxAndOffset(DOWNSTREAM, box, ignoredCaretOffset);
                 if (box) {
                     // previous root line box found
                     root = box->root();
@@ -472,27 +488,56 @@ VisiblePosition previousLinePosition(const VisiblePosition &visiblePosition, int
 
                 return VisiblePosition(pos, DOWNSTREAM);
             }
-            n = n->previousEditable();
+            n = previousLeafWithSameEditability(n);
         }
     }
     
     if (root) {
-        // FIXME: Can be wrong for multi-column layout.
-        int absx, absy;
-        containingBlock->absolutePositionForContent(absx, absy);
+        // FIXME: Can be wrong for multi-column layout and with transforms.
+        FloatPoint absPos = containingBlock->localToAbsoluteForContent(FloatPoint());
         if (containingBlock->hasOverflowClip())
-            containingBlock->layer()->subtractScrollOffset(absx, absy);
-        RenderObject *renderer = root->closestLeafChildForXPos(x - absx, isEditablePosition(p))->object();
-        Node* node = renderer->element();
+            absPos -= containingBlock->layer()->scrolledContentOffset();
+        RenderObject *renderer = root->closestLeafChildForXPos(x - absPos.x(), isEditablePosition(p))->object();
+        Node* node = renderer->node();
         if (editingIgnoresContent(node))
             return Position(node->parent(), node->nodeIndex());
-        return renderer->positionForCoordinates(x - absx, root->topOverflow());
+        return renderer->positionForCoordinates(x - absPos.x(), root->topOverflow());
     }
     
     // Could not find a previous line. This means we must already be on the first line.
     // Move to the start of the content in this block, which effectively moves us
     // to the start of the line we're on.
-    return VisiblePosition(node->rootEditableElement(), 0, DOWNSTREAM);
+    Node* rootElement = node->isContentEditable() ? node->rootEditableElement() : node->document()->documentElement();
+    return VisiblePosition(rootElement, 0, DOWNSTREAM);
+}
+
+static Node* nextLeafWithSameEditability(Node* node, int offset)
+{
+    bool editable = node->isContentEditable();
+    ASSERT(offset >= 0);
+    Node* child = node->childNode(offset);
+    Node* n = child ? child->nextLeafNode() : node->nextLeafNode();
+    while (n) {
+        if (editable == n->isContentEditable())
+            return n;
+        n = n->nextLeafNode();
+    }
+    return 0;
+}
+
+static Node* nextLeafWithSameEditability(Node* node)
+{
+    if (!node)
+        return 0;
+    
+    bool editable = node->isContentEditable();
+    Node* n = node->nextLeafNode();
+    while (n) {
+        if (editable == n->isContentEditable())
+            return n;
+        n = n->nextLeafNode();
+    }
+    return 0;
 }
 
 VisiblePosition nextLinePosition(const VisiblePosition &visiblePosition, int x)
@@ -511,7 +556,9 @@ VisiblePosition nextLinePosition(const VisiblePosition &visiblePosition, int x)
 
     RenderBlock *containingBlock = 0;
     RootInlineBox *root = 0;
-    InlineBox *box = renderer->inlineBox(p.offset(), visiblePosition.affinity());
+    InlineBox* box;
+    int ignoredCaretOffset;
+    visiblePosition.getInlineBoxAndOffset(box, ignoredCaretOffset);
     if (box) {
         root = box->root()->nextRootBox();
         if (root)
@@ -523,16 +570,16 @@ VisiblePosition nextLinePosition(const VisiblePosition &visiblePosition, int x)
         // Need to move forward to next containing editable block in this root editable
         // block and find the first root line box in that block.
         Node* startBlock = enclosingBlock(node);
-        Node *n = node->nextEditable(p.offset());
+        Node* n = nextLeafWithSameEditability(node, p.offset());
         while (n && startBlock == enclosingBlock(n))
-            n = n->nextEditable();
+            n = nextLeafWithSameEditability(n);
         while (n) {
             if (highestEditableRoot(Position(n, 0)) != highestRoot)
                 break;
-            Position pos(n, n->caretMinOffset());
+            Position pos(n, caretMinOffset(n));
             if (pos.isCandidate()) {
                 ASSERT(n->renderer());
-                box = n->renderer()->inlineBox(n->caretMinOffset());
+                pos.getInlineBoxAndOffset(DOWNSTREAM, box, ignoredCaretOffset);
                 if (box) {
                     // next root line box found
                     root = box->root();
@@ -542,27 +589,26 @@ VisiblePosition nextLinePosition(const VisiblePosition &visiblePosition, int x)
 
                 return VisiblePosition(pos, DOWNSTREAM);
             }
-            n = n->nextEditable();
+            n = nextLeafWithSameEditability(n);
         }
     }
     
     if (root) {
-        // FIXME: Can be wrong for multi-column layout.
-        int absx, absy;
-        containingBlock->absolutePositionForContent(absx, absy);
+        // FIXME: Can be wrong for multi-column layout and with transforms.
+        FloatPoint absPos = containingBlock->localToAbsoluteForContent(FloatPoint());
         if (containingBlock->hasOverflowClip())
-            containingBlock->layer()->subtractScrollOffset(absx, absy);
-        RenderObject *renderer = root->closestLeafChildForXPos(x - absx, isEditablePosition(p))->object();
-        Node* node = renderer->element();
+            absPos -= containingBlock->layer()->scrolledContentOffset();
+        RenderObject *renderer = root->closestLeafChildForXPos(x - absPos.x(), isEditablePosition(p))->object();
+        Node* node = renderer->node();
         if (editingIgnoresContent(node))
             return Position(node->parent(), node->nodeIndex());
-        return renderer->positionForCoordinates(x - absx, root->topOverflow());
+        return renderer->positionForCoordinates(x - absPos.x(), root->topOverflow());
     }    
 
     // Could not find a next line. This means we must already be on the last line.
     // Move to the end of the content in this block, which effectively moves us
     // to the end of the line we're on.
-    Element *rootElement = node->rootEditableElement();
+    Element* rootElement = node->isContentEditable() ? node->rootEditableElement() : node->document()->documentElement();
     return VisiblePosition(rootElement, rootElement ? rootElement->childNodeCount() : 0, DOWNSTREAM);
 }
 
@@ -745,6 +791,17 @@ VisiblePosition endOfParagraph(const VisiblePosition &c)
     }
 
     return VisiblePosition(node, offset, DOWNSTREAM);
+}
+
+VisiblePosition startOfNextParagraph(const VisiblePosition& visiblePosition)
+{
+    VisiblePosition paragraphEnd(endOfParagraph(visiblePosition));
+    VisiblePosition afterParagraphEnd(paragraphEnd.next(true));
+    // The position after the last position in the last cell of a table
+    // is not the start of the next paragraph.
+    if (isFirstPositionAfterTable(afterParagraphEnd))
+        return afterParagraphEnd.next(true);
+    return afterParagraphEnd;
 }
 
 bool inSameParagraph(const VisiblePosition &a, const VisiblePosition &b)

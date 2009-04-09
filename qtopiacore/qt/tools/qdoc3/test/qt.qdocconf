@@ -6,13 +6,13 @@ include(qt-defines.qdocconf)
 
 project                 = Qt
 versionsym              =
-version                 = 4.4.3
+version                 = 4.5.0
 description             = Qt Reference Documentation
-url                     = http://doc.trolltech.com/4.4
+url                     = http://doc.trolltech.com/4.5
 
 edition.Console.modules = QtCore QtDBus QtNetwork QtScript QtSql QtXml \
                           QtXmlPatterns QtTest
-edition.Desktop.modules = QtCore QtDBus QtGui QtNetwork QtOpenGL QtScript QtSql QtSvg \
+edition.Desktop.modules = QtCore QtDBus QtGui QtNetwork QtOpenGL QtScript QtScriptTools QtSql QtSvg \
                           QtWebKit QtXml QtXmlPatterns Qt3Support QtHelp \
                           QtDesigner QtAssistant QAxContainer Phonon \
                           QAxServer QtUiTools QtTest QtDBus
@@ -22,7 +22,7 @@ edition.DesktopLight.groups       = -graphicsview-api
 qhp.projects            = Qt
 
 qhp.Qt.file                = qt.qhp
-qhp.Qt.namespace           = com.trolltech.qt.442
+qhp.Qt.namespace           = com.trolltech.qt.450
 qhp.Qt.virtualFolder       = qdoc
 qhp.Qt.indexTitle          = Qt Reference Documentation
 qhp.Qt.indexRoot           = 
@@ -37,13 +37,14 @@ qhp.Qt.extraFiles          = classic.css \
                              images/dynamiclayouts-example.png \
                              images/stylesheet-coffee-plastique.png                             
 
-qhp.Qt.filterAttributes    = qt 4.4.2 qtrefdoc
-qhp.Qt.customFilters.Qt.name = Qt 4.4.2
-qhp.Qt.customFilters.Qt.filterAttributes = qt 4.4.2
+qhp.Qt.filterAttributes    = qt 4.5.0 qtrefdoc
+qhp.Qt.customFilters.Qt.name = Qt 4.5.0
+qhp.Qt.customFilters.Qt.filterAttributes = qt 4.5.0
 qhp.Qt.subprojects         = classes overviews examples
 qhp.Qt.subprojects.classes.title = Classes
 qhp.Qt.subprojects.classes.indexTitle = Qt's Classes
 qhp.Qt.subprojects.classes.selectors = class fake:headerfile
+qhp.Qt.subprojects.classes.sortPages = true
 qhp.Qt.subprojects.overviews.title = Overviews
 qhp.Qt.subprojects.overviews.indexTitle = All Overviews and HOWTOs
 qhp.Qt.subprojects.overviews.selectors = fake:page,group,module
@@ -95,7 +96,7 @@ excludedirs             = $QTDIR/src/3rdparty/clucene \
                           $QTDIR/src/3rdparty/zlib \
                           $QTDIR/doc/src/snippets
 
-sources.fileextensions  = "*.cpp *.qdoc"
+sources.fileextensions  = "*.cpp *.qdoc *.mm"
 examples.fileextensions = "*.cpp *.h *.js *.xq *.svg *.xml *.ui *.qhp *.qhcp"
 
 exampledirs             = $QTDIR/doc/src \

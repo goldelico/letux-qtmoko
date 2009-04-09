@@ -3,6 +3,8 @@
 * 
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
+*
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "MultiFieldQueryParser.h"
@@ -19,10 +21,11 @@ CL_NS_USE(analysis)
 
 CL_NS_DEF(queryParser)
 
-MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysis)::Analyzer* a):
+MultiFieldQueryParser::MultiFieldQueryParser(const TCHAR** fields, CL_NS(analysis)::Analyzer* a, BoostMap* boosts):
 	QueryParser(NULL,a)
 {
 	this->fields = fields;
+    this->boosts = boosts;
 }
 MultiFieldQueryParser::~MultiFieldQueryParser(){
 }
@@ -71,10 +74,18 @@ Query* MultiFieldQueryParser::parse(const TCHAR* query, const TCHAR** fields, co
 
 Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText, int32_t slop){
 	if (field == NULL) {
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
 			Query* q = QueryParser::GetFieldQuery(fields[i], queryText);
 			if (q != NULL) {
+                //If the user passes a map of boosts
+                 if (boosts != NULL) {
+                     //Get the boost from the map and apply them
+                     BoostMap::const_iterator itr = boosts->find(fields[i]);
+                     if (itr != boosts->end()) {
+                         q->setBoost(itr->second);
+                     }
+                 }
 				if (q->getQueryName() == PhraseQuery::getClassName()) {
 					((PhraseQuery*)q)->setSlop(slop);
 				}
@@ -88,7 +99,8 @@ Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText
 		}
 		if (clauses.size() == 0)  // happens for stopwords
 			return NULL;
-		return QueryParser::GetBooleanQuery(clauses);
+		Query* q = QueryParser::GetBooleanQuery(clauses);
+        return q;
 	}else{
 		Query* q = QueryParser::GetFieldQuery(field, queryText);
 		if ( q )
@@ -105,7 +117,7 @@ Query* MultiFieldQueryParser::GetFieldQuery(const TCHAR* field, TCHAR* queryText
 
 CL_NS(search)::Query* MultiFieldQueryParser::GetFuzzyQuery(const TCHAR* field, TCHAR* termStr){
 	if (field == NULL) {
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
 			Query* q = QueryParser::GetFuzzyQuery(fields[i], termStr); //todo: , minSimilarity
 			if ( q ){
@@ -126,7 +138,7 @@ CL_NS(search)::Query* MultiFieldQueryParser::GetFuzzyQuery(const TCHAR* field, T
 
 Query* MultiFieldQueryParser::GetPrefixQuery(const TCHAR* field, TCHAR* termStr){
 	if (field == NULL) {
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
 			Query* q = QueryParser::GetPrefixQuery(fields[i], termStr);
 			if ( q ){
@@ -147,7 +159,7 @@ Query* MultiFieldQueryParser::GetPrefixQuery(const TCHAR* field, TCHAR* termStr)
 
 Query* MultiFieldQueryParser::GetWildcardQuery(const TCHAR* field, TCHAR* termStr){
 	if (field == NULL) {
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
 			Query* q = QueryParser::GetWildcardQuery(fields[i], termStr);
 			if ( q ){
@@ -169,7 +181,7 @@ Query* MultiFieldQueryParser::GetWildcardQuery(const TCHAR* field, TCHAR* termSt
 
 Query* MultiFieldQueryParser::GetRangeQuery(const TCHAR* field, TCHAR* part1, TCHAR* part2, bool inclusive){
 	if (field == NULL) {
-		vector<BooleanClause*> clauses;
+		CL_NS_STD(vector)<BooleanClause*> clauses;
 		for (int i = 0; fields[i]!=NULL; ++i) {
 			Query* q = QueryParser::GetRangeQuery(fields[i], part1, part2, inclusive);
 			if ( q ){

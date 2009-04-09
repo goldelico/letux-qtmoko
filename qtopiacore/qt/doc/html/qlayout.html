@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/kernel/qlayout.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/kernel/qlayout.cpp -->
 <head>
-  <title>Qt 4.4: QLayout Class Reference</title>
+  <title>Qt 4.5: QLayout Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QLayout Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -25,77 +25,77 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qlayout.html#SizeConstraint-enum">SizeConstraint</a></b> { SetDefaultConstraint, SetFixedSize, SetMinimumSize, SetMaximumSize, SetMinAndMaxSize, SetNoConstraint }</li>
+<li><div class="fn"></div>enum <b><a href="qlayout.html#SizeConstraint-enum">SizeConstraint</a></b> { SetDefaultConstraint, SetFixedSize, SetMinimumSize, SetMaximumSize, SetMinAndMaxSize, SetNoConstraint }</li>
 </ul>
 <a name="properties"></a>
 <h3>Properties</h3>
 <ul>
-<li><div class="fn"/><b><a href="qlayout.html#sizeConstraint-prop">sizeConstraint</a></b> : SizeConstraint</li>
-<li><div class="fn"/><b><a href="qlayout.html#spacing-prop">spacing</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qlayout.html#sizeConstraint-prop">sizeConstraint</a></b> : SizeConstraint</li>
+<li><div class="fn"></div><b><a href="qlayout.html#spacing-prop">spacing</a></b> : int</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qlayout.html#QLayout">QLayout</a></b> ( QWidget * <i>parent</i> )</li>
-<li><div class="fn"/><b><a href="qlayout.html#QLayout-2">QLayout</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qlayout.html#activate">activate</a></b> ()</li>
-<li><div class="fn"/>virtual void <b><a href="qlayout.html#addItem">addItem</a></b> ( QLayoutItem * <i>item</i> ) = 0</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#addWidget">addWidget</a></b> ( QWidget * <i>w</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qlayout.html#contentsRect">contentsRect</a></b> () const</li>
-<li><div class="fn"/>virtual int <b><a href="qlayout.html#count">count</a></b> () const = 0</li>
-<li><div class="fn"/>virtual Qt::Orientations <b><a href="qlayout.html#expandingDirections">expandingDirections</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#getContentsMargins">getContentsMargins</a></b> ( int * <i>left</i>, int * <i>top</i>, int * <i>right</i>, int * <i>bottom</i> ) const</li>
-<li><div class="fn"/>virtual int <b><a href="qlayout.html#indexOf">indexOf</a></b> ( QWidget * <i>widget</i> ) const</li>
-<li><div class="fn"/>bool <b><a href="qlayout.html#isEnabled">isEnabled</a></b> () const</li>
-<li><div class="fn"/>virtual QLayoutItem * <b><a href="qlayout.html#itemAt">itemAt</a></b> ( int <i>index</i> ) const = 0</li>
-<li><div class="fn"/>virtual QSize <b><a href="qlayout.html#maximumSize">maximumSize</a></b> () const</li>
-<li><div class="fn"/>QWidget * <b><a href="qlayout.html#menuBar">menuBar</a></b> () const</li>
-<li><div class="fn"/>virtual QSize <b><a href="qlayout.html#minimumSize">minimumSize</a></b> () const</li>
-<li><div class="fn"/>QWidget * <b><a href="qlayout.html#parentWidget">parentWidget</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#removeItem">removeItem</a></b> ( QLayoutItem * <i>item</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#removeWidget">removeWidget</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>bool <b><a href="qlayout.html#setAlignment">setAlignment</a></b> ( QWidget * <i>w</i>, Qt::Alignment <i>alignment</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#setAlignment-2">setAlignment</a></b> ( Qt::Alignment <i>alignment</i> )</li>
-<li><div class="fn"/>bool <b><a href="qlayout.html#setAlignment-3">setAlignment</a></b> ( QLayout * <i>l</i>, Qt::Alignment <i>alignment</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#setContentsMargins">setContentsMargins</a></b> ( int <i>left</i>, int <i>top</i>, int <i>right</i>, int <i>bottom</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#setEnabled">setEnabled</a></b> ( bool <i>enable</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#setMenuBar">setMenuBar</a></b> ( QWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#sizeConstraint-prop">setSizeConstraint</a></b> ( SizeConstraint )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#spacing-prop">setSpacing</a></b> ( int )</li>
-<li><div class="fn"/>SizeConstraint <b><a href="qlayout.html#sizeConstraint-prop">sizeConstraint</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qlayout.html#spacing-prop">spacing</a></b> () const</li>
-<li><div class="fn"/>virtual QLayoutItem * <b><a href="qlayout.html#takeAt">takeAt</a></b> ( int <i>index</i> ) = 0</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#update">update</a></b> ()</li>
+<li><div class="fn"></div><b><a href="qlayout.html#QLayout">QLayout</a></b> ( QWidget * <i>parent</i> )</li>
+<li><div class="fn"></div><b><a href="qlayout.html#QLayout-2">QLayout</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qlayout.html#activate">activate</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qlayout.html#addItem">addItem</a></b> ( QLayoutItem * <i>item</i> ) = 0</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#addWidget">addWidget</a></b> ( QWidget * <i>w</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qlayout.html#contentsRect">contentsRect</a></b> () const</li>
+<li><div class="fn"></div>virtual int <b><a href="qlayout.html#count">count</a></b> () const = 0</li>
+<li><div class="fn"></div>virtual Qt::Orientations <b><a href="qlayout.html#expandingDirections">expandingDirections</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#getContentsMargins">getContentsMargins</a></b> ( int * <i>left</i>, int * <i>top</i>, int * <i>right</i>, int * <i>bottom</i> ) const</li>
+<li><div class="fn"></div>virtual int <b><a href="qlayout.html#indexOf">indexOf</a></b> ( QWidget * <i>widget</i> ) const</li>
+<li><div class="fn"></div>bool <b><a href="qlayout.html#isEnabled">isEnabled</a></b> () const</li>
+<li><div class="fn"></div>virtual QLayoutItem * <b><a href="qlayout.html#itemAt">itemAt</a></b> ( int <i>index</i> ) const = 0</li>
+<li><div class="fn"></div>virtual QSize <b><a href="qlayout.html#maximumSize">maximumSize</a></b> () const</li>
+<li><div class="fn"></div>QWidget * <b><a href="qlayout.html#menuBar">menuBar</a></b> () const</li>
+<li><div class="fn"></div>virtual QSize <b><a href="qlayout.html#minimumSize">minimumSize</a></b> () const</li>
+<li><div class="fn"></div>QWidget * <b><a href="qlayout.html#parentWidget">parentWidget</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#removeItem">removeItem</a></b> ( QLayoutItem * <i>item</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#removeWidget">removeWidget</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qlayout.html#setAlignment">setAlignment</a></b> ( QWidget * <i>w</i>, Qt::Alignment <i>alignment</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#setAlignment-2">setAlignment</a></b> ( Qt::Alignment <i>alignment</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qlayout.html#setAlignment-3">setAlignment</a></b> ( QLayout * <i>l</i>, Qt::Alignment <i>alignment</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#setContentsMargins">setContentsMargins</a></b> ( int <i>left</i>, int <i>top</i>, int <i>right</i>, int <i>bottom</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#setEnabled">setEnabled</a></b> ( bool <i>enable</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#setMenuBar">setMenuBar</a></b> ( QWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#sizeConstraint-prop">setSizeConstraint</a></b> ( SizeConstraint )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#spacing-prop">setSpacing</a></b> ( int )</li>
+<li><div class="fn"></div>SizeConstraint <b><a href="qlayout.html#sizeConstraint-prop">sizeConstraint</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qlayout.html#spacing-prop">spacing</a></b> () const</li>
+<li><div class="fn"></div>virtual QLayoutItem * <b><a href="qlayout.html#takeAt">takeAt</a></b> ( int <i>index</i> ) = 0</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#update">update</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"/>17 public functions inherited from <a href="qlayoutitem.html#public-functions">QLayoutItem</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>17 public functions inherited from <a href="qlayoutitem.html#public-functions">QLayoutItem</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
 <ul>
-<li><div class="fn"/>QSize <b><a href="qlayout.html#closestAcceptableSize">closestAcceptableSize</a></b> ( const QWidget * <i>widget</i>, const QSize &amp; <i>size</i> )</li>
+<li><div class="fn"></div>QSize <b><a href="qlayout.html#closestAcceptableSize">closestAcceptableSize</a></b> ( const QWidget * <i>widget</i>, const QSize &amp; <i>size</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qlayout.html#addChildLayout">addChildLayout</a></b> ( QLayout * <i>l</i> )</li>
-<li><div class="fn"/>void <b><a href="qlayout.html#addChildWidget">addChildWidget</a></b> ( QWidget * <i>w</i> )</li>
-<li><div class="fn"/>QRect <b><a href="qlayout.html#alignmentRect">alignmentRect</a></b> ( const QRect &amp; <i>r</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#addChildLayout">addChildLayout</a></b> ( QLayout * <i>l</i> )</li>
+<li><div class="fn"></div>void <b><a href="qlayout.html#addChildWidget">addChildWidget</a></b> ( QWidget * <i>w</i> )</li>
+<li><div class="fn"></div>QRect <b><a href="qlayout.html#alignmentRect">alignmentRect</a></b> ( const QRect &amp; <i>r</i> ) const</li>
 </ul>
 <ul>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -127,8 +127,8 @@
 <p>The default mode is <a href="qlayout.html#SizeConstraint-enum">SetDefaultConstraint</a>.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>SizeConstraint sizeConstraint () const</b></li>
-<li><div class="fn"/><b>void setSizeConstraint ( SizeConstraint )</b></li>
+<li><div class="fn"></div><b>SizeConstraint sizeConstraint () const</b></li>
+<li><div class="fn"></div><b>void setSizeConstraint ( SizeConstraint )</b></li>
 </ul>
 <h3 class="fn"><a name="spacing-prop"></a>spacing : int</h3>
 <p>This property holds the spacing between widgets inside the layout.</p>
@@ -136,8 +136,8 @@
 <p>For <a href="qgridlayout.html">QGridLayout</a> and <a href="qformlayout.html">QFormLayout</a>, it is possible to set different horizontal and vertical spacings using <a href="qgridlayout.html#horizontalSpacing-prop">setHorizontalSpacing()</a> and <a href="qgridlayout.html#verticalSpacing-prop">setVerticalSpacing()</a>. In that case, spacing() returns -1.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int spacing () const</b></li>
-<li><div class="fn"/><b>void setSpacing ( int )</b></li>
+<li><div class="fn"></div><b>int spacing () const</b></li>
+<li><div class="fn"></div><b>void setSpacing ( int )</b></li>
 </ul>
 <p>See also <a href="qlayout.html#contentsRect">contentsRect</a>(), <a href="qlayout.html#getContentsMargins">getContentsMargins</a>(), <a href="qstyle.html#layoutSpacing">QStyle::layoutSpacing</a>(), and <a href="qstyle.html#pixelMetric">QStyle::pixelMetric</a>().</p>
 <hr />
@@ -205,7 +205,7 @@
          for (int i = 0; i &lt; layout-&gt;count(); ++i)
              paintLayout(painter, layout-&gt;itemAt(i));
      }
-     painter-&gt;drawRect(layout-&gt;geometry());
+     painter-&gt;drawRect(item-&gt;geometry());
  }
 
  void MyWidget::paintEvent(QPaintEvent *)
@@ -243,7 +243,6 @@
 <h3 class="fn"><a name="setAlignment"></a>bool QLayout::setAlignment ( <a href="qwidget.html">QWidget</a> * <i>w</i>, <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> <i>alignment</i> )</h3>
 <p>Sets the alignment for widget <i>w</i> to <i>alignment</i> and returns true if <i>w</i> is found in this layout (not including child layouts); otherwise returns false.</p>
 <h3 class="fn"><a name="setAlignment-2"></a>void QLayout::setAlignment ( <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> <i>alignment</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Sets the alignment of this item to <i>alignment</i>.</p>
 <p>See also <a href="qlayoutitem.html#setAlignment">QLayoutItem::setAlignment</a>().</p>
 <h3 class="fn"><a name="setAlignment-3"></a>bool QLayout::setAlignment ( QLayout * <i>l</i>, <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> <i>alignment</i> )</h3>
@@ -277,8 +276,8 @@
 <p>See also <a href="qlayout.html#activate">activate</a>() and <a href="qlayoutitem.html#invalidate">invalidate</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

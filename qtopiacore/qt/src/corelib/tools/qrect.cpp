@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -907,13 +911,37 @@ void QRect::moveCenter(const QPoint &p)
 
 bool QRect::contains(const QPoint &p, bool proper) const
 {
-    QRect r = normalized();
-    if (proper)
-        return p.x() > r.x1 && p.x() < r.x2 &&
-               p.y() > r.y1 && p.y() < r.y2;
-    else
-        return p.x() >= r.x1 && p.x() <= r.x2 &&
-               p.y() >= r.y1 && p.y() <= r.y2;
+    int l, r;
+    if (x2 < x1 - 1) {
+        l = x2;
+        r = x1;
+    } else {
+        l = x1;
+        r = x2;
+    }
+    if (proper) {
+        if (p.x() <= l || p.x() >= r)
+            return false;
+    } else {
+        if (p.x() < l || p.x() > r)
+            return false;
+    }
+    int t, b;
+    if (y2 < y1 - 1) {
+        t = y2;
+        b = y1;
+    } else {
+        t = y1;
+        b = y2;
+    }
+    if (proper) {
+        if (p.y() <= t || p.y() >= b)
+            return false;
+    } else {
+        if (p.y() < t || p.y() > b)
+            return false;
+    }
+    return true;
 }
 
 
@@ -949,12 +977,52 @@ bool QRect::contains(const QRect &r, bool proper) const
 {
     if (isNull() || r.isNull())
         return false;
-    QRect r1 = normalized();
-    QRect r2 = r.normalized();
-    if (proper)
-        return r2.x1 > r1.x1 && r2.x2 < r1.x2 && r2.y1 > r1.y1 && r2.y2 < r1.y2;
+
+    int l1 = x1;
+    int r1 = x1;
+    if (x2 - x1 + 1 < 0)
+        l1 = x2;
     else
-        return r2.x1 >= r1.x1 && r2.x2 <= r1.x2 && r2.y1 >= r1.y1 && r2.y2 <= r1.y2;
+        r1 = x2;
+
+    int l2 = r.x1;
+    int r2 = r.x1;
+    if (r.x2 - r.x1 + 1 < 0)
+        l2 = r.x2;
+    else
+        r2 = r.x2;
+
+    if (proper) {
+        if (l2 <= l1 || r2 >= r1)
+            return false;
+    } else {
+        if (l2 < l1 || r2 > r1)
+            return false;
+    }
+
+    int t1 = y1;
+    int b1 = y1;
+    if (y2 - y1 + 1 < 0)
+        t1 = y2;
+    else
+        b1 = y2;
+
+    int t2 = r.y1;
+    int b2 = r.y1;
+    if (r.y2 - r.y1 + 1 < 0)
+        t2 = r.y2;
+    else
+        b2 = r.y2;
+
+    if (proper) {
+        if (t2 <= t1 || b2 >= b1)
+            return false;
+    } else {
+        if (t2 < t1 || b2 > b1)
+            return false;
+    }
+
+    return true;
 }
 
 /*!
@@ -989,13 +1057,40 @@ QRect QRect::operator|(const QRect &r) const
         return r;
     if (r.isNull())
         return *this;
-    QRect r1 = normalized();
-    QRect r2 = r.normalized();
+
+    int l1 = x1;
+    int r1 = x1;
+    if (x2 - x1 + 1 < 0)
+        l1 = x2;
+    else
+        r1 = x2;
+
+    int l2 = r.x1;
+    int r2 = r.x1;
+    if (r.x2 - r.x1 + 1 < 0)
+        l2 = r.x2;
+    else
+        r2 = r.x2;
+
+    int t1 = y1;
+    int b1 = y1;
+    if (y2 - y1 + 1 < 0)
+        t1 = y2;
+    else
+        b1 = y2;
+
+    int t2 = r.y1;
+    int b2 = r.y1;
+    if (r.y2 - r.y1 + 1 < 0)
+        t2 = r.y2;
+    else
+        b2 = r.y2;
+
     QRect tmp;
-    tmp.x1 = qMin(r1.x1, r2.x1);
-    tmp.x2 = qMax(r1.x2, r2.x2);
-    tmp.y1 = qMin(r1.y1, r2.y1);
-    tmp.y2 = qMax(r1.y2, r2.y2);
+    tmp.x1 = qMin(l1, l2);
+    tmp.x2 = qMax(r1, r2);
+    tmp.y1 = qMin(t1, t2);
+    tmp.y2 = qMax(b1, b2);
     return tmp;
 }
 
@@ -1031,14 +1126,47 @@ QRect QRect::operator&(const QRect &r) const
 {
     if (isNull() || r.isNull())
         return QRect();
-    QRect r1 = normalized();
-    QRect r2 = r.normalized();
+
+    int l1 = x1;
+    int r1 = x1;
+    if (x2 - x1 + 1 < 0)
+        l1 = x2;
+    else
+        r1 = x2;
+
+    int l2 = r.x1;
+    int r2 = r.x1;
+    if (r.x2 - r.x1 + 1 < 0)
+        l2 = r.x2;
+    else
+        r2 = r.x2;
+
+    if (l1 > r2 || l2 > r1)
+        return QRect();
+
+    int t1 = y1;
+    int b1 = y1;
+    if (y2 - y1 + 1 < 0)
+        t1 = y2;
+    else
+        b1 = y2;
+
+    int t2 = r.y1;
+    int b2 = r.y1;
+    if (r.y2 - r.y1 + 1 < 0)
+        t2 = r.y2;
+    else
+        b2 = r.y2;
+
+    if (t1 > b2 || t2 > b1)
+        return QRect();
+
     QRect tmp;
-    tmp.x1 = qMax(r1.x1, r2.x1);
-    tmp.x2 = qMin(r1.x2, r2.x2);
-    tmp.y1 = qMax(r1.y1, r2.y1);
-    tmp.y2 = qMin(r1.y2, r2.y2);
-    return tmp.isEmpty() ? QRect() : tmp;
+    tmp.x1 = qMax(l1, l2);
+    tmp.x2 = qMin(r1, r2);
+    tmp.y1 = qMax(t1, t2);
+    tmp.y2 = qMin(b1, b2);
+    return tmp;
 }
 
 /*!
@@ -1077,12 +1205,43 @@ bool QRect::intersects(const QRect &r) const
 {
     if (isNull() || r.isNull())
         return false;
-    QRect r1 = normalized();
-    QRect r2 = r.normalized();
-    return (qMax(r1.x1, r2.x1) <= qMin(r1.x2, r2.x2) &&
-             qMax(r1.y1, r2.y1) <= qMin(r1.y2, r2.y2));
-}
 
+    int l1 = x1;
+    int r1 = x1;
+    if (x2 - x1 + 1 < 0)
+        l1 = x2;
+    else
+        r1 = x2;
+
+    int l2 = r.x1;
+    int r2 = r.x1;
+    if (r.x2 - r.x1 + 1 < 0)
+        l2 = r.x2;
+    else
+        r2 = r.x2;
+
+    if (l1 > r2 || l2 > r1)
+        return false;
+
+    int t1 = y1;
+    int b1 = y1;
+    if (y2 - y1 + 1 < 0)
+        t1 = y2;
+    else
+        b1 = y2;
+
+    int t2 = r.y1;
+    int b2 = r.y1;
+    if (r.y2 - r.y1 + 1 < 0)
+        t2 = r.y2;
+    else
+        b2 = r.y2;
+
+    if (t1 > b2 || t2 > b1)
+        return false;
+
+    return true;
+}
 
 /*!
     \fn bool operator==(const QRect &r1, const QRect &r2)
@@ -1400,11 +1559,11 @@ QRectF QRectF::normalized() const
 {
     QRectF r = *this;
     if (r.w < 0) {
-        r.xp = r.xp + r.w;
+        r.xp += r.w;
         r.w = -r.w;
     }
     if (r.h < 0) {
-        r.yp = r.yp + r.h;
+        r.yp += r.h;
         r.h = -r.h;
     }
     return r;
@@ -1811,11 +1970,31 @@ QRectF QRectF::normalized() const
 
 bool QRectF::contains(const QPointF &p) const
 {
-    if (isNull())
+    qreal l = xp;
+    qreal r = xp;
+    if (w < 0)
+        l += w;
+    else
+        r += w;
+    if (l == r) // null rect
         return false;
-    QRectF r = normalized();
-    return p.x() >= r.xp && p.x() <= r.xp + r.w &&
-           p.y() >= r.yp && p.y() <= r.yp + r.h;
+
+    if (p.x() < l || p.x() > r)
+        return false;
+
+    qreal t = yp;
+    qreal b = yp;
+    if (h < 0)
+        t += h;
+    else
+        b += h;
+    if (t == b) // null rect
+        return false;
+
+    if (p.y() < t || p.y() > b)
+        return false;
+
+    return true;
 }
 
 
@@ -1837,12 +2016,49 @@ bool QRectF::contains(const QPointF &p) const
 
 bool QRectF::contains(const QRectF &r) const
 {
-    if (isNull() || r.isNull())
+    qreal l1 = xp;
+    qreal r1 = xp;
+    if (w < 0)
+        l1 += w;
+    else
+        r1 += w;
+    if (l1 == r1) // null rect
         return false;
-    QRectF r1 = normalized();
-    QRectF r2 = r.normalized();
-    return r2.xp >= r1.xp && r2.xp + r2.w <= r1.xp + r1.w
-        && r2.yp >= r1.yp && r2.yp + r2.h <= r1.yp + r1.h;
+
+    qreal l2 = r.xp;
+    qreal r2 = r.xp;
+    if (r.w < 0)
+        l2 += r.w;
+    else
+        r2 += r.w;
+    if (l2 == r2) // null rect
+        return false;
+
+    if (l2 < l1 || r2 > r1)
+        return false;
+
+    qreal t1 = yp;
+    qreal b1 = yp;
+    if (h < 0)
+        t1 += h;
+    else
+        b1 += h;
+    if (t1 == b1) // null rect
+        return false;
+
+    qreal t2 = r.yp;
+    qreal b2 = r.yp;
+    if (r.h < 0)
+        t2 += r.h;
+    else
+        b2 += r.h;
+    if (t2 == b2) // null rect
+        return false;
+
+    if (t2 < t1 || b2 > b1)
+        return false;
+
+    return true;
 }
 
 /*!
@@ -1938,17 +2154,47 @@ bool QRectF::contains(const QRectF &r) const
 
 QRectF QRectF::operator|(const QRectF &r) const
 {
-    if (isNull())
+    qreal l1 = xp;
+    qreal r1 = xp;
+    if (w < 0)
+        l1 += w;
+    else
+        r1 += w;
+    if (l1 == r1) // null rect
         return r;
-    if (r.isNull())
+
+    qreal l2 = r.xp;
+    qreal r2 = r.xp;
+    if (r.w < 0)
+        l2 += r.w;
+    else
+        r2 += r.w;
+    if (l2 == r2) // null rect
         return *this;
-    QRectF r1 = normalized();
-    QRectF r2 = r.normalized();
+
+    qreal t1 = yp;
+    qreal b1 = yp;
+    if (h < 0)
+        t1 += h;
+    else
+        b1 += h;
+    if (t1 == b1) // null rect
+        return r;
+
+    qreal t2 = r.yp;
+    qreal b2 = r.yp;
+    if (r.h < 0)
+        t2 += r.h;
+    else
+        b2 += r.h;
+    if (t2 == b2) // null rect
+        return *this;
+
     QRectF tmp;
-    tmp.xp = qMin(r1.xp, r2.xp);
-    tmp.yp = qMin(r1.yp, r2.yp);
-    tmp.w = qMax(r1.xp + r1.w, r2.xp + r2.w) - tmp.xp;
-    tmp.h = qMax(r1.yp + r1.h, r2.yp + r2.h) - tmp.yp;
+    tmp.xp = qMin(l1, l2);
+    tmp.yp = qMin(t1, t2);
+    tmp.w = qMax(r1, r2) - tmp.xp;
+    tmp.h = qMax(b1, b2) - tmp.yp;
     return tmp;
 }
 
@@ -1983,16 +2229,54 @@ QRectF QRectF::operator|(const QRectF &r) const
 
 QRectF QRectF::operator&(const QRectF &r) const
 {
-    if (isNull() || r.isNull())
+    qreal l1 = xp;
+    qreal r1 = xp;
+    if (w < 0)
+        l1 += w;
+    else
+        r1 += w;
+    if (l1 == r1) // null rect
         return QRectF();
-    QRectF r1 = normalized();
-    QRectF r2 = r.normalized();
+
+    qreal l2 = r.xp;
+    qreal r2 = r.xp;
+    if (r.w < 0)
+        l2 += r.w;
+    else
+        r2 += r.w;
+    if (l2 == r2) // null rect
+        return QRectF();
+
+    if (l1 >= r2 || l2 >= r1)
+        return QRectF();
+
+    qreal t1 = yp;
+    qreal b1 = yp;
+    if (h < 0)
+        t1 += h;
+    else
+        b1 += h;
+    if (t1 == b1) // null rect
+        return QRectF();
+
+    qreal t2 = r.yp;
+    qreal b2 = r.yp;
+    if (r.h < 0)
+        t2 += r.h;
+    else
+        b2 += r.h;
+    if (t2 == b2) // null rect
+        return QRectF();
+
+    if (t1 >= b2 || t2 >= b1)
+        return QRectF();
+
     QRectF tmp;
-    tmp.xp = qMax(r1.xp, r2.xp);
-    tmp.yp = qMax(r1.yp, r2.yp);
-    tmp.w = qMin(r1.xp + r1.w, r2.xp + r2.w) - tmp.xp;
-    tmp.h = qMin(r1.yp + r1.h, r2.yp + r2.h) - tmp.yp;
-    return tmp.isEmpty() ? QRectF() : tmp;
+    tmp.xp = qMax(l1, l2);
+    tmp.yp = qMax(t1, t2);
+    tmp.w = qMin(r1, r2) - tmp.xp;
+    tmp.h = qMin(b1, b2) - tmp.yp;
+    return tmp;
 }
 
 /*!
@@ -2030,12 +2314,49 @@ QRectF QRectF::operator&(const QRectF &r) const
 
 bool QRectF::intersects(const QRectF &r) const
 {
-    if (isNull() || r.isNull())
+    qreal l1 = xp;
+    qreal r1 = xp;
+    if (w < 0)
+        l1 += w;
+    else
+        r1 += w;
+    if (l1 == r1) // null rect
         return false;
-    QRectF r1 = normalized();
-    QRectF r2 = r.normalized();
-    return qMax(r1.xp, r2.xp) < qMin(r1.xp + r1.w, r2.xp + r2.w)
-        && qMax(r1.yp, r2.yp) < qMin(r1.yp + r1.h, r2.yp + r2.h);
+
+    qreal l2 = r.xp;
+    qreal r2 = r.xp;
+    if (r.w < 0)
+        l2 += r.w;
+    else
+        r2 += r.w;
+    if (l2 == r2) // null rect
+        return false;
+
+    if (l1 >= r2 || l2 >= r1)
+        return false;
+
+    qreal t1 = yp;
+    qreal b1 = yp;
+    if (h < 0)
+        t1 += h;
+    else
+        b1 += h;
+    if (t1 == b1) // null rect
+        return false;
+
+    qreal t2 = r.yp;
+    qreal b2 = r.yp;
+    if (r.h < 0)
+        t2 += r.h;
+    else
+        b2 += r.h;
+    if (t2 == b2) // null rect
+        return false;
+
+    if (t1 >= b2 || t2 >= b1)
+        return false;
+
+    return true;
 }
 
 /*!
@@ -2060,10 +2381,10 @@ bool QRectF::intersects(const QRectF &r) const
 
 QRect QRectF::toAlignedRect() const
 {
-    int xmin = int(qFloor(x()));
-    int xmax = int(qCeil(x() + width()));
-    int ymin = int(qFloor(y()));
-    int ymax = int(qCeil(y() + height()));
+    int xmin = int(qFloor(xp));
+    int xmax = int(qCeil(xp + w));
+    int ymin = int(qFloor(yp));
+    int ymax = int(qCeil(yp + h));
     return QRect(xmin, ymin, xmax - xmin, ymax - ymin);
 }
 

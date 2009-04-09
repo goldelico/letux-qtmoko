@@ -2,7 +2,8 @@
  * This file is part of the WebKit project.
  *
  * Copyright (C) 2006 Oliver Hunt <ojh16@student.canterbury.ac.nz>
- *           (C) 2006 Apple Computer Inc.
+ * Copyright (C) 2006, 2008 Apple Inc. All rights reserved.
+ *           (C) 2008 Rob Buis <buis@kde.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,14 +32,26 @@
 namespace WebCore {
 class RenderSVGInlineText : public RenderText {
 public:
-    RenderSVGInlineText(Node*, StringImpl*);
+    RenderSVGInlineText(Node*, PassRefPtr<StringImpl>);
     virtual const char* renderName() const { return "RenderSVGInlineText"; }
+
     virtual void absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool topLevel = true);
+    virtual void absoluteQuads(Vector<FloatQuad>&, bool topLevel = true);
+
     virtual bool requiresLayer() { return false; }
     virtual IntRect selectionRect(bool clipToVisibleContent = true);
     virtual bool isSVGText() const { return true; }
     virtual InlineTextBox* createInlineTextBox();
+
+    virtual IntRect localCaretRect(InlineBox*, int caretOffset, int* extraWidthToEndOfLine = 0);
+    virtual VisiblePosition positionForCoordinates(int x, int y);
+
+    virtual void destroy();
+
+private:
+    IntRect computeAbsoluteRectForRange(int startPos, int endPos);
 };
+
 }
 
 #endif // ENABLE(SVG)

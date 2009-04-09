@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -60,6 +67,10 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
+
+#ifdef QT_FONTS_ARE_RESOURCES
+#include <qresource.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -112,6 +123,7 @@ void QFontDatabasePrivate::addFont(const QString &familyname, const char *foundr
 #ifndef QT_NO_QWS_QPF2
 void QFontDatabasePrivate::addQPF2File(const QByteArray &file)
 {
+#ifndef QT_FONTS_ARE_RESOURCES
     struct stat st;
     if (stat(file.constData(), &st))
         return;
@@ -119,8 +131,15 @@ void QFontDatabasePrivate::addQPF2File(const QByteArray &file)
     if (f < 0)
         return;
     const uchar *data = (const uchar *)mmap(0, st.st_size, PROT_READ, MAP_SHARED, f, 0);
+    const int dataSize = st.st_size;
+#else
+    QResource res(QLatin1String(file.constData()));
+    const uchar *data = res.data();
+    const int dataSize = res.size();
+    //qDebug() << "addQPF2File" << file << data;
+#endif
     if (data && data != (const uchar *)MAP_FAILED) {
-        if (QFontEngineQPF::verifyHeader(data, st.st_size)) {
+        if (QFontEngineQPF::verifyHeader(data, dataSize)) {
             QString fontName = QFontEngineQPF::extractHeaderField(data, QFontEngineQPF::Tag_FontName).toString();
             int pixelSize = QFontEngineQPF::extractHeaderField(data, QFontEngineQPF::Tag_PixelSize).toInt();
             QVariant weight = QFontEngineQPF::extractHeaderField(data, QFontEngineQPF::Tag_Weight);
@@ -151,9 +170,13 @@ void QFontDatabasePrivate::addQPF2File(const QByteArray &file)
         } else {
             qDebug() << "header verification of QPF2 font" << file << "failed. maybe it is corrupt?";
         }
+#ifndef QT_FONTS_ARE_RESOURCES
         munmap((void *)data, st.st_size);
+#endif
     }
+#ifndef QT_FONTS_ARE_RESOURCES
     ::close(f);
+#endif
 }
 #endif
 
@@ -228,6 +251,7 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt);
 
 extern QString qws_fontCacheDir();
 
+#ifndef QT_FONTS_ARE_RESOURCES
 bool QFontDatabasePrivate::loadFromCache(const QString &fontPath)
 {
     const bool weAreTheServer = QWSServer::instance();
@@ -309,6 +333,7 @@ bool QFontDatabasePrivate::loadFromCache(const QString &fontPath)
     //qDebug() << "fallback families from cache:" << fallbackFamilies;
     return true;
 }
+#endif // QT_FONTS_ARE_RESOURCES
 
 /*!
     \internal
@@ -318,17 +343,30 @@ static QString qwsFontPath()
 {
     QString fontpath = QString::fromLocal8Bit(qgetenv("QT_QWS_FONTDIR"));
     if (fontpath.isEmpty()) {
+#ifdef QT_FONTS_ARE_RESOURCES
+        fontpath = QLatin1String(":/qt/fonts");
+#else
 #ifndef QT_NO_SETTINGS
         fontpath = QLibraryInfo::location(QLibraryInfo::LibrariesPath);
         fontpath += QLatin1String("/fonts");
 #else
         fontpath = QLatin1String("/lib/fonts");
 #endif
+#endif //QT_FONTS_ARE_RESOURCES
     }
 
     return fontpath;
 }
 
+#ifdef QFONTDATABASE_DEBUG
+class FriendlyResource : public QResource
+{
+public:
+    bool isDir () const { return QResource::isDir(); }
+    bool isFile () const { return QResource::isFile(); }
+    QStringList children () const { return QResource::children(); }
+};
+#endif
 /*!
     \internal
 */
@@ -338,6 +376,17 @@ static void initializeDb()
     if (!db || db->count)
         return;
 
+    QString fontpath = qwsFontPath();
+#ifndef QT_FONTS_ARE_RESOURCES
+    QString fontDirFile = fontpath + QLatin1String("/fontdir");
+
+    if(!QFile::exists(fontpath)) {
+        qFatal("QFontDatabase: Cannot find font directory %s - is Qt installed correctly?",
+               fontpath.toLocal8Bit().constData());
+    }
+
+    const bool loaded = db->loadFromCache(fontpath);
+
     if (db->reregisterAppFonts) {
         db->reregisterAppFonts = false;
         for (int i = 0; i < db->applicationFonts.count(); ++i)
@@ -346,15 +395,7 @@ static void initializeDb()
             }
     }
 
-    QString fontpath = qwsFontPath();
-    QString fontDirFile = fontpath + QLatin1String("/fontdir");
-
-    if(!QFile::exists(fontpath)) {
-        qFatal("QFontDatabase: Cannot find font directory %s - is Qt installed correctly?",
-               fontpath.toLocal8Bit().constData());
-    }
-
-    if (db->loadFromCache(fontpath))
+    if (loaded)
         return;
 
     QString dbFileName = qws_fontCacheDir() + QLatin1String("/fontdb");
@@ -422,6 +463,7 @@ static void initializeDb()
         db->addTTFile(file);
     }
 #endif
+
 #ifndef QT_NO_QWS_QPF2
     dir.setNameFilters(QStringList() << QLatin1String("*.qpf2"));
     dir.refresh();
@@ -431,6 +473,24 @@ static void initializeDb()
         db->addQPF2File(file);
     }
 #endif
+
+#else //QT_FONTS_ARE_RESOURCES
+#ifdef QFONTDATABASE_DEBUG
+    {
+        QResource fontdir(fontpath);
+        FriendlyResource *fr = static_cast<FriendlyResource*>(&fontdir);
+        qDebug() << "fontdir" << fr->isValid() << fr->isDir() << fr->children();
+
+    }
+#endif
+    QDir dir(fontpath, QLatin1String("*.qpf2"));
+    for (int i = 0; i < int(dir.count()); ++i) {
+        const QByteArray file = QFile::encodeName(dir.absoluteFilePath(dir[i]));
+        //qDebug() << "looking at" << file;
+        db->addQPF2File(file);
+    }
+#endif //QT_FONTS_ARE_RESOURCES
+
 
 #ifdef QFONTDATABASE_DEBUG
     // print the database
@@ -501,9 +561,10 @@ static void initializeDb()
     }
 #endif
 
+#ifndef QT_FONTS_ARE_RESOURCES
     // the empty string/familyname signifies the end of the font list.
     *db->stream << QString();
-
+#endif
     {
         bool coveredWritingSystems[QFontDatabase::WritingSystemsCount] = { 0 };
 
@@ -528,13 +589,16 @@ static void initializeDb()
                 db->fallbackFamilies << family->name;
         }
         //qDebug() << "fallbacks on the server:" << db->fallbackFamilies;
+#ifndef QT_FONTS_ARE_RESOURCES
         *db->stream << db->fallbackFamilies;
+#endif
     }
-
+#ifndef QT_FONTS_ARE_RESOURCES
     delete db->stream;
     db->stream = 0;
     QFile::remove(dbFileName);
     binaryDb.rename(dbFileName);
+#endif
 }
 
 // called from qwindowsystem_qws.cpp
@@ -594,11 +658,23 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
     Q_ASSERT(size);
 
     int pixelSize = size->pixelSize;
-    if (!pixelSize || style->smoothScalable && pixelSize == SMOOTH_SCALABLE)
+    if (!pixelSize || (style->smoothScalable && pixelSize == SMOOTH_SCALABLE))
         pixelSize = request.pixelSize;
 
 #ifndef QT_NO_QWS_QPF2
     if (foundry->name == QLatin1String("prerendered")) {
+#ifdef QT_FONTS_ARE_RESOURCES
+        QResource res(QLatin1String(size->fileName.constData()));
+        if (res.isValid()) {
+            QFontEngineQPF *fe = new QFontEngineQPF(request, res.data(), res.size());
+            if (fe->isValid())
+                return fe;
+            qDebug() << "fontengine is not valid! " << size->fileName;
+            delete fe;
+        } else {
+            qDebug() << "Resource not valid" << size->fileName;
+        }
+#else
         int f = ::open(size->fileName, O_RDONLY);
         if (f >= 0) {
             QFontEngineQPF *fe = new QFontEngineQPF(request, f);
@@ -607,9 +683,9 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
             qDebug() << "fontengine is not valid!";
             delete fe; // will close f
         }
+#endif
     } else
 #endif
-#ifndef QT_NO_FREETYPE
     if ( foundry->name != QLatin1String("qt") ) { ///#### is this the best way????
         QString file = QFile::decodeName(size->fileName);
 
@@ -621,9 +697,8 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
 
         QFontEngine *engine = 0;
 
-        if (file.isEmpty()) {
 #ifndef QT_NO_LIBRARY
-            QFontEngineFactoryInterface *factory = qobject_cast<QFontEngineFactoryInterface *>(loader()->instance(foundry->name));
+        QFontEngineFactoryInterface *factory = qobject_cast<QFontEngineFactoryInterface *>(loader()->instance(foundry->name));
             if (factory) {
                 QFontEngineInfo info;
                 info.setFamily(request.family);
@@ -644,12 +719,14 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
                             shareFonts = (pixelSize < 64);
                     }
                 }
-            }
+        }
 #endif // QT_NO_LIBRARY
-        } else if (QFile::exists(file) || privateDb()->isApplicationFont(file)) {
+            if (!engine && !file.isEmpty() && QFile::exists(file) || privateDb()->isApplicationFont(file)) {
             QFontEngine::FaceId faceId;
             faceId.filename = file.toLocal8Bit();
             faceId.index = size->fileIndex;
+
+#ifndef QT_NO_FREETYPE
 
             QFontEngineFT *fte = new QFontEngineFT(def);
             if (fte->init(faceId, style->antialiased,
@@ -661,15 +738,16 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
                 // try to distinguish between bdf and ttf fonts we can pre-render
                 // and don't try to share outline fonts
                 shareFonts = shareFonts
-                             && !fte->drawAsOutline()
+                             && !fte->defaultGlyphs()->outline_drawing
                              && !fte->getSfntTable(MAKE_TAG('h', 'e', 'a', 'd')).isEmpty();
 #endif
             } else {
                 delete fte;
             }
+#endif // QT_NO_FREETYPE
         }
         if (engine) {
-#ifndef QT_NO_QWS_QPF2
+#if !defined(QT_NO_QWS_QPF2) && !defined(QT_FONTS_ARE_RESOURCES)
             if (shareFonts) {
                 QFontEngineQPF *fe = new QFontEngineQPF(def, -1, engine);
                 engine = 0;
@@ -683,7 +761,6 @@ QFontEngine *loadSingleEngine(int script, const QFontPrivate *fp,
             return engine;
         }
     } else
-#endif // QT_NO_FREETYPE
     {
 #ifndef QT_NO_QWS_QPF
         QString fn = qwsFontPath();
@@ -731,6 +808,7 @@ static void registerFont(QFontDatabasePrivate::ApplicationFont *fnt)
     Q_UNUSED(fnt);
 #else
     fnt->families = db->addTTFile(QFile::encodeName(fnt->fileName), fnt->data);
+    db->fallbackFamilies += fnt->families;
 #endif
     db->reregisterAppFonts = true;
 }

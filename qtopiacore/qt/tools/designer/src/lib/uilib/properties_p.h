@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QMetaProperty>
 #include <QtCore/QLocale>
+#include <QtCore/QCoreApplication>
+
 #include <QtGui/QWidget>
 
 #include "formbuilderextra_p.h"
@@ -68,7 +74,7 @@ namespace QFormInternal
 class QAbstractFormBuilder;
 class DomProperty;
 
-QDESIGNER_UILIB_EXPORT DomProperty *variantToDomProperty(QAbstractFormBuilder *abstractFormBuilder, QObject *object, const QString &propertyName, const QVariant &value);
+QDESIGNER_UILIB_EXPORT DomProperty *variantToDomProperty(QAbstractFormBuilder *abstractFormBuilder, const QMetaObject *meta, const QString &propertyName, const QVariant &value);
 
 
 QDESIGNER_UILIB_EXPORT QVariant domPropertyToVariant(const DomProperty *property);
@@ -79,6 +85,9 @@ QDESIGNER_UILIB_EXPORT QVariant domPropertyToVariant(QAbstractFormBuilder *abstr
 class QAbstractFormBuilderGadget: public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(Qt::ItemFlags itemFlags READ fakeItemFlags)
+    Q_PROPERTY(Qt::CheckState checkState READ fakeCheckState)
+    Q_PROPERTY(Qt::Alignment textAlignment READ fakeAlignment)
     Q_PROPERTY(Qt::Orientation orientation READ fakeOrientation)
     Q_PROPERTY(QSizePolicy::Policy sizeType READ fakeSizeType)
     Q_PROPERTY(QPalette::ColorRole colorRole READ fakeColorRole)
@@ -108,6 +117,9 @@ public:
     QGradient::CoordinateMode fakeGradientCoordinate() const  { Q_ASSERT(0); return QGradient::LogicalMode; }
     QLocale::Language fakeLanguage() const  { Q_ASSERT(0); return QLocale::C; }
     QLocale::Country fakeCountry() const  { Q_ASSERT(0); return QLocale::AnyCountry; }
+    Qt::ItemFlags fakeItemFlags() const         { Q_ASSERT(0); return Qt::NoItemFlags; }
+    Qt::CheckState fakeCheckState() const       { Q_ASSERT(0); return Qt::Unchecked; }
+    Qt::Alignment fakeAlignment() const         { Q_ASSERT(0); return Qt::AlignLeft; }
 };
 
 // Convert key to value for a given QMetaEnum
@@ -117,11 +129,25 @@ inline EnumType enumKeyToValue(const QMetaEnum &metaEnum,const char *key, const 
     int val = metaEnum.keyToValue(key);
     if (val == -1) {
 
-        uiLibWarning(QObject::tr("The enumeration-value \"%1\" is invalid. The default value \"%2\" will be used instead.")
+        uiLibWarning(QCoreApplication::translate("QFormBuilder", "The enumeration-value '%1' is invalid. The default value '%2' will be used instead.")
                     .arg(QString::fromUtf8(key)).arg(QString::fromUtf8(metaEnum.key(0))));
         val = metaEnum.value(0);
     }
     return static_cast<EnumType>(val);
+}
+
+// Convert keys to value for a given QMetaEnum
+template <class EnumType>
+inline EnumType enumKeysToValue(const QMetaEnum &metaEnum,const char *keys, const EnumType* = 0)
+{
+    int val = metaEnum.keysToValue(keys);
+    if (val == -1) {
+
+        uiLibWarning(QCoreApplication::translate("QFormBuilder", "The flag-value '%1' is invalid. Zero will be used instead.")
+                    .arg(QString::fromUtf8(keys)));
+        val = 0;
+    }
+    return static_cast<EnumType>(QFlag(val));
 }
 
 // Access meta enumeration object of a qobject

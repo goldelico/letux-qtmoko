@@ -50,6 +50,11 @@ CL_NS_DEF(search)
 		}
 
 		BooleanClause(const BooleanClause& clone):
+#if defined(LUCENE_ENABLE_MEMLEAKTRACKING)
+#elif defined(LUCENE_ENABLE_REFCOUNT)
+#else
+			LuceneVoidBase(),
+#endif
 			query(clone.query->clone()),
 			required(clone.required),
 			prohibited(clone.prohibited),

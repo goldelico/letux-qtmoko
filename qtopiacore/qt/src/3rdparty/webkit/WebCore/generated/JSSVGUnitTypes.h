@@ -18,50 +18,68 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGUnitTypes_H
-#define JSSVGUnitTypes_H
+#ifndef JSSVGUnitTypes_h
+#define JSSVGUnitTypes_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
 class SVGUnitTypes;
 
-class JSSVGUnitTypes : public KJS::DOMObject {
+class JSSVGUnitTypes : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGUnitTypes(KJS::ExecState*, SVGUnitTypes*);
+    JSSVGUnitTypes(PassRefPtr<JSC::Structure>, PassRefPtr<SVGUnitTypes>, SVGElement* context);
     virtual ~JSSVGUnitTypes();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     SVGUnitTypes* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGUnitTypes> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGUnitTypes > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGUnitTypes*);
-SVGUnitTypes* toSVGUnitTypes(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGUnitTypes*, SVGElement* context);
+SVGUnitTypes* toSVGUnitTypes(JSC::JSValuePtr);
 
-class JSSVGUnitTypesPrototype : public KJS::JSObject {
+class JSSVGUnitTypesPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGUnitTypesPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGUnitTypesPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGUnitTypesConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGUnitTypesSVG_UNIT_TYPE_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGUnitTypesSVG_UNIT_TYPE_USERSPACEONUSE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGUnitTypesSVG_UNIT_TYPE_OBJECTBOUNDINGBOX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

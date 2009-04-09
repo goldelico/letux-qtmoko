@@ -25,168 +25,173 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLParamElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLParamElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLParamElementTableEntries[] =
+static const HashTableValue JSHTMLParamElementTableValues[6] =
 {
-    { "name", JSHTMLParamElement::NameAttrNum, DontDelete, 0, 0 },
-    { "valueType", JSHTMLParamElement::ValueTypeAttrNum, DontDelete, 0, 0 },
-    { "value", JSHTMLParamElement::ValueAttrNum, DontDelete, 0, &JSHTMLParamElementTableEntries[5] },
-    { "type", JSHTMLParamElement::TypeAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLParamElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "name", DontDelete, (intptr_t)jsHTMLParamElementName, (intptr_t)setJSHTMLParamElementName },
+    { "type", DontDelete, (intptr_t)jsHTMLParamElementType, (intptr_t)setJSHTMLParamElementType },
+    { "value", DontDelete, (intptr_t)jsHTMLParamElementValue, (intptr_t)setJSHTMLParamElementValue },
+    { "valueType", DontDelete, (intptr_t)jsHTMLParamElementValueType, (intptr_t)setJSHTMLParamElementValueType },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLParamElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLParamElementTable = 
-{
-    2, 6, JSHTMLParamElementTableEntries, 5
-};
+static const HashTable JSHTMLParamElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSHTMLParamElementTableValues, 0 };
+#else
+    { 18, 15, JSHTMLParamElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLParamElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLParamElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLParamElementConstructorTable = 
-{
-    2, 1, JSHTMLParamElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLParamElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLParamElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLParamElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLParamElementConstructor : public DOMObject {
 public:
     JSHTMLParamElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLParamElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLParamElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLParamElementConstructor::info = { "HTMLParamElementConstructor", 0, &JSHTMLParamElementConstructorTable, 0 };
+const ClassInfo JSHTMLParamElementConstructor::s_info = { "HTMLParamElementConstructor", 0, &JSHTMLParamElementConstructorTable, 0 };
 
 bool JSHTMLParamElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLParamElementConstructor, DOMObject>(exec, &JSHTMLParamElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLParamElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLParamElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLParamElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLParamElementPrototypeTable = 
-{
-    2, 1, JSHTMLParamElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLParamElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLParamElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLParamElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLParamElementPrototype::info = { "HTMLParamElementPrototype", 0, &JSHTMLParamElementPrototypeTable, 0 };
+const ClassInfo JSHTMLParamElementPrototype::s_info = { "HTMLParamElementPrototype", 0, &JSHTMLParamElementPrototypeTable, 0 };
 
 JSObject* JSHTMLParamElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLParamElementPrototype>(exec, "[[JSHTMLParamElement.prototype]]");
+    return getDOMPrototype<JSHTMLParamElement>(exec);
 }
 
-const ClassInfo JSHTMLParamElement::info = { "HTMLParamElement", &JSHTMLElement::info, &JSHTMLParamElementTable, 0 };
+const ClassInfo JSHTMLParamElement::s_info = { "HTMLParamElement", &JSHTMLElement::s_info, &JSHTMLParamElementTable, 0 };
 
-JSHTMLParamElement::JSHTMLParamElement(ExecState* exec, HTMLParamElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLParamElement::JSHTMLParamElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLParamElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLParamElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLParamElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLParamElementPrototype(JSHTMLParamElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLParamElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLParamElement, JSHTMLElement>(exec, &JSHTMLParamElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLParamElement, Base>(exec, &JSHTMLParamElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLParamElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLParamElementName(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NameAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        return jsString(imp->name());
-    }
-    case TypeAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case ValueAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        return jsString(imp->value());
-    }
-    case ValueTypeAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        return jsString(imp->valueType());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->name());
 }
 
-void JSHTMLParamElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLParamElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLParamElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLParamElementTable, this);
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
 }
 
-void JSHTMLParamElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLParamElementValue(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case NameAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        imp->setName(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TypeAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ValueAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        imp->setValue(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ValueTypeAttrNum: {
-        HTMLParamElement* imp = static_cast<HTMLParamElement*>(impl());
-
-        imp->setValueType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->value());
 }
 
-JSValue* JSHTMLParamElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLParamElementValueType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLParamElementConstructor>(exec, "[[HTMLParamElement.constructor]]");
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->valueType());
 }
+
+JSValuePtr jsHTMLParamElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLParamElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLParamElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLParamElement, Base>(exec, propertyName, value, &JSHTMLParamElementTable, this, slot);
+}
+
+void setJSHTMLParamElementName(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(thisObject)->impl());
+    imp->setName(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLParamElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLParamElementValue(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(thisObject)->impl());
+    imp->setValue(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLParamElementValueType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLParamElement* imp = static_cast<HTMLParamElement*>(static_cast<JSHTMLParamElement*>(thisObject)->impl());
+    imp->setValueType(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLParamElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLParamElementConstructor>(exec);
+}
+
 
 }

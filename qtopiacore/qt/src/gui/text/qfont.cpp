@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -59,6 +63,7 @@
 
 #ifdef Q_WS_X11
 #include "qx11info_x11.h"
+#include <private/qt_x11_p.h>
 #endif
 #ifdef Q_WS_QWS
 #include "qscreen_qws.h"
@@ -67,6 +72,8 @@
 #include "qfontengine_qpf_p.h"
 #endif
 #endif
+
+#include <QMutexLocker>
 
 // #define QFONTCACHE_DEBUG
 #ifdef QFONTCACHE_DEBUG
@@ -244,6 +251,8 @@ QFontPrivate::~QFontPrivate()
 #if !defined(Q_WS_MAC)
 QFontEngine *QFontPrivate::engineForScript(int script) const
 {
+    extern QMutex *qt_fontdatabase_mutex();
+    QMutexLocker locker(qt_fontdatabase_mutex());
     if (script >= QUnicodeTables::Inherited)
         script = QUnicodeTables::Common;
     if (engineData && engineData->fontCache != QFontCache::instance()) {
@@ -258,6 +267,8 @@ QFontEngine *QFontPrivate::engineForScript(int script) const
 #else
 QFontEngine *QFontPrivate::engineForScript(int script) const
 {
+    extern QMutex *qt_fontdatabase_mutex();
+    QMutexLocker locker(qt_fontdatabase_mutex());
     if (script >= QUnicodeTables::Inherited)
         script = QUnicodeTables::Common;
     if (engineData && engineData->fontCache != QFontCache::instance()) {
@@ -1780,6 +1791,10 @@ static void initFontSubst()
     Q_ASSERT(fontSubst != 0);
     if (!fontSubst->isEmpty())
         return;
+#if defined(Q_WS_X11) && !defined(QT_NO_FONTCONFIG)
+    if (X11->has_fontconfig)
+        return;
+#endif
 
     for (int i=0; initTbl[i] != 0; i += 2) {
         QStringList &list = (*fontSubst)[QString::fromLatin1(initTbl[i])];
@@ -1953,6 +1968,8 @@ static quint8 get_extended_font_bits(const QFontPrivate *f)
     quint8 bits = 0;
     if (f->request.ignorePitch)
         bits |= 0x01;
+    if (f->letterSpacingIsAbsolute)
+        bits |= 0x02;
     return bits;
 }
 
@@ -1981,7 +1998,8 @@ static void set_font_bits(int version, quint8 bits, QFontPrivate *f)
 static void set_extended_font_bits(quint8 bits, QFontPrivate *f)
 {
     Q_ASSERT(f != 0);
-    f->request.ignorePitch   = (bits & 0x01) != 0;
+    f->request.ignorePitch = (bits & 0x01) != 0;
+    f->letterSpacingIsAbsolute = (bits & 0x02) != 0;
 }
 #endif
 
@@ -2132,6 +2150,10 @@ QDataStream &operator<<(QDataStream &s, const QFont &font)
         s << (quint16)font.d->request.stretch;
     if (s.version() >= QDataStream::Qt_4_4)
         s << get_extended_font_bits(font.d);
+    if (s.version() >= QDataStream::Qt_4_5) {
+        s << font.d->letterSpacing.value();
+        s << font.d->wordSpacing.value();
+    }
     return s;
 }
 
@@ -2202,6 +2224,13 @@ QDataStream &operator>>(QDataStream &s, QFont &font)
         quint8 extendedBits;
         s >> extendedBits;
         set_extended_font_bits(extendedBits, font.d);
+    }
+    if (s.version() >= QDataStream::Qt_4_5) {
+        int value;
+        s >> value;
+        font.d->letterSpacing.setValue(value);
+        s >> value;
+        font.d->wordSpacing.setValue(value);
     }
 
     return s;
@@ -2453,10 +2482,10 @@ bool QFontInfo::fixedPitch() const
 #ifdef Q_OS_MAC
     if (!engine->fontDef.fixedPitchComputed) {
         QChar ch[2] = { QLatin1Char('i'), QLatin1Char('m') };
-        QGlyphLayout g[2];
+        QGlyphLayoutArray<2> g;
         int l = 2;
-        engine->stringToCMap(ch, 2, g, &l, 0);
-        engine->fontDef.fixedPitch = g[0].advance.x == g[1].advance.x;
+        engine->stringToCMap(ch, 2, &g, &l, 0);
+        engine->fontDef.fixedPitch = g.advances_x[0] == g.advances_x[1];
         engine->fontDef.fixedPitchComputed = true;
     }
 #endif

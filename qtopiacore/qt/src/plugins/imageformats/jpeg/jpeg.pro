@@ -9,8 +9,8 @@ SOURCES += main.cpp \
 
 wince*: { 
 	DEFINES += NO_GETENV 
-	contains(CE_ARCH,x86):CONFIG -= exceptions
-	contains(CE_ARCH,x86):CONFIG -= stl
+	contains(CE_ARCH,x86):CONFIG -= stl exceptions
+	contains(CE_ARCH,x86):CONFIG += exceptions_off
 }
 
 contains(QT_CONFIG, system-jpeg) {

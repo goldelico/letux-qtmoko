@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,10 +48,15 @@
 
 #include "qpainter.h"
 #include "qfile.h"
+#include "qbuffer.h"
 #include "qbytearray.h"
 #include "qqueue.h"
 #include "qstack.h"
 #include "qdebug.h"
+
+#ifndef QT_NO_COMPRESS
+#include <zlib.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -63,14 +72,114 @@ QSvgTinyDocument::~QSvgTinyDocument()
 {
 }
 
+#ifndef QT_NO_COMPRESS
+#   ifdef QT_BUILD_INTERNAL
+Q_AUTOTEST_EXPORT QByteArray qt_inflateGZipDataFrom(QIODevice *device);
+#   else
+static QByteArray qt_inflateGZipDataFrom(QIODevice *device);
+#   endif
+
+QByteArray qt_inflateGZipDataFrom(QIODevice *device)
+{
+    if (!device)
+        return QByteArray();
+
+    if (!device->isOpen())
+        device->open(QIODevice::ReadOnly);
+
+    Q_ASSERT(device->isOpen() && device->isReadable());
+
+    static const int CHUNK_SIZE = 4096;
+    int zlibResult = Z_OK;
+
+    QByteArray source;
+    QByteArray destination;
+
+    // Initialize zlib stream struct
+    z_stream zlibStream;
+    zlibStream.next_in = Z_NULL;
+    zlibStream.avail_in = 0;
+    zlibStream.avail_out = 0;
+    zlibStream.zalloc = Z_NULL;
+    zlibStream.zfree = Z_NULL;
+    zlibStream.opaque = Z_NULL;
+
+    // Adding 16 to the window size gives us gzip decoding
+    if (inflateInit2(&zlibStream, MAX_WBITS + 16) != Z_OK) {
+        qWarning("Cannot initialize zlib, because: %s",
+                (zlibStream.msg != NULL ? zlibStream.msg : "Unknown error"));
+        return QByteArray();
+    }
+
+    bool stillMoreWorkToDo = true;
+    while (stillMoreWorkToDo) {
+
+        if (!zlibStream.avail_in) {
+            source = device->read(CHUNK_SIZE);
+
+            if (source.isEmpty())
+                break;
+
+            zlibStream.avail_in = source.size();
+            zlibStream.next_in = reinterpret_cast<Bytef*>(source.data());
+        }
+
+        do {
+            // Prepare the destination buffer
+            int oldSize = destination.size();
+            destination.resize(oldSize + CHUNK_SIZE);
+            zlibStream.next_out = reinterpret_cast<Bytef*>(
+                    destination.data() + oldSize - zlibStream.avail_out);
+            zlibStream.avail_out += CHUNK_SIZE;
+
+            zlibResult = inflate(&zlibStream, Z_NO_FLUSH);
+            switch (zlibResult) {
+                case Z_NEED_DICT:
+                case Z_DATA_ERROR:
+                case Z_STREAM_ERROR:
+                case Z_MEM_ERROR: {
+                    inflateEnd(&zlibStream);
+                    qWarning("Error while inflating gzip file: %s",
+                            (zlibStream.msg != NULL ? zlibStream.msg : "Unknown error"));
+                    destination.chop(zlibStream.avail_out);
+                    return destination;
+                }
+            }
+
+        // If the output buffer still has more room after calling inflate
+        // it means we have to provide more data, so exit the loop here
+        } while (!zlibStream.avail_out);
+
+        if (zlibResult == Z_STREAM_END) {
+            // Make sure there are no more members to process before exiting
+            if (!(zlibStream.avail_in && inflateReset(&zlibStream) == Z_OK))
+                stillMoreWorkToDo = false;
+        }
+    }
+
+    // Chop off trailing space in the buffer
+    destination.chop(zlibStream.avail_out);
+
+    inflateEnd(&zlibStream);
+    return destination;
+}
+#endif
+
 QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
 {
     QFile file(fileName);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
+    if (!file.open(QFile::ReadOnly)) {
         qWarning("Cannot open file '%s', because: %s",
                  qPrintable(fileName), qPrintable(file.errorString()));
         return 0;
     }
+
+#ifndef QT_NO_COMPRESS
+    if (fileName.endsWith(QLatin1String(".svgz"), Qt::CaseInsensitive)
+            || fileName.endsWith(QLatin1String(".svg.gz"), Qt::CaseInsensitive)) {
+        return load(qt_inflateGZipDataFrom(&file));
+    }
+#endif
 
     QSvgTinyDocument *doc = 0;
     QSvgHandler handler(&file);
@@ -85,6 +194,26 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
 }
 
 QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
+{
+#ifndef QT_NO_COMPRESS
+    // Check for gzip magic number and inflate if appropriate
+    if (contents.startsWith("\x1f\x8b")) {
+        QBuffer buffer(const_cast<QByteArray *>(&contents));
+        return load(qt_inflateGZipDataFrom(&buffer));
+    }
+#endif
+
+    QSvgHandler handler(contents);
+
+    QSvgTinyDocument *doc = 0;
+    if (handler.ok()) {
+        doc = handler.document();
+        doc->m_animationDuration = handler.animationDuration();
+    }
+    return doc;
+}
+
+QSvgTinyDocument * QSvgTinyDocument::load(QXmlStreamReader *contents)
 {
     QSvgHandler handler(contents);
 
@@ -112,14 +241,14 @@ void QSvgTinyDocument::draw(QPainter *p, const QRectF &bounds)
     p->setRenderHint(QPainter::Antialiasing);
     p->setRenderHint(QPainter::SmoothPixmapTransform);
     QList<QSvgNode*>::iterator itr = m_renderers.begin();
-    applyStyle(p);
+    applyStyle(p, m_states);
     while (itr != m_renderers.end()) {
         QSvgNode *node = *itr;
         if (node->isVisible())
-            node->draw(p);
+            node->draw(p, m_states);
         ++itr;
     }
-    revertStyle(p);
+    revertStyle(p, m_states);
     p->restore();
 }
 
@@ -136,10 +265,10 @@ void QSvgTinyDocument::draw(QPainter *p, const QString &id,
 
     p->save();
 
-    const QRectF elementBounds = node->transformedBounds(QMatrix());
+    const QRectF elementBounds = node->transformedBounds(QTransform());
 
     mapSourceToTarget(p, bounds, elementBounds);
-    QMatrix matx = p->worldMatrix();
+    QTransform originalTransform = p->worldTransform();
 
     //XXX set default style on the painter
     p->setPen(Qt::NoPen);
@@ -148,29 +277,26 @@ void QSvgTinyDocument::draw(QPainter *p, const QString &id,
     p->setRenderHint(QPainter::SmoothPixmapTransform);
 
     QStack<QSvgNode*> parentApplyStack;
-    QQueue<QSvgNode*> parentRevertQueue;
     QSvgNode *parent = node->parent();
     while (parent) {
         parentApplyStack.push(parent);
-        parentRevertQueue.enqueue(parent);
         parent = parent->parent();
     }
 
-    foreach(QSvgNode *par, parentApplyStack) {
-        par->applyStyle(p);
-    }
-    //reset the world matrix so that our parents don't affect
-    //the position
-    QMatrix om = p->worldMatrix();
-    p->setWorldMatrix(matx);
+    for (int i = parentApplyStack.size() - 1; i >= 0; --i)
+        parentApplyStack[i]->applyStyle(p, m_states);
+    
+    // Reset the world transform so that our parents don't affect
+    // the position
+    QTransform currentTransform = p->worldTransform();
+    p->setWorldTransform(originalTransform);
 
-    node->draw(p);
+    node->draw(p, m_states);
 
-    p->setWorldMatrix(om);
+    p->setWorldTransform(currentTransform);
 
-    foreach(QSvgNode *par, parentRevertQueue) {
-        par->revertStyle(p);
-    }
+    for (int i = 0; i < parentApplyStack.size(); ++i)
+        parentApplyStack[i]->revertStyle(p, m_states);
 
     //p->fillRect(bounds.adjusted(-5, -5, 5, 5), QColor(0, 0, 255, 100));
 
@@ -230,6 +356,11 @@ void QSvgTinyDocument::draw(QPainter *p)
     draw(p, QRectF());
 }
 
+void QSvgTinyDocument::draw(QPainter *p, QSvgExtraStates &)
+{
+    draw(p);
+}
+
 void QSvgTinyDocument::mapSourceToTarget(QPainter *p, const QRectF &targetRect, const QRectF &sourceRect)
 {
     QRectF target = targetRect;
@@ -251,10 +382,10 @@ void QSvgTinyDocument::mapSourceToTarget(QPainter *p, const QRectF &targetRect, 
         source = viewBox();
 
     if (source != target && !source.isNull()) {
-        QMatrix mat;
-        mat.scale(target.width() / source.width(),
+        QTransform transform;
+        transform.scale(target.width() / source.width(),
                   target.height() / source.height());
-        QRectF c2 = mat.mapRect(source);
+        QRectF c2 = transform.mapRect(source);
         p->translate(target.x() - c2.x(),
                      target.y() - c2.y());
         p->scale(target.width() / source.width(),
@@ -264,17 +395,11 @@ void QSvgTinyDocument::mapSourceToTarget(QPainter *p, const QRectF &targetRect, 
 
 QRectF QSvgTinyDocument::boundsOnElement(const QString &id) const
 {
-    QRectF bounds;
-    QMatrix matx;
-
     const QSvgNode *node = scopeNode(id);
-
-    if (!node) {
+    if (!node)
         node = this;
-    }
 
-    bounds = node->transformedBounds(matx);
-    return bounds;
+    return node->transformedBounds(QTransform());
 }
 
 bool QSvgTinyDocument::elementExists(const QString &id) const
@@ -287,28 +412,22 @@ bool QSvgTinyDocument::elementExists(const QString &id) const
 QMatrix QSvgTinyDocument::matrixForElement(const QString &id) const
 {
     QSvgNode *node = scopeNode(id);
-    QMatrix mat;
 
     if (!node) {
         qDebug("Couldn't find node %s. Skipping rendering.", qPrintable(id));
-        return mat;
-    }
-    QStack<QSvgNode*> parentApplyStack;
-    QSvgNode *parent = node->parent();
-    while (parent) {
-        parentApplyStack.push(parent);
-        parent = parent->parent();
+        return QMatrix();
     }
 
-    QImage dummyImg(2, 2, QImage::Format_ARGB32_Premultiplied);
-    QPainter dummy(&dummyImg);
-    foreach(QSvgNode *par, parentApplyStack) {
-        par->applyStyle(&dummy);
-    }
-    node->applyStyle(&dummy);
-    mat = dummy.worldMatrix();
+    QTransform t;
 
-    return mat;
+    node = node->parent();
+    while (node) {
+        if (node->m_style.transform)
+            t *= node->m_style.transform->qtransform();
+        node = node->parent();
+    }
+    
+    return t.toAffine();
 }
 
 int QSvgTinyDocument::currentFrame() const

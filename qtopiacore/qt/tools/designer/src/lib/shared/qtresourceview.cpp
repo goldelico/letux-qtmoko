@@ -1,40 +1,45 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
+#include "abstractsettings_p.h"
 #include "qtresourceview_p.h"
 #include "qtresourcemodel_p.h"
 #include "qtresourceeditordialog_p.h"
@@ -62,7 +67,6 @@
 #include <QtGui/QMenu>
 #include <QtGui/QDrag>
 #include <QtCore/QMimeData>
-#include <QtCore/QSettings>
 #include <QtXml/QDomDocument>
 
 QT_BEGIN_NAMESPACE
@@ -147,6 +151,7 @@ public:
     void applyExpansionState();
     void restoreSettings();
     void saveSettings();
+    void updateActions();
 
     QPixmap makeThumbnail(const QPixmap &pix) const;
 
@@ -169,6 +174,7 @@ public:
 
     bool m_ignoreGuiSignals;
     QString m_settingsKey;
+    bool m_resourceEditingEnabled;
 };
 
 QtResourceViewPrivate::QtResourceViewPrivate(QDesignerFormEditorInterface *core) :
@@ -181,7 +187,8 @@ QtResourceViewPrivate::QtResourceViewPrivate(QDesignerFormEditorInterface *core)
     m_editResourcesAction(0),
     m_reloadResourcesAction(0),
     m_copyResourcePathAction(0),
-    m_ignoreGuiSignals(false)
+    m_ignoreGuiSignals(false),
+    m_resourceEditingEnabled(true)
 {
 }
 
@@ -190,11 +197,11 @@ void QtResourceViewPrivate::restoreSettings()
     if (m_settingsKey.isEmpty())
         return;
 
-    QSettings settings;
-    settings.beginGroup(m_settingsKey);
+    QDesignerSettingsInterface *settings = m_core->settingsManager();
+    settings->beginGroup(m_settingsKey);
 
-    m_splitter->restoreState(settings.value(QLatin1String(SplitterPosition)).toByteArray());
-    settings.endGroup();
+    m_splitter->restoreState(settings->value(QLatin1String(SplitterPosition)).toByteArray());
+    settings->endGroup();
 }
 
 void QtResourceViewPrivate::saveSettings()
@@ -202,16 +209,18 @@ void QtResourceViewPrivate::saveSettings()
     if (m_settingsKey.isEmpty())
         return;
 
-    QSettings settings;
-    settings.beginGroup(m_settingsKey);
+    QDesignerSettingsInterface *settings = m_core->settingsManager();
+    settings->beginGroup(m_settingsKey);
 
-    settings.setValue(QLatin1String(SplitterPosition), m_splitter->saveState());
-    settings.endGroup();
+    settings->setValue(QLatin1String(SplitterPosition), m_splitter->saveState());
+    settings->endGroup();
 }
 
 void QtResourceViewPrivate::slotEditResources()
 {
-    const QString selectedResource = QtResourceEditorDialog::editResources(m_resourceModel, m_core->dialogGui(), q_ptr);
+    const QString selectedResource
+            = QtResourceEditorDialog::editResources(m_core, m_resourceModel,
+                                                    m_core->dialogGui(), q_ptr);
     if (!selectedResource.isEmpty())
         q_ptr->selectResource(selectedResource);
 }
@@ -275,11 +284,22 @@ QPixmap QtResourceViewPrivate::makeThumbnail(const QPixmap &pix) const
     return QPixmap::fromImage(img);
 }
 
-void QtResourceViewPrivate::slotResourceSetActivated(QtResourceSet *resourceSet)
+void QtResourceViewPrivate::updateActions()
 {
-    const bool resourceActive = resourceSet;
+    bool resourceActive = false;
+    if (m_resourceModel)
+        resourceActive = m_resourceModel->currentResourceSet();
+
+    m_editResourcesAction->setVisible(m_resourceEditingEnabled);
     m_editResourcesAction->setEnabled(resourceActive);
     m_reloadResourcesAction->setEnabled(resourceActive);
+}
+
+void QtResourceViewPrivate::slotResourceSetActivated(QtResourceSet *resourceSet)
+{
+    Q_UNUSED(resourceSet)
+
+    updateActions();
 
     storeExpansionState();
     const QString currentPath = m_itemToPath.value(m_treeWidget->currentItem());
@@ -439,7 +459,7 @@ QtResourceView::QtResourceView(QDesignerFormEditorInterface *core, QWidget *pare
     connect(d_ptr->m_reloadResourcesAction, SIGNAL(triggered()), this, SLOT(slotReloadResources()));
     d_ptr->m_reloadResourcesAction->setEnabled(false);
 
-    d_ptr->m_copyResourcePathAction = new QAction(tr("Copy Path"), this);
+    d_ptr->m_copyResourcePathAction = new QAction(qdesigner_internal::createIconSet(QLatin1String("editcopy.png")), tr("Copy Path"), this);
     connect(d_ptr->m_copyResourcePathAction, SIGNAL(triggered()), this, SLOT(slotCopyResourcePath()));
     d_ptr->m_copyResourcePathAction->setEnabled(false);
 
@@ -570,6 +590,17 @@ void QtResourceView::setResourceModel(QtResourceModel *model)
     d_ptr->slotResourceSetActivated(d_ptr->m_resourceModel->currentResourceSet());
 }
 
+bool QtResourceView::isResourceEditingEnabled() const
+{
+    return d_ptr->m_resourceEditingEnabled;
+}
+
+void QtResourceView::setResourceEditingEnabled(bool enable)
+{
+    d_ptr->m_resourceEditingEnabled = enable;
+    d_ptr->updateActions();
+}
+
 void QtResourceView::setDragEnabled(bool dragEnabled)
 {
     d_ptr->m_listWidget->setDragEnabled(dragEnabled);
@@ -656,12 +687,14 @@ public:
     void slotResourceSelected(const QString &resource) { setOkButtonEnabled(!resource.isEmpty()); }
     void setOkButtonEnabled(bool v)                    { m_box->button(QDialogButtonBox::Ok)->setEnabled(v); }
 
+    QDesignerFormEditorInterface *m_core;
     QtResourceView *m_view;
     QDialogButtonBox *m_box;
 };
 
 QtResourceViewDialogPrivate::QtResourceViewDialogPrivate(QDesignerFormEditorInterface *core) :
     q_ptr(0),
+    m_core(core),
     m_view(new QtResourceView(core)),
     m_box(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel))
 {
@@ -686,23 +719,23 @@ QtResourceViewDialog::QtResourceViewDialog(QDesignerFormEditorInterface *core, Q
     d_ptr->setOkButtonEnabled(false);
     d_ptr->m_view->setResourceModel(core->resourceModel());
 
-    QSettings settings;
-    settings.beginGroup(QLatin1String(ResourceViewDialogC));
+    QDesignerSettingsInterface *settings = core->settingsManager();
+    settings->beginGroup(QLatin1String(ResourceViewDialogC));
 
-    if (settings.contains(QLatin1String(Geometry)))
-        setGeometry(settings.value(QLatin1String(Geometry)).toRect());
+    if (settings->contains(QLatin1String(Geometry)))
+        setGeometry(settings->value(QLatin1String(Geometry)).toRect());
 
-    settings.endGroup();
+    settings->endGroup();
 }
 
 QtResourceViewDialog::~QtResourceViewDialog()
 {
-    QSettings settings;
-    settings.beginGroup(QLatin1String(ResourceViewDialogC));
+    QDesignerSettingsInterface *settings = d_ptr->m_core->settingsManager();
+    settings->beginGroup(QLatin1String(ResourceViewDialogC));
 
-    settings.setValue(QLatin1String(Geometry), geometry());
+    settings->setValue(QLatin1String(Geometry), geometry());
 
-    settings.endGroup();
+    settings->endGroup();
 
     delete d_ptr;
 }
@@ -715,6 +748,16 @@ QString QtResourceViewDialog::selectedResource() const
 void QtResourceViewDialog::selectResource(const QString &path)
 {
     d_ptr->m_view->selectResource(path);
+}
+
+bool QtResourceViewDialog::isResourceEditingEnabled() const
+{
+    return d_ptr->m_view->isResourceEditingEnabled();
+}
+
+void QtResourceViewDialog::setResourceEditingEnabled(bool enable)
+{
+    d_ptr->m_view->setResourceEditingEnabled(enable);
 }
 
 QT_END_NAMESPACE

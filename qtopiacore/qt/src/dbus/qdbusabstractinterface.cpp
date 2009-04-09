@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtDBus module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 #include "qdbusabstractinterface_p.h"
 
 #include "qdbusargument.h"
+#include "qdbuspendingcall.h"
 #include "qdbusmetaobject_p.h"
 #include "qdbusmetatype_p.h"
 #include "qdbusutil_p.h"
@@ -405,6 +410,27 @@ QDBusMessage QDBusAbstractInterface::callWithArgumentList(QDBus::CallMode mode,
 }
 
 /*!
+    \since 4.5
+    Places a call to the remote method specified by \a method on this
+    interface, using \a args as arguments. This function returns a
+    QDBusPendingCall object that can be used to track the status of the
+    reply and access its contents once it has arrived.
+
+    Normally, you should place calls using asyncCall().
+
+    \threadsafe
+*/
+QDBusPendingCall QDBusAbstractInterface::asyncCallWithArgumentList(const QString& method,
+                                                                   const QList<QVariant>& args)
+{
+    Q_D(QDBusAbstractInterface);
+
+    QDBusMessage msg = QDBusMessage::createMethodCall(service(), path(), interface(), method);
+    msg.setArguments(args);
+    return d->connection.asyncCall(msg);
+}
+
+/*!
     Places a call to the remote method specified by \a method
     on this interface, using \a args as arguments. This function
     returns immediately after queueing the call. The reply from
@@ -478,7 +504,7 @@ bool QDBusAbstractInterface::callWithCallback(const QString &method,
 void QDBusAbstractInterface::connectNotify(const char *signal)
 {
     // we end up recursing here, so optimise away
-    if (qstrcmp(signal, SIGNAL(destroyed(QObject*))) == 0)
+    if (qstrcmp(signal + 1, "destroyed(QObject*)") == 0)
         return;
 
     // someone connecting to one of our signals
@@ -572,7 +598,6 @@ QDBusMessage QDBusAbstractInterface::call(const QString &method, const QVariant 
     return call(QDBus::AutoDetect, method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
-
 /*!
     \overload
 
@@ -630,6 +655,63 @@ QDBusMessage QDBusAbstractInterface::call(QDBus::CallMode mode, const QString &m
     return callWithArgumentList(mode, method, argList);
 }
 
+
+/*!
+    \since 4.5
+    Calls the method \a method on this interface and passes the parameters to this function to the
+    method.
+
+    The parameters to \c call are passed on to the remote function via D-Bus as input
+    arguments. The returned QDBusPendingCall object can be used to find out information about
+    the reply.
+
+    This function can be used with up to 8 parameters, passed in arguments \a arg1, \a arg2,
+    \a arg3, \a arg4, \a arg5, \a arg6, \a arg7 and \a arg8. If you need more than 8
+    parameters or if you have a variable number of parameters to be passed, use
+    asyncCallWithArgumentList().
+
+    It can be used the following way:
+
+    \snippet doc/src/snippets/code/src_qdbus_qdbusabstractinterface.cpp 1
+
+    This example illustrates function calling with 0, 1 and 2 parameters and illustrates different
+    parameter types passed in each (the first call to \c "ProcessWorkUnicode" will contain one
+    Unicode string, the second call to \c "ProcessWork" will contain one string and one byte array).
+*/
+QDBusPendingCall QDBusAbstractInterface::asyncCall(const QString &method, const QVariant &arg1,
+                                                   const QVariant &arg2,
+                                                   const QVariant &arg3,
+                                                   const QVariant &arg4,
+                                                   const QVariant &arg5,
+                                                   const QVariant &arg6,
+                                                   const QVariant &arg7,
+                                                   const QVariant &arg8)
+{
+    QList<QVariant> argList;
+    int count = 0 + arg1.isValid() + arg2.isValid() + arg3.isValid() + arg4.isValid() +
+                arg5.isValid() + arg6.isValid() + arg7.isValid() + arg8.isValid();
+
+    switch (count) {
+    case 8:
+        argList.prepend(arg8);
+    case 7:
+        argList.prepend(arg7);
+    case 6:
+        argList.prepend(arg6);
+    case 5:
+        argList.prepend(arg5);
+    case 4:
+        argList.prepend(arg4);
+    case 3:
+        argList.prepend(arg3);
+    case 2:
+        argList.prepend(arg2);
+    case 1:
+        argList.prepend(arg1);
+    }
+
+    return asyncCallWithArgumentList(method, argList);
+}
 
 /*!
     \internal

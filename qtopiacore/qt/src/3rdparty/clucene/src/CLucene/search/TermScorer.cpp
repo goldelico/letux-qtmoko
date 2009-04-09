@@ -107,9 +107,9 @@ CL_NS_DEF(search)
      return ret;
   }
 
-  float_t TermScorer::score(){
+  qreal TermScorer::score(){
 	 int32_t f = freqs[pointer];
-    float_t raw =                                   // compute tf(f)*weight
+    qreal raw =                                   // compute tf(f)*weight
       f < LUCENE_SCORE_CACHE_SIZE			  // check cache
       ? scoreCache[f]                             // cache hit
       : getSimilarity()->tf(f) * weightValue;        // cache miss

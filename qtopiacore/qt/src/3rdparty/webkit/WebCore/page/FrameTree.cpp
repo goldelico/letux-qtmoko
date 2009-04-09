@@ -1,4 +1,3 @@
-// -*- c-basic-offset: 4 -*-
 /*
  * Copyright (C) 2006 Apple Computer, Inc.
  *
@@ -23,27 +22,15 @@
 
 #include "Frame.h"
 #include "Page.h"
+#include "PageGroup.h"
 #include <stdarg.h>
 #include <wtf/Platform.h>
+#include <wtf/StringExtras.h>
 #include <wtf/Vector.h>
-
-#include <stdio.h>
 
 using std::swap;
 
 namespace WebCore {
-
-// FIXME: This belongs in some header file where multiple clients can share it.
-#if COMPILER(MSVC)
-int snprintf(char* str, size_t size, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    int result = vsnprintf_s(str, size, _TRUNCATE, format, args);
-    va_end(args);
-    return result;
-}
-#endif
 
 FrameTree::~FrameTree()
 {
@@ -59,6 +46,18 @@ void FrameTree::setName(const AtomicString& name)
     }
     m_name = AtomicString(); // Remove our old frame name so it's not considered in uniqueChildName.
     m_name = parent()->tree()->uniqueChildName(name);
+}
+
+void FrameTree::clearName()
+{
+    m_name = AtomicString();
+}
+
+Frame* FrameTree::parent(bool checkForDisconnectedFrame) const 
+{ 
+    if (checkForDisconnectedFrame && m_thisFrame->isDisconnected())
+        return 0;
+    return m_parent;
 }
 
 void FrameTree::appendChild(PassRefPtr<Frame> child)
@@ -131,7 +130,7 @@ AtomicString FrameTree::uniqueChildName(const AtomicString& requestedName) const
     String name;
     name += framePathPrefix;
     if (frame)
-        name += frame->tree()->name().domString().substring(framePathPrefixLength,
+        name += frame->tree()->name().string().substring(framePathPrefixLength,
             frame->tree()->name().length() - framePathPrefixLength - framePathSuffixLength);
     for (int i = chain.size() - 1; i >= 0; --i) {
         frame = chain[i];
@@ -175,7 +174,7 @@ Frame* FrameTree::find(const AtomicString& name) const
         return m_thisFrame;
     
     if (name == "_top")
-        return m_thisFrame->page()->mainFrame();
+        return top();
     
     if (name == "_parent")
         return parent() ? parent() : m_thisFrame;
@@ -191,20 +190,26 @@ Frame* FrameTree::find(const AtomicString& name) const
 
     // Search the entire tree for this page next.
     Page* page = m_thisFrame->page();
+
+    // The frame could have been detached from the page, so check it.
+    if (!page)
+        return 0;
+
     for (Frame* frame = page->mainFrame(); frame; frame = frame->tree()->traverseNext())
         if (frame->tree()->name() == name)
             return frame;
 
-    // Search the entire tree for all other pages in this namespace.
-    const HashSet<Page*>* pages = page->frameNamespace();
-    if (pages) {
-        HashSet<Page*>::const_iterator end = pages->end();
-        for (HashSet<Page*>::const_iterator it = pages->begin(); it != end; ++it) {
-            Page* otherPage = *it;
-            if (otherPage != page)
-                for (Frame* frame = otherPage->mainFrame(); frame; frame = frame->tree()->traverseNext())
-                    if (frame->tree()->name() == name)
-                        return frame;
+    // Search the entire tree of each of the other pages in this namespace.
+    // FIXME: Is random order OK?
+    const HashSet<Page*>& pages = page->group().pages();
+    HashSet<Page*>::const_iterator end = pages.end();
+    for (HashSet<Page*>::const_iterator it = pages.begin(); it != end; ++it) {
+        Page* otherPage = *it;
+        if (otherPage != page) {
+            for (Frame* frame = otherPage->mainFrame(); frame; frame = frame->tree()->traverseNext()) {
+                if (frame->tree()->name() == name)
+                    return frame;
+            }
         }
     }
 
@@ -295,14 +300,14 @@ Frame* FrameTree::deepLastChild() const
     return result;
 }
 
-Frame* FrameTree::top() const
+Frame* FrameTree::top(bool checkForDisconnectedFrame) const
 {
-    if (Page* page = m_thisFrame->page())
-        return page->mainFrame();
-
     Frame* frame = m_thisFrame;
-    while (Frame* parent = frame->tree()->parent())
+    for (Frame* parent = m_thisFrame; parent; parent = parent->tree()->parent()) {
         frame = parent;
+        if (checkForDisconnectedFrame && frame->isDisconnected())
+            return frame;
+    }
     return frame;
 }
 

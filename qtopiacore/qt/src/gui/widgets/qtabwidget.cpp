@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,7 @@
 
 #ifndef QT_NO_TABWIDGET
 #include "private/qwidget_p.h"
+#include "private/qtabbar_p.h"
 #include "qapplication.h"
 #include "qbitmap.h"
 #include "qdesktopwidget.h"
@@ -168,6 +173,15 @@ QT_BEGIN_NAMESPACE
     \sa currentWidget() currentIndex
 */
 
+/*!
+    \fn void QTabWidget::tabCloseRequested(int index)
+    \since 4.5
+
+    This signal is emitted when the close button on a tab is clicked.
+    The \a index is the index that should be removed.
+
+    \sa setTabsClosable()
+*/
 
 class QTabWidgetPrivate : public QWidgetPrivate
 {
@@ -179,6 +193,7 @@ public:
     void updateTabBarPosition();
     void _q_showTab(int);
     void _q_removeTab(int);
+    void _q_tabMoved(int from, int to);
     void init();
 
     QTabBar *tabs;
@@ -217,7 +232,7 @@ void QTabWidgetPrivate::init()
     tabBar->setDrawBase(false);
     q->setTabBar(tabBar);
 
-    q->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding, 
+    q->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding,
                                  QSizePolicy::TabWidget));
 #ifdef QT_KEYPAD_NAVIGATION
     if (QApplication::keypadNavigationEnabled())
@@ -228,6 +243,7 @@ void QTabWidgetPrivate::init()
     q->setFocusProxy(tabs);
     q->setTabPosition(static_cast<QTabWidget::TabPosition> (q->style()->styleHint(
                       QStyle::SH_TabWidget_DefaultTabPosition, 0, q )));
+
 }
 
 /*!
@@ -245,10 +261,23 @@ void QTabWidget::initStyleOption(QStyleOptionTabWidgetFrame *option) const
     Q_D(const QTabWidget);
     option->initFrom(this);
 
+    if (documentMode())
+        option->lineWidth = 0;
+    else
+        option->lineWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth, 0, this);
+
     int exth = style()->pixelMetric(QStyle::PM_TabBarBaseHeight, 0, this);
     QSize t(0, d->stack->frameWidth());
-    if (d->tabs->isVisibleTo(const_cast<QTabWidget *>(this)))
+    if (d->tabs->isVisibleTo(const_cast<QTabWidget *>(this))) {
         t = d->tabs->sizeHint();
+        if (documentMode()) {
+            if (tabPosition() == East || tabPosition() == West) {
+                t.setHeight(height());
+            } else {
+                t.setWidth(width());
+            }
+        }
+    }
 
     if (d->rightCornerWidget) {
         const QSize rightCornerSizeHint = d->rightCornerWidget->sizeHint();
@@ -418,6 +447,7 @@ int QTabWidget::insertTab(int index, QWidget *w, const QIcon& icon, const QStrin
     d->tabs->insertTab(index, icon, label);
     setUpLayout();
     tabInserted(index);
+
     return index;
 }
 
@@ -660,6 +690,12 @@ void QTabWidget::setTabBar(QTabBar* tb)
     setFocusProxy(d->tabs);
     connect(d->tabs, SIGNAL(currentChanged(int)),
             this, SLOT(_q_showTab(int)));
+    connect(d->tabs, SIGNAL(tabMoved(int, int)),
+            this, SLOT(_q_tabMoved(int, int)));
+    if (d->tabs->tabsClosable())
+        connect(d->tabs, SIGNAL(tabCloseRequested(int)),
+                this, SIGNAL(tabCloseRequested(int)));
+    tb->setExpanding(!documentMode());
     setUpLayout();
 }
 
@@ -698,6 +734,15 @@ void QTabWidgetPrivate::_q_removeTab(int index)
     tabs->removeTab(index);
     q->setUpLayout();
     q->tabRemoved(index);
+}
+
+void QTabWidgetPrivate::_q_tabMoved(int from, int to)
+{
+    stack->blockSignals(true);
+    QWidget *w = stack->widget(from);
+    stack->removeWidget(w);
+    stack->insertWidget(to, w);
+    stack->blockSignals(false);
 }
 
 /*
@@ -873,6 +918,54 @@ void QTabWidget::setTabPosition(TabPosition pos)
         return;
     d->pos = pos;
     d->updateTabBarPosition();
+}
+
+/*!
+    \property QTabWidget::tabsClosable
+    \brief whether close buttons are automatically added to each tab.
+
+    \since 4.5
+
+    \sa QTabBar::tabsClosable()
+*/
+bool QTabWidget::tabsClosable() const
+{
+    return tabBar()->tabsClosable();
+}
+
+void QTabWidget::setTabsClosable(bool closeable)
+{
+    if (tabsClosable() == closeable)
+        return;
+
+    tabBar()->setTabsClosable(closeable);
+    if (closeable)
+        connect(tabBar(), SIGNAL(tabCloseRequested(int)),
+                this, SIGNAL(tabCloseRequested(int)));
+    else
+        disconnect(tabBar(), SIGNAL(tabCloseRequested(int)),
+                  this, SIGNAL(tabCloseRequested(int)));
+    setUpLayout();
+}
+
+/*!
+    \property QTabWidget::movable
+    \brief This property holds whether the user can move the tabs
+    within the tabbar area.
+
+    \since 4.5
+
+    By default, this property is false;
+*/
+
+bool QTabWidget::isMovable() const
+{
+    return tabBar()->isMovable();
+}
+
+void QTabWidget::setMovable(bool movable)
+{
+    tabBar()->setMovable(movable);
 }
 
 /*!
@@ -1075,6 +1168,24 @@ void QTabWidget::paintEvent(QPaintEvent *)
 {
     Q_D(QTabWidget);
     QStylePainter p(this);
+    if (documentMode()) {
+        if (QWidget *w = cornerWidget(Qt::TopLeftCorner)) {
+            QStyleOptionTabBarBaseV2 opt;
+            QTabBarPrivate::initStyleBaseOption(&opt, tabBar(), w->size());
+            opt.rect.moveLeft(w->x() + opt.rect.x());
+            opt.rect.moveTop(w->y() + opt.rect.y());
+            p.drawPrimitive(QStyle::PE_FrameTabBarBase, opt);
+        }
+        if (QWidget *w = cornerWidget(Qt::TopRightCorner)) {
+            QStyleOptionTabBarBaseV2 opt;
+            QTabBarPrivate::initStyleBaseOption(&opt, tabBar(), w->size());
+            opt.rect.moveLeft(w->x() + opt.rect.x());
+            opt.rect.moveTop(w->y() + opt.rect.y());
+            p.drawPrimitive(QStyle::PE_FrameTabBarBase, opt);
+        }
+        return;
+    }
+
     QStyleOptionTabWidgetFrame opt;
     initStyleOption(&opt);
     opt.rect = d->panelRect;
@@ -1145,6 +1256,33 @@ bool QTabWidget::usesScrollButtons() const
 void QTabWidget::setUsesScrollButtons(bool useButtons)
 {
     d_func()->tabs->setUsesScrollButtons(useButtons);
+}
+
+/*!
+    \property QTabWidget::documentMode
+    \brief Whether or not the tab widget is rendered in a mode suitable for document
+     pages. This is the same as document mode on Mac OS X.
+    \since 4.5
+
+    When this property is set the tab widget frame is not rendered. This mode is useful
+    for showing document-type pages where the page covers most of the tab widget
+    area.
+
+    \sa elideMode, QTabBar::documentMode, QTabBar::usesScrollButtons, QStyle::SH_TabBar_PreferNoArrows
+*/
+bool QTabWidget::documentMode() const
+{
+    Q_D(const QTabWidget);
+    return d->tabs->documentMode();
+}
+
+void QTabWidget::setDocumentMode(bool enabled)
+{
+    Q_D(QTabWidget);
+    d->tabs->setDocumentMode(enabled);
+    d->tabs->setExpanding(!enabled);
+    d->tabs->setDrawBase(enabled);
+    setUpLayout();
 }
 
 /*!

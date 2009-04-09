@@ -18,71 +18,83 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGTransform_H
-#define JSSVGTransform_H
+#ifndef JSSVGTransform_h
+#define JSSVGTransform_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 #include "SVGTransform.h"
 #include "JSSVGPODTypeWrapper.h"
 
 namespace WebCore {
 
-class JSSVGTransform : public KJS::DOMObject {
+class JSSVGTransform : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGTransform(KJS::ExecState*, JSSVGPODTypeWrapper<SVGTransform>*);
+    JSSVGTransform(PassRefPtr<JSC::Structure>, PassRefPtr<JSSVGPODTypeWrapper<SVGTransform> >, SVGElement* context);
     virtual ~JSSVGTransform();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        TypeAttrNum, MatrixAttrNum, AngleAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum, 
-
-        // Functions
-        SetMatrixFuncNum, SetTranslateFuncNum, SetScaleFuncNum, SetRotateFuncNum, 
-        SetSkewXFuncNum, SetSkewYFuncNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
     JSSVGPODTypeWrapper<SVGTransform>* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
+    RefPtr<SVGElement> m_context;
     RefPtr<JSSVGPODTypeWrapper<SVGTransform> > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, JSSVGPODTypeWrapper<SVGTransform>*);
-SVGTransform toSVGTransform(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, JSSVGPODTypeWrapper<SVGTransform>*, SVGElement* context);
+SVGTransform toSVGTransform(JSC::JSValuePtr);
 
-class JSSVGTransformPrototype : public KJS::JSObject {
+class JSSVGTransformPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    JSSVGTransformPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
-};
-
-class JSSVGTransformPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGTransformPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
-
-private:
-    int id;
+    JSSVGTransformPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Functions
+
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetMatrix(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetTranslate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetScale(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetRotate(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetSkewX(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGTransformPrototypeFunctionSetSkewY(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGTransformType(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformMatrix(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformAngle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+// Constants
+
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_UNKNOWN(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_MATRIX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_TRANSLATE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_SCALE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_ROTATE(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_SKEWX(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGTransformSVG_TRANSFORM_SKEWY(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

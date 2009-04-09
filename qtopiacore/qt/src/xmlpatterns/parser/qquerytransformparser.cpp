@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -117,42 +121,46 @@
 
 /* Copy the first part of user declarations.  */
 /* Line 164 of yacc.c.  */
-#line 24 "querytransformparser.ypp"
+#line 22 "querytransformparser.ypp"
 
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -166,11 +174,14 @@
 //
 // We mean it.
 
+#include <limits>
+
 #include <QUrl>
 
 #include "qabstractfloat_p.h"
 #include "qandexpression_p.h"
 #include "qanyuri_p.h"
+#include "qapplytemplate_p.h"
 #include "qargumentreference_p.h"
 #include "qarithmeticexpression_p.h"
 #include "qatomicstring_p.h"
@@ -178,6 +189,7 @@
 #include "qattributenamevalidator_p.h"
 #include "qaxisstep_p.h"
 #include "qbuiltintypes_p.h"
+#include "qcalltemplate_p.h"
 #include "qcastableas_p.h"
 #include "qcastas_p.h"
 #include "qcombinenodes_p.h"
@@ -185,8 +197,10 @@
 #include "qcommonnamespaces_p.h"
 #include "qcommonsequencetypes_p.h"
 #include "qcommonvalues_p.h"
+#include "qcomputednamespaceconstructor_p.h"
 #include "qcontextitem_p.h"
 #include "qcopyof_p.h"
+#include "qcurrentitemstore_p.h"
 #include "qdebug_p.h"
 #include "qdelegatingnamespaceresolver_p.h"
 #include "qdocumentconstructor_p.h"
@@ -194,11 +208,14 @@
 #include "qemptysequence_p.h"
 #include "qemptysequencetype_p.h"
 #include "qevaluationcache_p.h"
+#include "qexpressionfactory_p.h"
 #include "qexpressionsequence_p.h"
 #include "qexpressionvariablereference_p.h"
 #include "qexternalvariablereference_p.h"
 #include "qforclause_p.h"
+#include "qfunctioncall_p.h"
 #include "qfunctionfactory_p.h"
+#include "qfunctionsignature_p.h"
 #include "qgeneralcomparison_p.h"
 #include "qgenericpredicate_p.h"
 #include "qgenericsequencetype_p.h"
@@ -206,18 +223,17 @@
 #include "qinstanceof_p.h"
 #include "qletclause_p.h"
 #include "qliteral_p.h"
-#include "qpatternistlocale_p.h"
 #include "qlocalnametest_p.h"
 #include "qnamespaceconstructor_p.h"
 #include "qnamespacenametest_p.h"
 #include "qncnameconstructor_p.h"
-#include "qnodesortexpression_p.h"
 #include "qnodecomparison_p.h"
-#include "qnumeric_p.h"
+#include "qnodesort_p.h"
 #include "qorderby_p.h"
 #include "qorexpression_p.h"
 #include "qparsercontext_p.h"
 #include "qpath_p.h"
+#include "qpatternistlocale_p.h"
 #include "qpositionalvariablereference_p.h"
 #include "qprocessinginstructionconstructor_p.h"
 #include "qqnameconstructor_p.h"
@@ -227,16 +243,23 @@
 #include "qrangeexpression_p.h"
 #include "qrangevariablereference_p.h"
 #include "qreturnorderby_p.h"
+#include "qschemanumeric_p.h"
 #include "qschematypefactory_p.h"
 #include "qsimplecontentconstructor_p.h"
+#include "qstaticbaseuristore_p.h"
+#include "qstaticcompatibilitystore_p.h"
+#include "qtemplateparameterreference_p.h"
+#include "qtemplate_p.h"
 #include "qtextnodeconstructor_p.h"
 #include "qtokenizer_p.h"
 #include "qtreatas_p.h"
 #include "qtypechecker_p.h"
 #include "qunaryexpression_p.h"
+#include "qunresolvedvariablereference_p.h"
 #include "quserfunctioncallsite_p.h"
 #include "qvaluecomparison_p.h"
 #include "qxpathhelper_p.h"
+#include "qxsltsimplecontentconstructor_p.h"
 
 /*
  * The cpp generated with bison 2.1 wants to
@@ -262,7 +285,7 @@ namespace QPatternist
 #undef YYLTYPE_IS_TRIVIAL
 #define YYLTYPE_IS_TRIVIAL 0
 
-/* Supresses `warning: "YYENABLE_NLS" is not defined`
+/* Suppresses `warning: "YYENABLE_NLS" is not defined`
  * @c YYENABLE_NLS enables Bison internationalization, and we don't
  * use that, so disable it. See the Bison Manual, section 4.5 Parser Internationalization.
  */
@@ -271,9 +294,51 @@ namespace QPatternist
 static inline QSourceLocation fromYYLTYPE(const YYLTYPE &sourceLocator,
                                           const ParserContext *const parseInfo)
 {
-    return QSourceLocation(parseInfo->tokenizer->uri(),
+    return QSourceLocation(parseInfo->tokenizer->queryURI(),
                            sourceLocator.first_line,
                            sourceLocator.first_column);
+}
+
+/**
+ * @short Flags invalid expressions and declarations in the currently
+ * parsed language.
+ *
+ * Since this grammar is used for several languages: XQuery 1.0, XSL-T 2.0 and
+ * XPath 2.0 inside XSL-T, it is the union of all the constructs in these
+ * languages. However, when dealing with each language individually, we
+ * regularly need to disallow some expressions, such as direct element
+ * constructors when parsing XSL-T, or the typeswitch when parsing XPath.
+ *
+ * This is further complicated by that XSLTTokenizer sometimes generates code
+ * which is allowed in XQuery but not in XPath. For that reason the token
+ * INTERNAL is sometimes generated, which signals that an expression, for
+ * instance the @c let clause, should not be flagged as an error, because it's
+ * used for internal purposes.
+ *
+ * Hence, this function is called from each expression and declaration which is
+ * unavailable in XPath.
+ *
+ * If @p isInternal is @c true, no error is raised. Otherwise, if the current
+ * language is not XQuery, an error is raised.
+ */
+static void disallowedConstruct(const ParserContext *const parseInfo,
+                                const YYLTYPE &sourceLocator,
+                                const bool isInternal = false)
+{
+    if(!isInternal && parseInfo->languageAccent != QXmlQuery::XQuery10)
+    {
+        parseInfo->staticContext->error(QtXmlPatterns::tr("A construct was encountered which only is allowed in XQuery."),
+                                        ReportContext::XPST0003,
+                                        fromYYLTYPE(sourceLocator, parseInfo));
+
+    }
+}
+
+static inline bool isVariableReference(const Expression::ID id)
+{
+    return    id == Expression::IDExpressionVariableReference
+           || id == Expression::IDRangeVariableReference
+           || id == Expression::IDArgumentReference;
 }
 
 class ReflectYYLTYPE : public SourceLocationReflection
@@ -298,7 +363,7 @@ public:
     virtual QString description() const
     {
         Q_ASSERT(false);
-        return QLatin1String("ReflectYYLTYPE, not implemented");
+        return QString();
     }
 
 private:
@@ -322,12 +387,97 @@ static inline Expression::Ptr create(Expression *const expr,
     return Expression::Ptr(expr);
 }
 
+static inline Template::Ptr create(Template *const expr,
+                                   const YYLTYPE &sourceLocator,
+                                   const ParserContext *const parseInfo)
+{
+    parseInfo->staticContext->addLocation(expr, fromYYLTYPE(sourceLocator, parseInfo));
+    return Template::Ptr(expr);
+}
+
 static inline Expression::Ptr create(const Expression::Ptr &expr,
                                      const YYLTYPE &sourceLocator,
                                      const ParserContext *const parseInfo)
 {
     parseInfo->staticContext->addLocation(expr.data(), fromYYLTYPE(sourceLocator, parseInfo));
     return expr;
+}
+
+static Expression::Ptr createSimpleContent(const Expression::Ptr &source,
+                                           const YYLTYPE &sourceLocator,
+                                           const ParserContext *const parseInfo)
+{
+    return create(parseInfo->isXSLT() ? new XSLTSimpleContentConstructor(source) : new SimpleContentConstructor(source),
+                  sourceLocator,
+                  parseInfo);
+}
+
+static void loadPattern(const Expression::Ptr &matchPattern,
+                        TemplatePattern::Vector &ourPatterns,
+                        const TemplatePattern::ID id,
+                        const PatternPriority priority,
+                        const Template::Ptr &temp)
+{
+    Q_ASSERT(temp);
+
+    const PatternPriority effectivePriority = qIsNaN(priority) ? matchPattern->patternPriority() : priority;
+
+    ourPatterns.append(TemplatePattern::Ptr(new TemplatePattern(matchPattern, effectivePriority, id, temp)));
+}
+
+static Expression::Ptr typeCheckTemplateBody(const Expression::Ptr &body,
+                                             const SequenceType::Ptr &reqType,
+                                             const ParserContext *const parseInfo)
+{
+    return TypeChecker::applyFunctionConversion(body, reqType,
+                                                parseInfo->staticContext,
+                                                ReportContext::XTTE0505,
+                                                TypeChecker::Options(TypeChecker::AutomaticallyConvert | TypeChecker::GeneratePromotion));
+}
+
+static void registerNamedTemplate(const QXmlName &name,
+                                  const Expression::Ptr &body,
+                                  ParserContext *const parseInfo,
+                                  const YYLTYPE &sourceLocator,
+                                  const Template::Ptr &temp)
+{
+    Template::Ptr &e = parseInfo->namedTemplates[name];
+
+    if(e)
+    {
+        parseInfo->staticContext->error(QtXmlPatterns::tr("A template by name %1 "
+                                                          "has already been declared.")
+                                        .arg(formatKeyword(parseInfo->staticContext->namePool(),
+                                                                         name)),
+                                        ReportContext::XTSE0660,
+                                        fromYYLTYPE(sourceLocator, parseInfo));
+    }
+    else
+    {
+        e = temp;
+        e->body = body;
+    }
+}
+
+/**
+ * @short Centralizes code for creating numeric literals.
+ */
+template<typename TNumberClass>
+Expression::Ptr createNumericLiteral(const QString &in,
+                                     const YYLTYPE &sl,
+                                     const ParserContext *const parseInfo)
+{
+    const Item num(TNumberClass::fromLexical(in));
+
+    if(num.template as<AtomicValue>()->hasError())
+    {
+        parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not a valid numeric literal.")
+                                           .arg(formatData(in)),
+                                        ReportContext::XPST0003, fromYYLTYPE(sl, parseInfo));
+        return Expression::Ptr(); /* Avoid compiler warning. */
+    }
+    else
+        return create(new Literal(num), sl, parseInfo);
 }
 
 /**
@@ -349,7 +499,7 @@ static int XPatherror(YYLTYPE *sourceLocator, const ParserContext *const parseIn
  * When we want to connect the OrderBy and ReturnOrderBy, it might be that we have other expressions, such
  * as @c where and @c let inbetween. We need to continue through them. This function does that.
  */
-static ReturnOrderBy *locateReturnClause(Expression::Ptr &expr)
+static ReturnOrderBy *locateReturnClause(const Expression::Ptr &expr)
 {
     Q_ASSERT(expr);
 
@@ -360,6 +510,145 @@ static ReturnOrderBy *locateReturnClause(Expression::Ptr &expr)
         return expr->as<ReturnOrderBy>();
     else
         return 0;
+}
+
+static inline bool isPredicate(const Expression::ID id)
+{
+    return id == Expression::IDGenericPredicate ||
+           id == Expression::IDFirstItemPredicate;
+}
+
+/**
+ * Assumes expr is an AxisStep wrapped in some kind of predicates or paths. Filters
+ * through the predicates and returns the AxisStep.
+ */
+static Expression::Ptr findAxisStep(const Expression::Ptr &expr,
+                                    const bool throughStructures = true)
+{
+    Q_ASSERT(expr);
+
+    if(!throughStructures)
+        return expr;
+
+    Expression *candidate = expr.data();
+    Expression::ID id = candidate->id();
+
+    while(isPredicate(id) || id == Expression::IDPath)
+    {
+        const Expression::List &children = candidate->operands();
+        if(children.isEmpty())
+            return Expression::Ptr();
+        else
+        {
+            candidate = children.first().data();
+            id = candidate->id();
+        }
+    }
+
+    if(id == Expression::IDEmptySequence)
+        return Expression::Ptr();
+    else
+    {
+        Q_ASSERT(candidate->is(Expression::IDAxisStep));
+        return Expression::Ptr(candidate);
+    }
+}
+
+static void changeToTopAxis(const Expression::Ptr &op)
+{
+    /* This axis must have been written away by now. */
+    Q_ASSERT(op->as<AxisStep>()->axis() != QXmlNodeModelIndex::AxisChild);
+
+    if(op->as<AxisStep>()->axis() != QXmlNodeModelIndex::AxisSelf)
+        op->as<AxisStep>()->setAxis(QXmlNodeModelIndex::AxisAttributeOrTop);
+}
+
+/**
+ * @short Writes @p operand1 and @p operand2, two operands in an XSL-T pattern,
+ * into an equivalent XPath expression.
+ *
+ * Essentially, the following rewrite is done:
+ *
+ * <tt>
+ * axis1::test1(a)/axis2::test2(b)
+ *              =>
+ * child-or-top::test2(b)[parent::test1(a)]
+ * </tt>
+ *
+ * Section 5.5.3 The Meaning of a Pattern talks about rewrites that are applied to
+ * only the first step in a pattern, but since we're doing rewrites more radically,
+ * its line of reasoning cannot be followed.
+ *
+ * Keep in mind the rewrites that non-terminal PatternStep do.
+ *
+ * @see createIdPatternPath()
+ */
+static inline Expression::Ptr createPatternPath(const Expression::Ptr &operand1,
+                                                const Expression::Ptr &operand2,
+                                                const QXmlNodeModelIndex::Axis axis,
+                                                const YYLTYPE &sl,
+                                                const ParserContext *const parseInfo)
+{
+    const Expression::Ptr operandL(findAxisStep(operand1, false));
+
+    if(operandL->is(Expression::IDAxisStep))
+        operandL->as<AxisStep>()->setAxis(axis);
+    else
+        findAxisStep(operand1)->as<AxisStep>()->setAxis(axis);
+
+    return create(GenericPredicate::create(operand2, operandL,
+                                           parseInfo->staticContext, fromYYLTYPE(sl, parseInfo)), sl, parseInfo);
+}
+
+/**
+ * @short Performs the same role as createPatternPath(), but is tailored
+ * for @c fn:key() and @c fn:id().
+ *
+ * @c fn:key() and @c fn:id() can be part of path patterns(only as the first step,
+ * to be precise) and that poses a challenge to rewriting because what
+ * createPatternPath() is not possible to express, since the functions cannot be
+ * node tests. E.g, this rewrite is not possible:
+ *
+ * <tt>
+ * id-or-key/abc
+ *  =>
+ * child-or-top::abc[parent::id-or-key]
+ * </tt>
+ *
+ * Our approach is to rewrite like this:
+ *
+ * <tt>
+ * id-or-key/abc
+ * =>
+ * child-or-top::abc[parent::node is id-or-key]
+ * </tt>
+ *
+ * @p operand1 is the call to @c fn:key() or @c fn:id(), @p operand2
+ * the right operand, and @p axis the target axis to rewrite to.
+ *
+ * @see createPatternPath()
+ */
+static inline Expression::Ptr createIdPatternPath(const Expression::Ptr &operand1,
+                                                  const Expression::Ptr &operand2,
+                                                  const QXmlNodeModelIndex::Axis axis,
+                                                  const YYLTYPE &sl,
+                                                  const ParserContext *const parseInfo)
+{
+    const Expression::Ptr operandR(findAxisStep(operand2));
+    Q_ASSERT(operandR);
+    changeToTopAxis(operandR);
+
+    const Expression::Ptr parentStep(create(new AxisStep(axis, BuiltinTypes::node),
+                                            sl,
+                                            parseInfo));
+    const Expression::Ptr isComp(create(new NodeComparison(parentStep,
+                                                           QXmlNodeModelIndex::Is,
+                                                           operand1),
+                                         sl,
+                                         parseInfo));
+
+    return create(GenericPredicate::create(operandR, isComp,
+                                           parseInfo->staticContext, fromYYLTYPE(sl, parseInfo)), sl, parseInfo);
 }
 
 /**
@@ -401,7 +690,7 @@ static QUrl resolveAndCheckCollation(const QString &collation,
 }
 
 /* The Bison generated parser declares macros that aren't used
- * so supress the warnings by fake usage of them.
+ * so suppress the warnings by fake usage of them.
  *
  * We do the same for some more defines in the first action. */
 #if    defined(YYLSP_NEEDED)    \
@@ -414,6 +703,9 @@ static QUrl resolveAndCheckCollation(const QString &collation,
 
 /**
  * Wraps @p operand with a CopyOf in case it makes any difference.
+ *
+ * There is no need to wrap the return value in a call to create(), it's
+ * already done.
  */
 static Expression::Ptr createCopyOf(const Expression::Ptr &operand,
                                     const ParserContext *const parseInfo,
@@ -421,6 +713,13 @@ static Expression::Ptr createCopyOf(const Expression::Ptr &operand,
 {
     return create(new CopyOf(operand, parseInfo->inheritNamespacesMode,
                              parseInfo->preserveNamespacesMode), sl, parseInfo);
+}
+
+static Expression::Ptr createCompatStore(const Expression::Ptr &expr,
+                                         const YYLTYPE &sourceLocator,
+                                         const ParserContext *const parseInfo)
+{
+    return create(new StaticCompatibilityStore(expr), sourceLocator, parseInfo);
 }
 
 /**
@@ -463,10 +762,7 @@ static int XPathlex(YYSTYPE *lexVal, YYLTYPE *sourceLocator, const ParserContext
 
     const Tokenizer::Token tok(parseInfo->tokenizer->nextToken(sourceLocator));
 
-    if(tok.enums.zeroer)
-        (*lexVal).enums = tok.enums;
-    else
-        (*lexVal).sval = tok.value;
+    (*lexVal).sval = tok.value;
 
     return static_cast<int>(tok.type);
 }
@@ -524,9 +820,10 @@ static inline Expression::Ptr createDirAttributeValue(const Expression::List &co
  *
  *      -- The Salsa Master
  *
- * Issues an error via @p parseInfo's StaticContext if the initialization expression @p checkee for the
- * global variable @p var, contains a variable reference to @p var. That is, if there's
- * a circularity.
+ * Issues an error via @p parseInfo's StaticContext if the initialization
+ * expression @p checkee for the global variable @p var, contains a variable
+ * reference to @p var. That is, if there's a circularity.
+ *
  * @see <a href="http://www.w3.org/TR/xquery/#ERRXQST0054">XQuery 1.0: An XML
  * Query Language, err:XQST0054</a>
  */
@@ -551,13 +848,13 @@ static void checkVariableCircularity(const VariableDeclaration::Ptr &var,
         {
             parseInfo->staticContext->error(QtXmlPatterns::tr("The initialization of variable %1 "
                                                               "depends on itself").arg(formatKeyword(var, parseInfo->staticContext->namePool())),
-                                            ReportContext::XQST0054, ref);
+                                            parseInfo->isXSLT() ? ReportContext::XTDE0640 : ReportContext::XQST0054, ref);
             return;
         }
         else
         {
             /* If the variable we're checking is below another variable, it can be a recursive
-               dependency through functions, so we need to check variable references too. */
+             * dependency through functions, so we need to check variable references too. */
             checkVariableCircularity(var, ref->sourceExpression(), type, signList, parseInfo);
             return;
         }
@@ -565,7 +862,7 @@ static void checkVariableCircularity(const VariableDeclaration::Ptr &var,
     else if(id == Expression::IDUserFunctionCallsite)
     {
         const UserFunctionCallsite::Ptr callsite(checkee);
-        const FunctionSignature::Ptr sign(callsite->signature());
+        const FunctionSignature::Ptr sign(callsite->callTargetDescription());
         const FunctionSignature::List::const_iterator end(signList.constEnd());
         FunctionSignature::List::const_iterator it(signList.constBegin());
         bool noMatch = true;
@@ -590,6 +887,11 @@ static void checkVariableCircularity(const VariableDeclaration::Ptr &var,
         }
         /* Continue with the operands, such that we also check the arguments of the callsite. */
     }
+    else if(id == Expression::IDUnresolvedVariableReference)
+    {
+        /* We're called before it has rewritten itself. */
+        checkVariableCircularity(var, checkee->as<UnresolvedVariableReference>()->replacement(), type, signList, parseInfo);
+    }
 
     /* Check the operands. */
     const Expression::List ops(checkee->operands());
@@ -612,78 +914,13 @@ static void variableUnavailable(const QXmlName &variableName,
                                     ReportContext::XPST0008, fromYYLTYPE(location, parseInfo));
 }
 
-/* Forward declaration. */
-static void checkCallsiteCircularity(FunctionSignature::List &signList,
-                                     Expression::Ptr expr,
-                                     const ParserContext *const parseInfo);
-
-/**
- * Helper function for checkCallsiteCircularity(). If C++ allowed it,
- * it would have been local to it.
- */
-static void checkOperandsCircularity(FunctionSignature::List &signList,
-                                     Expression::Ptr expr,
-                                     const ParserContext *const parseInfo)
-{
-    /* Check the operands. */
-    const Expression::List ops(expr->operands());
-    const Expression::List::const_iterator end(ops.constEnd());
-    Expression::List::const_iterator it(ops.constBegin());
-
-    for(; it != end; ++it)
-        checkCallsiteCircularity(signList, *it, parseInfo);
-}
-
-/**
- * Flags callsites to be aware of their recursion by calling
- * UserFunctionCallsite::configureRecursion(), if that is the case.
- */
-static void checkCallsiteCircularity(FunctionSignature::List &signList,
-                                     Expression::Ptr expr,
-                                     const ParserContext *const parseInfo)
-{
-    Q_ASSERT(expr);
-    Q_ASSERT(parseInfo);
-
-    if(expr->is(Expression::IDUserFunctionCallsite))
-    {
-        FunctionSignature::List::const_iterator it(signList.constBegin());
-        const FunctionSignature::List::const_iterator end(signList.constEnd());
-        UserFunctionCallsite *const callsite = static_cast<UserFunctionCallsite *>(expr.data());
-
-        for(; it != end; ++it)
-        {
-            if(callsite->configureRecursion(*it))
-            {
-                /* A callsite inside the function body to the function. This user function
-                 * is recursive if it's to the same function, in other words. Which it was
-                 * if configureRecursion() returned true. */
-
-                /* Now we continue and check the operands of the callsite. That is, the arguments.
-                 * This catches for instance local:foo(local:foo(3)). */
-                checkOperandsCircularity(signList, expr, parseInfo);
-                return;
-            }
-        }
-        /* Check the body of the function so this callsite isn't "indirectly" a
-         * recursive call to the function we're checking. XQTS test case
-         * default_namespace-011 is an example of this. */
-        signList.append(callsite->signature());
-        checkCallsiteCircularity(signList, callsite->body(), parseInfo);
-    }
-
-    checkOperandsCircularity(signList, expr, parseInfo); /* We're done in this case. */
-}
-
 /**
  * The Cardinality in a TypeDeclaration for a variable in a quantification has no effect,
  * and this function ensures this by changing @p type to Cardinality Cardinality::zeroOrMore().
  *
- * finalizePushedVariable() can be seen as popping the variable.
- *
  * @see <a href="http://www.w3.org/Bugs/Public/show_bug.cgi?id=3305">Bugzilla Bug 3305
  * Cardinality + on range variables</a>
- * @see finalizePushedVariable()
+ * @see ParserContext::finalizePushedVariable()
  */
 static inline SequenceType::Ptr quantificationType(const SequenceType::Ptr &type)
 {
@@ -700,7 +937,7 @@ static Expression::Ptr pushVariable(const QXmlName name,
                                     const VariableDeclaration::Type type,
                                     const YYLTYPE &sourceLocator,
                                     ParserContext *const parseInfo,
-                                    const bool checksource = true)
+                                    const bool checkSource = true)
 {
     Q_ASSERT(!name.isNull());
     Q_ASSERT(parseInfo);
@@ -724,7 +961,7 @@ static Expression::Ptr pushVariable(const QXmlName name,
         }
         case VariableDeclaration::RangeVariable:
         {
-            slot = parseInfo->allocateRangeSlot();
+            slot = parseInfo->staticContext->allocateRangeSlot();
             break;
         }
         case VariableDeclaration::PositionalVariable:
@@ -732,6 +969,10 @@ static Expression::Ptr pushVariable(const QXmlName name,
             slot = parseInfo->allocatePositionalSlot();
             break;
         }
+        case VariableDeclaration::TemplateParameter:
+            /* Fallthrough. We do nothing, template parameters
+             * doesn't use context slots at all, they're hashed
+             * on the name. */
         case VariableDeclaration::ExternalVariable:
             /* We do nothing, external variables doesn't use
              *context slots/stack frames at all. */
@@ -742,19 +983,23 @@ static Expression::Ptr pushVariable(const QXmlName name,
 
     Expression::Ptr checked;
 
-    if(checksource)
+    if(checkSource && seqType)
     {
         if(expr)
         {
-            /* We only want to add conversion for function arguments.
+            /* We only want to add conversion for function arguments, and variables
+             * if we're XSL-T.
              *
              * We unconditionally skip TypeChecker::CheckFocus because the StaticContext we
              * pass hasn't set up the focus yet, since that's the parent's responsibility. */
-            const TypeChecker::Options options((type == VariableDeclaration::FunctionArgument ? TypeChecker::AutomaticallyConvert
-                                                                                              : TypeChecker::Options()));
+            const TypeChecker::Options options((   type == VariableDeclaration::FunctionArgument
+                                                || type == VariableDeclaration::TemplateParameter
+                                                || parseInfo->isXSLT())
+                                               ? TypeChecker::AutomaticallyConvert : TypeChecker::Options());
 
             checked = TypeChecker::applyFunctionConversion(expr, seqType, parseInfo->staticContext,
-                                                           ReportContext::XPTY0004, options);
+                                                           parseInfo->isXSLT() ? ReportContext::XTTE0570 : ReportContext::XPTY0004,
+                                                           options);
         }
     }
     else
@@ -780,29 +1025,6 @@ static Expression::Ptr pushVariable(const QXmlName name,
     return checked;
 }
 
-/**
- * @short Removes the recently pushed variables from
- * scope. The amount of removed variables is @p amount.
- */
-static void finalizePushedVariable(ParserContext *const parseInfo, const int amount = 1)
-{
-    Q_ASSERT(parseInfo);
-
-    for(int i = 0; i < amount; ++i)
-    {
-        const VariableDeclaration::Ptr var(parseInfo->variables.pop());
-        Q_ASSERT(var);
-
-        if(var->isUsed())
-            continue;
-        else
-        {
-            parseInfo->staticContext->warning(QtXmlPatterns::tr("The variable %1 is unused")
-                                                .arg(formatKeyword(var, parseInfo->staticContext->namePool())));
-        }
-    }
-}
-
 static inline VariableDeclaration::Ptr variableByName(const QXmlName name,
                                                       const ParserContext *const parseInfo)
 {
@@ -822,6 +1044,81 @@ static inline VariableDeclaration::Ptr variableByName(const QXmlName name,
     }
 
     return VariableDeclaration::Ptr();
+}
+
+static Expression::Ptr resolveVariable(const QXmlName &name,
+                                       const YYLTYPE &sourceLocator,
+                                       ParserContext *const parseInfo,
+                                       const bool raiseErrorOnUnavailability)
+{
+    const VariableDeclaration::Ptr var(variableByName(name, parseInfo));
+    Expression::Ptr retval;
+
+    if(var && var->type != VariableDeclaration::ExternalVariable)
+    {
+        switch(var->type)
+        {
+            case VariableDeclaration::RangeVariable:
+            {
+                retval = create(new RangeVariableReference(var->expression(), var->slot), sourceLocator, parseInfo);
+                break;
+            }
+            case VariableDeclaration::GlobalVariable:
+            /* Fallthrough. From the perspective of an ExpressionVariableReference, it can't tell
+             * a difference between a global and a local expression variable. However, the cache
+             * mechanism must. */
+            case VariableDeclaration::ExpressionVariable:
+            {
+                retval = create(new ExpressionVariableReference(var->slot, var), sourceLocator, parseInfo);
+                break;
+            }
+            case VariableDeclaration::FunctionArgument:
+            {
+                retval = create(new ArgumentReference(var->sequenceType, var->slot), sourceLocator, parseInfo);
+                break;
+            }
+            case VariableDeclaration::PositionalVariable:
+            {
+                retval = create(new PositionalVariableReference(var->slot), sourceLocator, parseInfo);
+                break;
+            }
+            case VariableDeclaration::TemplateParameter:
+            {
+                retval = create(new TemplateParameterReference(var), sourceLocator, parseInfo);
+                break;
+            }
+            case VariableDeclaration::ExternalVariable:
+                /* This code path will never be hit, but the case
+                 * label silences a warning. See above. */
+                ;
+        }
+        Q_ASSERT(retval);
+        var->references.append(retval);
+    }
+    else
+    {
+        /* Let's see if your external variable loader can provide us with one. */
+        const SequenceType::Ptr varType(parseInfo->staticContext->
+                                        externalVariableLoader()->announceExternalVariable(name, CommonSequenceTypes::ZeroOrMoreItems));
+
+        if(varType)
+        {
+            const Expression::Ptr extRef(create(new ExternalVariableReference(name, varType), sourceLocator, parseInfo));
+            const Expression::Ptr checked(TypeChecker::applyFunctionConversion(extRef, varType, parseInfo->staticContext));
+            retval = checked;
+        }
+        else if(!raiseErrorOnUnavailability && parseInfo->isXSLT())
+        {
+            /* In XSL-T, global variables are in scope for the whole
+             * stylesheet, so we must resolve this first at the end. */
+            retval = create(new UnresolvedVariableReference(name), sourceLocator, parseInfo);
+            parseInfo->unresolvedVariableReferences.insert(name, retval);
+        }
+        else
+            variableUnavailable(name, parseInfo, sourceLocator);
+    }
+
+    return retval;
 }
 
 static Expression::Ptr createReturnOrderBy(const OrderSpecTransfer::List &orderSpecTransfer,
@@ -880,152 +1177,167 @@ static Expression::Ptr createReturnOrderBy(const OrderSpecTransfer::List &orderS
      XPATH2_STRING_LITERAL = 260,
      QNAME = 261,
      NCNAME = 262,
-     ANY_LOCAL_NAME = 263,
-     ANY_PREFIX = 264,
-     NUMBER = 265,
-     XPATH2_NUMBER = 266,
-     AND = 267,
-     APOS = 268,
-     AS = 269,
-     ASCENDING = 270,
-     ASSIGN = 271,
-     AT = 272,
-     AT_SIGN = 273,
-     ATTRIBUTE = 274,
-     BAR = 275,
-     BASEURI = 276,
-     BEGIN_END_TAG = 277,
-     BOUNDARY_SPACE = 278,
-     BY = 279,
-     CASE = 280,
-     CASTABLE = 281,
-     CAST = 282,
-     COLLATION = 283,
-     COLON = 284,
-     COLONCOLON = 285,
-     COMMA = 286,
-     COMMENT = 287,
-     COMMENT_START = 288,
-     CONSTRUCTION = 289,
-     COPY_NAMESPACES = 290,
-     CURLY_LBRACE = 291,
-     CURLY_RBRACE = 292,
-     DECLARE = 293,
-     DEFAULT = 294,
-     DESCENDING = 295,
-     DIV = 296,
-     DOCUMENT = 297,
-     DOCUMENT_NODE = 298,
-     DOLLAR = 299,
-     DOT = 300,
-     DOTDOT = 301,
-     ELEMENT = 302,
-     ELSE = 303,
-     EMPTY = 304,
-     EMPTY_SEQUENCE = 305,
-     ENCODING = 306,
-     EQ = 307,
-     ERROR = 308,
-     EVERY = 309,
-     EXCEPT = 310,
-     EXTERNAL = 311,
-     FOLLOWS = 312,
-     FOR = 313,
-     FUNCTION = 314,
-     GE = 315,
-     G_EQ = 316,
-     G_GE = 317,
-     G_GT = 318,
-     G_LE = 319,
-     G_LT = 320,
-     G_NE = 321,
-     GREATEST = 322,
-     GT = 323,
-     IDIV = 324,
-     IF = 325,
-     IMPORT = 326,
-     INHERIT = 327,
-     IN = 328,
-     INSTANCE = 329,
-     INTERSECT = 330,
-     IS = 331,
-     ITEM = 332,
-     LAX = 333,
-     LBRACKET = 334,
-     LEAST = 335,
-     LE = 336,
-     LET = 337,
-     LPAREN = 338,
-     LT = 339,
-     MINUS = 340,
-     MOD = 341,
-     MODULE = 342,
-     NAMESPACE = 343,
-     NE = 344,
-     NODE = 345,
-     NO_ELEMENT_CONTENT = 346,
-     NO_INHERIT = 347,
-     NO_PRESERVE = 348,
-     OF = 349,
-     OPTION = 350,
-     ORDER_BY = 351,
-     ORDERED = 352,
-     ORDERING = 353,
-     ORDER = 354,
-     OR = 355,
-     PI_START = 356,
-     PLUS = 357,
-     POSITION_SET = 358,
-     PRAGMA_END = 359,
-     PRAGMA_START = 360,
-     PRECEDES = 361,
-     PRESERVE = 362,
-     PROCESSING_INSTRUCTION = 363,
-     QUESTION = 364,
-     QUICK_TAG_END = 365,
-     QUOTE = 366,
-     RBRACKET = 367,
-     RETURN = 368,
-     RPAREN = 369,
-     SATISFIES = 370,
-     SCHEMA = 371,
-     SCHEMA_ATTRIBUTE = 372,
-     SCHEMA_ELEMENT = 373,
-     SEMI_COLON = 374,
-     SLASH = 375,
-     SLASHSLASH = 376,
-     SOME = 377,
-     STABLE = 378,
-     STAR = 379,
-     STRICT = 380,
-     STRIP = 381,
-     SUCCESS = 382,
-     COMMENT_CONTENT = 383,
-     PI_CONTENT = 384,
-     PI_TARGET = 385,
-     TEXT = 386,
-     THEN = 387,
-     TO = 388,
-     TREAT = 389,
-     TYPESWITCH = 390,
-     UNION = 391,
-     UNORDERED = 392,
-     VALIDATE = 393,
-     VARIABLE = 394,
-     VERSION = 395,
-     WHERE = 396,
-     XQUERY = 397,
-     ANCESTOR_OR_SELF = 398,
-     ANCESTOR = 399,
-     CHILD = 400,
-     DESCENDANT_OR_SELF = 401,
-     DESCENDANT = 402,
-     FOLLOWING_SIBLING = 403,
-     FOLLOWING = 404,
-     PRECEDING = 405,
-     PARENT = 406,
-     PRECEDING_SIBLING = 407,
-     SELF = 408
+     CLARK_NAME = 263,
+     ANY_LOCAL_NAME = 264,
+     ANY_PREFIX = 265,
+     NUMBER = 266,
+     XPATH2_NUMBER = 267,
+     ANCESTOR = 268,
+     ANCESTOR_OR_SELF = 269,
+     AND = 270,
+     APOS = 271,
+     APPLY_TEMPLATE = 272,
+     AS = 273,
+     ASCENDING = 274,
+     ASSIGN = 275,
+     AT = 276,
+     AT_SIGN = 277,
+     ATTRIBUTE = 278,
+     AVT = 279,
+     BAR = 280,
+     BASEURI = 281,
+     BEGIN_END_TAG = 282,
+     BOUNDARY_SPACE = 283,
+     BY = 284,
+     CALL_TEMPLATE = 285,
+     CASE = 286,
+     CASTABLE = 287,
+     CAST = 288,
+     CHILD = 289,
+     COLLATION = 290,
+     COLONCOLON = 291,
+     COMMA = 292,
+     COMMENT = 293,
+     COMMENT_START = 294,
+     CONSTRUCTION = 295,
+     COPY_NAMESPACES = 296,
+     CURLY_LBRACE = 297,
+     CURLY_RBRACE = 298,
+     DECLARE = 299,
+     DEFAULT = 300,
+     DESCENDANT = 301,
+     DESCENDANT_OR_SELF = 302,
+     DESCENDING = 303,
+     DIV = 304,
+     DOCUMENT = 305,
+     DOCUMENT_NODE = 306,
+     DOLLAR = 307,
+     DOT = 308,
+     DOTDOT = 309,
+     ELEMENT = 310,
+     ELSE = 311,
+     EMPTY = 312,
+     EMPTY_SEQUENCE = 313,
+     ENCODING = 314,
+     END_SORT = 315,
+     EQ = 316,
+     ERROR = 317,
+     EVERY = 318,
+     EXCEPT = 319,
+     EXTERNAL = 320,
+     FOLLOWING = 321,
+     FOLLOWING_SIBLING = 322,
+     FOLLOWS = 323,
+     FOR_APPLY_TEMPLATE = 324,
+     FOR = 325,
+     FUNCTION = 326,
+     GE = 327,
+     G_EQ = 328,
+     G_GE = 329,
+     G_GT = 330,
+     G_LE = 331,
+     G_LT = 332,
+     G_NE = 333,
+     GREATEST = 334,
+     GT = 335,
+     IDIV = 336,
+     IF = 337,
+     IMPORT = 338,
+     INHERIT = 339,
+     IN = 340,
+     INSTANCE = 341,
+     INTERSECT = 342,
+     IS = 343,
+     ITEM = 344,
+     LAX = 345,
+     LBRACKET = 346,
+     LEAST = 347,
+     LE = 348,
+     LET = 349,
+     LPAREN = 350,
+     LT = 351,
+     MAP = 352,
+     MATCHES = 353,
+     MINUS = 354,
+     MODE = 355,
+     MOD = 356,
+     MODULE = 357,
+     NAME = 358,
+     NAMESPACE = 359,
+     NE = 360,
+     NODE = 361,
+     NO_INHERIT = 362,
+     NO_PRESERVE = 363,
+     OF = 364,
+     OPTION = 365,
+     ORDERED = 366,
+     ORDERING = 367,
+     ORDER = 368,
+     OR = 369,
+     PARENT = 370,
+     PI_START = 371,
+     PLUS = 372,
+     POSITION_SET = 373,
+     PRAGMA_END = 374,
+     PRAGMA_START = 375,
+     PRECEDES = 376,
+     PRECEDING = 377,
+     PRECEDING_SIBLING = 378,
+     PRESERVE = 379,
+     PRIORITY = 380,
+     PROCESSING_INSTRUCTION = 381,
+     QUESTION = 382,
+     QUICK_TAG_END = 383,
+     QUOTE = 384,
+     RBRACKET = 385,
+     RETURN = 386,
+     RPAREN = 387,
+     SATISFIES = 388,
+     SCHEMA_ATTRIBUTE = 389,
+     SCHEMA_ELEMENT = 390,
+     SCHEMA = 391,
+     SELF = 392,
+     SEMI_COLON = 393,
+     SLASH = 394,
+     SLASHSLASH = 395,
+     SOME = 396,
+     SORT = 397,
+     STABLE = 398,
+     STAR = 399,
+     STRICT = 400,
+     STRIP = 401,
+     SUCCESS = 402,
+     COMMENT_CONTENT = 403,
+     PI_CONTENT = 404,
+     PI_TARGET = 405,
+     XSLT_VERSION = 406,
+     TEMPLATE = 407,
+     TEXT = 408,
+     THEN = 409,
+     TO = 410,
+     TREAT = 411,
+     TUNNEL = 412,
+     TYPESWITCH = 413,
+     UNION = 414,
+     UNORDERED = 415,
+     VALIDATE = 416,
+     VARIABLE = 417,
+     VERSION = 418,
+     WHERE = 419,
+     XQUERY = 420,
+     INTERNAL = 421,
+     INTERNAL_NAME = 422,
+     CURRENT = 423
    };
 #endif
 
@@ -1054,7 +1366,7 @@ typedef struct YYLTYPE
 /* Copy the second part of user declarations.  */
 
 /* Line 221 of yacc.c.  */
-#line 987 "qquerytransformparser.cpp"
+#line 1289 "qquerytransformparser.cpp"
 
 #ifdef short
 # undef short
@@ -1271,20 +1583,20 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  5
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   1463
+#define YYLAST   2052
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  154
+#define YYNTOKENS  169
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  206
+#define YYNNTS  237
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  402
+#define YYNRULES  472
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  667
+#define YYNSTATES  812
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   408
+#define YYMAXUTOK   423
 
 #define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
@@ -1332,7 +1644,9 @@ static const yytype_uint8 yytranslate[] =
      115,   116,   117,   118,   119,   120,   121,   122,   123,   124,
      125,   126,   127,   128,   129,   130,   131,   132,   133,   134,
      135,   136,   137,   138,   139,   140,   141,   142,   143,   144,
-     145,   146,   147,   148,   149,   150,   151,   152,   153
+     145,   146,   147,   148,   149,   150,   151,   152,   153,   154,
+     155,   156,   157,   158,   159,   160,   161,   162,   163,   164,
+     165,   166,   167,   168
 };
 
 #if YYDEBUG
@@ -1342,211 +1656,248 @@ static const yytype_uint16 yyprhs[] =
 {
        0,     0,     3,     6,     9,    10,    16,    17,    20,    23,
       26,    33,    34,    37,    40,    43,    46,    49,    52,    55,
-      57,    59,    61,    63,    65,    67,    69,    71,    73,    75,
-      82,    87,    89,    91,    93,    95,   102,   109,   115,   120,
-     122,   124,   130,   133,   136,   143,   145,   147,   149,   151,
-     157,   162,   169,   170,   174,   178,   185,   186,   190,   191,
-     194,   196,   200,   208,   210,   213,   218,   220,   222,   223,
-     234,   235,   237,   241,   245,   247,   249,   253,   255,   257,
-     259,   263,   267,   269,   271,   273,   275,   277,   279,   281,
-     282,   283,   294,   295,   296,   307,   309,   311,   313,   314,
-     318,   319,   328,   329,   338,   340,   342,   344,   348,   354,
-     355,   358,   362,   364,   369,   370,   372,   374,   375,   377,
-     378,   381,   385,   388,   390,   392,   393,   394,   404,   405,
-     406,   416,   418,   419,   420,   430,   431,   432,   442,   444,
-     447,   448,   455,   456,   457,   466,   468,   470,   471,   475,
-     479,   480,   487,   496,   498,   502,   504,   508,   510,   512,
-     514,   516,   518,   522,   524,   528,   530,   532,   534,   538,
-     540,   542,   544,   546,   548,   552,   554,   558,   560,   562,
-     564,   566,   568,   573,   575,   580,   582,   587,   589,   594,
-     596,   599,   601,   603,   605,   607,   609,   613,   615,   617,
-     619,   621,   623,   625,   629,   631,   633,   635,   637,   639,
-     641,   645,   647,   649,   651,   654,   656,   659,   662,   665,
-     668,   672,   675,   677,   682,   683,   685,   688,   691,   693,
-     695,   697,   701,   705,   707,   709,   711,   716,   718,   720,
-     721,   725,   727,   729,   731,   734,   736,   738,   740,   742,
-     744,   746,   748,   750,   752,   754,   756,   758,   759,   763,
-     765,   767,   769,   771,   773,   775,   777,   779,   781,   783,
-     785,   787,   792,   794,   796,   798,   800,   802,   804,   806,
-     808,   810,   812,   814,   817,   819,   821,   825,   828,   830,
-     833,   838,   839,   841,   843,   845,   847,   849,   851,   853,
-     854,   855,   864,   866,   872,   873,   876,   880,   884,   888,
-     889,   892,   895,   896,   899,   902,   905,   908,   911,   915,
-     917,   919,   921,   923,   925,   927,   930,   931,   936,   940,
-     943,   946,   950,   951,   952,   956,   958,   960,   962,   964,
-     966,   968,   970,   973,   974,   977,   980,   983,   984,   986,
-     988,   990,   992,   994,   996,   999,  1001,  1003,  1005,  1007,
-    1009,  1011,  1013,  1015,  1018,  1021,  1026,  1028,  1030,  1033,
-    1036,  1039,  1044,  1049,  1051,  1053,  1056,  1061,  1066,  1073,
-    1080,  1085,  1088,  1093,  1098,  1105,  1112,  1117,  1120,  1122,
-    1124,  1126,  1128,  1130,  1132,  1134,  1136,  1138,  1140,  1142,
-    1144,  1146,  1148
+      58,    66,    67,    68,    84,    85,    88,    89,    91,    94,
+      96,    98,   100,   102,   104,   106,   108,   110,   112,   114,
+     122,   127,   129,   131,   133,   135,   142,   149,   155,   160,
+     162,   164,   170,   173,   176,   183,   185,   187,   189,   191,
+     197,   203,   210,   211,   215,   219,   226,   227,   231,   232,
+     235,   237,   241,   251,   253,   256,   257,   260,   265,   267,
+     269,   270,   282,   283,   285,   289,   293,   295,   297,   301,
+     303,   305,   309,   311,   313,   316,   319,   321,   325,   329,
+     331,   333,   337,   341,   343,   345,   347,   351,   355,   357,
+     359,   361,   363,   365,   370,   371,   374,   375,   378,   380,
+     384,   386,   388,   390,   392,   393,   394,   405,   406,   407,
+     418,   420,   422,   424,   425,   429,   430,   440,   441,   450,
+     452,   454,   456,   460,   466,   467,   469,   472,   476,   478,
+     483,   484,   486,   488,   489,   491,   492,   495,   499,   503,
+     506,   508,   510,   511,   512,   522,   523,   524,   534,   536,
+     537,   538,   548,   549,   550,   560,   562,   565,   566,   573,
+     574,   575,   584,   586,   588,   589,   593,   597,   598,   605,
+     614,   616,   620,   622,   626,   628,   630,   632,   634,   636,
+     640,   642,   646,   648,   650,   652,   656,   658,   660,   662,
+     664,   666,   670,   672,   676,   678,   680,   682,   684,   686,
+     691,   693,   698,   700,   705,   707,   712,   714,   717,   719,
+     721,   723,   725,   727,   731,   733,   735,   737,   739,   741,
+     743,   747,   749,   751,   753,   755,   757,   759,   763,   765,
+     767,   769,   772,   774,   777,   780,   783,   786,   790,   793,
+     795,   800,   801,   803,   806,   809,   811,   813,   815,   819,
+     827,   831,   833,   835,   838,   839,   843,   849,   850,   860,
+     866,   867,   870,   871,   873,   877,   878,   882,   888,   889,
+     891,   892,   895,   897,   899,   901,   903,   908,   910,   912,
+     913,   917,   919,   921,   923,   926,   928,   930,   932,   934,
+     936,   938,   940,   942,   944,   946,   948,   950,   951,   955,
+     957,   959,   961,   963,   965,   967,   969,   971,   973,   975,
+     977,   979,   984,   986,   988,   990,   992,   994,   996,   998,
+    1004,  1006,  1008,  1010,  1012,  1015,  1017,  1019,  1023,  1026,
+    1028,  1031,  1036,  1037,  1039,  1041,  1043,  1045,  1047,  1049,
+    1051,  1052,  1053,  1062,  1064,  1070,  1071,  1074,  1078,  1082,
+    1086,  1087,  1090,  1093,  1094,  1097,  1100,  1103,  1106,  1109,
+    1113,  1115,  1117,  1119,  1121,  1123,  1125,  1127,  1131,  1132,
+    1138,  1139,  1141,  1146,  1150,  1154,  1158,  1159,  1160,  1164,
+    1166,  1168,  1170,  1172,  1174,  1176,  1180,  1182,  1185,  1186,
+    1189,  1192,  1195,  1196,  1198,  1200,  1202,  1204,  1206,  1208,
+    1211,  1213,  1215,  1217,  1219,  1221,  1223,  1225,  1227,  1230,
+    1233,  1238,  1240,  1242,  1245,  1248,  1251,  1256,  1261,  1263,
+    1265,  1268,  1273,  1278,  1285,  1292,  1297,  1300,  1305,  1310,
+    1318,  1326,  1327,  1329,  1334,  1337,  1339,  1341,  1343,  1345,
+    1347,  1349,  1351,  1353,  1356,  1358,  1360,  1362,  1364,  1366,
+    1368,  1370,  1372
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int16 yyrhs[] =
 {
-     155,     0,    -1,   156,   159,    -1,   156,   158,    -1,    -1,
-     142,   140,   358,   157,   164,    -1,    -1,    51,   358,    -1,
-     161,   197,    -1,   160,   161,    -1,    87,    88,     7,    61,
-     357,   164,    -1,    -1,   161,   168,    -1,   161,   162,    -1,
-     161,   165,    -1,   161,   163,    -1,   161,   187,    -1,   161,
-     191,    -1,   161,   171,    -1,   166,    -1,   179,    -1,   180,
-      -1,   189,    -1,   172,    -1,   174,    -1,   176,    -1,   181,
-      -1,   183,    -1,   119,    -1,    38,    88,     7,    61,   357,
-     164,    -1,    38,    23,   167,   164,    -1,   126,    -1,   107,
-      -1,   169,    -1,   170,    -1,    38,    39,    47,    88,   357,
-     164,    -1,    38,    39,    59,    88,   357,   164,    -1,    38,
-      95,   352,   358,   164,    -1,    38,    98,   173,   164,    -1,
-      97,    -1,   137,    -1,    38,    39,    99,   175,   164,    -1,
-      49,    80,    -1,    49,    67,    -1,    38,    35,   177,    31,
-     178,   164,    -1,   107,    -1,    93,    -1,    72,    -1,    92,
-      -1,    38,    39,    28,   358,   164,    -1,    38,    21,   357,
-     164,    -1,    71,   116,   182,   357,   185,   164,    -1,    -1,
-      39,    47,    88,    -1,    88,     7,    61,    -1,    71,    87,
-     184,   357,   185,   164,    -1,    -1,    88,     7,    61,    -1,
-      -1,    17,   186,    -1,   357,    -1,   186,    31,   357,    -1,
-      38,   139,    44,   299,   333,   188,   164,    -1,    56,    -1,
-      16,   200,    -1,    38,    34,   190,   164,    -1,   126,    -1,
-     107,    -1,    -1,    38,    59,   354,    83,   193,   114,   192,
-     333,   195,   164,    -1,    -1,   194,    -1,   193,    31,   194,
-      -1,    44,   299,   333,    -1,    56,    -1,   196,    -1,    36,
-     198,    37,    -1,   198,    -1,   200,    -1,   199,    -1,   200,
-      31,   200,    -1,   199,    31,   200,    -1,   245,    -1,   201,
-      -1,   221,    -1,   235,    -1,   244,    -1,   202,    -1,   209,
-      -1,    -1,    -1,    58,    44,   299,   333,   208,    73,   200,
-     203,   204,   205,    -1,    -1,    -1,    31,    44,   299,   333,
-     208,    73,   200,   206,   207,   205,    -1,   213,    -1,   202,
-      -1,   209,    -1,    -1,    17,    44,   299,    -1,    -1,    82,
-      44,   299,   333,    16,   200,   210,   211,    -1,    -1,    31,
-      44,   299,   333,    16,   200,   212,   211,    -1,   213,    -1,
-     202,    -1,   209,    -1,   214,   113,   200,    -1,   141,   200,
-     214,   113,   200,    -1,    -1,   220,   215,    -1,   215,    31,
-     216,    -1,   216,    -1,   200,   217,   218,   219,    -1,    -1,
-      15,    -1,    40,    -1,    -1,   175,    -1,    -1,    28,   357,
-      -1,   123,    99,    24,    -1,    99,    24,    -1,   222,    -1,
-     228,    -1,    -1,    -1,   122,    44,   299,   333,    73,   200,
-     223,   224,   225,    -1,    -1,    -1,    31,    44,   299,   333,
-      73,   200,   226,   227,   225,    -1,   234,    -1,    -1,    -1,
-      54,    44,   299,   333,    73,   200,   229,   230,   231,    -1,
-      -1,    -1,    31,    44,   299,   333,    73,   200,   232,   233,
-     231,    -1,   234,    -1,   115,   200,    -1,    -1,   135,    83,
-     198,   114,   236,   237,    -1,    -1,    -1,    25,   241,   334,
-     238,   113,   200,   239,   240,    -1,   237,    -1,   242,    -1,
-      -1,    44,   352,    14,    -1,    39,   113,   200,    -1,    -1,
-      39,    44,   352,   243,   113,   200,    -1,    70,    83,   198,
-     114,   132,   200,    48,   200,    -1,   246,    -1,   245,   100,
-     246,    -1,   247,    -1,   246,    12,   247,    -1,   248,    -1,
-     266,    -1,   264,    -1,   268,    -1,   249,    -1,   249,   133,
-     249,    -1,   251,    -1,   249,   250,   251,    -1,   102,    -1,
-      85,    -1,   253,    -1,   251,   252,   253,    -1,   124,    -1,
-      41,    -1,    69,    -1,    86,    -1,   254,    -1,   254,   255,
-     254,    -1,   257,    -1,   257,   256,   257,    -1,   136,    -1,
-      20,    -1,    75,    -1,    55,    -1,   258,    -1,   258,    74,
-      94,   334,    -1,   259,    -1,   259,   134,    14,   334,    -1,
-     260,    -1,   260,    26,    14,   332,    -1,   261,    -1,   261,
-      27,    14,   332,    -1,   263,    -1,   262,   261,    -1,   102,
-      -1,    85,    -1,   270,    -1,   277,    -1,   272,    -1,   248,
-     265,   248,    -1,    61,    -1,    66,    -1,    62,    -1,    63,
-      -1,    64,    -1,    65,    -1,   248,   267,   248,    -1,    52,
-      -1,    89,    -1,    60,    -1,    68,    -1,    81,    -1,    84,
-      -1,   248,   269,   248,    -1,    76,    -1,   106,    -1,    57,
-      -1,   271,   196,    -1,   138,    -1,   138,   125,    -1,   138,
-      78,    -1,   274,   273,    -1,    36,    37,    -1,    36,   198,
-      37,    -1,   274,   275,    -1,   275,    -1,   105,   356,   276,
-     104,    -1,    -1,   358,    -1,   120,   278,    -1,   121,   278,
-      -1,   120,    -1,   278,    -1,   279,    -1,   278,   120,   279,
-      -1,   278,   121,   279,    -1,   280,    -1,   294,    -1,   281,
-      -1,   280,    79,   198,   112,    -1,   282,    -1,   289,    -1,
-      -1,   285,   283,   284,    -1,   287,    -1,   291,    -1,   345,
-      -1,   286,    30,    -1,   143,    -1,   144,    -1,    19,    -1,
-     145,    -1,   146,    -1,   147,    -1,   149,    -1,   150,    -1,
-     148,    -1,   152,    -1,   151,    -1,   153,    -1,    -1,    18,
-     288,   291,    -1,   291,    -1,   345,    -1,   290,    -1,    46,
-      -1,   292,    -1,   338,    -1,   352,    -1,   293,    -1,   124,
-      -1,     8,    -1,     9,    -1,   295,    -1,   294,    79,   198,
-     112,    -1,   296,    -1,   298,    -1,   300,    -1,   301,    -1,
-     303,    -1,   302,    -1,   305,    -1,   297,    -1,   358,    -1,
-      11,    -1,    10,    -1,    44,   299,    -1,     7,    -1,   359,
-      -1,    83,   198,   114,    -1,    83,   114,    -1,    45,    -1,
-     173,   196,    -1,   354,    83,   304,   114,    -1,    -1,   200,
-      -1,   199,    -1,   306,    -1,   318,    -1,   307,    -1,   316,
-      -1,   317,    -1,    -1,    -1,    65,   355,   308,   311,   309,
-     103,   311,   310,    -1,   110,    -1,    63,   315,    22,   352,
-      63,    -1,    -1,   311,   312,    -1,   355,    61,   313,    -1,
-     111,   314,   111,    -1,    13,   314,    13,    -1,    -1,   196,
-     314,    -1,   358,   314,    -1,    -1,   315,   306,    -1,   315,
-     358,    -1,   315,     4,    -1,   315,   196,    -1,    33,   128,
-      -1,   101,   130,   129,    -1,   319,    -1,   320,    -1,   322,
-      -1,   323,    -1,   324,    -1,   325,    -1,    42,   196,    -1,
-      -1,    47,   329,   321,   273,    -1,    19,   326,   273,    -1,
-     131,   196,    -1,    32,   196,    -1,   108,   331,   273,    -1,
-      -1,    -1,   327,   352,   328,    -1,   330,    -1,   352,    -1,
-     330,    -1,   196,    -1,     7,    -1,   196,    -1,   337,    -1,
-     337,   109,    -1,    -1,    14,   334,    -1,   336,   335,    -1,
-      50,   350,    -1,    -1,   102,    -1,   124,    -1,   109,    -1,
-     337,    -1,   338,    -1,   345,    -1,    77,   350,    -1,   352,
-      -1,   340,    -1,   348,    -1,   349,    -1,   344,    -1,   343,
-      -1,   342,    -1,   339,    -1,    90,   350,    -1,    43,   350,
-      -1,    43,    83,   341,   114,    -1,   348,    -1,   349,    -1,
-     131,   350,    -1,    32,   350,    -1,   108,   350,    -1,   108,
-      83,     7,   114,    -1,   108,    83,   358,   114,    -1,   346,
-      -1,   347,    -1,    19,   350,    -1,    19,    83,   124,   114,
-      -1,    19,    83,   351,   114,    -1,    19,    83,   351,    31,
-     353,   114,    -1,    19,    83,   124,    31,   353,   114,    -1,
-     117,    83,   352,   114,    -1,    47,   350,    -1,    47,    83,
-     124,   114,    -1,    47,    83,   352,   114,    -1,    47,    83,
-     352,    31,   353,   114,    -1,    47,    83,   124,    31,   353,
-     114,    -1,   118,    83,   352,   114,    -1,    83,   114,    -1,
-       7,    -1,   359,    -1,     7,    -1,   359,    -1,   352,    -1,
-       7,    -1,   359,    -1,     7,    -1,     6,    -1,     7,    -1,
-     359,    -1,   358,    -1,     3,    -1,     5,    -1,     6,    -1
+     170,     0,    -1,   171,   174,    -1,   171,   173,    -1,    -1,
+     165,   163,   404,   172,   185,    -1,    -1,    59,   404,    -1,
+     176,   219,    -1,   175,   176,    -1,   102,   104,     7,    73,
+     403,   185,    -1,    -1,   176,   189,    -1,   176,   183,    -1,
+     176,   186,    -1,   176,   184,    -1,   176,   177,    -1,   176,
+     208,    -1,   176,   213,    -1,   176,   192,    -1,    44,   152,
+     182,   317,   377,   305,   185,    -1,    -1,    -1,    44,   152,
+     181,    98,    95,   178,   220,   179,   132,   228,   180,   317,
+     377,   305,   185,    -1,    -1,   125,   404,    -1,    -1,   182,
+      -1,   103,   397,    -1,   187,    -1,   200,    -1,   201,    -1,
+     211,    -1,   193,    -1,   195,    -1,   197,    -1,   202,    -1,
+     204,    -1,   138,    -1,    44,   104,     7,    73,   403,   364,
+     185,    -1,    44,    28,   188,   185,    -1,   146,    -1,   124,
+      -1,   190,    -1,   191,    -1,    44,    45,    55,   104,   403,
+     185,    -1,    44,    45,    71,   104,   403,   185,    -1,    44,
+     110,   397,   404,   185,    -1,    44,   112,   194,   185,    -1,
+     111,    -1,   160,    -1,    44,    45,   113,   196,   185,    -1,
+      57,    92,    -1,    57,    79,    -1,    44,    41,   198,    37,
+     199,   185,    -1,   124,    -1,   108,    -1,    84,    -1,   107,
+      -1,    44,    45,    35,   404,   185,    -1,    44,    26,   364,
+     403,   185,    -1,    83,   136,   203,   403,   206,   185,    -1,
+      -1,    45,    55,   104,    -1,   104,     7,    73,    -1,    83,
+     102,   205,   403,   206,   185,    -1,    -1,   104,     7,    73,
+      -1,    -1,    21,   207,    -1,   403,    -1,   207,    37,   403,
+      -1,    44,   162,   364,    52,   341,   377,   209,   210,   185,
+      -1,    65,    -1,    20,   227,    -1,    -1,    20,   227,    -1,
+      44,    40,   212,   185,    -1,   146,    -1,   124,    -1,    -1,
+      44,    71,   364,   399,    95,   215,   132,   214,   377,   217,
+     185,    -1,    -1,   216,    -1,   215,    37,   216,    -1,    52,
+     341,   377,    -1,    65,    -1,   218,    -1,    42,   225,    43,
+      -1,   225,    -1,   221,    -1,   220,    25,   221,    -1,   223,
+      -1,   139,    -1,   139,   223,    -1,   140,   223,    -1,   222,
+      -1,   222,   139,   223,    -1,   222,   140,   223,    -1,   345,
+      -1,   224,    -1,   223,   139,   224,    -1,   223,   140,   224,
+      -1,   322,    -1,   227,    -1,   226,    -1,   227,    37,   227,
+      -1,   226,    37,   227,    -1,   277,    -1,   232,    -1,   253,
+      -1,   267,    -1,   276,    -1,    24,    95,   356,   132,    -1,
+      -1,   100,   230,    -1,    -1,   100,   231,    -1,   231,    -1,
+     230,    37,   231,    -1,   405,    -1,     7,    -1,   233,    -1,
+     240,    -1,    -1,    -1,    70,    52,   341,   377,   239,    85,
+     227,   234,   235,   236,    -1,    -1,    -1,    37,    52,   341,
+     377,   239,    85,   227,   237,   238,   236,    -1,   244,    -1,
+     233,    -1,   240,    -1,    -1,    21,    52,   341,    -1,    -1,
+      94,   364,    52,   341,   377,    20,   227,   241,   242,    -1,
+      -1,    37,    52,   341,   377,    20,   227,   243,   242,    -1,
+     244,    -1,   233,    -1,   240,    -1,   245,   131,   227,    -1,
+     164,   227,   245,   131,   227,    -1,    -1,   246,    -1,   252,
+     247,    -1,   247,    37,   248,    -1,   248,    -1,   227,   249,
+     250,   251,    -1,    -1,    19,    -1,    48,    -1,    -1,   196,
+      -1,    -1,    35,   403,    -1,   166,    35,   227,    -1,   143,
+     113,    29,    -1,   113,    29,    -1,   254,    -1,   260,    -1,
+      -1,    -1,   141,    52,   341,   377,    85,   227,   255,   256,
+     257,    -1,    -1,    -1,    37,    52,   341,   377,    85,   227,
+     258,   259,   257,    -1,   266,    -1,    -1,    -1,    63,    52,
+     341,   377,    85,   227,   261,   262,   263,    -1,    -1,    -1,
+      37,    52,   341,   377,    85,   227,   264,   265,   263,    -1,
+     266,    -1,   133,   227,    -1,    -1,   158,    95,   225,   132,
+     268,   269,    -1,    -1,    -1,    31,   273,   378,   270,   131,
+     227,   271,   272,    -1,   269,    -1,   274,    -1,    -1,    52,
+     397,    18,    -1,    45,   131,   227,    -1,    -1,    45,    52,
+     397,   275,   131,   227,    -1,    82,    95,   225,   132,   154,
+     227,    56,   227,    -1,   278,    -1,   277,   114,   278,    -1,
+     279,    -1,   278,    15,   279,    -1,   280,    -1,   298,    -1,
+     296,    -1,   300,    -1,   281,    -1,   281,   155,   281,    -1,
+     283,    -1,   281,   282,   283,    -1,   117,    -1,    99,    -1,
+     285,    -1,   283,   284,   285,    -1,   144,    -1,    49,    -1,
+      81,    -1,   101,    -1,   286,    -1,   285,   287,   286,    -1,
+     289,    -1,   286,   288,   289,    -1,   159,    -1,    25,    -1,
+      87,    -1,    64,    -1,   290,    -1,   290,    86,   109,   378,
+      -1,   291,    -1,   291,   156,    18,   378,    -1,   292,    -1,
+     292,    32,    18,   376,    -1,   293,    -1,   293,    33,    18,
+     376,    -1,   295,    -1,   294,   293,    -1,   117,    -1,    99,
+      -1,   302,    -1,   309,    -1,   304,    -1,   280,   297,   280,
+      -1,    73,    -1,    78,    -1,    74,    -1,    75,    -1,    76,
+      -1,    77,    -1,   280,   299,   280,    -1,    61,    -1,   105,
+      -1,    72,    -1,    80,    -1,    93,    -1,    96,    -1,   280,
+     301,   280,    -1,    88,    -1,   121,    -1,    68,    -1,   303,
+     218,    -1,   161,    -1,   161,   145,    -1,   161,    90,    -1,
+     306,   305,    -1,    42,    43,    -1,    42,   225,    43,    -1,
+     306,   307,    -1,   307,    -1,   120,   402,   308,   119,    -1,
+      -1,   404,    -1,   139,   310,    -1,   140,   310,    -1,   139,
+      -1,   310,    -1,   311,    -1,   310,   321,   311,    -1,   310,
+     321,   142,   246,   131,   311,    60,    -1,   310,   140,   311,
+      -1,   322,    -1,   336,    -1,   168,   218,    -1,    -1,   151,
+     312,   218,    -1,    26,   404,    42,   225,    43,    -1,    -1,
+      44,   104,     7,    73,     3,    42,   313,   225,    43,    -1,
+      30,   397,    95,   314,   132,    -1,    -1,   315,   316,    -1,
+      -1,   318,    -1,   316,    37,   318,    -1,    -1,    95,   316,
+     132,    -1,   319,    52,   341,   377,   320,    -1,    -1,   157,
+      -1,    -1,    20,   227,    -1,   139,    -1,    97,    -1,    69,
+      -1,   323,    -1,   322,    91,   225,   130,    -1,   324,    -1,
+     331,    -1,    -1,   327,   325,   326,    -1,   329,    -1,   333,
+      -1,   389,    -1,   328,    36,    -1,    14,    -1,    13,    -1,
+      23,    -1,    34,    -1,    47,    -1,    46,    -1,    66,    -1,
+     122,    -1,    67,    -1,   123,    -1,   115,    -1,   137,    -1,
+      -1,    22,   330,   333,    -1,   333,    -1,   389,    -1,   332,
+      -1,    54,    -1,   334,    -1,   382,    -1,   397,    -1,   335,
+      -1,   144,    -1,     9,    -1,    10,    -1,   337,    -1,   336,
+      91,   225,   130,    -1,   338,    -1,   340,    -1,   342,    -1,
+     343,    -1,   345,    -1,   344,    -1,   347,    -1,    17,   229,
+      95,   314,   132,    -1,   339,    -1,   404,    -1,    12,    -1,
+      11,    -1,    52,   341,    -1,     7,    -1,   405,    -1,    95,
+     225,   132,    -1,    95,   132,    -1,    53,    -1,   194,   218,
+      -1,   399,    95,   346,   132,    -1,    -1,   227,    -1,   226,
+      -1,   348,    -1,   360,    -1,   349,    -1,   358,    -1,   359,
+      -1,    -1,    -1,    77,   401,   350,   353,   351,   118,   353,
+     352,    -1,   128,    -1,    75,   357,    27,   397,    75,    -1,
+      -1,   353,   354,    -1,   401,    73,   355,    -1,   129,   356,
+     129,    -1,    16,   356,    16,    -1,    -1,   218,   356,    -1,
+     404,   356,    -1,    -1,   357,   348,    -1,   357,   404,    -1,
+     357,     4,    -1,   357,   218,    -1,    39,   148,    -1,   116,
+     150,   149,    -1,   361,    -1,   362,    -1,   365,    -1,   366,
+      -1,   367,    -1,   368,    -1,   375,    -1,    50,   364,   218,
+      -1,    -1,    55,   364,   372,   363,   305,    -1,    -1,   166,
+      -1,    23,   364,   369,   305,    -1,   153,   364,   218,    -1,
+      38,   364,   218,    -1,   126,   374,   305,    -1,    -1,    -1,
+     370,   397,   371,    -1,   373,    -1,   397,    -1,   373,    -1,
+     218,    -1,     7,    -1,   218,    -1,   104,   218,   218,    -1,
+     381,    -1,   381,   127,    -1,    -1,    18,   378,    -1,   380,
+     379,    -1,    58,   395,    -1,    -1,   117,    -1,   144,    -1,
+     127,    -1,   381,    -1,   382,    -1,   389,    -1,    89,   395,
+      -1,   397,    -1,   384,    -1,   392,    -1,   394,    -1,   388,
+      -1,   387,    -1,   386,    -1,   383,    -1,   106,   395,    -1,
+      51,   395,    -1,    51,    95,   385,   132,    -1,   392,    -1,
+     394,    -1,   153,   395,    -1,    38,   395,    -1,   126,   395,
+      -1,   126,    95,     7,   132,    -1,   126,    95,   404,   132,
+      -1,   390,    -1,   391,    -1,    23,   395,    -1,    23,    95,
+     144,   132,    -1,    23,    95,   396,   132,    -1,    23,    95,
+     396,    37,   398,   132,    -1,    23,    95,   144,    37,   398,
+     132,    -1,   134,    95,   397,   132,    -1,    55,   395,    -1,
+      55,    95,   144,   132,    -1,    55,    95,   397,   132,    -1,
+      55,    95,   397,    37,   398,   393,   132,    -1,    55,    95,
+     144,    37,   398,   393,   132,    -1,    -1,   127,    -1,   135,
+      95,   397,   132,    -1,    95,   132,    -1,     7,    -1,   405,
+      -1,     7,    -1,   405,    -1,   397,    -1,   400,    -1,   405,
+      -1,     7,    -1,   167,     7,    -1,     7,    -1,     6,    -1,
+       7,    -1,   405,    -1,   404,    -1,     3,    -1,     5,    -1,
+       6,    -1,     8,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,  1031,  1031,  1032,  1034,  1035,  1066,  1067,  1083,  1147,
-    1149,  1155,  1157,  1163,  1169,  1175,  1183,  1187,  1191,  1196,
-    1197,  1198,  1199,  1200,  1201,  1202,  1204,  1205,  1207,  1209,
-    1253,  1267,  1272,  1277,  1278,  1280,  1295,  1310,  1320,  1334,
-    1338,  1343,  1357,  1361,  1366,  1380,  1385,  1390,  1395,  1400,
-    1416,  1438,  1446,  1447,  1448,  1450,  1467,  1468,  1470,  1471,
-    1473,  1474,  1476,  1517,  1521,  1526,  1540,  1544,  1550,  1549,
-    1647,  1650,  1656,  1677,  1683,  1687,  1689,  1694,  1696,  1697,
-    1702,  1709,  1715,  1716,  1717,  1718,  1719,  1721,  1722,  1726,
-    1730,  1724,  1770,  1773,  1768,  1789,  1790,  1791,  1794,  1798,
-    1806,  1805,  1815,  1814,  1823,  1824,  1825,  1827,  1835,  1846,
-    1849,  1854,  1861,  1868,  1874,  1894,  1899,  1905,  1908,  1910,
-    1911,  1916,  1920,  1925,  1926,  1929,  1933,  1928,  1942,  1946,
-    1941,  1954,  1957,  1961,  1956,  1970,  1974,  1969,  1982,  1984,
-    2012,  2011,  2022,  2030,  2021,  2041,  2042,  2045,  2049,  2054,
-    2059,  2058,  2074,  2079,  2080,  2085,  2086,  2091,  2092,  2093,
-    2094,  2096,  2097,  2102,  2103,  2108,  2109,  2111,  2112,  2117,
-    2118,  2119,  2120,  2122,  2123,  2128,  2129,  2134,  2138,  2143,
-    2147,  2152,  2153,  2159,  2160,  2165,  2166,  2171,  2172,  2177,
-    2178,  2183,  2187,  2192,  2193,  2194,  2196,  2201,  2202,  2203,
-    2204,  2205,  2206,  2208,  2213,  2214,  2215,  2216,  2217,  2218,
-    2220,  2225,  2226,  2227,  2229,  2242,  2243,  2244,  2246,  2262,
-    2266,  2271,  2272,  2274,  2276,  2277,  2279,  2285,  2289,  2295,
-    2298,  2299,  2303,  2308,  2312,  2314,  2315,  2320,  2321,  2324,
-    2323,  2353,  2355,  2356,  2358,  2372,  2373,  2374,  2375,  2376,
-    2377,  2378,  2379,  2380,  2381,  2382,  2383,  2386,  2385,  2395,
-    2399,  2404,  2406,  2411,  2412,  2414,  2418,  2420,  2424,  2433,
-    2439,  2440,  2445,  2446,  2447,  2448,  2449,  2450,  2451,  2453,
-    2454,  2459,  2472,  2486,  2543,  2548,  2553,  2557,  2562,  2567,
-    2572,  2601,  2605,  2612,  2614,  2615,  2617,  2618,  2619,  2653,
-    2662,  2651,  2903,  2907,  2927,  2930,  2936,  2941,  2946,  2952,
-    2955,  2960,  2967,  2971,  2977,  2991,  2997,  3014,  3019,  3033,
-    3034,  3035,  3036,  3037,  3038,  3040,  3046,  3045,  3083,  3095,
-    3100,  3105,  3116,  3120,  3116,  3126,  3128,  3132,  3134,  3149,
-    3153,  3158,  3162,  3168,  3171,  3176,  3181,  3186,  3187,  3188,
-    3189,  3191,  3192,  3193,  3194,  3199,  3235,  3236,  3237,  3238,
-    3239,  3240,  3241,  3243,  3248,  3253,  3259,  3260,  3262,  3267,
-    3272,  3277,  3282,  3300,  3301,  3303,  3308,  3313,  3317,  3329,
-    3342,  3352,  3357,  3362,  3367,  3381,  3395,  3405,  3407,  3412,
-    3419,  3426,  3428,  3430,  3434,  3436,  3437,  3439,  3445,  3447,
-    3449,  3450,  3452
+       0,  1341,  1341,  1342,  1344,  1345,  1376,  1377,  1393,  1491,
+    1493,  1499,  1501,  1508,  1514,  1520,  1527,  1530,  1534,  1538,
+    1558,  1572,  1576,  1570,  1639,  1643,  1660,  1663,  1665,  1670,
+    1671,  1675,  1676,  1680,  1684,  1688,  1690,  1691,  1693,  1695,
+    1741,  1755,  1760,  1765,  1766,  1768,  1783,  1798,  1808,  1823,
+    1827,  1832,  1846,  1850,  1855,  1869,  1874,  1879,  1884,  1889,
+    1905,  1928,  1936,  1937,  1938,  1940,  1957,  1958,  1960,  1961,
+    1963,  1964,  1966,  2021,  2025,  2031,  2034,  2039,  2053,  2057,
+    2063,  2062,  2171,  2174,  2180,  2201,  2207,  2211,  2213,  2218,
+    2228,  2229,  2234,  2235,  2244,  2314,  2325,  2326,  2330,  2335,
+    2404,  2405,  2409,  2414,  2458,  2459,  2464,  2471,  2477,  2478,
+    2479,  2480,  2481,  2482,  2488,  2493,  2499,  2502,  2507,  2513,
+    2519,  2523,  2548,  2549,  2553,  2557,  2551,  2598,  2601,  2596,
+    2617,  2618,  2619,  2622,  2626,  2634,  2633,  2647,  2646,  2655,
+    2656,  2657,  2659,  2667,  2678,  2681,  2683,  2688,  2695,  2702,
+    2708,  2728,  2733,  2739,  2742,  2744,  2745,  2752,  2758,  2762,
+    2767,  2768,  2771,  2775,  2770,  2784,  2788,  2783,  2796,  2799,
+    2803,  2798,  2812,  2816,  2811,  2824,  2826,  2854,  2853,  2865,
+    2873,  2864,  2884,  2885,  2888,  2892,  2897,  2902,  2901,  2917,
+    2922,  2923,  2928,  2929,  2934,  2935,  2936,  2937,  2939,  2940,
+    2945,  2946,  2951,  2952,  2954,  2955,  2960,  2961,  2962,  2963,
+    2965,  2966,  2971,  2972,  2977,  2978,  2980,  2984,  2989,  2990,
+    2996,  2997,  3002,  3003,  3008,  3009,  3014,  3015,  3020,  3024,
+    3029,  3030,  3031,  3033,  3038,  3039,  3040,  3041,  3042,  3043,
+    3045,  3050,  3051,  3052,  3053,  3054,  3055,  3057,  3062,  3063,
+    3064,  3066,  3080,  3081,  3082,  3084,  3100,  3104,  3109,  3110,
+    3112,  3117,  3118,  3120,  3126,  3130,  3136,  3139,  3140,  3144,
+    3153,  3158,  3162,  3163,  3168,  3167,  3182,  3189,  3188,  3203,
+    3211,  3211,  3220,  3222,  3225,  3230,  3232,  3236,  3302,  3305,
+    3311,  3314,  3323,  3327,  3331,  3336,  3337,  3342,  3343,  3346,
+    3345,  3375,  3377,  3378,  3380,  3394,  3395,  3396,  3397,  3398,
+    3399,  3400,  3401,  3402,  3403,  3404,  3405,  3408,  3407,  3417,
+    3428,  3433,  3435,  3440,  3441,  3443,  3447,  3449,  3453,  3462,
+    3468,  3469,  3474,  3475,  3476,  3477,  3478,  3479,  3480,  3481,
+    3491,  3492,  3497,  3501,  3506,  3511,  3516,  3521,  3525,  3530,
+    3535,  3540,  3569,  3573,  3580,  3582,  3586,  3588,  3589,  3590,
+    3624,  3633,  3622,  3874,  3878,  3898,  3901,  3907,  3912,  3917,
+    3923,  3926,  3936,  3943,  3947,  3953,  3967,  3973,  3990,  3995,
+    4008,  4009,  4010,  4011,  4012,  4013,  4014,  4016,  4024,  4023,
+    4063,  4066,  4071,  4086,  4091,  4098,  4110,  4114,  4110,  4120,
+    4122,  4126,  4128,  4143,  4147,  4156,  4161,  4165,  4171,  4174,
+    4179,  4184,  4189,  4190,  4191,  4192,  4194,  4195,  4196,  4197,
+    4202,  4238,  4239,  4240,  4241,  4242,  4243,  4244,  4246,  4251,
+    4256,  4262,  4263,  4265,  4270,  4275,  4280,  4285,  4301,  4302,
+    4304,  4309,  4314,  4318,  4330,  4343,  4353,  4358,  4363,  4368,
+    4382,  4396,  4397,  4399,  4409,  4411,  4416,  4423,  4430,  4432,
+    4434,  4435,  4437,  4441,  4446,  4447,  4449,  4455,  4457,  4459,
+    4460,  4462,  4474
 };
 #endif
 
@@ -1557,58 +1908,65 @@ static const char *const yytname[] =
 {
   "\"end of file\"", "error", "$undefined", "\"<string literal>\"",
   "\"<non-boundary text node>\"", "\"<string literal(XPath 2.0)>\"",
-  "\"QName\"", "\"NCName\"", "ANY_LOCAL_NAME", "ANY_PREFIX",
-  "\"<number literal>\"", "\"<number literal(XPath 2.0)>\"", "\"and\"",
-  "\"'\"", "\"as\"", "\"ascending\"", "\":=\"", "\"at\"", "\"@\"",
-  "\"attribute\"", "\"|\"", "\"base-uri\"", "\"</\"", "\"boundary-space\"",
-  "\"by\"", "\"case\"", "\"castable\"", "\"cast\"", "\"collation\"",
-  "\":\"", "\"::\"", "\",\"", "\"comment\"", "\"<!--\"",
-  "\"construction\"", "\"copy-namespaces\"", "\"{\"", "\"}\"",
-  "\"declare\"", "\"default\"", "\"descending\"", "\"div\"",
+  "\"QName\"", "\"NCName\"", "\"ClarkName\"", "ANY_LOCAL_NAME",
+  "ANY_PREFIX", "\"<number literal>\"", "\"<number literal(XPath 2.0)>\"",
+  "\"ancestor\"", "\"ancestor-or-self\"", "\"and\"", "\"'\"",
+  "\"apply-template\"", "\"as\"", "\"ascending\"", "\":=\"", "\"at\"",
+  "\"@\"", "\"attribute\"", "AVT", "\"|\"", "\"base-uri\"", "\"</\"",
+  "\"boundary-space\"", "\"by\"", "\"call-template\"", "\"case\"",
+  "\"castable\"", "\"cast\"", "\"child\"", "\"collation\"", "\"::\"",
+  "\",\"", "\"comment\"", "\"<!--\"", "\"construction\"",
+  "\"copy-namespaces\"", "\"{\"", "\"}\"", "\"declare\"", "\"default\"",
+  "\"descendant\"", "\"descendant-or-self\"", "\"descending\"", "\"div\"",
   "\"document\"", "\"document-node\"", "\"$\"", "\".\"", "\"..\"",
   "\"element\"", "\"else\"", "\"empty\"", "\"empty-sequence\"",
-  "\"encoding\"", "\"eq\"", "\"unknown keyword\"", "\"every\"",
-  "\"except\"", "\"external\"", "\">>\"", "\"for\"", "\"function\"",
-  "\"ge\"", "\"=\"", "\">=\"", "\">\"", "\"<=\"", "\"<\"", "\"!=\"",
-  "\"greatest\"", "\"gt\"", "\"idiv\"", "\"if\"", "\"import\"",
+  "\"encoding\"", "\"end_sort\"", "\"eq\"", "\"unknown keyword\"",
+  "\"every\"", "\"except\"", "\"external\"", "\"following\"",
+  "\"following-sibling\"", "\">>\"", "\"for-apply-template\"", "\"for\"",
+  "\"function\"", "\"ge\"", "\"=\"", "\">=\"", "\">\"", "\"<=\"", "\"<\"",
+  "\"!=\"", "\"greatest\"", "\"gt\"", "\"idiv\"", "\"if\"", "\"import\"",
   "\"inherit\"", "\"in\"", "\"instance\"", "\"intersect\"", "\"is\"",
   "\"item\"", "\"lax\"", "\"[\"", "\"least\"", "\"le\"", "\"let\"",
-  "\"(\"", "\"lt\"", "\"-\"", "\"mod\"", "\"module\"", "\"namespace\"",
-  "\"ne\"", "\"node\"", "NO_ELEMENT_CONTENT", "\"no-inherit\"",
-  "\"no-preserve\"", "\"of\"", "\"option\"", "\"order by\"", "\"ordered\"",
-  "\"ordering\"", "\"order\"", "\"or\"", "\"<?\"", "\"+\"", "POSITION_SET",
-  "\"#)\"", "\"(#\"", "\"<<\"", "\"preserve\"",
+  "\"(\"", "\"lt\"", "\"map\"", "\"matches\"", "\"-\"", "\"mode\"",
+  "\"mod\"", "\"module\"", "\"name\"", "\"namespace\"", "\"ne\"",
+  "\"node\"", "\"no-inherit\"", "\"no-preserve\"", "\"of\"", "\"option\"",
+  "\"ordered\"", "\"ordering\"", "\"order\"", "\"or\"", "\"parent\"",
+  "\"<?\"", "\"+\"", "POSITION_SET", "\"#)\"", "\"(#\"", "\"<<\"",
+  "\"preceding\"", "\"preceding-sibling\"", "\"preserve\"", "\"priority\"",
   "\"processing-instruction\"", "\"?\"", "\"/>\"", "\"\\\"\"", "\"]\"",
-  "\"return\"", "\")\"", "\"satisfies\"", "\"schema\"",
-  "\"schema-attribute\"", "\"schema-element\"", "\";\"", "\"/\"", "\"//\"",
-  "\"some\"", "\"stable\"", "\"*\"", "\"strict\"", "\"strip\"", "SUCCESS",
-  "COMMENT_CONTENT", "PI_CONTENT", "PI_TARGET", "\"text\"", "\"then\"",
-  "\"to\"", "\"treat\"", "\"typeswitch\"", "\"union\"", "\"unordered\"",
-  "\"validate\"", "\"variable\"", "\"version\"", "\"where\"", "\"xquery\"",
-  "\"ancestor-or-self\"", "\"ancestor\"", "\"child\"",
-  "\"descendant-or-self\"", "\"descendant\"", "\"following-sibling\"",
-  "\"following\"", "\"preceding\"", "\"parent\"", "\"preceding-sibling\"",
-  "\"self\"", "$accept", "Module", "VersionDecl", "Encoding", "MainModule",
-  "LibraryModule", "ModuleDecl", "Prolog", "Setter", "Import", "Separator",
-  "NamespaceDecl", "BoundarySpaceDecl", "BoundarySpacePolicy",
-  "DefaultNamespaceDecl", "DeclareDefaultElementNamespace",
-  "DeclareDefaultFunctionNamespace", "OptionDecl", "OrderingModeDecl",
-  "OrderingMode", "EmptyOrderDecl", "OrderingEmptySequence",
-  "CopyNamespacesDecl", "PreserveMode", "InheritMode",
-  "DefaultCollationDecl", "BaseURIDecl", "SchemaImport", "SchemaPrefix",
-  "ModuleImport", "ModuleNamespaceDecl", "FileLocations", "FileLocation",
-  "VarDecl", "VariableValue", "ConstructionDecl", "ConstructionMode",
-  "FunctionDecl", "@1", "ParamList", "Param", "FunctionBody",
-  "EnclosedExpr", "QueryBody", "Expr", "ExpressionSequence", "ExprSingle",
-  "FLWORExpr", "ForClause", "@2", "@3", "ForTail", "@4", "@5",
-  "PositionalVar", "LetClause", "@6", "LetTail", "@7", "WhereClause",
-  "OrderByClause", "OrderSpecList", "OrderSpec", "DirectionModifier",
-  "EmptynessModifier", "CollationModifier", "OrderByInputOrder",
-  "QuantifiedExpr", "SomeQuantificationExpr", "@8", "@9",
-  "SomeQuantificationTail", "@10", "@11", "EveryQuantificationExpr", "@12",
-  "@13", "EveryQuantificationTail", "@14", "@15", "SatisfiesClause",
-  "TypeswitchExpr", "@16", "CaseClause", "@17", "@18", "CaseTail",
-  "CaseVariable", "CaseDefault", "@19", "IfExpr", "OrExpr", "AndExpr",
+  "\"return\"", "\")\"", "\"satisfies\"", "\"schema-attribute\"",
+  "\"schema-element\"", "\"schema\"", "\"self\"", "\";\"", "\"/\"",
+  "\"//\"", "\"some\"", "\"sort\"", "\"stable\"", "\"*\"", "\"strict\"",
+  "\"strip\"", "SUCCESS", "COMMENT_CONTENT", "PI_CONTENT", "PI_TARGET",
+  "XSLT_VERSION", "\"template\"", "\"text\"", "\"then\"", "\"to\"",
+  "\"treat\"", "\"tunnel\"", "\"typeswitch\"", "\"union\"",
+  "\"unordered\"", "\"validate\"", "\"variable\"", "\"version\"",
+  "\"where\"", "\"xquery\"", "\"internal\"", "\"internal-name\"",
+  "\"current\"", "$accept", "Module", "VersionDecl", "Encoding",
+  "MainModule", "LibraryModule", "ModuleDecl", "Prolog", "TemplateDecl",
+  "@1", "@2", "OptionalPriority", "OptionalTemplateName", "TemplateName",
+  "Setter", "Import", "Separator", "NamespaceDecl", "BoundarySpaceDecl",
+  "BoundarySpacePolicy", "DefaultNamespaceDecl",
+  "DeclareDefaultElementNamespace", "DeclareDefaultFunctionNamespace",
+  "OptionDecl", "OrderingModeDecl", "OrderingMode", "EmptyOrderDecl",
+  "OrderingEmptySequence", "CopyNamespacesDecl", "PreserveMode",
+  "InheritMode", "DefaultCollationDecl", "BaseURIDecl", "SchemaImport",
+  "SchemaPrefix", "ModuleImport", "ModuleNamespaceDecl", "FileLocations",
+  "FileLocation", "VarDecl", "VariableValue", "OptionalDefaultValue",
+  "ConstructionDecl", "ConstructionMode", "FunctionDecl", "@3",
+  "ParamList", "Param", "FunctionBody", "EnclosedExpr", "QueryBody",
+  "Pattern", "PathPattern", "IdKeyPattern", "RelativePathPattern",
+  "PatternStep", "Expr", "ExpressionSequence", "ExprSingle",
+  "OptionalModes", "OptionalMode", "Modes", "Mode", "FLWORExpr",
+  "ForClause", "@4", "@5", "ForTail", "@6", "@7", "PositionalVar",
+  "LetClause", "@8", "LetTail", "@9", "WhereClause", "OrderByClause",
+  "MandatoryOrderByClause", "OrderSpecList", "OrderSpec",
+  "DirectionModifier", "EmptynessModifier", "CollationModifier",
+  "OrderByInputOrder", "QuantifiedExpr", "SomeQuantificationExpr", "@10",
+  "@11", "SomeQuantificationTail", "@12", "@13", "EveryQuantificationExpr",
+  "@14", "@15", "EveryQuantificationTail", "@16", "@17", "SatisfiesClause",
+  "TypeswitchExpr", "@18", "CaseClause", "@19", "@20", "CaseTail",
+  "CaseVariable", "CaseDefault", "@21", "IfExpr", "OrExpr", "AndExpr",
   "ComparisonExpr", "RangeExpr", "AdditiveExpr", "AdditiveOperator",
   "MultiplicativeExpr", "MultiplyOperator", "UnionExpr",
   "IntersectExceptExpr", "UnionOperator", "IntersectOperator",
@@ -1617,26 +1975,30 @@ static const char *const yytname[] =
   "ValueComp", "ValueComparisonOperator", "NodeComp", "NodeOperator",
   "ValidateExpr", "ValidationMode", "ExtensionExpr",
   "EnclosedOptionalExpr", "Pragmas", "Pragma", "PragmaContents",
-  "PathExpr", "RelativePathExpr", "StepExpr", "FilteredAxisStep",
-  "AxisStep", "ForwardStep", "@20", "NodeTestInAxisStep", "Axis",
-  "AxisToken", "AbbrevForwardStep", "@21", "ReverseStep",
-  "AbbrevReverseStep", "NodeTest", "NameTest", "WildCard", "FilterExpr",
-  "PrimaryExpr", "Literal", "NumericLiteral", "VarRef", "VarName",
-  "ParenthesizedExpr", "ContextItemExpr", "OrderingExpr", "FunctionCall",
+  "PathExpr", "RelativePathExpr", "StepExpr", "@22", "@23",
+  "TemplateWithParameters", "@24", "TemplateParameters",
+  "OptionalTemplateParameters", "TemplateParameter", "IsTunnel",
+  "OptionalAssign", "MapOrSlash", "FilteredAxisStep", "AxisStep",
+  "ForwardStep", "@25", "NodeTestInAxisStep", "Axis", "AxisToken",
+  "AbbrevForwardStep", "@26", "ReverseStep", "AbbrevReverseStep",
+  "NodeTest", "NameTest", "WildCard", "FilterExpr", "PrimaryExpr",
+  "Literal", "NumericLiteral", "VarRef", "VarName", "ParenthesizedExpr",
+  "ContextItemExpr", "OrderingExpr", "FunctionCallExpr",
   "FunctionArguments", "Constructor", "DirectConstructor",
-  "DirElemConstructor", "@22", "@23", "DirElemConstructorTail",
+  "DirElemConstructor", "@27", "@28", "DirElemConstructorTail",
   "DirAttributeList", "Attribute", "DirAttributeValue", "AttrValueContent",
   "DirElemContent", "DirCommentConstructor", "DirPIConstructor",
   "ComputedConstructor", "CompDocConstructor", "CompElemConstructor",
-  "@24", "CompAttrConstructor", "CompTextConstructor",
+  "@29", "IsInternal", "CompAttrConstructor", "CompTextConstructor",
   "CompCommentConstructor", "CompPIConstructor", "CompAttributeName",
-  "@25", "@26", "CompElementName", "CompNameExpr", "CompPIName",
-  "SingleType", "TypeDeclaration", "SequenceType", "OccurrenceIndicator",
-  "ItemType", "AtomicType", "KindTest", "AnyKindTest", "DocumentTest",
-  "AnyElementTest", "TextTest", "CommentTest", "PITest",
-  "AnyAttributeTest", "AttributeTest", "SchemaAttributeTest",
-  "ElementTest", "SchemaElementTest", "EmptyParanteses", "AttributeName",
-  "ElementName", "TypeName", "FunctionName", "LexicalName", "PragmaName",
+  "@30", "@31", "CompElementName", "CompNameExpr", "CompPIName",
+  "CompNamespaceConstructor", "SingleType", "TypeDeclaration",
+  "SequenceType", "OccurrenceIndicator", "ItemType", "AtomicType",
+  "KindTest", "AnyKindTest", "DocumentTest", "AnyElementTest", "TextTest",
+  "CommentTest", "PITest", "AnyAttributeTest", "AttributeTest",
+  "SchemaAttributeTest", "ElementTest", "OptionalQuestionMark",
+  "SchemaElementTest", "EmptyParanteses", "AttributeName", "ElementName",
+  "TypeName", "FunctionName", "NCName", "LexicalName", "PragmaName",
   "URILiteral", "StringLiteral", "QName", 0
 };
 #endif
@@ -1661,99 +2023,114 @@ static const yytype_uint16 yytoknum[] =
      375,   376,   377,   378,   379,   380,   381,   382,   383,   384,
      385,   386,   387,   388,   389,   390,   391,   392,   393,   394,
      395,   396,   397,   398,   399,   400,   401,   402,   403,   404,
-     405,   406,   407,   408
+     405,   406,   407,   408,   409,   410,   411,   412,   413,   414,
+     415,   416,   417,   418,   419,   420,   421,   422,   423
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint16 yyr1[] =
 {
-       0,   154,   155,   155,   156,   156,   157,   157,   158,   159,
-     160,   161,   161,   161,   161,   161,   161,   161,   161,   162,
-     162,   162,   162,   162,   162,   162,   163,   163,   164,   165,
-     166,   167,   167,   168,   168,   169,   170,   171,   172,   173,
-     173,   174,   175,   175,   176,   177,   177,   178,   178,   179,
-     180,   181,   182,   182,   182,   183,   184,   184,   185,   185,
-     186,   186,   187,   188,   188,   189,   190,   190,   192,   191,
-     193,   193,   193,   194,   195,   195,   196,   197,   198,   198,
-     199,   199,   200,   200,   200,   200,   200,   201,   201,   203,
-     204,   202,   206,   207,   205,   205,   205,   205,   208,   208,
-     210,   209,   212,   211,   211,   211,   211,   213,   213,   214,
-     214,   215,   215,   216,   217,   217,   217,   218,   218,   219,
-     219,   220,   220,   221,   221,   223,   224,   222,   226,   227,
-     225,   225,   229,   230,   228,   232,   233,   231,   231,   234,
-     236,   235,   238,   239,   237,   240,   240,   241,   241,   242,
-     243,   242,   244,   245,   245,   246,   246,   247,   247,   247,
-     247,   248,   248,   249,   249,   250,   250,   251,   251,   252,
-     252,   252,   252,   253,   253,   254,   254,   255,   255,   256,
-     256,   257,   257,   258,   258,   259,   259,   260,   260,   261,
-     261,   262,   262,   263,   263,   263,   264,   265,   265,   265,
-     265,   265,   265,   266,   267,   267,   267,   267,   267,   267,
-     268,   269,   269,   269,   270,   271,   271,   271,   272,   273,
-     273,   274,   274,   275,   276,   276,   277,   277,   277,   277,
-     278,   278,   278,   279,   279,   280,   280,   281,   281,   283,
-     282,   282,   284,   284,   285,   286,   286,   286,   286,   286,
-     286,   286,   286,   286,   286,   286,   286,   288,   287,   287,
-     287,   289,   290,   291,   291,   292,   292,   293,   293,   293,
-     294,   294,   295,   295,   295,   295,   295,   295,   295,   296,
-     296,   297,   297,   298,   299,   299,   300,   300,   301,   302,
-     303,   304,   304,   304,   305,   305,   306,   306,   306,   308,
-     309,   307,   310,   310,   311,   311,   312,   313,   313,   314,
-     314,   314,   315,   315,   315,   315,   315,   316,   317,   318,
-     318,   318,   318,   318,   318,   319,   321,   320,   322,   323,
-     324,   325,   327,   328,   326,   326,   329,   329,   330,   331,
-     331,   332,   332,   333,   333,   334,   334,   335,   335,   335,
-     335,   336,   336,   336,   336,   337,   338,   338,   338,   338,
-     338,   338,   338,   339,   340,   340,   341,   341,   342,   343,
-     344,   344,   344,   345,   345,   346,   346,   346,   346,   346,
-     347,   348,   348,   348,   348,   348,   349,   350,   351,   351,
-     352,   352,   353,   354,   354,   355,   355,   356,   356,   357,
-     358,   358,   359
+       0,   169,   170,   170,   171,   171,   172,   172,   173,   174,
+     175,   176,   176,   176,   176,   176,   176,   176,   176,   176,
+     177,   178,   179,   177,   180,   180,   181,   181,   182,   183,
+     183,   183,   183,   183,   183,   183,   184,   184,   185,   186,
+     187,   188,   188,   189,   189,   190,   191,   192,   193,   194,
+     194,   195,   196,   196,   197,   198,   198,   199,   199,   200,
+     201,   202,   203,   203,   203,   204,   205,   205,   206,   206,
+     207,   207,   208,   209,   209,   210,   210,   211,   212,   212,
+     214,   213,   215,   215,   215,   216,   217,   217,   218,   219,
+     220,   220,   221,   221,   221,   221,   221,   221,   221,   222,
+     223,   223,   223,   224,   225,   225,   226,   226,   227,   227,
+     227,   227,   227,   227,   228,   228,   229,   229,   230,   230,
+     231,   231,   232,   232,   234,   235,   233,   237,   238,   236,
+     236,   236,   236,   239,   239,   241,   240,   243,   242,   242,
+     242,   242,   244,   244,   245,   245,   246,   247,   247,   248,
+     249,   249,   249,   250,   250,   251,   251,   251,   252,   252,
+     253,   253,   255,   256,   254,   258,   259,   257,   257,   261,
+     262,   260,   264,   265,   263,   263,   266,   268,   267,   270,
+     271,   269,   272,   272,   273,   273,   274,   275,   274,   276,
+     277,   277,   278,   278,   279,   279,   279,   279,   280,   280,
+     281,   281,   282,   282,   283,   283,   284,   284,   284,   284,
+     285,   285,   286,   286,   287,   287,   288,   288,   289,   289,
+     290,   290,   291,   291,   292,   292,   293,   293,   294,   294,
+     295,   295,   295,   296,   297,   297,   297,   297,   297,   297,
+     298,   299,   299,   299,   299,   299,   299,   300,   301,   301,
+     301,   302,   303,   303,   303,   304,   305,   305,   306,   306,
+     307,   308,   308,   309,   309,   309,   309,   310,   310,   310,
+     310,   311,   311,   311,   312,   311,   311,   313,   311,   311,
+     315,   314,   316,   316,   316,   317,   317,   318,   319,   319,
+     320,   320,   321,   321,   321,   322,   322,   323,   323,   325,
+     324,   324,   326,   326,   327,   328,   328,   328,   328,   328,
+     328,   328,   328,   328,   328,   328,   328,   330,   329,   329,
+     329,   331,   332,   333,   333,   334,   334,   335,   335,   335,
+     336,   336,   337,   337,   337,   337,   337,   337,   337,   337,
+     338,   338,   339,   339,   340,   341,   341,   342,   342,   343,
+     344,   345,   346,   346,   346,   347,   347,   348,   348,   348,
+     350,   351,   349,   352,   352,   353,   353,   354,   355,   355,
+     356,   356,   356,   357,   357,   357,   357,   357,   358,   359,
+     360,   360,   360,   360,   360,   360,   360,   361,   363,   362,
+     364,   364,   365,   366,   367,   368,   370,   371,   369,   369,
+     372,   372,   373,   374,   374,   375,   376,   376,   377,   377,
+     378,   378,   379,   379,   379,   379,   380,   380,   380,   380,
+     381,   382,   382,   382,   382,   382,   382,   382,   383,   384,
+     384,   385,   385,   386,   387,   388,   388,   388,   389,   389,
+     390,   390,   390,   390,   390,   391,   392,   392,   392,   392,
+     392,   393,   393,   394,   395,   396,   396,   397,   397,   398,
+     399,   399,   400,   400,   401,   401,   402,   402,   403,   404,
+     404,   405,   405
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     2,     2,     0,     5,     0,     2,     2,     2,
-       6,     0,     2,     2,     2,     2,     2,     2,     2,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     6,
+       6,     0,     2,     2,     2,     2,     2,     2,     2,     2,
+       7,     0,     0,    15,     0,     2,     0,     1,     2,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     7,
        4,     1,     1,     1,     1,     6,     6,     5,     4,     1,
        1,     5,     2,     2,     6,     1,     1,     1,     1,     5,
-       4,     6,     0,     3,     3,     6,     0,     3,     0,     2,
-       1,     3,     7,     1,     2,     4,     1,     1,     0,    10,
-       0,     1,     3,     3,     1,     1,     3,     1,     1,     1,
-       3,     3,     1,     1,     1,     1,     1,     1,     1,     0,
-       0,    10,     0,     0,    10,     1,     1,     1,     0,     3,
-       0,     8,     0,     8,     1,     1,     1,     3,     5,     0,
-       2,     3,     1,     4,     0,     1,     1,     0,     1,     0,
-       2,     3,     2,     1,     1,     0,     0,     9,     0,     0,
-       9,     1,     0,     0,     9,     0,     0,     9,     1,     2,
-       0,     6,     0,     0,     8,     1,     1,     0,     3,     3,
-       0,     6,     8,     1,     3,     1,     3,     1,     1,     1,
-       1,     1,     3,     1,     3,     1,     1,     1,     3,     1,
-       1,     1,     1,     1,     3,     1,     3,     1,     1,     1,
-       1,     1,     4,     1,     4,     1,     4,     1,     4,     1,
-       2,     1,     1,     1,     1,     1,     3,     1,     1,     1,
+       5,     6,     0,     3,     3,     6,     0,     3,     0,     2,
+       1,     3,     9,     1,     2,     0,     2,     4,     1,     1,
+       0,    11,     0,     1,     3,     3,     1,     1,     3,     1,
+       1,     3,     1,     1,     2,     2,     1,     3,     3,     1,
+       1,     3,     3,     1,     1,     1,     3,     3,     1,     1,
+       1,     1,     1,     4,     0,     2,     0,     2,     1,     3,
+       1,     1,     1,     1,     0,     0,    10,     0,     0,    10,
+       1,     1,     1,     0,     3,     0,     9,     0,     8,     1,
+       1,     1,     3,     5,     0,     1,     2,     3,     1,     4,
+       0,     1,     1,     0,     1,     0,     2,     3,     3,     2,
+       1,     1,     0,     0,     9,     0,     0,     9,     1,     0,
+       0,     9,     0,     0,     9,     1,     2,     0,     6,     0,
+       0,     8,     1,     1,     0,     3,     3,     0,     6,     8,
+       1,     3,     1,     3,     1,     1,     1,     1,     1,     3,
+       1,     3,     1,     1,     1,     3,     1,     1,     1,     1,
+       1,     3,     1,     3,     1,     1,     1,     1,     1,     4,
+       1,     4,     1,     4,     1,     4,     1,     2,     1,     1,
        1,     1,     1,     3,     1,     1,     1,     1,     1,     1,
-       3,     1,     1,     1,     2,     1,     2,     2,     2,     2,
-       3,     2,     1,     4,     0,     1,     2,     2,     1,     1,
-       1,     3,     3,     1,     1,     1,     4,     1,     1,     0,
+       3,     1,     1,     1,     1,     1,     1,     3,     1,     1,
+       1,     2,     1,     2,     2,     2,     2,     3,     2,     1,
+       4,     0,     1,     2,     2,     1,     1,     1,     3,     7,
+       3,     1,     1,     2,     0,     3,     5,     0,     9,     5,
+       0,     2,     0,     1,     3,     0,     3,     5,     0,     1,
+       0,     2,     1,     1,     1,     1,     4,     1,     1,     0,
        3,     1,     1,     1,     2,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     0,     3,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     4,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     2,     1,     1,     3,     2,     1,     2,
-       4,     0,     1,     1,     1,     1,     1,     1,     1,     0,
-       0,     8,     1,     5,     0,     2,     3,     3,     3,     0,
-       2,     2,     0,     2,     2,     2,     2,     2,     3,     1,
-       1,     1,     1,     1,     1,     2,     0,     4,     3,     2,
-       2,     3,     0,     0,     3,     1,     1,     1,     1,     1,
-       1,     1,     2,     0,     2,     2,     2,     0,     1,     1,
-       1,     1,     1,     1,     2,     1,     1,     1,     1,     1,
-       1,     1,     1,     2,     2,     4,     1,     1,     2,     2,
-       2,     4,     4,     1,     1,     2,     4,     4,     6,     6,
-       4,     2,     4,     4,     6,     6,     4,     2,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     4,     1,     1,     1,     1,     1,     1,     1,     5,
+       1,     1,     1,     1,     2,     1,     1,     3,     2,     1,
+       2,     4,     0,     1,     1,     1,     1,     1,     1,     1,
+       0,     0,     8,     1,     5,     0,     2,     3,     3,     3,
+       0,     2,     2,     0,     2,     2,     2,     2,     2,     3,
+       1,     1,     1,     1,     1,     1,     1,     3,     0,     5,
+       0,     1,     4,     3,     3,     3,     0,     0,     3,     1,
+       1,     1,     1,     1,     1,     3,     1,     2,     0,     2,
+       2,     2,     0,     1,     1,     1,     1,     1,     1,     2,
+       1,     1,     1,     1,     1,     1,     1,     1,     2,     2,
+       4,     1,     1,     2,     2,     2,     4,     4,     1,     1,
+       2,     4,     4,     6,     6,     4,     2,     4,     4,     7,
+       7,     0,     1,     4,     2,     1,     1,     1,     1,     1,
+       1,     1,     1,     2,     1,     1,     1,     1,     1,     1,
        1,     1,     1
 };
 
@@ -1763,578 +2140,747 @@ static const yytype_uint8 yyr2[] =
 static const yytype_uint16 yydefact[] =
 {
        4,     0,     0,    11,     0,     1,     0,     3,     2,    11,
-       0,   400,   401,     6,     0,     9,   402,   390,   268,   269,
-     282,   281,   257,   332,     0,     0,     0,     0,     0,     0,
-     288,   262,     0,     0,     0,     0,     0,     0,     0,     0,
-     192,     0,    39,     0,   191,     0,     0,     0,     0,   228,
-       0,     0,   267,     0,     0,    40,   215,   245,   246,   248,
-     249,   250,   253,   251,   252,   255,   254,   256,    13,    15,
-      14,    19,    12,    33,    34,    18,    23,     0,    24,    25,
-      20,    21,    26,    27,    16,    22,    17,     8,    77,    79,
-      78,    83,    87,    88,    84,   123,   124,    85,    86,    82,
-     153,   155,   157,   161,   163,   167,   173,   175,   181,   183,
-     185,   187,     0,   189,   159,   158,   160,   193,     0,   195,
-       0,   222,   194,   229,   230,   233,   235,   237,   239,     0,
-     241,   238,   261,   259,   263,   266,   234,   270,   272,   279,
-     273,   274,   275,   277,   276,   278,   294,   296,   297,   298,
-     295,   319,   320,   321,   322,   323,   324,   264,   362,   356,
-     361,   360,   359,   260,   373,   374,   357,   358,   265,     0,
-     280,   391,     0,     0,     0,     0,     0,     0,   338,     0,
-       0,   335,   375,     0,   330,   369,   317,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   325,     0,   364,
-     284,   283,   285,   390,     0,   326,   337,   381,   336,   391,
-       0,     0,   396,   395,   299,     0,    56,    52,     0,   287,
-       0,   363,     0,   397,   224,   398,   339,     0,   340,     0,
-     370,     0,     0,   226,   227,     0,   329,   368,     0,   217,
-     216,   289,     0,     0,     0,     0,   204,   213,   206,   197,
-     199,   200,   201,   202,   198,   207,   211,   208,   209,   205,
-     212,     0,     0,     0,   166,   165,     0,     0,   170,   171,
-     172,   169,     0,   178,   177,     0,   180,   179,     0,     0,
-       0,     0,     0,   190,   214,     0,   218,   221,     0,     0,
-       0,     0,   244,     0,   291,     7,    28,     5,     0,     0,
-       0,     0,     0,   258,     0,   388,   387,     0,     0,   389,
-     328,   333,     0,   399,    32,    31,     0,    67,    66,     0,
-      46,    45,     0,     0,     0,     0,     0,   393,     0,   394,
-       0,     0,     0,     0,     0,   366,   367,     0,     0,     0,
-     343,   343,   304,     0,     0,     0,     0,     0,     0,   343,
-     286,   318,     0,   225,     0,     0,   331,     0,     0,   343,
-       0,    81,    80,   154,   156,   196,   203,   210,   162,   164,
-     168,   174,   176,     0,     0,     0,     0,   219,     0,   231,
-     232,     0,     0,   240,   242,   243,     0,   293,   292,     0,
-       0,    76,     0,   376,     0,   377,   334,    50,    30,    65,
-       0,     0,     0,     0,     0,     0,    70,     0,     0,    38,
-     343,   365,     0,   382,     0,   383,   327,     0,     0,    98,
-     300,     0,     0,    58,     0,     0,    58,     0,   223,   371,
-     372,   380,   386,     0,   140,     0,     0,   182,   347,   351,
-     352,   353,   355,   184,   186,   341,   188,   220,   236,   271,
-     290,    10,   392,     0,     0,    47,    48,     0,    49,     0,
-       0,    43,    42,    41,     0,     0,    71,     0,    37,     0,
-       0,     0,   344,     0,     0,     0,     0,   305,     0,     0,
-      57,     0,     0,    53,    54,     0,     0,     0,     0,   346,
-     354,   348,   350,   349,   345,   342,   379,   378,    44,    35,
-      36,   343,     0,    68,    29,     0,    63,     0,   385,   384,
-     132,     0,     0,   304,     0,     0,    59,    60,    55,    51,
-     100,   125,   147,   141,    73,    72,   343,    64,    62,   133,
-      99,    89,     0,   309,   309,   306,     0,     0,   109,   126,
-       0,     0,     0,     0,    90,   312,   302,   301,   309,     0,
-     309,     0,   152,    61,     0,     0,     0,     0,   105,   106,
-     101,   104,     0,     0,     0,     0,   142,    74,     0,    75,
-       0,     0,   134,   138,   109,     0,   310,   308,   311,   307,
-       0,   122,     0,   109,     0,   114,   110,   112,     0,   127,
-     131,   148,     0,    69,     0,   139,     0,    96,    91,    97,
-      95,   315,     0,   316,   313,   314,   343,   121,     0,   107,
-     115,   116,   117,     0,     0,     0,   343,     0,     0,     0,
-       0,   118,   119,   111,   343,   143,     0,   343,   303,     0,
-     108,     0,   113,     0,     0,     0,    98,   102,   120,     0,
-       0,   145,   144,   146,   135,     0,   109,   128,     0,     0,
-     136,     0,   103,   129,   150,   149,     0,    92,     0,     0,
-     137,    93,   130,     0,   109,   151,    94
+       0,   469,   470,     6,     0,     9,   471,   457,   472,   328,
+     329,   343,   342,   306,   305,   116,   317,   390,     0,     0,
+       0,   308,   390,     0,     0,   310,   309,   390,     0,     0,
+     349,   322,   390,     0,   311,   313,     0,     0,     0,     0,
+     390,     0,   229,     0,     0,    49,   315,     0,   228,     0,
+     312,   314,     0,     0,     0,   316,   265,     0,     0,   327,
+     274,   390,     0,    50,   252,     0,     0,    16,    13,    15,
+      14,    29,    12,    43,    44,    19,    33,     0,    34,    35,
+      30,    31,    36,    37,    17,    32,    18,     8,    89,   105,
+     104,   109,   122,   123,   110,   160,   161,   111,   112,   108,
+     190,   192,   194,   198,   200,   204,   210,   212,   218,   220,
+     222,   224,     0,   226,   196,   195,   197,   230,     0,   232,
+       0,   259,   231,   266,   267,   271,   295,   297,   299,     0,
+     301,   298,   321,   319,   323,   326,   272,   330,   332,   340,
+     333,   334,   335,   337,   336,   338,   355,   357,   358,   359,
+     356,   380,   381,   382,   383,   384,   385,   386,   324,   427,
+     421,   426,   425,   424,   320,   438,   439,   422,   423,   325,
+       0,   460,   341,   458,     0,     0,     0,     0,     0,     0,
+       0,     0,   391,   396,   440,   370,     0,   457,     0,   458,
+       0,     0,   434,   378,   390,     0,     0,     0,     0,   390,
+       0,     0,     0,    26,   390,     0,     0,   429,   345,   344,
+     346,     0,     0,   446,     0,     0,   465,   464,   360,     0,
+      66,    62,     0,     0,   348,     0,     0,     0,   428,     0,
+     466,   261,   467,   403,     0,   404,     0,   435,     0,     0,
+     263,   264,     0,     0,     0,   433,     0,   254,   253,   463,
+     273,   350,     0,     0,     0,     0,   241,   250,   243,   234,
+     236,   237,   238,   239,   235,   244,   248,   245,   246,   242,
+     249,     0,     0,     0,   203,   202,     0,     0,   207,   208,
+     209,   206,     0,   215,   214,     0,   217,   216,     0,     0,
+       0,     0,     0,   227,   251,     0,   255,   258,   294,   293,
+     292,     0,     0,     0,     0,   304,     0,   352,     7,    38,
+       5,     0,     0,   121,   117,   120,   280,     0,     0,     0,
+       0,   318,   455,   454,     0,     0,   456,   402,     0,     0,
+     399,   370,     0,   370,     0,   280,   394,     0,    42,    41,
+       0,    79,    78,     0,    56,    55,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,   285,     0,   387,
+       0,   431,   432,     0,     0,   388,   401,   400,   408,   408,
+     365,     0,     0,     0,     0,     0,     0,     0,     0,   347,
+       0,   405,   379,     0,   262,     0,     0,   395,     0,     0,
+     408,   275,   393,     0,   107,   106,   191,   193,   233,   240,
+     247,   199,   201,   205,   211,   213,     0,     0,     0,     0,
+     256,     0,   270,     0,   268,     0,     0,   300,   302,   303,
+       0,   354,   353,     0,     0,   468,     0,     0,   282,     0,
+     441,     0,   442,   392,   397,   371,   113,   372,     0,     0,
+       0,    40,    77,     0,     0,     0,     0,     0,     0,   462,
+       0,   461,     0,     0,    48,    28,     0,   282,   408,     0,
+     430,     0,   447,     0,   448,     0,     0,     0,   133,   361,
+       0,     0,    68,     0,     0,    68,   408,     0,    88,   260,
+     436,   437,   445,   453,     0,   177,     0,     0,   219,   412,
+     416,   417,   418,   420,   221,   223,   406,   225,   257,     0,
+       0,     0,     0,   296,   331,   351,    10,     0,   339,   289,
+     281,   283,     0,   459,     0,     0,   398,   276,   279,    60,
+      57,    58,     0,    59,     0,     0,    53,    52,    51,    82,
+     469,   390,    47,    21,     0,     0,   408,   451,   451,   389,
+     409,     0,     0,     0,     0,   366,     0,     0,    67,     0,
+       0,    63,    64,     0,     0,     0,     0,     0,   411,   419,
+     413,   415,   414,   410,   407,   159,     0,     0,   150,   146,
+     148,   288,     0,   444,   443,    54,    45,    46,     0,     0,
+      83,   277,     0,     0,   286,     0,     0,   452,     0,     0,
+     169,     0,     0,   365,     0,     0,    69,    70,    65,    61,
+       0,     0,   162,   184,   178,   158,     0,   151,   152,   153,
+       0,   284,   408,   408,     0,    80,     0,    39,   307,    93,
+       0,    22,    90,    96,    92,   100,   103,    99,    20,     0,
+      73,    75,   450,   449,   170,   134,   124,     0,   370,   370,
+     367,     0,     0,   135,   163,     0,     0,   269,   154,   155,
+     147,   290,    85,    84,   408,     0,    94,    95,     0,     0,
+       0,     0,     0,     0,    74,     0,     0,     0,   125,   373,
+     363,   362,     0,     0,   189,    71,   144,     0,     0,   179,
+       0,     0,   149,     0,   287,     0,   278,    91,   114,    97,
+      98,   101,   102,    76,    72,     0,     0,   171,   175,   144,
+       0,   369,   368,     0,     0,   140,   141,   136,   139,     0,
+     145,     0,   164,   168,   185,     0,   156,     0,   291,    86,
+       0,    87,     0,    24,     0,   176,     0,   131,   126,   132,
+     130,   376,     0,   377,   374,   375,     0,   144,     0,     0,
+       0,   157,    81,   115,   118,     0,   285,   408,     0,     0,
+     408,     0,   142,   408,   180,     0,    25,   408,     0,   408,
+     364,     0,     0,     0,     0,   119,     0,     0,   133,     0,
+     143,     0,     0,   182,   181,   183,     0,   172,     0,   137,
+     165,     0,     0,    23,   173,     0,   144,   166,   187,   186,
+       0,   127,   138,     0,     0,   174,   128,   167,     0,   144,
+     188,   129
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     2,     3,   173,     7,     8,     9,    10,    68,    69,
-     297,    70,    71,   316,    72,    73,    74,    75,    76,    77,
-      78,   405,    79,   322,   457,    80,    81,    82,   348,    83,
-     345,   482,   516,    84,   507,    85,   319,    86,   526,   465,
-     466,   568,   548,    87,    88,    89,    90,    91,    92,   544,
-     574,   598,   661,   664,   475,    93,   538,   560,   646,   561,
-     562,   586,   587,   612,   622,   632,   563,    94,    95,   539,
-     564,   589,   653,   658,    96,   529,   543,   572,   650,   656,
-     573,    97,   488,   523,   592,   634,   642,   541,   643,   659,
-      98,    99,   100,   101,   102,   103,   267,   104,   272,   105,
-     106,   275,   278,   107,   108,   109,   110,   111,   112,   113,
-     114,   261,   115,   262,   116,   263,   117,   118,   119,   286,
-     120,   121,   352,   122,   123,   124,   125,   126,   127,   291,
-     383,   128,   129,   130,   175,   131,   132,   133,   134,   135,
-     136,   137,   138,   139,   140,   201,   141,   142,   143,   144,
-     389,   145,   146,   147,   342,   476,   547,   420,   477,   535,
-     549,   575,   148,   149,   150,   151,   152,   339,   153,   154,
-     155,   156,   179,   180,   396,   205,   181,   229,   444,   418,
-     437,   494,   438,   439,   157,   158,   159,   334,   160,   161,
-     162,   163,   164,   165,   166,   167,   182,   308,   168,   453,
-     169,   478,   224,   312,   170,   171
+      -1,     2,     3,   185,     7,     8,     9,    10,    77,   593,
+     669,   756,   366,   367,    78,    79,   320,    80,    81,   350,
+      82,    83,    84,    85,    86,    87,    88,   458,    89,   356,
+     532,    90,    91,    92,   386,    93,   383,   560,   606,    94,
+     641,   676,    95,   353,    96,   664,   589,   590,   730,   341,
+      97,   631,   632,   633,   634,   635,    98,    99,   100,   733,
+     189,   753,   324,   101,   102,   678,   709,   738,   806,   809,
+     553,   103,   686,   717,   796,   718,   719,   720,   579,   580,
+     619,   659,   692,   512,   104,   105,   654,   687,   722,   797,
+     803,   106,   644,   677,   707,   794,   800,   708,   107,   567,
+     614,   725,   774,   784,   656,   785,   804,   108,   109,   110,
+     111,   112,   113,   287,   114,   292,   115,   116,   295,   298,
+     117,   118,   119,   120,   121,   122,   123,   124,   281,   125,
+     282,   126,   283,   127,   128,   129,   306,   130,   131,   393,
+     132,   133,   134,   253,   626,   437,   438,   520,   468,   521,
+     522,   694,   312,   135,   136,   137,   314,   427,   138,   139,
+     140,   190,   141,   142,   143,   144,   145,   146,   147,   148,
+     149,   150,   219,   151,   152,   153,   154,   433,   155,   156,
+     157,   380,   554,   681,   479,   555,   650,   342,   710,   158,
+     159,   160,   161,   162,   475,   193,   163,   164,   165,   166,
+     338,   339,   526,   375,   340,   246,   167,   505,   477,   498,
+     573,   499,   500,   168,   169,   170,   370,   171,   172,   173,
+     174,   175,   176,   177,   598,   178,   194,   335,   179,   524,
+     180,   181,   556,   241,   541,   182,   183
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -543
+#define YYPACT_NINF -668
 static const yytype_int16 yypact[] =
 {
-     -49,    -2,   147,    95,   253,  -543,   128,  -543,  -543,  -543,
-     555,  -543,  -543,   157,   223,    32,  -543,   194,  -543,  -543,
-    -543,  -543,  -543,    68,    22,   132,   240,   256,   212,   244,
-    -543,  -543,    88,   257,   273,   262,   241,    86,   290,   706,
-    -543,   260,  -543,   210,  -543,   265,    36,   263,   270,  1310,
-    1310,   301,  -543,    22,   278,  -543,    34,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,   256,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,   331,
-     332,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,   264,
-     353,  -543,   404,   163,    20,  -543,    -6,   120,   297,   238,
-     347,   349,  1159,  -543,  -543,  -543,  -543,  -543,   256,  -543,
-      41,  -543,  -543,   177,  -543,   295,  -543,  -543,  -543,   348,
-    -543,  -543,  -543,  -543,  -543,  -543,   303,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,   302,
-    -543,   305,   253,   261,   325,   192,  1008,    12,  -543,   354,
-     300,  -543,  -543,   277,  -543,  -543,  -543,   253,   110,   126,
-     150,   133,   306,   377,   300,    94,   350,  -543,    13,  -543,
-    -543,  -543,  -543,  -543,    19,  -543,  -543,  -543,  -543,  -543,
-     244,   244,  -543,  -543,  -543,  1008,   308,    40,   244,  -543,
-     279,  -543,   275,  -543,   253,  -543,  -543,    62,  -543,   354,
-    -543,   300,   300,   177,   177,   244,  -543,  -543,  1008,  -543,
-    -543,  -543,  1008,  1008,  1159,  1159,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  1159,  1159,  1159,  -543,  -543,  1159,  1159,  -543,  -543,
-    -543,  -543,  1159,  -543,  -543,  1159,  -543,  -543,  1159,   307,
-     388,   391,   392,  -543,  -543,   857,  -543,  -543,  1310,  1310,
-    1008,   323,  -543,  1008,  1008,  -543,  -543,  -543,   253,   260,
-     324,   326,   260,  -543,   371,  -543,  -543,    26,    42,  -543,
-    -543,  -543,   261,  -543,  -543,  -543,   261,  -543,  -543,   261,
-    -543,  -543,   380,   253,   327,   328,   365,  -543,   335,  -543,
-     358,   253,   261,   244,   309,  -543,  -543,    44,    51,   354,
-     406,   406,  -543,   313,   415,   253,   381,   422,   253,   406,
-    -543,  -543,   329,  -543,   316,   320,  -543,   330,   336,   406,
-     337,  -543,  -543,   353,  -543,  -543,  -543,  -543,     7,    20,
-    -543,  -543,  -543,    31,    31,   300,   300,  -543,   400,  -543,
-    -543,   333,   355,  -543,  -543,  -543,   340,   331,   332,   339,
-     261,  -543,   300,  -543,   300,  -543,  -543,  -543,  -543,  -543,
-      15,   261,   253,   253,   187,   261,   398,   253,   261,  -543,
-     406,  -543,   300,  -543,   300,  -543,  -543,    31,   370,   432,
-     262,   341,   396,   442,   374,   402,   442,   455,  -543,  -543,
-    -543,  -543,  -543,   401,  -543,   260,   260,  -543,   116,  -543,
-    -543,  -543,  -543,  -543,  -543,   366,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,   362,   364,  -543,  -543,   261,  -543,   261,
-     261,  -543,  -543,  -543,   244,    52,  -543,   261,  -543,    64,
-     367,   368,  -543,  1008,   435,   410,   384,  -543,   423,  1008,
-    -543,   253,   261,  -543,  -543,   261,  1008,  1008,   464,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,   406,   398,  -543,  -543,  1008,  -543,   261,  -543,  -543,
-    -543,   244,  1008,  -543,     3,   443,   459,  -543,  -543,  -543,
-    -543,  -543,   448,  -543,  -543,  -543,   406,  -543,  -543,  -543,
-    -543,  -543,    27,   191,   191,  -543,  1008,   253,   123,  -543,
-     300,    31,   148,    10,  -543,  -543,  -543,  -543,   191,   481,
-     191,   385,  -543,  -543,   451,   473,   399,  1008,  -543,  -543,
-    -543,  -543,   386,  1008,    17,   486,  -543,  -543,   261,  -543,
-     457,  1008,  -543,  -543,   139,   282,  -543,  -543,  -543,  -543,
-     244,  -543,   478,     0,  1008,    73,   472,  -543,   460,  -543,
-    -543,  -543,   393,  -543,   244,  -543,   461,  -543,  -543,  -543,
-    -543,  -543,   300,  -543,  -543,  -543,   406,  -543,   394,  -543,
-    -543,  -543,   365,  1008,   244,  1008,   406,   244,   445,   493,
-    1008,  -543,   483,  -543,   406,  -543,   439,   406,  -543,  1008,
-    -543,   253,  -543,   440,   216,  1008,   432,  -543,  -543,  1008,
-       5,  -543,  -543,  -543,  -543,   441,   123,  -543,   300,  1008,
-    -543,  1008,  -543,  -543,  -543,  -543,    10,  -543,    17,   405,
-    -543,  -543,  -543,  1008,   139,  -543,  -543
+     -63,   -28,   185,    86,   337,  -668,   117,  -668,  -668,  -668,
+     734,  -668,  -668,   181,   253,   156,  -668,   213,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,   212,  -668,   -12,   230,   337,
+     342,  -668,   -38,   189,   298,  -668,  -668,   188,   272,   353,
+    -668,  -668,    71,   316,  -668,  -668,   318,   239,   276,   134,
+     188,   900,  -668,   334,   282,  -668,  -668,   233,  -668,   367,
+    -668,  -668,   133,   290,   295,  -668,  1730,  1730,   345,  -668,
+    -668,   -38,   305,  -668,   -36,   396,   334,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,   334,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,   369,
+     370,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,   307,
+     389,  -668,   601,   173,    24,   -22,    32,  -668,   338,   267,
+     393,   394,  1398,  -668,  -668,  -668,  -668,  -668,   334,  -668,
+      59,  -668,  -668,   166,  -668,   339,  -668,  -668,  -668,   395,
+    -668,  -668,  -668,  -668,  -668,  -668,   341,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,
+     340,  -668,  -668,   347,   337,   291,   360,   493,   373,   349,
+    1885,    64,  -668,   334,  -668,   226,   392,  -668,   358,  -668,
+     304,   334,  -668,  -668,   188,   167,   174,   206,    21,   188,
+     430,   342,   -53,   351,   188,   334,     6,  -668,  -668,  -668,
+    -668,    79,   287,  -668,   353,   353,  -668,  -668,  -668,  1232,
+     336,    18,   403,   344,  -668,   324,  1232,   334,  -668,   308,
+    -668,   337,  -668,  -668,    23,  -668,   416,  -668,   342,   342,
+     166,   166,   353,   334,   334,  -668,  1232,  -668,  -668,  -668,
+    -668,  -668,  1232,  1232,  1398,  1398,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,
+    -668,  1398,  1398,  1398,  -668,  -668,  1398,  1398,  -668,  -668,
+    -668,  -668,  1398,  -668,  -668,  1398,  -668,  -668,  1398,   352,
+     447,   448,   449,  -668,  -668,  1066,  -668,  -668,  -668,  -668,
+    -668,  1730,  1564,  1232,   108,  -668,  1232,  1232,  -668,  -668,
+    -668,   337,   461,  -668,  -668,  -668,  -668,   282,   374,   378,
+     282,  -668,  -668,  -668,     0,    51,  -668,  -668,   416,   342,
+    -668,   226,   343,   226,  1232,  -668,  -668,   337,  -668,  -668,
+     291,  -668,  -668,   291,  -668,  -668,   437,   337,   372,   376,
+     421,    26,   408,   337,   291,   342,   384,    -1,   431,  -668,
+     355,  -668,  -668,    52,    69,  -668,  -668,  -668,   466,   466,
+    -668,   356,   482,   337,   435,   484,   337,   353,   485,  -668,
+     453,  -668,  -668,   379,  -668,   365,   368,  -668,   371,   377,
+     466,  -668,  -668,   380,  -668,  -668,   389,  -668,  -668,  -668,
+    -668,   168,    24,   -22,    32,  -668,   456,   456,   342,   342,
+    -668,   459,  -668,   191,  -668,   375,   404,  -668,  -668,  -668,
+     383,   369,   370,   386,   291,  -668,   442,   388,    -6,   342,
+    -668,   342,  -668,  -668,  -668,  -668,  -668,  -668,   465,   391,
+     291,  -668,  -668,   157,   291,   337,   337,    16,   291,  -668,
+     409,  -668,   348,   291,  -668,  -668,   415,    -6,   466,   353,
+    -668,   342,  -668,   342,  -668,   416,   456,   440,   495,   239,
+     381,   454,   507,   425,   457,   507,   466,   463,  -668,  -668,
+    -668,  -668,  -668,  -668,   462,  -668,   282,   282,  -668,   121,
+    -668,  -668,  -668,  -668,  -668,  -668,   412,  -668,  -668,   512,
+     433,   417,  1232,  -668,  -668,  -668,  -668,   337,  -668,  -668,
+     513,  -668,   497,  -668,   422,   423,  -668,  -668,  -668,  -668,
+    -668,  -668,   291,  -668,   291,   291,  -668,  -668,  -668,   504,
+     515,   188,  -668,  -668,    83,   416,   466,   432,   432,  -668,
+    -668,  1232,   508,   476,   450,  -668,   492,  1232,  -668,   337,
+     291,  -668,  -668,   291,   547,   566,  1232,   539,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,   543,  1730,    62,   536,
+    -668,   419,   353,  -668,  -668,  -668,  -668,  -668,   353,    84,
+    -668,  -668,   291,  1804,  -668,   291,    46,  -668,   445,   446,
+    -668,   353,  1232,  -668,    33,   524,   550,  -668,  -668,  -668,
+    1232,   515,  -668,   537,  -668,  -668,   528,  -668,  -668,   421,
+    1232,  -668,   466,   466,   504,  -668,  1232,  -668,   404,  1899,
+    1899,   567,  -668,   140,   148,  -668,   339,  -668,  -668,  1232,
+    -668,   573,  -668,  -668,  -668,  -668,  -668,    92,   226,   226,
+    -668,  1232,   337,  -668,  -668,   342,   456,  -668,  -668,   -23,
+    -668,   574,  -668,  -668,   466,   552,   148,   148,  1804,   464,
+    1899,  1899,  1899,  1899,  -668,  1232,   291,    11,  -668,  -668,
+    -668,  -668,   582,   472,  -668,  -668,    10,    47,   584,  -668,
+     337,   569,  -668,  1232,  -668,   234,  -668,  -668,   506,   148,
+     148,  -668,  -668,  -668,  -668,   555,  1232,  -668,  -668,    63,
+     250,  -668,  -668,   556,  1232,  -668,  -668,  -668,  -668,   479,
+    -668,   559,  -668,  -668,  -668,   481,  -668,  1232,  -668,  -668,
+     291,  -668,   373,   488,   353,  -668,   562,  -668,  -668,  -668,
+    -668,  -668,   342,  -668,  -668,  -668,   353,   191,  1232,   353,
+    1232,  -668,  -668,   578,  -668,   337,   521,   466,   353,   542,
+     466,   487,  -668,   466,  -668,   373,  -668,   466,   534,   466,
+    -668,   600,  1232,   538,   125,  -668,   416,  1232,   495,  1232,
+    -668,  1232,    -2,  -668,  -668,  -668,   291,  -668,   544,  -668,
+    -668,   342,  1232,  -668,  -668,  1232,    10,  -668,  -668,  -668,
+      11,  -668,  -668,    47,   490,  -668,  -668,  -668,  1232,    63,
+    -668,  -668
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,   508,  -543,  -543,
-    -248,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,   342,
-    -543,   -93,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,    96,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-      23,  -543,   -22,  -543,   -12,   227,  -203,  -543,  -530,  -543,
-    -543,  -138,  -543,  -543,  -109,  -529,  -543,  -118,  -543,  -542,
-     -52,  -543,   -81,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -124,  -543,  -543,  -543,  -543,  -543,  -121,  -543,  -543,
-    -517,  -543,  -543,   -98,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -543,   294,   296,  -161,   274,  -543,   276,  -543,   267,
-     281,  -543,  -543,   269,  -543,  -543,  -543,   430,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -167,
-    -543,   425,  -543,  -543,   272,    37,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,  -543,  -146,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -159,  -543,  -543,  -543,  -543,
-    -543,  -543,   -27,  -543,  -543,  -543,  -543,    38,  -543,  -543,
-    -306,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,  -543,
-    -543,  -543,  -543,  -543,  -543,  -543,   517,  -543,   174,  -313,
-    -363,  -543,  -543,   -39,  -351,  -543,  -543,  -543,  -543,  -543,
-    -543,  -288,  -543,  -543,   356,   359,   -11,  -543,   -17,  -165,
-     360,   524,  -543,  -292,    -4,   -25
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,   613,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -285,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,   418,  -668,     5,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,   142,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,     4,  -668,   -51,
+    -668,  -668,   -35,  -668,  -397,  -340,   -47,   317,  -255,  -668,
+    -668,  -668,  -641,  -668,  -619,  -668,  -668,  -174,  -668,  -668,
+    -142,  -583,  -668,  -159,  -668,  -657,  -109,   216,  -668,    27,
+    -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -157,  -668,
+    -668,  -668,  -668,  -668,  -152,  -668,  -668,  -667,  -668,  -668,
+    -125,  -668,  -668,  -668,  -668,  -668,  -668,  -668,  -668,   387,
+     385,   131,   366,  -668,   397,  -668,   361,   359,  -668,  -668,
+     362,  -668,  -668,  -668,   535,  -668,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,  -668,  -245,  -668,   526,  -668,
+    -668,   279,  -294,  -668,  -668,   313,  -668,   194,   -91,    85,
+    -668,  -668,  -668,   -87,  -668,  -668,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,  -175,  -668,  -668,  -668,  -668,  -668,
+    -668,  -668,  -183,  -668,  -668,  -668,  -538,  -668,  -668,   -42,
+    -668,  -668,  -668,  -668,    67,  -668,  -668,  -327,  -668,  -668,
+    -668,  -668,  -668,  -668,  -668,     3,  -668,  -668,  -668,  -668,
+    -668,  -668,  -668,  -668,   458,  -668,  -668,   252,  -341,  -412,
+    -668,  -668,   -55,  -394,  -668,  -668,  -668,  -668,  -668,  -668,
+    -304,  -668,  -668,   467,   124,   469,   -11,  -668,   -24,  -170,
+     321,  -668,   639,  -668,  -308,    15,   -30
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
    number is the opposite.  If zero, do what YYDEFACT says.
    If YYTABLE_NINF, syntax error.  */
-#define YYTABLE_NINF -395
+#define YYTABLE_NINF -463
 static const yytype_int16 yytable[] =
 {
-      13,   178,   184,   385,   202,   197,   390,   209,   558,   559,
-     178,   443,   310,   185,   273,   208,   533,   199,    16,   305,
-     225,   207,   440,   440,   228,    16,   203,   220,   419,   303,
-     221,   236,   600,   212,   213,   230,   427,    16,   203,   361,
-     362,   570,   237,   226,   597,   599,   433,   590,   588,   648,
-     382,   340,   341,   423,   472,   241,   426,   392,   176,   349,
-     300,   268,   356,   299,   397,    11,   440,    12,   398,   354,
-      26,   399,   176,   394,    28,   412,   359,   285,   300,   346,
-     505,   435,   414,   502,   409,   441,   441,   455,   610,   269,
-     545,   388,   264,     1,    16,   203,   284,   469,  -247,   555,
-     365,   366,   367,    37,   176,   183,   270,   456,   436,   265,
-     459,   460,   239,   611,   534,   467,   558,   559,   649,   227,
-     506,    41,   600,   556,   176,   571,   306,   306,   347,   441,
-     274,    48,   571,   306,   597,   599,   307,   546,     4,   301,
-     393,   590,   451,   337,   271,   384,    45,     5,    47,    48,
-     209,   177,   309,   458,   554,   209,   395,   463,   413,   240,
-     468,   323,   302,   311,   304,   415,   503,   329,   295,   209,
-     596,   204,   416,   216,   410,   276,   306,   331,   566,   209,
-     324,    34,     6,   313,   176,   202,   202,   338,   524,   517,
-     440,    42,   325,   202,    11,   277,    12,    34,    16,   203,
-      18,    19,   217,   343,   567,    38,   209,   209,   172,   498,
-     202,   499,   500,   542,   357,   358,    14,   314,   491,   504,
-     353,    38,   555,   355,   299,   492,   360,   176,   551,   454,
-     174,    55,   326,   317,   518,    28,   315,   519,   555,   300,
-     493,   522,   576,   320,   578,   553,   556,   470,   264,   471,
-      16,   200,   318,   441,   461,   640,    11,   321,    12,   528,
-     186,   187,   556,   188,   557,   265,   209,   462,   212,   213,
-     510,    16,   223,   378,   189,   190,   515,  -393,   381,   191,
-     557,   386,    41,   520,   521,    11,   601,    12,   185,   207,
-     230,   237,   176,   619,   313,   198,   266,   288,   289,   192,
-     301,   210,   527,   626,   602,   501,    16,   203,   202,   531,
-      48,   633,    16,   327,   636,    25,    52,   211,   176,   401,
-     593,   233,   234,   302,   215,   379,   380,   408,   193,    16,
-     203,    18,    19,   552,   218,   194,   445,   445,   195,   638,
-     222,   313,   382,   183,   313,   235,   231,    35,   209,   209,
-     209,   209,   530,   232,   583,   299,   442,   442,   442,   442,
-     585,   238,   242,   243,   244,   245,    28,   209,   595,   209,
-     300,   279,   280,   281,   290,   452,   282,   452,   292,   196,
-     296,   609,   293,    43,   330,   294,   298,   209,  -394,   209,
-     285,   306,   209,   350,   333,   452,   344,   452,   313,   313,
-     442,   373,   374,   313,   351,   375,   376,   204,   391,   227,
-     585,   400,   625,    41,   404,   402,   403,   630,   406,   407,
-     417,   606,   422,   411,   489,   490,   637,   421,   424,   425,
-     429,   301,   644,   428,   430,   616,   647,   447,   177,   202,
-      47,    48,   464,   473,   431,   448,   655,    52,   657,   474,
-     432,   434,   449,   450,   302,   624,   246,   480,   627,   481,
-     665,   247,   483,   484,   248,   249,   250,   251,   252,   253,
-     254,   486,   255,   479,   487,   495,   496,   313,   497,   511,
-     256,   508,   509,   512,   514,   257,   202,   513,   258,   522,
-     537,   536,   540,   259,   577,   580,   579,   581,   582,   584,
-     591,   594,   607,   613,   614,   617,   615,   620,   628,   629,
-     260,   631,   635,   639,   651,   209,   209,    15,   663,   621,
-     569,   387,   485,   565,   442,   525,   666,   645,   652,   550,
-     550,   608,   623,   313,   662,   660,   641,   332,   363,   370,
-     368,   364,   283,   369,   550,   287,   550,   372,   604,   206,
-     446,   532,   328,   603,   335,   202,   371,   336,    11,   214,
-      12,    16,    17,    18,    19,    20,    21,     0,     0,   202,
-       0,   605,     0,    22,    23,     0,     0,   209,     0,     0,
-       0,     0,     0,     0,     0,   618,     0,    24,    25,   202,
-       0,     0,   202,    26,     0,     0,     0,    27,    28,    29,
-      30,    31,    32,     0,     0,     0,     0,     0,     0,    33,
-       0,     0,     0,    34,     0,     0,     0,     0,     0,     0,
-      35,     0,     0,   209,     0,    36,    37,   313,     0,     0,
-       0,   654,     0,     0,     0,     0,     0,    38,    39,     0,
-      40,     0,     0,     0,     0,    41,     0,     0,     0,     0,
-       0,     0,    42,     0,     0,     0,    43,    44,     0,     0,
-      45,     0,     0,    46,     0,     0,     0,     0,     0,     0,
-       0,     0,    47,    48,     0,    49,    50,    51,     0,    52,
-       0,     0,     0,     0,     0,     0,    53,     0,     0,     0,
-      54,     0,    55,    56,     0,     0,     0,     0,    57,    58,
-      59,    60,    61,    62,    63,    64,    65,    66,    67,    11,
-       0,    12,    16,    17,    18,    19,    20,    21,     0,     0,
-       0,     0,     0,     0,    22,    23,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    24,    25,
-       0,     0,     0,     0,     0,     0,     0,     0,    27,    28,
-      29,    30,    31,    32,     0,     0,     0,     0,     0,     0,
-      33,     0,     0,     0,    34,     0,     0,     0,     0,     0,
-       0,    35,     0,     0,     0,     0,    36,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,    38,    39,
-       0,    40,     0,     0,     0,     0,    41,     0,     0,     0,
-       0,     0,     0,    42,     0,     0,     0,    43,    44,     0,
-       0,    45,     0,     0,    46,     0,     0,     0,     0,     0,
-     219,     0,     0,    47,    48,     0,    49,    50,    51,     0,
-      52,     0,     0,     0,     0,     0,     0,    53,     0,     0,
-       0,    54,     0,    55,    56,     0,     0,     0,     0,    57,
-      58,    59,    60,    61,    62,    63,    64,    65,    66,    67,
-      11,     0,    12,    16,    17,    18,    19,    20,    21,     0,
-       0,     0,     0,     0,     0,    22,    23,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    24,
-      25,     0,     0,     0,   377,     0,     0,     0,     0,    27,
-      28,    29,    30,    31,    32,     0,     0,     0,     0,     0,
-       0,    33,     0,     0,     0,    34,     0,     0,     0,     0,
-       0,     0,    35,     0,     0,     0,     0,    36,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    38,
-      39,     0,    40,     0,     0,     0,     0,    41,     0,     0,
-       0,     0,     0,     0,    42,     0,     0,     0,    43,    44,
-       0,     0,    45,     0,     0,    46,     0,     0,     0,     0,
-       0,     0,     0,     0,    47,    48,     0,    49,    50,    51,
-       0,    52,     0,     0,     0,     0,     0,     0,    53,     0,
-       0,     0,    54,     0,    55,    56,     0,     0,     0,     0,
-      57,    58,    59,    60,    61,    62,    63,    64,    65,    66,
-      67,    11,     0,    12,    16,    17,    18,    19,    20,    21,
-       0,     0,     0,     0,     0,     0,    22,    23,     0,     0,
+     199,   397,   237,   293,   235,   504,   198,   404,   405,   220,
+     429,   245,   690,   434,   445,   331,   447,   422,   424,    13,
+     723,   202,   501,   501,  -307,   260,    11,   217,    12,   242,
+     395,   223,    16,   459,    18,   201,   261,   439,   478,   450,
+     215,   378,   379,   238,   196,   222,  -288,   713,   705,   648,
+     791,   247,   740,   232,   257,   637,   357,   200,    55,   494,
+     255,   328,   432,   384,   550,   451,   639,   715,   452,   400,
+      16,   332,    18,   288,   254,   482,   358,   304,   485,   464,
+      46,   617,   501,   191,   721,    16,   197,    18,   441,   471,
+     737,   754,   359,   443,   467,   536,   296,   -27,   226,   227,
+     736,   305,     1,   716,    50,   289,   473,    73,   537,   258,
+     618,   640,   502,   502,    16,   197,    18,    19,    20,   297,
+     581,   624,   385,   509,   775,   290,   739,   545,   192,   792,
+     637,   426,   440,    46,   360,     4,   723,   294,   333,   428,
+     243,    64,   337,   691,   706,   564,   327,   534,   535,   516,
+     346,   519,   740,   510,   192,   333,   613,    50,   325,    38,
+     199,   336,   649,   328,   369,   529,   221,   679,   291,   533,
+     782,   337,   502,   538,   714,   236,   509,   715,   542,    59,
+     706,   199,   381,   442,   472,     5,   391,   363,     6,   390,
+     737,   199,   199,    75,   220,   220,   333,   374,   377,   318,
+     187,   474,   401,   402,   486,   596,   510,   347,   334,   403,
+     343,   333,   361,   716,    54,   594,   625,   368,   199,   199,
+     680,    14,   220,   373,   398,   399,   739,   714,   244,    11,
+     549,    12,   666,   667,   329,   308,   230,   192,   570,    49,
+     184,   530,    63,    64,   689,   226,   227,   585,   571,   586,
+     587,   607,    69,    11,   741,    12,   394,   578,   421,   396,
+     186,   330,   501,   309,   531,   572,   425,   284,   236,   430,
+     231,   525,   284,   699,   700,   608,   236,   742,   609,   670,
+     671,   661,   662,   616,   199,   285,   546,   672,   673,    33,
+     285,   348,   236,    16,   197,    18,   600,   448,   351,   729,
+     595,   547,   605,   548,   509,   310,   311,   627,  -462,   199,
+     638,   612,   188,   349,   354,   444,   202,   223,   247,   255,
+     352,   682,   683,   695,   204,   195,   205,    47,   286,   236,
+     355,   461,   701,   702,   510,   199,   435,   203,   206,   207,
+      11,   465,    12,   208,   685,   250,   251,   646,    16,   197,
+      18,   540,   502,    12,   192,   653,   343,   220,   343,    16,
+     218,    18,   435,   506,   506,   578,    57,   216,   224,   209,
+     225,   229,   454,    16,   240,    18,   236,   200,   463,    16,
+     323,    18,   726,   239,   674,   248,   199,   199,   199,   199,
+     249,   704,   503,   503,   503,   503,   684,   252,   435,   622,
+     256,   435,   210,   259,   265,   623,   262,   263,   211,   199,
+     212,   199,   408,   409,   410,   523,   768,   523,   645,   771,
+     703,   264,   773,   300,   299,   301,   776,   302,   778,   319,
+     313,   315,   316,   321,   344,   317,   333,   362,   728,   220,
+     382,   199,  -461,   199,   326,   752,   199,   523,   388,   523,
+     213,   735,   503,   345,   365,   387,   389,   392,   305,   747,
+     214,   416,    16,   197,    18,   417,   418,   419,   436,   221,
+     435,   435,   751,   244,   453,   446,   455,   435,   457,   426,
+     456,   462,   466,   469,   476,   568,   569,   470,   480,   481,
+     483,   484,   487,   762,   327,   764,   488,   490,   489,   191,
+     491,   793,   508,   492,   539,   513,   636,    38,   527,   493,
+     543,   328,   495,   514,   496,   517,   552,   780,   515,   204,
+     518,   205,   787,   528,   789,   551,   790,   558,   559,   561,
+     562,   786,   435,   206,   207,   557,   565,   799,   208,   574,
+     801,   575,   636,   636,   592,   497,   576,   566,   577,   582,
+     581,   757,   220,   810,   583,   584,   588,   591,   220,   597,
+     601,   602,    54,   760,   209,   604,   763,   610,   603,   611,
+     613,   220,   615,   620,   435,   769,   519,   642,   643,   665,
+     651,   636,   329,   636,   636,   636,   636,   652,   657,   655,
+      63,    64,   668,   675,   693,   696,   698,   322,   711,   199,
+     199,   712,   724,   211,   727,   212,   732,   734,   746,   330,
+     748,   749,   750,   755,   758,   765,   467,   770,   772,   777,
+     779,   808,    15,   781,   658,   199,   199,   563,   663,   795,
+     364,   688,   503,   697,   431,   811,   788,   802,   761,   511,
+     199,   199,   199,   199,   731,   213,   807,   660,   805,   783,
+     407,   406,   411,   413,   414,   214,   307,   303,   449,   743,
+     415,   544,   266,   343,   343,   767,   621,   435,   744,   267,
+     647,   507,   599,   268,   269,   270,   271,   272,   273,   274,
+     376,   275,   460,   371,   412,   372,   228,     0,     0,   276,
+       0,     0,     0,     0,   277,     0,     0,   278,     0,     0,
+       0,     0,   325,     0,   220,   435,   279,     0,     0,     0,
+       0,     0,   199,     0,     0,     0,   220,     0,   759,   220,
+       0,     0,   280,     0,     0,   745,     0,     0,   220,     0,
+       0,     0,     0,     0,     0,   325,     0,    11,     0,    12,
+      16,    17,    18,    19,    20,    21,    22,    23,    24,     0,
+       0,    25,     0,     0,     0,     0,    26,    27,    28,     0,
+      29,   199,     0,     0,    30,     0,     0,   798,    31,     0,
+     766,     0,    32,    33,     0,     0,     0,     0,    34,     0,
+      35,    36,     0,     0,    37,    38,    39,    40,    41,    42,
+       0,     0,     0,     0,     0,     0,     0,    43,     0,     0,
+      44,    45,     0,     0,    46,     0,     0,     0,     0,     0,
+       0,    47,     0,     0,     0,     0,    48,    49,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,    50,    51,
+       0,     0,     0,    52,     0,     0,     0,     0,    53,     0,
+      54,     0,     0,     0,     0,    55,     0,     0,     0,    56,
+      57,    58,     0,     0,    59,     0,    60,    61,     0,     0,
+      62,     0,     0,     0,     0,     0,     0,     0,    63,    64,
+       0,    65,     0,    66,    67,    68,     0,     0,    69,     0,
+       0,     0,     0,     0,     0,    70,     0,    71,     0,     0,
+       0,     0,    72,     0,    73,    74,     0,     0,     0,     0,
+       0,    75,    76,    11,     0,    12,    16,    17,    18,    19,
+      20,    21,    22,    23,    24,     0,     0,    25,     0,     0,
+       0,     0,    26,    27,    28,     0,    29,     0,     0,     0,
+      30,     0,     0,     0,    31,     0,     0,     0,    32,    33,
+       0,     0,     0,     0,   233,     0,    35,    36,     0,     0,
+      37,    38,    39,    40,    41,    42,     0,     0,     0,     0,
+       0,     0,     0,    43,     0,     0,    44,    45,     0,     0,
+      46,     0,     0,     0,     0,     0,     0,    47,     0,     0,
+       0,     0,    48,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    50,    51,     0,     0,     0,    52,
+       0,     0,     0,     0,    53,     0,    54,     0,     0,     0,
+       0,    55,     0,     0,     0,    56,    57,    58,     0,     0,
+      59,     0,    60,    61,     0,     0,    62,     0,     0,     0,
+       0,     0,   234,     0,    63,    64,     0,    65,     0,    66,
+      67,    68,     0,     0,    69,     0,     0,     0,     0,     0,
+       0,    70,     0,    71,     0,     0,     0,     0,    72,     0,
+      73,    74,     0,     0,     0,     0,     0,    75,    76,    11,
+       0,    12,    16,    17,    18,    19,    20,    21,    22,    23,
+      24,     0,     0,    25,     0,     0,     0,     0,    26,    27,
+      28,     0,    29,     0,     0,     0,    30,     0,     0,     0,
+      31,     0,     0,     0,    32,    33,     0,     0,     0,   420,
+     233,     0,    35,    36,     0,     0,    37,    38,    39,    40,
+      41,    42,     0,     0,     0,     0,     0,     0,     0,    43,
+       0,     0,    44,    45,     0,     0,    46,     0,     0,     0,
+       0,     0,     0,    47,     0,     0,     0,     0,    48,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      24,    25,     0,     0,     0,     0,     0,     0,     0,     0,
-      27,    28,    29,    30,    31,    32,     0,     0,     0,     0,
-       0,     0,    33,     0,     0,     0,    34,     0,     0,     0,
-       0,     0,     0,    35,     0,     0,     0,     0,    36,     0,
+      50,    51,     0,     0,     0,    52,     0,     0,     0,     0,
+      53,     0,    54,     0,     0,     0,     0,    55,     0,     0,
+       0,    56,    57,    58,     0,     0,    59,     0,    60,    61,
+       0,     0,    62,     0,     0,     0,     0,     0,     0,     0,
+      63,    64,     0,    65,     0,    66,    67,    68,     0,     0,
+      69,     0,     0,     0,     0,     0,     0,    70,     0,    71,
+       0,     0,     0,     0,    72,     0,    73,    74,     0,     0,
+       0,     0,     0,    75,    76,    11,     0,    12,    16,    17,
+      18,    19,    20,    21,    22,    23,    24,     0,     0,    25,
+       0,     0,     0,     0,    26,    27,    28,     0,    29,     0,
+       0,     0,    30,     0,     0,     0,    31,     0,     0,     0,
+      32,    33,     0,     0,     0,     0,   233,     0,    35,    36,
+       0,     0,    37,    38,    39,    40,    41,    42,     0,     0,
+       0,     0,     0,     0,     0,    43,     0,     0,    44,    45,
+       0,     0,    46,     0,     0,     0,     0,     0,     0,    47,
+       0,     0,     0,     0,    48,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,    50,    51,     0,     0,
+       0,    52,     0,     0,     0,     0,    53,     0,    54,     0,
+       0,     0,     0,    55,     0,     0,     0,    56,    57,    58,
+       0,     0,    59,     0,    60,    61,     0,     0,    62,     0,
+       0,     0,     0,     0,     0,     0,    63,    64,     0,    65,
+       0,    66,    67,    68,     0,     0,    69,     0,     0,     0,
+       0,     0,     0,    70,     0,    71,     0,     0,     0,     0,
+      72,     0,    73,    74,     0,     0,     0,     0,     0,    75,
+      76,    11,     0,    12,    16,    17,    18,    19,    20,    21,
+      22,    23,    24,     0,     0,    25,     0,     0,     0,     0,
+      26,    27,     0,     0,    29,     0,     0,     0,    30,     0,
+       0,     0,    31,     0,     0,     0,    32,    33,     0,     0,
+       0,     0,   233,     0,    35,    36,     0,     0,    37,    38,
+      39,    40,    41,    42,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    44,    45,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    47,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      38,    39,     0,    40,     0,     0,     0,     0,    41,     0,
-       0,     0,     0,     0,     0,    42,     0,     0,     0,    43,
-      44,     0,     0,    45,     0,     0,    46,     0,     0,     0,
-       0,     0,     0,     0,     0,    47,    48,     0,    49,    50,
-      51,     0,    52,     0,     0,     0,     0,     0,     0,    53,
-       0,     0,     0,    54,     0,    55,    56,     0,     0,     0,
-       0,    57,    58,    59,    60,    61,    62,    63,    64,    65,
-      66,    67,    11,     0,    12,    16,    17,    18,    19,    20,
-      21,     0,     0,     0,     0,     0,     0,    22,    23,     0,
+       0,     0,     0,    51,     0,     0,     0,    52,     0,     0,
+       0,     0,    53,     0,    54,     0,     0,     0,     0,    55,
+       0,     0,     0,    56,    57,    58,     0,     0,    59,     0,
+      60,    61,     0,     0,    62,     0,     0,     0,     0,     0,
+       0,     0,    63,    64,     0,    65,     0,    66,    67,     0,
+       0,     0,    69,     0,     0,     0,     0,     0,     0,    70,
+       0,    71,     0,     0,     0,     0,     0,     0,    73,    74,
+       0,     0,     0,     0,     0,    75,    76,    11,     0,    12,
+      16,    17,    18,    19,    20,    21,    22,    23,    24,     0,
+       0,    25,     0,     0,     0,     0,    26,    27,     0,     0,
+      29,     0,     0,     0,    30,     0,     0,     0,    31,     0,
+       0,     0,    32,    33,     0,     0,     0,     0,   233,     0,
+      35,    36,     0,     0,    37,    38,    39,    40,    41,    42,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,    24,    25,     0,     0,     0,     0,     0,     0,     0,
-       0,    27,    28,    29,    30,    31,    32,     0,     0,     0,
+      44,    45,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,    47,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    51,
+       0,     0,     0,     0,     0,     0,     0,     0,    53,     0,
+      54,     0,     0,     0,     0,    55,     0,     0,     0,    56,
+      57,     0,     0,     0,     0,     0,    60,    61,     0,     0,
+      62,     0,     0,     0,     0,     0,     0,     0,    63,    64,
+       0,    65,     0,     0,     0,     0,   423,     0,    69,     0,
+       0,     0,     0,     0,     0,    70,     0,    71,     0,     0,
+       0,     0,     0,     0,    73,     0,     0,     0,     0,     0,
+       0,    75,    76,    11,     0,    12,    16,    17,    18,    19,
+      20,    21,    22,    23,    24,     0,     0,    25,     0,     0,
+       0,     0,    26,    27,     0,     0,    29,     0,     0,     0,
+      30,     0,     0,     0,    31,     0,     0,     0,    32,    33,
+       0,     0,     0,     0,   233,     0,    35,    36,     0,     0,
+      37,    38,    39,    40,    41,    42,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,    44,    45,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    47,     0,     0,
+      16,    17,    18,    19,    20,     0,     0,    23,    24,     0,
+       0,     0,     0,     0,     0,    51,    26,   628,     0,     0,
+       0,     0,     0,     0,    53,     0,    54,     0,    31,     0,
+       0,    55,   327,     0,     0,    56,    57,     0,     0,     0,
+      35,    36,    60,    61,     0,    38,    62,     0,    41,   328,
+       0,     0,     0,     0,    63,    64,     0,    65,     0,     0,
+      44,    45,     0,     0,    69,     0,     0,     0,     0,     0,
+       0,    70,     0,    71,     0,     0,     0,     0,     0,     0,
+      73,    16,   197,    18,    19,    20,     0,    75,    76,     0,
+       0,     0,     0,     0,     0,    16,   197,    18,    19,    20,
+      54,     0,    23,    24,     0,     0,     0,     0,     0,    56,
+       0,    26,   628,   327,     0,     0,    60,    61,     0,     0,
+     329,     0,     0,    31,     0,     0,    38,   327,    63,    64,
+     328,    65,     0,   629,   630,    35,    36,     0,    69,     0,
+      38,     0,     0,    41,   328,     0,     0,   330,     0,     0,
+       0,     0,     0,     0,     0,    44,    45,     0,     0,     0,
+       0,    75,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,    35,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    39,     0,    40,     0,     0,     0,     0,    41,
-       0,     0,     0,     0,     0,     0,    42,     0,     0,     0,
-      43,    44,     0,     0,    45,     0,     0,    46,     0,     0,
-       0,     0,     0,     0,     0,     0,    47,    48,     0,    49,
-      50,     0,     0,    52,     0,     0,     0,     0,     0,     0,
-      53,     0,     0,     0,     0,     0,    55,    56,     0,     0,
-       0,     0,    57,    58,    59,    60,    61,    62,    63,    64,
-      65,    66,    67,    11,     0,    12,    16,    17,    18,    19,
-      20,    21,     0,     0,     0,     0,     0,     0,    22,    23,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    24,    25,     0,     0,     0,     0,     0,     0,
-       0,     0,    27,    28,    29,    30,    31,    32,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,    35,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,    39,     0,     0,     0,     0,     0,     0,
-      41,     0,     0,     0,     0,     0,     0,    42,     0,     0,
-       0,    43,     0,     0,     0,     0,     0,     0,    46,     0,
-       0,     0,     0,     0,     0,     0,     0,    47,    48,     0,
-       0,     0,     0,     0,    52,     0,     0,     0,     0,     0,
-       0,    53,     0,     0,     0,     0,     0,    55,     0,     0,
-       0,     0,     0,    57,    58,    59,    60,    61,    62,    63,
-      64,    65,    66,    67
+       0,    54,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,    54,     0,     0,     0,     0,
+       0,   329,     0,     0,    56,     0,     0,     0,     0,     0,
+      64,    60,    61,     0,     0,   329,     0,     0,     0,    69,
+       0,     0,     0,    63,    64,     0,    65,     0,   330,     0,
+       0,     0,     0,    69,     0,     0,     0,     0,     0,     0,
+       0,     0,   330
 };
 
 static const yytype_int16 yycheck[] =
 {
-       4,    23,    24,   291,    29,    27,   298,    32,   538,   538,
-      32,   374,   179,    24,    20,    32,    13,    28,     6,     7,
-      45,    32,   373,   374,    46,     6,     7,    39,   341,   175,
-      41,    53,   574,     6,     7,    46,   349,     6,     7,   242,
-     243,    31,    53,     7,   574,   574,   359,   564,    31,    44,
-      19,   210,   211,   345,   417,    77,   348,    31,    36,   218,
-      47,    41,   229,    32,   312,     3,   417,     5,   316,     7,
-      38,   319,    36,    31,    43,    31,   235,    36,    47,    39,
-      16,    50,    31,    31,   332,   373,   374,    72,    15,    69,
-      63,   294,    85,   142,     6,     7,   118,   410,    30,    99,
-     261,   262,   263,    71,    36,    83,    86,    92,    77,   102,
-     402,   403,    78,    40,   111,   407,   646,   646,   113,    83,
-      56,    90,   664,   123,    36,   115,   114,   114,    88,   417,
-     136,   118,   115,   114,   664,   664,   124,   110,   140,   108,
-     114,   658,   390,   124,   124,   291,   105,     0,   117,   118,
-     175,    83,   177,   401,    31,   180,   114,   405,   114,   125,
-     408,    28,   131,   180,   176,   114,   114,   192,   172,   194,
-      31,    83,   339,    87,   333,    55,   114,   194,   541,   204,
-      47,    58,    87,   187,    36,   210,   211,   204,   501,   481,
-     541,    97,    59,   218,     3,    75,     5,    58,     6,     7,
-       8,     9,   116,   215,    56,    82,   231,   232,    51,   457,
-     235,   459,   460,   526,   231,   232,    88,   107,   102,   467,
-     224,    82,    99,   227,    32,   109,   238,    36,   534,   394,
-       7,   137,    99,   107,   482,    43,   126,   485,    99,    47,
-     124,    25,   548,    93,   550,   537,   123,   412,    85,   414,
-       6,     7,   126,   541,    67,    39,     3,   107,     5,   507,
-     128,    21,   123,    23,   141,   102,   291,    80,     6,     7,
-     473,     6,     7,   285,    34,    35,   479,    83,   290,    39,
-     141,   293,    90,   486,   487,     3,     4,     5,   299,   300,
-     301,   302,    36,   606,   298,    83,   133,   120,   121,    59,
-     108,    44,   505,   616,    22,   464,     6,     7,   333,   512,
-     118,   624,     6,     7,   627,    33,   124,    44,    36,   323,
-     568,    49,    50,   131,    83,   288,   289,   331,    88,     6,
-       7,     8,     9,   536,    44,    95,   375,   376,    98,   631,
-     130,   345,    19,    83,   348,    44,    83,    65,   373,   374,
-     375,   376,   511,    83,   557,    32,   373,   374,   375,   376,
-     563,    83,    31,    31,   100,    12,    43,   392,   571,   394,
-      47,    74,   134,    26,    79,   392,    27,   394,    30,   139,
-     119,   584,    79,   101,     7,    83,    61,   412,    83,   414,
-      36,   114,   417,   114,    44,   412,    88,   414,   402,   403,
-     417,    94,    14,   407,   129,    14,    14,    83,    37,    83,
-     613,    31,   615,    90,    49,    88,    88,   620,    83,    61,
-      14,   580,     7,   114,   435,   436,   629,   114,    47,     7,
-     114,   108,   635,   104,   114,   594,   639,    37,    83,   464,
-     117,   118,    44,    73,   114,   112,   649,   124,   651,    17,
-     114,   114,   112,   114,   131,   614,    52,    61,   617,    17,
-     663,    57,    88,    61,    60,    61,    62,    63,    64,    65,
-      66,    16,    68,   132,    73,   109,   114,   481,   114,    44,
-      76,   114,   114,    73,    61,    81,   511,   103,    84,    25,
-      31,    48,    44,    89,    13,    44,   111,    24,    99,   113,
-      14,    44,    24,    31,    44,    44,   113,   113,    63,    16,
-     106,    28,    73,    73,    73,   540,   541,     9,   113,   612,
-     542,   294,   426,   540,   541,   502,   664,   636,   646,   533,
-     534,   583,   613,   537,   658,   656,   634,   195,   244,   272,
-     266,   245,   112,   267,   548,   120,   550,   278,   575,    32,
-     376,   513,   192,   575,   198,   580,   275,   198,     3,    35,
-       5,     6,     7,     8,     9,    10,    11,    -1,    -1,   594,
-      -1,   575,    -1,    18,    19,    -1,    -1,   602,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   602,    -1,    32,    33,   614,
-      -1,    -1,   617,    38,    -1,    -1,    -1,    42,    43,    44,
-      45,    46,    47,    -1,    -1,    -1,    -1,    -1,    -1,    54,
-      -1,    -1,    -1,    58,    -1,    -1,    -1,    -1,    -1,    -1,
-      65,    -1,    -1,   648,    -1,    70,    71,   631,    -1,    -1,
-      -1,   648,    -1,    -1,    -1,    -1,    -1,    82,    83,    -1,
-      85,    -1,    -1,    -1,    -1,    90,    -1,    -1,    -1,    -1,
-      -1,    -1,    97,    -1,    -1,    -1,   101,   102,    -1,    -1,
-     105,    -1,    -1,   108,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,   117,   118,    -1,   120,   121,   122,    -1,   124,
-      -1,    -1,    -1,    -1,    -1,    -1,   131,    -1,    -1,    -1,
-     135,    -1,   137,   138,    -1,    -1,    -1,    -1,   143,   144,
-     145,   146,   147,   148,   149,   150,   151,   152,   153,     3,
-      -1,     5,     6,     7,     8,     9,    10,    11,    -1,    -1,
-      -1,    -1,    -1,    -1,    18,    19,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    32,    33,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    42,    43,
-      44,    45,    46,    47,    -1,    -1,    -1,    -1,    -1,    -1,
-      54,    -1,    -1,    -1,    58,    -1,    -1,    -1,    -1,    -1,
-      -1,    65,    -1,    -1,    -1,    -1,    70,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    82,    83,
-      -1,    85,    -1,    -1,    -1,    -1,    90,    -1,    -1,    -1,
-      -1,    -1,    -1,    97,    -1,    -1,    -1,   101,   102,    -1,
-      -1,   105,    -1,    -1,   108,    -1,    -1,    -1,    -1,    -1,
-     114,    -1,    -1,   117,   118,    -1,   120,   121,   122,    -1,
-     124,    -1,    -1,    -1,    -1,    -1,    -1,   131,    -1,    -1,
-      -1,   135,    -1,   137,   138,    -1,    -1,    -1,    -1,   143,
-     144,   145,   146,   147,   148,   149,   150,   151,   152,   153,
-       3,    -1,     5,     6,     7,     8,     9,    10,    11,    -1,
-      -1,    -1,    -1,    -1,    -1,    18,    19,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    32,
-      33,    -1,    -1,    -1,    37,    -1,    -1,    -1,    -1,    42,
-      43,    44,    45,    46,    47,    -1,    -1,    -1,    -1,    -1,
-      -1,    54,    -1,    -1,    -1,    58,    -1,    -1,    -1,    -1,
-      -1,    -1,    65,    -1,    -1,    -1,    -1,    70,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    82,
-      83,    -1,    85,    -1,    -1,    -1,    -1,    90,    -1,    -1,
-      -1,    -1,    -1,    -1,    97,    -1,    -1,    -1,   101,   102,
-      -1,    -1,   105,    -1,    -1,   108,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,   117,   118,    -1,   120,   121,   122,
-      -1,   124,    -1,    -1,    -1,    -1,    -1,    -1,   131,    -1,
-      -1,    -1,   135,    -1,   137,   138,    -1,    -1,    -1,    -1,
-     143,   144,   145,   146,   147,   148,   149,   150,   151,   152,
-     153,     3,    -1,     5,     6,     7,     8,     9,    10,    11,
-      -1,    -1,    -1,    -1,    -1,    -1,    18,    19,    -1,    -1,
+      30,   246,    53,    25,    51,   417,    30,   262,   263,    39,
+     314,    62,    35,   321,   341,   190,   343,   311,   312,     4,
+     687,    32,   416,   417,    36,    76,     3,    38,     5,    59,
+       7,    42,     6,     7,     8,    32,    87,    37,   379,   347,
+      37,   224,   225,    54,    29,    42,    52,    37,    37,    16,
+      52,    62,   709,    50,    90,   593,    35,    95,   111,   400,
+      71,    55,   317,    45,   476,   350,    20,   686,   353,   252,
+       6,     7,     8,    49,    71,   383,    55,   128,   386,   364,
+      70,    19,   476,    95,    37,     6,     7,     8,    37,    37,
+     709,   732,    71,   338,    95,    79,    64,    98,     6,     7,
+      37,    42,   165,   686,    94,    81,    37,   160,    92,   145,
+      48,    65,   416,   417,     6,     7,     8,     9,    10,    87,
+      37,    37,   104,   113,   765,   101,   709,   468,   166,   131,
+     668,    23,   132,    70,   113,   163,   803,   159,   132,   314,
+       7,   135,   193,   166,   133,   486,    38,   455,   456,   434,
+     201,   157,   809,   143,   166,   132,    31,    94,   188,    51,
+     190,   191,   129,    55,   215,   450,    95,    75,   144,   454,
+      45,   222,   476,   458,   164,    42,   113,   796,   463,   120,
+     133,   211,   229,   132,   132,     0,   237,   211,   102,   236,
+     809,   221,   222,   167,   224,   225,   132,   221,   222,   184,
+      44,   132,   253,   254,   387,   546,   143,   204,   144,   256,
+     195,   132,   209,   796,   106,   132,   132,   214,   248,   249,
+     128,   104,   252,   144,   248,   249,   809,   164,    95,     3,
+     475,     5,   629,   630,   126,    69,   102,   166,   117,    83,
+      59,    84,   134,   135,   656,     6,     7,   532,   127,   534,
+     535,   559,   144,     3,     4,     5,   241,   512,   305,   244,
+       7,   153,   656,    97,   107,   144,   313,    99,    42,   316,
+     136,   441,    99,   670,   671,   560,    42,    27,   563,   139,
+     140,   622,   623,   577,   314,   117,   469,   139,   140,    39,
+     117,   124,    42,     6,     7,     8,   551,   344,   124,    65,
+     545,   471,   557,   473,   113,   139,   140,   592,    95,   339,
+     595,   566,   100,   146,   108,   339,   327,   328,   329,   330,
+     146,   648,   649,   664,    26,    95,    28,    77,   155,    42,
+     124,   361,   672,   673,   143,   365,   321,   148,    40,    41,
+       3,   365,     5,    45,   652,    66,    67,   602,     6,     7,
+       8,     3,   656,     5,   166,   610,   341,   387,   343,     6,
+       7,     8,   347,   418,   419,   620,   116,    95,    52,    71,
+      52,    95,   357,     6,     7,     8,    42,    95,   363,     6,
+       7,     8,   690,   150,   639,    95,   416,   417,   418,   419,
+      95,   676,   416,   417,   418,   419,   651,    52,   383,   582,
+      95,   386,   104,     7,    15,   588,    37,    37,   110,   439,
+     112,   441,   281,   282,   283,   439,   757,   441,   601,   760,
+     675,   114,   763,   156,    86,    32,   767,    33,   769,   138,
+      91,    36,    91,    73,    42,    95,   132,     7,   693,   469,
+     104,   471,    95,   473,    95,   730,   476,   471,   104,   473,
+     152,   706,   476,    95,   103,    52,   132,   149,    42,   714,
+     162,   109,     6,     7,     8,    18,    18,    18,     7,    95,
+     455,   456,   727,    95,    37,   132,   104,   462,    57,    23,
+     104,    73,    98,    52,    18,   496,   497,   132,   132,     7,
+      55,     7,     7,   748,    38,   750,    43,   132,   119,    95,
+     132,   786,    43,   132,    95,   130,   593,    51,    43,   132,
+      95,    55,   132,   130,    58,    73,    21,   772,   132,    26,
+     132,    28,   777,   132,   779,    85,   781,    73,    21,   104,
+      73,   776,   517,    40,    41,   154,    73,   792,    45,   127,
+     795,    29,   629,   630,   541,    89,   113,    85,   131,    52,
+      37,   734,   582,   808,   132,   132,    52,    42,   588,   127,
+      52,    85,   106,   746,    71,    73,   749,    20,   118,     3,
+      31,   601,    29,    37,   559,   758,   157,   132,   132,   626,
+      56,   668,   126,   670,   671,   672,   673,    37,    60,    52,
+     134,   135,    25,    20,    20,    43,   132,   104,    16,   629,
+     630,   129,    18,   110,    35,   112,   100,    52,    52,   153,
+     131,    52,   131,   125,    52,    37,    95,    75,   131,    85,
+      20,   131,     9,    85,   619,   655,   656,   485,   624,    85,
+     212,   655,   656,   668,   317,   809,   778,   796,   747,   423,
+     670,   671,   672,   673,   695,   152,   803,   620,   800,   774,
+     265,   264,   286,   292,   295,   162,   130,   122,   345,   710,
+     298,   467,    61,   648,   649,   756,   581,   652,   710,    68,
+     603,   419,   548,    72,    73,    74,    75,    76,    77,    78,
+     222,    80,   361,   216,   287,   216,    47,    -1,    -1,    88,
+      -1,    -1,    -1,    -1,    93,    -1,    -1,    96,    -1,    -1,
+      -1,    -1,   732,    -1,   734,   690,   105,    -1,    -1,    -1,
+      -1,    -1,   742,    -1,    -1,    -1,   746,    -1,   742,   749,
+      -1,    -1,   121,    -1,    -1,   710,    -1,    -1,   758,    -1,
+      -1,    -1,    -1,    -1,    -1,   765,    -1,     3,    -1,     5,
+       6,     7,     8,     9,    10,    11,    12,    13,    14,    -1,
+      -1,    17,    -1,    -1,    -1,    -1,    22,    23,    24,    -1,
+      26,   791,    -1,    -1,    30,    -1,    -1,   791,    34,    -1,
+     755,    -1,    38,    39,    -1,    -1,    -1,    -1,    44,    -1,
+      46,    47,    -1,    -1,    50,    51,    52,    53,    54,    55,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    63,    -1,    -1,
+      66,    67,    -1,    -1,    70,    -1,    -1,    -1,    -1,    -1,
+      -1,    77,    -1,    -1,    -1,    -1,    82,    83,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    94,    95,
+      -1,    -1,    -1,    99,    -1,    -1,    -1,    -1,   104,    -1,
+     106,    -1,    -1,    -1,    -1,   111,    -1,    -1,    -1,   115,
+     116,   117,    -1,    -1,   120,    -1,   122,   123,    -1,    -1,
+     126,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   134,   135,
+      -1,   137,    -1,   139,   140,   141,    -1,    -1,   144,    -1,
+      -1,    -1,    -1,    -1,    -1,   151,    -1,   153,    -1,    -1,
+      -1,    -1,   158,    -1,   160,   161,    -1,    -1,    -1,    -1,
+      -1,   167,   168,     3,    -1,     5,     6,     7,     8,     9,
+      10,    11,    12,    13,    14,    -1,    -1,    17,    -1,    -1,
+      -1,    -1,    22,    23,    24,    -1,    26,    -1,    -1,    -1,
+      30,    -1,    -1,    -1,    34,    -1,    -1,    -1,    38,    39,
+      -1,    -1,    -1,    -1,    44,    -1,    46,    47,    -1,    -1,
+      50,    51,    52,    53,    54,    55,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    63,    -1,    -1,    66,    67,    -1,    -1,
+      70,    -1,    -1,    -1,    -1,    -1,    -1,    77,    -1,    -1,
+      -1,    -1,    82,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    94,    95,    -1,    -1,    -1,    99,
+      -1,    -1,    -1,    -1,   104,    -1,   106,    -1,    -1,    -1,
+      -1,   111,    -1,    -1,    -1,   115,   116,   117,    -1,    -1,
+     120,    -1,   122,   123,    -1,    -1,   126,    -1,    -1,    -1,
+      -1,    -1,   132,    -1,   134,   135,    -1,   137,    -1,   139,
+     140,   141,    -1,    -1,   144,    -1,    -1,    -1,    -1,    -1,
+      -1,   151,    -1,   153,    -1,    -1,    -1,    -1,   158,    -1,
+     160,   161,    -1,    -1,    -1,    -1,    -1,   167,   168,     3,
+      -1,     5,     6,     7,     8,     9,    10,    11,    12,    13,
+      14,    -1,    -1,    17,    -1,    -1,    -1,    -1,    22,    23,
+      24,    -1,    26,    -1,    -1,    -1,    30,    -1,    -1,    -1,
+      34,    -1,    -1,    -1,    38,    39,    -1,    -1,    -1,    43,
+      44,    -1,    46,    47,    -1,    -1,    50,    51,    52,    53,
+      54,    55,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    63,
+      -1,    -1,    66,    67,    -1,    -1,    70,    -1,    -1,    -1,
+      -1,    -1,    -1,    77,    -1,    -1,    -1,    -1,    82,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      32,    33,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      42,    43,    44,    45,    46,    47,    -1,    -1,    -1,    -1,
-      -1,    -1,    54,    -1,    -1,    -1,    58,    -1,    -1,    -1,
-      -1,    -1,    -1,    65,    -1,    -1,    -1,    -1,    70,    -1,
+      94,    95,    -1,    -1,    -1,    99,    -1,    -1,    -1,    -1,
+     104,    -1,   106,    -1,    -1,    -1,    -1,   111,    -1,    -1,
+      -1,   115,   116,   117,    -1,    -1,   120,    -1,   122,   123,
+      -1,    -1,   126,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+     134,   135,    -1,   137,    -1,   139,   140,   141,    -1,    -1,
+     144,    -1,    -1,    -1,    -1,    -1,    -1,   151,    -1,   153,
+      -1,    -1,    -1,    -1,   158,    -1,   160,   161,    -1,    -1,
+      -1,    -1,    -1,   167,   168,     3,    -1,     5,     6,     7,
+       8,     9,    10,    11,    12,    13,    14,    -1,    -1,    17,
+      -1,    -1,    -1,    -1,    22,    23,    24,    -1,    26,    -1,
+      -1,    -1,    30,    -1,    -1,    -1,    34,    -1,    -1,    -1,
+      38,    39,    -1,    -1,    -1,    -1,    44,    -1,    46,    47,
+      -1,    -1,    50,    51,    52,    53,    54,    55,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    63,    -1,    -1,    66,    67,
+      -1,    -1,    70,    -1,    -1,    -1,    -1,    -1,    -1,    77,
+      -1,    -1,    -1,    -1,    82,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    94,    95,    -1,    -1,
+      -1,    99,    -1,    -1,    -1,    -1,   104,    -1,   106,    -1,
+      -1,    -1,    -1,   111,    -1,    -1,    -1,   115,   116,   117,
+      -1,    -1,   120,    -1,   122,   123,    -1,    -1,   126,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,   134,   135,    -1,   137,
+      -1,   139,   140,   141,    -1,    -1,   144,    -1,    -1,    -1,
+      -1,    -1,    -1,   151,    -1,   153,    -1,    -1,    -1,    -1,
+     158,    -1,   160,   161,    -1,    -1,    -1,    -1,    -1,   167,
+     168,     3,    -1,     5,     6,     7,     8,     9,    10,    11,
+      12,    13,    14,    -1,    -1,    17,    -1,    -1,    -1,    -1,
+      22,    23,    -1,    -1,    26,    -1,    -1,    -1,    30,    -1,
+      -1,    -1,    34,    -1,    -1,    -1,    38,    39,    -1,    -1,
+      -1,    -1,    44,    -1,    46,    47,    -1,    -1,    50,    51,
+      52,    53,    54,    55,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    66,    67,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    77,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      82,    83,    -1,    85,    -1,    -1,    -1,    -1,    90,    -1,
-      -1,    -1,    -1,    -1,    -1,    97,    -1,    -1,    -1,   101,
-     102,    -1,    -1,   105,    -1,    -1,   108,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   117,   118,    -1,   120,   121,
-     122,    -1,   124,    -1,    -1,    -1,    -1,    -1,    -1,   131,
-      -1,    -1,    -1,   135,    -1,   137,   138,    -1,    -1,    -1,
-      -1,   143,   144,   145,   146,   147,   148,   149,   150,   151,
-     152,   153,     3,    -1,     5,     6,     7,     8,     9,    10,
-      11,    -1,    -1,    -1,    -1,    -1,    -1,    18,    19,    -1,
+      -1,    -1,    -1,    95,    -1,    -1,    -1,    99,    -1,    -1,
+      -1,    -1,   104,    -1,   106,    -1,    -1,    -1,    -1,   111,
+      -1,    -1,    -1,   115,   116,   117,    -1,    -1,   120,    -1,
+     122,   123,    -1,    -1,   126,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,   134,   135,    -1,   137,    -1,   139,   140,    -1,
+      -1,    -1,   144,    -1,    -1,    -1,    -1,    -1,    -1,   151,
+      -1,   153,    -1,    -1,    -1,    -1,    -1,    -1,   160,   161,
+      -1,    -1,    -1,    -1,    -1,   167,   168,     3,    -1,     5,
+       6,     7,     8,     9,    10,    11,    12,    13,    14,    -1,
+      -1,    17,    -1,    -1,    -1,    -1,    22,    23,    -1,    -1,
+      26,    -1,    -1,    -1,    30,    -1,    -1,    -1,    34,    -1,
+      -1,    -1,    38,    39,    -1,    -1,    -1,    -1,    44,    -1,
+      46,    47,    -1,    -1,    50,    51,    52,    53,    54,    55,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    32,    33,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    42,    43,    44,    45,    46,    47,    -1,    -1,    -1,
+      66,    67,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    77,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    95,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   104,    -1,
+     106,    -1,    -1,    -1,    -1,   111,    -1,    -1,    -1,   115,
+     116,    -1,    -1,    -1,    -1,    -1,   122,   123,    -1,    -1,
+     126,    -1,    -1,    -1,    -1,    -1,    -1,    -1,   134,   135,
+      -1,   137,    -1,    -1,    -1,    -1,   142,    -1,   144,    -1,
+      -1,    -1,    -1,    -1,    -1,   151,    -1,   153,    -1,    -1,
+      -1,    -1,    -1,    -1,   160,    -1,    -1,    -1,    -1,    -1,
+      -1,   167,   168,     3,    -1,     5,     6,     7,     8,     9,
+      10,    11,    12,    13,    14,    -1,    -1,    17,    -1,    -1,
+      -1,    -1,    22,    23,    -1,    -1,    26,    -1,    -1,    -1,
+      30,    -1,    -1,    -1,    34,    -1,    -1,    -1,    38,    39,
+      -1,    -1,    -1,    -1,    44,    -1,    46,    47,    -1,    -1,
+      50,    51,    52,    53,    54,    55,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    66,    67,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    77,    -1,    -1,
+       6,     7,     8,     9,    10,    -1,    -1,    13,    14,    -1,
+      -1,    -1,    -1,    -1,    -1,    95,    22,    23,    -1,    -1,
+      -1,    -1,    -1,    -1,   104,    -1,   106,    -1,    34,    -1,
+      -1,   111,    38,    -1,    -1,   115,   116,    -1,    -1,    -1,
+      46,    47,   122,   123,    -1,    51,   126,    -1,    54,    55,
+      -1,    -1,    -1,    -1,   134,   135,    -1,   137,    -1,    -1,
+      66,    67,    -1,    -1,   144,    -1,    -1,    -1,    -1,    -1,
+      -1,   151,    -1,   153,    -1,    -1,    -1,    -1,    -1,    -1,
+     160,     6,     7,     8,     9,    10,    -1,   167,   168,    -1,
+      -1,    -1,    -1,    -1,    -1,     6,     7,     8,     9,    10,
+     106,    -1,    13,    14,    -1,    -1,    -1,    -1,    -1,   115,
+      -1,    22,    23,    38,    -1,    -1,   122,   123,    -1,    -1,
+     126,    -1,    -1,    34,    -1,    -1,    51,    38,   134,   135,
+      55,   137,    -1,   139,   140,    46,    47,    -1,   144,    -1,
+      51,    -1,    -1,    54,    55,    -1,    -1,   153,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    66,    67,    -1,    -1,    -1,
+      -1,   167,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    65,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    83,    -1,    85,    -1,    -1,    -1,    -1,    90,
-      -1,    -1,    -1,    -1,    -1,    -1,    97,    -1,    -1,    -1,
-     101,   102,    -1,    -1,   105,    -1,    -1,   108,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,   117,   118,    -1,   120,
-     121,    -1,    -1,   124,    -1,    -1,    -1,    -1,    -1,    -1,
-     131,    -1,    -1,    -1,    -1,    -1,   137,   138,    -1,    -1,
-      -1,    -1,   143,   144,   145,   146,   147,   148,   149,   150,
-     151,   152,   153,     3,    -1,     5,     6,     7,     8,     9,
-      10,    11,    -1,    -1,    -1,    -1,    -1,    -1,    18,    19,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    32,    33,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    42,    43,    44,    45,    46,    47,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    65,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    83,    -1,    -1,    -1,    -1,    -1,    -1,
-      90,    -1,    -1,    -1,    -1,    -1,    -1,    97,    -1,    -1,
-      -1,   101,    -1,    -1,    -1,    -1,    -1,    -1,   108,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,   117,   118,    -1,
-      -1,    -1,    -1,    -1,   124,    -1,    -1,    -1,    -1,    -1,
-      -1,   131,    -1,    -1,    -1,    -1,    -1,   137,    -1,    -1,
-      -1,    -1,    -1,   143,   144,   145,   146,   147,   148,   149,
-     150,   151,   152,   153
+      -1,   106,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,   106,    -1,    -1,    -1,    -1,
+      -1,   126,    -1,    -1,   115,    -1,    -1,    -1,    -1,    -1,
+     135,   122,   123,    -1,    -1,   126,    -1,    -1,    -1,   144,
+      -1,    -1,    -1,   134,   135,    -1,   137,    -1,   153,    -1,
+      -1,    -1,    -1,   144,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,   153
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint16 yystos[] =
 {
-       0,   142,   155,   156,   140,     0,    87,   158,   159,   160,
-     161,     3,     5,   358,    88,   161,     6,     7,     8,     9,
-      10,    11,    18,    19,    32,    33,    38,    42,    43,    44,
-      45,    46,    47,    54,    58,    65,    70,    71,    82,    83,
-      85,    90,    97,   101,   102,   105,   108,   117,   118,   120,
-     121,   122,   124,   131,   135,   137,   138,   143,   144,   145,
-     146,   147,   148,   149,   150,   151,   152,   153,   162,   163,
-     165,   166,   168,   169,   170,   171,   172,   173,   174,   176,
-     179,   180,   181,   183,   187,   189,   191,   197,   198,   199,
-     200,   201,   202,   209,   221,   222,   228,   235,   244,   245,
-     246,   247,   248,   249,   251,   253,   254,   257,   258,   259,
-     260,   261,   262,   263,   264,   266,   268,   270,   271,   272,
-     274,   275,   277,   278,   279,   280,   281,   282,   285,   286,
-     287,   289,   290,   291,   292,   293,   294,   295,   296,   297,
-     298,   300,   301,   302,   303,   305,   306,   307,   316,   317,
-     318,   319,   320,   322,   323,   324,   325,   338,   339,   340,
-     342,   343,   344,   345,   346,   347,   348,   349,   352,   354,
-     358,   359,    51,   157,     7,   288,    36,    83,   196,   326,
-     327,   330,   350,    83,   196,   350,   128,    21,    23,    34,
-      35,    39,    59,    88,    95,    98,   139,   196,    83,   350,
-       7,   299,   359,     7,    83,   329,   330,   350,   352,   359,
-      44,    44,     6,     7,   355,    83,    87,   116,    44,   114,
-     198,   350,   130,     7,   356,   359,     7,    83,   196,   331,
-     350,    83,    83,   278,   278,    44,   196,   350,    83,    78,
-     125,   196,    31,    31,   100,    12,    52,    57,    60,    61,
-      62,    63,    64,    65,    66,    68,    76,    81,    84,    89,
-     106,   265,   267,   269,    85,   102,   133,   250,    41,    69,
-      86,   124,   252,    20,   136,   255,    55,    75,   256,    74,
-     134,    26,    27,   261,   196,    36,   273,   275,   120,   121,
-      79,   283,    30,    79,    83,   358,   119,   164,    61,    32,
-      47,   108,   131,   291,   198,     7,   114,   124,   351,   359,
-     273,   352,   357,   358,   107,   126,   167,   107,   126,   190,
-      93,   107,   177,    28,    47,    59,    99,     7,   354,   359,
-       7,   352,   173,    44,   341,   348,   349,   124,   352,   321,
-     299,   299,   308,   198,    88,   184,    39,    88,   182,   299,
-     114,   129,   276,   358,     7,   358,   273,   352,   352,   299,
-     198,   200,   200,   246,   247,   248,   248,   248,   249,   251,
-     253,   254,   257,    94,    14,    14,    14,    37,   198,   279,
-     279,   198,    19,   284,   291,   345,   198,   199,   200,   304,
-     357,    37,    31,   114,    31,   114,   328,   164,   164,   164,
-      31,   358,    88,    88,    49,   175,    83,    61,   358,   164,
-     299,   114,    31,   114,    31,   114,   273,    14,   333,   333,
-     311,   114,     7,   357,    47,     7,   357,   333,   104,   114,
-     114,   114,   114,   333,   114,    50,    77,   334,   336,   337,
-     338,   345,   352,   334,   332,   337,   332,    37,   112,   112,
-     114,   164,   352,   353,   353,    72,    92,   178,   164,   357,
-     357,    67,    80,   164,    44,   193,   194,   357,   164,   333,
-     353,   353,   334,    73,    17,   208,   309,   312,   355,   132,
-      61,    17,   185,    88,    61,   185,    16,    73,   236,   350,
-     350,   102,   109,   124,   335,   109,   114,   114,   164,   164,
-     164,   299,    31,   114,   164,    16,    56,   188,   114,   114,
-     200,    44,    73,   103,    61,   200,   186,   357,   164,   164,
-     200,   200,    25,   237,   333,   194,   192,   200,   164,   229,
-     299,   200,   311,    13,   111,   313,    48,    31,   210,   223,
-      44,   241,   333,   230,   203,    63,   110,   310,   196,   314,
-     358,   314,   200,   357,    31,    99,   123,   141,   202,   209,
-     211,   213,   214,   220,   224,   352,   334,    56,   195,   196,
-      31,   115,   231,   234,   204,   315,   314,    13,   314,   111,
-      44,    24,    99,   200,   113,   200,   215,   216,    31,   225,
-     234,    14,   238,   164,    44,   200,    31,   202,   205,   209,
-     213,     4,    22,   196,   306,   358,   299,    24,   214,   200,
-      15,    40,   217,    31,    44,   113,   299,    44,   352,   333,
-     113,   175,   218,   216,   299,   200,   333,   299,    63,    16,
-     200,    28,   219,   333,   239,    73,   333,   200,   357,    73,
-      39,   237,   240,   242,   200,   208,   212,   200,    44,   113,
-     232,    73,   211,   226,   352,   200,   233,   200,   227,   243,
-     231,   206,   225,   113,   207,   200,   205
+       0,   165,   170,   171,   163,     0,   102,   173,   174,   175,
+     176,     3,     5,   404,   104,   176,     6,     7,     8,     9,
+      10,    11,    12,    13,    14,    17,    22,    23,    24,    26,
+      30,    34,    38,    39,    44,    46,    47,    50,    51,    52,
+      53,    54,    55,    63,    66,    67,    70,    77,    82,    83,
+      94,    95,    99,   104,   106,   111,   115,   116,   117,   120,
+     122,   123,   126,   134,   135,   137,   139,   140,   141,   144,
+     151,   153,   158,   160,   161,   167,   168,   177,   183,   184,
+     186,   187,   189,   190,   191,   192,   193,   194,   195,   197,
+     200,   201,   202,   204,   208,   211,   213,   219,   225,   226,
+     227,   232,   233,   240,   253,   254,   260,   267,   276,   277,
+     278,   279,   280,   281,   283,   285,   286,   289,   290,   291,
+     292,   293,   294,   295,   296,   298,   300,   302,   303,   304,
+     306,   307,   309,   310,   311,   322,   323,   324,   327,   328,
+     329,   331,   332,   333,   334,   335,   336,   337,   338,   339,
+     340,   342,   343,   344,   345,   347,   348,   349,   358,   359,
+     360,   361,   362,   365,   366,   367,   368,   375,   382,   383,
+     384,   386,   387,   388,   389,   390,   391,   392,   394,   397,
+     399,   400,   404,   405,    59,   172,     7,    44,   100,   229,
+     330,    95,   166,   364,   395,    95,   404,     7,   397,   405,
+      95,   364,   395,   148,    26,    28,    40,    41,    45,    71,
+     104,   110,   112,   152,   162,   364,    95,   395,     7,   341,
+     405,    95,   364,   395,    52,    52,     6,     7,   401,    95,
+     102,   136,   364,    44,   132,   225,    42,   218,   395,   150,
+       7,   402,   405,     7,    95,   218,   374,   395,    95,    95,
+     310,   310,    52,   312,   364,   395,    95,    90,   145,     7,
+     218,   218,    37,    37,   114,    15,    61,    68,    72,    73,
+      74,    75,    76,    77,    78,    80,    88,    93,    96,   105,
+     121,   297,   299,   301,    99,   117,   155,   282,    49,    81,
+     101,   144,   284,    25,   159,   287,    64,    87,   288,    86,
+     156,    32,    33,   293,   218,    42,   305,   307,    69,    97,
+     139,   140,   321,    91,   325,    36,    91,    95,   404,   138,
+     185,    73,   104,     7,   231,   405,    95,    38,    55,   126,
+     153,   333,     7,   132,   144,   396,   405,   218,   369,   370,
+     373,   218,   356,   404,    42,    95,   218,   364,   124,   146,
+     188,   124,   146,   212,   108,   124,   198,    35,    55,    71,
+     113,   364,     7,   397,   194,   103,   181,   182,   364,   218,
+     385,   392,   394,   144,   397,   372,   373,   397,   341,   341,
+     350,   225,   104,   205,    45,   104,   203,    52,   104,   132,
+     225,   218,   149,   308,   404,     7,   404,   305,   397,   397,
+     341,   218,   218,   225,   227,   227,   278,   279,   280,   280,
+     280,   281,   283,   285,   286,   289,   109,    18,    18,    18,
+      43,   225,   311,   142,   311,   225,    23,   326,   333,   389,
+     225,   226,   227,   346,   403,   404,     7,   314,   315,    37,
+     132,    37,   132,   305,   397,   356,   132,   356,   225,   314,
+     403,   185,   185,    37,   404,   104,   104,    57,   196,     7,
+     399,   405,    73,   404,   185,   397,    98,    95,   317,    52,
+     132,    37,   132,    37,   132,   363,    18,   377,   377,   353,
+     132,     7,   403,    55,     7,   403,   341,     7,    43,   119,
+     132,   132,   132,   132,   377,   132,    58,    89,   378,   380,
+     381,   382,   389,   397,   378,   376,   381,   376,    43,   113,
+     143,   246,   252,   130,   130,   132,   185,    73,   132,   157,
+     316,   318,   319,   397,   398,   398,   371,    43,   132,   185,
+      84,   107,   199,   185,   403,   403,    79,    92,   185,    95,
+       3,   403,   185,    95,   316,   377,   341,   398,   398,   305,
+     378,    85,    21,   239,   351,   354,   401,   154,    73,    21,
+     206,   104,    73,   206,   377,    73,    85,   268,   395,   395,
+     117,   127,   144,   379,   127,    29,   113,   131,   227,   247,
+     248,    37,    52,   132,   132,   185,   185,   185,    52,   215,
+     216,    42,   364,   178,   132,   305,   377,   127,   393,   393,
+     227,    52,    85,   118,    73,   227,   207,   403,   185,   185,
+      20,     3,   227,    31,   269,    29,   311,    19,    48,   249,
+      37,   318,   341,   341,    37,   132,   313,   185,    23,   139,
+     140,   220,   221,   222,   223,   224,   322,   345,   185,    20,
+      65,   209,   132,   132,   261,   341,   227,   353,    16,   129,
+     355,    56,    37,   227,   255,    52,   273,    60,   196,   250,
+     248,   377,   377,   216,   214,   225,   223,   223,    25,   179,
+     139,   140,   139,   140,   227,    20,   210,   262,   234,    75,
+     128,   352,   356,   356,   227,   403,   241,   256,   397,   378,
+      35,   166,   251,    20,   320,   377,    43,   221,   132,   223,
+     223,   224,   224,   227,   185,    37,   133,   263,   266,   235,
+     357,    16,   129,    37,   164,   233,   240,   242,   244,   245,
+     246,    37,   257,   266,    18,   270,   403,    35,   227,    65,
+     217,   218,   100,   228,    52,   227,    37,   233,   236,   240,
+     244,     4,    27,   218,   348,   404,    52,   227,   131,    52,
+     131,   227,   185,   230,   231,   125,   180,   341,    52,   397,
+     341,   245,   227,   341,   227,    37,   404,   317,   377,   341,
+      75,   377,   131,   377,   271,   231,   377,    85,   377,    20,
+     227,    85,    45,   269,   272,   274,   305,   227,   239,   227,
+     227,    52,   131,   185,   264,    85,   243,   258,   397,   227,
+     265,   227,   242,   259,   275,   263,   237,   257,   131,   238,
+     227,   236
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -3180,10 +3726,10 @@ yyreduce:
     {
         case 5:
 /* Line 1269 of yacc.c.  */
-#line 1036 "querytransformparser.ypp"
+#line 1346 "querytransformparser.ypp"
     {
 
-/* Supress more compiler warnings about unused defines. */
+/* Suppress more compiler warnings about unused defines. */
 #if    defined(YYNNTS)              \
     || defined(yyerrok)             \
     || defined(YYNSTATES)           \
@@ -3214,7 +3760,7 @@ yyreduce:
 
   case 7:
 /* Line 1269 of yacc.c.  */
-#line 1068 "querytransformparser.ypp"
+#line 1378 "querytransformparser.ypp"
     {
         const QRegExp encNameRegExp(QLatin1String("[A-Za-z][A-Za-z0-9._\\-]*"));
 
@@ -3233,74 +3779,108 @@ yyreduce:
 
   case 8:
 /* Line 1269 of yacc.c.  */
-#line 1084 "querytransformparser.ypp"
+#line 1394 "querytransformparser.ypp"
     {
-        /* First, the UserFunction callsites aren't bound yet, so bind them(if possible!). */
-
-        const UserFunctionCallsite::List::const_iterator cend(parseInfo->userFunctionCallsites.constEnd());
-        UserFunctionCallsite::List::const_iterator cit(parseInfo->userFunctionCallsites.constBegin());
-
-        for(; cit != cend; ++cit) /* For each callsite. */
+        /* In XSL-T, we can have dangling variable references, so resolve them
+         * before we proceed with other steps, such as checking circularity. */
+        if(parseInfo->isXSLT())
         {
-            const UserFunctionCallsite::Ptr callsite(*cit);
-            Q_ASSERT(callsite);
-            const UserFunction::List::const_iterator end(parseInfo->userFunctions.constEnd());
-            UserFunction::List::const_iterator it(parseInfo->userFunctions.constBegin());
+            typedef QHash<QXmlName, Expression::Ptr> Hash;
+            const Hash::const_iterator end(parseInfo->unresolvedVariableReferences.constEnd());
 
-            for(; it != end; ++it) /* For each UserFunction. */
+            for(Hash::const_iterator it(parseInfo->unresolvedVariableReferences.constBegin()); it != end; ++it)
             {
-                const FunctionSignature::Ptr sign((*it)->signature());
-                Q_ASSERT(sign);
-
-                if(callsite->isSignatureValid(sign))
-                {
-                    callsite->setSource((*it),
-                                        parseInfo->allocateCacheSlots((*it)->argumentDeclarations().count()));
-                    break;
-                }
+                const Expression::Ptr body(resolveVariable(it.key(), (yyloc), parseInfo, true)); // TODO source locations vaise
+                Q_ASSERT(body);
+                it.value()->as<UnresolvedVariableReference>()->bindTo(body);
             }
-            if(it == end)
+        }
+
+        /* The UserFunction callsites aren't bound yet, so bind them(if possible!). */
+        {
+            const UserFunctionCallsite::List::const_iterator cend(parseInfo->userFunctionCallsites.constEnd());
+            UserFunctionCallsite::List::const_iterator cit(parseInfo->userFunctionCallsites.constBegin());
+            for(; cit != cend; ++cit) /* For each callsite. */
             {
-                parseInfo->staticContext->error(QtXmlPatterns::tr("No function with signature %1 is available")
-                                                   .arg(formatFunction(callsite)),
-                                                ReportContext::XPST0017, fromYYLTYPE((yyloc), parseInfo));
+                const UserFunctionCallsite::Ptr callsite(*cit);
+                Q_ASSERT(callsite);
+                const UserFunction::List::const_iterator end(parseInfo->userFunctions.constEnd());
+                UserFunction::List::const_iterator it(parseInfo->userFunctions.constBegin());
+
+                for(; it != end; ++it) /* For each UserFunction. */
+                {
+                    const FunctionSignature::Ptr sign((*it)->signature());
+                    Q_ASSERT(sign);
+
+                    if(callsite->isSignatureValid(sign))
+                    {
+                        callsite->setSource((*it),
+                                            parseInfo->allocateCacheSlots((*it)->argumentDeclarations().count()));
+                        break;
+                    }
+                }
+                if(it == end)
+                {
+                    parseInfo->staticContext->error(QtXmlPatterns::tr("No function with signature %1 is available")
+                                                       .arg(formatFunction(callsite)),
+                                                    ReportContext::XPST0017, fromYYLTYPE((yyloc), parseInfo));
+                }
             }
         }
 
         /* Mark callsites in UserFunction bodies as recursive, if they are. */
-        const UserFunction::List::const_iterator fend(parseInfo->userFunctions.constEnd());
-        UserFunction::List::const_iterator fit(parseInfo->userFunctions.constBegin());
-        for(; fit != fend; ++fit)
         {
-            FunctionSignature::List signList;
-            signList.append((*fit)->signature());
-            checkCallsiteCircularity(signList, (*fit)->body(), parseInfo);
+            const UserFunction::List::const_iterator fend(parseInfo->userFunctions.constEnd());
+            UserFunction::List::const_iterator fit(parseInfo->userFunctions.constBegin());
+            for(; fit != fend; ++fit)
+            {
+                CallTargetDescription::List signList;
+                signList.append((*fit)->signature());
+                CallTargetDescription::checkCallsiteCircularity(signList, (*fit)->body());
+            }
         }
 
-        /* Now, check all global variables for circularity.
-         * This is done backwards because global variables are only in scope below them. */
-        const VariableDeclaration::List::const_iterator start(parseInfo->declaredVariables.constBegin());
-        VariableDeclaration::List::const_iterator it(parseInfo->declaredVariables.constEnd());
-
-        while(it != start)
+        /* Now, check all global variables for circularity.  This is done
+         * backwards because global variables are only in scope below them,
+         * in XQuery. */
         {
-            --it;
-            if((*it)->type != VariableDeclaration::ExpressionVariable && (*it)->type != VariableDeclaration::GlobalVariable)
-                continue; /* We want to ignore 'external' variables. */
+            const VariableDeclaration::List::const_iterator start(parseInfo->declaredVariables.constBegin());
+            VariableDeclaration::List::const_iterator it(parseInfo->declaredVariables.constEnd());
 
-            FunctionSignature::List signList;
-            checkVariableCircularity(*it, (*it)->expression(), (*it)->type, signList, parseInfo);
-            ExpressionFactory::registerLastPath((*it)->expression());
-            finalizePushedVariable(parseInfo); /* Warn if it's unused. */
+            while(it != start)
+            {
+                --it;
+                if((*it)->type != VariableDeclaration::ExpressionVariable && (*it)->type != VariableDeclaration::GlobalVariable)
+                    continue; /* We want to ignore 'external' variables. */
+
+                FunctionSignature::List signList;
+                checkVariableCircularity(*it, (*it)->expression(), (*it)->type, signList, parseInfo);
+                ExpressionFactory::registerLastPath((*it)->expression());
+                parseInfo->finalizePushedVariable(1, false); /* Warn if it's unused. */
+            }
         }
 
-        parseInfo->queryBody = (yyvsp[(2) - (2)].expr);
+        /* Generate code for doing initial template name calling. One problem
+         * is that we compilation in the initial template name, since we throw away the
+         * code if we don't have the requested template. */
+        if(parseInfo->languageAccent == QXmlQuery::XSLT20
+           && !parseInfo->initialTemplateName.isNull()
+           && parseInfo->namedTemplates.contains(parseInfo->initialTemplateName))
+        {
+            parseInfo->queryBody = create(new CallTemplate(parseInfo->initialTemplateName,
+                                                           WithParam::Hash()),
+                                          (yyloc), parseInfo);
+            parseInfo->templateCalls.append(parseInfo->queryBody);
+            /* We just discard the template body that XSLTTokenizer generated. */
+        }
+        else
+            parseInfo->queryBody = (yyvsp[(2) - (2)].expr);
     }
     break;
 
   case 10:
 /* Line 1269 of yacc.c.  */
-#line 1150 "querytransformparser.ypp"
+#line 1494 "querytransformparser.ypp"
     {
         // TODO add to namespace context
         parseInfo->moduleNamespace = parseInfo->staticContext->namePool()->allocateNamespace((yyvsp[(3) - (6)].sval));
@@ -3309,8 +3889,9 @@ yyreduce:
 
   case 12:
 /* Line 1269 of yacc.c.  */
-#line 1158 "querytransformparser.ypp"
+#line 1502 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc));
         if(parseInfo->hasSecondPrologPart)
             parseInfo->staticContext->error(QtXmlPatterns::tr("A default namespace declaration must occur before function, "
                                                "variable, and option declarations."), ReportContext::XPST0003, fromYYLTYPE((yyloc), parseInfo));
@@ -3319,7 +3900,7 @@ yyreduce:
 
   case 13:
 /* Line 1269 of yacc.c.  */
-#line 1164 "querytransformparser.ypp"
+#line 1509 "querytransformparser.ypp"
     {
         if(parseInfo->hasSecondPrologPart)
             parseInfo->staticContext->error(QtXmlPatterns::tr("A default namespace declaration must occur before function, "
@@ -3329,7 +3910,7 @@ yyreduce:
 
   case 14:
 /* Line 1269 of yacc.c.  */
-#line 1170 "querytransformparser.ypp"
+#line 1515 "querytransformparser.ypp"
     {
         if(parseInfo->hasSecondPrologPart)
             parseInfo->staticContext->error(QtXmlPatterns::tr("Namespace declarations must occur before function, "
@@ -3339,25 +3920,18 @@ yyreduce:
 
   case 15:
 /* Line 1269 of yacc.c.  */
-#line 1176 "querytransformparser.ypp"
+#line 1521 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc));
         if(parseInfo->hasSecondPrologPart)
             parseInfo->staticContext->error(QtXmlPatterns::tr("Module imports must occur before function, "
                                                "variable, and option declarations."), ReportContext::XPST0003, fromYYLTYPE((yyloc), parseInfo));
     }
     break;
 
-  case 16:
-/* Line 1269 of yacc.c.  */
-#line 1184 "querytransformparser.ypp"
-    {
-        parseInfo->hasSecondPrologPart = true;
-    }
-    break;
-
   case 17:
 /* Line 1269 of yacc.c.  */
-#line 1188 "querytransformparser.ypp"
+#line 1531 "querytransformparser.ypp"
     {
         parseInfo->hasSecondPrologPart = true;
     }
@@ -3365,62 +3939,234 @@ yyreduce:
 
   case 18:
 /* Line 1269 of yacc.c.  */
-#line 1192 "querytransformparser.ypp"
+#line 1535 "querytransformparser.ypp"
     {
         parseInfo->hasSecondPrologPart = true;
     }
     break;
 
-  case 29:
+  case 19:
 /* Line 1269 of yacc.c.  */
-#line 1210 "querytransformparser.ypp"
+#line 1539 "querytransformparser.ypp"
     {
-        if((yyvsp[(3) - (6)].sval) == QLatin1String("xmlns"))
+        disallowedConstruct(parseInfo, (yyloc));
+        parseInfo->hasSecondPrologPart = true;
+    }
+    break;
+
+  case 20:
+/* Line 1269 of yacc.c.  */
+#line 1562 "querytransformparser.ypp"
+    {
+        Template::Ptr temp(create(new Template(parseInfo->currentImportPrecedence, (yyvsp[(5) - (7)].sequenceType)), (yyloc), parseInfo));
+
+        registerNamedTemplate((yyvsp[(3) - (7)].qName), typeCheckTemplateBody((yyvsp[(6) - (7)].expr), (yyvsp[(5) - (7)].sequenceType), parseInfo),
+                              parseInfo, (yylsp[(1) - (7)]), temp);
+        temp->templateParameters = parseInfo->templateParameters;
+        parseInfo->templateParametersHandled();
+    }
+    break;
+
+  case 21:
+/* Line 1269 of yacc.c.  */
+#line 1572 "querytransformparser.ypp"
+    {
+    parseInfo->isParsingPattern = true;
+  }
+    break;
+
+  case 22:
+/* Line 1269 of yacc.c.  */
+#line 1576 "querytransformparser.ypp"
+    {
+    parseInfo->isParsingPattern = false;
+  }
+    break;
+
+  case 23:
+/* Line 1269 of yacc.c.  */
+#line 1585 "querytransformparser.ypp"
+    {
+        /* In this grammar branch, we're guaranteed to be a template rule, but
+         * may also be a named template. */
+
+        const ImportPrecedence ip = parseInfo->isFirstTemplate() ? 0 : parseInfo->currentImportPrecedence;
+        Expression::Ptr pattern((yyvsp[(7) - (15)].expr));
+        const TemplatePattern::ID templateID = parseInfo->allocateTemplateID();
+
+        Template::Ptr templ(create(new Template(ip, (yyvsp[(13) - (15)].sequenceType)), (yyloc), parseInfo));
+        templ->body = typeCheckTemplateBody((yyvsp[(14) - (15)].expr), (yyvsp[(13) - (15)].sequenceType), parseInfo);
+        templ->templateParameters = parseInfo->templateParameters;
+        parseInfo->templateParametersHandled();
+
+        TemplatePattern::Vector ourPatterns;
+        /* We do it as per 6.4 Conflict Resolution for Template Rules:
+         *
+         * "If the pattern contains multiple alternatives separated by |, then
+         * the template rule is treated equivalently to a set of template
+         * rules, one for each alternative. However, it is not an error if a
+         * node matches more than one of the alternatives." */
+        while(pattern->is(Expression::IDCombineNodes))
         {
-            parseInfo->staticContext->error(QtXmlPatterns::tr("It is not possible to redeclare prefix %1.")
-                                               .arg(formatKeyword(QLatin1String("xmlns"))),
-                                            ReportContext::XQST0070, fromYYLTYPE((yyloc), parseInfo));
+            const Expression::List operands(pattern->operands());
+            pattern = operands.first();
+
+            loadPattern(operands.at(1), ourPatterns, templateID, (yyvsp[(11) - (15)].enums.Double), templ);
         }
-        else if (((yyvsp[(5) - (6)].sval) == CommonNamespaces::XML && (yyvsp[(3) - (6)].sval) != QLatin1String("xml"))
-                 || ((yyvsp[(3) - (6)].sval) == QLatin1String("xml") && (yyvsp[(5) - (6)].sval) != CommonNamespaces::XML))
+
+        loadPattern(pattern, ourPatterns, templateID, (yyvsp[(11) - (15)].enums.Double), templ);
+
+        if(!(yyvsp[(3) - (15)].qName).isNull())
+            registerNamedTemplate((yyvsp[(3) - (15)].qName), (yyvsp[(14) - (15)].expr), parseInfo, (yylsp[(1) - (15)]), templ);
+
+        /* Now, let's add it to all the relevant templates. */
+        for(int i = 0; i < (yyvsp[(10) - (15)].qNameVector).count(); ++i) /* For each mode. */
         {
-             parseInfo->staticContext->error(QtXmlPatterns::tr(
-                                            "Only the prefix %1 can be declared to bind the "
-                                            "namespace %2. By default, it is already bound "
-                                            "to the prefix %1.")
-                                             .arg(formatKeyword("xml"))
-                                             .arg(formatURI(CommonNamespaces::XML)),
-                                             ReportContext::XQST0070, fromYYLTYPE((yyloc), parseInfo));
+            const QXmlName &modeName = (yyvsp[(10) - (15)].qNameVector).at(i);
+
+            if(modeName == QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::all) && (yyvsp[(10) - (15)].qNameVector).count() > 1)
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("The keyword %1 cannot occur with any other mode name.")
+                                                                 .arg(formatKeyword(QLatin1String("#all"))),
+                                                ReportContext::XTSE0530,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+
+            /* For each pattern the template use. */
+            const TemplateMode::Ptr mode(parseInfo->modeFor(modeName));
+            for(int t = 0; t < ourPatterns.count(); ++t)
+                mode->templatePatterns.append(ourPatterns.at(t));
         }
-        else if(parseInfo->declaredPrefixes.contains((yyvsp[(3) - (6)].sval)))
+    }
+    break;
+
+  case 24:
+/* Line 1269 of yacc.c.  */
+#line 1639 "querytransformparser.ypp"
+    {
+        (yyval.enums.Double) = std::numeric_limits<xsDouble>::quiet_NaN();
+    }
+    break;
+
+  case 25:
+/* Line 1269 of yacc.c.  */
+#line 1644 "querytransformparser.ypp"
+    {
+        const AtomicValue::Ptr val(Decimal::fromLexical((yyvsp[(2) - (2)].sval)));
+        if(val->hasError())
         {
-            /* This includes the case where the user has bound a default prefix(such
-             * as 'local') and now tries to do it again. */
-            parseInfo->staticContext->error(QtXmlPatterns::tr("Prefix %1 is already declared in the prolog.")
-                                               .arg(formatKeyword((yyvsp[(3) - (6)].sval))),
-                                            ReportContext::XQST0033, fromYYLTYPE((yyloc), parseInfo));
+            parseInfo->staticContext->error(QtXmlPatterns::tr("The value of attribute %1 must of type %2, which %3 isn't.")
+                                                             .arg(formatKeyword(QLatin1String("priority")),
+                                                                  formatType(parseInfo->staticContext->namePool(), BuiltinTypes::xsDecimal),
+                                                                  formatData((yyvsp[(2) - (2)].sval))),
+                                            ReportContext::XTSE0530,
+                                            fromYYLTYPE((yyloc), parseInfo));
         }
         else
-        {
-            parseInfo->declaredPrefixes.append((yyvsp[(3) - (6)].sval));
+            (yyval.enums.Double) = val->as<Numeric>()->toDouble();
+    }
+    break;
 
-            if((yyvsp[(5) - (6)].sval).isEmpty())
-            {
-                parseInfo->staticContext->namespaceBindings()->addBinding(QXmlName(StandardNamespaces::UndeclarePrefix,
-                                                                                   StandardLocalNames::empty,
-                                                                                   parseInfo->staticContext->namePool()->allocatePrefix((yyvsp[(3) - (6)].sval))));
-            }
-            else
-            {
-                parseInfo->staticContext->namespaceBindings()->addBinding(parseInfo->staticContext->namePool()->allocateBinding((yyvsp[(3) - (6)].sval), (yyvsp[(5) - (6)].sval)));
-            }
-        }
+  case 26:
+/* Line 1269 of yacc.c.  */
+#line 1660 "querytransformparser.ypp"
+    {
+        (yyval.qName) = QXmlName();
+    }
+    break;
+
+  case 28:
+/* Line 1269 of yacc.c.  */
+#line 1666 "querytransformparser.ypp"
+    {
+        (yyval.qName) = (yyvsp[(2) - (2)].qName);
     }
     break;
 
   case 30:
 /* Line 1269 of yacc.c.  */
-#line 1254 "querytransformparser.ypp"
+#line 1672 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 32:
+/* Line 1269 of yacc.c.  */
+#line 1677 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 33:
+/* Line 1269 of yacc.c.  */
+#line 1681 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 34:
+/* Line 1269 of yacc.c.  */
+#line 1685 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 39:
+/* Line 1269 of yacc.c.  */
+#line 1696 "querytransformparser.ypp"
+    {
+        if(!(yyvsp[(6) - (7)].enums.Bool))
+            disallowedConstruct(parseInfo, (yyloc));
+
+        if((yyvsp[(3) - (7)].sval) == QLatin1String("xmlns"))
+        {
+            parseInfo->staticContext->error(QtXmlPatterns::tr("It is not possible to redeclare prefix %1.")
+                                               .arg(formatKeyword(QLatin1String("xmlns"))),
+                                            ReportContext::XQST0070, fromYYLTYPE((yyloc), parseInfo));
+        }
+        else if ((yyvsp[(5) - (7)].sval) == CommonNamespaces::XML || (yyvsp[(3) - (7)].sval) == QLatin1String("xml"))
+        {
+             parseInfo->staticContext->error(QtXmlPatterns::tr(
+                                            "The prefix %1 can not be bound. By default, it is already bound "
+                                            "to the namespace %2.")
+                                             .arg(formatKeyword("xml"))
+                                             .arg(formatURI(CommonNamespaces::XML)),
+                                             ReportContext::XQST0070,
+                                             fromYYLTYPE((yyloc), parseInfo));
+        }
+        else if(parseInfo->declaredPrefixes.contains((yyvsp[(3) - (7)].sval)))
+        {
+            /* This includes the case where the user has bound a default prefix(such
+             * as 'local') and now tries to do it again. */
+            parseInfo->staticContext->error(QtXmlPatterns::tr("Prefix %1 is already declared in the prolog.")
+                                               .arg(formatKeyword((yyvsp[(3) - (7)].sval))),
+                                            ReportContext::XQST0033, fromYYLTYPE((yyloc), parseInfo));
+        }
+        else
+        {
+            parseInfo->declaredPrefixes.append((yyvsp[(3) - (7)].sval));
+
+            if((yyvsp[(5) - (7)].sval).isEmpty())
+            {
+                parseInfo->staticContext->namespaceBindings()->addBinding(QXmlName(StandardNamespaces::UndeclarePrefix,
+                                                                                   StandardLocalNames::empty,
+                                                                                   parseInfo->staticContext->namePool()->allocatePrefix((yyvsp[(3) - (7)].sval))));
+            }
+            else
+            {
+                parseInfo->staticContext->namespaceBindings()->addBinding(parseInfo->staticContext->namePool()->allocateBinding((yyvsp[(3) - (7)].sval), (yyvsp[(5) - (7)].sval)));
+            }
+        }
+    }
+    break;
+
+  case 40:
+/* Line 1269 of yacc.c.  */
+#line 1742 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::BoundarySpaceDecl))
         {
@@ -3435,25 +4181,25 @@ yyreduce:
     }
     break;
 
-  case 31:
+  case 41:
 /* Line 1269 of yacc.c.  */
-#line 1268 "querytransformparser.ypp"
+#line 1756 "querytransformparser.ypp"
     {
         (yyval.enums.boundarySpacePolicy) = StaticContext::BSPStrip;
     }
     break;
 
-  case 32:
+  case 42:
 /* Line 1269 of yacc.c.  */
-#line 1273 "querytransformparser.ypp"
+#line 1761 "querytransformparser.ypp"
     {
         (yyval.enums.boundarySpacePolicy) = StaticContext::BSPPreserve;
     }
     break;
 
-  case 35:
+  case 45:
 /* Line 1269 of yacc.c.  */
-#line 1282 "querytransformparser.ypp"
+#line 1770 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::DeclareDefaultElementNamespace))
         {
@@ -3468,9 +4214,9 @@ yyreduce:
     }
     break;
 
-  case 36:
+  case 46:
 /* Line 1269 of yacc.c.  */
-#line 1297 "querytransformparser.ypp"
+#line 1785 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::DeclareDefaultFunctionNamespace))
         {
@@ -3485,9 +4231,9 @@ yyreduce:
     }
     break;
 
-  case 37:
+  case 47:
 /* Line 1269 of yacc.c.  */
-#line 1311 "querytransformparser.ypp"
+#line 1799 "querytransformparser.ypp"
     {
         if((yyvsp[(3) - (5)].qName).prefix() == StandardPrefixes::empty)
         {
@@ -3498,10 +4244,11 @@ yyreduce:
     }
     break;
 
-  case 38:
+  case 48:
 /* Line 1269 of yacc.c.  */
-#line 1321 "querytransformparser.ypp"
+#line 1809 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc));
         if(parseInfo->hasDeclaration(ParserContext::OrderingModeDecl))
         {
             parseInfo->staticContext->error(prologMessage("declare ordering"),
@@ -3515,25 +4262,25 @@ yyreduce:
     }
     break;
 
-  case 39:
+  case 49:
 /* Line 1269 of yacc.c.  */
-#line 1335 "querytransformparser.ypp"
+#line 1824 "querytransformparser.ypp"
     {
         (yyval.enums.orderingMode) = StaticContext::Ordered;
     }
     break;
 
-  case 40:
+  case 50:
 /* Line 1269 of yacc.c.  */
-#line 1339 "querytransformparser.ypp"
+#line 1828 "querytransformparser.ypp"
     {
         (yyval.enums.orderingMode) = StaticContext::Unordered;
     }
     break;
 
-  case 41:
+  case 51:
 /* Line 1269 of yacc.c.  */
-#line 1344 "querytransformparser.ypp"
+#line 1833 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::EmptyOrderDecl))
         {
@@ -3548,25 +4295,25 @@ yyreduce:
     }
     break;
 
-  case 42:
+  case 52:
 /* Line 1269 of yacc.c.  */
-#line 1358 "querytransformparser.ypp"
+#line 1847 "querytransformparser.ypp"
     {
         (yyval.enums.orderingEmptySequence) = StaticContext::Least;
     }
     break;
 
-  case 43:
+  case 53:
 /* Line 1269 of yacc.c.  */
-#line 1362 "querytransformparser.ypp"
+#line 1851 "querytransformparser.ypp"
     {
         (yyval.enums.orderingEmptySequence) = StaticContext::Greatest;
     }
     break;
 
-  case 44:
+  case 54:
 /* Line 1269 of yacc.c.  */
-#line 1368 "querytransformparser.ypp"
+#line 1857 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::CopyNamespacesDecl))
         {
@@ -3580,41 +4327,41 @@ yyreduce:
     }
     break;
 
-  case 45:
+  case 55:
 /* Line 1269 of yacc.c.  */
-#line 1381 "querytransformparser.ypp"
+#line 1870 "querytransformparser.ypp"
     {
         parseInfo->preserveNamespacesMode = true;
     }
     break;
 
-  case 46:
+  case 56:
 /* Line 1269 of yacc.c.  */
-#line 1386 "querytransformparser.ypp"
+#line 1875 "querytransformparser.ypp"
     {
         parseInfo->preserveNamespacesMode = false;
     }
     break;
 
-  case 47:
+  case 57:
 /* Line 1269 of yacc.c.  */
-#line 1391 "querytransformparser.ypp"
+#line 1880 "querytransformparser.ypp"
     {
         parseInfo->inheritNamespacesMode = true;
     }
     break;
 
-  case 48:
+  case 58:
 /* Line 1269 of yacc.c.  */
-#line 1396 "querytransformparser.ypp"
+#line 1885 "querytransformparser.ypp"
     {
         parseInfo->inheritNamespacesMode = false;
     }
     break;
 
-  case 49:
+  case 59:
 /* Line 1269 of yacc.c.  */
-#line 1401 "querytransformparser.ypp"
+#line 1890 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::DefaultCollationDecl))
         {
@@ -3631,10 +4378,11 @@ yyreduce:
     }
     break;
 
-  case 50:
+  case 60:
 /* Line 1269 of yacc.c.  */
-#line 1417 "querytransformparser.ypp"
+#line 1906 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(3) - (5)].enums.Bool));
         if(parseInfo->hasDeclaration(ParserContext::BaseURIDecl))
         {
             parseInfo->staticContext->error(prologMessage("declare base-uri"),
@@ -3645,7 +4393,7 @@ yyreduce:
             parseInfo->registerDeclaration(ParserContext::BaseURIDecl);
             const ReflectYYLTYPE ryy((yyloc), parseInfo);
 
-            QUrl toBeBase(AnyURI::toQUrl<ReportContext::XQST0046>((yyvsp[(3) - (4)].sval), parseInfo->staticContext, &ryy));
+            QUrl toBeBase(AnyURI::toQUrl<ReportContext::XQST0046>((yyvsp[(4) - (5)].sval), parseInfo->staticContext, &ryy));
             /* Now we're guaranteed that base is a valid lexical representation, but it can still be relative. */
 
             if(toBeBase.isRelative())
@@ -3656,9 +4404,9 @@ yyreduce:
     }
     break;
 
-  case 51:
+  case 61:
 /* Line 1269 of yacc.c.  */
-#line 1439 "querytransformparser.ypp"
+#line 1929 "querytransformparser.ypp"
     {
         parseInfo->staticContext->error(QtXmlPatterns::tr("The Schema Import feature is not supported, "
                                            "and therefore %1 declarations cannot occur.")
@@ -3667,9 +4415,9 @@ yyreduce:
     }
     break;
 
-  case 55:
+  case 65:
 /* Line 1269 of yacc.c.  */
-#line 1451 "querytransformparser.ypp"
+#line 1941 "querytransformparser.ypp"
     {
         if((yyvsp[(4) - (6)].sval).isEmpty())
         {
@@ -3687,69 +4435,98 @@ yyreduce:
     }
     break;
 
-  case 62:
+  case 72:
 /* Line 1269 of yacc.c.  */
-#line 1477 "querytransformparser.ypp"
+#line 1968 "querytransformparser.ypp"
     {
-        if(variableByName((yyvsp[(4) - (7)].qName), parseInfo))
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(3) - (9)].enums.Bool));
+        if(variableByName((yyvsp[(5) - (9)].qName), parseInfo))
         {
             parseInfo->staticContext->error(QtXmlPatterns::tr("A variable by name %1 has already "
-                                               "been declared in the prolog.")
-                                               .arg(formatKeyword(parseInfo->staticContext->namePool()->toLexical((yyvsp[(4) - (7)].qName)))),
-                                            ReportContext::XQST0049, fromYYLTYPE((yyloc), parseInfo));
+                                                              "been declared.")
+                                               .arg(formatKeyword(parseInfo->staticContext->namePool()->toLexical((yyvsp[(5) - (9)].qName)))),
+                                            parseInfo->isXSLT() ? ReportContext::XTSE0630 : ReportContext::XQST0049,
+                                            fromYYLTYPE((yyloc), parseInfo));
         }
         else
         {
-            if((yyvsp[(6) - (7)].expr)) /* We got a value assigned. */
+            if((yyvsp[(7) - (9)].expr)) /* We got a value assigned. */
             {
                 const Expression::Ptr checked
-                        (TypeChecker::applyFunctionConversion((yyvsp[(6) - (7)].expr), (yyvsp[(5) - (7)].sequenceType), parseInfo->staticContext, ReportContext::XPTY0004, TypeChecker::CheckFocus));
+                        (TypeChecker::applyFunctionConversion((yyvsp[(7) - (9)].expr), (yyvsp[(6) - (9)].sequenceType), parseInfo->staticContext,
+                                                              (yyvsp[(3) - (9)].enums.Bool) ? ReportContext::XTTE0570 : ReportContext::XPTY0004,
+                                                              (yyvsp[(3) - (9)].enums.Bool) ? TypeChecker::Options(TypeChecker::CheckFocus | TypeChecker::AutomaticallyConvert) : TypeChecker::CheckFocus));
 
-                pushVariable((yyvsp[(4) - (7)].qName), (yyvsp[(5) - (7)].sequenceType), checked, VariableDeclaration::GlobalVariable, (yyloc), parseInfo);
+                pushVariable((yyvsp[(5) - (9)].qName), (yyvsp[(6) - (9)].sequenceType), checked, VariableDeclaration::GlobalVariable, (yyloc), parseInfo);
                 parseInfo->declaredVariables.append(parseInfo->variables.last());
             }
             else /* We got an 'external' declaration. */
             {
                 const SequenceType::Ptr varType(parseInfo->staticContext->
-                                                externalVariableLoader()->announceExternalVariable((yyvsp[(4) - (7)].qName), (yyvsp[(5) - (7)].sequenceType)));
+                                                externalVariableLoader()->announceExternalVariable((yyvsp[(5) - (9)].qName), (yyvsp[(6) - (9)].sequenceType)));
 
                 if(varType)
                 {
                     /* We push the declaration such that we can see name clashes and so on, but we don't use it for tying
                      * any references to it. */
-                    pushVariable((yyvsp[(4) - (7)].qName), varType, Expression::Ptr(), VariableDeclaration::ExternalVariable, (yyloc), parseInfo);
+                    pushVariable((yyvsp[(5) - (9)].qName), varType, Expression::Ptr(), VariableDeclaration::ExternalVariable, (yyloc), parseInfo);
+                }
+                else if((yyvsp[(8) - (9)].expr))
+                {
+                    /* Ok, the xsl:param got a default value, we make it
+                     * available as a regular variable declaration. */
+                    // TODO turn into checked
+                    pushVariable((yyvsp[(5) - (9)].qName), (yyvsp[(6) - (9)].sequenceType), (yyvsp[(8) - (9)].expr), VariableDeclaration::GlobalVariable, (yyloc), parseInfo);
+                    // TODO ensure that duplicates are trapped.
                 }
                 else
                 {
                     parseInfo->staticContext->error(QtXmlPatterns::tr("No value is available for the external "
-                                                       "variable by name %1.")
-                                                       .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(4) - (7)].qName))),
-                                                    ReportContext::XPDY0002, fromYYLTYPE((yyloc), parseInfo));
+                                                                      "variable by name %1.")
+                                                       .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(5) - (9)].qName))),
+                                                    parseInfo->isXSLT() ? ReportContext::XTDE0050 : ReportContext::XPDY0002,
+                                                    fromYYLTYPE((yyloc), parseInfo));
                 }
             }
         }
     }
     break;
 
-  case 63:
+  case 73:
 /* Line 1269 of yacc.c.  */
-#line 1518 "querytransformparser.ypp"
+#line 2022 "querytransformparser.ypp"
     {
         (yyval.expr).reset();
     }
     break;
 
-  case 64:
+  case 74:
 /* Line 1269 of yacc.c.  */
-#line 1522 "querytransformparser.ypp"
+#line 2026 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (2)].expr);
     }
     break;
 
-  case 65:
+  case 75:
 /* Line 1269 of yacc.c.  */
-#line 1527 "querytransformparser.ypp"
+#line 2031 "querytransformparser.ypp"
+    {
+        (yyval.expr).reset();
+    }
+    break;
+
+  case 76:
+/* Line 1269 of yacc.c.  */
+#line 2035 "querytransformparser.ypp"
+    {
+        (yyval.expr) = (yyvsp[(2) - (2)].expr);
+    }
+    break;
+
+  case 77:
+/* Line 1269 of yacc.c.  */
+#line 2040 "querytransformparser.ypp"
     {
         if(parseInfo->hasDeclaration(ParserContext::ConstructionDecl))
         {
@@ -3764,38 +4541,48 @@ yyreduce:
     }
     break;
 
-  case 66:
+  case 78:
 /* Line 1269 of yacc.c.  */
-#line 1541 "querytransformparser.ypp"
+#line 2054 "querytransformparser.ypp"
     {
         (yyval.enums.constructionMode) = StaticContext::CMStrip;
     }
     break;
 
-  case 67:
+  case 79:
 /* Line 1269 of yacc.c.  */
-#line 1545 "querytransformparser.ypp"
+#line 2058 "querytransformparser.ypp"
     {
         (yyval.enums.constructionMode) = StaticContext::CMPreserve;
     }
     break;
 
-  case 68:
+  case 80:
 /* Line 1269 of yacc.c.  */
-#line 1550 "querytransformparser.ypp"
+#line 2063 "querytransformparser.ypp"
     {
-                (yyval.enums.slot) = parseInfo->currentExpressionSlot() - (yyvsp[(5) - (6)].functionArguments).count();
+                (yyval.enums.slot) = parseInfo->currentExpressionSlot() - (yyvsp[(6) - (7)].functionArguments).count();
               }
     break;
 
-  case 69:
+  case 81:
 /* Line 1269 of yacc.c.  */
-#line 1554 "querytransformparser.ypp"
+#line 2067 "querytransformparser.ypp"
     {
-        /* If FunctionBody is null, it is 'external', otherwise the value is the body. */
-        const QXmlName::NamespaceCode ns((yyvsp[(3) - (10)].qName).namespaceURI());
+        if(!(yyvsp[(3) - (11)].enums.Bool))
+            disallowedConstruct(parseInfo, (yyloc), (yyvsp[(3) - (11)].enums.Bool));
 
-        if((yyvsp[(9) - (10)].expr)) /* We got a function body. */
+        /* If FunctionBody is null, it is 'external', otherwise the value is the body. */
+        const QXmlName::NamespaceCode ns((yyvsp[(4) - (11)].qName).namespaceURI());
+
+        if(parseInfo->isXSLT() && !(yyvsp[(4) - (11)].qName).hasPrefix())
+        {
+            parseInfo->staticContext->error(QtXmlPatterns::tr("A stylesheet function must have a prefixed name."),
+                                            ReportContext::XTSE0740,
+                                            fromYYLTYPE((yyloc), parseInfo));
+        }
+
+        if((yyvsp[(10) - (11)].expr)) /* We got a function body. */
         {
             if(ns == StandardNamespaces::empty)
             {
@@ -3814,7 +4601,8 @@ yyreduce:
                                                    "Try the predefined prefix %2, which "
                                                    "exists for these cases.")
                                                 .arg(formatURI(parseInfo->staticContext->namePool(), ns), formatKeyword("local")),
-                                                ReportContext::XQST0045, fromYYLTYPE((yyloc), parseInfo));
+                                                parseInfo->isXSLT() ? ReportContext::XTSE0080 : ReportContext::XQST0045,
+                                                fromYYLTYPE((yyloc), parseInfo));
             }
             else if(parseInfo->moduleNamespace != StandardNamespaces::empty &&
                     ns != parseInfo->moduleNamespace)
@@ -3833,19 +4621,19 @@ yyreduce:
             {
                 /* Apply function conversion such that the body matches the declared
                  * return type. */
-                const Expression::Ptr checked(TypeChecker::applyFunctionConversion((yyvsp[(9) - (10)].expr), (yyvsp[(8) - (10)].sequenceType),
+                const Expression::Ptr checked(TypeChecker::applyFunctionConversion((yyvsp[(10) - (11)].expr), (yyvsp[(9) - (11)].sequenceType),
                                                                                    parseInfo->staticContext,
                                                                                    ReportContext::XPTY0004,
-                                                                                   TypeChecker::Options((TypeChecker::AutomaticallyConvert |
-                                                                                                         TypeChecker::CheckFocus |
-                                                                                                         TypeChecker::GeneratePromotion))));
+                                                                                   TypeChecker::Options(TypeChecker::AutomaticallyConvert |
+                                                                                                        TypeChecker::CheckFocus |
+                                                                                                        TypeChecker::GeneratePromotion)));
 
-                const int argCount = (yyvsp[(5) - (10)].functionArguments).count();
-                const FunctionSignature::Ptr sign(new FunctionSignature((yyvsp[(3) - (10)].qName) /* name */,
+                const int argCount = (yyvsp[(6) - (11)].functionArguments).count();
+                const FunctionSignature::Ptr sign(new FunctionSignature((yyvsp[(4) - (11)].qName) /* name */,
                                                                         argCount /* minArgs */,
                                                                         argCount /* maxArgs */,
-                                                                        (yyvsp[(8) - (10)].sequenceType) /* returnType */));
-                sign->setArguments((yyvsp[(5) - (10)].functionArguments));
+                                                                        (yyvsp[(9) - (11)].sequenceType) /* returnType */));
+                sign->setArguments((yyvsp[(6) - (11)].functionArguments));
                 const UserFunction::List::const_iterator end(parseInfo->userFunctions.constEnd());
                 UserFunction::List::const_iterator it(parseInfo->userFunctions.constBegin());
 
@@ -3856,7 +4644,7 @@ yyreduce:
                         parseInfo->staticContext->error(QtXmlPatterns::tr("A function already exists with "
                                                            "the signature %1.")
                                                            .arg(formatFunction(parseInfo->staticContext->namePool(), sign)),
-                                                        ReportContext::XQST0034, fromYYLTYPE((yyloc), parseInfo));
+                                                        parseInfo->isXSLT() ? ReportContext::XTSE0770 : ReportContext::XQST0034, fromYYLTYPE((yyloc), parseInfo));
                     }
                 }
 
@@ -3865,13 +4653,13 @@ yyreduce:
                 for(int i = 0; i < argCount; ++i)
                     argDecls.append(parseInfo->variables.at(i));
 
-                if((yyvsp[(7) - (10)].enums.slot) > -1)
+                if((yyvsp[(8) - (11)].enums.slot) > -1)
                 {
                     /* We have allocated slots, so now push them out of scope. */
-                    finalizePushedVariable(parseInfo, argCount);
+                    parseInfo->finalizePushedVariable(argCount);
                 }
 
-                parseInfo->userFunctions.append(UserFunction::Ptr(new UserFunction(sign, checked, (yyvsp[(7) - (10)].enums.slot), argDecls)));
+                parseInfo->userFunctions.append(UserFunction::Ptr(new UserFunction(sign, checked, (yyvsp[(8) - (11)].enums.slot), argDecls)));
             }
         }
         else /* We got an 'external' declaration. */
@@ -3884,17 +4672,17 @@ yyreduce:
     }
     break;
 
-  case 70:
+  case 82:
 /* Line 1269 of yacc.c.  */
-#line 1647 "querytransformparser.ypp"
+#line 2171 "querytransformparser.ypp"
     {
         (yyval.functionArguments) = FunctionArgument::List();
     }
     break;
 
-  case 71:
+  case 83:
 /* Line 1269 of yacc.c.  */
-#line 1651 "querytransformparser.ypp"
+#line 2175 "querytransformparser.ypp"
     {
         FunctionArgument::List l;
         l.append((yyvsp[(1) - (1)].functionArgument));
@@ -3902,9 +4690,9 @@ yyreduce:
     }
     break;
 
-  case 72:
+  case 84:
 /* Line 1269 of yacc.c.  */
-#line 1657 "querytransformparser.ypp"
+#line 2181 "querytransformparser.ypp"
     {
         FunctionArgument::List::const_iterator it((yyvsp[(1) - (3)].functionArguments).constBegin());
         const FunctionArgument::List::const_iterator end((yyvsp[(1) - (3)].functionArguments).constEnd());
@@ -3926,42 +4714,303 @@ yyreduce:
     }
     break;
 
-  case 73:
+  case 85:
 /* Line 1269 of yacc.c.  */
-#line 1678 "querytransformparser.ypp"
+#line 2202 "querytransformparser.ypp"
     {
         pushVariable((yyvsp[(2) - (3)].qName), (yyvsp[(3) - (3)].sequenceType), Expression::Ptr(), VariableDeclaration::FunctionArgument, (yyloc), parseInfo);
         (yyval.functionArgument) = FunctionArgument::Ptr(new FunctionArgument((yyvsp[(2) - (3)].qName), (yyvsp[(3) - (3)].sequenceType)));
     }
     break;
 
-  case 74:
+  case 86:
 /* Line 1269 of yacc.c.  */
-#line 1684 "querytransformparser.ypp"
+#line 2208 "querytransformparser.ypp"
     {
         (yyval.expr).reset();
     }
     break;
 
-  case 76:
+  case 88:
 /* Line 1269 of yacc.c.  */
-#line 1690 "querytransformparser.ypp"
+#line 2214 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (3)].expr);
     }
     break;
 
-  case 79:
+  case 91:
 /* Line 1269 of yacc.c.  */
-#line 1698 "querytransformparser.ypp"
+#line 2230 "querytransformparser.ypp"
+    {
+        (yyval.expr) = create(new CombineNodes((yyvsp[(1) - (3)].expr), CombineNodes::Union, (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
+    }
+    break;
+
+  case 93:
+/* Line 1269 of yacc.c.  */
+#line 2236 "querytransformparser.ypp"
+    {
+        /* We write this into a node test. The spec says, 5.5.3 The Meaning of a Pattern:
+         * "Similarly, / matches a document node, and only a document node,
+         * because the result of the expression root(.)//(/) returns the root
+         * node of the tree containing the context node if and only if it is a
+         * document node." */
+        (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisSelf, BuiltinTypes::document), (yyloc), parseInfo);
+    }
+    break;
+
+  case 94:
+/* Line 1269 of yacc.c.  */
+#line 2245 "querytransformparser.ypp"
+    {
+        /* /axis::node-test
+         *       =>
+         * axis::node-test[parent::document-node()]
+         *
+         * In practice it looks like this. $2 is:
+         *
+         *     TruthPredicate
+         *          AxisStep    self::element(c)
+         *          TruthPredicate
+         *              AxisStep    parent::element(b)
+         *              AxisStep    parent::element(a)
+         *
+         * and we want this:
+         *
+         *      TruthPredicate
+         *          AxisStep    self::element(c)
+         *          TruthPredicate
+         *              AxisStep    self::element(b)
+         *              TruthPredicate
+         *                  AxisStep    parent::element(a)
+         *                  AxisStep    parent::document()
+         *
+         * So we want to rewrite the predicate deepest down into a
+         * another TruthPredicate containing the AxisStep.
+         *
+         * The simplest case where $2 is only an axis step is special. When $2 is:
+         *
+         *  AxisStep self::element(a)
+         *
+         * we want:
+         *
+         *  TruthPredicate
+         *      AxisStep self::element(a)
+         *      AxisStep parent::document()
+         */
+
+        /* First, find the target. */
+        Expression::Ptr target((yyvsp[(2) - (2)].expr));
+
+        while(isPredicate(target->id()))
+        {
+            const Expression::Ptr candidate(target->operands().at(1));
+
+            if(isPredicate(candidate->id()))
+                target = candidate;
+            else
+                break; /* target is now the last predicate. */
+        }
+
+        if(target->is(Expression::IDAxisStep))
+        {
+            (yyval.expr) = create(GenericPredicate::create((yyvsp[(2) - (2)].expr), create(new AxisStep(QXmlNodeModelIndex::AxisParent, BuiltinTypes::document), (yyloc), parseInfo),
+                                                 parseInfo->staticContext, fromYYLTYPE((yylsp[(1) - (2)]), parseInfo)), (yylsp[(1) - (2)]), parseInfo);
+        }
+        else
+        {
+            const Expression::List targetOperands(target->operands());
+            Expression::List newOps;
+            newOps.append(targetOperands.at(0));
+
+            newOps.append(create(GenericPredicate::create(targetOperands.at(1),
+                                                          create(new AxisStep(QXmlNodeModelIndex::AxisParent, BuiltinTypes::document), (yyloc), parseInfo),
+                                                          parseInfo->staticContext, fromYYLTYPE((yylsp[(1) - (2)]), parseInfo)), (yylsp[(1) - (2)]), parseInfo));
+
+            target->setOperands(newOps);
+            (yyval.expr) = (yyvsp[(2) - (2)].expr);
+        }
+    }
+    break;
+
+  case 95:
+/* Line 1269 of yacc.c.  */
+#line 2315 "querytransformparser.ypp"
+    {
+        /* //axis::node-test
+         *        =>
+         * axis::node-test[parent::node()]
+         *
+         * Spec says: "//para matches any para element that has a parent node."
+         */
+        (yyval.expr) = create(GenericPredicate::create((yyvsp[(2) - (2)].expr), create(new AxisStep(QXmlNodeModelIndex::AxisParent, BuiltinTypes::node), (yyloc), parseInfo),
+                                             parseInfo->staticContext, fromYYLTYPE((yylsp[(1) - (2)]), parseInfo)), (yylsp[(1) - (2)]), parseInfo);
+    }
+    break;
+
+  case 97:
+/* Line 1269 of yacc.c.  */
+#line 2327 "querytransformparser.ypp"
+    {
+        createIdPatternPath((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), QXmlNodeModelIndex::AxisParent, (yylsp[(2) - (3)]), parseInfo);
+    }
+    break;
+
+  case 98:
+/* Line 1269 of yacc.c.  */
+#line 2331 "querytransformparser.ypp"
+    {
+        createIdPatternPath((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), QXmlNodeModelIndex::AxisAncestor, (yylsp[(2) - (3)]), parseInfo);
+    }
+    break;
+
+  case 99:
+/* Line 1269 of yacc.c.  */
+#line 2336 "querytransformparser.ypp"
+    {
+        const Expression::List ands((yyvsp[(1) - (1)].expr)->operands());
+        const FunctionSignature::Ptr signature((yyvsp[(1) - (1)].expr)->as<FunctionCall>()->signature());
+        const QXmlName name(signature->name());
+        const QXmlName key(StandardNamespaces::fn, StandardLocalNames::key);
+        const QXmlName id(StandardNamespaces::fn, StandardLocalNames::id);
+
+        if(name == id)
+        {
+            const Expression::ID id = ands.first()->id();
+            if(!isVariableReference(id) && id != Expression::IDStringValue)
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("When function %1 is used for matching inside a pattern, "
+                                                                  "the argument must be a variable reference or a string literal.")
+                                                                  .arg(formatFunction(parseInfo->staticContext->namePool(), signature)),
+                                                ReportContext::XPST0003,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+        }
+        else if(name == key)
+        {
+            if(ands.first()->id() != Expression::IDStringValue)
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("In an XSL-T pattern, the first argument to function %1 "
+                                                                  "must be a string literal, when used for matching.")
+                                                                  .arg(formatFunction(parseInfo->staticContext->namePool(), signature)),
+                                                ReportContext::XPST0003,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+
+            const Expression::ID id2 = ands.at(1)->id();
+            if(!isVariableReference(id2) &&
+               id2 != Expression::IDStringValue &&
+               id2 != Expression::IDIntegerValue &&
+               id2 != Expression::IDBooleanValue &&
+               id2 != Expression::IDFloat)
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("In an XSL-T pattern, the first argument to function %1 "
+                                                                  "must be a literal or a variable reference, when used for matching.")
+                                                                  .arg(formatFunction(parseInfo->staticContext->namePool(), signature)),
+                                                ReportContext::XPST0003,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+
+            if(ands.count() == 3)
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("In an XSL-T pattern, function %1 cannot have a third argument.")
+                                                                  .arg(formatFunction(parseInfo->staticContext->namePool(), signature)),
+                                                ReportContext::XPST0003,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+
+        }
+        else
+        {
+            const FunctionSignature::Hash signs(parseInfo->staticContext->functionSignatures()->functionSignatures());
+            parseInfo->staticContext->error(QtXmlPatterns::tr("In an XSL-T pattern, only function %1 "
+                                                              "and %2, not %3, can be used for matching.")
+                                                              .arg(formatFunction(parseInfo->staticContext->namePool(), signs.value(id)),
+                                                                   formatFunction(parseInfo->staticContext->namePool(), signs.value(key)),
+                                                                   formatFunction(parseInfo->staticContext->namePool(), signature)),
+                                            ReportContext::XPST0003,
+                                            fromYYLTYPE((yyloc), parseInfo));
+        }
+
+        (yyval.expr) = (yyvsp[(1) - (1)].expr);
+    }
+    break;
+
+  case 101:
+/* Line 1269 of yacc.c.  */
+#line 2406 "querytransformparser.ypp"
+    {
+        (yyval.expr) = createPatternPath((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), QXmlNodeModelIndex::AxisParent, (yylsp[(2) - (3)]), parseInfo);
+    }
+    break;
+
+  case 102:
+/* Line 1269 of yacc.c.  */
+#line 2410 "querytransformparser.ypp"
+    {
+        (yyval.expr) = createPatternPath((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), QXmlNodeModelIndex::AxisAncestor, (yylsp[(2) - (3)]), parseInfo);
+    }
+    break;
+
+  case 103:
+/* Line 1269 of yacc.c.  */
+#line 2415 "querytransformparser.ypp"
+    {
+        const Expression::Ptr expr(findAxisStep((yyvsp[(1) - (1)].expr)));
+
+        const QXmlNodeModelIndex::Axis axis = expr->as<AxisStep>()->axis();
+        AxisStep *const axisStep = expr->as<AxisStep>();
+
+        /* Here we constrain the possible axes, and we rewrite the axes as according
+         * to 5.5.3 The Meaning of a Pattern.
+         *
+         * However, we also rewrite axis child and attribute to axis self. The
+         * reason for this is that if we don't, we will match the children of
+         * the context node, instead of the context node itself. The formal
+         * definition of a pattern, root(.)//EE is insensitive to context,
+         * while the way we implement pattern, "the other way of seeing it",
+         * e.g from right to left, are very much. */
+
+        if(axisStep->nodeTest() == BuiltinTypes::document
+           || axis == QXmlNodeModelIndex::AxisChild)
+            axisStep->setAxis(QXmlNodeModelIndex::AxisSelf);
+        else if(axis == QXmlNodeModelIndex::AxisAttribute)
+        {
+            axisStep->setAxis(QXmlNodeModelIndex::AxisSelf);
+            /* Consider that the user write attribute::node().  This is
+             * semantically equivalent to attribute::attribute(), but since we have changed
+             * the axis to axis self, we also need to change the node test, such that we
+             * have self::attribute(). */
+            if(*axisStep->nodeTest() == *BuiltinTypes::node)
+                axisStep->setNodeTest(BuiltinTypes::attribute);
+        }
+        else
+        {
+            parseInfo->staticContext->error(QtXmlPatterns::tr("In an XSL-T pattern, axis %1 cannot be used, "
+                                                              "only axis %2 or %3 can.")
+                                            .arg(formatKeyword(AxisStep::axisName(axis)),
+                                                 formatKeyword(AxisStep::axisName(QXmlNodeModelIndex::AxisChild)),
+                                                 formatKeyword(AxisStep::axisName(QXmlNodeModelIndex::AxisAttribute))),
+                                            ReportContext::XPST0003,
+                                            fromYYLTYPE((yyloc), parseInfo));
+        }
+
+        (yyval.expr) = (yyvsp[(1) - (1)].expr);
+    }
+    break;
+
+  case 105:
+/* Line 1269 of yacc.c.  */
+#line 2460 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ExpressionSequence((yyvsp[(1) - (1)].expressionList)), (yyloc), parseInfo);
     }
     break;
 
-  case 80:
+  case 106:
 /* Line 1269 of yacc.c.  */
-#line 1703 "querytransformparser.ypp"
+#line 2465 "querytransformparser.ypp"
     {
         Expression::List l;
         l.append((yyvsp[(1) - (3)].expr));
@@ -3970,38 +5019,134 @@ yyreduce:
     }
     break;
 
-  case 81:
+  case 107:
 /* Line 1269 of yacc.c.  */
-#line 1710 "querytransformparser.ypp"
+#line 2472 "querytransformparser.ypp"
     {
         (yyvsp[(1) - (3)].expressionList).append((yyvsp[(3) - (3)].expr));
         (yyval.expressionList) = (yyvsp[(1) - (3)].expressionList);
     }
     break;
 
-  case 89:
+  case 113:
 /* Line 1269 of yacc.c.  */
-#line 1726 "querytransformparser.ypp"
+#line 2483 "querytransformparser.ypp"
+    {
+        (yyval.expr) = createDirAttributeValue((yyvsp[(3) - (4)].expressionList), parseInfo, (yyloc));
+    }
+    break;
+
+  case 114:
+/* Line 1269 of yacc.c.  */
+#line 2488 "querytransformparser.ypp"
+    {
+        QVector<QXmlName> result;
+        result.append(QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::Default));
+        (yyval.qNameVector) = result;
+    }
+    break;
+
+  case 115:
+/* Line 1269 of yacc.c.  */
+#line 2494 "querytransformparser.ypp"
+    {
+        (yyval.qNameVector) = (yyvsp[(2) - (2)].qNameVector);
+    }
+    break;
+
+  case 116:
+/* Line 1269 of yacc.c.  */
+#line 2499 "querytransformparser.ypp"
+    {
+            (yyval.qName) = QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::Default);
+    }
+    break;
+
+  case 117:
+/* Line 1269 of yacc.c.  */
+#line 2503 "querytransformparser.ypp"
+    {
+        (yyval.qName) = (yyvsp[(2) - (2)].qName);
+    }
+    break;
+
+  case 118:
+/* Line 1269 of yacc.c.  */
+#line 2508 "querytransformparser.ypp"
+    {
+        QVector<QXmlName> result;
+        result.append((yyvsp[(1) - (1)].qName));
+        (yyval.qNameVector) = result;
+    }
+    break;
+
+  case 119:
+/* Line 1269 of yacc.c.  */
+#line 2514 "querytransformparser.ypp"
+    {
+        (yyvsp[(1) - (3)].qNameVector).append((yyvsp[(3) - (3)].qName));
+        (yyval.qNameVector) = (yyvsp[(1) - (3)].qNameVector);
+    }
+    break;
+
+  case 120:
+/* Line 1269 of yacc.c.  */
+#line 2520 "querytransformparser.ypp"
+    {
+        (yyval.qName) = (yyvsp[(1) - (1)].qName);
+    }
+    break;
+
+  case 121:
+/* Line 1269 of yacc.c.  */
+#line 2524 "querytransformparser.ypp"
+    {
+        if((yyvsp[(1) - (1)].sval) == QLatin1String("#current"))
+            (yyval.qName) = QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::current);
+        else if((yyvsp[(1) - (1)].sval) == QLatin1String("#default"))
+            (yyval.qName) = QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::Default);
+        else if((yyvsp[(1) - (1)].sval) == QLatin1String("#all"))
+            (yyval.qName) = QXmlName(StandardNamespaces::InternalXSLT, StandardLocalNames::all);
+        else
+        {
+            const ReflectYYLTYPE ryy((yyloc), parseInfo);
+
+            if(!QXmlUtils::isNCName((yyvsp[(1) - (1)].sval)))
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is an invalid template mode name.")
+                                                                  .arg(formatKeyword((yyvsp[(1) - (1)].sval))),
+                                                ReportContext::XTSE0550,
+                                                fromYYLTYPE((yyloc), parseInfo));
+            }
+
+            (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(StandardNamespaces::empty, (yyvsp[(1) - (1)].sval));
+        }
+    }
+    break;
+
+  case 124:
+/* Line 1269 of yacc.c.  */
+#line 2553 "querytransformparser.ypp"
     {
                /* We're pushing the range variable here, not the positional. */
                (yyval.expr) = pushVariable((yyvsp[(3) - (7)].qName), quantificationType((yyvsp[(4) - (7)].sequenceType)), (yyvsp[(7) - (7)].expr), VariableDeclaration::RangeVariable, (yyloc), parseInfo);
            }
     break;
 
-  case 90:
+  case 125:
 /* Line 1269 of yacc.c.  */
-#line 1730 "querytransformparser.ypp"
+#line 2557 "querytransformparser.ypp"
     {
                /* It is ok this appears after PositionalVar, because currentRangeSlot()
                 * uses a different "channel" than currentPositionSlot(), so they can't trash
                 * each other. */
-               (yyval.enums.slot) = parseInfo->currentRangeSlot();
+               (yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();
            }
     break;
 
-  case 91:
+  case 126:
 /* Line 1269 of yacc.c.  */
-#line 1737 "querytransformparser.ypp"
+#line 2564 "querytransformparser.ypp"
     {
         Q_ASSERT((yyvsp[(7) - (10)].expr));
         Q_ASSERT((yyvsp[(10) - (10)].expr));
@@ -4015,7 +5160,8 @@ yyreduce:
             parseInfo->staticContext->error(QtXmlPatterns::tr("The name of a variable bound in a for-expression must be different "
                                                "from the positional variable. Hence, the two variables named %1 collide.")
                                                .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(3) - (10)].qName))),
-                                            ReportContext::XQST0089, fromYYLTYPE((yyloc), parseInfo));
+                                            ReportContext::XQST0089,
+                                            fromYYLTYPE((yyloc), parseInfo));
 
         }
 
@@ -4027,56 +5173,56 @@ yyreduce:
         else
             (yyval.expr) = retBody;
 
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
 
         if((yyvsp[(5) - (10)].enums.slot) != -1) /* We also have a positional variable to remove from the scope. */
-            finalizePushedVariable(parseInfo);
+            parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 92:
+  case 127:
 /* Line 1269 of yacc.c.  */
-#line 1770 "querytransformparser.ypp"
+#line 2598 "querytransformparser.ypp"
     {
              pushVariable((yyvsp[(3) - (7)].qName), quantificationType((yyvsp[(4) - (7)].sequenceType)), (yyvsp[(7) - (7)].expr), VariableDeclaration::RangeVariable, (yyloc), parseInfo);
          }
     break;
 
-  case 93:
+  case 128:
 /* Line 1269 of yacc.c.  */
-#line 1773 "querytransformparser.ypp"
+#line 2601 "querytransformparser.ypp"
     {
              /* It is ok this appears after PositionalVar, because currentRangeSlot()
               * uses a different "channel" than currentPositionSlot(), so they can't trash
               * each other. */
-             (yyval.enums.slot) = parseInfo->currentRangeSlot();
+             (yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();
          }
     break;
 
-  case 94:
+  case 129:
 /* Line 1269 of yacc.c.  */
-#line 1780 "querytransformparser.ypp"
+#line 2608 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ForClause((yyvsp[(9) - (10)].enums.slot), (yyvsp[(7) - (10)].expr), (yyvsp[(10) - (10)].expr), (yyvsp[(5) - (10)].enums.slot)), (yyloc), parseInfo);
 
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
 
         if((yyvsp[(5) - (10)].enums.slot) != -1) /* We also have a positional variable to remove from the scope. */
-            finalizePushedVariable(parseInfo);
+            parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 98:
+  case 133:
 /* Line 1269 of yacc.c.  */
-#line 1794 "querytransformparser.ypp"
+#line 2622 "querytransformparser.ypp"
     {
         (yyval.enums.slot) = -1;
     }
     break;
 
-  case 99:
+  case 134:
 /* Line 1269 of yacc.c.  */
-#line 1799 "querytransformparser.ypp"
+#line 2627 "querytransformparser.ypp"
     {
         pushVariable((yyvsp[(3) - (3)].qName), CommonSequenceTypes::ExactlyOneInteger, Expression::Ptr(),
                      VariableDeclaration::PositionalVariable, (yyloc), parseInfo);
@@ -4084,41 +5230,45 @@ yyreduce:
     }
     break;
 
-  case 100:
+  case 135:
 /* Line 1269 of yacc.c.  */
-#line 1806 "querytransformparser.ypp"
-    { (yyval.expr) = pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr), VariableDeclaration::ExpressionVariable, (yyloc), parseInfo);}
+#line 2634 "querytransformparser.ypp"
+    {
+                (yyval.expr) = pushVariable((yyvsp[(4) - (7)].qName), quantificationType((yyvsp[(5) - (7)].sequenceType)), (yyvsp[(7) - (7)].expr), VariableDeclaration::ExpressionVariable, (yyloc), parseInfo);
+           }
     break;
 
-  case 101:
+  case 136:
 /* Line 1269 of yacc.c.  */
-#line 1808 "querytransformparser.ypp"
+#line 2638 "querytransformparser.ypp"
     {
-        Q_ASSERT(parseInfo->variables.top()->name == (yyvsp[(3) - (8)].qName));
-        (yyval.expr) = create(new LetClause((yyvsp[(7) - (8)].expr), (yyvsp[(8) - (8)].expr), parseInfo->variables.top()), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (9)].enums.Bool));
+
+        Q_ASSERT(parseInfo->variables.top()->name == (yyvsp[(4) - (9)].qName));
+        (yyval.expr) = create(new LetClause((yyvsp[(8) - (9)].expr), (yyvsp[(9) - (9)].expr), parseInfo->variables.top()), (yyloc), parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 102:
+  case 137:
 /* Line 1269 of yacc.c.  */
-#line 1815 "querytransformparser.ypp"
+#line 2647 "querytransformparser.ypp"
     { (yyval.expr) = pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr), VariableDeclaration::ExpressionVariable, (yyloc), parseInfo);}
     break;
 
-  case 103:
+  case 138:
 /* Line 1269 of yacc.c.  */
-#line 1817 "querytransformparser.ypp"
+#line 2649 "querytransformparser.ypp"
     {
         Q_ASSERT(parseInfo->variables.top()->name == (yyvsp[(3) - (8)].qName));
         (yyval.expr) = create(new LetClause((yyvsp[(7) - (8)].expr), (yyvsp[(8) - (8)].expr), parseInfo->variables.top()), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 107:
+  case 142:
 /* Line 1269 of yacc.c.  */
-#line 1828 "querytransformparser.ypp"
+#line 2660 "querytransformparser.ypp"
     {
         if((yyvsp[(1) - (3)].orderSpecs).isEmpty())
             (yyval.expr) = (yyvsp[(3) - (3)].expr);
@@ -4127,9 +5277,9 @@ yyreduce:
     }
     break;
 
-  case 108:
+  case 143:
 /* Line 1269 of yacc.c.  */
-#line 1836 "querytransformparser.ypp"
+#line 2668 "querytransformparser.ypp"
     {
         if((yyvsp[(3) - (5)].orderSpecs).isEmpty())
             (yyval.expr) = create(new IfThenClause((yyvsp[(2) - (5)].expr), (yyvsp[(5) - (5)].expr), create(new EmptySequence, (yyloc), parseInfo)), (yyloc), parseInfo);
@@ -4140,25 +5290,25 @@ yyreduce:
     }
     break;
 
-  case 109:
+  case 144:
 /* Line 1269 of yacc.c.  */
-#line 1846 "querytransformparser.ypp"
+#line 2678 "querytransformparser.ypp"
     {
         (yyval.orderSpecs) = OrderSpecTransfer::List();
     }
     break;
 
-  case 110:
+  case 146:
 /* Line 1269 of yacc.c.  */
-#line 1850 "querytransformparser.ypp"
+#line 2684 "querytransformparser.ypp"
     {
         (yyval.orderSpecs) = (yyvsp[(2) - (2)].orderSpecs);
     }
     break;
 
-  case 111:
+  case 147:
 /* Line 1269 of yacc.c.  */
-#line 1855 "querytransformparser.ypp"
+#line 2689 "querytransformparser.ypp"
     {
         OrderSpecTransfer::List list;
         list += (yyvsp[(1) - (3)].orderSpecs);
@@ -4167,9 +5317,9 @@ yyreduce:
     }
     break;
 
-  case 112:
+  case 148:
 /* Line 1269 of yacc.c.  */
-#line 1862 "querytransformparser.ypp"
+#line 2696 "querytransformparser.ypp"
     {
         OrderSpecTransfer::List list;
         list.append((yyvsp[(1) - (1)].orderSpec));
@@ -4177,17 +5327,17 @@ yyreduce:
     }
     break;
 
-  case 113:
+  case 149:
 /* Line 1269 of yacc.c.  */
-#line 1869 "querytransformparser.ypp"
+#line 2703 "querytransformparser.ypp"
     {
         (yyval.orderSpec) = OrderSpecTransfer((yyvsp[(1) - (4)].expr), OrderBy::OrderSpec((yyvsp[(2) - (4)].enums.sortDirection), (yyvsp[(3) - (4)].enums.orderingEmptySequence)));
     }
     break;
 
-  case 114:
+  case 150:
 /* Line 1269 of yacc.c.  */
-#line 1874 "querytransformparser.ypp"
+#line 2708 "querytransformparser.ypp"
     {
         /* Where does the specification state the default value is ascending?
          *
@@ -4209,182 +5359,195 @@ yyreduce:
     }
     break;
 
-  case 115:
+  case 151:
 /* Line 1269 of yacc.c.  */
-#line 1895 "querytransformparser.ypp"
+#line 2729 "querytransformparser.ypp"
     {
         (yyval.enums.sortDirection) = OrderBy::OrderSpec::Ascending;
     }
     break;
 
-  case 116:
+  case 152:
 /* Line 1269 of yacc.c.  */
-#line 1900 "querytransformparser.ypp"
+#line 2734 "querytransformparser.ypp"
     {
         (yyval.enums.sortDirection) = OrderBy::OrderSpec::Descending;
     }
     break;
 
-  case 117:
+  case 153:
 /* Line 1269 of yacc.c.  */
-#line 1905 "querytransformparser.ypp"
+#line 2739 "querytransformparser.ypp"
     {
         (yyval.enums.orderingEmptySequence) = parseInfo->staticContext->orderingEmptySequence();
     }
     break;
 
-  case 120:
+  case 156:
 /* Line 1269 of yacc.c.  */
-#line 1912 "querytransformparser.ypp"
+#line 2746 "querytransformparser.ypp"
     {
-        resolveAndCheckCollation<ReportContext::XQST0076>((yyvsp[(2) - (2)].sval), parseInfo, (yyloc));
+        if(parseInfo->isXSLT())
+            resolveAndCheckCollation<ReportContext::XTDE1035>((yyvsp[(2) - (2)].sval), parseInfo, (yyloc));
+        else
+            resolveAndCheckCollation<ReportContext::XQST0076>((yyvsp[(2) - (2)].sval), parseInfo, (yyloc));
     }
     break;
 
-  case 121:
+  case 157:
 /* Line 1269 of yacc.c.  */
-#line 1917 "querytransformparser.ypp"
+#line 2753 "querytransformparser.ypp"
+    {
+        /* We do nothing. We don't use collations, and we have this non-terminal
+         * in order to accept expressions. */
+    }
+    break;
+
+  case 158:
+/* Line 1269 of yacc.c.  */
+#line 2759 "querytransformparser.ypp"
     {
         parseInfo->orderStability.push(OrderBy::StableOrder);
     }
     break;
 
-  case 122:
+  case 159:
 /* Line 1269 of yacc.c.  */
-#line 1921 "querytransformparser.ypp"
+#line 2763 "querytransformparser.ypp"
     {
         parseInfo->orderStability.push(OrderBy::UnstableOrder);
     }
     break;
 
-  case 125:
+  case 162:
 /* Line 1269 of yacc.c.  */
-#line 1929 "querytransformparser.ypp"
+#line 2771 "querytransformparser.ypp"
     {
                             pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr),
                                          VariableDeclaration::RangeVariable, (yyloc), parseInfo);
                         }
     break;
 
-  case 126:
+  case 163:
 /* Line 1269 of yacc.c.  */
-#line 1933 "querytransformparser.ypp"
-    {(yyval.enums.slot) = parseInfo->currentRangeSlot();}
+#line 2775 "querytransformparser.ypp"
+    {(yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();}
     break;
 
-  case 127:
+  case 164:
 /* Line 1269 of yacc.c.  */
-#line 1935 "querytransformparser.ypp"
+#line 2777 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new QuantifiedExpression((yyvsp[(8) - (9)].enums.slot),
                                              QuantifiedExpression::Some, (yyvsp[(6) - (9)].expr), (yyvsp[(9) - (9)].expr)), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 128:
+  case 165:
 /* Line 1269 of yacc.c.  */
-#line 1942 "querytransformparser.ypp"
+#line 2784 "querytransformparser.ypp"
     {
                             (yyval.expr) = pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr),
                                                     VariableDeclaration::RangeVariable, (yyloc), parseInfo);
                         }
     break;
 
-  case 129:
+  case 166:
 /* Line 1269 of yacc.c.  */
-#line 1946 "querytransformparser.ypp"
-    {(yyval.enums.slot) = parseInfo->currentRangeSlot();}
+#line 2788 "querytransformparser.ypp"
+    {(yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();}
     break;
 
-  case 130:
+  case 167:
 /* Line 1269 of yacc.c.  */
-#line 1948 "querytransformparser.ypp"
+#line 2790 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new QuantifiedExpression((yyvsp[(8) - (9)].enums.slot),
                                              QuantifiedExpression::Some, (yyvsp[(7) - (9)].expr), (yyvsp[(9) - (9)].expr)), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 132:
+  case 169:
 /* Line 1269 of yacc.c.  */
-#line 1957 "querytransformparser.ypp"
+#line 2799 "querytransformparser.ypp"
     {
                             pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr),
                                          VariableDeclaration::RangeVariable, (yyloc), parseInfo);
                          }
     break;
 
-  case 133:
+  case 170:
 /* Line 1269 of yacc.c.  */
-#line 1961 "querytransformparser.ypp"
-    {(yyval.enums.slot) = parseInfo->currentRangeSlot();}
+#line 2803 "querytransformparser.ypp"
+    {(yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();}
     break;
 
-  case 134:
+  case 171:
 /* Line 1269 of yacc.c.  */
-#line 1963 "querytransformparser.ypp"
+#line 2805 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new QuantifiedExpression((yyvsp[(8) - (9)].enums.slot),
                                              QuantifiedExpression::Every, (yyvsp[(6) - (9)].expr), (yyvsp[(9) - (9)].expr)), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 135:
+  case 172:
 /* Line 1269 of yacc.c.  */
-#line 1970 "querytransformparser.ypp"
+#line 2812 "querytransformparser.ypp"
     {
                             (yyval.expr) = pushVariable((yyvsp[(3) - (6)].qName), quantificationType((yyvsp[(4) - (6)].sequenceType)), (yyvsp[(6) - (6)].expr),
                                                     VariableDeclaration::RangeVariable, (yyloc), parseInfo);
                          }
     break;
 
-  case 136:
+  case 173:
 /* Line 1269 of yacc.c.  */
-#line 1974 "querytransformparser.ypp"
-    {(yyval.enums.slot) = parseInfo->currentRangeSlot();}
+#line 2816 "querytransformparser.ypp"
+    {(yyval.enums.slot) = parseInfo->staticContext->currentRangeSlot();}
     break;
 
-  case 137:
+  case 174:
 /* Line 1269 of yacc.c.  */
-#line 1976 "querytransformparser.ypp"
+#line 2818 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new QuantifiedExpression((yyvsp[(8) - (9)].enums.slot),
                                              QuantifiedExpression::Every, (yyvsp[(7) - (9)].expr), (yyvsp[(9) - (9)].expr)), (yyloc), parseInfo);
-        finalizePushedVariable(parseInfo);
+        parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 139:
+  case 176:
 /* Line 1269 of yacc.c.  */
-#line 1985 "querytransformparser.ypp"
+#line 2827 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (2)].expr);
     }
     break;
 
-  case 140:
+  case 177:
 /* Line 1269 of yacc.c.  */
-#line 2012 "querytransformparser.ypp"
+#line 2854 "querytransformparser.ypp"
     {
                     parseInfo->typeswitchSource.push((yyvsp[(3) - (4)].expr));
                 }
     break;
 
-  case 141:
+  case 178:
 /* Line 1269 of yacc.c.  */
-#line 2016 "querytransformparser.ypp"
+#line 2858 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc));
         parseInfo->typeswitchSource.pop();
         (yyval.expr) = (yyvsp[(6) - (6)].expr);
     }
     break;
 
-  case 142:
+  case 179:
 /* Line 1269 of yacc.c.  */
-#line 2022 "querytransformparser.ypp"
+#line 2865 "querytransformparser.ypp"
     {
         if(!(yyvsp[(2) - (3)].qName).isNull())
         {
@@ -4394,52 +5557,52 @@ yyreduce:
     }
     break;
 
-  case 143:
+  case 180:
 /* Line 1269 of yacc.c.  */
-#line 2030 "querytransformparser.ypp"
+#line 2873 "querytransformparser.ypp"
     {
         /* The variable shouldn't be in-scope for other case branches. */
         if(!(yyvsp[(2) - (6)].qName).isNull())
-            finalizePushedVariable(parseInfo);
+            parseInfo->finalizePushedVariable();
     }
     break;
 
-  case 144:
+  case 181:
 /* Line 1269 of yacc.c.  */
-#line 2036 "querytransformparser.ypp"
+#line 2879 "querytransformparser.ypp"
     {
         const Expression::Ptr instanceOf(create(new InstanceOf(parseInfo->typeswitchSource.top(), (yyvsp[(3) - (8)].sequenceType)), (yyloc), parseInfo));
         (yyval.expr) = create(new IfThenClause(instanceOf, (yyvsp[(6) - (8)].expr), (yyvsp[(8) - (8)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 147:
+  case 184:
 /* Line 1269 of yacc.c.  */
-#line 2045 "querytransformparser.ypp"
+#line 2888 "querytransformparser.ypp"
     {
         (yyval.qName) = QXmlName();
     }
     break;
 
-  case 148:
+  case 185:
 /* Line 1269 of yacc.c.  */
-#line 2050 "querytransformparser.ypp"
+#line 2893 "querytransformparser.ypp"
     {
         (yyval.qName) = (yyvsp[(2) - (3)].qName);
     }
     break;
 
-  case 149:
+  case 186:
 /* Line 1269 of yacc.c.  */
-#line 2055 "querytransformparser.ypp"
+#line 2898 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(3) - (3)].expr);
     }
     break;
 
-  case 150:
+  case 187:
 /* Line 1269 of yacc.c.  */
-#line 2059 "querytransformparser.ypp"
+#line 2902 "querytransformparser.ypp"
     {
         if(!(yyvsp[(3) - (3)].qName).isNull())
         {
@@ -4450,325 +5613,310 @@ yyreduce:
     }
     break;
 
-  case 151:
+  case 188:
 /* Line 1269 of yacc.c.  */
-#line 2068 "querytransformparser.ypp"
+#line 2911 "querytransformparser.ypp"
     {
         if(!(yyvsp[(3) - (6)].qName).isNull())
-            finalizePushedVariable(parseInfo);
+            parseInfo->finalizePushedVariable();
         (yyval.expr) = (yyvsp[(6) - (6)].expr);
     }
     break;
 
-  case 152:
+  case 189:
 /* Line 1269 of yacc.c.  */
-#line 2075 "querytransformparser.ypp"
+#line 2918 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new IfThenClause((yyvsp[(3) - (8)].expr), (yyvsp[(6) - (8)].expr), (yyvsp[(8) - (8)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 154:
+  case 191:
 /* Line 1269 of yacc.c.  */
-#line 2081 "querytransformparser.ypp"
+#line 2924 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new OrExpression((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 156:
+  case 193:
 /* Line 1269 of yacc.c.  */
-#line 2087 "querytransformparser.ypp"
+#line 2930 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new AndExpression((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 162:
+  case 199:
 /* Line 1269 of yacc.c.  */
-#line 2098 "querytransformparser.ypp"
+#line 2941 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new RangeExpression((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 164:
+  case 201:
 /* Line 1269 of yacc.c.  */
-#line 2104 "querytransformparser.ypp"
+#line 2947 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ArithmeticExpression((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.mathOperator), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 165:
+  case 202:
 /* Line 1269 of yacc.c.  */
-#line 2108 "querytransformparser.ypp"
+#line 2951 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::Add;}
     break;
 
-  case 166:
+  case 203:
 /* Line 1269 of yacc.c.  */
-#line 2109 "querytransformparser.ypp"
+#line 2952 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::Substract;}
     break;
 
-  case 168:
+  case 205:
 /* Line 1269 of yacc.c.  */
-#line 2113 "querytransformparser.ypp"
+#line 2956 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ArithmeticExpression((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.mathOperator), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 169:
+  case 206:
 /* Line 1269 of yacc.c.  */
-#line 2117 "querytransformparser.ypp"
+#line 2960 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::Multiply;}
     break;
 
-  case 170:
+  case 207:
 /* Line 1269 of yacc.c.  */
-#line 2118 "querytransformparser.ypp"
+#line 2961 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::Div;}
     break;
 
-  case 171:
+  case 208:
 /* Line 1269 of yacc.c.  */
-#line 2119 "querytransformparser.ypp"
+#line 2962 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::IDiv;}
     break;
 
-  case 172:
+  case 209:
 /* Line 1269 of yacc.c.  */
-#line 2120 "querytransformparser.ypp"
+#line 2963 "querytransformparser.ypp"
     {(yyval.enums.mathOperator) = AtomicMathematician::Mod;}
     break;
 
-  case 174:
+  case 211:
 /* Line 1269 of yacc.c.  */
-#line 2124 "querytransformparser.ypp"
+#line 2967 "querytransformparser.ypp"
+    {
+        (yyval.expr) = create(new CombineNodes((yyvsp[(1) - (3)].expr), CombineNodes::Union, (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
+    }
+    break;
+
+  case 213:
+/* Line 1269 of yacc.c.  */
+#line 2973 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new CombineNodes((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.combinedNodeOp), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 176:
+  case 216:
 /* Line 1269 of yacc.c.  */
-#line 2130 "querytransformparser.ypp"
-    {
-        (yyval.expr) = create(new CombineNodes((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.combinedNodeOp), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
-    }
-    break;
-
-  case 177:
-/* Line 1269 of yacc.c.  */
-#line 2135 "querytransformparser.ypp"
-    {
-        (yyval.enums.combinedNodeOp) = CombineNodes::Union;
-    }
-    break;
-
-  case 178:
-/* Line 1269 of yacc.c.  */
-#line 2139 "querytransformparser.ypp"
-    {
-        (yyval.enums.combinedNodeOp) = CombineNodes::Union;
-    }
-    break;
-
-  case 179:
-/* Line 1269 of yacc.c.  */
-#line 2144 "querytransformparser.ypp"
+#line 2981 "querytransformparser.ypp"
     {
         (yyval.enums.combinedNodeOp) = CombineNodes::Intersect;
     }
     break;
 
-  case 180:
+  case 217:
 /* Line 1269 of yacc.c.  */
-#line 2148 "querytransformparser.ypp"
+#line 2985 "querytransformparser.ypp"
     {
         (yyval.enums.combinedNodeOp) = CombineNodes::Except;
     }
     break;
 
-  case 182:
+  case 219:
 /* Line 1269 of yacc.c.  */
-#line 2154 "querytransformparser.ypp"
+#line 2991 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new InstanceOf((yyvsp[(1) - (4)].expr),
         SequenceType::Ptr((yyvsp[(4) - (4)].sequenceType))), (yyloc), parseInfo);
     }
     break;
 
-  case 184:
+  case 221:
 /* Line 1269 of yacc.c.  */
-#line 2161 "querytransformparser.ypp"
+#line 2998 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new TreatAs((yyvsp[(1) - (4)].expr), (yyvsp[(4) - (4)].sequenceType)), (yyloc), parseInfo);
     }
     break;
 
-  case 186:
+  case 223:
 /* Line 1269 of yacc.c.  */
-#line 2167 "querytransformparser.ypp"
+#line 3004 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new CastableAs((yyvsp[(1) - (4)].expr), (yyvsp[(4) - (4)].sequenceType)), (yyloc), parseInfo);
     }
     break;
 
-  case 188:
+  case 225:
 /* Line 1269 of yacc.c.  */
-#line 2173 "querytransformparser.ypp"
+#line 3010 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new CastAs((yyvsp[(1) - (4)].expr), (yyvsp[(4) - (4)].sequenceType)), (yyloc), parseInfo);
     }
     break;
 
-  case 190:
+  case 227:
 /* Line 1269 of yacc.c.  */
-#line 2179 "querytransformparser.ypp"
+#line 3016 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new UnaryExpression((yyvsp[(1) - (2)].enums.mathOperator), (yyvsp[(2) - (2)].expr), parseInfo->staticContext), (yyloc), parseInfo);
     }
     break;
 
-  case 191:
+  case 228:
 /* Line 1269 of yacc.c.  */
-#line 2184 "querytransformparser.ypp"
+#line 3021 "querytransformparser.ypp"
     {
         (yyval.enums.mathOperator) = AtomicMathematician::Add;
     }
     break;
 
-  case 192:
+  case 229:
 /* Line 1269 of yacc.c.  */
-#line 2188 "querytransformparser.ypp"
+#line 3025 "querytransformparser.ypp"
     {
         (yyval.enums.mathOperator) = AtomicMathematician::Substract;
     }
     break;
 
-  case 196:
+  case 233:
 /* Line 1269 of yacc.c.  */
-#line 2197 "querytransformparser.ypp"
+#line 3034 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new GeneralComparison((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.valueOperator), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
+        (yyval.expr) = create(new GeneralComparison((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.valueOperator), (yyvsp[(3) - (3)].expr), parseInfo->isBackwardsCompat.top()), (yyloc), parseInfo);
     }
     break;
 
-  case 197:
+  case 234:
 /* Line 1269 of yacc.c.  */
-#line 2201 "querytransformparser.ypp"
+#line 3038 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorEqual;}
     break;
 
-  case 198:
+  case 235:
 /* Line 1269 of yacc.c.  */
-#line 2202 "querytransformparser.ypp"
+#line 3039 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorNotEqual;}
     break;
 
-  case 199:
+  case 236:
 /* Line 1269 of yacc.c.  */
-#line 2203 "querytransformparser.ypp"
+#line 3040 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorGreaterOrEqual;}
     break;
 
-  case 200:
+  case 237:
 /* Line 1269 of yacc.c.  */
-#line 2204 "querytransformparser.ypp"
+#line 3041 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorGreaterThan;}
     break;
 
-  case 201:
+  case 238:
 /* Line 1269 of yacc.c.  */
-#line 2205 "querytransformparser.ypp"
+#line 3042 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorLessOrEqual;}
     break;
 
-  case 202:
+  case 239:
 /* Line 1269 of yacc.c.  */
-#line 2206 "querytransformparser.ypp"
+#line 3043 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorLessThan;}
     break;
 
-  case 203:
+  case 240:
 /* Line 1269 of yacc.c.  */
-#line 2209 "querytransformparser.ypp"
+#line 3046 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ValueComparison((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.valueOperator), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 204:
+  case 241:
 /* Line 1269 of yacc.c.  */
-#line 2213 "querytransformparser.ypp"
+#line 3050 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorEqual;}
     break;
 
-  case 205:
+  case 242:
 /* Line 1269 of yacc.c.  */
-#line 2214 "querytransformparser.ypp"
+#line 3051 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorNotEqual;}
     break;
 
-  case 206:
+  case 243:
 /* Line 1269 of yacc.c.  */
-#line 2215 "querytransformparser.ypp"
+#line 3052 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorGreaterOrEqual;}
     break;
 
-  case 207:
+  case 244:
 /* Line 1269 of yacc.c.  */
-#line 2216 "querytransformparser.ypp"
+#line 3053 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorGreaterThan;}
     break;
 
-  case 208:
+  case 245:
 /* Line 1269 of yacc.c.  */
-#line 2217 "querytransformparser.ypp"
+#line 3054 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorLessOrEqual;}
     break;
 
-  case 209:
+  case 246:
 /* Line 1269 of yacc.c.  */
-#line 2218 "querytransformparser.ypp"
+#line 3055 "querytransformparser.ypp"
     {(yyval.enums.valueOperator) = AtomicComparator::OperatorLessThan;}
     break;
 
-  case 210:
+  case 247:
 /* Line 1269 of yacc.c.  */
-#line 2221 "querytransformparser.ypp"
+#line 3058 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new NodeComparison((yyvsp[(1) - (3)].expr), (yyvsp[(2) - (3)].enums.nodeOperator), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 211:
+  case 248:
 /* Line 1269 of yacc.c.  */
-#line 2225 "querytransformparser.ypp"
+#line 3062 "querytransformparser.ypp"
     {(yyval.enums.nodeOperator) = QXmlNodeModelIndex::Is;}
     break;
 
-  case 212:
+  case 249:
 /* Line 1269 of yacc.c.  */
-#line 2226 "querytransformparser.ypp"
+#line 3063 "querytransformparser.ypp"
     {(yyval.enums.nodeOperator) = QXmlNodeModelIndex::Precedes;}
     break;
 
-  case 213:
+  case 250:
 /* Line 1269 of yacc.c.  */
-#line 2227 "querytransformparser.ypp"
+#line 3064 "querytransformparser.ypp"
     {(yyval.enums.nodeOperator) = QXmlNodeModelIndex::Follows;}
     break;
 
-  case 214:
+  case 251:
 /* Line 1269 of yacc.c.  */
-#line 2230 "querytransformparser.ypp"
+#line 3067 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc));
         parseInfo->staticContext->error(QtXmlPatterns::tr("The Schema Validation Feature is not supported. "
-                                           "Hence, %1-expressions may not be used.")
+                                                          "Hence, %1-expressions may not be used.")
                                            .arg(formatKeyword("validate")),
                                         ReportContext::XQST0075, fromYYLTYPE((yyloc), parseInfo));
         /*
@@ -4777,27 +5925,27 @@ yyreduce:
     }
     break;
 
-  case 215:
+  case 252:
 /* Line 1269 of yacc.c.  */
-#line 2242 "querytransformparser.ypp"
+#line 3080 "querytransformparser.ypp"
     {(yyval.enums.validationMode) = Validate::Strict;}
     break;
 
-  case 216:
+  case 253:
 /* Line 1269 of yacc.c.  */
-#line 2243 "querytransformparser.ypp"
+#line 3081 "querytransformparser.ypp"
     {(yyval.enums.validationMode) = Validate::Strict;}
     break;
 
-  case 217:
+  case 254:
 /* Line 1269 of yacc.c.  */
-#line 2244 "querytransformparser.ypp"
+#line 3082 "querytransformparser.ypp"
     {(yyval.enums.validationMode) = Validate::Lax;}
     break;
 
-  case 218:
+  case 255:
 /* Line 1269 of yacc.c.  */
-#line 2247 "querytransformparser.ypp"
+#line 3085 "querytransformparser.ypp"
     {
         /* We don't support any pragmas, so we only do the
          * necessary validation and use the fallback expression. */
@@ -4814,92 +5962,360 @@ yyreduce:
     }
     break;
 
-  case 219:
+  case 256:
 /* Line 1269 of yacc.c.  */
-#line 2263 "querytransformparser.ypp"
+#line 3101 "querytransformparser.ypp"
     {
         (yyval.expr).reset();
     }
     break;
 
-  case 220:
+  case 257:
 /* Line 1269 of yacc.c.  */
-#line 2267 "querytransformparser.ypp"
+#line 3105 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (3)].expr);
     }
     break;
 
-  case 226:
+  case 260:
 /* Line 1269 of yacc.c.  */
-#line 2280 "querytransformparser.ypp"
+#line 3113 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 263:
+/* Line 1269 of yacc.c.  */
+#line 3121 "querytransformparser.ypp"
     {
         /* This is "/step". That is, fn:root(self::node()) treat as document-node()/RelativePathExpr. */
         (yyval.expr) = create(new Path(createRootExpression(parseInfo, (yyloc)), (yyvsp[(2) - (2)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 227:
+  case 264:
 /* Line 1269 of yacc.c.  */
-#line 2286 "querytransformparser.ypp"
+#line 3127 "querytransformparser.ypp"
     {
         (yyval.expr) = createSlashSlashPath(createRootExpression(parseInfo, (yyloc)), (yyvsp[(2) - (2)].expr), (yyloc), parseInfo);
     }
     break;
 
-  case 228:
+  case 265:
 /* Line 1269 of yacc.c.  */
-#line 2290 "querytransformparser.ypp"
+#line 3131 "querytransformparser.ypp"
     {
         /* This is "/". That is, fn:root(self::node()) treat as document-node(). */
         (yyval.expr) = createRootExpression(parseInfo, (yyloc));
     }
     break;
 
-  case 231:
+  case 268:
 /* Line 1269 of yacc.c.  */
-#line 2300 "querytransformparser.ypp"
+#line 3141 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new Path((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
+        (yyval.expr) = create(new Path((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), (yyvsp[(2) - (3)].enums.pathKind)), (yyloc), parseInfo);
     }
     break;
 
-  case 232:
+  case 269:
 /* Line 1269 of yacc.c.  */
-#line 2304 "querytransformparser.ypp"
+#line 3145 "querytransformparser.ypp"
+    {
+        const Expression::Ptr orderBy(createReturnOrderBy((yyvsp[(4) - (7)].orderSpecs), (yyvsp[(6) - (7)].expr), parseInfo->orderStability.pop(), (yyloc), parseInfo));
+
+        ReturnOrderBy *const rob = orderBy->as<ReturnOrderBy>();
+        const Expression::Ptr path(create(new Path((yyvsp[(1) - (7)].expr), orderBy, (yyvsp[(2) - (7)].enums.pathKind)), (yyloc), parseInfo));
+
+        (yyval.expr) = create(new OrderBy(rob->stability(), rob->orderSpecs(), path, rob), (yyloc), parseInfo);
+    }
+    break;
+
+  case 270:
+/* Line 1269 of yacc.c.  */
+#line 3154 "querytransformparser.ypp"
     {
         (yyval.expr) = createSlashSlashPath((yyvsp[(1) - (3)].expr), (yyvsp[(3) - (3)].expr), (yyloc), parseInfo);
     }
     break;
 
-  case 233:
+  case 271:
 /* Line 1269 of yacc.c.  */
-#line 2309 "querytransformparser.ypp"
+#line 3159 "querytransformparser.ypp"
     {
         (yyval.expr) = NodeSortExpression::wrapAround((yyvsp[(1) - (1)].expr), parseInfo->staticContext);
     }
     break;
 
-  case 236:
+  case 273:
 /* Line 1269 of yacc.c.  */
-#line 2316 "querytransformparser.ypp"
+#line 3164 "querytransformparser.ypp"
+    {
+        (yyval.expr) = create(new CurrentItemStore((yyvsp[(2) - (2)].expr)), (yyloc), parseInfo);
+    }
+    break;
+
+  case 274:
+/* Line 1269 of yacc.c.  */
+#line 3168 "querytransformparser.ypp"
+    {
+        const xsDouble version = (yyvsp[(1) - (1)].sval).toDouble();
+
+        parseInfo->isBackwardsCompat.push(version != 2);
+
+        (yyval.enums.Double) = version;
+    }
+    break;
+
+  case 275:
+/* Line 1269 of yacc.c.  */
+#line 3176 "querytransformparser.ypp"
+    {
+        if((yyvsp[(2) - (3)].enums.Double) < 2)
+            (yyval.expr) = createCompatStore((yyvsp[(3) - (3)].expr), (yyloc), parseInfo);
+        else
+            (yyval.expr) = (yyvsp[(3) - (3)].expr);
+    }
+    break;
+
+  case 276:
+/* Line 1269 of yacc.c.  */
+#line 3183 "querytransformparser.ypp"
+    {
+    Q_ASSERT(!(yyvsp[(2) - (5)].sval).isEmpty());
+    (yyval.expr) = create(new StaticBaseURIStore((yyvsp[(2) - (5)].sval), (yyvsp[(4) - (5)].expr)), (yyloc), parseInfo);
+}
+    break;
+
+  case 277:
+/* Line 1269 of yacc.c.  */
+#line 3189 "querytransformparser.ypp"
+    {
+        parseInfo->resolvers.push(parseInfo->staticContext->namespaceBindings());
+        const NamespaceResolver::Ptr resolver(new DelegatingNamespaceResolver(parseInfo->staticContext->namespaceBindings()));
+        resolver->addBinding(QXmlName(parseInfo->staticContext->namePool()->allocateNamespace((yyvsp[(5) - (6)].sval)),
+                                      StandardLocalNames::empty,
+                                      parseInfo->staticContext->namePool()->allocatePrefix((yyvsp[(3) - (6)].sval))));
+        parseInfo->staticContext->setNamespaceBindings(resolver);
+    }
+    break;
+
+  case 278:
+/* Line 1269 of yacc.c.  */
+#line 3199 "querytransformparser.ypp"
+    {
+        parseInfo->staticContext->setNamespaceBindings(parseInfo->resolvers.pop());
+        (yyval.expr) = (yyvsp[(8) - (9)].expr);
+    }
+    break;
+
+  case 279:
+/* Line 1269 of yacc.c.  */
+#line 3204 "querytransformparser.ypp"
+    {
+        (yyval.expr) = create(new CallTemplate((yyvsp[(2) - (5)].qName), parseInfo->templateWithParams), (yyloc), parseInfo);
+        parseInfo->templateWithParametersHandled();
+        parseInfo->templateCalls.append((yyval.expr));
+    }
+    break;
+
+  case 280:
+/* Line 1269 of yacc.c.  */
+#line 3211 "querytransformparser.ypp"
+    {
+        parseInfo->startParsingWithParam();
+    }
+    break;
+
+  case 281:
+/* Line 1269 of yacc.c.  */
+#line 3215 "querytransformparser.ypp"
+    {
+        parseInfo->endParsingWithParam();
+    }
+    break;
+
+  case 282:
+/* Line 1269 of yacc.c.  */
+#line 3220 "querytransformparser.ypp"
+    {
+    }
+    break;
+
+  case 283:
+/* Line 1269 of yacc.c.  */
+#line 3223 "querytransformparser.ypp"
+    {
+    }
+    break;
+
+  case 284:
+/* Line 1269 of yacc.c.  */
+#line 3226 "querytransformparser.ypp"
+    {
+    }
+    break;
+
+  case 285:
+/* Line 1269 of yacc.c.  */
+#line 3230 "querytransformparser.ypp"
+    {
+    }
+    break;
+
+  case 286:
+/* Line 1269 of yacc.c.  */
+#line 3233 "querytransformparser.ypp"
+    {
+    }
+    break;
+
+  case 287:
+/* Line 1269 of yacc.c.  */
+#line 3237 "querytransformparser.ypp"
+    {
+        /* Note, this grammar rule is invoked for @c xsl:param @em and @c
+         * xsl:with-param. */
+        const bool isParsingWithParam = parseInfo->isParsingWithParam();
+
+        /**
+         * @c xsl:param doesn't make life easy:
+         *
+         * If it only has @c name, it's default value is an empty
+         * string(hence has type @c xs:string), but the value that
+         * (maybe) is supplied can be anything, typically a node.
+         *
+         * Therefore, for that very common case we can't rely on
+         * the Expression's type, but have to force it to item()*.
+         *
+         * So if we're supplied the type item()*, we pass a null
+         * SequenceType. TemplateParameterReference recognizes this
+         * and has item()* as its static type, regardless of if the
+         * expression has a more specific type.
+         */
+        SequenceType::Ptr type;
+
+        if(!(yyvsp[(4) - (5)].sequenceType)->is(CommonSequenceTypes::ZeroOrMoreItems))
+            type = (yyvsp[(4) - (5)].sequenceType);
+
+        Expression::Ptr expr;
+
+        /* The default value is an empty sequence. */
+        if(!(yyvsp[(5) - (5)].expr) && ((type && (yyvsp[(4) - (5)].sequenceType)->cardinality().allowsEmpty())
+                   || isParsingWithParam))
+            expr = create(new EmptySequence, (yyloc), parseInfo);
+        else
+            expr = (yyvsp[(5) - (5)].expr);
+
+        /* We ensure we have some type, so CallTemplate, Template and friends
+         * are happy. */
+        if(!isParsingWithParam && !type)
+            type = CommonSequenceTypes::ZeroOrMoreItems;
+
+        if((yyvsp[(1) - (5)].enums.Bool))
+            /* TODO, handle tunnel parameters. */;
+        else
+        {
+            if((!isParsingWithParam && VariableDeclaration::contains(parseInfo->templateParameters, (yyvsp[(3) - (5)].qName))) ||
+               (isParsingWithParam && parseInfo->templateWithParams.contains((yyvsp[(3) - (5)].qName))))
+            {
+                parseInfo->staticContext->error(QtXmlPatterns::tr("Each name of a template parameter must be unique; %1 is duplicated.")
+                                                                 .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(3) - (5)].qName))),
+                                                isParsingWithParam ? ReportContext::XTSE0670 : ReportContext::XTSE0580, fromYYLTYPE((yyloc), parseInfo));
+            }
+            else
+            {
+                if(isParsingWithParam)
+                    parseInfo->templateWithParams[(yyvsp[(3) - (5)].qName)] = WithParam::Ptr(new WithParam((yyvsp[(3) - (5)].qName), (yyvsp[(4) - (5)].sequenceType), expr));
+                else
+                {
+                    Q_ASSERT(type);
+                    pushVariable((yyvsp[(3) - (5)].qName), type, expr, VariableDeclaration::TemplateParameter, (yyloc), parseInfo);
+                    parseInfo->templateParameters.append(parseInfo->variables.top());
+                }
+            }
+        }
+    }
+    break;
+
+  case 288:
+/* Line 1269 of yacc.c.  */
+#line 3302 "querytransformparser.ypp"
+    {
+        (yyval.enums.Bool) = false;
+    }
+    break;
+
+  case 289:
+/* Line 1269 of yacc.c.  */
+#line 3306 "querytransformparser.ypp"
+    {
+        (yyval.enums.Bool) = true;
+    }
+    break;
+
+  case 290:
+/* Line 1269 of yacc.c.  */
+#line 3311 "querytransformparser.ypp"
+    {
+        (yyval.expr) = Expression::Ptr();
+    }
+    break;
+
+  case 291:
+/* Line 1269 of yacc.c.  */
+#line 3315 "querytransformparser.ypp"
+    {
+        (yyval.expr) = (yyvsp[(2) - (2)].expr);
+    }
+    break;
+
+  case 292:
+/* Line 1269 of yacc.c.  */
+#line 3324 "querytransformparser.ypp"
+    {
+        (yyval.enums.pathKind) = Path::RegularPath;
+    }
+    break;
+
+  case 293:
+/* Line 1269 of yacc.c.  */
+#line 3328 "querytransformparser.ypp"
+    {
+        (yyval.enums.pathKind) = Path::XSLTForEach;
+    }
+    break;
+
+  case 294:
+/* Line 1269 of yacc.c.  */
+#line 3332 "querytransformparser.ypp"
+    {
+        (yyval.enums.pathKind) = Path::ForApplyTemplate;
+    }
+    break;
+
+  case 296:
+/* Line 1269 of yacc.c.  */
+#line 3338 "querytransformparser.ypp"
     {
         (yyval.expr) = create(GenericPredicate::create((yyvsp[(1) - (4)].expr), (yyvsp[(3) - (4)].expr), parseInfo->staticContext, fromYYLTYPE((yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 239:
+  case 299:
 /* Line 1269 of yacc.c.  */
-#line 2324 "querytransformparser.ypp"
+#line 3346 "querytransformparser.ypp"
     {
                 if((yyvsp[(1) - (1)].enums.axis) == QXmlNodeModelIndex::AxisAttribute)
                     parseInfo->nodeTestSource = BuiltinTypes::attribute;
              }
     break;
 
-  case 240:
+  case 300:
 /* Line 1269 of yacc.c.  */
-#line 2329 "querytransformparser.ypp"
+#line 3351 "querytransformparser.ypp"
     {
         if((yyvsp[(3) - (3)].itemType))
         {
@@ -4926,9 +6342,9 @@ yyreduce:
     }
     break;
 
-  case 244:
+  case 304:
 /* Line 1269 of yacc.c.  */
-#line 2359 "querytransformparser.ypp"
+#line 3381 "querytransformparser.ypp"
     {
         if((yyvsp[(1) - (2)].enums.axis) == QXmlNodeModelIndex::AxisNamespace)
         {
@@ -4943,89 +6359,89 @@ yyreduce:
     }
     break;
 
-  case 245:
+  case 305:
 /* Line 1269 of yacc.c.  */
-#line 2372 "querytransformparser.ypp"
+#line 3394 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisAncestorOrSelf  ;}
     break;
 
-  case 246:
+  case 306:
 /* Line 1269 of yacc.c.  */
-#line 2373 "querytransformparser.ypp"
+#line 3395 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisAncestor        ;}
     break;
 
-  case 247:
+  case 307:
 /* Line 1269 of yacc.c.  */
-#line 2374 "querytransformparser.ypp"
+#line 3396 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisAttribute       ;}
     break;
 
-  case 248:
+  case 308:
 /* Line 1269 of yacc.c.  */
-#line 2375 "querytransformparser.ypp"
+#line 3397 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisChild           ;}
     break;
 
-  case 249:
+  case 309:
 /* Line 1269 of yacc.c.  */
-#line 2376 "querytransformparser.ypp"
+#line 3398 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisDescendantOrSelf;}
     break;
 
-  case 250:
+  case 310:
 /* Line 1269 of yacc.c.  */
-#line 2377 "querytransformparser.ypp"
+#line 3399 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisDescendant      ;}
     break;
 
-  case 251:
+  case 311:
 /* Line 1269 of yacc.c.  */
-#line 2378 "querytransformparser.ypp"
+#line 3400 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisFollowing       ;}
     break;
 
-  case 252:
+  case 312:
 /* Line 1269 of yacc.c.  */
-#line 2379 "querytransformparser.ypp"
+#line 3401 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisPreceding       ;}
     break;
 
-  case 253:
+  case 313:
 /* Line 1269 of yacc.c.  */
-#line 2380 "querytransformparser.ypp"
+#line 3402 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisFollowingSibling;}
     break;
 
-  case 254:
+  case 314:
 /* Line 1269 of yacc.c.  */
-#line 2381 "querytransformparser.ypp"
+#line 3403 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisPrecedingSibling;}
     break;
 
-  case 255:
+  case 315:
 /* Line 1269 of yacc.c.  */
-#line 2382 "querytransformparser.ypp"
+#line 3404 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisParent          ;}
     break;
 
-  case 256:
+  case 316:
 /* Line 1269 of yacc.c.  */
-#line 2383 "querytransformparser.ypp"
+#line 3405 "querytransformparser.ypp"
     {(yyval.enums.axis) = QXmlNodeModelIndex::AxisSelf            ;}
     break;
 
-  case 257:
+  case 317:
 /* Line 1269 of yacc.c.  */
-#line 2386 "querytransformparser.ypp"
+#line 3408 "querytransformparser.ypp"
     {
                         parseInfo->nodeTestSource = BuiltinTypes::attribute;
                    }
     break;
 
-  case 258:
+  case 318:
 /* Line 1269 of yacc.c.  */
-#line 2390 "querytransformparser.ypp"
+#line 3412 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisAttribute, (yyvsp[(3) - (3)].itemType)), (yyloc), parseInfo);
 
@@ -5033,49 +6449,56 @@ yyreduce:
     }
     break;
 
-  case 259:
+  case 319:
 /* Line 1269 of yacc.c.  */
-#line 2396 "querytransformparser.ypp"
+#line 3418 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisChild, (yyvsp[(1) - (1)].itemType)), (yyloc), parseInfo);
+        ItemType::Ptr nodeTest;
+
+        if(parseInfo->isParsingPattern && *(yyvsp[(1) - (1)].itemType) == *BuiltinTypes::node)
+            nodeTest = BuiltinTypes::xsltNodeTest;
+        else
+            nodeTest = (yyvsp[(1) - (1)].itemType);
+
+        (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisChild, nodeTest), (yyloc), parseInfo);
     }
     break;
 
-  case 260:
+  case 320:
 /* Line 1269 of yacc.c.  */
-#line 2400 "querytransformparser.ypp"
+#line 3429 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisAttribute, (yyvsp[(1) - (1)].itemType)), (yyloc), parseInfo);
     }
     break;
 
-  case 262:
+  case 322:
 /* Line 1269 of yacc.c.  */
-#line 2407 "querytransformparser.ypp"
+#line 3436 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new AxisStep(QXmlNodeModelIndex::AxisParent, BuiltinTypes::node), (yyloc), parseInfo);
     }
     break;
 
-  case 265:
+  case 325:
 /* Line 1269 of yacc.c.  */
-#line 2415 "querytransformparser.ypp"
+#line 3444 "querytransformparser.ypp"
     {
         (yyval.itemType) = QNameTest::create(parseInfo->nodeTestSource, (yyvsp[(1) - (1)].qName));
     }
     break;
 
-  case 267:
+  case 327:
 /* Line 1269 of yacc.c.  */
-#line 2421 "querytransformparser.ypp"
+#line 3450 "querytransformparser.ypp"
     {
         (yyval.itemType) = parseInfo->nodeTestSource;
     }
     break;
 
-  case 268:
+  case 328:
 /* Line 1269 of yacc.c.  */
-#line 2425 "querytransformparser.ypp"
+#line 3454 "querytransformparser.ypp"
     {
         const NamePool::Ptr np(parseInfo->staticContext->namePool());
         const ReflectYYLTYPE ryy((yyloc), parseInfo);
@@ -5086,179 +6509,122 @@ yyreduce:
     }
     break;
 
-  case 269:
+  case 329:
 /* Line 1269 of yacc.c.  */
-#line 2434 "querytransformparser.ypp"
+#line 3463 "querytransformparser.ypp"
     {
         const QXmlName::LocalNameCode c = parseInfo->staticContext->namePool()->allocateLocalName((yyvsp[(1) - (1)].sval));
         (yyval.itemType) = LocalNameTest::create(parseInfo->nodeTestSource, c);
     }
     break;
 
-  case 271:
+  case 331:
 /* Line 1269 of yacc.c.  */
-#line 2441 "querytransformparser.ypp"
+#line 3470 "querytransformparser.ypp"
     {
         (yyval.expr) = create(GenericPredicate::create((yyvsp[(1) - (4)].expr), (yyvsp[(3) - (4)].expr), parseInfo->staticContext, fromYYLTYPE((yylsp[(4) - (4)]), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 280:
+  case 339:
 /* Line 1269 of yacc.c.  */
-#line 2455 "querytransformparser.ypp"
+#line 3482 "querytransformparser.ypp"
+    {
+        (yyval.expr) = create(new ApplyTemplate(parseInfo->modeFor((yyvsp[(2) - (5)].qName)),
+                                      parseInfo->templateWithParams,
+                                      parseInfo->modeFor(QXmlName(StandardNamespaces::InternalXSLT,
+                                                                  StandardLocalNames::Default))),
+                    (yylsp[(1) - (5)]), parseInfo);
+        parseInfo->templateWithParametersHandled();
+    }
+    break;
+
+  case 341:
+/* Line 1269 of yacc.c.  */
+#line 3493 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new Literal(AtomicString::fromValue((yyvsp[(1) - (1)].sval))), (yyloc), parseInfo);
     }
     break;
 
-  case 281:
+  case 342:
 /* Line 1269 of yacc.c.  */
-#line 2460 "querytransformparser.ypp"
+#line 3498 "querytransformparser.ypp"
     {
-        const Item num(Double::fromLexical((yyvsp[(1) - (1)].sval)));
-
-        if(num.as<AtomicValue>()->hasError())
-        {
-            parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not a valid numeric literal.")
-                                               .arg(formatData((yyvsp[(1) - (1)].sval))),
-                                            ReportContext::XPST0003, fromYYLTYPE((yyloc), parseInfo));
-        }
-        else
-            (yyval.expr) = create(new Literal(num), (yyloc), parseInfo);
+        (yyval.expr) = createNumericLiteral<Double>((yyvsp[(1) - (1)].sval), (yyloc), parseInfo);
     }
     break;
 
-  case 282:
+  case 343:
 /* Line 1269 of yacc.c.  */
-#line 2473 "querytransformparser.ypp"
+#line 3502 "querytransformparser.ypp"
     {
-        const Item num(Numeric::fromLexical((yyvsp[(1) - (1)].sval)));
-
-        if(num.as<AtomicValue>()->hasError())
-        {
-            parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not a valid numeric literal.")
-                                               .arg(formatData((yyvsp[(1) - (1)].sval))),
-                                            ReportContext::XPST0003, fromYYLTYPE((yyloc), parseInfo));
-        }
-        else
-            (yyval.expr) = create(new Literal(num), (yyloc), parseInfo);
+        (yyval.expr) = createNumericLiteral<Numeric>((yyvsp[(1) - (1)].sval), (yyloc), parseInfo);
     }
     break;
 
-  case 283:
+  case 344:
 /* Line 1269 of yacc.c.  */
-#line 2487 "querytransformparser.ypp"
+#line 3507 "querytransformparser.ypp"
     {
-        const VariableDeclaration::Ptr var(variableByName((yyvsp[(2) - (2)].qName), parseInfo));
-
-        if(var && var->type != VariableDeclaration::ExternalVariable)
-        {
-            switch(var->type)
-            {
-                case VariableDeclaration::RangeVariable:
-                {
-                    (yyval.expr) = create(new RangeVariableReference(var->expression(), var->slot), (yyloc), parseInfo);
-                    break;
-                }
-                case VariableDeclaration::GlobalVariable:
-                /* Fallthrough. From the perspective of an ExpressionVariableReference, it can't tell
-                 * a difference between a global and a local expression variable. However, the cache
-                 * mechanism must. */
-                case VariableDeclaration::ExpressionVariable:
-                {
-                    (yyval.expr) = create(new ExpressionVariableReference(var->slot, var), (yyloc), parseInfo);
-                    break;
-                }
-                case VariableDeclaration::FunctionArgument:
-                {
-                    (yyval.expr) = create(new ArgumentReference(var->sequenceType, var->slot), (yyloc), parseInfo);
-                    break;
-                }
-                case VariableDeclaration::PositionalVariable:
-                {
-                    (yyval.expr) = create(new PositionalVariableReference(var->slot), (yyloc), parseInfo);
-                    break;
-                }
-                case VariableDeclaration::ExternalVariable:
-                    /* This code path will never be hit, but the case
-                     * label silences a warning. See above. */
-                    ;
-            }
-            Q_ASSERT((yyval.expr));
-            var->references.append((yyval.expr));
-        }
-        else
-        {
-            /* Let's see if your external variable loader can provide us with one. */
-            const SequenceType::Ptr varType(parseInfo->staticContext->
-                                            externalVariableLoader()->announceExternalVariable((yyvsp[(2) - (2)].qName), CommonSequenceTypes::ZeroOrMoreItems));
-
-            if(varType)
-            {
-                const Expression::Ptr extRef(create(new ExternalVariableReference((yyvsp[(2) - (2)].qName), varType), (yyloc), parseInfo));
-                const Expression::Ptr checked(TypeChecker::applyFunctionConversion(extRef, varType, parseInfo->staticContext));
-                (yyval.expr) = checked;
-            }
-            else
-                variableUnavailable((yyvsp[(2) - (2)].qName), parseInfo, (yylsp[(2) - (2)]));
-        }
+        (yyval.expr) = resolveVariable((yyvsp[(2) - (2)].qName), (yyloc), parseInfo, false);
     }
     break;
 
-  case 284:
+  case 345:
 /* Line 1269 of yacc.c.  */
-#line 2544 "querytransformparser.ypp"
+#line 3512 "querytransformparser.ypp"
     {
         /* See: http://www.w3.org/TR/xpath20/#id-variables */
         (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(QString(), (yyvsp[(1) - (1)].sval));
     }
     break;
 
-  case 285:
+  case 346:
 /* Line 1269 of yacc.c.  */
-#line 2549 "querytransformparser.ypp"
+#line 3517 "querytransformparser.ypp"
     {
         (yyval.qName) = (yyvsp[(1) - (1)].qName);
     }
     break;
 
-  case 286:
+  case 347:
 /* Line 1269 of yacc.c.  */
-#line 2554 "querytransformparser.ypp"
+#line 3522 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (3)].expr);
     }
     break;
 
-  case 287:
+  case 348:
 /* Line 1269 of yacc.c.  */
-#line 2558 "querytransformparser.ypp"
+#line 3526 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new EmptySequence, (yyloc), parseInfo);
     }
     break;
 
-  case 288:
+  case 349:
 /* Line 1269 of yacc.c.  */
-#line 2563 "querytransformparser.ypp"
+#line 3531 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new ContextItem(), (yyloc), parseInfo);
     }
     break;
 
-  case 289:
+  case 350:
 /* Line 1269 of yacc.c.  */
-#line 2568 "querytransformparser.ypp"
+#line 3536 "querytransformparser.ypp"
     {
         (yyval.expr) = (yyvsp[(2) - (2)].expr);
     }
     break;
 
-  case 290:
+  case 351:
 /* Line 1269 of yacc.c.  */
-#line 2573 "querytransformparser.ypp"
+#line 3541 "querytransformparser.ypp"
     {
-        if(XPathHelper::isReservedNamespace((yyvsp[(1) - (4)].qName).namespaceURI()))
+        if(XPathHelper::isReservedNamespace((yyvsp[(1) - (4)].qName).namespaceURI()) || (yyvsp[(1) - (4)].qName).namespaceURI() == StandardNamespaces::InternalXSLT)
         { /* We got a call to a builtin function. */
             const ReflectYYLTYPE ryy((yyloc), parseInfo);
 
@@ -5285,17 +6651,17 @@ yyreduce:
     }
     break;
 
-  case 291:
+  case 352:
 /* Line 1269 of yacc.c.  */
-#line 2601 "querytransformparser.ypp"
+#line 3569 "querytransformparser.ypp"
     {
         (yyval.expressionList) = Expression::List();
     }
     break;
 
-  case 292:
+  case 353:
 /* Line 1269 of yacc.c.  */
-#line 2606 "querytransformparser.ypp"
+#line 3574 "querytransformparser.ypp"
     {
         Expression::List list;
         list.append((yyvsp[(1) - (1)].expr));
@@ -5303,18 +6669,26 @@ yyreduce:
     }
     break;
 
-  case 299:
+  case 355:
 /* Line 1269 of yacc.c.  */
-#line 2653 "querytransformparser.ypp"
+#line 3583 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc));
+    }
+    break;
+
+  case 360:
+/* Line 1269 of yacc.c.  */
+#line 3624 "querytransformparser.ypp"
     {
                         (yyval.enums.tokenizerPosition) = parseInfo->tokenizer->commenceScanOnly();
                         parseInfo->scanOnlyStack.push(true);
                     }
     break;
 
-  case 300:
+  case 361:
 /* Line 1269 of yacc.c.  */
-#line 2662 "querytransformparser.ypp"
+#line 3633 "querytransformparser.ypp"
     {
                         ++parseInfo->elementConstructorDepth;
                         Expression::List constructors;
@@ -5369,7 +6743,7 @@ yyreduce:
                                                                         ReportContext::XQST0085, fromYYLTYPE((yyloc), parseInfo));
                                     }
                                 }
-                                else if(!QUrl(strNamespace).isValid())
+                                else if(!AnyURI::isValid(strNamespace))
                                 {
                                     parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is an invalid namespace URI.").arg(formatURI(strNamespace)),
                                                                     ReportContext::XQST0022, fromYYLTYPE((yyloc), parseInfo));
@@ -5460,9 +6834,9 @@ yyreduce:
                     }
     break;
 
-  case 301:
+  case 362:
 /* Line 1269 of yacc.c.  */
-#line 2808 "querytransformparser.ypp"
+#line 3779 "querytransformparser.ypp"
     {
         /* We add the content constructor after the attribute constructors. This might result
          * in nested ExpressionSequences, but it will be optimized away later on. */
@@ -5547,7 +6921,7 @@ yyreduce:
         }
 
         const Expression::Ptr name(create(new Literal(toItem(QNameValue::fromValue(parseInfo->staticContext->namePool(), parseInfo->tagStack.top()))), (yyloc), parseInfo));
-        (yyval.expr) = create(new ElementConstructor(name, contentOp), (yyloc), parseInfo);
+        (yyval.expr) = create(new ElementConstructor(name, contentOp, parseInfo->isXSLT()), (yyloc), parseInfo);
 
         /* Restore the old context. We don't want the namespaces
          * to be in-scope for expressions appearing after the
@@ -5559,17 +6933,17 @@ yyreduce:
     }
     break;
 
-  case 302:
+  case 363:
 /* Line 1269 of yacc.c.  */
-#line 2904 "querytransformparser.ypp"
+#line 3875 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new EmptySequence(), (yyloc), parseInfo);
     }
     break;
 
-  case 303:
+  case 364:
 /* Line 1269 of yacc.c.  */
-#line 2908 "querytransformparser.ypp"
+#line 3879 "querytransformparser.ypp"
     {
         if(!(yyvsp[(4) - (5)].qName).isLexicallyEqual(parseInfo->tagStack.top()))
         {
@@ -5589,85 +6963,90 @@ yyreduce:
     }
     break;
 
-  case 304:
+  case 365:
 /* Line 1269 of yacc.c.  */
-#line 2927 "querytransformparser.ypp"
+#line 3898 "querytransformparser.ypp"
     {
         (yyval.attributeHolders) = AttributeHolderVector();
     }
     break;
 
-  case 305:
+  case 366:
 /* Line 1269 of yacc.c.  */
-#line 2931 "querytransformparser.ypp"
+#line 3902 "querytransformparser.ypp"
     {
         (yyvsp[(1) - (2)].attributeHolders).append((yyvsp[(2) - (2)].attributeHolder));
         (yyval.attributeHolders) = (yyvsp[(1) - (2)].attributeHolders);
     }
     break;
 
-  case 306:
+  case 367:
 /* Line 1269 of yacc.c.  */
-#line 2937 "querytransformparser.ypp"
+#line 3908 "querytransformparser.ypp"
     {
         (yyval.attributeHolder) = qMakePair((yyvsp[(1) - (3)].sval), (yyvsp[(3) - (3)].expr));
     }
     break;
 
-  case 307:
+  case 368:
 /* Line 1269 of yacc.c.  */
-#line 2942 "querytransformparser.ypp"
+#line 3913 "querytransformparser.ypp"
     {
         (yyval.expr) = createDirAttributeValue((yyvsp[(2) - (3)].expressionList), parseInfo, (yyloc));
     }
     break;
 
-  case 308:
+  case 369:
 /* Line 1269 of yacc.c.  */
-#line 2947 "querytransformparser.ypp"
+#line 3918 "querytransformparser.ypp"
     {
         (yyval.expr) = createDirAttributeValue((yyvsp[(2) - (3)].expressionList), parseInfo, (yyloc));
     }
     break;
 
-  case 309:
+  case 370:
 /* Line 1269 of yacc.c.  */
-#line 2952 "querytransformparser.ypp"
+#line 3923 "querytransformparser.ypp"
     {
         (yyval.expressionList) = Expression::List();
     }
     break;
 
-  case 310:
+  case 371:
 /* Line 1269 of yacc.c.  */
-#line 2956 "querytransformparser.ypp"
+#line 3927 "querytransformparser.ypp"
     {
-        (yyvsp[(2) - (2)].expressionList).prepend(create(new SimpleContentConstructor((yyvsp[(1) - (2)].expr)), (yyloc), parseInfo));
+        Expression::Ptr content((yyvsp[(1) - (2)].expr));
+
+        if(parseInfo->isBackwardsCompat.top())
+            content = create(GenericPredicate::createFirstItem(content), (yyloc), parseInfo);
+
+        (yyvsp[(2) - (2)].expressionList).prepend(createSimpleContent(content, (yyloc), parseInfo));
         (yyval.expressionList) = (yyvsp[(2) - (2)].expressionList);
     }
     break;
 
-  case 311:
+  case 372:
 /* Line 1269 of yacc.c.  */
-#line 2961 "querytransformparser.ypp"
+#line 3937 "querytransformparser.ypp"
     {
         (yyvsp[(2) - (2)].expressionList).prepend(create(new Literal(AtomicString::fromValue((yyvsp[(1) - (2)].sval))), (yyloc), parseInfo));
         (yyval.expressionList) = (yyvsp[(2) - (2)].expressionList);
     }
     break;
 
-  case 312:
+  case 373:
 /* Line 1269 of yacc.c.  */
-#line 2967 "querytransformparser.ypp"
+#line 3943 "querytransformparser.ypp"
     {
         (yyval.expressionList) = Expression::List();
         parseInfo->isPreviousEnclosedExpr = false;
     }
     break;
 
-  case 313:
+  case 374:
 /* Line 1269 of yacc.c.  */
-#line 2972 "querytransformparser.ypp"
+#line 3948 "querytransformparser.ypp"
     {
         (yyvsp[(1) - (2)].expressionList).append((yyvsp[(2) - (2)].expr));
         (yyval.expressionList) = (yyvsp[(1) - (2)].expressionList);
@@ -5675,9 +7054,9 @@ yyreduce:
     }
     break;
 
-  case 314:
+  case 375:
 /* Line 1269 of yacc.c.  */
-#line 2978 "querytransformparser.ypp"
+#line 3954 "querytransformparser.ypp"
     {
         if(parseInfo->staticContext->boundarySpacePolicy() == StaticContext::BSPStrip &&
            XPathHelper::isWhitespaceOnly((yyvsp[(2) - (2)].sval)))
@@ -5693,9 +7072,9 @@ yyreduce:
     }
     break;
 
-  case 315:
+  case 376:
 /* Line 1269 of yacc.c.  */
-#line 2992 "querytransformparser.ypp"
+#line 3968 "querytransformparser.ypp"
     {
         (yyvsp[(1) - (2)].expressionList).append(create(new TextNodeConstructor(create(new Literal(AtomicString::fromValue((yyvsp[(2) - (2)].sval))), (yyloc), parseInfo)), (yyloc), parseInfo));
         (yyval.expressionList) = (yyvsp[(1) - (2)].expressionList);
@@ -5703,9 +7082,9 @@ yyreduce:
     }
     break;
 
-  case 316:
+  case 377:
 /* Line 1269 of yacc.c.  */
-#line 2998 "querytransformparser.ypp"
+#line 3974 "querytransformparser.ypp"
     {
         /* We insert a text node constructor that send an empty text node between
          * the two enclosed expressions, in order to ensure that no space is inserted.
@@ -5723,24 +7102,23 @@ yyreduce:
     }
     break;
 
-  case 317:
+  case 378:
 /* Line 1269 of yacc.c.  */
-#line 3015 "querytransformparser.ypp"
+#line 3991 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new CommentConstructor(create(new Literal(AtomicString::fromValue((yyvsp[(2) - (2)].sval))), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 318:
+  case 379:
 /* Line 1269 of yacc.c.  */
-#line 3020 "querytransformparser.ypp"
+#line 3996 "querytransformparser.ypp"
     {
         const ReflectYYLTYPE ryy((yyloc), parseInfo);
-        const QString name
-            (NCNameConstructor::validateTargetName<StaticContext::Ptr,
-                                                   ReportContext::XPST0003,
-                                                   ReportContext::XPST0003>((yyvsp[(2) - (3)].sval),
-                                                                            parseInfo->staticContext, &ryy));
+        NCNameConstructor::validateTargetName<StaticContext::Ptr,
+                                              ReportContext::XPST0003,
+                                              ReportContext::XPST0003>((yyvsp[(2) - (3)].sval),
+                                                                       parseInfo->staticContext, &ryy);
 
         (yyval.expr) = create(new ProcessingInstructionConstructor(
                              create(new Literal(AtomicString::fromValue((yyvsp[(2) - (3)].sval))), (yyloc), parseInfo),
@@ -5748,33 +7126,36 @@ yyreduce:
     }
     break;
 
-  case 325:
+  case 387:
 /* Line 1269 of yacc.c.  */
-#line 3041 "querytransformparser.ypp"
+#line 4017 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new DocumentConstructor((yyvsp[(2) - (2)].expr)), (yyloc), parseInfo);
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (3)].enums.Bool));
+
+        (yyval.expr) = create(new DocumentConstructor((yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 326:
+  case 388:
 /* Line 1269 of yacc.c.  */
-#line 3046 "querytransformparser.ypp"
+#line 4024 "querytransformparser.ypp"
     {
                         /* This value is incremented before the action below is executed. */
                         ++parseInfo->elementConstructorDepth;
                      }
     break;
 
-  case 327:
+  case 389:
 /* Line 1269 of yacc.c.  */
-#line 3051 "querytransformparser.ypp"
+#line 4029 "querytransformparser.ypp"
     {
+        Q_ASSERT(5);
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (5)].enums.Bool));
+
         Expression::Ptr effExpr;
 
-        if((yyvsp[(4) - (4)].expr))
-        {
-            effExpr = createCopyOf((yyvsp[(4) - (4)].expr), parseInfo, (yyloc));
-        }
+        if((yyvsp[(5) - (5)].expr))
+            effExpr = createCopyOf((yyvsp[(5) - (5)].expr), parseInfo, (yyloc));
         else
             effExpr = create(new EmptySequence(), (yyloc), parseInfo);
 
@@ -5786,7 +7167,7 @@ yyreduce:
         {
             Expression::List exprList;
 
-            /* We append the namespace constuctor before the body, in order to
+            /* We append the namespace constructor before the body, in order to
              * comply with QAbstractXmlPushHandler's contract. */
             const QXmlName def(parseInfo->resolvers.top()->lookupNamespaceURI(StandardPrefixes::empty), StandardLocalNames::empty);
             exprList.append(create(new NamespaceConstructor(def), (yyloc), parseInfo));
@@ -5797,88 +7178,109 @@ yyreduce:
         }
 
         --parseInfo->elementConstructorDepth;
-        (yyval.expr) = create(new ElementConstructor((yyvsp[(2) - (4)].expr), effExpr), (yyloc), parseInfo);
+        (yyval.expr) = create(new ElementConstructor((yyvsp[(3) - (5)].expr), effExpr, parseInfo->isXSLT()), (yyloc), parseInfo);
     }
     break;
 
-  case 328:
+  case 390:
 /* Line 1269 of yacc.c.  */
-#line 3086 "querytransformparser.ypp"
+#line 4063 "querytransformparser.ypp"
     {
-        const Expression::Ptr name(create(new AttributeNameValidator((yyvsp[(2) - (3)].expr)), (yyloc), parseInfo));
+        (yyval.enums.Bool) = false;
+    }
+    break;
 
-        if((yyvsp[(3) - (3)].expr))
-            (yyval.expr) = create(new AttributeConstructor(name, create(new SimpleContentConstructor((yyvsp[(3) - (3)].expr)), (yyloc), parseInfo)), (yyloc), parseInfo);
+  case 391:
+/* Line 1269 of yacc.c.  */
+#line 4067 "querytransformparser.ypp"
+    {
+        (yyval.enums.Bool) = true;
+    }
+    break;
+
+  case 392:
+/* Line 1269 of yacc.c.  */
+#line 4075 "querytransformparser.ypp"
+    {
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (4)].enums.Bool));
+
+        const Expression::Ptr name(create(new AttributeNameValidator((yyvsp[(3) - (4)].expr)), (yyloc), parseInfo));
+
+        if((yyvsp[(4) - (4)].expr))
+            (yyval.expr) = create(new AttributeConstructor(name, createSimpleContent((yyvsp[(4) - (4)].expr), (yyloc), parseInfo)), (yyloc), parseInfo);
         else
             (yyval.expr) = create(new AttributeConstructor(name, create(new EmptySequence(), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 329:
+  case 393:
 /* Line 1269 of yacc.c.  */
-#line 3096 "querytransformparser.ypp"
+#line 4087 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new TextNodeConstructor(create(new SimpleContentConstructor((yyvsp[(2) - (2)].expr)), (yyloc), parseInfo)), (yyloc), parseInfo);
+        (yyval.expr) = create(new TextNodeConstructor(createSimpleContent((yyvsp[(3) - (3)].expr), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 330:
+  case 394:
 /* Line 1269 of yacc.c.  */
-#line 3101 "querytransformparser.ypp"
+#line 4092 "querytransformparser.ypp"
     {
-        (yyval.expr) = create(new CommentConstructor(create(new SimpleContentConstructor((yyvsp[(2) - (2)].expr)), (yyloc), parseInfo)), (yyloc), parseInfo);
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (3)].enums.Bool));
+
+        (yyval.expr) = create(new CommentConstructor(createSimpleContent((yyvsp[(3) - (3)].expr), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 331:
+  case 395:
 /* Line 1269 of yacc.c.  */
-#line 3106 "querytransformparser.ypp"
+#line 4099 "querytransformparser.ypp"
     {
+        disallowedConstruct(parseInfo, (yyloc), (yyvsp[(2) - (3)].expr));
+
         if((yyvsp[(3) - (3)].expr))
         {
-            (yyval.expr) = create(new ProcessingInstructionConstructor((yyvsp[(2) - (3)].expr),
-                                         create(new SimpleContentConstructor((yyvsp[(3) - (3)].expr)), (yyloc), parseInfo)), (yyloc), parseInfo);
+            (yyval.expr) = create(new ProcessingInstructionConstructor((yyvsp[(2) - (3)].expr), createSimpleContent((yyvsp[(3) - (3)].expr), (yyloc), parseInfo)), (yyloc), parseInfo);
         }
         else
             (yyval.expr) = create(new ProcessingInstructionConstructor((yyvsp[(2) - (3)].expr), create(new EmptySequence(), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 332:
+  case 396:
 /* Line 1269 of yacc.c.  */
-#line 3116 "querytransformparser.ypp"
+#line 4110 "querytransformparser.ypp"
     {
                         parseInfo->nodeTestSource = BuiltinTypes::attribute;
                    }
     break;
 
-  case 333:
+  case 397:
 /* Line 1269 of yacc.c.  */
-#line 3120 "querytransformparser.ypp"
+#line 4114 "querytransformparser.ypp"
     {
                         parseInfo->restoreNodeTestSource();
                    }
     break;
 
-  case 334:
+  case 398:
 /* Line 1269 of yacc.c.  */
-#line 3123 "querytransformparser.ypp"
+#line 4117 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new Literal(toItem(QNameValue::fromValue(parseInfo->staticContext->namePool(), (yyvsp[(2) - (3)].qName)))), (yyloc), parseInfo);
     }
     break;
 
-  case 336:
+  case 400:
 /* Line 1269 of yacc.c.  */
-#line 3129 "querytransformparser.ypp"
+#line 4123 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new Literal(toItem(QNameValue::fromValue(parseInfo->staticContext->namePool(), (yyvsp[(1) - (1)].qName)))), (yyloc), parseInfo);
     }
     break;
 
-  case 338:
+  case 402:
 /* Line 1269 of yacc.c.  */
-#line 3135 "querytransformparser.ypp"
+#line 4129 "querytransformparser.ypp"
     {
         if(BuiltinTypes::xsQName->xdtTypeMatches((yyvsp[(1) - (1)].expr)->staticType()->itemType()))
             (yyval.expr) = (yyvsp[(1) - (1)].expr);
@@ -5891,105 +7293,113 @@ yyreduce:
     }
     break;
 
-  case 339:
+  case 403:
 /* Line 1269 of yacc.c.  */
-#line 3150 "querytransformparser.ypp"
+#line 4144 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new NCNameConstructor(create(new Literal(AtomicString::fromValue((yyvsp[(1) - (1)].sval))), (yyloc), parseInfo)), (yyloc), parseInfo);
     }
     break;
 
-  case 340:
+  case 404:
 /* Line 1269 of yacc.c.  */
-#line 3154 "querytransformparser.ypp"
+#line 4148 "querytransformparser.ypp"
     {
         (yyval.expr) = create(new NCNameConstructor((yyvsp[(1) - (1)].expr)), (yyloc), parseInfo);
     }
     break;
 
-  case 341:
+  case 405:
 /* Line 1269 of yacc.c.  */
-#line 3159 "querytransformparser.ypp"
+#line 4157 "querytransformparser.ypp"
+    {
+    (yyval.expr) = create(new ComputedNamespaceConstructor((yyvsp[(2) - (3)].expr), (yyvsp[(3) - (3)].expr)), (yyloc), parseInfo);
+}
+    break;
+
+  case 406:
+/* Line 1269 of yacc.c.  */
+#line 4162 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = makeGenericSequenceType((yyvsp[(1) - (1)].itemType), Cardinality::exactlyOne());
     }
     break;
 
-  case 342:
+  case 407:
 /* Line 1269 of yacc.c.  */
-#line 3163 "querytransformparser.ypp"
+#line 4166 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = makeGenericSequenceType((yyvsp[(1) - (2)].itemType), Cardinality::zeroOrOne());
     }
     break;
 
-  case 343:
+  case 408:
 /* Line 1269 of yacc.c.  */
-#line 3168 "querytransformparser.ypp"
+#line 4171 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = CommonSequenceTypes::ZeroOrMoreItems;
     }
     break;
 
-  case 344:
+  case 409:
 /* Line 1269 of yacc.c.  */
-#line 3172 "querytransformparser.ypp"
+#line 4175 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = (yyvsp[(2) - (2)].sequenceType);
     }
     break;
 
-  case 345:
+  case 410:
 /* Line 1269 of yacc.c.  */
-#line 3177 "querytransformparser.ypp"
+#line 4180 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = makeGenericSequenceType((yyvsp[(1) - (2)].itemType), (yyvsp[(2) - (2)].cardinality));
     }
     break;
 
-  case 346:
+  case 411:
 /* Line 1269 of yacc.c.  */
-#line 3182 "querytransformparser.ypp"
+#line 4185 "querytransformparser.ypp"
     {
         (yyval.sequenceType) = CommonSequenceTypes::Empty;
     }
     break;
 
-  case 347:
+  case 412:
 /* Line 1269 of yacc.c.  */
-#line 3186 "querytransformparser.ypp"
+#line 4189 "querytransformparser.ypp"
     {(yyval.cardinality) = Cardinality::exactlyOne();}
     break;
 
-  case 348:
+  case 413:
 /* Line 1269 of yacc.c.  */
-#line 3187 "querytransformparser.ypp"
+#line 4190 "querytransformparser.ypp"
     {(yyval.cardinality) = Cardinality::oneOrMore();}
     break;
 
-  case 349:
+  case 414:
 /* Line 1269 of yacc.c.  */
-#line 3188 "querytransformparser.ypp"
+#line 4191 "querytransformparser.ypp"
     {(yyval.cardinality) = Cardinality::zeroOrMore();}
     break;
 
-  case 350:
+  case 415:
 /* Line 1269 of yacc.c.  */
-#line 3189 "querytransformparser.ypp"
+#line 4192 "querytransformparser.ypp"
     {(yyval.cardinality) = Cardinality::zeroOrOne();}
     break;
 
-  case 354:
+  case 419:
 /* Line 1269 of yacc.c.  */
-#line 3195 "querytransformparser.ypp"
+#line 4198 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::item;
     }
     break;
 
-  case 355:
+  case 420:
 /* Line 1269 of yacc.c.  */
-#line 3200 "querytransformparser.ypp"
+#line 4203 "querytransformparser.ypp"
     {
         const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(1) - (1)].qName)));
 
@@ -6023,66 +7433,66 @@ yyreduce:
     }
     break;
 
-  case 363:
+  case 428:
 /* Line 1269 of yacc.c.  */
-#line 3244 "querytransformparser.ypp"
+#line 4247 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::node;
     }
     break;
 
-  case 364:
+  case 429:
 /* Line 1269 of yacc.c.  */
-#line 3249 "querytransformparser.ypp"
+#line 4252 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::document;
     }
     break;
 
-  case 365:
+  case 430:
 /* Line 1269 of yacc.c.  */
-#line 3254 "querytransformparser.ypp"
+#line 4257 "querytransformparser.ypp"
     {
         // TODO support for document element testing
         (yyval.itemType) = BuiltinTypes::document;
     }
     break;
 
-  case 368:
+  case 433:
 /* Line 1269 of yacc.c.  */
-#line 3263 "querytransformparser.ypp"
+#line 4266 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::text;
     }
     break;
 
-  case 369:
+  case 434:
 /* Line 1269 of yacc.c.  */
-#line 3268 "querytransformparser.ypp"
+#line 4271 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::comment;
     }
     break;
 
-  case 370:
+  case 435:
 /* Line 1269 of yacc.c.  */
-#line 3273 "querytransformparser.ypp"
+#line 4276 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::pi;
     }
     break;
 
-  case 371:
+  case 436:
 /* Line 1269 of yacc.c.  */
-#line 3278 "querytransformparser.ypp"
+#line 4281 "querytransformparser.ypp"
     {
         (yyval.itemType) = LocalNameTest::create(BuiltinTypes::pi, parseInfo->staticContext->namePool()->allocateLocalName((yyvsp[(3) - (4)].sval)));
     }
     break;
 
-  case 372:
+  case 437:
 /* Line 1269 of yacc.c.  */
-#line 3283 "querytransformparser.ypp"
+#line 4286 "querytransformparser.ypp"
     {
         if(QXmlUtils::isNCName((yyvsp[(3) - (4)].sval)))
         {
@@ -6090,44 +7500,42 @@ yyreduce:
         }
         else
         {
-            parseInfo->staticContext->warning(QtXmlPatterns::tr("%1 is not a valid name for a "
-                                                 "processing-instruction. Therefore this "
-                                                 "name test will never match.")
-                                                 .arg(formatKeyword((yyvsp[(3) - (4)].sval))), fromYYLTYPE((yyloc), parseInfo));
-
-            /* This one will never match. How can we compile it away? 'sum' is a dummy value. */
-            (yyval.itemType) = LocalNameTest::create(BuiltinTypes::comment, StandardLocalNames::sum);
+            parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not a valid name for a "
+                                                              "processing-instruction.")
+                                                 .arg(formatKeyword((yyvsp[(3) - (4)].sval))),
+                                            ReportContext::XPTY0004,
+                                            fromYYLTYPE((yyloc), parseInfo));
         }
     }
     break;
 
-  case 375:
+  case 440:
 /* Line 1269 of yacc.c.  */
-#line 3304 "querytransformparser.ypp"
+#line 4305 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::attribute;
     }
     break;
 
-  case 376:
+  case 441:
 /* Line 1269 of yacc.c.  */
-#line 3309 "querytransformparser.ypp"
+#line 4310 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::attribute;
     }
     break;
 
-  case 377:
+  case 442:
 /* Line 1269 of yacc.c.  */
-#line 3314 "querytransformparser.ypp"
+#line 4315 "querytransformparser.ypp"
     {
         (yyval.itemType) = QNameTest::create(BuiltinTypes::attribute, (yyvsp[(3) - (4)].qName));
     }
     break;
 
-  case 378:
+  case 443:
 /* Line 1269 of yacc.c.  */
-#line 3318 "querytransformparser.ypp"
+#line 4319 "querytransformparser.ypp"
     {
         const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (6)].qName)));
 
@@ -6141,9 +7549,9 @@ yyreduce:
     }
     break;
 
-  case 379:
+  case 444:
 /* Line 1269 of yacc.c.  */
-#line 3330 "querytransformparser.ypp"
+#line 4331 "querytransformparser.ypp"
     {
         const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (6)].qName)));
 
@@ -6157,9 +7565,9 @@ yyreduce:
     }
     break;
 
-  case 380:
+  case 445:
 /* Line 1269 of yacc.c.  */
-#line 3343 "querytransformparser.ypp"
+#line 4344 "querytransformparser.ypp"
     {
         parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not in the in-scope attribute "
                                            "declarations. Note that the schema import "
@@ -6170,67 +7578,67 @@ yyreduce:
     }
     break;
 
-  case 381:
+  case 446:
 /* Line 1269 of yacc.c.  */
-#line 3353 "querytransformparser.ypp"
+#line 4354 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::element;
     }
     break;
 
-  case 382:
+  case 447:
 /* Line 1269 of yacc.c.  */
-#line 3358 "querytransformparser.ypp"
+#line 4359 "querytransformparser.ypp"
     {
         (yyval.itemType) = BuiltinTypes::element;
     }
     break;
 
-  case 383:
+  case 448:
 /* Line 1269 of yacc.c.  */
-#line 3363 "querytransformparser.ypp"
+#line 4364 "querytransformparser.ypp"
     {
         (yyval.itemType) = QNameTest::create(BuiltinTypes::element, (yyvsp[(3) - (4)].qName));
     }
     break;
 
-  case 384:
+  case 449:
 /* Line 1269 of yacc.c.  */
-#line 3368 "querytransformparser.ypp"
+#line 4369 "querytransformparser.ypp"
     {
-        const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (6)].qName)));
+        const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (7)].qName)));
 
         if(t)
             (yyval.itemType) = BuiltinTypes::element;
         else
         {
             parseInfo->staticContext->error(unknownType()
-                                               .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(5) - (6)].qName))),
+                                               .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(5) - (7)].qName))),
                                             ReportContext::XPST0008, fromYYLTYPE((yyloc), parseInfo));
         }
     }
     break;
 
-  case 385:
+  case 450:
 /* Line 1269 of yacc.c.  */
-#line 3382 "querytransformparser.ypp"
+#line 4383 "querytransformparser.ypp"
     {
-        const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (6)].qName)));
+        const SchemaType::Ptr t(parseInfo->staticContext->schemaDefinitions()->createSchemaType((yyvsp[(5) - (7)].qName)));
 
         if(t)
             (yyval.itemType) = BuiltinTypes::element;
         else
         {
             parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is an unknown schema type.")
-                                               .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(5) - (6)].qName))),
+                                               .arg(formatKeyword(parseInfo->staticContext->namePool(), (yyvsp[(5) - (7)].qName))),
                                             ReportContext::XPST0008, fromYYLTYPE((yyloc), parseInfo));
         }
     }
     break;
 
-  case 386:
+  case 453:
 /* Line 1269 of yacc.c.  */
-#line 3396 "querytransformparser.ypp"
+#line 4400 "querytransformparser.ypp"
     {
         parseInfo->staticContext->error(QtXmlPatterns::tr("%1 is not in the in-scope attribute "
                                            "declarations. Note that the schema import "
@@ -6241,17 +7649,17 @@ yyreduce:
     }
     break;
 
-  case 388:
+  case 455:
 /* Line 1269 of yacc.c.  */
-#line 3408 "querytransformparser.ypp"
+#line 4412 "querytransformparser.ypp"
     {
         (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(StandardNamespaces::empty, (yyvsp[(1) - (1)].sval));
     }
     break;
 
-  case 390:
+  case 457:
 /* Line 1269 of yacc.c.  */
-#line 3420 "querytransformparser.ypp"
+#line 4424 "querytransformparser.ypp"
     {
         if(parseInfo->nodeTestSource == BuiltinTypes::element)
             (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(parseInfo->staticContext->namespaceBindings()->lookupNamespaceURI(StandardPrefixes::empty), (yyvsp[(1) - (1)].sval));
@@ -6260,17 +7668,25 @@ yyreduce:
     }
     break;
 
-  case 393:
+  case 462:
 /* Line 1269 of yacc.c.  */
-#line 3431 "querytransformparser.ypp"
+#line 4438 "querytransformparser.ypp"
     {
         (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(parseInfo->staticContext->defaultFunctionNamespace(), (yyvsp[(1) - (1)].sval));
     }
     break;
 
-  case 397:
+  case 463:
 /* Line 1269 of yacc.c.  */
-#line 3440 "querytransformparser.ypp"
+#line 4442 "querytransformparser.ypp"
+    {
+        (yyval.qName) = parseInfo->staticContext->namePool()->allocateQName(StandardNamespaces::InternalXSLT, (yyvsp[(2) - (2)].sval));
+    }
+    break;
+
+  case 466:
+/* Line 1269 of yacc.c.  */
+#line 4450 "querytransformparser.ypp"
     {
         parseInfo->staticContext->error(QtXmlPatterns::tr("The name of an extension expression must be in "
                                                           "a namespace."),
@@ -6278,10 +7694,11 @@ yyreduce:
     }
     break;
 
-  case 402:
+  case 471:
 /* Line 1269 of yacc.c.  */
-#line 3453 "querytransformparser.ypp"
+#line 4463 "querytransformparser.ypp"
     {
+
         const ReflectYYLTYPE ryy((yyloc), parseInfo);
 
         (yyval.qName) = QNameConstructor::
@@ -6293,9 +7710,17 @@ yyreduce:
     }
     break;
 
+  case 472:
+/* Line 1269 of yacc.c.  */
+#line 4475 "querytransformparser.ypp"
+    {
+        (yyval.qName) = parseInfo->staticContext->namePool()->fromClarkName((yyvsp[(1) - (1)].sval));
+    }
+    break;
+
 
 /* Line 1269 of yacc.c.  */
-#line 6228 "qquerytransformparser.cpp"
+#line 7643 "qquerytransformparser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -6513,10 +7938,38 @@ yyreturn:
 
 
 /* Line 1486 of yacc.c.  */
-#line 3464 "querytransformparser.ypp"
+#line 4479 "querytransformparser.ypp"
 
+
+QString Tokenizer::tokenToString(const Token &token)
+{
+    switch(token.type)
+    {
+        case NCNAME:
+        /* Fallthrough. */
+        case QNAME:
+        /* Fallthrough. */
+        case NUMBER:
+        /* Fallthrough. */
+        case XPATH2_NUMBER:
+            return token.value;
+        case STRING_LITERAL:
+            return QLatin1Char('"') + token.value + QLatin1Char('"');
+        default:
+        {
+            const QString raw(QString::fromLatin1(yytname[YYTRANSLATE(token.type)]));
+
+            /* Remove the quotes. */
+            if(raw.at(0) == QLatin1Char('"') && raw.length() > 1)
+                return raw.mid(1, raw.length() - 2);
+            else
+                return raw;
+        }
+    }
+}
 
 } /* namespace Patternist */
+
 QT_END_NAMESPACE
 
 // vim: et:ts=4:sw=4:sts=4:syntax=yacc

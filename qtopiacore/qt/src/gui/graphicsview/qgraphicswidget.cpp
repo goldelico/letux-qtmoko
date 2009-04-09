@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,8 +49,15 @@
 #include "qgraphicslayout_p.h"
 #include "qgraphicsscene.h"
 #include "qgraphicssceneevent.h"
-#include <private/qgraphicsscene_p.h>
 
+#ifndef QT_NO_ACTION
+#include <private/qaction_p.h>
+#endif
+#include <private/qapplication_p.h>
+#include <private/qgraphicsscene_p.h>
+#ifndef QT_NO_SHORTCUT
+#include <private/qshortcutmap_p.h>
+#endif
 #include <QtCore/qmutex.h>
 #include <QtGui/qapplication.h>
 #include <QtGui/qgraphicsview.h>
@@ -73,6 +84,7 @@ QT_BEGIN_NAMESPACE
         \o Provides a \l palette, a \l font and a \l style().
         \o Has a defined geometry().
         \o Supports layouts with setLayout() and layout().
+        \o Supports shortcuts and actions with grabShortcut() and insertAction()
     \endlist
 
     Unlike QGraphicsItem, QGraphicsWidget is not an abstract class; you can
@@ -138,6 +150,12 @@ QT_BEGIN_NAMESPACE
                         application's style.
     \row    \o Qt::WA_Resized
                     \o Set by setGeometry() and resize().
+    \row    \o Qt::WA_SetPalette
+                    \o Set by setPalette().
+    \row    \o Qt::WA_SetFont
+                    \o Set by setPalette().
+    \row    \o Qt::WA_WindowPropagation
+                    \o Enables propagation to window widgets.
     \endtable
 
     Although QGraphicsWidget inherits from both QObject and QGraphicsItem,
@@ -199,12 +217,59 @@ QGraphicsWidget::QGraphicsWidget(QGraphicsWidgetPrivate &dd, QGraphicsItem *pare
     d->init(parent, wFlags);
 }
 
+/*
+    \internal
+    \class QGraphicsWidgetStyles
+
+    We use this thread-safe class to maintain a hash of styles for widgets
+    styles. Note that QApplication::style() itself isn't thread-safe, QStyle
+    isn't thread-safe, and we don't have a thread-safe factory for creating
+    the default style, nor cloning a style.
+*/
+class QGraphicsWidgetStyles
+{
+public:
+    QStyle *styleForWidget(const QGraphicsWidget *widget) const
+    {
+        QMutexLocker locker(&mutex);
+        return styles.value(widget, 0);
+    }
+
+    void setStyleForWidget(QGraphicsWidget *widget, QStyle *style)
+    {
+        QMutexLocker locker(&mutex);
+        if (style)
+            styles[widget] = style;
+        else
+            styles.remove(widget);
+    }
+
+private:
+    QMap<const QGraphicsWidget *, QStyle *> styles;
+    mutable QMutex mutex;
+};
+Q_GLOBAL_STATIC(QGraphicsWidgetStyles, widgetStyles)
+
 /*!
     Destroys the QGraphicsWidget instance.
 */
 QGraphicsWidget::~QGraphicsWidget()
 {
     Q_D(QGraphicsWidget);
+#ifndef QT_NO_ACTION
+    // Remove all actions from this widget
+    for (int i = 0; i < d->actions.size(); ++i) {
+        QActionPrivate *apriv = d->actions.at(i)->d_func();
+        apriv->graphicsWidgets.removeAll(this);
+    }
+    d->actions.clear();
+#endif
+
+    if (QGraphicsScene *scn = scene()) {
+        QGraphicsScenePrivate *sceneD = scn->d_func();
+        if (sceneD->tabFocusFirst == this)
+            sceneD->tabFocusFirst = (d->focusNext == this ? 0 : d->focusNext);
+    }
     d->focusPrev->d_func()->focusNext = d->focusNext;
     d->focusNext->d_func()->focusPrev = d->focusPrev;
 
@@ -214,14 +279,30 @@ QGraphicsWidget::~QGraphicsWidget()
 
     clearFocus();
 
-    delete d->layout;
+    //we check if we have a layout previously
+    if (d->layout) {
+        delete d->layout;
+        foreach (QGraphicsItem * item, childItems()) {
+            // In case of a custom layout which doesn't remove and delete items, we ensure that
+            // the parent layout item does not point to the deleted layout. This code is here to
+            // avoid regression from 4.4 to 4.5, because according to 4.5 docs it is not really needed.
+            if (item->isWidget()) {
+                QGraphicsWidget *widget = static_cast<QGraphicsWidget *>(item);
+                if (widget->parentLayoutItem() == d->layout)
+                    widget->setParentLayoutItem(0);
+            }
+        }
+    }
+
+    // Remove this graphics widget from widgetStyles
+    widgetStyles()->setStyleForWidget(this, 0);
 }
 
 /*!
     \property QGraphicsWidget::size
     \brief the size of the widget
 
-    Calling setSize() resizes the widget to \a size bounded by minimumSize()
+    Calling resize() resizes the widget to a \a size bounded by minimumSize()
     and maximumSize(). This property only affects the widget's width and
     height (e.g., its right and bottom edges); the widget's position and
     top-left corner remains unaffected.
@@ -271,25 +352,37 @@ void QGraphicsWidget::resize(const QSizeF &size)
 */
 void QGraphicsWidget::setGeometry(const QRectF &rect)
 {
+    QGraphicsWidgetPrivate *wd = QGraphicsWidget::d_func();
     const QGraphicsLayoutItemPrivate *d = QGraphicsLayoutItem::d_ptr;
+    setAttribute(Qt::WA_Resized);
     QRectF newGeom = rect;
     newGeom.setSize(rect.size().expandedTo(effectiveSizeHint(Qt::MinimumSize))
                                .boundedTo(effectiveSizeHint(Qt::MaximumSize)));
     if (newGeom == d->geom)
         return;
 
+    // Update and prepare to change the geometry (remove from index).
+    if (wd->scene) {
+        if (rect.topLeft() != d->geom.topLeft())
+            wd->fullUpdateHelper(true);
+        else
+            update();
+    }
+    prepareGeometryChange();
+
     // setPos triggers ItemPositionChange, which can adjust position
     QPointF oldPos = d->geom.topLeft();
-    setPos(newGeom.topLeft());
+    wd->inSetGeometry = 1;
+    wd->setPosHelper(newGeom.topLeft(), /* update = */ false);
+    wd->inSetGeometry = 0;
     newGeom.moveTopLeft(pos());
-    
+
     if (newGeom == d->geom)
         return;
 
     // Update the layout item geometry
-    if (oldPos == pos()) {
-        prepareGeometryChange();
-    } else {
+    bool moved = oldPos != pos();
+    if (moved) {
         // Send move event.
         QGraphicsSceneMoveEvent event;
         event.setOldPos(oldPos);
@@ -300,15 +393,12 @@ void QGraphicsWidget::setGeometry(const QRectF &rect)
     QGraphicsLayoutItem::setGeometry(newGeom);
 
     // Send resize event
-    if (newGeom.size() != oldSize) {
-        setAttribute(Qt::WA_Resized);
+    bool resized = newGeom.size() != oldSize;
+    if (resized) {
         QGraphicsSceneResizeEvent re;
         re.setOldSize(oldSize);
         re.setNewSize(newGeom.size());
         QApplication::sendEvent(this, &re);
-
-        // ### When only resizing we can avoid the full update.
-        update();
     }
 }
 
@@ -489,21 +579,31 @@ QRectF QGraphicsWidget::windowFrameRect() const
     state, and stores the output in \a option. The default implementation
     populates \a option with the following properties.
 
-    \table  \o Style Option Property                \o Value
-    \row    \o state & QStyle::State_Enabled
-                    \o Corresponds to QGraphicsItem::isEnabled().
-    \row    \o state & QStyle::State_HasFocus
-                    \o Corresponds to QGraphicsItem::hasFocus().
-    \row    \o state & QStyle::State_MouseOver
-                    \o Corresponds to QGraphicsItem::isUnderMouse().
-    \row    \o direction
-                    \o Corresponds to QGraphicsWidget::layoutDirection().
-    \row    \o rect
-                    \o Corresponds to QGraphicsWidget::rect().toRect().
-    \row    \o palette
-                    \o Corresponds to QGraphicsWidget::palette().
-    \row    \o fontMetrics
-                    \o Corresponds to QFontMetrics(QGraphicsWidget::font()).
+    \table
+      \header
+        \o Style Option Property
+        \o Value
+      \row
+        \o state & QStyle::State_Enabled
+        \o Corresponds to QGraphicsItem::isEnabled().
+      \row
+        \o state & QStyle::State_HasFocus
+        \o Corresponds to QGraphicsItem::hasFocus().
+      \row
+        \o state & QStyle::State_MouseOver
+        \o Corresponds to QGraphicsItem::isUnderMouse().
+      \row
+        \o direction
+        \o Corresponds to QGraphicsWidget::layoutDirection().
+      \row
+        \o rect
+        \o Corresponds to QGraphicsWidget::rect().toRect().
+      \row
+        \o palette
+        \o Corresponds to QGraphicsWidget::palette().
+      \row
+        \o fontMetrics
+        \o Corresponds to QFontMetrics(QGraphicsWidget::font()).
     \endtable
 
     Subclasses of QGraphicsWidget should call the base implementation, and
@@ -651,12 +751,12 @@ void QGraphicsWidget::setLayout(QGraphicsLayout *l)
 
     // Install and activate the layout.
     l->setParentLayoutItem(this);
-    l->d_func()->reparentChildWidgets(this);
+    l->d_func()->reparentChildItems(this);
     l->invalidate();
 }
 
 /*!
-    Adjusts the size of the widget to its effective minimum size hint.
+    Adjusts the size of the widget to its effective preferred size hint.
 
     This function is called implicitly when the item is shown for the first
     time.
@@ -665,7 +765,7 @@ void QGraphicsWidget::setLayout(QGraphicsLayout *l)
 */
 void QGraphicsWidget::adjustSize()
 {
-    QSizeF sz = effectiveSizeHint(Qt::MinimumSize);
+    QSizeF sz = effectiveSizeHint(Qt::PreferredSize);
     // What if sz is not valid?!
     if (sz.isValid())
         resize(sz);
@@ -713,39 +813,6 @@ void QGraphicsWidget::unsetLayoutDirection()
     setAttribute(Qt::WA_SetLayoutDirection, false);
     d->resolveLayoutDirection();
 }
-
-/*
-    \internal
-    \class QGraphicsWidgetStyles
-
-    We use this thread-safe class to maintain a hash of styles for widgets
-    styles. Note that QApplication::style() itself isn't thread-safe, QStyle
-    isn't thread-safe, and we don't have a thread-safe factory for creating
-    the default style, nor cloning a style.
-*/
-class QGraphicsWidgetStyles
-{
-public:
-    QStyle *styleForWidget(const QGraphicsWidget *widget) const
-    {
-        QMutexLocker locker(&mutex);
-        return styles.value(widget, 0);
-    }
-    
-    void setStyleForWidget(QGraphicsWidget *widget, QStyle *style)
-    {
-        QMutexLocker locker(&mutex);
-        if (style)
-            styles[widget] = style;
-        else
-            styles.remove(widget);
-    }
-
-private:
-    QMap<const QGraphicsWidget *, QStyle *> styles;
-    mutable QMutex mutex;
-};
-Q_GLOBAL_STATIC(QGraphicsWidgetStyles, widgetStyles)
 
 /*!
     Returns a pointer to the widget's style. If this widget does not have any
@@ -816,8 +883,11 @@ QFont QGraphicsWidget::font() const
 void QGraphicsWidget::setFont(const QFont &font)
 {
     Q_D(QGraphicsWidget);
-    d->font = font;
-    d->resolveFont();
+    setAttribute(Qt::WA_SetFont, font.resolve() != 0);
+
+    QFont naturalFont = d->naturalWidgetFont();
+    QFont resolvedFont = font.resolve(naturalFont);
+    d->setFont_helper(resolvedFont);
 }
 
 /*!
@@ -853,11 +923,11 @@ QPalette QGraphicsWidget::palette() const
 void QGraphicsWidget::setPalette(const QPalette &palette)
 {
     Q_D(QGraphicsWidget);
-    // ### Qt 4.5: Add this attribute and fix the d->resolvePalette() function
-    // to respect it.
-    // setAttribute(Qt::WA_SetPalette, palette.resolve() != 0);
-    d->palette = palette;
-    d->resolvePalette();
+    setAttribute(Qt::WA_SetPalette, palette.resolve() != 0);
+
+    QPalette naturalPalette = d->naturalWidgetPalette();
+    QPalette resolvedPalette = palette.resolve(naturalPalette);
+    d->setPalette_helper(resolvedPalette);
 }
 
 /*!
@@ -872,12 +942,16 @@ void QGraphicsWidget::setPalette(const QPalette &palette)
 void QGraphicsWidget::updateGeometry()
 {
     QGraphicsLayoutItem::updateGeometry();
-    QGraphicsWidget *parent = parentWidget();
-    if (parent && parent->layout()) {
-        parent->layout()->invalidate();
+    QGraphicsLayoutItem *parentItem = parentLayoutItem();
+
+    if (parentItem && parentItem->isLayout()) {
+        parentItem->updateGeometry();
     } else {
-        if (parent && parent->isVisible())
-            QApplication::postEvent(parent, new QEvent(QEvent::LayoutRequest));
+        if (parentItem) {
+            QGraphicsWidget *parentWid = parentWidget();    //###
+            if (parentWid->isVisible())
+                QApplication::postEvent(parentWid, new QEvent(QEvent::LayoutRequest));
+        }
         bool wasResized = testAttribute(Qt::WA_Resized);
         resize(size()); // this will restrict the size
         setAttribute(Qt::WA_Resized, wasResized);
@@ -928,7 +1002,11 @@ QVariant QGraphicsWidget::itemChange(GraphicsItemChange change, const QVariant &
         }
         break;
     case ItemPositionHasChanged:
-        setGeometry(QRectF(pos(), size()));
+        if (!d->inSetGeometry) {
+            // Ensure setGeometry is called (avoid recursion when setPos is
+            // called from within setGeometry).
+            setGeometry(QRectF(pos(), size()));
+        }
         break;
     case ItemParentChange: {
         QGraphicsItem *parent = qVariantValue<QGraphicsItem *>(value);
@@ -1056,7 +1134,7 @@ bool QGraphicsWidget::windowFrameEvent(QEvent *event)
     \since 4.4
 
     Returns the window frame section at position \a pos, or
-    Qt::NoWindowFrameSection if there is no window frame section at this
+    Qt::NoSection if there is no window frame section at this
     position.
 
     This function is used in QGraphicsWidget's base implementation for window
@@ -1251,6 +1329,7 @@ bool QGraphicsWidget::event(QEvent *event)
 */
 void QGraphicsWidget::changeEvent(QEvent *event)
 {
+    Q_D(QGraphicsWidget);
     switch (event->type()) {
     case QEvent::StyleChange:
         // ### Don't unset if the margins are explicitly set.
@@ -1261,6 +1340,10 @@ void QGraphicsWidget::changeEvent(QEvent *event)
         break;
     case QEvent::PaletteChange:
         update();
+        break;
+    case QEvent::ParentChange:
+        d->resolveFont(d->inheritedFontResolveMask);
+        d->resolvePalette(d->inheritedPaletteResolveMask);
         break;
     default:
         break;
@@ -1324,7 +1407,7 @@ bool QGraphicsWidget::focusNextPrevChild(bool next)
         if (hasFocus())
             return true;
     }
-    return d->scene->focusNextPrevChild(next);
+    return false;
 }
 
 /*!
@@ -1618,6 +1701,231 @@ QGraphicsWidget *QGraphicsWidget::focusWidget() const
     return d->focusChild;
 }
 
+
+#ifndef QT_NO_SHORTCUT
+/*!
+    \since 4.5
+
+    Adds a shortcut to Qt's shortcut system that watches for the given key \a
+    sequence in the given \a context. If the \a context is
+    Qt::ApplicationShortcut, the shortcut applies to the application as a
+    whole. Otherwise, it is either local to this widget, Qt::WidgetShortcut,
+    or to the window itself, Qt::WindowShortcut. For widgets that are not part
+    of a window (i.e., top-level widgets and their children),
+    Qt::WindowShortcut shortcuts apply to the scene.
+
+    If the same key \a sequence has been grabbed by several widgets,
+    when the key \a sequence occurs a QEvent::Shortcut event is sent
+    to all the widgets to which it applies in a non-deterministic
+    order, but with the ``ambiguous'' flag set to true.
+
+    \warning You should not normally need to use this function;
+    instead create \l{QAction}s with the shortcut key sequences you
+    require (if you also want equivalent menu options and toolbar
+    buttons), or create \l{QShortcut}s if you just need key sequences.
+    Both QAction and QShortcut handle all the event filtering for you,
+    and provide signals which are triggered when the user triggers the
+    key sequence, so are much easier to use than this low-level
+    function.
+
+    \sa releaseShortcut() setShortcutEnabled() QWidget::grabShortcut()
+*/
+int QGraphicsWidget::grabShortcut(const QKeySequence &sequence, Qt::ShortcutContext context)
+{
+    Q_ASSERT(qApp);
+    if (sequence.isEmpty())
+        return 0;
+    // ### setAttribute(Qt::WA_GrabbedShortcut);
+    return qApp->d_func()->shortcutMap.addShortcut(this, sequence, context);
+}
+
+/*!
+    \since 4.5
+
+    Removes the shortcut with the given \a id from Qt's shortcut
+    system. The widget will no longer receive QEvent::Shortcut events
+    for the shortcut's key sequence (unless it has other shortcuts
+    with the same key sequence).
+
+    \warning You should not normally need to use this function since
+    Qt's shortcut system removes shortcuts automatically when their
+    parent widget is destroyed. It is best to use QAction or
+    QShortcut to handle shortcuts, since they are easier to use than
+    this low-level function. Note also that this is an expensive
+    operation.
+
+    \sa grabShortcut() setShortcutEnabled() , QWidget::releaseShortcut()
+*/
+void QGraphicsWidget::releaseShortcut(int id)
+{
+    Q_ASSERT(qApp);
+    if (id)
+        qApp->d_func()->shortcutMap.removeShortcut(id, this, 0);
+}
+
+/*!
+    \since 4.5
+
+    If \a enabled is true, the shortcut with the given \a id is
+    enabled; otherwise the shortcut is disabled.
+
+    \warning You should not normally need to use this function since
+    Qt's shortcut system enables/disables shortcuts automatically as
+    widgets become hidden/visible and gain or lose focus. It is best
+    to use QAction or QShortcut to handle shortcuts, since they are
+    easier to use than this low-level function.
+
+    \sa grabShortcut() releaseShortcut(), QWidget::setShortcutEnabled()
+*/
+void QGraphicsWidget::setShortcutEnabled(int id, bool enabled)
+{
+    Q_ASSERT(qApp);
+    if (id)
+        qApp->d_func()->shortcutMap.setShortcutEnabled(enabled, id, this, 0);
+}
+
+/*!
+    \since 4.5
+
+    If \a enabled is true, auto repeat of the shortcut with the
+    given \a id is enabled; otherwise it is disabled.
+
+    \sa grabShortcut() releaseShortcut() QWidget::setShortcutAutoRepeat()
+*/
+void QGraphicsWidget::setShortcutAutoRepeat(int id, bool enabled)
+{
+    Q_ASSERT(qApp);
+    if (id)
+        qApp->d_func()->shortcutMap.setShortcutAutoRepeat(enabled, id, this, 0);
+}
+#endif
+
+#ifndef QT_NO_ACTION
+/*!
+    \since 4.5
+
+    Appends the action \a action to this widget's list of actions.
+
+    All QGraphicsWidgets have a list of \l{QAction}s, however they can be
+    represented graphically in many different ways. The default use of the
+    QAction list (as returned by actions()) is to create a context QMenu.
+
+    A QGraphicsWidget should only have one of each action and adding an action
+    it already has will not cause the same action to be in the widget twice.
+
+    \sa removeAction(), insertAction(), actions(), QWidget::addAction()
+*/
+void QGraphicsWidget::addAction(QAction *action)
+{
+    insertAction(0, action);
+}
+
+/*!
+    \since 4.5
+
+    Appends the actions \a actions to this widget's list of actions.
+
+    \sa removeAction(), QMenu, addAction(), QWidget::addActions()
+*/
+void QGraphicsWidget::addActions(QList<QAction *> actions)
+{
+    for (int i = 0; i < actions.count(); ++i)
+        insertAction(0, actions.at(i));
+}
+
+/*!
+    \since 4.5
+
+    Inserts the action \a action to this widget's list of actions,
+    before the action \a before. It appends the action if \a before is 0 or
+    \a before is not a valid action for this widget.
+
+    A QGraphicsWidget should only have one of each action.
+
+    \sa removeAction(), addAction(), QMenu, actions(),
+    QWidget::insertActions()
+*/
+void QGraphicsWidget::insertAction(QAction *before, QAction *action)
+{
+    if (!action) {
+        qWarning("QWidget::insertAction: Attempt to insert null action");
+        return;
+    }
+
+    Q_D(QGraphicsWidget);
+    int index = d->actions.indexOf(action);
+    if (index != -1)
+        d->actions.removeAt(index);
+
+    int pos = d->actions.indexOf(before);
+    if (pos < 0) {
+        before = 0;
+        pos = d->actions.size();
+    }
+    d->actions.insert(pos, action);
+
+    QActionPrivate *apriv = action->d_func();
+    apriv->graphicsWidgets.append(this);
+
+    QActionEvent e(QEvent::ActionAdded, action, before);
+    QApplication::sendEvent(this, &e);
+}
+
+/*!
+    \since 4.5
+
+    Inserts the actions \a actions to this widget's list of actions,
+    before the action \a before. It appends the action if \a before is 0 or
+    \a before is not a valid action for this widget.
+
+    A QGraphicsWidget can have at most one of each action.
+
+    \sa removeAction(), QMenu, insertAction(), QWidget::insertActions()
+*/
+void QGraphicsWidget::insertActions(QAction *before, QList<QAction *> actions)
+{
+    for (int i = 0; i < actions.count(); ++i)
+        insertAction(before, actions.at(i));
+}
+
+/*!
+    \since 4.5
+
+    Removes the action \a action from this widget's list of actions.
+
+    \sa insertAction(), actions(), insertAction(), QWidget::removeAction()
+*/
+void QGraphicsWidget::removeAction(QAction *action)
+{
+    if (!action)
+        return;
+
+    Q_D(QGraphicsWidget);
+
+    QActionPrivate *apriv = action->d_func();
+    apriv->graphicsWidgets.removeAll(this);
+
+    if (d->actions.removeAll(action)) {
+        QActionEvent e(QEvent::ActionRemoved, action);
+        QApplication::sendEvent(this, &e);
+    }
+}
+
+/*!
+    \since 4.5
+
+    Returns the (possibly empty) list of this widget's actions.
+
+    \sa insertAction(), removeAction(), QWidget::actions(),
+    QAction::associatedWidgets(), QAction::associatedGraphicsWidgets()
+*/
+QList<QAction *> QGraphicsWidget::actions() const
+{
+    Q_D(const QGraphicsWidget);
+    return d->actions;
+}
+#endif
+
 /*!
     Moves the \a second widget around the ring of focus widgets so that
     keyboard focus moves from the \a first widget to the \a second widget when
@@ -1804,6 +2112,8 @@ void QGraphicsWidget::paintWindowFrame(QPainter *painter, const QStyleOptionGrap
     // Fill background
     QStyleHintReturnMask mask;
     bool setMask = style()->styleHint(QStyle::SH_WindowFrame_Mask, &bar, widget, &mask) && !mask.region.isEmpty();
+    bool hasBorder = !style()->styleHint(QStyle::SH_TitleBar_NoBorder, &bar, widget);
+    int frameWidth = style()->pixelMetric(QStyle::PM_MDIFrameWidth, &bar, widget);
     if (setMask) {
         painter->save();
         painter->setClipRegion(mask.region, Qt::IntersectClip);
@@ -1821,22 +2131,26 @@ void QGraphicsWidget::paintWindowFrame(QPainter *painter, const QStyleOptionGrap
             painter->fillRect(windowFrameRect, palette().window());
         }
     }
-    if (setMask)
-        painter->restore();
     painter->setRenderHint(QPainter::NonCosmeticDefaultPen);
 
     // Draw title
     int height = (int)d->titleBarHeight(bar);
     bar.rect.setHeight(height);
+    if (hasBorder) // Frame is painted by PE_FrameWindow
+        bar.rect.adjust(frameWidth, frameWidth, -frameWidth, 0);
+
     painter->save();
+    painter->setFont(QApplication::font("QWorkspaceTitleBar"));
     style()->drawComplexControl(QStyle::CC_TitleBar, &bar, painter, widget);
     painter->restore();
-
+    if (setMask)
+        painter->restore();
     // Draw window frame
     QStyleOptionFrame frameOptions;
     frameOptions.QStyleOption::operator=(*option);
     initStyleOption(&frameOptions);
-    painter->setClipRect(windowFrameRect.adjusted(0, +height, 0, 0), Qt::IntersectClip);
+    if (!hasBorder)
+        painter->setClipRect(windowFrameRect.adjusted(0, +height, 0, 0), Qt::IntersectClip);
     if (hasFocus()) {
         frameOptions.state |= QStyle::State_HasFocus;
     } else {
@@ -1919,18 +2233,25 @@ bool QGraphicsWidget::close()
 #endif
 
 #if 0
-void QGraphicsWidget::dumpFocusChain(QGraphicsWidget *widget)
+void QGraphicsWidget::dumpFocusChain()
 {
     qDebug() << "=========== Dumping focus chain ==============";
     int i = 0;
-    QGraphicsWidget *fw = widget;
-    QGraphicsWidget *next = fw;
-    if (fw) {
-        do {
-            qDebug() << i++ << next->className() << next->data(0) << "focusItem:" << (static_cast<QGraphicsItem*>(next) == fw ? "true" : "false") << "next:" << next->d_func()->focusNext->data(0) << "prev:" << next->d_func()->focusPrev->data(0);
-            next = next->d_func()->focusNext; 
-        } while (next != fw);
-    }
+    QGraphicsWidget *next = this;
+    QSet<QGraphicsWidget*> visited;
+    do {
+        if (!next) {
+            qWarning("Found a focus chain that is not circular, (next == 0)");
+            break;
+        }
+        qDebug() << i++ << QString::number(uint(next), 16) << next->className() << next->data(0) << QString::fromAscii("focusItem:%1").arg(next->hasFocus() ? "1" : "0") << QLatin1String("next:") << next->d_func()->focusNext->data(0) << QLatin1String("prev:") << next->d_func()->focusPrev->data(0);
+        if (visited.contains(next)) {
+            qWarning("Already visited this node. However, I expected to dump until I found myself.");
+            break;
+        }
+        visited << next;
+        next = next->d_func()->focusNext;
+    } while (next != this);
 }
 #endif
 

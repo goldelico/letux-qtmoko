@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtTest module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,12 +49,19 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qprocess.h>
+#include <QtCore/qdebug.h>
 
 #include "QtTest/private/qtestlog_p.h"
 #include "QtTest/private/qtesttable_p.h"
 #include "QtTest/qtestdata.h"
 #include "QtTest/private/qtestresult_p.h"
 #include "QtTest/private/qsignaldumper_p.h"
+#include "QtTest/private/qbenchmark_p.h"
+#include "3rdparty/cycle_p.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -65,7 +76,11 @@
 
 #ifdef Q_WS_MAC
 #include <Carbon/Carbon.h> // for SetFrontProcess
+#ifdef QT_MAC_USE_COCOA
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#else
 #include <Security/AuthSession.h>
+#endif
 #undef verify
 #endif
 
@@ -314,6 +329,23 @@ QT_BEGIN_NAMESPACE
     \snippet doc/src/snippets/code/src_qtestlib_qtestcase.cpp 12
 
     \sa QTEST_MAIN()
+*/
+
+/*!
+    \macro QBENCHMARK
+
+    \relates QTest
+
+    This macro is used to measure the performance of code within a test.
+    The code to be benchmarked is contained within a code block following
+    this macro.
+
+    For example:
+
+    \snippet examples/qtestlib/tutorial5/benchmarking.cpp 0
+
+    \sa {QTestLib Manual#Creating a Benchmark}{Creating a Benchmark},
+        {Chapter 5: Writing a Benchmark}{Writing a Benchmark}
 */
 
 /*! \enum QTest::SkipMode
@@ -799,13 +831,31 @@ static void qParseArgs(int argc, char *argv[])
          " -keyevent-verbose : Turn on verbose messages for keyboard simulation\n"
          " -maxwarnings n    : Sets the maximum amount of messages to output.\n"
          "                     0 means unlimited, default: 2000\n"
-         " -help      : This help\n";
+         "\n"
+         " Benchmark related options:\n"
+#ifdef QTESTLIB_USE_VALGRIND
+        " -callgrind      : Use callgrind to time benchmarks\n"
+#endif
+#ifdef HAVE_TICK_COUNTER
+        " -tickcounter    : Use CPU tick counters to time benchmarks\n"
+#endif
+        " -eventcounter   : Counts events received during benchmarks\n"
+        " -minimumvalue n : Sets the minimum acceptable measurement value\n"
+        " -iterations  n  : Sets the number of accumulation iterations.\n"
+        " -median  n      : Sets the number of median iterations.\n"
+        " -vb             : Print out verbose benchmarking information.\n"
+#ifndef QT_NO_PROCESS
+// Will be enabled when tools are integrated.    
+//        " -chart          : Runs the chart generator after the test. No output is printed to the console\n"
+#endif
+         "\n"
+        " -help      : This help\n";
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "--help") == 0
             || strcmp(argv[i], "/?") == 0) {
-            printf(" Usage: %s [options] [testfunctions[:testdata]]...\n"
-                   "    By default, all testfunction will be run.\n\n"
+            printf(" Usage: %s [options] [testfunction[:testdata]]...\n"
+                   "    By default, all testfunctions will be run.\n\n"
                    "%s", argv[0], testOptions);
             exit(0);
         } else if (strcmp(argv[i], "-functions") == 0) {
@@ -860,6 +910,59 @@ static void qParseArgs(int argc, char *argv[])
             }
         } else if (strcmp(argv[i], "-keyevent-verbose") == 0) {
             QTest::keyVerbose = 1;
+#ifdef QTESTLIB_USE_VALGRIND
+        } else if (strcmp(argv[i], "-callgrind") == 0) {
+            if (QBenchmarkValgrindUtils::haveValgrind())
+                if (QFileInfo(QDir::currentPath()).isWritable()) {
+                    QBenchmarkGlobalData::current->setMode(QBenchmarkGlobalData::CallgrindParentProcess);
+                } else {
+                    printf("WARNING: Current directory not writable. Using the walltime measurer.\n");
+                }
+            else {
+                printf("WARNING: Valgrind not found or too old. Make sure it is installed and in your path. "
+                       "Using the walltime measurer.\n");
+            }
+        } else if (strcmp(argv[i], "-callgrindchild") == 0) { // "private" option
+            QBenchmarkGlobalData::current->setMode(QBenchmarkGlobalData::CallgrindChildProcess);
+            QBenchmarkGlobalData::current->callgrindOutFileBase =
+                QBenchmarkValgrindUtils::outFileBase();
+#endif
+#ifdef HAVE_TICK_COUNTER
+        } else if (strcmp(argv[i], "-tickcounter") == 0) {
+            QBenchmarkGlobalData::current->setMode(QBenchmarkGlobalData::TickCounter);
+#endif
+        } else if (strcmp(argv[i], "-eventcounter") == 0) {
+            QBenchmarkGlobalData::current->setMode(QBenchmarkGlobalData::EventCounter);
+        } else if (strcmp(argv[i], "-minimumvalue") == 0) {
+            if (i + 1 >= argc) {
+                printf("-minimumvalue needs an extra parameter to indicate the minimum time(ms)\n");
+                exit(1);
+            } else {
+                QBenchmarkGlobalData::current->walltimeMinimum = qToInt(argv[++i]);
+            }
+        } else if (strcmp(argv[i], "-iterations") == 0) {
+            if (i + 1 >= argc) {
+                printf("-iterations needs an extra parameter to indicate the number of iterations\n");
+                exit(1);
+            } else {
+                QBenchmarkGlobalData::current->iterationCount = qToInt(argv[++i]);
+            }
+        } else if (strcmp(argv[i], "-median") == 0) {
+            if (i + 1 >= argc) {
+                printf("-median needs an extra parameter to indicate the number of median iterations\n");
+                exit(1);
+            } else {
+                QBenchmarkGlobalData::current->medianIterationCount = qToInt(argv[++i]);
+            }
+
+        } else if (strcmp(argv[i], "-vb") == 0) {
+            QBenchmarkGlobalData::current->verboseOutput = true;
+#ifndef QT_NO_PROCESS
+        } else if (strcmp(argv[i], "-chart") == 0) {
+            QBenchmarkGlobalData::current->createChart = true;
+            QTestLog::setLogMode(QTestLog::XML);
+            QTestLog::redirectOutput("results.xml");
+#endif
         } else if (strcmp(argv[i], "-qws") == 0) {
             // do nothing
         } else if (argv[i][0] == '-') {
@@ -868,17 +971,18 @@ static void qParseArgs(int argc, char *argv[])
         } else {
             int colon = -1;
             char buf[512], *data=0;
-            for(int off = 0; *(argv[i]+off); ++off) {
+            int off;
+            for(off = 0; *(argv[i]+off); ++off) {
                 if (*(argv[i]+off) == ':') {
                     colon = off;
                     break;
                 }
             }
             if(colon != -1) {
-                *(argv[i]+colon) = '\0';
                 data = qstrdup(argv[i]+colon+1);
             }
-            QTest::qt_snprintf(buf, 512, "%s()", argv[i]);
+            QTest::qt_snprintf(buf, qMin(512, off + 1), "%s", argv[i]); // copy text before the ':' into buf
+            QTest::qt_snprintf(buf + off, qMin(512 - off, 3), "()");    // append "()"
             int idx = QTest::currentTestObject->metaObject()->indexOfMethod(buf);
             if (idx < 0 || !isValidSlot(QTest::currentTestObject->metaObject()->method(idx))) {
                 printf("Unknown testfunction: '%s'\n", buf);
@@ -894,6 +998,24 @@ static void qParseArgs(int argc, char *argv[])
     }
 }
 
+QBenchmarkResult qMedian(const QList<QBenchmarkResult> &container)
+{
+    const int count = container.count();
+    if (count == 0)
+        return QBenchmarkResult();
+
+    if (count == 1)
+        return container.at(0);
+    
+    QList<QBenchmarkResult> containerCopy = container;
+    qSort(containerCopy);
+
+    const int middle = count / 2;
+
+    // ### handle even-sized containers here by doing an aritmetic mean of the two middle items.
+    return containerCopy.at(middle);
+}
+
 struct QTestDataSetter
 {
     QTestDataSetter(QTestData *data)
@@ -905,6 +1027,71 @@ struct QTestDataSetter
         QTestResult::setCurrentTestData(0);
     }
 };
+
+static void qInvokeTestMethodDataEntry(char *slot)
+{
+    /* Benchmarking: for each median iteration*/
+
+    int i = (QBenchmarkGlobalData::current->measurer->needsWarmupIteration()) ? -1 : 0;
+
+    QList<QBenchmarkResult> results;
+    do {
+        QBenchmarkTestMethodData::current->beginDataRun();
+
+        /* Benchmarking: for each accumulation iteration*/
+        bool invokeOk;
+        do {
+            QTestResult::setCurrentTestLocation(QTestResult::InitFunc);
+            QMetaObject::invokeMethod(QTest::currentTestObject, "init");
+            if (QTestResult::skipCurrentTest())
+                break;
+
+            QTestResult::setCurrentTestLocation(QTestResult::Func);
+
+            QBenchmarkTestMethodData::current->result = QBenchmarkResult();
+            QBenchmarkTestMethodData::current->resultAccepted = false;
+
+            QBenchmarkGlobalData::current->context.tag =
+                QLatin1String(
+                    QTestResult::currentDataTag()
+                    ? QTestResult::currentDataTag() : "");
+
+            invokeOk = QMetaObject::invokeMethod(QTest::currentTestObject, slot, 
+                                                 Qt::DirectConnection);
+            if (!invokeOk)
+                QTestResult::addFailure("Unable to execute slot", __FILE__, __LINE__);
+
+            QTestResult::setCurrentTestLocation(QTestResult::CleanupFunc);
+            QMetaObject::invokeMethod(QTest::currentTestObject, "cleanup");
+            QTestResult::setCurrentTestLocation(QTestResult::NoWhere);
+
+            // If this test method has a benchmark, repeat until all measurements are
+            // acceptable.
+            // The QBENCHMARK macro increases the number of iterations for each run until
+            // this happens.
+        } while (invokeOk
+                 && QBenchmarkTestMethodData::current->isBenchmark()
+                 && QBenchmarkTestMethodData::current->resultsAccepted() == false);
+
+        QBenchmarkTestMethodData::current->endDataRun();
+        if (i > -1)  // iteration -1 is the warmup iteration.
+            results.append(QBenchmarkTestMethodData::current->result);
+
+        if (QBenchmarkTestMethodData::current->isBenchmark() && 
+            QBenchmarkGlobalData::current->verboseOutput) {
+                if (i == -1) {
+                    qDebug() << "warmup stage result      :" << QBenchmarkTestMethodData::current->result.value;
+                } else {
+                    qDebug() << "accumulation stage result:" << QBenchmarkTestMethodData::current->result.value;
+                }
+            }
+    } while (QBenchmarkTestMethodData::current->isBenchmark()
+             && (++i < QBenchmarkGlobalData::current->adjustMedianIterationCount()));
+
+    if (QBenchmarkTestMethodData::current->isBenchmark()
+        && QBenchmarkTestMethodData::current->resultsAccepted())
+        QTestLog::addBenchmarkResult(qMedian(results));
+}
 
 /*!
     \internal
@@ -918,6 +1105,11 @@ struct QTestDataSetter
 static bool qInvokeTestMethod(const char *slotName, const char *data=0)
 {
     QTEST_ASSERT(slotName);
+
+    QBenchmarkTestMethodData benchmarkData;
+    QBenchmarkTestMethodData::current = &benchmarkData;
+
+    QBenchmarkGlobalData::current->context.slotName = QLatin1String(slotName);
 
     char member[512];
     QTestTable table;
@@ -959,21 +1151,8 @@ static bool qInvokeTestMethod(const char *slotName, const char *data=0)
                     foundFunction = true;
                     QTestDataSetter s(table.isEmpty() ? static_cast<QTestData *>(0)
                                                       : table.testData(curDataIndex));
-                    QTestResult::setCurrentTestLocation(QTestResult::InitFunc);
-                    QMetaObject::invokeMethod(QTest::currentTestObject, "init");
-                    if (QTestResult::skipCurrentTest())
-                        break;
 
-                    QTestResult::setCurrentTestLocation(QTestResult::Func);
-                    if (!QMetaObject::invokeMethod(QTest::currentTestObject, slot,
-                                                  Qt::DirectConnection)) {
-                        QTestResult::addFailure("Unable to execute slot", __FILE__, __LINE__);
-                        break;
-                    }
-
-                    QTestResult::setCurrentTestLocation(QTestResult::CleanupFunc);
-                    QMetaObject::invokeMethod(QTest::currentTestObject, "cleanup");
-                    QTestResult::setCurrentTestLocation(QTestResult::NoWhere);
+                    qInvokeTestMethodDataEntry(slot);
 
                     if (QTestResult::skipCurrentTest())
                         // check whether SkipAll was requested
@@ -1094,12 +1273,63 @@ char *toHexRepresentation(const char *ba, int length)
     return result;
 }
 
+static void qInvokeTestMethods(QObject *testObject) 
+{ 
+    const QMetaObject *metaObject = testObject->metaObject(); 
+    QTEST_ASSERT(metaObject); 
+ 
+    QTestLog::startLogging(); 
+ 
+    QTestResult::setCurrentTestFunction("initTestCase"); 
+    QTestResult::setCurrentTestLocation(QTestResult::DataFunc); 
+    QTestTable::globalTestTable(); 
+    QMetaObject::invokeMethod(testObject, "initTestCase_data", Qt::DirectConnection); 
+ 
+    if (!QTestResult::skipCurrentTest() && !QTest::currentTestFailed()) { 
+        QTestResult::setCurrentTestLocation(QTestResult::InitFunc); 
+        QMetaObject::invokeMethod(testObject, "initTestCase"); 
+ 
+        // finishedCurrentTestFunction() resets QTestResult::testFailed(), so use a local copy. 
+        const bool previousFailed = QTestResult::testFailed(); 
+        QTestResult::finishedCurrentTestFunction(); 
+ 
+        if(!QTestResult::skipCurrentTest() && !previousFailed) { 
+ 
+            if (lastTestFuncIdx >= 0) { 
+                for (int i = 0; i <= lastTestFuncIdx; ++i) { 
+                    if (!qInvokeTestMethod(metaObject->method(testFuncs[i].function).signature(), 
+                                           testFuncs[i].data)) 
+                        break; 
+                } 
+            } else { 
+                int methodCount = metaObject->methodCount(); 
+                for (int i = 0; i < methodCount; ++i) { 
+                    QMetaMethod slotMethod = metaObject->method(i); 
+                    if (!isValidSlot(slotMethod)) 
+                        continue; 
+                    if (!qInvokeTestMethod(slotMethod.signature())) 
+                        break; 
+                } 
+            } 
+        } 
+ 
+        QTestResult::setSkipCurrentTest(false); 
+        QTestResult::setCurrentTestFunction("cleanupTestCase"); 
+        QMetaObject::invokeMethod(testObject, "cleanupTestCase"); 
+    } 
+    QTestResult::finishedCurrentTestFunction(); 
+    QTestResult::setCurrentTestFunction(0); 
+    QTestTable::clearGlobalTestTable(); 
+ 
+    QTestLog::stopLogging(); 
+} 
+
 } // namespace
 
 /*!
     Executes tests declared in \a testObject. In addition, the private slots
     \c{initTestCase()}, \c{cleanupTestCase()}, \c{init()} and \c{cleanup()}
-    are executed if they exist. See \l{Creating a test} for more details.
+    are executed if they exist. See \l{Creating a Test} for more details.
 
     Optionally, the command line arguments \a argc and \a argv can be provided.
     For a list of recognized arguments, read \l {QTestLib Command Line Arguments}.
@@ -1107,6 +1337,11 @@ char *toHexRepresentation(const char *ba, int length)
     For stand-alone tests, the convenience macro \l QTEST_MAIN() can
     be used to declare a main method that parses the command line arguments
     and executes the tests.
+
+    Returns 0 if all tests passed. Returns a value other than 0 if tests failed
+    or in case of unhandled exceptions. The return value from this function is
+    also the exit code of the test application when the \l QTEST_MAIN() macro
+    is used.
 
     The following example will run all tests in \c MyFirstTestObject and
     \c{MySecondTestObject}:
@@ -1126,26 +1361,50 @@ char *toHexRepresentation(const char *ba, int length)
 
 int QTest::qExec(QObject *testObject, int argc, char **argv)
 {
- #ifndef QT_NO_EXCEPTIONS
-     try {
- #endif
+    QBenchmarkGlobalData benchmarkData;
+    QBenchmarkGlobalData::current = &benchmarkData;
+
+#ifdef QTESTLIB_USE_VALGRIND
+    int callgrindChildExitCode = 0;
+#endif
+
+#ifdef Q_WS_MAC
+     bool macNeedsActivate = qApp && qstrcmp(qApp->metaObject()->className(), "QApplication");
+#ifdef QT_MAC_USE_COCOA
+     IOPMAssertionID powerID;
+#endif
+#endif
+#ifndef QT_NO_EXCEPTIONS
+    try {
+#endif
 
  #if defined(Q_OS_WIN) && !defined(Q_OS_WINCE)
      SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
  #endif
 
 #ifdef Q_WS_MAC
-    // Starting with Qt 4.4, applications lauched from the command line
+    // Starting with Qt 4.4, applications launched from the command line
     // no longer get focus automatically. Since some tests might depend
     // on this, call SetFrontProcess here to get the pre 4.4 behavior.
+#ifdef QT_MAC_USE_COCOA
+    if (macNeedsActivate) {
+        ProcessSerialNumber psn = { 0, kCurrentProcess };
+        SetFrontProcess(&psn);
+
+        IOReturn ok = IOPMAssertionCreate(kIOPMAssertionTypeNoDisplaySleep, kIOPMAssertionLevelOn, &powerID);
+        if (ok != kIOReturnSuccess)
+            macNeedsActivate = false; // no need to release the assertion.
+    }
+#else
     SecuritySessionId mySession;
     SessionAttributeBits sessionInfo;
     SessionGetInfo(callerSecuritySession, &mySession, &sessionInfo);
-    if (qApp && qstrcmp(qApp->metaObject()->className(), "QApplicaion")){
+    if (macNeedsActivate){
         ProcessSerialNumber psn = { 0, kCurrentProcess };
         SetFrontProcess(&psn);
         UpdateSystemActivity(1); // Wake the display.
     }
+#endif
 #endif
 
     QTestResult::reset();
@@ -1159,49 +1418,22 @@ int QTest::qExec(QObject *testObject, int argc, char **argv)
 
     QTestResult::setCurrentTestObject(metaObject->className());
     qParseArgs(argc, argv);
+#ifdef QTESTLIB_USE_VALGRIND
+    if (QBenchmarkGlobalData::current->mode() == QBenchmarkGlobalData::CallgrindParentProcess) {
+        const QStringList origAppArgs(QCoreApplication::arguments());
+        if (!QBenchmarkValgrindUtils::rerunThroughCallgrind(origAppArgs, callgrindChildExitCode))
+            return -1;
 
-    QTestLog::startLogging();
+        QBenchmarkValgrindUtils::cleanup();
 
-    QTestResult::setCurrentTestFunction("initTestCase");
-    QTestResult::setCurrentTestLocation(QTestResult::DataFunc);
-    QTestTable::globalTestTable();
-    QMetaObject::invokeMethod(testObject, "initTestCase_data", Qt::DirectConnection);
+    } else {
+#endif
 
-    if (!QTestResult::skipCurrentTest() && !QTest::currentTestFailed()) {
-        QTestResult::setCurrentTestLocation(QTestResult::InitFunc);
-        QMetaObject::invokeMethod(testObject, "initTestCase");
+        qInvokeTestMethods(testObject);
 
-        // finishedCurrentTestFunction() resets QTestResult::testFailed(), so use a local copy.
-        const bool previousFailed = QTestResult::testFailed();
-        QTestResult::finishedCurrentTestFunction();
-
-        if(!QTestResult::skipCurrentTest() && !previousFailed) {
-
-            if (lastTestFuncIdx >= 0) {
-                for (int i = 0; i <= lastTestFuncIdx; ++i) {
-                    if (!qInvokeTestMethod(metaObject->method(testFuncs[i].function).signature(),
-                                           testFuncs[i].data))
-                        break;
-                }
-            } else {
-                int methodCount = metaObject->methodCount();
-                for (int i = 0; i < methodCount; ++i) {
-                    QMetaMethod slotMethod = metaObject->method(i);
-                    if (!isValidSlot(slotMethod))
-                        continue;
-                    if (!qInvokeTestMethod(slotMethod.signature()))
-                        break;
-                }
-            }
-        }
-
-        QTestResult::setSkipCurrentTest(false);
-        QTestResult::setCurrentTestFunction("cleanupTestCase");
-        QMetaObject::invokeMethod(testObject, "cleanupTestCase");
+#ifdef QTESTLIB_USE_VALGRIND
     }
-    QTestResult::finishedCurrentTestFunction();
-    QTestResult::setCurrentTestFunction(0);
-    QTestTable::clearGlobalTestTable();
+#endif
 
  #ifndef QT_NO_EXCEPTIONS
      } catch (...) {
@@ -1211,7 +1443,12 @@ int QTest::qExec(QObject *testObject, int argc, char **argv)
              QTestResult::setCurrentTestFunction(0);
          }
 
-         QTestLog::stopLogging();
+        QTestLog::stopLogging();
+#ifdef QT_MAC_USE_COCOA
+         if (macNeedsActivate) {
+             IOPMAssertionRelease(powerID);
+         }
+#endif
  #ifdef Q_OS_WIN
          // rethrow exception to make debugging easier
          throw;
@@ -1220,12 +1457,50 @@ int QTest::qExec(QObject *testObject, int argc, char **argv)
      }
  #endif
 
-    QTestLog::stopLogging();
     currentTestObject = 0;
-#if defined(QTEST_NOEXITCODE) || defined(QT_BUILD_INTERNAL)
+#ifdef QT_MAC_USE_COCOA
+     if (macNeedsActivate) {
+         IOPMAssertionRelease(powerID);
+     }
+#endif
+
+
+#ifndef QT_NO_PROCESS
+    if (QBenchmarkGlobalData::current->createChart) {
+
+#define XSTR(s) STR(s)
+#define STR(s) #s
+#ifdef Q_OS_WIN
+    const char * path = XSTR(QBENCHLIB_BASE) "/tools/generatereport/generatereport.exe";
+#else
+    const char * path = XSTR(QBENCHLIB_BASE) "/tools/generatereport/generatereport";
+#endif
+#undef XSTR
+#undef STR
+
+        if (QFile::exists(QLatin1String(path))) {
+            QProcess p;
+            p.setProcessChannelMode(QProcess::ForwardedChannels);
+            p.start(QLatin1String(path), QStringList() << QLatin1String("results.xml"));
+            p.waitForFinished(-1);
+        } else {
+            qWarning("Could not find %s, please make sure it is compiled.", path);
+        }
+    }
+#endif
+
+#if defined(QTEST_NOEXITCODE) || (defined(QT_BUILD_INTERNAL) && !defined(QTEST_FORCE_EXITCODE))
     return 0;
 #else
-    return QTestResult::failCount();
+
+#ifdef QTESTLIB_USE_VALGRIND
+    if (QBenchmarkGlobalData::current->mode() == QBenchmarkGlobalData::CallgrindParentProcess)
+        return callgrindChildExitCode;
+#endif
+    // make sure our exit code is never going above 127
+    // since that could wrap and indicate 0 test fails
+    return qMin(QTestResult::failCount(), 127);
+
 #endif
 }
 

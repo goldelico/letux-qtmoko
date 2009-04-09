@@ -52,4 +52,12 @@ bool PluginData::supportsMimeType(const String& mimeType) const
     return false;
 }
 
+String PluginData::pluginNameForMimeType(const String& mimeType) const
+{
+    for (unsigned i = 0; i < m_mimes.size(); ++i)
+        if (m_mimes[i]->type == mimeType)
+            return m_mimes[i]->plugin->name;
+    return String();
+}
+
 }

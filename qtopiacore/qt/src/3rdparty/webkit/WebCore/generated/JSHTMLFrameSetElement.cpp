@@ -26,92 +26,103 @@
 
 #include "AtomicString.h"
 #include "HTMLFrameSetElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLFrameSetElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLFrameSetElementTableEntries[] =
+static const HashTableValue JSHTMLFrameSetElementTableValues[4] =
 {
-    { "cols", JSHTMLFrameSetElement::ColsAttrNum, DontDelete, 0, &JSHTMLFrameSetElementTableEntries[3] },
-    { "rows", JSHTMLFrameSetElement::RowsAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLFrameSetElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "cols", DontDelete, (intptr_t)jsHTMLFrameSetElementCols, (intptr_t)setJSHTMLFrameSetElementCols },
+    { "rows", DontDelete, (intptr_t)jsHTMLFrameSetElementRows, (intptr_t)setJSHTMLFrameSetElementRows },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLFrameSetElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFrameSetElementTable = 
-{
-    2, 4, JSHTMLFrameSetElementTableEntries, 3
-};
+static const HashTable JSHTMLFrameSetElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLFrameSetElementTableValues, 0 };
+#else
+    { 8, 7, JSHTMLFrameSetElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLFrameSetElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLFrameSetElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFrameSetElementConstructorTable = 
-{
-    2, 1, JSHTMLFrameSetElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLFrameSetElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLFrameSetElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLFrameSetElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLFrameSetElementConstructor : public DOMObject {
 public:
     JSHTMLFrameSetElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLFrameSetElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLFrameSetElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLFrameSetElementConstructor::info = { "HTMLFrameSetElementConstructor", 0, &JSHTMLFrameSetElementConstructorTable, 0 };
+const ClassInfo JSHTMLFrameSetElementConstructor::s_info = { "HTMLFrameSetElementConstructor", 0, &JSHTMLFrameSetElementConstructorTable, 0 };
 
 bool JSHTMLFrameSetElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLFrameSetElementConstructor, DOMObject>(exec, &JSHTMLFrameSetElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFrameSetElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLFrameSetElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLFrameSetElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLFrameSetElementPrototypeTable = 
-{
-    2, 1, JSHTMLFrameSetElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLFrameSetElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLFrameSetElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLFrameSetElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLFrameSetElementPrototype::info = { "HTMLFrameSetElementPrototype", 0, &JSHTMLFrameSetElementPrototypeTable, 0 };
+const ClassInfo JSHTMLFrameSetElementPrototype::s_info = { "HTMLFrameSetElementPrototype", 0, &JSHTMLFrameSetElementPrototypeTable, 0 };
 
 JSObject* JSHTMLFrameSetElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLFrameSetElementPrototype>(exec, "[[JSHTMLFrameSetElement.prototype]]");
+    return getDOMPrototype<JSHTMLFrameSetElement>(exec);
 }
 
-const ClassInfo JSHTMLFrameSetElement::info = { "HTMLFrameSetElement", &JSHTMLElement::info, &JSHTMLFrameSetElementTable, 0 };
+const ClassInfo JSHTMLFrameSetElement::s_info = { "HTMLFrameSetElement", &JSHTMLElement::s_info, &JSHTMLFrameSetElementTable, 0 };
 
-JSHTMLFrameSetElement::JSHTMLFrameSetElement(ExecState* exec, HTMLFrameSetElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLFrameSetElement::JSHTMLFrameSetElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLFrameSetElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLFrameSetElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLFrameSetElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLFrameSetElementPrototype(JSHTMLFrameSetElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLFrameSetElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -120,54 +131,46 @@ bool JSHTMLFrameSetElement::getOwnPropertySlot(ExecState* exec, const Identifier
         slot.setCustom(this, nameGetter);
         return true;
     }
-    return getStaticValueSlot<JSHTMLFrameSetElement, JSHTMLElement>(exec, &JSHTMLFrameSetElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLFrameSetElement, Base>(exec, &JSHTMLFrameSetElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLFrameSetElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLFrameSetElementCols(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ColsAttrNum: {
-        HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(impl());
-
-        return jsString(imp->cols());
-    }
-    case RowsAttrNum: {
-        HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(impl());
-
-        return jsString(imp->rows());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(static_cast<JSHTMLFrameSetElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->cols());
 }
 
-void JSHTMLFrameSetElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLFrameSetElementRows(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLFrameSetElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLFrameSetElementTable, this);
+    HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(static_cast<JSHTMLFrameSetElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->rows());
 }
 
-void JSHTMLFrameSetElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLFrameSetElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ColsAttrNum: {
-        HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(impl());
-
-        imp->setCols(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case RowsAttrNum: {
-        HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(impl());
-
-        imp->setRows(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    return static_cast<JSHTMLFrameSetElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLFrameSetElement::getConstructor(ExecState* exec)
+void JSHTMLFrameSetElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLFrameSetElementConstructor>(exec, "[[HTMLFrameSetElement.constructor]]");
+    lookupPut<JSHTMLFrameSetElement, Base>(exec, propertyName, value, &JSHTMLFrameSetElementTable, this, slot);
 }
+
+void setJSHTMLFrameSetElementCols(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(static_cast<JSHTMLFrameSetElement*>(thisObject)->impl());
+    imp->setCols(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLFrameSetElementRows(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLFrameSetElement* imp = static_cast<HTMLFrameSetElement*>(static_cast<JSHTMLFrameSetElement*>(thisObject)->impl());
+    imp->setRows(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLFrameSetElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLFrameSetElementConstructor>(exec);
+}
+
 
 }

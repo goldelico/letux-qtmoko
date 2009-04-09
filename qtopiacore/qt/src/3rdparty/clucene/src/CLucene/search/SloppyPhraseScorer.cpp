@@ -29,7 +29,7 @@ CL_NS_DEF(search)
       this->slop = slop;
   }
 
-  float_t SloppyPhraseScorer::phraseFreq() {
+  qreal SloppyPhraseScorer::phraseFreq() {
   //Func - Returns the freqency of the phrase
   //Pre  - first != NULL
   //       last  != NULL
@@ -62,7 +62,7 @@ CL_NS_DEF(search)
           pq->put(pp);		
           }
 
-     float_t freq = 0.0f;
+     qreal freq = 0.0f;
      
 	 bool done = false;
      

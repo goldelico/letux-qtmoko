@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGMetadataElement_H
-#define JSSVGMetadataElement_H
+#ifndef JSSVGMetadataElement_h
+#define JSSVGMetadataElement_h
 
 
 #if ENABLE(SVG)
@@ -31,22 +31,24 @@ namespace WebCore {
 class SVGMetadataElement;
 
 class JSSVGMetadataElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGMetadataElement(KJS::ExecState*, SVGMetadataElement*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGMetadataElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGMetadataElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGMetadataElementPrototype : public KJS::JSObject {
+class JSSVGMetadataElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGMetadataElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGMetadataElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 

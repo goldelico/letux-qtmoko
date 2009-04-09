@@ -1,9 +1,7 @@
 /*
     Copyright (C) 2004, 2005, 2006 Nikolas Zimmermann <wildfox@kde.org>
                   2004, 2005 Rob Buis <buis@kde.org>
-                  2005 Eric Seidel <eric.seidel@kdemail.net>
-
-    This file is part of the KDE project
+                  2005 Eric Seidel <eric@webkit.org>
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -28,19 +26,22 @@
 
 namespace WebCore {
 
+class FloatPoint;
+
 class FloatPoint3D {
 public:
     FloatPoint3D();
     FloatPoint3D(float x, float y, float z);
+    FloatPoint3D(const FloatPoint&);
 
-    float x() const;
-    void setX(float x);
+    float x() const { return m_x; }
+    void setX(float x) { m_x = x; }
 
-    float y() const;
-    void setY(float y);
+    float y() const { return m_y; }
+    void setY(float y) { m_y = y; }
 
-    float z() const;
-    void setZ(float z);
+    float z() const { return m_z; }
+    void setZ(float z) { m_z = z; }
 
     void normalize();
 

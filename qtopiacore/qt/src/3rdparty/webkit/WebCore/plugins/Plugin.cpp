@@ -66,7 +66,7 @@ PassRefPtr<MimeType> Plugin::item(unsigned index)
     const Vector<MimeClassInfo*>& mimes = m_pluginData->mimes();
     for (unsigned i = 0; i < mimes.size(); ++i)
         if (mimes[i] == mime)
-            return new MimeType(m_pluginData.get(), i);
+            return MimeType::create(m_pluginData.get(), i).get();
     return 0;
 }
 
@@ -79,12 +79,12 @@ bool Plugin::canGetItemsForName(const AtomicString& propertyName)
     return false;
 }
 
-PassRefPtr<MimeType> Plugin::nameGetter(const AtomicString& propertyName)
+PassRefPtr<MimeType> Plugin::namedItem(const AtomicString& propertyName)
 {
     const Vector<MimeClassInfo*>& mimes = m_pluginData->mimes();
     for (unsigned i = 0; i < mimes.size(); ++i)
         if (mimes[i]->type == propertyName)
-            return new MimeType(m_pluginData.get(), i);
+            return MimeType::create(m_pluginData.get(), i).get();
     return 0;
 }
 

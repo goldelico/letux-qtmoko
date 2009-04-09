@@ -269,6 +269,10 @@ CL_NS_DEF(search)
   
  PhraseQuery::PhraseWeight::PhraseWeight(Searcher* searcher, PhraseQuery* _this) {
    this->_this=_this;
+   this->value = 0;
+   this->idf = 0;
+   this->queryNorm = 0;
+   this->queryWeight = 0;
    this->searcher = searcher;
  }
 
@@ -280,15 +284,15 @@ CL_NS_DEF(search)
 
  
  Query* PhraseQuery::PhraseWeight::getQuery() { return _this; }
- float_t PhraseQuery::PhraseWeight::getValue() { return value; }
+ qreal PhraseQuery::PhraseWeight::getValue() { return value; }
 
- float_t PhraseQuery::PhraseWeight::sumOfSquaredWeights(){
+ qreal PhraseQuery::PhraseWeight::sumOfSquaredWeights(){
    idf = _this->getSimilarity(searcher)->idf(&_this->terms, searcher);
    queryWeight = idf * _this->getBoost();    // compute query weight
    return queryWeight * queryWeight;         // square it
  }
 
- void PhraseQuery::PhraseWeight::normalize(float_t queryNorm) {
+ void PhraseQuery::PhraseWeight::normalize(qreal queryNorm) {
    this->queryNorm = queryNorm;
    queryWeight *= queryNorm;                   // normalize query weight
    value = queryWeight * idf;                  // idf for document 
@@ -430,7 +434,7 @@ CL_NS_DEF(search)
 
    Explanation* fieldNormExpl = _CLNEW Explanation();
    uint8_t* fieldNorms = reader->norms(_this->field);
-   float_t fieldNorm =
+   qreal fieldNorm =
      fieldNorms!=NULL ? Similarity::decodeNorm(fieldNorms[doc]) : 0.0f;
    fieldNormExpl->setValue(fieldNorm);
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -246,7 +250,7 @@ QByteArray QHttpNetworkRequestPrivate::methodName() const
 QByteArray QHttpNetworkRequestPrivate::uri(bool throughProxy) const
 {
     QUrl::FormattingOptions format(QUrl::RemoveFragment);
-    
+
     // for POST, query data is send as content
     if (operation == QHttpNetworkRequest::Post && !data)
         format |= QUrl::RemoveQuery;
@@ -560,7 +564,7 @@ int QHttpNetworkReplyPrivate::gunzipBodyPartially(QByteArray &compressed, QByteA
         inflated.append(QByteArray((const char *)out, have));
      } while (inflateStrm.avail_out == 0);
     // clean up and return
-    if(ret <= Z_ERRNO || ret == Z_STREAM_END) {
+    if (ret <= Z_ERRNO || ret == Z_STREAM_END) {
         inflateEnd(&inflateStrm);
         initInflate = false;
     }
@@ -626,10 +630,10 @@ qint64 QHttpNetworkReplyPrivate::readHeader(QAbstractSocket *socket)
     bool allHeaders = false;
     while (!allHeaders && socket->bytesAvailable()) {
         if (socket->peek(&c, 1) == 1 && c == '\n') {
-            // check for possible header endings. As per HTTP rfc, 
-            // the header endings will be marked by CRLFCRLF. But 
+            // check for possible header endings. As per HTTP rfc,
+            // the header endings will be marked by CRLFCRLF. But
             // we will allow CRLFLF, LFLF & CRLFCRLF
-            if (fragment.endsWith("\n\r") || fragment.endsWith('\n')) 
+            if (fragment.endsWith("\n\r") || fragment.endsWith('\n'))
                 allHeaders = true;
         }
         bytes += socket->read(&c, 1);
@@ -648,7 +652,7 @@ qint64 QHttpNetworkReplyPrivate::readHeader(QAbstractSocket *socket)
 void QHttpNetworkReplyPrivate::parseHeader(const QByteArray &header)
 {
     // see rfc2616, sec 4 for information about HTTP/1.1 headers.
-    // allows relaxed parsing here, accepts both CRLF & LF line endings 
+    // allows relaxed parsing here, accepts both CRLF & LF line endings
     const QByteArrayMatcher lf("\n");
     const QByteArrayMatcher colon(":");
     int i = 0;
@@ -777,21 +781,21 @@ qint64 QHttpNetworkReplyPrivate::getChunkSize(QIODevice *in, qint64 *chunkSize)
     *chunkSize = -1;
     int bytesAvailable = in->bytesAvailable();
     while (bytesAvailable > bytes) {
-        // check for line ending, skip blank lines
-        if (in->peek(crlf, 2) == 2 && crlf[0] == '\r' && crlf[1] == '\n' && fragment.size()) {
-            // normal chunk size
-            bytes += in->read(crlf, 2); // read the "\r\n"
+        qint64 sniffedBytes =  in->peek(crlf, 2);
+        int fragmentSize = fragment.size();
+        // check the next two bytes for a "\r\n", skip blank lines
+        if ((fragmentSize && sniffedBytes == 2 && crlf[0] == '\r' && crlf[1] == '\n')
+           ||(fragmentSize > 1 && fragment.endsWith('\r')  && crlf[0] == '\n'))
+        {
+            bytes += in->read(crlf, 1);     // read the \r or \n
+            if (crlf[0] == '\r')
+                bytes += in->read(crlf, 1); // read the \n
             bool ok = false;
-            QString strSize= QString::fromAscii(fragment.constData());
             // ignore the chunk-extension
-            strSize = strSize.mid(0, strSize.indexOf(QLatin1Char(';'))).trimmed();
-            *chunkSize = strSize.toLong(&ok, 16);
+            fragment = fragment.mid(0, fragment.indexOf(';')).trimmed();
+            *chunkSize = fragment.toLong(&ok, 16);
             fragment.clear();
             break; // size done
-        } else if (bytesAvailable == 1 && crlf[0] == '\r') {
-            // if the current data ends '1' byte before (missing '\n') the chunk size is read fully,
-            // leave the '\r' in the socket itself.
-            break;
         } else {
             // read the fragment to the buffer
             char c = 0;
@@ -1335,7 +1339,7 @@ bool QHttpNetworkConnectionPrivate::expand(QAbstractSocket *socket, QHttpNetwork
                     emit reply->readyRead();
                     // make sure that the reply is valid
                     if (channels[i].reply != reply)
-                        return true; 
+                        return true;
                     emit reply->dataReadProgress(reply->d_func()->totalProgress, 0);
                     // make sure that the reply is valid
                     if (channels[i].reply != reply)
@@ -1431,7 +1435,7 @@ void QHttpNetworkConnectionPrivate::receiveReply(QAbstractSocket *socket, QHttpN
                         if (channels[i].reply != reply)
                             return;
                     }
-                } 
+                }
 #ifndef QT_NO_COMPRESS
                 else if (!expand(socket, reply, false)) { // expand a chunk if possible
                     return; // ### expand failed
@@ -1467,16 +1471,16 @@ void QHttpNetworkConnectionPrivate::allDone(QAbstractSocket *socket, QHttpNetwor
     int i = indexOf(socket);
     if (reply->d_func()->connectionCloseEnabled())
         closeChannel(i);
-    // queue the finished signal, this is required since we might send new requests from  
-    // slot connected to it. The socket will not fire readyRead signal, if we are already 
+    // queue the finished signal, this is required since we might send new requests from
+    // slot connected to it. The socket will not fire readyRead signal, if we are already
     // in the slot connected to readyRead
     if (emitFinished)
         QMetaObject::invokeMethod(reply, "finished", Qt::QueuedConnection);
     // reset the reconnection attempts after we receive a complete reply.
-    // in case of failures, each channel will attempt two reconnects before emitting error. 
+    // in case of failures, each channel will attempt two reconnects before emitting error.
     channels[i].reconnectAttempts = 2;
 }
-    
+
 void QHttpNetworkConnectionPrivate::handleStatus(QAbstractSocket *socket, QHttpNetworkReply *reply)
 {
     Q_ASSERT(socket);
@@ -1845,7 +1849,7 @@ void QHttpNetworkConnectionPrivate::_q_disconnected()
 
 void QHttpNetworkConnectionPrivate::_q_startNextRequest()
 {
-    // send the current request again 
+    // send the current request again
     if (channels[0].resendCurrent || channels[1].resendCurrent) {
         int i = channels[0].resendCurrent ? 0:1;
         QAbstractSocket *socket = channels[i].socket;
@@ -1952,7 +1956,7 @@ void QHttpNetworkConnectionPrivate::_q_error(QAbstractSocket::SocketError socket
         break;
     }
     QPointer<QObject> that = q;
-    QString errorString = errorDetail(errorCode, socket);  
+    QString errorString = errorDetail(errorCode, socket);
     if (send2Reply) {
         if (channels[i].reply) {
             channels[i].reply->d_func()->errorString = errorString;

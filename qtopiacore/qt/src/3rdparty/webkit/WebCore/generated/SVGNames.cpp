@@ -28,7 +28,7 @@
 
 
 #include "config.h"
-#ifdef AVOID_STATIC_CONSTRUCTORS
+#ifdef SKIP_STATIC_CONSTRUCTORS_ON_GCC
 #define DOM_SVGNAMES_HIDE_GLOBALS 1
 #else
 #define QNAME_DEFAULT_CONSTRUCTOR 1
@@ -37,26 +37,67 @@
 #include "SVGNames.h"
 
 #include "StaticConstructors.h"
-namespace WebCore { namespace SVGNames {
+namespace WebCore {
+
+ namespace SVGNames {
 
 using namespace WebCore;
 
 DEFINE_GLOBAL(AtomicString, svgNamespaceURI, "http://www.w3.org/2000/svg")
 // Tags
 DEFINE_GLOBAL(QualifiedName, aTag, nullAtom, "a", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, altGlyphTag, nullAtom, "altGlyph", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, animateTag, nullAtom, "animate", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, animateColorTag, nullAtom, "animateColor", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, animateMotionTag, nullAtom, "animateMotion", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, animateTransformTag, nullAtom, "animateTransform", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, circleTag, nullAtom, "circle", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, clipPathTag, nullAtom, "clipPath", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, cursorTag, nullAtom, "cursor", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, definition_srcTag, nullAtom, "definition_src", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, defsTag, nullAtom, "defs", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, descTag, nullAtom, "desc", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, ellipseTag, nullAtom, "ellipse", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feBlendTag, nullAtom, "feBlend", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feColorMatrixTag, nullAtom, "feColorMatrix", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feComponentTransferTag, nullAtom, "feComponentTransfer", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feCompositeTag, nullAtom, "feComposite", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feDiffuseLightingTag, nullAtom, "feDiffuseLighting", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feDisplacementMapTag, nullAtom, "feDisplacementMap", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feDistantLightTag, nullAtom, "feDistantLight", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feFloodTag, nullAtom, "feFlood", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feFuncATag, nullAtom, "feFuncA", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feFuncBTag, nullAtom, "feFuncB", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feFuncGTag, nullAtom, "feFuncG", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feFuncRTag, nullAtom, "feFuncR", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feGaussianBlurTag, nullAtom, "feGaussianBlur", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feImageTag, nullAtom, "feImage", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feMergeTag, nullAtom, "feMerge", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feMergeNodeTag, nullAtom, "feMergeNode", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feOffsetTag, nullAtom, "feOffset", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, fePointLightTag, nullAtom, "fePointLight", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feSpecularLightingTag, nullAtom, "feSpecularLighting", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feSpotLightTag, nullAtom, "feSpotLight", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feTileTag, nullAtom, "feTile", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, feTurbulenceTag, nullAtom, "feTurbulence", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, filterTag, nullAtom, "filter", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, fontTag, nullAtom, "font", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, font_faceTag, nullAtom, "font_face", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, font_face_formatTag, nullAtom, "font_face_format", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, font_face_nameTag, nullAtom, "font_face_name", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, font_face_srcTag, nullAtom, "font_face_src", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, font_face_uriTag, nullAtom, "font_face_uri", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, foreignObjectTag, nullAtom, "foreignObject", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, gTag, nullAtom, "g", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, glyphTag, nullAtom, "glyph", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, hkernTag, nullAtom, "hkern", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, imageTag, nullAtom, "image", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, lineTag, nullAtom, "line", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, linearGradientTag, nullAtom, "linearGradient", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, markerTag, nullAtom, "marker", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, maskTag, nullAtom, "mask", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, metadataTag, nullAtom, "metadata", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, missing_glyphTag, nullAtom, "missing_glyph", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, mpathTag, nullAtom, "mpath", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, pathTag, nullAtom, "path", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, patternTag, nullAtom, "pattern", svgNamespaceURI);
@@ -72,6 +113,7 @@ DEFINE_GLOBAL(QualifiedName, svgTag, nullAtom, "svg", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, switchTag, nullAtom, "switch", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, symbolTag, nullAtom, "symbol", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, textTag, nullAtom, "text", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, textPathTag, nullAtom, "textPath", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, titleTag, nullAtom, "title", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, trefTag, nullAtom, "tref", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, tspanTag, nullAtom, "tspan", svgNamespaceURI);
@@ -83,19 +125,58 @@ WebCore::QualifiedName** getSVGTags(size_t* size)
 {
     static WebCore::QualifiedName* SVGTags[] = {
         (WebCore::QualifiedName*)&aTag,
+        (WebCore::QualifiedName*)&altGlyphTag,
+        (WebCore::QualifiedName*)&animateTag,
+        (WebCore::QualifiedName*)&animateColorTag,
+        (WebCore::QualifiedName*)&animateMotionTag,
+        (WebCore::QualifiedName*)&animateTransformTag,
         (WebCore::QualifiedName*)&circleTag,
         (WebCore::QualifiedName*)&clipPathTag,
         (WebCore::QualifiedName*)&cursorTag,
+        (WebCore::QualifiedName*)&definition_srcTag,
         (WebCore::QualifiedName*)&defsTag,
         (WebCore::QualifiedName*)&descTag,
         (WebCore::QualifiedName*)&ellipseTag,
+        (WebCore::QualifiedName*)&feBlendTag,
+        (WebCore::QualifiedName*)&feColorMatrixTag,
+        (WebCore::QualifiedName*)&feComponentTransferTag,
+        (WebCore::QualifiedName*)&feCompositeTag,
+        (WebCore::QualifiedName*)&feDiffuseLightingTag,
+        (WebCore::QualifiedName*)&feDisplacementMapTag,
+        (WebCore::QualifiedName*)&feDistantLightTag,
+        (WebCore::QualifiedName*)&feFloodTag,
+        (WebCore::QualifiedName*)&feFuncATag,
+        (WebCore::QualifiedName*)&feFuncBTag,
+        (WebCore::QualifiedName*)&feFuncGTag,
+        (WebCore::QualifiedName*)&feFuncRTag,
+        (WebCore::QualifiedName*)&feGaussianBlurTag,
+        (WebCore::QualifiedName*)&feImageTag,
+        (WebCore::QualifiedName*)&feMergeTag,
+        (WebCore::QualifiedName*)&feMergeNodeTag,
+        (WebCore::QualifiedName*)&feOffsetTag,
+        (WebCore::QualifiedName*)&fePointLightTag,
+        (WebCore::QualifiedName*)&feSpecularLightingTag,
+        (WebCore::QualifiedName*)&feSpotLightTag,
+        (WebCore::QualifiedName*)&feTileTag,
+        (WebCore::QualifiedName*)&feTurbulenceTag,
+        (WebCore::QualifiedName*)&filterTag,
+        (WebCore::QualifiedName*)&fontTag,
+        (WebCore::QualifiedName*)&font_faceTag,
+        (WebCore::QualifiedName*)&font_face_formatTag,
+        (WebCore::QualifiedName*)&font_face_nameTag,
+        (WebCore::QualifiedName*)&font_face_srcTag,
+        (WebCore::QualifiedName*)&font_face_uriTag,
+        (WebCore::QualifiedName*)&foreignObjectTag,
         (WebCore::QualifiedName*)&gTag,
+        (WebCore::QualifiedName*)&glyphTag,
+        (WebCore::QualifiedName*)&hkernTag,
         (WebCore::QualifiedName*)&imageTag,
         (WebCore::QualifiedName*)&lineTag,
         (WebCore::QualifiedName*)&linearGradientTag,
         (WebCore::QualifiedName*)&markerTag,
         (WebCore::QualifiedName*)&maskTag,
         (WebCore::QualifiedName*)&metadataTag,
+        (WebCore::QualifiedName*)&missing_glyphTag,
         (WebCore::QualifiedName*)&mpathTag,
         (WebCore::QualifiedName*)&pathTag,
         (WebCore::QualifiedName*)&patternTag,
@@ -111,13 +192,14 @@ WebCore::QualifiedName** getSVGTags(size_t* size)
         (WebCore::QualifiedName*)&switchTag,
         (WebCore::QualifiedName*)&symbolTag,
         (WebCore::QualifiedName*)&textTag,
+        (WebCore::QualifiedName*)&textPathTag,
         (WebCore::QualifiedName*)&titleTag,
         (WebCore::QualifiedName*)&trefTag,
         (WebCore::QualifiedName*)&tspanTag,
         (WebCore::QualifiedName*)&useTag,
         (WebCore::QualifiedName*)&viewTag,
     };
-    *size = 34;
+    *size = 74;
     return SVGTags;
 }
 
@@ -135,8 +217,8 @@ DEFINE_GLOBAL(QualifiedName, attributeNameAttr, nullAtom, "attributeName", svgNa
 DEFINE_GLOBAL(QualifiedName, attributeTypeAttr, nullAtom, "attributeType", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, azimuthAttr, nullAtom, "azimuth", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, baseFrequencyAttr, nullAtom, "baseFrequency", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, baseline_shiftAttr, nullAtom, "baseline_shift", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, baseProfileAttr, nullAtom, "baseProfile", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, baseline_shiftAttr, nullAtom, "baseline_shift", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, bboxAttr, nullAtom, "bbox", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, beginAttr, nullAtom, "begin", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, biasAttr, nullAtom, "bias", svgNamespaceURI);
@@ -144,9 +226,9 @@ DEFINE_GLOBAL(QualifiedName, byAttr, nullAtom, "by", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, calcModeAttr, nullAtom, "calcMode", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, cap_heightAttr, nullAtom, "cap_height", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, clipAttr, nullAtom, "clip", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, clipPathUnitsAttr, nullAtom, "clipPathUnits", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, clip_pathAttr, nullAtom, "clip_path", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, clip_ruleAttr, nullAtom, "clip_rule", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, clipPathUnitsAttr, nullAtom, "clipPathUnits", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, colorAttr, nullAtom, "color", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, color_interpolationAttr, nullAtom, "color_interpolation", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, color_interpolation_filtersAttr, nullAtom, "color_interpolation_filters", svgNamespaceURI);
@@ -199,10 +281,10 @@ DEFINE_GLOBAL(QualifiedName, fxAttr, nullAtom, "fx", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, fyAttr, nullAtom, "fy", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, g1Attr, nullAtom, "g1", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, g2Attr, nullAtom, "g2", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, glyphRefAttr, nullAtom, "glyphRef", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, glyph_nameAttr, nullAtom, "glyph_name", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, glyph_orientation_horizontalAttr, nullAtom, "glyph_orientation_horizontal", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, glyph_orientation_verticalAttr, nullAtom, "glyph_orientation_vertical", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, glyphRefAttr, nullAtom, "glyphRef", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, gradientTransformAttr, nullAtom, "gradientTransform", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, gradientUnitsAttr, nullAtom, "gradientUnits", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, hangingAttr, nullAtom, "hanging", svgNamespaceURI);
@@ -226,17 +308,18 @@ DEFINE_GLOBAL(QualifiedName, kerningAttr, nullAtom, "kerning", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, keyPointsAttr, nullAtom, "keyPoints", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, keySplinesAttr, nullAtom, "keySplines", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, keyTimesAttr, nullAtom, "keyTimes", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, langAttr, nullAtom, "lang", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, lengthAdjustAttr, nullAtom, "lengthAdjust", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, letter_spacingAttr, nullAtom, "letter_spacing", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, lighting_colorAttr, nullAtom, "lighting_color", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, limitingConeAngleAttr, nullAtom, "limitingConeAngle", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, localAttr, nullAtom, "local", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, marker_endAttr, nullAtom, "marker_end", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, marker_midAttr, nullAtom, "marker_mid", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, marker_startAttr, nullAtom, "marker_start", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, markerHeightAttr, nullAtom, "markerHeight", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, markerUnitsAttr, nullAtom, "markerUnits", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, markerWidthAttr, nullAtom, "markerWidth", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, marker_endAttr, nullAtom, "marker_end", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, marker_midAttr, nullAtom, "marker_mid", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, marker_startAttr, nullAtom, "marker_start", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, maskAttr, nullAtom, "mask", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, maskContentUnitsAttr, nullAtom, "maskContentUnits", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, maskUnitsAttr, nullAtom, "maskUnits", svgNamespaceURI);
@@ -249,8 +332,11 @@ DEFINE_GLOBAL(QualifiedName, modeAttr, nullAtom, "mode", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, nameAttr, nullAtom, "name", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, numOctavesAttr, nullAtom, "numOctaves", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, offsetAttr, nullAtom, "offset", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onactivateAttr, nullAtom, "onactivate", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onbeginAttr, nullAtom, "onbegin", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onendAttr, nullAtom, "onend", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onfocusinAttr, nullAtom, "onfocusin", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, onfocusoutAttr, nullAtom, "onfocusout", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onrepeatAttr, nullAtom, "onrepeat", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, onzoomAttr, nullAtom, "onzoom", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, opacityAttr, nullAtom, "opacity", svgNamespaceURI);
@@ -322,10 +408,10 @@ DEFINE_GLOBAL(QualifiedName, tableValuesAttr, nullAtom, "tableValues", svgNamesp
 DEFINE_GLOBAL(QualifiedName, targetAttr, nullAtom, "target", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, targetXAttr, nullAtom, "targetX", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, targetYAttr, nullAtom, "targetY", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, textLengthAttr, nullAtom, "textLength", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, text_anchorAttr, nullAtom, "text_anchor", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, text_decorationAttr, nullAtom, "text_decoration", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, text_renderingAttr, nullAtom, "text_rendering", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, textLengthAttr, nullAtom, "textLength", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, titleAttr, nullAtom, "title", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, toAttr, nullAtom, "to", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, transformAttr, nullAtom, "transform", svgNamespaceURI);
@@ -355,10 +441,10 @@ DEFINE_GLOBAL(QualifiedName, widthsAttr, nullAtom, "widths", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, word_spacingAttr, nullAtom, "word_spacing", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, writing_modeAttr, nullAtom, "writing_mode", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, xAttr, nullAtom, "x", svgNamespaceURI);
-DEFINE_GLOBAL(QualifiedName, x_heightAttr, nullAtom, "x_height", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, x1Attr, nullAtom, "x1", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, x2Attr, nullAtom, "x2", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, xChannelSelectorAttr, nullAtom, "xChannelSelector", svgNamespaceURI);
+DEFINE_GLOBAL(QualifiedName, x_heightAttr, nullAtom, "x_height", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, yAttr, nullAtom, "y", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, y1Attr, nullAtom, "y1", svgNamespaceURI);
 DEFINE_GLOBAL(QualifiedName, y2Attr, nullAtom, "y2", svgNamespaceURI);
@@ -383,8 +469,8 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&attributeTypeAttr,
         (WebCore::QualifiedName*)&azimuthAttr,
         (WebCore::QualifiedName*)&baseFrequencyAttr,
-        (WebCore::QualifiedName*)&baseline_shiftAttr,
         (WebCore::QualifiedName*)&baseProfileAttr,
+        (WebCore::QualifiedName*)&baseline_shiftAttr,
         (WebCore::QualifiedName*)&bboxAttr,
         (WebCore::QualifiedName*)&beginAttr,
         (WebCore::QualifiedName*)&biasAttr,
@@ -392,9 +478,9 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&calcModeAttr,
         (WebCore::QualifiedName*)&cap_heightAttr,
         (WebCore::QualifiedName*)&clipAttr,
+        (WebCore::QualifiedName*)&clipPathUnitsAttr,
         (WebCore::QualifiedName*)&clip_pathAttr,
         (WebCore::QualifiedName*)&clip_ruleAttr,
-        (WebCore::QualifiedName*)&clipPathUnitsAttr,
         (WebCore::QualifiedName*)&colorAttr,
         (WebCore::QualifiedName*)&color_interpolationAttr,
         (WebCore::QualifiedName*)&color_interpolation_filtersAttr,
@@ -447,10 +533,10 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&fyAttr,
         (WebCore::QualifiedName*)&g1Attr,
         (WebCore::QualifiedName*)&g2Attr,
+        (WebCore::QualifiedName*)&glyphRefAttr,
         (WebCore::QualifiedName*)&glyph_nameAttr,
         (WebCore::QualifiedName*)&glyph_orientation_horizontalAttr,
         (WebCore::QualifiedName*)&glyph_orientation_verticalAttr,
-        (WebCore::QualifiedName*)&glyphRefAttr,
         (WebCore::QualifiedName*)&gradientTransformAttr,
         (WebCore::QualifiedName*)&gradientUnitsAttr,
         (WebCore::QualifiedName*)&hangingAttr,
@@ -474,17 +560,18 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&keyPointsAttr,
         (WebCore::QualifiedName*)&keySplinesAttr,
         (WebCore::QualifiedName*)&keyTimesAttr,
+        (WebCore::QualifiedName*)&langAttr,
         (WebCore::QualifiedName*)&lengthAdjustAttr,
         (WebCore::QualifiedName*)&letter_spacingAttr,
         (WebCore::QualifiedName*)&lighting_colorAttr,
         (WebCore::QualifiedName*)&limitingConeAngleAttr,
         (WebCore::QualifiedName*)&localAttr,
-        (WebCore::QualifiedName*)&marker_endAttr,
-        (WebCore::QualifiedName*)&marker_midAttr,
-        (WebCore::QualifiedName*)&marker_startAttr,
         (WebCore::QualifiedName*)&markerHeightAttr,
         (WebCore::QualifiedName*)&markerUnitsAttr,
         (WebCore::QualifiedName*)&markerWidthAttr,
+        (WebCore::QualifiedName*)&marker_endAttr,
+        (WebCore::QualifiedName*)&marker_midAttr,
+        (WebCore::QualifiedName*)&marker_startAttr,
         (WebCore::QualifiedName*)&maskAttr,
         (WebCore::QualifiedName*)&maskContentUnitsAttr,
         (WebCore::QualifiedName*)&maskUnitsAttr,
@@ -497,8 +584,11 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&nameAttr,
         (WebCore::QualifiedName*)&numOctavesAttr,
         (WebCore::QualifiedName*)&offsetAttr,
+        (WebCore::QualifiedName*)&onactivateAttr,
         (WebCore::QualifiedName*)&onbeginAttr,
         (WebCore::QualifiedName*)&onendAttr,
+        (WebCore::QualifiedName*)&onfocusinAttr,
+        (WebCore::QualifiedName*)&onfocusoutAttr,
         (WebCore::QualifiedName*)&onrepeatAttr,
         (WebCore::QualifiedName*)&onzoomAttr,
         (WebCore::QualifiedName*)&opacityAttr,
@@ -570,10 +660,10 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&targetAttr,
         (WebCore::QualifiedName*)&targetXAttr,
         (WebCore::QualifiedName*)&targetYAttr,
+        (WebCore::QualifiedName*)&textLengthAttr,
         (WebCore::QualifiedName*)&text_anchorAttr,
         (WebCore::QualifiedName*)&text_decorationAttr,
         (WebCore::QualifiedName*)&text_renderingAttr,
-        (WebCore::QualifiedName*)&textLengthAttr,
         (WebCore::QualifiedName*)&titleAttr,
         (WebCore::QualifiedName*)&toAttr,
         (WebCore::QualifiedName*)&transformAttr,
@@ -603,10 +693,10 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&word_spacingAttr,
         (WebCore::QualifiedName*)&writing_modeAttr,
         (WebCore::QualifiedName*)&xAttr,
-        (WebCore::QualifiedName*)&x_heightAttr,
         (WebCore::QualifiedName*)&x1Attr,
         (WebCore::QualifiedName*)&x2Attr,
         (WebCore::QualifiedName*)&xChannelSelectorAttr,
+        (WebCore::QualifiedName*)&x_heightAttr,
         (WebCore::QualifiedName*)&yAttr,
         (WebCore::QualifiedName*)&y1Attr,
         (WebCore::QualifiedName*)&y2Attr,
@@ -614,9 +704,334 @@ WebCore::QualifiedName** getSVGAttrs(size_t* size)
         (WebCore::QualifiedName*)&zAttr,
         (WebCore::QualifiedName*)&zoomAndPanAttr,
     };
-    *size = 243;
+    *size = 247;
     return SVGAttr;
 }
+
+// Tags as strings
+char aTagString[] = "a";
+char altGlyphTagString[] = "altGlyph";
+char animateTagString[] = "animate";
+char animateColorTagString[] = "animateColor";
+char animateMotionTagString[] = "animateMotion";
+char animateTransformTagString[] = "animateTransform";
+char circleTagString[] = "circle";
+char clipPathTagString[] = "clipPath";
+char cursorTagString[] = "cursor";
+char definition_srcTagString[] = "definition-src";
+char defsTagString[] = "defs";
+char descTagString[] = "desc";
+char ellipseTagString[] = "ellipse";
+char feBlendTagString[] = "feBlend";
+char feColorMatrixTagString[] = "feColorMatrix";
+char feComponentTransferTagString[] = "feComponentTransfer";
+char feCompositeTagString[] = "feComposite";
+char feDiffuseLightingTagString[] = "feDiffuseLighting";
+char feDisplacementMapTagString[] = "feDisplacementMap";
+char feDistantLightTagString[] = "feDistantLight";
+char feFloodTagString[] = "feFlood";
+char feFuncATagString[] = "feFuncA";
+char feFuncBTagString[] = "feFuncB";
+char feFuncGTagString[] = "feFuncG";
+char feFuncRTagString[] = "feFuncR";
+char feGaussianBlurTagString[] = "feGaussianBlur";
+char feImageTagString[] = "feImage";
+char feMergeTagString[] = "feMerge";
+char feMergeNodeTagString[] = "feMergeNode";
+char feOffsetTagString[] = "feOffset";
+char fePointLightTagString[] = "fePointLight";
+char feSpecularLightingTagString[] = "feSpecularLighting";
+char feSpotLightTagString[] = "feSpotLight";
+char feTileTagString[] = "feTile";
+char feTurbulenceTagString[] = "feTurbulence";
+char filterTagString[] = "filter";
+char fontTagString[] = "font";
+char font_faceTagString[] = "font-face";
+char font_face_formatTagString[] = "font-face-format";
+char font_face_nameTagString[] = "font-face-name";
+char font_face_srcTagString[] = "font-face-src";
+char font_face_uriTagString[] = "font-face-uri";
+char foreignObjectTagString[] = "foreignObject";
+char gTagString[] = "g";
+char glyphTagString[] = "glyph";
+char hkernTagString[] = "hkern";
+char imageTagString[] = "image";
+char lineTagString[] = "line";
+char linearGradientTagString[] = "linearGradient";
+char markerTagString[] = "marker";
+char maskTagString[] = "mask";
+char metadataTagString[] = "metadata";
+char missing_glyphTagString[] = "missing-glyph";
+char mpathTagString[] = "mpath";
+char pathTagString[] = "path";
+char patternTagString[] = "pattern";
+char polygonTagString[] = "polygon";
+char polylineTagString[] = "polyline";
+char radialGradientTagString[] = "radialGradient";
+char rectTagString[] = "rect";
+char scriptTagString[] = "script";
+char setTagString[] = "set";
+char stopTagString[] = "stop";
+char styleTagString[] = "style";
+char svgTagString[] = "svg";
+char switchTagString[] = "switch";
+char symbolTagString[] = "symbol";
+char textTagString[] = "text";
+char textPathTagString[] = "textPath";
+char titleTagString[] = "title";
+char trefTagString[] = "tref";
+char tspanTagString[] = "tspan";
+char useTagString[] = "use";
+char viewTagString[] = "view";
+
+// Attributes as strings
+char accent_heightAttrString[] = "accent-height";
+char accumulateAttrString[] = "accumulate";
+char additiveAttrString[] = "additive";
+char alignment_baselineAttrString[] = "alignment-baseline";
+char alphabeticAttrString[] = "alphabetic";
+char amplitudeAttrString[] = "amplitude";
+char animateAttrString[] = "animate";
+char arabic_formAttrString[] = "arabic-form";
+char ascentAttrString[] = "ascent";
+char attributeNameAttrString[] = "attributeName";
+char attributeTypeAttrString[] = "attributeType";
+char azimuthAttrString[] = "azimuth";
+char baseFrequencyAttrString[] = "baseFrequency";
+char baseProfileAttrString[] = "baseProfile";
+char baseline_shiftAttrString[] = "baseline-shift";
+char bboxAttrString[] = "bbox";
+char beginAttrString[] = "begin";
+char biasAttrString[] = "bias";
+char byAttrString[] = "by";
+char calcModeAttrString[] = "calcMode";
+char cap_heightAttrString[] = "cap-height";
+char clipAttrString[] = "clip";
+char clipPathUnitsAttrString[] = "clipPathUnits";
+char clip_pathAttrString[] = "clip-path";
+char clip_ruleAttrString[] = "clip-rule";
+char colorAttrString[] = "color";
+char color_interpolationAttrString[] = "color-interpolation";
+char color_interpolation_filtersAttrString[] = "color-interpolation-filters";
+char color_profileAttrString[] = "color-profile";
+char color_renderingAttrString[] = "color-rendering";
+char contentScriptTypeAttrString[] = "contentScriptType";
+char contentStyleTypeAttrString[] = "contentStyleType";
+char cursorAttrString[] = "cursor";
+char cxAttrString[] = "cx";
+char cyAttrString[] = "cy";
+char dAttrString[] = "d";
+char descentAttrString[] = "descent";
+char diffuseConstantAttrString[] = "diffuseConstant";
+char directionAttrString[] = "direction";
+char displayAttrString[] = "display";
+char divisorAttrString[] = "divisor";
+char dominant_baselineAttrString[] = "dominant-baseline";
+char durAttrString[] = "dur";
+char dxAttrString[] = "dx";
+char dyAttrString[] = "dy";
+char edgeModeAttrString[] = "edgeMode";
+char elevationAttrString[] = "elevation";
+char enable_backgroundAttrString[] = "enable-background";
+char endAttrString[] = "end";
+char exponentAttrString[] = "exponent";
+char externalResourcesRequiredAttrString[] = "externalResourcesRequired";
+char feColorMatrixAttrString[] = "feColorMatrix";
+char feCompositeAttrString[] = "feComposite";
+char feGaussianBlurAttrString[] = "feGaussianBlur";
+char feMorphologyAttrString[] = "feMorphology";
+char feTileAttrString[] = "feTile";
+char fillAttrString[] = "fill";
+char fill_opacityAttrString[] = "fill-opacity";
+char fill_ruleAttrString[] = "fill-rule";
+char filterAttrString[] = "filter";
+char filterResAttrString[] = "filterRes";
+char filterUnitsAttrString[] = "filterUnits";
+char flood_colorAttrString[] = "flood-color";
+char flood_opacityAttrString[] = "flood-opacity";
+char font_familyAttrString[] = "font-family";
+char font_sizeAttrString[] = "font-size";
+char font_size_adjustAttrString[] = "font-size-adjust";
+char font_stretchAttrString[] = "font-stretch";
+char font_styleAttrString[] = "font-style";
+char font_variantAttrString[] = "font-variant";
+char font_weightAttrString[] = "font-weight";
+char formatAttrString[] = "format";
+char fromAttrString[] = "from";
+char fxAttrString[] = "fx";
+char fyAttrString[] = "fy";
+char g1AttrString[] = "g1";
+char g2AttrString[] = "g2";
+char glyphRefAttrString[] = "glyphRef";
+char glyph_nameAttrString[] = "glyph-name";
+char glyph_orientation_horizontalAttrString[] = "glyph-orientation-horizontal";
+char glyph_orientation_verticalAttrString[] = "glyph-orientation-vertical";
+char gradientTransformAttrString[] = "gradientTransform";
+char gradientUnitsAttrString[] = "gradientUnits";
+char hangingAttrString[] = "hanging";
+char heightAttrString[] = "height";
+char horiz_adv_xAttrString[] = "horiz-adv-x";
+char horiz_origin_xAttrString[] = "horiz-origin-x";
+char horiz_origin_yAttrString[] = "horiz-origin-y";
+char ideographicAttrString[] = "ideographic";
+char image_renderingAttrString[] = "image-rendering";
+char inAttrString[] = "in";
+char in2AttrString[] = "in2";
+char interceptAttrString[] = "intercept";
+char kAttrString[] = "k";
+char k1AttrString[] = "k1";
+char k2AttrString[] = "k2";
+char k3AttrString[] = "k3";
+char k4AttrString[] = "k4";
+char kernelMatrixAttrString[] = "kernelMatrix";
+char kernelUnitLengthAttrString[] = "kernelUnitLength";
+char kerningAttrString[] = "kerning";
+char keyPointsAttrString[] = "keyPoints";
+char keySplinesAttrString[] = "keySplines";
+char keyTimesAttrString[] = "keyTimes";
+char langAttrString[] = "lang";
+char lengthAdjustAttrString[] = "lengthAdjust";
+char letter_spacingAttrString[] = "letter-spacing";
+char lighting_colorAttrString[] = "lighting-color";
+char limitingConeAngleAttrString[] = "limitingConeAngle";
+char localAttrString[] = "local";
+char markerHeightAttrString[] = "markerHeight";
+char markerUnitsAttrString[] = "markerUnits";
+char markerWidthAttrString[] = "markerWidth";
+char marker_endAttrString[] = "marker-end";
+char marker_midAttrString[] = "marker-mid";
+char marker_startAttrString[] = "marker-start";
+char maskAttrString[] = "mask";
+char maskContentUnitsAttrString[] = "maskContentUnits";
+char maskUnitsAttrString[] = "maskUnits";
+char mathematicalAttrString[] = "mathematical";
+char maxAttrString[] = "max";
+char mediaAttrString[] = "media";
+char methodAttrString[] = "method";
+char minAttrString[] = "min";
+char modeAttrString[] = "mode";
+char nameAttrString[] = "name";
+char numOctavesAttrString[] = "numOctaves";
+char offsetAttrString[] = "offset";
+char onactivateAttrString[] = "onactivate";
+char onbeginAttrString[] = "onbegin";
+char onendAttrString[] = "onend";
+char onfocusinAttrString[] = "onfocusin";
+char onfocusoutAttrString[] = "onfocusout";
+char onrepeatAttrString[] = "onrepeat";
+char onzoomAttrString[] = "onzoom";
+char opacityAttrString[] = "opacity";
+char operatorAttrString[] = "operator";
+char orderAttrString[] = "order";
+char orientAttrString[] = "orient";
+char orientationAttrString[] = "orientation";
+char originAttrString[] = "origin";
+char overflowAttrString[] = "overflow";
+char overline_positionAttrString[] = "overline-position";
+char overline_thicknessAttrString[] = "overline-thickness";
+char panose_1AttrString[] = "panose-1";
+char pathAttrString[] = "path";
+char pathLengthAttrString[] = "pathLength";
+char patternContentUnitsAttrString[] = "patternContentUnits";
+char patternTransformAttrString[] = "patternTransform";
+char patternUnitsAttrString[] = "patternUnits";
+char pointer_eventsAttrString[] = "pointer-events";
+char pointsAttrString[] = "points";
+char pointsAtXAttrString[] = "pointsAtX";
+char pointsAtYAttrString[] = "pointsAtY";
+char pointsAtZAttrString[] = "pointsAtZ";
+char preserveAlphaAttrString[] = "preserveAlpha";
+char preserveAspectRatioAttrString[] = "preserveAspectRatio";
+char primitiveUnitsAttrString[] = "primitiveUnits";
+char rAttrString[] = "r";
+char radiusAttrString[] = "radius";
+char refXAttrString[] = "refX";
+char refYAttrString[] = "refY";
+char rendering_intentAttrString[] = "rendering-intent";
+char repeatCountAttrString[] = "repeatCount";
+char repeatDurAttrString[] = "repeatDur";
+char requiredExtensionsAttrString[] = "requiredExtensions";
+char requiredFeaturesAttrString[] = "requiredFeatures";
+char restartAttrString[] = "restart";
+char resultAttrString[] = "result";
+char rotateAttrString[] = "rotate";
+char rxAttrString[] = "rx";
+char ryAttrString[] = "ry";
+char scaleAttrString[] = "scale";
+char seedAttrString[] = "seed";
+char shape_renderingAttrString[] = "shape-rendering";
+char slopeAttrString[] = "slope";
+char spacingAttrString[] = "spacing";
+char specularConstantAttrString[] = "specularConstant";
+char specularExponentAttrString[] = "specularExponent";
+char spreadMethodAttrString[] = "spreadMethod";
+char startOffsetAttrString[] = "startOffset";
+char stdDeviationAttrString[] = "stdDeviation";
+char stemhAttrString[] = "stemh";
+char stemvAttrString[] = "stemv";
+char stitchTilesAttrString[] = "stitchTiles";
+char stop_colorAttrString[] = "stop-color";
+char stop_opacityAttrString[] = "stop-opacity";
+char strikethrough_positionAttrString[] = "strikethrough-position";
+char strikethrough_thicknessAttrString[] = "strikethrough-thickness";
+char strokeAttrString[] = "stroke";
+char stroke_dasharrayAttrString[] = "stroke-dasharray";
+char stroke_dashoffsetAttrString[] = "stroke-dashoffset";
+char stroke_linecapAttrString[] = "stroke-linecap";
+char stroke_linejoinAttrString[] = "stroke-linejoin";
+char stroke_miterlimitAttrString[] = "stroke-miterlimit";
+char stroke_opacityAttrString[] = "stroke-opacity";
+char stroke_widthAttrString[] = "stroke-width";
+char styleAttrString[] = "style";
+char surfaceScaleAttrString[] = "surfaceScale";
+char systemLanguageAttrString[] = "systemLanguage";
+char tableValuesAttrString[] = "tableValues";
+char targetAttrString[] = "target";
+char targetXAttrString[] = "targetX";
+char targetYAttrString[] = "targetY";
+char textLengthAttrString[] = "textLength";
+char text_anchorAttrString[] = "text-anchor";
+char text_decorationAttrString[] = "text-decoration";
+char text_renderingAttrString[] = "text-rendering";
+char titleAttrString[] = "title";
+char toAttrString[] = "to";
+char transformAttrString[] = "transform";
+char typeAttrString[] = "type";
+char u1AttrString[] = "u1";
+char u2AttrString[] = "u2";
+char underline_positionAttrString[] = "underline-position";
+char underline_thicknessAttrString[] = "underline-thickness";
+char unicodeAttrString[] = "unicode";
+char unicode_bidiAttrString[] = "unicode-bidi";
+char unicode_rangeAttrString[] = "unicode-range";
+char units_per_emAttrString[] = "units-per-em";
+char v_alphabeticAttrString[] = "v-alphabetic";
+char v_hangingAttrString[] = "v-hanging";
+char v_ideographicAttrString[] = "v-ideographic";
+char v_mathematicalAttrString[] = "v-mathematical";
+char valuesAttrString[] = "values";
+char versionAttrString[] = "version";
+char vert_adv_yAttrString[] = "vert-adv-y";
+char vert_origin_xAttrString[] = "vert-origin-x";
+char vert_origin_yAttrString[] = "vert-origin-y";
+char viewBoxAttrString[] = "viewBox";
+char viewTargetAttrString[] = "viewTarget";
+char visibilityAttrString[] = "visibility";
+char widthAttrString[] = "width";
+char widthsAttrString[] = "widths";
+char word_spacingAttrString[] = "word-spacing";
+char writing_modeAttrString[] = "writing-mode";
+char xAttrString[] = "x";
+char x1AttrString[] = "x1";
+char x2AttrString[] = "x2";
+char xChannelSelectorAttrString[] = "xChannelSelector";
+char x_heightAttrString[] = "x-height";
+char yAttrString[] = "y";
+char y1AttrString[] = "y1";
+char y2AttrString[] = "y2";
+char yChannelSelectorAttrString[] = "yChannelSelector";
+char zAttrString[] = "z";
+char zoomAndPanAttrString[] = "zoomAndPan";
 
 void init()
 {
@@ -634,55 +1049,59 @@ void init()
     new ((void*)&svgNamespaceURI) AtomicString(svgNS);
 
     // Tags
-    const char *aTagString = "a";
-    const char *circleTagString = "circle";
-    const char *clipPathTagString = "clipPath";
-    const char *cursorTagString = "cursor";
-    const char *defsTagString = "defs";
-    const char *descTagString = "desc";
-    const char *ellipseTagString = "ellipse";
-    const char *gTagString = "g";
-    const char *imageTagString = "image";
-    const char *lineTagString = "line";
-    const char *linearGradientTagString = "linearGradient";
-    const char *markerTagString = "marker";
-    const char *maskTagString = "mask";
-    const char *metadataTagString = "metadata";
-    const char *mpathTagString = "mpath";
-    const char *pathTagString = "path";
-    const char *patternTagString = "pattern";
-    const char *polygonTagString = "polygon";
-    const char *polylineTagString = "polyline";
-    const char *radialGradientTagString = "radialGradient";
-    const char *rectTagString = "rect";
-    const char *scriptTagString = "script";
-    const char *setTagString = "set";
-    const char *stopTagString = "stop";
-    const char *styleTagString = "style";
-    const char *svgTagString = "svg";
-    const char *switchTagString = "switch";
-    const char *symbolTagString = "symbol";
-    const char *textTagString = "text";
-    const char *titleTagString = "title";
-    const char *trefTagString = "tref";
-    const char *tspanTagString = "tspan";
-    const char *useTagString = "use";
-    const char *viewTagString = "view";
-
     new ((void*)&aTag) QualifiedName(nullAtom, aTagString, svgNS);
+    new ((void*)&altGlyphTag) QualifiedName(nullAtom, altGlyphTagString, svgNS);
+    new ((void*)&animateTag) QualifiedName(nullAtom, animateTagString, svgNS);
+    new ((void*)&animateColorTag) QualifiedName(nullAtom, animateColorTagString, svgNS);
+    new ((void*)&animateMotionTag) QualifiedName(nullAtom, animateMotionTagString, svgNS);
+    new ((void*)&animateTransformTag) QualifiedName(nullAtom, animateTransformTagString, svgNS);
     new ((void*)&circleTag) QualifiedName(nullAtom, circleTagString, svgNS);
     new ((void*)&clipPathTag) QualifiedName(nullAtom, clipPathTagString, svgNS);
     new ((void*)&cursorTag) QualifiedName(nullAtom, cursorTagString, svgNS);
+    new ((void*)&definition_srcTag) QualifiedName(nullAtom, definition_srcTagString, svgNS);
     new ((void*)&defsTag) QualifiedName(nullAtom, defsTagString, svgNS);
     new ((void*)&descTag) QualifiedName(nullAtom, descTagString, svgNS);
     new ((void*)&ellipseTag) QualifiedName(nullAtom, ellipseTagString, svgNS);
+    new ((void*)&feBlendTag) QualifiedName(nullAtom, feBlendTagString, svgNS);
+    new ((void*)&feColorMatrixTag) QualifiedName(nullAtom, feColorMatrixTagString, svgNS);
+    new ((void*)&feComponentTransferTag) QualifiedName(nullAtom, feComponentTransferTagString, svgNS);
+    new ((void*)&feCompositeTag) QualifiedName(nullAtom, feCompositeTagString, svgNS);
+    new ((void*)&feDiffuseLightingTag) QualifiedName(nullAtom, feDiffuseLightingTagString, svgNS);
+    new ((void*)&feDisplacementMapTag) QualifiedName(nullAtom, feDisplacementMapTagString, svgNS);
+    new ((void*)&feDistantLightTag) QualifiedName(nullAtom, feDistantLightTagString, svgNS);
+    new ((void*)&feFloodTag) QualifiedName(nullAtom, feFloodTagString, svgNS);
+    new ((void*)&feFuncATag) QualifiedName(nullAtom, feFuncATagString, svgNS);
+    new ((void*)&feFuncBTag) QualifiedName(nullAtom, feFuncBTagString, svgNS);
+    new ((void*)&feFuncGTag) QualifiedName(nullAtom, feFuncGTagString, svgNS);
+    new ((void*)&feFuncRTag) QualifiedName(nullAtom, feFuncRTagString, svgNS);
+    new ((void*)&feGaussianBlurTag) QualifiedName(nullAtom, feGaussianBlurTagString, svgNS);
+    new ((void*)&feImageTag) QualifiedName(nullAtom, feImageTagString, svgNS);
+    new ((void*)&feMergeTag) QualifiedName(nullAtom, feMergeTagString, svgNS);
+    new ((void*)&feMergeNodeTag) QualifiedName(nullAtom, feMergeNodeTagString, svgNS);
+    new ((void*)&feOffsetTag) QualifiedName(nullAtom, feOffsetTagString, svgNS);
+    new ((void*)&fePointLightTag) QualifiedName(nullAtom, fePointLightTagString, svgNS);
+    new ((void*)&feSpecularLightingTag) QualifiedName(nullAtom, feSpecularLightingTagString, svgNS);
+    new ((void*)&feSpotLightTag) QualifiedName(nullAtom, feSpotLightTagString, svgNS);
+    new ((void*)&feTileTag) QualifiedName(nullAtom, feTileTagString, svgNS);
+    new ((void*)&feTurbulenceTag) QualifiedName(nullAtom, feTurbulenceTagString, svgNS);
+    new ((void*)&filterTag) QualifiedName(nullAtom, filterTagString, svgNS);
+    new ((void*)&fontTag) QualifiedName(nullAtom, fontTagString, svgNS);
+    new ((void*)&font_faceTag) QualifiedName(nullAtom, font_faceTagString, svgNS);
+    new ((void*)&font_face_formatTag) QualifiedName(nullAtom, font_face_formatTagString, svgNS);
+    new ((void*)&font_face_nameTag) QualifiedName(nullAtom, font_face_nameTagString, svgNS);
+    new ((void*)&font_face_srcTag) QualifiedName(nullAtom, font_face_srcTagString, svgNS);
+    new ((void*)&font_face_uriTag) QualifiedName(nullAtom, font_face_uriTagString, svgNS);
+    new ((void*)&foreignObjectTag) QualifiedName(nullAtom, foreignObjectTagString, svgNS);
     new ((void*)&gTag) QualifiedName(nullAtom, gTagString, svgNS);
+    new ((void*)&glyphTag) QualifiedName(nullAtom, glyphTagString, svgNS);
+    new ((void*)&hkernTag) QualifiedName(nullAtom, hkernTagString, svgNS);
     new ((void*)&imageTag) QualifiedName(nullAtom, imageTagString, svgNS);
     new ((void*)&lineTag) QualifiedName(nullAtom, lineTagString, svgNS);
     new ((void*)&linearGradientTag) QualifiedName(nullAtom, linearGradientTagString, svgNS);
     new ((void*)&markerTag) QualifiedName(nullAtom, markerTagString, svgNS);
     new ((void*)&maskTag) QualifiedName(nullAtom, maskTagString, svgNS);
     new ((void*)&metadataTag) QualifiedName(nullAtom, metadataTagString, svgNS);
+    new ((void*)&missing_glyphTag) QualifiedName(nullAtom, missing_glyphTagString, svgNS);
     new ((void*)&mpathTag) QualifiedName(nullAtom, mpathTagString, svgNS);
     new ((void*)&pathTag) QualifiedName(nullAtom, pathTagString, svgNS);
     new ((void*)&patternTag) QualifiedName(nullAtom, patternTagString, svgNS);
@@ -698,327 +1117,13 @@ void init()
     new ((void*)&switchTag) QualifiedName(nullAtom, switchTagString, svgNS);
     new ((void*)&symbolTag) QualifiedName(nullAtom, symbolTagString, svgNS);
     new ((void*)&textTag) QualifiedName(nullAtom, textTagString, svgNS);
+    new ((void*)&textPathTag) QualifiedName(nullAtom, textPathTagString, svgNS);
     new ((void*)&titleTag) QualifiedName(nullAtom, titleTagString, svgNS);
     new ((void*)&trefTag) QualifiedName(nullAtom, trefTagString, svgNS);
     new ((void*)&tspanTag) QualifiedName(nullAtom, tspanTagString, svgNS);
     new ((void*)&useTag) QualifiedName(nullAtom, useTagString, svgNS);
     new ((void*)&viewTag) QualifiedName(nullAtom, viewTagString, svgNS);
     // Attributes
-    const char *accent_heightAttrString = "accent_height";
-    const char *accumulateAttrString = "accumulate";
-    const char *additiveAttrString = "additive";
-    const char *alignment_baselineAttrString = "alignment_baseline";
-    const char *alphabeticAttrString = "alphabetic";
-    const char *amplitudeAttrString = "amplitude";
-    const char *animateAttrString = "animate";
-    const char *arabic_formAttrString = "arabic_form";
-    const char *ascentAttrString = "ascent";
-    const char *attributeNameAttrString = "attributeName";
-    const char *attributeTypeAttrString = "attributeType";
-    const char *azimuthAttrString = "azimuth";
-    const char *baseFrequencyAttrString = "baseFrequency";
-    const char *baseline_shiftAttrString = "baseline_shift";
-    const char *baseProfileAttrString = "baseProfile";
-    const char *bboxAttrString = "bbox";
-    const char *beginAttrString = "begin";
-    const char *biasAttrString = "bias";
-    const char *byAttrString = "by";
-    const char *calcModeAttrString = "calcMode";
-    const char *cap_heightAttrString = "cap_height";
-    const char *clipAttrString = "clip";
-    const char *clip_pathAttrString = "clip_path";
-    const char *clip_ruleAttrString = "clip_rule";
-    const char *clipPathUnitsAttrString = "clipPathUnits";
-    const char *colorAttrString = "color";
-    const char *color_interpolationAttrString = "color_interpolation";
-    const char *color_interpolation_filtersAttrString = "color_interpolation_filters";
-    const char *color_profileAttrString = "color_profile";
-    const char *color_renderingAttrString = "color_rendering";
-    const char *contentScriptTypeAttrString = "contentScriptType";
-    const char *contentStyleTypeAttrString = "contentStyleType";
-    const char *cursorAttrString = "cursor";
-    const char *cxAttrString = "cx";
-    const char *cyAttrString = "cy";
-    const char *dAttrString = "d";
-    const char *descentAttrString = "descent";
-    const char *diffuseConstantAttrString = "diffuseConstant";
-    const char *directionAttrString = "direction";
-    const char *displayAttrString = "display";
-    const char *divisorAttrString = "divisor";
-    const char *dominant_baselineAttrString = "dominant_baseline";
-    const char *durAttrString = "dur";
-    const char *dxAttrString = "dx";
-    const char *dyAttrString = "dy";
-    const char *edgeModeAttrString = "edgeMode";
-    const char *elevationAttrString = "elevation";
-    const char *enable_backgroundAttrString = "enable_background";
-    const char *endAttrString = "end";
-    const char *exponentAttrString = "exponent";
-    const char *externalResourcesRequiredAttrString = "externalResourcesRequired";
-    const char *feColorMatrixAttrString = "feColorMatrix";
-    const char *feCompositeAttrString = "feComposite";
-    const char *feGaussianBlurAttrString = "feGaussianBlur";
-    const char *feMorphologyAttrString = "feMorphology";
-    const char *feTileAttrString = "feTile";
-    const char *fillAttrString = "fill";
-    const char *fill_opacityAttrString = "fill_opacity";
-    const char *fill_ruleAttrString = "fill_rule";
-    const char *filterAttrString = "filter";
-    const char *filterResAttrString = "filterRes";
-    const char *filterUnitsAttrString = "filterUnits";
-    const char *flood_colorAttrString = "flood_color";
-    const char *flood_opacityAttrString = "flood_opacity";
-    const char *font_familyAttrString = "font_family";
-    const char *font_sizeAttrString = "font_size";
-    const char *font_size_adjustAttrString = "font_size_adjust";
-    const char *font_stretchAttrString = "font_stretch";
-    const char *font_styleAttrString = "font_style";
-    const char *font_variantAttrString = "font_variant";
-    const char *font_weightAttrString = "font_weight";
-    const char *formatAttrString = "format";
-    const char *fromAttrString = "from";
-    const char *fxAttrString = "fx";
-    const char *fyAttrString = "fy";
-    const char *g1AttrString = "g1";
-    const char *g2AttrString = "g2";
-    const char *glyph_nameAttrString = "glyph_name";
-    const char *glyph_orientation_horizontalAttrString = "glyph_orientation_horizontal";
-    const char *glyph_orientation_verticalAttrString = "glyph_orientation_vertical";
-    const char *glyphRefAttrString = "glyphRef";
-    const char *gradientTransformAttrString = "gradientTransform";
-    const char *gradientUnitsAttrString = "gradientUnits";
-    const char *hangingAttrString = "hanging";
-    const char *heightAttrString = "height";
-    const char *horiz_adv_xAttrString = "horiz_adv_x";
-    const char *horiz_origin_xAttrString = "horiz_origin_x";
-    const char *horiz_origin_yAttrString = "horiz_origin_y";
-    const char *ideographicAttrString = "ideographic";
-    const char *image_renderingAttrString = "image_rendering";
-    const char *inAttrString = "in";
-    const char *in2AttrString = "in2";
-    const char *interceptAttrString = "intercept";
-    const char *kAttrString = "k";
-    const char *k1AttrString = "k1";
-    const char *k2AttrString = "k2";
-    const char *k3AttrString = "k3";
-    const char *k4AttrString = "k4";
-    const char *kernelMatrixAttrString = "kernelMatrix";
-    const char *kernelUnitLengthAttrString = "kernelUnitLength";
-    const char *kerningAttrString = "kerning";
-    const char *keyPointsAttrString = "keyPoints";
-    const char *keySplinesAttrString = "keySplines";
-    const char *keyTimesAttrString = "keyTimes";
-    const char *lengthAdjustAttrString = "lengthAdjust";
-    const char *letter_spacingAttrString = "letter_spacing";
-    const char *lighting_colorAttrString = "lighting_color";
-    const char *limitingConeAngleAttrString = "limitingConeAngle";
-    const char *localAttrString = "local";
-    const char *marker_endAttrString = "marker_end";
-    const char *marker_midAttrString = "marker_mid";
-    const char *marker_startAttrString = "marker_start";
-    const char *markerHeightAttrString = "markerHeight";
-    const char *markerUnitsAttrString = "markerUnits";
-    const char *markerWidthAttrString = "markerWidth";
-    const char *maskAttrString = "mask";
-    const char *maskContentUnitsAttrString = "maskContentUnits";
-    const char *maskUnitsAttrString = "maskUnits";
-    const char *mathematicalAttrString = "mathematical";
-    const char *maxAttrString = "max";
-    const char *mediaAttrString = "media";
-    const char *methodAttrString = "method";
-    const char *minAttrString = "min";
-    const char *modeAttrString = "mode";
-    const char *nameAttrString = "name";
-    const char *numOctavesAttrString = "numOctaves";
-    const char *offsetAttrString = "offset";
-    const char *onbeginAttrString = "onbegin";
-    const char *onendAttrString = "onend";
-    const char *onrepeatAttrString = "onrepeat";
-    const char *onzoomAttrString = "onzoom";
-    const char *opacityAttrString = "opacity";
-    const char *operatorAttrString = "operator";
-    const char *orderAttrString = "order";
-    const char *orientAttrString = "orient";
-    const char *orientationAttrString = "orientation";
-    const char *originAttrString = "origin";
-    const char *overflowAttrString = "overflow";
-    const char *overline_positionAttrString = "overline_position";
-    const char *overline_thicknessAttrString = "overline_thickness";
-    const char *panose_1AttrString = "panose_1";
-    const char *pathAttrString = "path";
-    const char *pathLengthAttrString = "pathLength";
-    const char *patternContentUnitsAttrString = "patternContentUnits";
-    const char *patternTransformAttrString = "patternTransform";
-    const char *patternUnitsAttrString = "patternUnits";
-    const char *pointer_eventsAttrString = "pointer_events";
-    const char *pointsAttrString = "points";
-    const char *pointsAtXAttrString = "pointsAtX";
-    const char *pointsAtYAttrString = "pointsAtY";
-    const char *pointsAtZAttrString = "pointsAtZ";
-    const char *preserveAlphaAttrString = "preserveAlpha";
-    const char *preserveAspectRatioAttrString = "preserveAspectRatio";
-    const char *primitiveUnitsAttrString = "primitiveUnits";
-    const char *rAttrString = "r";
-    const char *radiusAttrString = "radius";
-    const char *refXAttrString = "refX";
-    const char *refYAttrString = "refY";
-    const char *rendering_intentAttrString = "rendering_intent";
-    const char *repeatCountAttrString = "repeatCount";
-    const char *repeatDurAttrString = "repeatDur";
-    const char *requiredExtensionsAttrString = "requiredExtensions";
-    const char *requiredFeaturesAttrString = "requiredFeatures";
-    const char *restartAttrString = "restart";
-    const char *resultAttrString = "result";
-    const char *rotateAttrString = "rotate";
-    const char *rxAttrString = "rx";
-    const char *ryAttrString = "ry";
-    const char *scaleAttrString = "scale";
-    const char *seedAttrString = "seed";
-    const char *shape_renderingAttrString = "shape_rendering";
-    const char *slopeAttrString = "slope";
-    const char *spacingAttrString = "spacing";
-    const char *specularConstantAttrString = "specularConstant";
-    const char *specularExponentAttrString = "specularExponent";
-    const char *spreadMethodAttrString = "spreadMethod";
-    const char *startOffsetAttrString = "startOffset";
-    const char *stdDeviationAttrString = "stdDeviation";
-    const char *stemhAttrString = "stemh";
-    const char *stemvAttrString = "stemv";
-    const char *stitchTilesAttrString = "stitchTiles";
-    const char *stop_colorAttrString = "stop_color";
-    const char *stop_opacityAttrString = "stop_opacity";
-    const char *strikethrough_positionAttrString = "strikethrough_position";
-    const char *strikethrough_thicknessAttrString = "strikethrough_thickness";
-    const char *strokeAttrString = "stroke";
-    const char *stroke_dasharrayAttrString = "stroke_dasharray";
-    const char *stroke_dashoffsetAttrString = "stroke_dashoffset";
-    const char *stroke_linecapAttrString = "stroke_linecap";
-    const char *stroke_linejoinAttrString = "stroke_linejoin";
-    const char *stroke_miterlimitAttrString = "stroke_miterlimit";
-    const char *stroke_opacityAttrString = "stroke_opacity";
-    const char *stroke_widthAttrString = "stroke_width";
-    const char *styleAttrString = "style";
-    const char *surfaceScaleAttrString = "surfaceScale";
-    const char *systemLanguageAttrString = "systemLanguage";
-    const char *tableValuesAttrString = "tableValues";
-    const char *targetAttrString = "target";
-    const char *targetXAttrString = "targetX";
-    const char *targetYAttrString = "targetY";
-    const char *text_anchorAttrString = "text_anchor";
-    const char *text_decorationAttrString = "text_decoration";
-    const char *text_renderingAttrString = "text_rendering";
-    const char *textLengthAttrString = "textLength";
-    const char *titleAttrString = "title";
-    const char *toAttrString = "to";
-    const char *transformAttrString = "transform";
-    const char *typeAttrString = "type";
-    const char *u1AttrString = "u1";
-    const char *u2AttrString = "u2";
-    const char *underline_positionAttrString = "underline_position";
-    const char *underline_thicknessAttrString = "underline_thickness";
-    const char *unicodeAttrString = "unicode";
-    const char *unicode_bidiAttrString = "unicode_bidi";
-    const char *unicode_rangeAttrString = "unicode_range";
-    const char *units_per_emAttrString = "units_per_em";
-    const char *v_alphabeticAttrString = "v_alphabetic";
-    const char *v_hangingAttrString = "v_hanging";
-    const char *v_ideographicAttrString = "v_ideographic";
-    const char *v_mathematicalAttrString = "v_mathematical";
-    const char *valuesAttrString = "values";
-    const char *versionAttrString = "version";
-    const char *vert_adv_yAttrString = "vert_adv_y";
-    const char *vert_origin_xAttrString = "vert_origin_x";
-    const char *vert_origin_yAttrString = "vert_origin_y";
-    const char *viewBoxAttrString = "viewBox";
-    const char *viewTargetAttrString = "viewTarget";
-    const char *visibilityAttrString = "visibility";
-    const char *widthAttrString = "width";
-    const char *widthsAttrString = "widths";
-    const char *word_spacingAttrString = "word_spacing";
-    const char *writing_modeAttrString = "writing_mode";
-    const char *xAttrString = "x";
-    const char *x_heightAttrString = "x_height";
-    const char *x1AttrString = "x1";
-    const char *x2AttrString = "x2";
-    const char *xChannelSelectorAttrString = "xChannelSelector";
-    const char *yAttrString = "y";
-    const char *y1AttrString = "y1";
-    const char *y2AttrString = "y2";
-    const char *yChannelSelectorAttrString = "yChannelSelector";
-    const char *zAttrString = "z";
-    const char *zoomAndPanAttrString = "zoomAndPan";
-    accent_heightAttrString = "accent-height";
-    alignment_baselineAttrString = "alignment-baseline";
-    arabic_formAttrString = "arabic-form";
-    baseline_shiftAttrString = "baseline-shift";
-    cap_heightAttrString = "cap-height";
-    clip_pathAttrString = "clip-path";
-    clip_ruleAttrString = "clip-rule";
-    color_interpolationAttrString = "color-interpolation";
-    color_interpolation_filtersAttrString = "color-interpolation-filters";
-    color_profileAttrString = "color-profile";
-    color_renderingAttrString = "color-rendering";
-    dominant_baselineAttrString = "dominant-baseline";
-    enable_backgroundAttrString = "enable-background";
-    fill_opacityAttrString = "fill-opacity";
-    fill_ruleAttrString = "fill-rule";
-    flood_colorAttrString = "flood-color";
-    flood_opacityAttrString = "flood-opacity";
-    font_familyAttrString = "font-family";
-    font_sizeAttrString = "font-size";
-    font_size_adjustAttrString = "font-size-adjust";
-    font_stretchAttrString = "font-stretch";
-    font_styleAttrString = "font-style";
-    font_variantAttrString = "font-variant";
-    font_weightAttrString = "font-weight";
-    glyph_nameAttrString = "glyph-name";
-    glyph_orientation_horizontalAttrString = "glyph-orientation-horizontal";
-    glyph_orientation_verticalAttrString = "glyph-orientation-vertical";
-    horiz_adv_xAttrString = "horiz-adv-x";
-    horiz_origin_xAttrString = "horiz-origin-x";
-    horiz_origin_yAttrString = "horiz-origin-y";
-    image_renderingAttrString = "image-rendering";
-    letter_spacingAttrString = "letter-spacing";
-    lighting_colorAttrString = "lighting-color";
-    marker_endAttrString = "marker-end";
-    marker_midAttrString = "marker-mid";
-    marker_startAttrString = "marker-start";
-    overline_positionAttrString = "overline-position";
-    overline_thicknessAttrString = "overline-thickness";
-    panose_1AttrString = "panose-1";
-    pointer_eventsAttrString = "pointer-events";
-    rendering_intentAttrString = "rendering-intent";
-    shape_renderingAttrString = "shape-rendering";
-    stop_colorAttrString = "stop-color";
-    stop_opacityAttrString = "stop-opacity";
-    strikethrough_positionAttrString = "strikethrough-position";
-    strikethrough_thicknessAttrString = "strikethrough-thickness";
-    stroke_dasharrayAttrString = "stroke-dasharray";
-    stroke_dashoffsetAttrString = "stroke-dashoffset";
-    stroke_linecapAttrString = "stroke-linecap";
-    stroke_linejoinAttrString = "stroke-linejoin";
-    stroke_miterlimitAttrString = "stroke-miterlimit";
-    stroke_opacityAttrString = "stroke-opacity";
-    stroke_widthAttrString = "stroke-width";
-    text_anchorAttrString = "text-anchor";
-    text_decorationAttrString = "text-decoration";
-    text_renderingAttrString = "text-rendering";
-    underline_positionAttrString = "underline-position";
-    underline_thicknessAttrString = "underline-thickness";
-    unicode_bidiAttrString = "unicode-bidi";
-    unicode_rangeAttrString = "unicode-range";
-    units_per_emAttrString = "units-per-em";
-    v_alphabeticAttrString = "v-alphabetic";
-    v_hangingAttrString = "v-hanging";
-    v_ideographicAttrString = "v-ideographic";
-    v_mathematicalAttrString = "v-mathematical";
-    vert_adv_yAttrString = "vert-adv-y";
-    vert_origin_xAttrString = "vert-origin-x";
-    vert_origin_yAttrString = "vert-origin-y";
-    word_spacingAttrString = "word-spacing";
-    writing_modeAttrString = "writing-mode";
-    x_heightAttrString = "x-height";
-
     new ((void*)&accent_heightAttr) QualifiedName(nullAtom, accent_heightAttrString, nullAtom);
     new ((void*)&accumulateAttr) QualifiedName(nullAtom, accumulateAttrString, nullAtom);
     new ((void*)&additiveAttr) QualifiedName(nullAtom, additiveAttrString, nullAtom);
@@ -1032,8 +1137,8 @@ void init()
     new ((void*)&attributeTypeAttr) QualifiedName(nullAtom, attributeTypeAttrString, nullAtom);
     new ((void*)&azimuthAttr) QualifiedName(nullAtom, azimuthAttrString, nullAtom);
     new ((void*)&baseFrequencyAttr) QualifiedName(nullAtom, baseFrequencyAttrString, nullAtom);
-    new ((void*)&baseline_shiftAttr) QualifiedName(nullAtom, baseline_shiftAttrString, nullAtom);
     new ((void*)&baseProfileAttr) QualifiedName(nullAtom, baseProfileAttrString, nullAtom);
+    new ((void*)&baseline_shiftAttr) QualifiedName(nullAtom, baseline_shiftAttrString, nullAtom);
     new ((void*)&bboxAttr) QualifiedName(nullAtom, bboxAttrString, nullAtom);
     new ((void*)&beginAttr) QualifiedName(nullAtom, beginAttrString, nullAtom);
     new ((void*)&biasAttr) QualifiedName(nullAtom, biasAttrString, nullAtom);
@@ -1041,9 +1146,9 @@ void init()
     new ((void*)&calcModeAttr) QualifiedName(nullAtom, calcModeAttrString, nullAtom);
     new ((void*)&cap_heightAttr) QualifiedName(nullAtom, cap_heightAttrString, nullAtom);
     new ((void*)&clipAttr) QualifiedName(nullAtom, clipAttrString, nullAtom);
+    new ((void*)&clipPathUnitsAttr) QualifiedName(nullAtom, clipPathUnitsAttrString, nullAtom);
     new ((void*)&clip_pathAttr) QualifiedName(nullAtom, clip_pathAttrString, nullAtom);
     new ((void*)&clip_ruleAttr) QualifiedName(nullAtom, clip_ruleAttrString, nullAtom);
-    new ((void*)&clipPathUnitsAttr) QualifiedName(nullAtom, clipPathUnitsAttrString, nullAtom);
     new ((void*)&colorAttr) QualifiedName(nullAtom, colorAttrString, nullAtom);
     new ((void*)&color_interpolationAttr) QualifiedName(nullAtom, color_interpolationAttrString, nullAtom);
     new ((void*)&color_interpolation_filtersAttr) QualifiedName(nullAtom, color_interpolation_filtersAttrString, nullAtom);
@@ -1096,10 +1201,10 @@ void init()
     new ((void*)&fyAttr) QualifiedName(nullAtom, fyAttrString, nullAtom);
     new ((void*)&g1Attr) QualifiedName(nullAtom, g1AttrString, nullAtom);
     new ((void*)&g2Attr) QualifiedName(nullAtom, g2AttrString, nullAtom);
+    new ((void*)&glyphRefAttr) QualifiedName(nullAtom, glyphRefAttrString, nullAtom);
     new ((void*)&glyph_nameAttr) QualifiedName(nullAtom, glyph_nameAttrString, nullAtom);
     new ((void*)&glyph_orientation_horizontalAttr) QualifiedName(nullAtom, glyph_orientation_horizontalAttrString, nullAtom);
     new ((void*)&glyph_orientation_verticalAttr) QualifiedName(nullAtom, glyph_orientation_verticalAttrString, nullAtom);
-    new ((void*)&glyphRefAttr) QualifiedName(nullAtom, glyphRefAttrString, nullAtom);
     new ((void*)&gradientTransformAttr) QualifiedName(nullAtom, gradientTransformAttrString, nullAtom);
     new ((void*)&gradientUnitsAttr) QualifiedName(nullAtom, gradientUnitsAttrString, nullAtom);
     new ((void*)&hangingAttr) QualifiedName(nullAtom, hangingAttrString, nullAtom);
@@ -1123,17 +1228,18 @@ void init()
     new ((void*)&keyPointsAttr) QualifiedName(nullAtom, keyPointsAttrString, nullAtom);
     new ((void*)&keySplinesAttr) QualifiedName(nullAtom, keySplinesAttrString, nullAtom);
     new ((void*)&keyTimesAttr) QualifiedName(nullAtom, keyTimesAttrString, nullAtom);
+    new ((void*)&langAttr) QualifiedName(nullAtom, langAttrString, nullAtom);
     new ((void*)&lengthAdjustAttr) QualifiedName(nullAtom, lengthAdjustAttrString, nullAtom);
     new ((void*)&letter_spacingAttr) QualifiedName(nullAtom, letter_spacingAttrString, nullAtom);
     new ((void*)&lighting_colorAttr) QualifiedName(nullAtom, lighting_colorAttrString, nullAtom);
     new ((void*)&limitingConeAngleAttr) QualifiedName(nullAtom, limitingConeAngleAttrString, nullAtom);
     new ((void*)&localAttr) QualifiedName(nullAtom, localAttrString, nullAtom);
-    new ((void*)&marker_endAttr) QualifiedName(nullAtom, marker_endAttrString, nullAtom);
-    new ((void*)&marker_midAttr) QualifiedName(nullAtom, marker_midAttrString, nullAtom);
-    new ((void*)&marker_startAttr) QualifiedName(nullAtom, marker_startAttrString, nullAtom);
     new ((void*)&markerHeightAttr) QualifiedName(nullAtom, markerHeightAttrString, nullAtom);
     new ((void*)&markerUnitsAttr) QualifiedName(nullAtom, markerUnitsAttrString, nullAtom);
     new ((void*)&markerWidthAttr) QualifiedName(nullAtom, markerWidthAttrString, nullAtom);
+    new ((void*)&marker_endAttr) QualifiedName(nullAtom, marker_endAttrString, nullAtom);
+    new ((void*)&marker_midAttr) QualifiedName(nullAtom, marker_midAttrString, nullAtom);
+    new ((void*)&marker_startAttr) QualifiedName(nullAtom, marker_startAttrString, nullAtom);
     new ((void*)&maskAttr) QualifiedName(nullAtom, maskAttrString, nullAtom);
     new ((void*)&maskContentUnitsAttr) QualifiedName(nullAtom, maskContentUnitsAttrString, nullAtom);
     new ((void*)&maskUnitsAttr) QualifiedName(nullAtom, maskUnitsAttrString, nullAtom);
@@ -1146,8 +1252,11 @@ void init()
     new ((void*)&nameAttr) QualifiedName(nullAtom, nameAttrString, nullAtom);
     new ((void*)&numOctavesAttr) QualifiedName(nullAtom, numOctavesAttrString, nullAtom);
     new ((void*)&offsetAttr) QualifiedName(nullAtom, offsetAttrString, nullAtom);
+    new ((void*)&onactivateAttr) QualifiedName(nullAtom, onactivateAttrString, nullAtom);
     new ((void*)&onbeginAttr) QualifiedName(nullAtom, onbeginAttrString, nullAtom);
     new ((void*)&onendAttr) QualifiedName(nullAtom, onendAttrString, nullAtom);
+    new ((void*)&onfocusinAttr) QualifiedName(nullAtom, onfocusinAttrString, nullAtom);
+    new ((void*)&onfocusoutAttr) QualifiedName(nullAtom, onfocusoutAttrString, nullAtom);
     new ((void*)&onrepeatAttr) QualifiedName(nullAtom, onrepeatAttrString, nullAtom);
     new ((void*)&onzoomAttr) QualifiedName(nullAtom, onzoomAttrString, nullAtom);
     new ((void*)&opacityAttr) QualifiedName(nullAtom, opacityAttrString, nullAtom);
@@ -1219,10 +1328,10 @@ void init()
     new ((void*)&targetAttr) QualifiedName(nullAtom, targetAttrString, nullAtom);
     new ((void*)&targetXAttr) QualifiedName(nullAtom, targetXAttrString, nullAtom);
     new ((void*)&targetYAttr) QualifiedName(nullAtom, targetYAttrString, nullAtom);
+    new ((void*)&textLengthAttr) QualifiedName(nullAtom, textLengthAttrString, nullAtom);
     new ((void*)&text_anchorAttr) QualifiedName(nullAtom, text_anchorAttrString, nullAtom);
     new ((void*)&text_decorationAttr) QualifiedName(nullAtom, text_decorationAttrString, nullAtom);
     new ((void*)&text_renderingAttr) QualifiedName(nullAtom, text_renderingAttrString, nullAtom);
-    new ((void*)&textLengthAttr) QualifiedName(nullAtom, textLengthAttrString, nullAtom);
     new ((void*)&titleAttr) QualifiedName(nullAtom, titleAttrString, nullAtom);
     new ((void*)&toAttr) QualifiedName(nullAtom, toAttrString, nullAtom);
     new ((void*)&transformAttr) QualifiedName(nullAtom, transformAttrString, nullAtom);
@@ -1252,10 +1361,10 @@ void init()
     new ((void*)&word_spacingAttr) QualifiedName(nullAtom, word_spacingAttrString, nullAtom);
     new ((void*)&writing_modeAttr) QualifiedName(nullAtom, writing_modeAttrString, nullAtom);
     new ((void*)&xAttr) QualifiedName(nullAtom, xAttrString, nullAtom);
-    new ((void*)&x_heightAttr) QualifiedName(nullAtom, x_heightAttrString, nullAtom);
     new ((void*)&x1Attr) QualifiedName(nullAtom, x1AttrString, nullAtom);
     new ((void*)&x2Attr) QualifiedName(nullAtom, x2AttrString, nullAtom);
     new ((void*)&xChannelSelectorAttr) QualifiedName(nullAtom, xChannelSelectorAttrString, nullAtom);
+    new ((void*)&x_heightAttr) QualifiedName(nullAtom, x_heightAttrString, nullAtom);
     new ((void*)&yAttr) QualifiedName(nullAtom, yAttrString, nullAtom);
     new ((void*)&y1Attr) QualifiedName(nullAtom, y1AttrString, nullAtom);
     new ((void*)&y2Attr) QualifiedName(nullAtom, y2AttrString, nullAtom);

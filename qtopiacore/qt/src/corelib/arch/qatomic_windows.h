@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -317,11 +321,20 @@ Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndAddOrdered(qptrdiff valueTo
 // exported at all.
 #include <winbase.h>
 #else
+
 #if _WIN32_WCE >= 0x600
 #define Q_ARGUMENT_TYPE volatile
+#  if defined(_X86_)
+#    define InterlockedIncrement _InterlockedIncrement
+#    define InterlockedDecrement _InterlockedDecrement
+#    define InterlockedExchange _InterlockedExchange
+#    define InterlockedCompareExchange _InterlockedCompareExchange
+#    define InterlockedExchangeAdd _InterlockedExchangeAdd
+#  endif
 #else
 #define Q_ARGUMENT_TYPE
 #endif
+
 extern "C" {
 long __cdecl InterlockedIncrement(long Q_ARGUMENT_TYPE * lpAddend);
 long __cdecl InterlockedDecrement(long Q_ARGUMENT_TYPE * lpAddend);
@@ -329,6 +342,15 @@ long __cdecl InterlockedExchange(long Q_ARGUMENT_TYPE * Target, long Value);
 long __cdecl InterlockedCompareExchange(long Q_ARGUMENT_TYPE * Destination, long Exchange, long Comperand);
 long __cdecl InterlockedExchangeAdd(long Q_ARGUMENT_TYPE * Addend, long Value);
 }
+
+#if _WIN32_WCE >= 0x600 && defined(_X86_)
+#  pragma intrinsic (_InterlockedIncrement)
+#  pragma intrinsic (_InterlockedDecrement)
+#  pragma intrinsic (_InterlockedExchange)
+#  pragma intrinsic (_InterlockedCompareExchange)
+#  pragma intrinsic (_InterlockedExchangeAdd)
+#endif
+
 #endif
 
 
@@ -383,6 +405,10 @@ Q_INLINE_TEMPLATE T *QBasicAtomicPointer<T>::fetchAndAddOrdered(qptrdiff valueTo
 
 #else
 
+// __INTERLOCKED_DECLARED is defined in MinGW's winbase.h. Simply, preferrably we use
+// MinGW's definition, such that we pick up variations in the headers.
+#ifndef __INTERLOCKED_DECLARED
+#define __INTERLOCKED_DECLARED
 extern "C" {
     __declspec(dllimport) long __stdcall InterlockedCompareExchange(long *, long, long);
     __declspec(dllimport) long __stdcall InterlockedIncrement(long *);
@@ -390,6 +416,7 @@ extern "C" {
     __declspec(dllimport) long __stdcall InterlockedExchange(long *, long);
     __declspec(dllimport) long __stdcall InterlockedExchangeAdd(long *, long);
 }
+#endif
 
 inline bool QBasicAtomicInt::ref()
 {

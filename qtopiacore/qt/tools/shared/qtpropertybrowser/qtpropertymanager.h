@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -73,15 +77,18 @@ public:
     int value(const QtProperty *property) const;
     int minimum(const QtProperty *property) const;
     int maximum(const QtProperty *property) const;
+    int singleStep(const QtProperty *property) const;
 
 public Q_SLOTS:
     void setValue(QtProperty *property, int val);
     void setMinimum(QtProperty *property, int minVal);
     void setMaximum(QtProperty *property, int maxVal);
     void setRange(QtProperty *property, int minVal, int maxVal);
+    void setSingleStep(QtProperty *property, int step);
 Q_SIGNALS:
     void valueChanged(QtProperty *property, int val);
     void rangeChanged(QtProperty *property, int minVal, int maxVal);
+    void singleStepChanged(QtProperty *property, int step);
 protected:
     QString valueText(const QtProperty *property) const;
     virtual void initializeProperty(QtProperty *property);
@@ -126,6 +133,7 @@ public:
     double value(const QtProperty *property) const;
     double minimum(const QtProperty *property) const;
     double maximum(const QtProperty *property) const;
+    double singleStep(const QtProperty *property) const;
     int decimals(const QtProperty *property) const;
 
 public Q_SLOTS:
@@ -133,10 +141,12 @@ public Q_SLOTS:
     void setMinimum(QtProperty *property, double minVal);
     void setMaximum(QtProperty *property, double maxVal);
     void setRange(QtProperty *property, double minVal, double maxVal);
+    void setSingleStep(QtProperty *property, double step);
     void setDecimals(QtProperty *property, int prec);
 Q_SIGNALS:
     void valueChanged(QtProperty *property, double val);
     void rangeChanged(QtProperty *property, double minVal, double maxVal);
+    void singleStepChanged(QtProperty *property, double step);
     void decimalsChanged(QtProperty *property, int prec);
 protected:
     QString valueText(const QtProperty *property) const;
@@ -632,6 +642,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void slotEnumChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotBoolChanged(QtProperty *, bool))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
+    Q_PRIVATE_SLOT(d_func(), void slotFontDatabaseChanged())
+    Q_PRIVATE_SLOT(d_func(), void slotFontDatabaseDelayedChange())
 };
 
 class QtColorPropertyManager : public QtAbstractPropertyManager

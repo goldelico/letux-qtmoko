@@ -21,228 +21,157 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEFloodElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
 #include "SVGFEFloodElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEFloodElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEFloodElementTableEntries[] =
+static const HashTableValue JSSVGFEFloodElementTableValues[8] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEFloodElement::XAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEFloodElementTableEntries[8] },
-    { "className", JSSVGFEFloodElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "width", JSSVGFEFloodElement::WidthAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFEFloodElement::YAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEFloodElementTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { "in1", JSSVGFEFloodElement::In1AttrNum, DontDelete|ReadOnly, 0, &JSSVGFEFloodElementTableEntries[9] },
-    { 0, 0, 0, 0, 0 },
-    { "height", JSSVGFEFloodElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "result", JSSVGFEFloodElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFEFloodElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEFloodElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEFloodElementTable = 
-{
-    2, 11, JSSVGFEFloodElementTableEntries, 8
-};
+static const HashTable JSSVGFEFloodElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEFloodElementTableValues, 0 };
+#else
+    { 17, 15, JSSVGFEFloodElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEFloodElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEFloodElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEFloodElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEFloodElementPrototypeTable = 
-{
-    2, 1, JSSVGFEFloodElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEFloodElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEFloodElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEFloodElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEFloodElementPrototype::info = { "SVGFEFloodElementPrototype", 0, &JSSVGFEFloodElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEFloodElementPrototype::s_info = { "SVGFEFloodElementPrototype", 0, &JSSVGFEFloodElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEFloodElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEFloodElementPrototype>(exec, "[[JSSVGFEFloodElement.prototype]]");
+    return getDOMPrototype<JSSVGFEFloodElement>(exec);
 }
 
-const ClassInfo JSSVGFEFloodElement::info = { "SVGFEFloodElement", &JSSVGElement::info, &JSSVGFEFloodElementTable, 0 };
-
-JSSVGFEFloodElement::JSSVGFEFloodElement(ExecState* exec, SVGFEFloodElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEFloodElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEFloodElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEFloodElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEFloodElement::s_info = { "SVGFEFloodElement", &JSSVGElement::s_info, &JSSVGFEFloodElementTable, 0 };
+
+JSSVGFEFloodElement::JSSVGFEFloodElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEFloodElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEFloodElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEFloodElementPrototype(JSSVGFEFloodElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEFloodElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEFloodElement, JSSVGElement>(exec, &JSSVGFEFloodElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEFloodElement, Base>(exec, &JSSVGFEFloodElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEFloodElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEFloodElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case In1AttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEFloodElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedString> obj = imp->in1Animated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEFloodElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
+JSValuePtr jsSVGFEFloodElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEFloodElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
+JSValuePtr jsSVGFEFloodElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
+JSValuePtr jsSVGFEFloodElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(static_cast<JSSVGFEFloodElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
 
-        ASSERT(exec && exec->dynamicInterpreter());
+JSValuePtr jsSVGFEFloodElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEFloodElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEFloodElement* castedThisObj = static_cast<JSSVGFEFloodElement*>(asObject(thisValue));
+    SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
 
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
 
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEFloodElement* imp = static_cast<SVGFEFloodElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

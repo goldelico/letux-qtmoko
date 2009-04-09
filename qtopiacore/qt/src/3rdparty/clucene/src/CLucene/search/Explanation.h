@@ -16,7 +16,7 @@ CL_NS_DEF(search)
    #define LUCENE_SEARCH_EXPLANATION_DESC_LEN 200
    class Explanation :LUCENE_BASE {
    private:
-      float_t value;                            // the value of this node
+      qreal value;                            // the value of this node
       TCHAR description[LUCENE_SEARCH_EXPLANATION_DESC_LEN];                     // what it represents
       CL_NS(util)::CLArrayList<Explanation*,CL_NS(util)::Deletor::Object<Explanation> > details;                      // sub-explanations
 
@@ -27,16 +27,16 @@ CL_NS_DEF(search)
       Explanation();
       ~Explanation();
 
-      Explanation(float_t value, const TCHAR* description);
+      Explanation(qreal value, const TCHAR* description);
       void set(const Explanation& other);
 
       Explanation* clone() const;
 
       /** The value assigned to this explanation node. */
-      float_t getValue() const;
+      qreal getValue() const;
         
       /** Sets the value assigned to this explanation node. */
-      void setValue(float_t value);
+      void setValue(qreal value);
 
       /** A description of this explanation node. */
       const TCHAR* getDescription() const; ///<returns reference

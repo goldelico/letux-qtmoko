@@ -23,11 +23,7 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGViewElement.h"
 
 #include <wtf/GetPtr.h>
@@ -39,48 +35,55 @@
 #include "SVGStringList.h"
 #include "SVGViewElement.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGViewElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGViewElementTableEntries[] =
+static const HashTableValue JSSVGViewElementTableValues[6] =
 {
-    { "externalResourcesRequired", JSSVGViewElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, &JSSVGViewElementTableEntries[5] },
-    { "zoomAndPan", JSSVGViewElement::ZoomAndPanAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "viewTarget", JSSVGViewElement::ViewTargetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "viewBox", JSSVGViewElement::ViewBoxAttrNum, DontDelete|ReadOnly, 0, &JSSVGViewElementTableEntries[6] },
-    { "preserveAspectRatio", JSSVGViewElement::PreserveAspectRatioAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "viewTarget", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementViewTarget, (intptr_t)0 },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementExternalResourcesRequired, (intptr_t)0 },
+    { "viewBox", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementViewBox, (intptr_t)0 },
+    { "preserveAspectRatio", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementPreserveAspectRatio, (intptr_t)0 },
+    { "zoomAndPan", DontDelete, (intptr_t)jsSVGViewElementZoomAndPan, (intptr_t)setJSSVGViewElementZoomAndPan },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGViewElementTable = 
-{
-    2, 7, JSSVGViewElementTableEntries, 5
-};
+static const HashTable JSSVGViewElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 15, JSSVGViewElementTableValues, 0 };
+#else
+    { 16, 15, JSSVGViewElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGViewElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGViewElementPrototypeTableValues[4] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "SVG_ZOOMANDPAN_UNKNOWN", SVGViewElement::SVG_ZOOMANDPAN_UNKNOWN, DontDelete|ReadOnly, 0, 0 },
-    { "SVG_ZOOMANDPAN_DISABLE", SVGViewElement::SVG_ZOOMANDPAN_DISABLE, DontDelete|ReadOnly, 0, &JSSVGViewElementPrototypeTableEntries[3] },
-    { "SVG_ZOOMANDPAN_MAGNIFY", SVGViewElement::SVG_ZOOMANDPAN_MAGNIFY, DontDelete|ReadOnly, 0, 0 }
+    { "SVG_ZOOMANDPAN_UNKNOWN", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementSVG_ZOOMANDPAN_UNKNOWN, (intptr_t)0 },
+    { "SVG_ZOOMANDPAN_DISABLE", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementSVG_ZOOMANDPAN_DISABLE, (intptr_t)0 },
+    { "SVG_ZOOMANDPAN_MAGNIFY", DontDelete|ReadOnly, (intptr_t)jsSVGViewElementSVG_ZOOMANDPAN_MAGNIFY, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGViewElementPrototypeTable = 
-{
-    2, 4, JSSVGViewElementPrototypeTableEntries, 3
-};
+static const HashTable JSSVGViewElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSSVGViewElementPrototypeTableValues, 0 };
+#else
+    { 9, 7, JSSVGViewElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGViewElementPrototype::info = { "SVGViewElementPrototype", 0, &JSSVGViewElementPrototypeTable, 0 };
+const ClassInfo JSSVGViewElementPrototype::s_info = { "SVGViewElementPrototype", 0, &JSSVGViewElementPrototypeTable, 0 };
 
 JSObject* JSSVGViewElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGViewElementPrototype>(exec, "[[JSSVGViewElement.prototype]]");
+    return getDOMPrototype<JSSVGViewElement>(exec);
 }
 
 bool JSSVGViewElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -88,114 +91,82 @@ bool JSSVGViewElementPrototype::getOwnPropertySlot(ExecState* exec, const Identi
     return getStaticValueSlot<JSSVGViewElementPrototype, JSObject>(exec, &JSSVGViewElementPrototypeTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGViewElementPrototype::getValueProperty(ExecState*, int token) const
+const ClassInfo JSSVGViewElement::s_info = { "SVGViewElement", &JSSVGElement::s_info, &JSSVGViewElementTable, 0 };
+
+JSSVGViewElement::JSSVGViewElement(PassRefPtr<Structure> structure, PassRefPtr<SVGViewElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
 }
 
-const ClassInfo JSSVGViewElement::info = { "SVGViewElement", &JSSVGElement::info, &JSSVGViewElementTable, 0 };
-
-JSSVGViewElement::JSSVGViewElement(ExecState* exec, SVGViewElement* impl)
-    : JSSVGElement(exec, impl)
+JSObject* JSSVGViewElement::createPrototype(ExecState* exec)
 {
-    setPrototype(JSSVGViewElementPrototype::self(exec));
+    return new (exec) JSSVGViewElementPrototype(JSSVGViewElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGViewElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGViewElement, JSSVGElement>(exec, &JSSVGViewElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGViewElement, Base>(exec, &JSSVGViewElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGViewElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGViewElementViewTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ViewTargetAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->viewTarget()));
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ViewBoxAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedRect> obj = imp->viewBoxAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedRect>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedRect>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedRect>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case PreserveAspectRatioAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedPreserveAspectRatio> obj = imp->preserveAspectRatioAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedPreserveAspectRatio>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedPreserveAspectRatio>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedPreserveAspectRatio>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ZoomAndPanAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
-
-        return jsNumber(imp->zoomAndPan());
-    }
-    }
-    return 0;
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->viewTarget()), imp);
 }
 
-void JSSVGViewElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGViewElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGViewElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGViewElementTable, this);
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGViewElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGViewElementViewBox(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ZoomAndPanAttrNum: {
-        SVGViewElement* imp = static_cast<SVGViewElement*>(impl());
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedRect> obj = imp->viewBoxAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        imp->setZoomAndPan(value->toInt32(exec));
-        break;
-    }
-    }
+JSValuePtr jsSVGViewElementPreserveAspectRatio(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedPreserveAspectRatio> obj = imp->preserveAspectRatioAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGViewElementZoomAndPan(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->zoomAndPan());
+}
+
+void JSSVGViewElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGViewElement, Base>(exec, propertyName, value, &JSSVGViewElementTable, this, slot);
+}
+
+void setJSSVGViewElementZoomAndPan(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGViewElement* imp = static_cast<SVGViewElement*>(static_cast<JSSVGViewElement*>(thisObject)->impl());
+    imp->setZoomAndPan(value->toInt32(exec));
+}
+
+// Constant getters
+
+JSValuePtr jsSVGViewElementSVG_ZOOMANDPAN_UNKNOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(0));
+}
+
+JSValuePtr jsSVGViewElementSVG_ZOOMANDPAN_DISABLE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsSVGViewElementSVG_ZOOMANDPAN_MAGNIFY(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
 }
 
 

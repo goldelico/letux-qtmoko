@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/plugins-howto.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/plugins-howto.qdoc -->
 <head>
-  <title>Qt 4.4: How to Create Qt Plugins</title>
+  <title>Qt 4.5: How to Create Qt Plugins</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">How to Create Qt Plugins<br /><span class="subtitle"></span>
 </h1>
@@ -84,7 +84,9 @@
 <p>Some plugin classes require additional functions to be implemented. See the class documentation for details of the virtual functions that must be reimplemented for each type of plugin.</p>
 <p>Qt applications automatically know which plugins are available, because plugins are stored in the standard plugin subdirectories. Because of this applications don't require any code to find and load plugins, since Qt handles them automatically.</p>
 <p>The default directory for plugins is <tt>QTDIR/plugins</tt> (where <tt>QTDIR</tt> is the directory where Qt is installed), with each type of plugin in a subdirectory for that type, e.g&#x2e; <tt>styles</tt>. If you want your applications to use plugins and you don't want to use the standard plugins path, have your installation process determine the path you want to use for the plugins, and save the path, e.g&#x2e; using <a href="qsettings.html">QSettings</a>, for the application to read when it runs. The application can then call <a href="qcoreapplication.html#addLibraryPath">QCoreApplication::addLibraryPath</a>() with this path and your plugins will be available to the application. Note that the final part of the path (e.g&#x2e;, <tt>styles</tt>) cannot be changed.</p>
-<p>The normal way to include a plugin with an application is either to <a href="#static-plugins">compile it in with the application</a> or to compile it into a dynamic library and use it like any other library. If you want the plugin to be loadable then one approach is to create a subdirectory under the application and place the plugin in that directory. For more information about deployment, see the <a href="deployment.html">Deploying Qt Applications</a> documentation.</p>
+<p>The normal way to include a plugin with an application is either to <a href="#static-plugins">compile it in with the application</a> or to compile it into a dynamic library and use it like any other library.</p>
+<p>If you want the plugin to be loadable then one approach is to create a subdirectory under the application and place the plugin in that directory. If you distribute any of the plugins that come with Qt (the ones located in the <tt>plugins</tt> directory), you must copy the sub-directory under <tt>plugins</tt> where the plugin is located to your applications root folder (i.e&#x2e;, do not include the <tt>plugins</tt> directory).</p>
+<p>For more information about deployment, see the <a href="deployment.html">Deploying Qt Applications</a> documentation.</p>
 <p>The <a href="tools-styleplugin.html">Style Plugin Example</a> shows how to implement a plugin that extends the <a href="qstyleplugin.html">QStylePlugin</a> base class.</p>
 <a name="the-lower-level-api-extending-qt-applications"></a>
 <h3>The Lower-Level API: Extending Qt Applications</h3>
@@ -101,7 +103,7 @@
 <li>Declare a plugin class that inherits from <a href="qobject.html">QObject</a> and from the interfaces that the plugin wants to provide.</li>
 <li>Use the <a href="qobject.html#Q_INTERFACES">Q_INTERFACES</a>() macro to tell Qt's <a href="metaobjects.html">meta-object system</a> about the interfaces.</li>
 <li>Export the plugin using the <a href="qtplugin.html#Q_EXPORT_PLUGIN2">Q_EXPORT_PLUGIN2</a>() macro.</li>
-<li>Build the plugin using an suitable <tt>.pro</tt> file.</li>
+<li>Build the plugin using a suitable <tt>.pro</tt> file.</li>
 </ol>
 <p>For example, here's the definition of an interface class:</p>
 <pre> class FilterInterface
@@ -130,7 +132,7 @@
      QImage filterImage(const QString &amp;filter, const QImage &amp;image,
                         QWidget *parent);
  };</pre>
-<p>The <a href="tools-plugandpaint.html">Plug &amp; Paint</a> example documentation explains this process in detail. See also <a href="designer-creating-custom-widgets.html">Creating Custom Widgets for Qt Designer</a> for information about issues that are specific to <i>Qt Designer</i>. You can also take a look at the <a href="tools-echoplugin.html">Echo Plugin Example</a> is a more trivial example on how to implement a plugin that extends Qt applications.</p>
+<p>The <a href="tools-plugandpaint.html">Plug &amp; Paint</a> example documentation explains this process in detail. See also <a href="designer-creating-custom-widgets.html">Creating Custom Widgets for Qt Designer</a> for information about issues that are specific to <i>Qt Designer</i>. You can also take a look at the <a href="tools-echoplugin.html">Echo Plugin Example</a> is a more trivial example on how to implement a plugin that extends Qt applications. Please note that a <a href="qcoreapplication.html">QCoreApplication</a> must have been initialized before plugins can be loaded.</p>
 <a name="loading-and-verifying-plugins-dynamically"></a>
 <h3>Loading and Verifying Plugins Dynamically</h3>
 <p>When loading plugins, the Qt library does some sanity checking to determine whether or not the plugin can be loaded and used. This provides the ability to have multiple versions and configurations of the Qt library installed side by side.</p>
@@ -242,8 +244,8 @@
 <p>See also <a href="qpluginloader.html">QPluginLoader</a>, <a href="qlibrary.html">QLibrary</a>, and <a href="tools-plugandpaint.html">Plug &amp; Paint Example</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

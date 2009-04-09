@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,7 +65,6 @@ QtopiaPrintEngine::QtopiaPrintEngine(QPrinter::PrinterMode mode)
 bool QtopiaPrintEngine::begin(QPaintDevice *)
 {
     Q_D(QtopiaPrintEngine);
-    d->paintEngine->state = state;
     Q_ASSERT_X(d->printerState == QPrinter::Idle, "QtopiaPrintEngine", "printer already active");
 
     // Create a new off-screen monochrome image to handle the drawing process.
@@ -69,8 +75,13 @@ bool QtopiaPrintEngine::begin(QPaintDevice *)
     if ( !(d->pageImage) )
 	return false;
 
+    // Recreate the paint engine on the new image.
+    delete d->_paintEngine;
+    d->_paintEngine = 0;
+    d->paintEngine()->state = state;
+
     // Begin the paint process on the image.
-    if (!d->paintEngine->begin(d->pageImage))
+    if (!d->paintEngine()->begin(d->pageImage))
         return false;
 
     // Clear the first page to all-white.
@@ -89,7 +100,7 @@ bool QtopiaPrintEngine::end()
 {
     Q_D(QtopiaPrintEngine);
 
-    d->paintEngine->end();
+    d->paintEngine()->end();
 
     // Flush the last page.
     flushPage();
@@ -133,27 +144,27 @@ bool QtopiaPrintEngine::end()
 
 QPaintEngine *QtopiaPrintEngine::paintEngine() const
 {
-    return d_func()->paintEngine;
+    return const_cast<QtopiaPrintEnginePrivate *>(d_func())->paintEngine();
 }
 
 void QtopiaPrintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr)
 {
     Q_D(QtopiaPrintEngine);
     Q_ASSERT(d->printerState == QPrinter::Active);
-    d->paintEngine->drawPixmap(r, pm, sr);
+    d->paintEngine()->drawPixmap(r, pm, sr);
 }
 
 void QtopiaPrintEngine::drawTextItem(const QPointF &p, const QTextItem &ti)
 {
     Q_D(QtopiaPrintEngine);
     Q_ASSERT(d->printerState == QPrinter::Active);
-    d->paintEngine->drawTextItem(p, ti);
+    d->paintEngine()->drawTextItem(p, ti);
 }
 
 void QtopiaPrintEngine::updateState(const QPaintEngineState &state)
 {
     Q_D(QtopiaPrintEngine);
-    d->paintEngine->updateState(state);
+    d->paintEngine()->updateState(state);
 }
 
 QRect QtopiaPrintEngine::paperRect() const
@@ -367,7 +378,14 @@ QtopiaPrintEnginePrivate::~QtopiaPrintEnginePrivate()
 
 void QtopiaPrintEnginePrivate::initialize()
 {
-    paintEngine = new QRasterPaintEngine();
+    _paintEngine = 0;
+}
+
+QPaintEngine *QtopiaPrintEnginePrivate::paintEngine()
+{
+    if (!_paintEngine)
+        _paintEngine = new QRasterPaintEngine(pageImage);
+    return _paintEngine;
 }
 
 void QtopiaPrintEnginePrivate::writeG3FaxHeader()

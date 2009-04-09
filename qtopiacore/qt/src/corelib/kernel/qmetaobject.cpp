@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -82,17 +86,21 @@ QT_BEGIN_NAMESPACE
     \o className() returns the name of a class.
     \o superClass() returns the superclass's meta-object.
     \o method() and methodCount() provide information
-       about a class's meta-methods (signals, slots and other member functions).
+       about a class's meta-methods (signals, slots and other
+       \l{Q_INVOKABLE}{invokable} member functions).
     \o enumerator() and enumeratorCount() and provide information about
        a class's enumerators.
     \o propertyCount() and property() provide information about a
        class's properties.
+    \o constructor() and constructorCount() provide information
+       about a class's meta-constructors.
     \endlist
 
-    The index functions indexOfMethod(), indexOfEnumerator(), and
-    indexOfProperty() map names of member functions, enumerators, or
-    properties to indexes in the meta-object. For example, Qt uses
-    indexOfMethod() internally when you connect a signal to a slot.
+    The index functions indexOfConstructor(), indexOfMethod(),
+    indexOfEnumerator(), and indexOfProperty() map names of constructors,
+    member functions, enumerators, or properties to indexes in the
+    meta-object. For example, Qt uses indexOfMethod() internally when you
+    connect a signal to a slot.
 
     Classes can also have a list of \e{name}--\e{value} pairs of
     additional class information, stored in QMetaClassInfo objects.
@@ -119,6 +127,7 @@ QT_BEGIN_NAMESPACE
     \value QueryPropertyStored
     \value QueryPropertyEditable
     \value QueryPropertyUser
+    \value CreateInstance
 */
 
 /*!
@@ -149,7 +158,8 @@ enum PropertyFlags  {
     Editable = 0x00040000,
     ResolveEditable = 0x00080000,
     User = 0x00100000,
-    ResolveUser = 0x00200000
+    ResolveUser = 0x00200000,
+    Notify = 0x00400000
 };
 
 enum MethodFlags  {
@@ -161,6 +171,7 @@ enum MethodFlags  {
     MethodMethod = 0x00,
     MethodSignal = 0x04,
     MethodSlot = 0x08,
+    MethodConstructor = 0x0c,
     MethodTypeMask = 0x0c,
 
     MethodCompatibility = 0x10,
@@ -176,11 +187,88 @@ struct QMetaObjectPrivate
     int methodCount, methodData;
     int propertyCount, propertyData;
     int enumeratorCount, enumeratorData;
+    int constructorCount, constructorData;
 };
 
 static inline const QMetaObjectPrivate *priv(const uint* data)
 { return reinterpret_cast<const QMetaObjectPrivate*>(data); }
 
+
+/*!
+    \since 4.5
+
+    Constructs a new instance of this class. You can pass up to ten arguments
+    (\a val0, \a val1, \a val2, \a val3, \a val4, \a val5, \a val6, \a val7,
+    \a val8, and \a val9) to the constructor. Returns the new object, or 0 if
+    no suitable constructor is available.
+
+    Note that only constructors that are declared with the Q_INVOKABLE
+    modifier are made available through the meta-object system.
+
+    \sa Q_ARG(), constructor()
+*/
+QObject *QMetaObject::newInstance(QGenericArgument val0,
+                                  QGenericArgument val1,
+                                  QGenericArgument val2,
+                                  QGenericArgument val3,
+                                  QGenericArgument val4,
+                                  QGenericArgument val5,
+                                  QGenericArgument val6,
+                                  QGenericArgument val7,
+                                  QGenericArgument val8,
+                                  QGenericArgument val9) const
+{
+    QVarLengthArray<char, 512> sig;
+    sig.append(className(), qstrlen(className()));
+    sig.append('(');
+
+    enum { MaximumParamCount = 10 };
+    const char *typeNames[] = {val0.name(), val1.name(), val2.name(), val3.name(), val4.name(),
+                               val5.name(), val6.name(), val7.name(), val8.name(), val9.name()};
+
+    int paramCount;
+    for (paramCount = 0; paramCount < MaximumParamCount; ++paramCount) {
+        int len = qstrlen(typeNames[paramCount]);
+        if (len <= 0)
+            break;
+        sig.append(typeNames[paramCount], len);
+        sig.append(',');
+    }
+    if (paramCount == 0)
+        sig.append(')'); // no parameters
+    else
+        sig[sig.size() - 1] = ')';
+    sig.append('\0');
+
+    int idx = indexOfConstructor(sig.constData());
+    if (idx < 0) {
+        QByteArray norm = QMetaObject::normalizedSignature(sig.constData());
+        idx = indexOfConstructor(norm.constData());
+    }
+    if (idx < 0)
+        return 0;
+
+    QVariant ret(QMetaType::QObjectStar, (void*)0);
+    void *param[] = {ret.data(), val0.data(), val1.data(), val2.data(), val3.data(), val4.data(),
+                     val5.data(), val6.data(), val7.data(), val8.data(), val9.data()};
+
+    if (static_metacall(CreateInstance, idx, param) >= 0)
+        return 0;
+    return *reinterpret_cast<QObject**>(param[0]);
+}
+
+/*!
+    \internal
+*/
+int QMetaObject::static_metacall(Call cl, int idx, void **argv) const
+{
+    if (priv(d.data)->revision < 2)
+        return 0;
+    const QMetaObjectExtraData *extra = (const QMetaObjectExtraData*)(d.extradata);
+    if (!extra || !extra->static_metacall)
+        return 0;
+    return extra->static_metacall(cl, idx, argv);
+}
 
 /*!
     \fn const char *QMetaObject::className() const
@@ -337,6 +425,20 @@ int QMetaObject::classInfoOffset() const
 }
 
 /*!
+    \since 4.5
+
+    Returns the number of constructors in this class.
+
+    \sa constructor(), indexOfConstructor()
+*/
+int QMetaObject::constructorCount() const
+{
+    if (priv(d.data)->revision < 2)
+        return 0;
+    return priv(d.data)->constructorCount;
+}
+
+/*!
     Returns the number of methods in this class, including the number of
     properties provided by each base class. These include signals and slots
     as well as normal member functions.
@@ -411,6 +513,29 @@ int QMetaObject::classInfoCount() const
         m = m->d.superdata;
     }
     return n;
+}
+
+/*!
+    \since 4.5
+
+    Finds \a constructor and returns its index; otherwise returns -1.
+
+    Note that the \a constructor has to be in normalized form, as returned
+    by normalizedSignature().
+
+    \sa constructor(), constructorCount(), normalizedSignature()
+*/
+int QMetaObject::indexOfConstructor(const char *constructor) const
+{
+    if (priv(d.data)->revision < 2)
+        return -1;
+    for (int i = priv(d.data)->constructorCount-1; i >= 0; --i) {
+        if (strcmp(constructor, d.stringdata
+                   + d.data[priv(d.data)->constructorData + 5*i]) == 0) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 /*!
@@ -504,11 +629,19 @@ static const QMetaObject *QMetaObject_findMetaObject(const QMetaObject *self, co
         if (strcmp(self->d.stringdata, name) == 0)
             return self;
         if (self->d.extradata) {
-            const QMetaObject **e = self->d.extradata;
-            while (*e) {
-                if (const QMetaObject *m =QMetaObject_findMetaObject((*e), name))
-                    return m;
-                ++e;
+            const QMetaObject **e;
+            if (priv(self->d.data)->revision < 2) {
+                e = (const QMetaObject**)(self->d.extradata);
+            } else {
+                const QMetaObjectExtraData *extra = (const QMetaObjectExtraData*)(self->d.extradata);
+                e = extra->objects;
+            }
+            if (e) {
+                while (*e) {
+                    if (const QMetaObject *m =QMetaObject_findMetaObject((*e), name))
+                        return m;
+                    ++e;
+                }
             }
         }
         self = self->d.superdata;
@@ -573,13 +706,31 @@ int QMetaObject::indexOfClassInfo(const char *name) const
     while (m && i < 0) {
         for (i = priv(m->d.data)->classInfoCount-1; i >= 0; --i)
             if (strcmp(name, m->d.stringdata
-                       + m->d.data[priv(d.data)->classInfoData + 2*i]) == 0) {
+                       + m->d.data[priv(m->d.data)->classInfoData + 2*i]) == 0) {
                 i += m->classInfoOffset();
                 break;
             }
         m = m->d.superdata;
     }
     return i;
+}
+
+/*!
+    \since 4.5
+
+    Returns the meta-data for the constructor with the given \a index.
+
+    \sa constructorCount(), newInstance()
+*/
+QMetaMethod QMetaObject::constructor(int index) const
+{
+    int i = index;
+    QMetaMethod result;
+    if (priv(d.data)->revision >= 2 && i >= 0 && i < priv(d.data)->constructorCount) {
+        result.mobj = this;
+        result.handle = priv(d.data)->constructorData + 5*i;
+    }
+    return result;
 }
 
 /*!
@@ -839,6 +990,8 @@ QByteArray QMetaObject::normalizedSignature(const char *method)
     return result;
 }
 
+enum { MaximumParamCount = 11 }; // up to 10 arguments + 1 return value
+
 /*!
     Invokes the \a member (a signal or a slot name) on the object \a
     obj. Returns true if the member could be invoked. Returns false
@@ -898,20 +1051,22 @@ QByteArray QMetaObject::normalizedSignature(const char *method)
     and one double in the specified order, the call will fail.
 
 
-    \sa Q_ARG(), Q_RETURN_ARG(), qRegisterMetaType()
+    \sa Q_ARG(), Q_RETURN_ARG(), qRegisterMetaType(), QMetaMethod::invoke()
 */
-bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionType type,
-                 QGenericReturnArgument ret,
-                 QGenericArgument val0,
-                 QGenericArgument val1,
-                 QGenericArgument val2,
-                 QGenericArgument val3,
-                 QGenericArgument val4,
-                 QGenericArgument val5,
-                 QGenericArgument val6,
-                 QGenericArgument val7,
-                 QGenericArgument val8,
-                 QGenericArgument val9)
+bool QMetaObject::invokeMethod(QObject *obj,
+                               const char *member,
+                               Qt::ConnectionType type,
+                               QGenericReturnArgument ret,
+                               QGenericArgument val0,
+                               QGenericArgument val1,
+                               QGenericArgument val2,
+                               QGenericArgument val3,
+                               QGenericArgument val4,
+                               QGenericArgument val5,
+                               QGenericArgument val6,
+                               QGenericArgument val7,
+                               QGenericArgument val8,
+                               QGenericArgument val9)
 {
     if (!obj)
         return false;
@@ -923,7 +1078,6 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
     sig.append(member, len);
     sig.append('(');
 
-    enum { MaximumParamCount = 11 };
     const char *typeNames[] = {ret.name(), val0.name(), val1.name(), val2.name(), val3.name(),
                                val4.name(), val5.name(), val6.name(), val7.name(), val8.name(),
                                val9.name()};
@@ -947,90 +1101,12 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
         QByteArray norm = QMetaObject::normalizedSignature(sig.constData());
         idx = obj->metaObject()->indexOfMethod(norm.constData());
     }
-    if (idx < 0)
+
+    if (idx < 0 || idx >= obj->metaObject()->methodCount())
         return false;
-
-    // check return type
-    if (ret.data()) {
-        const char *retType = obj->metaObject()->method(idx).typeName();
-        if (qstrcmp(ret.name(), retType) != 0) {
-            // normalize the return value as well
-            // the trick here is to make a function signature out of the return type
-            // so that we can call normalizedSignature() and avoid duplicating code
-            QByteArray unnormalized;
-            int len = qstrlen(ret.name());
-
-            unnormalized.reserve(len + 3);
-            unnormalized = "_(";        // the function is called "_"
-            unnormalized.append(ret.name());
-            unnormalized.append(')');
-
-            QByteArray normalized = QMetaObject::normalizedSignature(unnormalized.constData());
-            normalized.truncate(normalized.length() - 1); // drop the ending ')'
-
-            if (qstrcmp(normalized.constData() + 2, retType) != 0)
-                return false;
-        }
-    }
-    void *param[] = {ret.data(), val0.data(), val1.data(), val2.data(), val3.data(), val4.data(),
-                     val5.data(), val6.data(), val7.data(), val8.data(), val9.data()};
-    if (type == Qt::AutoConnection) {
-        type = QThread::currentThread() == obj->thread()
-               ? Qt::DirectConnection
-               : Qt::QueuedConnection;
-    }
-
-    if (type == Qt::DirectConnection) {
-        return obj->qt_metacall(QMetaObject::InvokeMetaMethod, idx, param) < 0;
-    } else {
-        if (ret.data()) {
-            qWarning("QMetaObject::invokeMethod: Unable to invoke methods with return values in queued "
-                     "connections");
-            return false;
-        }
-        int nargs = 1; // include return type
-        void **args = (void **) qMalloc(paramCount * sizeof(void *));
-        int *types = (int *) qMalloc(paramCount * sizeof(int));
-        types[0] = 0; // return type
-        args[0] = 0;
-        for (int i = 1; i < paramCount; ++i) {
-            types[i] = QMetaType::type(typeNames[i]);
-            if (types[i]) {
-                args[i] = QMetaType::construct(types[i], param[i]);
-                ++nargs;
-            } else if (param[i]) {
-                qWarning("QMetaObject::invokeMethod: Unable to handle unregistered datatype '%s'",
-                         typeNames[i]);
-                for (int x = 1; x < i; ++x) {
-                    if (types[x] && args[x])
-                        QMetaType::destroy(types[x], args[x]);
-                }
-                qFree(types);
-                qFree(args);
-                return false;
-            }
-        }
-
-        if (type == Qt::QueuedConnection) {
-            QCoreApplication::postEvent(obj, new QMetaCallEvent(idx, 0, -1, nargs, types, args));
-        } else {
-            if (QThread::currentThread() == obj->thread()) {
-                qWarning("QMetaObject::invokeMethod: Dead lock detected in BlockingQueuedConnection: "
-                         "Receiver is %s(%p)",
-                         obj->metaObject()->className(), obj);
-            }
-
-            // blocking queued connection
-#ifdef QT_NO_THREAD
-            QCoreApplication::postEvent(obj, new QMetaCallEvent(idx, 0, -1, nargs, types, args));
-#else
-            QSemaphore semaphore;
-            QCoreApplication::postEvent(obj, new QMetaCallEvent(idx, 0, -1, nargs, types, args, &semaphore));
-            semaphore.acquire();
-#endif // QT_NO_THREAD
-        }
-    }
-    return true;
+    QMetaMethod method = obj->metaObject()->method(idx);
+    return method.invoke(obj, type, ret,
+                         val0, val1, val2, val3, val4, val5, val6, val7, val8, val9);
 }
 
 /*! \fn bool QMetaObject::invokeMethod(QObject *obj, const char *member,
@@ -1045,7 +1121,7 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
                                        QGenericArgument val7 = QGenericArgument(),
                                        QGenericArgument val8 = QGenericArgument(),
                                        QGenericArgument val9 = QGenericArgument());
-    \overload
+    \overload invokeMethod()
 
     This overload always invokes the member using the connection type Qt::AutoConnection.
 */
@@ -1063,7 +1139,7 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
                              QGenericArgument val8 = QGenericArgument(),
                              QGenericArgument val9 = QGenericArgument())
 
-    \overload
+    \overload invokeMethod()
 
     This overload can be used if the return value of the member is of no interest.
 */
@@ -1081,7 +1157,7 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
                              QGenericArgument val8 = QGenericArgument(),
                              QGenericArgument val9 = QGenericArgument())
 
-    \overload
+    \overload invokeMethod()
 
     This overload invokes the member using the connection type Qt::AutoConnection and
     ignores return values.
@@ -1097,7 +1173,8 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
 
     A QMetaMethod has a methodType(), a signature(), a list of
     parameterTypes() and parameterNames(), a return typeName(), a
-    tag(), and an access() specifier.
+    tag(), and an access() specifier. You can use invoke() to invoke
+    the method on an arbitrary QObject.
 
     \sa QMetaObject, QMetaEnum, QMetaProperty, {Qt's Property System}
 */
@@ -1123,6 +1200,7 @@ bool QMetaObject::invokeMethod(QObject *obj, const char *member, Qt::ConnectionT
     \value Method  The function is a plain member function.
     \value Signal  The function is a signal.
     \value Slot    The function is a slot.
+    \value Constructor The function is a constructor.
 */
 
 /*!
@@ -1263,6 +1341,298 @@ QMetaMethod::MethodType QMetaMethod::methodType() const
         return QMetaMethod::Method;
     return (QMetaMethod::MethodType)((mobj->d.data[handle + 4] & MethodTypeMask)>>2);
 }
+
+/*!
+    Invokes this method on the object \a object. Returns true if the member could be invoked.
+    Returns false if there is no such member or the parameters did not match.
+
+    The invocation can be either synchronous or asynchronous, depending on the
+    \a connectionType:
+
+    \list
+    \o If \a connectionType is Qt::DirectConnection, the member will be invoked immediately.
+
+    \o If \a connectionType is Qt::QueuedConnection,
+       a QEvent will be posted and the member is invoked as soon as the application
+       enters the main event loop.
+
+    \o If \a connectionType is Qt::AutoConnection, the member is invoked
+       synchronously if \a object lives in the same thread as the
+       caller; otherwise it will invoke the member asynchronously.
+    \endlist
+
+    The return value of this method call is placed in \a
+    returnValue. If the invocation is asynchronous, the return value cannot
+    be evaluated. You can pass up to ten arguments (\a val0, \a val1,
+    \a val2, \a val3, \a val4, \a val5, \a val6, \a val7, \a val8,
+    and \a val9) to this method call.
+
+    QGenericArgument and QGenericReturnArgument are internal
+    helper classes. Because signals and slots can be dynamically
+    invoked, you must enclose the arguments using the Q_ARG() and
+    Q_RETURN_ARG() macros. Q_ARG() takes a type name and a
+    const reference of that type; Q_RETURN_ARG() takes a type name
+    and a non-const reference.
+
+    To asynchronously invoke the
+    \l{QPushButton::animateClick()}{animateClick()} slot on a
+    QPushButton:
+
+    \snippet doc/src/snippets/code/src_corelib_kernel_qmetaobject.cpp 6
+
+    With asynchronous method invocations, the parameters must be of
+    types that are known to Qt's meta-object system, because Qt needs
+    to copy the arguments to store them in an event behind the
+    scenes. If you try to use a queued connection and get the error
+    message
+
+    \snippet doc/src/snippets/code/src_corelib_kernel_qmetaobject.cpp 7
+
+    call qRegisterMetaType() to register the data type before you
+    call QMetaMethod::invoke().
+
+    To synchronously invoke the \c compute(QString, int, double) slot on
+    some arbitrary object \c obj retrieve its return value:
+
+    \snippet doc/src/snippets/code/src_corelib_kernel_qmetaobject.cpp 8
+
+    If the "compute" slot does not take exactly one QString, one int
+    and one double in the specified order, the call will fail.
+
+    \sa Q_ARG(), Q_RETURN_ARG(), qRegisterMetaType(), QMetaObject::invokeMethod()
+*/
+bool QMetaMethod::invoke(QObject *object,
+                         Qt::ConnectionType connectionType,
+                         QGenericReturnArgument returnValue,
+                         QGenericArgument val0,
+                         QGenericArgument val1,
+                         QGenericArgument val2,
+                         QGenericArgument val3,
+                         QGenericArgument val4,
+                         QGenericArgument val5,
+                         QGenericArgument val6,
+                         QGenericArgument val7,
+                         QGenericArgument val8,
+                         QGenericArgument val9) const
+{
+    if (!object || !mobj)
+        return false;
+
+    // check return type
+    if (returnValue.data()) {
+        const char *retType = typeName();
+        if (qstrcmp(returnValue.name(), retType) != 0) {
+            // normalize the return value as well
+            // the trick here is to make a function signature out of the return type
+            // so that we can call normalizedSignature() and avoid duplicating code
+            QByteArray unnormalized;
+            int len = qstrlen(returnValue.name());
+
+            unnormalized.reserve(len + 3);
+            unnormalized = "_(";        // the function is called "_"
+            unnormalized.append(returnValue.name());
+            unnormalized.append(')');
+
+            QByteArray normalized = QMetaObject::normalizedSignature(unnormalized.constData());
+            normalized.truncate(normalized.length() - 1); // drop the ending ')'
+
+            if (qstrcmp(normalized.constData() + 2, retType) != 0)
+                return false;
+        }
+    }
+
+    // check argument count (we don't allow invoking a method if given too few arguments)
+    const char *typeNames[] = {
+        returnValue.name(),
+        val0.name(),
+        val1.name(),
+        val2.name(),
+        val3.name(),
+        val4.name(),
+        val5.name(),
+        val6.name(),
+        val7.name(),
+        val8.name(),
+        val9.name()
+    };
+    int paramCount;
+    for (paramCount = 1; paramCount < MaximumParamCount; ++paramCount) {
+        if (qstrlen(typeNames[paramCount]) <= 0)
+            break;
+    }
+    int metaMethodArgumentCount = 0;
+    {
+        // based on QMetaObject::parameterNames()
+        const char *names = mobj->d.stringdata + mobj->d.data[handle + 1];
+        if (*names == 0) {
+            // do we have one or zero arguments?
+            const char *signature = mobj->d.stringdata + mobj->d.data[handle];
+            while (*signature && *signature != '(')
+                ++signature;
+            if (*++signature != ')')
+                ++metaMethodArgumentCount;
+        } else {
+            --names;
+            do {
+                ++names;
+                while (*names && *names != ',')
+                    ++names;
+                ++metaMethodArgumentCount;
+            } while (*names);
+        }
+    }
+    if (paramCount <= metaMethodArgumentCount)
+        return false;
+
+    // check connection type
+    QThread *currentThread = QThread::currentThread();
+    QThread *objectThread = object->thread();
+    if (connectionType == Qt::AutoConnection) {
+        connectionType = currentThread == objectThread
+                         ? Qt::DirectConnection
+                         : Qt::QueuedConnection;
+    }
+
+    // invoke!
+    void *param[] = {
+        returnValue.data(),
+        val0.data(),
+        val1.data(),
+        val2.data(),
+        val3.data(),
+        val4.data(),
+        val5.data(),
+        val6.data(),
+        val7.data(),
+        val8.data(),
+        val9.data()
+    };
+    // recompute the methodIndex by reversing the arithmetic in QMetaObject::property()
+    int methodIndex = ((handle - priv(mobj->d.data)->methodData) / 5) + mobj->methodOffset();
+    if (connectionType == Qt::DirectConnection) {
+        return object->qt_metacall(QMetaObject::InvokeMetaMethod, methodIndex, param) < 0;
+    } else {
+        if (returnValue.data()) {
+            qWarning("QMetaMethod::invoke: Unable to invoke methods with return values in "
+                     "queued connections");
+            return false;
+        }
+
+        int nargs = 1; // include return type
+        void **args = (void **) qMalloc(paramCount * sizeof(void *));
+        int *types = (int *) qMalloc(paramCount * sizeof(int));
+        types[0] = 0; // return type
+        args[0] = 0;
+
+        for (int i = 1; i < paramCount; ++i) {
+            types[i] = QMetaType::type(typeNames[i]);
+            if (types[i]) {
+                args[i] = QMetaType::construct(types[i], param[i]);
+                ++nargs;
+            } else if (param[i]) {
+                qWarning("QMetaMethod::invoke: Unable to handle unregistered datatype '%s'",
+                         typeNames[i]);
+                for (int x = 1; x < i; ++x) {
+                    if (types[x] && args[x])
+                        QMetaType::destroy(types[x], args[x]);
+                }
+                qFree(types);
+                qFree(args);
+                return false;
+            }
+        }
+
+        if (connectionType == Qt::QueuedConnection) {
+            QCoreApplication::postEvent(object, new QMetaCallEvent(methodIndex,
+                                                                   0,
+                                                                   -1,
+                                                                   nargs,
+                                                                   types,
+                                                                   args));
+        } else {
+            if (currentThread == objectThread) {
+                qWarning("QMetaMethod::invoke: Dead lock detected in "
+                         "BlockingQueuedConnection: Receiver is %s(%p)",
+                         mobj->className(), object);
+            }
+
+            // blocking queued connection
+#ifdef QT_NO_THREAD
+            QCoreApplication::postEvent(object, new QMetaCallEvent(methodIndex,
+                                                                   0,
+                                                                   -1,
+                                                                   nargs,
+                                                                   types,
+                                                                   args));
+#else
+            QSemaphore semaphore;
+            QCoreApplication::postEvent(object, new QMetaCallEvent(methodIndex,
+                                                                   0,
+                                                                   -1,
+                                                                   nargs,
+                                                                   types,
+                                                                   args,
+                                                                   &semaphore));
+            semaphore.acquire();
+#endif // QT_NO_THREAD
+        }
+    }
+    return true;
+}
+
+/*! \fn bool QMetaMethod::invoke(QObject *object,
+                                 QGenericReturnArgument returnValue,
+                                 QGenericArgument val0 = QGenericArgument(0),
+                                 QGenericArgument val1 = QGenericArgument(),
+                                 QGenericArgument val2 = QGenericArgument(),
+                                 QGenericArgument val3 = QGenericArgument(),
+                                 QGenericArgument val4 = QGenericArgument(),
+                                 QGenericArgument val5 = QGenericArgument(),
+                                 QGenericArgument val6 = QGenericArgument(),
+                                 QGenericArgument val7 = QGenericArgument(),
+                                 QGenericArgument val8 = QGenericArgument(),
+                                 QGenericArgument val9 = QGenericArgument()) const
+    \overload invoke()
+
+    This overload always invokes this method using the connection type Qt::AutoConnection.
+*/
+
+/*! \fn bool QMetaMethod::invoke(QObject *object,
+                                 Qt::ConnectionType connectionType,
+                                 QGenericArgument val0 = QGenericArgument(0),
+                                 QGenericArgument val1 = QGenericArgument(),
+                                 QGenericArgument val2 = QGenericArgument(),
+                                 QGenericArgument val3 = QGenericArgument(),
+                                 QGenericArgument val4 = QGenericArgument(),
+                                 QGenericArgument val5 = QGenericArgument(),
+                                 QGenericArgument val6 = QGenericArgument(),
+                                 QGenericArgument val7 = QGenericArgument(),
+                                 QGenericArgument val8 = QGenericArgument(),
+                                 QGenericArgument val9 = QGenericArgument()) const
+
+    \overload invoke()
+
+    This overload can be used if the return value of the member is of no interest.
+*/
+
+/*!
+    \fn bool QMetaMethod::invoke(QObject *object,
+                                 QGenericArgument val0 = QGenericArgument(0),
+                                 QGenericArgument val1 = QGenericArgument(),
+                                 QGenericArgument val2 = QGenericArgument(),
+                                 QGenericArgument val3 = QGenericArgument(),
+                                 QGenericArgument val4 = QGenericArgument(),
+                                 QGenericArgument val5 = QGenericArgument(),
+                                 QGenericArgument val6 = QGenericArgument(),
+                                 QGenericArgument val7 = QGenericArgument(),
+                                 QGenericArgument val8 = QGenericArgument(),
+                                 QGenericArgument val9 = QGenericArgument()) const
+
+    \overload invoke()
+
+    This overload invokes this method using the
+    connection type Qt::AutoConnection and ignores return values.
+*/
 
 /*!
     \class QMetaEnum
@@ -1792,11 +2162,11 @@ bool QMetaProperty::write(QObject *object, const QVariant &value) const
     } else {
         int handle = priv(mobj->d.data)->propertyData + 3*idx;
         uint flags = mobj->d.data[handle + 2];
-        const char *typeName = mobj->d.stringdata + mobj->d.data[handle + 1];
         t = flags >> 24;
         if (t == 0xff) // special value for QVariant
             t = QVariant::LastType;
         if (t == QVariant::Invalid) {
+            const char *typeName = mobj->d.stringdata + mobj->d.data[handle + 1];
             const char *vtypeName = value.typeName();
             if (vtypeName && strcmp(typeName, vtypeName) == 0)
                 t = value.userType();
@@ -1860,6 +2230,54 @@ bool QMetaProperty::isReadable() const
         return false;
     int flags = mobj->d.data[handle + 2];
     return flags & Readable;
+}
+
+/*!
+    Returns true if this property has a corresponding change notify signal;
+    otherwise returns false.
+
+    \sa notifySignal()
+ */
+bool QMetaProperty::hasNotifySignal() const
+{
+    if (!mobj)
+        return false;
+    int flags = mobj->d.data[handle + 2];
+    return flags & Notify;
+}
+
+/*!
+    \since 4.5
+
+    Returns the QMetaMethod instance of the property change notifying signal if
+    one was specified, otherwise returns an invalid QMetaMethod.
+
+    \sa hasNotifySignal()
+ */
+QMetaMethod QMetaProperty::notifySignal() const
+{
+    int id = notifySignalIndex();
+    if (id != -1)
+        return mobj->method(id); 
+    else
+        return QMetaMethod();
+}
+
+/*!
+    Returns the index of the property change notifying signal if one was 
+    specified, otherwise returns -1.
+
+    \sa hasNotifySignal()
+ */
+int QMetaProperty::notifySignalIndex() const
+{
+    if (hasNotifySignal()) {
+        int offset = priv(mobj->d.data)->propertyData +
+                     priv(mobj->d.data)->propertyCount * 3 + idx;
+        return mobj->d.data[offset] + mobj->methodOffset();
+    } else {
+        return -1;
+    }
 }
 
 /*!

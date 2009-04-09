@@ -1,23 +1,23 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-*
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
+*/
 #include "CLucene/StdHeader.h"
 #include "SegmentInfos.h"
 
 #include "CLucene/store/Directory.h"
-#include "CLucene/util/VoidMap.h"
 #include "CLucene/util/Misc.h"
 
 CL_NS_USE(store)
 CL_NS_USE(util)
 CL_NS_DEF(index)
 
-SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store)::Directory* Dir)
+SegmentInfo::SegmentInfo(const QString& Name, const int32_t DocCount,
+    CL_NS(store)::Directory* Dir)
     : docCount(DocCount)
     , dir(Dir)
 {
@@ -25,27 +25,22 @@ SegmentInfo::SegmentInfo(const char* Name, const int32_t DocCount, CL_NS(store):
     //Pre  - Name holds the unique name in the directory Dir
     //       DocCount holds the number of documents in the segment
     //       Dir holds the Directory where the segment resides
-    //Post - The instance has been created. name contains the duplicated string Name.
-    //       docCount = DocCount and dir references Dir
-    STRCPY_AtoA(name, Name, CL_MAX_NAME);
+    //Post - The instance has been created. name contains the duplicated string
+    //        Name. docCount = DocCount and dir references Dir
+    name = Name;
 }
 
 SegmentInfo::~SegmentInfo()
 {
 }
 
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
 SegmentInfos::SegmentInfos(bool _deleteMembers)
     : deleteMembers(_deleteMembers)
-#else
-SegmentInfos::SegmentInfos(bool deleteMembers)
-    : infos(deleteMembers)
-#endif
 {
     //Func - Constructor
     //Pre  - deleteMembers indicates if the instance to be created must delete
-    //       all SegmentInfo instances it manages when the instance is destroyed or not
-    //       true -> must delete, false may not delete
+    //       all SegmentInfo instances it manages when the instance is destroyed
+    //       or not true -> must delete, false may not delete
     //Post - An instance of SegmentInfos has been created.
 
     //initialize counter to 0
@@ -58,14 +53,14 @@ SegmentInfos::~SegmentInfos()
     //Func - Destructor
     //Pre  - true
     //Post - The instance has been destroyed. Depending on the constructor used
-    //       the SegmentInfo instances that this instance managed have been deleted or not.
+    //       the SegmentInfo instances that this instance managed have been
+    //       deleted or not.
 
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
-    segmentInfosType::iterator it;
-    for (it = infos.begin(); it != infos.end(); ++it)
-        _CLLDELETE(*it);
-#endif
-
+    if (deleteMembers) {
+        segmentInfosType::iterator it;
+        for (it = infos.begin(); it != infos.end(); ++it)
+            _CLLDELETE(*it);
+    }
     //Clear the list of SegmentInfo instances - make sure everything is deleted
     infos.clear();
 }
@@ -79,11 +74,7 @@ SegmentInfo* SegmentInfos::info(int32_t i) const
     CND_PRECONDITION(i >= 0, "i contains negative number");
 
     //Get the i-th SegmentInfo instance
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
     SegmentInfo *ret = infos.value(i, 0);
-#else
-    SegmentInfo *ret = infos[i];
-#endif
 
     //Condition check to see if the i-th SegmentInfo has been retrieved
     CND_CONDITION(ret != NULL, "No SegmentInfo instance found");
@@ -123,7 +114,7 @@ void SegmentInfos::read(Directory* directory)
     //       a SegmentsInfo intance has been created and stored.
 
     //Open an IndexInput to the segments file and check if valid
-    IndexInput* input = directory->openInput("segments");
+    IndexInput* input = directory->openInput(QLatin1String("segments"));
     if (input) {
         try {
             int32_t format = input->readInt();
@@ -145,8 +136,8 @@ void SegmentInfos::read(Directory* directory)
             }
 
             //Temporary variable for storing the name of the segment
-            TCHAR tname[CL_MAX_PATH];
-            char aname[CL_MAX_PATH];
+            char aname[CL_MAX_PATH] = { 0 };
+            TCHAR tname[CL_MAX_PATH] = { 0 };
 
             //read segmentInfos
             for (int32_t i = input->readInt(); i > 0; --i) { 
@@ -155,7 +146,8 @@ void SegmentInfos::read(Directory* directory)
                 STRCPY_TtoA(aname, tname, CL_MAX_PATH);
 
                 //Instantiate a new SegmentInfo Instance
-                SegmentInfo* si = _CLNEW SegmentInfo(aname, input->readInt(), directory);
+                SegmentInfo* si = _CLNEW SegmentInfo(QLatin1String(aname),
+                    input->readInt(), directory);
 
                 //Condition check to see if si points to an instance
                 CND_CONDITION(si != NULL, "Memory allocation for si failed")	;
@@ -189,7 +181,7 @@ void SegmentInfos::write(Directory* directory)
     //Post - The new segment has been written to disk
 
     //Open an IndexOutput to the segments file and check if valid
-    IndexOutput* output = directory->createOutput("segments.new");
+    IndexOutput* output = directory->createOutput(QLatin1String("segments.new"));
     if (output) {
         try {
             // write FORMAT
@@ -209,16 +201,13 @@ void SegmentInfos::write(Directory* directory)
             //Iterate through all the SegmentInfo instances
             for (uint32_t i = 0; i < infos.size(); ++i) {
                 //Retrieve the SegmentInfo
-#if defined(_BUILD_FOR_QT_) && defined(_CLCOMPILER_MSVC) && _MSC_VER > 1200
                 SegmentInfo *si = infos.value(i, 0);
-#else
-                SegmentInfo *si = infos[i];
-#endif
                 //Condition check to see if si has been retrieved
                 CND_CONDITION(si != NULL, "No SegmentInfo instance found");
 
                 //Write the name of the current segment
-                STRCPY_AtoT(tname, si->name, CL_MAX_PATH);
+                int32_t count = si->name.toWCharArray(tname);
+                tname[count] = '\0';
                 output->writeString(tname, _tcslen(tname));
 
                 //Write the number of documents in the segment 
@@ -230,7 +219,8 @@ void SegmentInfos::write(Directory* directory)
         );
 
         // install new segment info
-        directory->renameFile("segments.new", "segments");
+        directory->renameFile(QLatin1String("segments.new"),
+            QLatin1String("segments"));
     }
 }
 
@@ -239,7 +229,7 @@ int64_t SegmentInfos::readCurrentVersion(Directory* directory)
 {
     int32_t format = 0;
     int64_t version = 0;
-    IndexInput* input = directory->openInput("segments");
+    IndexInput* input = directory->openInput(QLatin1String("segments"));
     try {
         format = input->readInt();
         if (format < 0){
@@ -251,8 +241,7 @@ int64_t SegmentInfos::readCurrentVersion(Directory* directory)
             // read version
             version = input->readLong();
         }
-    }
-    _CLFINALLY(
+    } _CLFINALLY (
         input->close(); 
         _CLDELETE(input);
     );
@@ -260,14 +249,11 @@ int64_t SegmentInfos::readCurrentVersion(Directory* directory)
     if (format < 0)
         return version;
 
-    // We cannot be sure about the format of the file.
-    // Therefore we have to read the whole file and cannot simply seek to the version entry.
-    SegmentInfos* sis = _CLNEW SegmentInfos();
-    sis->read(directory);
-    version = sis->getVersion();
-    _CLDELETE(sis);
-    
-    return version;
+    // We cannot be sure about the format of the file. Therefore we have to
+    // read the whole file and cannot simply seek to the version entry.
+    SegmentInfos segmentInfos;
+    segmentInfos.read(directory);
+    return segmentInfos.getVersion();
 }
 
 CL_NS_END

@@ -19,23 +19,14 @@
     This class provides all functionality needed for tracking global history.
 */
 
+#include "config.h"
 #include "qwebhistoryinterface.h"
 
 #include <QCoreApplication>
 
-#include "DeprecatedString.h"
+#include "PageGroup.h"
+#include "PlatformString.h"
 
-namespace WebCore {
-
-bool historyContains(const DeprecatedString& s)
-{
-    if (!QWebHistoryInterface::defaultInterface())
-        return false;
-
-    return QWebHistoryInterface::defaultInterface()->historyContains(QString(s));
-}
-
-} // namespace WebCore
 
 static QWebHistoryInterface *default_interface;
 
@@ -62,7 +53,13 @@ void QWebHistoryInterface::setDefaultInterface(QWebHistoryInterface *defaultInte
         return;
     if (default_interface && default_interface->parent() == 0)
         delete default_interface;
+
     default_interface = defaultInterface;
+    WebCore::PageGroup::removeAllVisitedLinks();
+
+    //### enable after the introduction of a version
+    //WebCore::PageGroup::setShouldTrackVisitedLinks(true);
+
     if (!gRoutineAdded) {
         qAddPostRoutine(gCleanupInterface);
         gRoutineAdded = true;

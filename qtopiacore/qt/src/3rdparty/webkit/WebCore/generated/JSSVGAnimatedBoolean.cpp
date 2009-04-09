@@ -23,127 +23,113 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedBoolean.h"
 
 #include <wtf/GetPtr.h>
 
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedBoolean)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedBooleanTableEntries[] =
+static const HashTableValue JSSVGAnimatedBooleanTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedBoolean::BaseValAttrNum, DontDelete, 0, 0 },
-    { "animVal", JSSVGAnimatedBoolean::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete, (intptr_t)jsSVGAnimatedBooleanBaseVal, (intptr_t)setJSSVGAnimatedBooleanBaseVal },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedBooleanAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedBooleanTable = 
-{
-    2, 2, JSSVGAnimatedBooleanTableEntries, 2
-};
+static const HashTable JSSVGAnimatedBooleanTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedBooleanTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedBooleanTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedBooleanPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedBooleanPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedBooleanPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedBooleanPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedBooleanPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedBooleanPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedBooleanPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedBooleanPrototype::info = { "SVGAnimatedBooleanPrototype", 0, &JSSVGAnimatedBooleanPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedBooleanPrototype::s_info = { "SVGAnimatedBooleanPrototype", 0, &JSSVGAnimatedBooleanPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedBooleanPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedBooleanPrototype>(exec, "[[JSSVGAnimatedBoolean.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedBoolean>(exec);
 }
 
-const ClassInfo JSSVGAnimatedBoolean::info = { "SVGAnimatedBoolean", 0, &JSSVGAnimatedBooleanTable, 0 };
+const ClassInfo JSSVGAnimatedBoolean::s_info = { "SVGAnimatedBoolean", 0, &JSSVGAnimatedBooleanTable, 0 };
 
-JSSVGAnimatedBoolean::JSSVGAnimatedBoolean(ExecState* exec, SVGAnimatedBoolean* impl)
-    : m_impl(impl)
+JSSVGAnimatedBoolean::JSSVGAnimatedBoolean(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedBoolean> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedBooleanPrototype::self(exec));
 }
 
 JSSVGAnimatedBoolean::~JSSVGAnimatedBoolean()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedBoolean>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedBoolean::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedBooleanPrototype(JSSVGAnimatedBooleanPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedBoolean::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedBoolean, KJS::DOMObject>(exec, &JSSVGAnimatedBooleanTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedBoolean, Base>(exec, &JSSVGAnimatedBooleanTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedBoolean::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedBooleanBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(impl());
-
-        return jsBoolean(imp->baseVal());
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(impl());
-
-        return jsBoolean(imp->animVal());
-    }
-    }
-    return 0;
+    SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(static_cast<JSSVGAnimatedBoolean*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->baseVal());
 }
 
-void JSSVGAnimatedBoolean::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGAnimatedBooleanAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGAnimatedBoolean, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGAnimatedBooleanTable, this);
+    SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(static_cast<JSSVGAnimatedBoolean*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->animVal());
 }
 
-void JSSVGAnimatedBoolean::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGAnimatedBoolean::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(impl());
-
-        imp->setBaseVal(value->toBoolean(exec));
-        break;
-    }
-    }
-    SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGAnimatedBoolean>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGAnimatedBoolean>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+    lookupPut<JSSVGAnimatedBoolean, Base>(exec, propertyName, value, &JSSVGAnimatedBooleanTable, this, slot);
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedBoolean* obj)
+void setJSSVGAnimatedBooleanBaseVal(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<SVGAnimatedBoolean, JSSVGAnimatedBoolean>(exec, obj);
+    SVGAnimatedBoolean* imp = static_cast<SVGAnimatedBoolean*>(static_cast<JSSVGAnimatedBoolean*>(thisObject)->impl());
+    imp->setBaseVal(value->toBoolean(exec));
+    if (static_cast<JSSVGAnimatedBoolean*>(thisObject)->context())
+        static_cast<JSSVGAnimatedBoolean*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGAnimatedBoolean*>(thisObject)->impl()->associatedAttributeName());
 }
-SVGAnimatedBoolean* toSVGAnimatedBoolean(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedBoolean* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedBoolean::info) ? static_cast<JSSVGAnimatedBoolean*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedBoolean>(exec, object, context);
+}
+SVGAnimatedBoolean* toSVGAnimatedBoolean(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedBoolean::s_info) ? static_cast<JSSVGAnimatedBoolean*>(asObject(value))->impl() : 0;
 }
 
 }

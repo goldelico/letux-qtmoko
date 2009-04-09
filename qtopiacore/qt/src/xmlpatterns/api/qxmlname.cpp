@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -309,7 +313,7 @@ bool QXmlName::operator!=(const QXmlName &other) const
  \since 4.4
  \relates QXmlName
 
- Computes a hash key from the the local name and the namespace
+ Computes a hash key from the local name and the namespace
  URI in \a name. The prefix in \a name is not used in the computation.
  */
 uint qHash(const QXmlName &name)
@@ -393,28 +397,11 @@ QString QXmlName::localName(const QXmlNamePool &namePool) const
   This function can be useful for debugging.
 
  \sa {http://www.jclark.com/xml/xmlns.htm} {XML Namespaces, James Clark}
+ \sa fromClarkName()
  */
 QString QXmlName::toClarkName(const QXmlNamePool &namePool) const
 {
-    if(isNull())
-        return QLatin1String("QXmlName(null)");
-    else
-    {
-        const QString ns(namespaceUri(namePool));
-
-        if(ns.isEmpty())
-            return localName(namePool);
-        else
-        {
-            const QString p(prefix(namePool));
-            const QString l(localName(namePool));
-
-            return   QChar::fromLatin1('{')
-                   + ns
-                   + QChar::fromLatin1('}')
-                   + (p.isEmpty() ? l : p + QChar::fromLatin1(':') + l);
-        }
-    }
+    return namePool.d->toClarkName(*this);
 }
 
 /*!
@@ -437,6 +424,43 @@ QXmlName &QXmlName::operator=(const QXmlName &other)
 bool QXmlName::isNCName(const QString &candidate)
 {
     return QXmlUtils::isNCName(candidate);
+}
+
+/*!
+  Converts \a clarkName into a QXmlName, inserts into \a namePool, and
+  returns it.
+
+  A clark name is a way to present a full QName with only one string, where
+  the namespace cannot contain braces. Here are a couple of examples:
+
+    \table
+    \header
+        \o Clark Name
+        \o Description
+    \row
+        \o \c html
+        \o The local name \c html, in no namespace
+    \row
+        \o \c {http://www.w3.org/1999/xhtml}html
+        \o The local name \c html, in the XHTML namespace
+    \row
+        \o \c {http://www.w3.org/1999/xhtml}my:html
+        \o The local name \c html, in the XHTML namespace, with the prefix \c my
+    \endtable
+
+    If the namespace contains braces, the returned value is either invalid or
+    has undefined content.
+
+    If \a clarkName is an invalid name, a default constructed QXmlName is
+    returned.
+
+  \since 4.5
+  \sa toClarkName()
+ */
+QXmlName QXmlName::fromClarkName(const QString &clarkName,
+                                 const QXmlNamePool &namePool)
+{
+    return namePool.d->fromClarkName(clarkName);
 }
 
 /*!

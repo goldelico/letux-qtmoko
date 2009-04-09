@@ -26,78 +26,86 @@
 
 #include "BarInfo.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSBarInfo)
+
 /* Hash table */
 
-static const HashEntry JSBarInfoTableEntries[] =
+static const HashTableValue JSBarInfoTableValues[2] =
 {
-    { "visible", JSBarInfo::VisibleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "visible", DontDelete|ReadOnly, (intptr_t)jsBarInfoVisible, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSBarInfoTable = 
-{
-    2, 1, JSBarInfoTableEntries, 1
-};
+static const HashTable JSBarInfoTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSBarInfoTableValues, 0 };
+#else
+    { 2, 1, JSBarInfoTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSBarInfoPrototypeTableEntries[] =
+static const HashTableValue JSBarInfoPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSBarInfoPrototypeTable = 
-{
-    2, 1, JSBarInfoPrototypeTableEntries, 1
-};
+static const HashTable JSBarInfoPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSBarInfoPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSBarInfoPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSBarInfoPrototype::info = { "BarInfoPrototype", 0, &JSBarInfoPrototypeTable, 0 };
+const ClassInfo JSBarInfoPrototype::s_info = { "BarInfoPrototype", 0, &JSBarInfoPrototypeTable, 0 };
 
 JSObject* JSBarInfoPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSBarInfoPrototype>(exec, "[[JSBarInfo.prototype]]");
+    return getDOMPrototype<JSBarInfo>(exec);
 }
 
-const ClassInfo JSBarInfo::info = { "BarInfo", 0, &JSBarInfoTable, 0 };
+const ClassInfo JSBarInfo::s_info = { "BarInfo", 0, &JSBarInfoTable, 0 };
 
-JSBarInfo::JSBarInfo(ExecState* exec, BarInfo* impl)
-    : m_impl(impl)
+JSBarInfo::JSBarInfo(PassRefPtr<Structure> structure, PassRefPtr<BarInfo> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSBarInfoPrototype::self(exec));
 }
 
 JSBarInfo::~JSBarInfo()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSBarInfo::createPrototype(ExecState* exec)
+{
+    return new (exec) JSBarInfoPrototype(JSBarInfoPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSBarInfo::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSBarInfo, KJS::DOMObject>(exec, &JSBarInfoTable, this, propertyName, slot);
+    return getStaticValueSlot<JSBarInfo, Base>(exec, &JSBarInfoTable, this, propertyName, slot);
 }
 
-JSValue* JSBarInfo::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsBarInfoVisible(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case VisibleAttrNum: {
-        BarInfo* imp = static_cast<BarInfo*>(impl());
-
-        return jsBoolean(imp->visible());
-    }
-    }
-    return 0;
+    BarInfo* imp = static_cast<BarInfo*>(static_cast<JSBarInfo*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->visible());
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, BarInfo* obj)
+JSC::JSValuePtr toJS(JSC::ExecState* exec, BarInfo* object)
 {
-    return KJS::cacheDOMObject<BarInfo, JSBarInfo>(exec, obj);
+    return getDOMObjectWrapper<JSBarInfo>(exec, object);
 }
-BarInfo* toBarInfo(KJS::JSValue* val)
+BarInfo* toBarInfo(JSC::JSValuePtr value)
 {
-    return val->isObject(&JSBarInfo::info) ? static_cast<JSBarInfo*>(val)->impl() : 0;
+    return value->isObject(&JSBarInfo::s_info) ? static_cast<JSBarInfo*>(asObject(value))->impl() : 0;
 }
 
 }

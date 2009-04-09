@@ -26,106 +26,113 @@
 
 #include "Comment.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSComment)
+
 /* Hash table */
 
-static const HashEntry JSCommentTableEntries[] =
+static const HashTableValue JSCommentTableValues[2] =
 {
-    { "constructor", JSComment::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCommentConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCommentTable = 
-{
-    2, 1, JSCommentTableEntries, 1
-};
+static const HashTable JSCommentTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCommentTableValues, 0 };
+#else
+    { 2, 1, JSCommentTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCommentConstructorTableEntries[] =
+static const HashTableValue JSCommentConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCommentConstructorTable = 
-{
-    2, 1, JSCommentConstructorTableEntries, 1
-};
+static const HashTable JSCommentConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCommentConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCommentConstructorTableValues, 0 };
+#endif
 
 class JSCommentConstructor : public DOMObject {
 public:
     JSCommentConstructor(ExecState* exec)
+        : DOMObject(JSCommentConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCommentPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCommentConstructor::info = { "CommentConstructor", 0, &JSCommentConstructorTable, 0 };
+const ClassInfo JSCommentConstructor::s_info = { "CommentConstructor", 0, &JSCommentConstructorTable, 0 };
 
 bool JSCommentConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCommentConstructor, DOMObject>(exec, &JSCommentConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCommentConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCommentPrototypeTableEntries[] =
+static const HashTableValue JSCommentPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCommentPrototypeTable = 
-{
-    2, 1, JSCommentPrototypeTableEntries, 1
-};
+static const HashTable JSCommentPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCommentPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSCommentPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCommentPrototype::info = { "CommentPrototype", 0, &JSCommentPrototypeTable, 0 };
+const ClassInfo JSCommentPrototype::s_info = { "CommentPrototype", 0, &JSCommentPrototypeTable, 0 };
 
 JSObject* JSCommentPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCommentPrototype>(exec, "[[JSComment.prototype]]");
+    return getDOMPrototype<JSComment>(exec);
 }
 
-const ClassInfo JSComment::info = { "Comment", &JSCharacterData::info, &JSCommentTable, 0 };
+const ClassInfo JSComment::s_info = { "Comment", &JSCharacterData::s_info, &JSCommentTable, 0 };
 
-JSComment::JSComment(ExecState* exec, Comment* impl)
-    : JSCharacterData(exec, impl)
+JSComment::JSComment(PassRefPtr<Structure> structure, PassRefPtr<Comment> impl)
+    : JSCharacterData(structure, impl)
 {
-    setPrototype(JSCommentPrototype::self(exec));
+}
+
+JSObject* JSComment::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCommentPrototype(JSCommentPrototype::createStructure(JSCharacterDataPrototype::self(exec)));
 }
 
 bool JSComment::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSComment, JSCharacterData>(exec, &JSCommentTable, this, propertyName, slot);
+    return getStaticValueSlot<JSComment, Base>(exec, &JSCommentTable, this, propertyName, slot);
 }
 
-JSValue* JSComment::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsCommentConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSComment*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSComment::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSCommentConstructor>(exec);
 }
 
-JSValue* JSComment::getConstructor(ExecState* exec)
-{
-    return KJS::cacheGlobalObject<JSCommentConstructor>(exec, "[[Comment.constructor]]");
-}
 
 }

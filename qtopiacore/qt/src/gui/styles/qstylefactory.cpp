@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,6 +54,9 @@
 #ifndef QT_NO_STYLE_CLEANLOOKS
 #include "qcleanlooksstyle.h"
 #endif
+#ifndef QT_NO_STYLE_GTK
+#include "qgtkstyle.h"
+#endif
 #ifndef QT_NO_STYLE_WINDOWSXP
 #include "qwindowsxpstyle.h"
 #endif
@@ -67,26 +74,8 @@ QT_BEGIN_NAMESPACE
 
 #if !defined(QT_NO_STYLE_MAC) && defined(Q_WS_MAC)
 QT_BEGIN_INCLUDE_NAMESPACE
-#  include <private/qt_mac_p.h>
 #  include "qmacstyle_mac.h"
 QT_END_INCLUDE_NAMESPACE
-
-QString qt_mac_get_style_name()
-{
-    QString ret;
-    Collection c = NewCollection();
-    if (c) {
-        GetTheme(c);
-        Str255 str;
-        SInt32 s = 256;
-        if(!GetCollectionItem(c, kThemeNameTag, 0, &s, &str)) {
-            extern QString qt_mac_from_pascal_string(const Str255); //qglobal.cpp
-            ret = qt_mac_from_pascal_string(str);
-        }
-    }
-    DisposeCollection(c);
-    return ret;
-}
 #endif
 
 #if !defined(QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
@@ -175,12 +164,17 @@ QStyle *QStyleFactory::create(const QString& key)
         ret = new QCleanlooksStyle;
     else
 #endif
+#ifndef QT_NO_STYLE_GTK
+    if (style == QLatin1String("gtk") || style == QLatin1String("gtk+"))
+        ret = new QGtkStyle;
+    else
+#endif
 #ifndef QT_NO_STYLE_MAC
     if (style.left(9) == QLatin1String("macintosh")) {
         ret = new QMacStyle;
 #  ifdef Q_WS_MAC
         if (style == QLatin1String("macintosh"))
-            style += QLatin1String(" (") + qt_mac_get_style_name() + QLatin1Char(')');
+            style += QLatin1String(" (aqua)");
 #  endif
     } else
 #endif
@@ -243,6 +237,10 @@ QStringList QStyleFactory::keys()
     if (!list.contains(QLatin1String("Plastique")))
         list << QLatin1String("Plastique");
 #endif
+#ifndef QT_NO_STYLE_GTK
+    if (!list.contains(QLatin1String("GTK+")))
+        list << QLatin1String("GTK+");
+#endif
 #ifndef QT_NO_STYLE_CLEANLOOKS
     if (!list.contains(QLatin1String("Cleanlooks")))
         list << QLatin1String("Cleanlooks");
@@ -250,7 +248,7 @@ QStringList QStyleFactory::keys()
 #ifndef QT_NO_STYLE_MAC
     QString mstyle = QLatin1String("Macintosh");
 # ifdef Q_WS_MAC
-    mstyle += QLatin1String(" (") + qt_mac_get_style_name() + QLatin1String(")");
+    mstyle += QLatin1String(" (aqua)");
 # endif
     if (!list.contains(mstyle))
         list << mstyle;

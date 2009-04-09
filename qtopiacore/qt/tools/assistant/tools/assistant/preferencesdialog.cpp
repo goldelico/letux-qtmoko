@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,8 +43,9 @@
 #include "filternamedialog.h"
 #include "installdialog.h"
 #include "fontpanel.h"
+#include "centralwidget.h"
 
-#include <QtCore/QDebug>
+#include <QtAlgorithms>
 
 #include <QtGui/QHeaderView>
 #include <QtGui/QFileDialog>
@@ -52,12 +57,10 @@
 
 QT_BEGIN_NAMESPACE
 
-PreferencesDialog::PreferencesDialog(QHelpEngineCore *helpEngine, QWidget *parent,
-                                     bool enableHelpServer)
+PreferencesDialog::PreferencesDialog(QHelpEngineCore *helpEngine, QWidget *parent)
     : QDialog(parent)
     , m_appFontChanged(false)
     , m_browserFontChanged(false)
-    , m_enableHelpServer(enableHelpServer)
 {
     m_helpEngine = helpEngine;
     m_ui.setupUi(this);
@@ -71,7 +74,7 @@ PreferencesDialog::PreferencesDialog(QHelpEngineCore *helpEngine, QWidget *paren
         true).toBool();
     m_hideDocsTab = !m_helpEngine->customValue(QLatin1String("EnableDocumentationManager"),
         true).toBool();
-    
+
     if (!m_hideFiltersTab) {
         m_ui.attributeWidget->header()->hide();
         m_ui.attributeWidget->setRootIsDecorated(false);
@@ -92,37 +95,19 @@ PreferencesDialog::PreferencesDialog(QHelpEngineCore *helpEngine, QWidget *paren
         m_ui.tabWidget->removeTab(m_ui.tabWidget->indexOf(m_ui.filtersTab));
     }
 
-    // disable the help server functionality for now
-    m_ui.tabWidget->removeTab(m_ui.tabWidget->indexOf(m_ui.networkTab));
-
     if (!m_hideDocsTab) {
-        if (m_enableHelpServer) {
-            /*
-            QMenu *menu = new QMenu(m_ui.docAddButton);
-            menu->addAction(tr("From Local File System..."),
-                this, SLOT(addDocumentationLocal()));
-            menu->addAction(tr("Download from Help Server..."),
-                this, SLOT(addDocumentationRemote()));
-            m_ui.docAddButton->setMenu(menu);
-            */
-            connect(m_ui.docAddButton, SIGNAL(clicked()),
-                this, SLOT(addDocumentationLocal()));
-        } else {
-            connect(m_ui.docAddButton, SIGNAL(clicked()),
-                this, SLOT(addDocumentationLocal()));
-            m_ui.tabWidget->removeTab(m_ui.tabWidget->indexOf(m_ui.networkTab));
-        }
-        connect(m_ui.docRemoveButton, SIGNAL(clicked()),
-            this, SLOT(removeDocumentation()));
-        
+        connect(m_ui.docAddButton, SIGNAL(clicked()), this,
+            SLOT(addDocumentationLocal()));
+        connect(m_ui.docRemoveButton, SIGNAL(clicked()), this,
+            SLOT(removeDocumentation()));
+
         m_docsBackup = m_helpEngine->registeredDocumentations();
         m_ui.registeredDocsListWidget->addItems(m_docsBackup);
     } else {
         m_ui.tabWidget->removeTab(m_ui.tabWidget->indexOf(m_ui.docsTab));
-        m_ui.tabWidget->removeTab(m_ui.tabWidget->indexOf(m_ui.networkTab));
     }
     updateFontSettingsPage();
-    loadNetworkSettings();
+    updateOptionsPage();
 }
 
 PreferencesDialog::~PreferencesDialog()
@@ -143,22 +128,15 @@ PreferencesDialog::~PreferencesDialog()
         emit updateApplicationFont();
         emit updateBrowserFont();
     }
+
+    if (!m_ui.homePageLineEdit->text().isEmpty())
+        m_helpEngine->setCustomValue("homepage", m_ui.homePageLineEdit->text());
 }
 
 void PreferencesDialog::showDialog()
 {
     if (exec() != Accepted)
         m_appFontChanged = m_browserFontChanged = false;
-}
-
-void PreferencesDialog::loadNetworkSettings()
-{
-    m_ui.proxyBox->setChecked(
-        m_helpEngine->customValue(QLatin1String("useProxy"), false).toBool());
-    m_ui.proxyLineEdit->setText(
-        m_helpEngine->customValue(QLatin1String("proxyHost"), QString()).toString());
-    m_ui.portSpinBox->setValue(
-        m_helpEngine->customValue(QLatin1String("proxyPort"), 0).toInt());
 }
 
 void PreferencesDialog::updateFilterPage()
@@ -170,10 +148,10 @@ void PreferencesDialog::updateFilterPage()
     m_ui.attributeWidget->clear();
 
     QHelpEngineCore help(m_helpEngine->collectionFile(), 0);
-    help.setupData();    
+    help.setupData();
     m_filterMapBackup.clear();
     const QStringList filters = help.customFilters();
-    foreach (const QString filter, filters) {
+    foreach (const QString &filter, filters) {
         QStringList atts = help.filterAttributes(filter);
         m_filterMapBackup.insert(filter, atts);
         if (!m_filterMap.contains(filter))
@@ -182,9 +160,9 @@ void PreferencesDialog::updateFilterPage()
 
     m_ui.filterWidget->addItems(m_filterMap.keys());
 
-    foreach (const QString a, help.filterAttributes())
+    foreach (const QString &a, help.filterAttributes())
         new QTreeWidgetItem(m_ui.attributeWidget, QStringList() << a);
-    
+
     if (m_filterMap.keys().count())
         m_ui.filterWidget->setCurrentRow(0);
 }
@@ -211,7 +189,7 @@ void PreferencesDialog::updateFilterMap()
     QString filter = m_ui.filterWidget->currentItem()->text();
     if (!m_filterMap.contains(filter))
         return;
-    
+
     QStringList newAtts;
     QTreeWidgetItem *itm = 0;
     for (int i=0; i<m_ui.attributeWidget->topLevelItemCount(); ++i) {
@@ -219,7 +197,7 @@ void PreferencesDialog::updateFilterMap()
         if (itm->checkState(0) == Qt::Checked)
             newAtts.append(itm->text(0));
     }
-    m_filterMap[filter] = newAtts;    
+    m_filterMap[filter] = newAtts;
 }
 
 void PreferencesDialog::addFilter()
@@ -260,7 +238,7 @@ void PreferencesDialog::addDocumentationLocal()
     if (fileNames.isEmpty())
         return;
 
-    foreach(const QString fileName, fileNames) {
+    foreach (const QString &fileName, fileNames) {
         const QString ns = QHelpEngineCore::namespaceName(fileName);
         if (ns.isEmpty()) {
             QMessageBox::warning(this, tr("Add Documentation"),
@@ -282,47 +260,39 @@ void PreferencesDialog::addDocumentationLocal()
     updateFilterPage();
 }
 
-void PreferencesDialog::addDocumentationRemote()
-{
-    InstallDialog *dia = 0;
-    if (m_ui.proxyBox->isChecked())
-        dia = new InstallDialog(m_helpEngine, this,
-            m_ui.proxyLineEdit->text(), m_ui.portSpinBox->value());
-    else
-        dia = new InstallDialog(m_helpEngine, this);
-    
-    dia->exec();
-    m_regDocs = dia->installedDocumentations();
-    if (!m_regDocs.count())
-        return;
-    foreach (QString ns, m_regDocs)
-        m_ui.registeredDocsListWidget->addItem(ns);
-    updateFilterPage();
-    delete dia;
-}
-
 void PreferencesDialog::removeDocumentation()
 {
-    QListWidgetItem *item = m_ui.registeredDocsListWidget
-        ->takeItem(m_ui.registeredDocsListWidget->currentRow());
-    if (!item)
-        return;
+    bool foundBefore = false;
+    CentralWidget* widget = CentralWidget::instance();
+    QMap<int, QString> openedDocList = widget->currentSourceFileList();
+    QStringList values(openedDocList.values());
 
-    m_unregDocs.append(item->text());
-    delete item;
-    if (m_ui.registeredDocsListWidget->count())
-        m_ui.registeredDocsListWidget->setCurrentRow(0);
+    QList<QListWidgetItem*> l = m_ui.registeredDocsListWidget->selectedItems();
+    foreach (QListWidgetItem* item, l) {
+        const QString& ns = item->text();
+        if (!foundBefore && values.contains(ns)) {
+            if (0 == QMessageBox::information(this, tr("Remove Documentation"),
+                tr("Some documents currently opened in Assistant reference the "
+                   "documentation you are attempting to remove. Removing the "
+                   "documentation will close those documents."), tr("Cancel"),
+                tr("OK"))) return;
+            foundBefore = true;
+        }
+
+        m_unregDocs.append(ns);
+        m_TabsToClose += openedDocList.keys(ns);
+        delete m_ui.registeredDocsListWidget->takeItem(
+            m_ui.registeredDocsListWidget->row(item));
+    }
+
+    if (m_ui.registeredDocsListWidget->count()) {
+        m_ui.registeredDocsListWidget->setCurrentRow(0,
+            QItemSelectionModel::ClearAndSelect);
+    }
 }
 
 void PreferencesDialog::applyChanges()
 {
-    m_helpEngine->setCustomValue(QLatin1String("useProxy"),
-        m_ui.proxyBox->isChecked());
-    m_helpEngine->setCustomValue(QLatin1String("proxyHost"),
-        m_ui.proxyLineEdit->text());
-    m_helpEngine->setCustomValue(QLatin1String("proxyPort"),
-        m_ui.portSpinBox->value());
-    
     bool filtersWereChanged = false;
     if (!m_hideFiltersTab) {
         if (m_filterMap.count() != m_filterMapBackup.count()) {
@@ -354,7 +324,7 @@ void PreferencesDialog::applyChanges()
     }
 
     if (filtersWereChanged) {
-        foreach (QString filter, m_removedFilters)
+        foreach (const QString &filter, m_removedFilters)
             m_helpEngine->removeCustomFilter(filter);
         QMapIterator<QString, QStringList> it(m_filterMap);
         while (it.hasNext()) {
@@ -362,9 +332,14 @@ void PreferencesDialog::applyChanges()
             m_helpEngine->addCustomFilter(it.key(), it.value());
         }
     }
-    
+
+    qSort(m_TabsToClose);
+    CentralWidget* widget = CentralWidget::instance();
+    for (int i = m_TabsToClose.count(); --i >= 0;)
+        widget->closeTabAt(m_TabsToClose.at(i));
+
     if (m_unregDocs.count()) {
-        foreach (QString doc, m_unregDocs)
+        foreach (const QString &doc, m_unregDocs)
             m_helpEngine->unregisterDocumentation(doc);
     }
 
@@ -409,12 +384,12 @@ void PreferencesDialog::updateFontSettingsPage()
     connect(m_browserFontPanel, SIGNAL(toggled(bool)), this, SLOT(browserFontSettingToggled(bool)));
 
     QList<QComboBox*> allCombos = qFindChildren<QComboBox*>(m_appFontPanel);
-    foreach(QComboBox* box, allCombos)
+    foreach (QComboBox* box, allCombos)
         connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(appFontSettingChanged(int)));
 
     allCombos.clear();
     allCombos = qFindChildren<QComboBox*>(m_browserFontPanel);
-    foreach(QComboBox* box, allCombos)
+    foreach (QComboBox* box, allCombos)
         connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(browserFontSettingChanged(int)));
 }
 
@@ -430,9 +405,9 @@ void PreferencesDialog::appFontSettingChanged(int index)
     m_appFontChanged = true;
 }
 
-void PreferencesDialog::browserFontSettingToggled(bool on) 
+void PreferencesDialog::browserFontSettingToggled(bool on)
 {
-    Q_UNUSED(on) 
+    Q_UNUSED(on)
     m_browserFontChanged = true;
 }
 
@@ -440,6 +415,39 @@ void PreferencesDialog::browserFontSettingChanged(int index)
 {
     Q_UNUSED(index)
     m_browserFontChanged = true;
+}
+
+void PreferencesDialog::updateOptionsPage()
+{
+    QString homepage = m_helpEngine->customValue(QLatin1String("homepage"),
+        QLatin1String("")).toString();
+
+    if (homepage.isEmpty()) {
+        homepage = m_helpEngine->customValue(QLatin1String("defaultHomepage"),
+            QLatin1String("help")).toString();
+    }
+
+    m_ui.homePageLineEdit->setText(homepage);
+    connect(m_ui.currentPageButton, SIGNAL(pressed()), this,
+        SLOT(currentHomepageChanged()));
+    connect(m_ui.restoreDefaultHomePageButton, SIGNAL(pressed()), this,
+        SLOT(restoreDefaultHomepage()));
+}
+
+void PreferencesDialog::restoreDefaultHomepage()
+{
+    QString homepage = m_helpEngine->customValue(
+        QLatin1String("defaultHomepage"), QLatin1String("help")).toString();
+    m_ui.homePageLineEdit->setText(homepage);
+}
+
+void PreferencesDialog::currentHomepageChanged()
+{
+    QString homepage = CentralWidget::instance()->currentSource().toString();
+    if (homepage.isEmpty())
+        homepage = QLatin1String("help");
+
+    m_ui.homePageLineEdit->setText(homepage);
 }
 
 QT_END_NAMESPACE

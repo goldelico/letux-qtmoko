@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -85,6 +89,21 @@ typedef struct {        //DTTOPTS
     int iGlowSize;
 } WIZ_DTTOPTS;
 
+typedef struct {
+    DWORD dwFlags;
+    DWORD dwMask;
+} WIZ_WTA_OPTIONS;
+
+#define WIZ_WM_THEMECHANGED                 0x031A
+#define WIZ_WM_DWMCOMPOSITIONCHANGED        0x031E
+
+enum WIZ_WINDOWTHEMEATTRIBUTETYPE {
+    WIZ_WTA_NONCLIENT = 1
+};
+
+#define WIZ_WTNCA_NODRAWCAPTION 0x00000001
+#define WIZ_WTNCA_NODRAWICON    0x00000002
+
 #define WIZ_DT_CENTER                   0x00000001 //DT_CENTER
 #define WIZ_DT_VCENTER                  0x00000004
 #define WIZ_DT_SINGLELINE               0x00000020
@@ -109,13 +128,20 @@ enum WIZ_NAV_BACKBUTTONSTATES {     //NAV_BACKBUTTONSTATES
 
 #define WIZ_WM_NCMOUSELEAVE 674             //WM_NCMOUSELEAVE
 
+#define WIZ_WP_CAPTION             1 //WP_CAPTION
+#define WIZ_CS_ACTIVE              1 //CS_ACTIVE
+#define WIZ_TMT_FILLCOLORHINT   3821 //TMT_FILLCOLORHINT
+#define WIZ_TMT_BORDERCOLORHINT 3822 //TMT_BORDERCOLORHINT
+
 typedef BOOL (WINAPI *PtrDwmDefWindowProc)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 typedef HRESULT (WINAPI *PtrDwmIsCompositionEnabled)(BOOL* pfEnabled);
 typedef HRESULT (WINAPI *PtrDwmExtendFrameIntoClientArea)(HWND hWnd, const WIZ_MARGINS* pMarInset);
+typedef HRESULT (WINAPI *PtrSetWindowThemeAttribute)(HWND hwnd, enum WIZ_WINDOWTHEMEATTRIBUTETYPE eAttribute, PVOID pvAttribute, DWORD cbAttribute);
 
 static PtrDwmDefWindowProc pDwmDefWindowProc = 0;
-static PtrDwmIsCompositionEnabled pDwmIsCompositionEnabled= 0;
-static PtrDwmExtendFrameIntoClientArea pDwmExtendFrameIntoClientArea= 0;
+static PtrDwmIsCompositionEnabled pDwmIsCompositionEnabled = 0;
+static PtrDwmExtendFrameIntoClientArea pDwmExtendFrameIntoClientArea = 0;
+static PtrSetWindowThemeAttribute pSetWindowThemeAttribute = 0;
 
 //Theme related
 typedef bool (WINAPI *PtrIsAppThemed)();
@@ -126,6 +152,7 @@ typedef HRESULT (WINAPI *PtrGetThemeSysFont)(HANDLE hTheme, int iFontId, LOGFONT
 typedef HRESULT (WINAPI *PtrDrawThemeTextEx)(HANDLE hTheme, HDC hdc, int iPartId, int iStateId, LPCWSTR pszText, int cchText, DWORD dwTextFlags, LPRECT pRect, const WIZ_DTTOPTS *pOptions);
 typedef HRESULT (WINAPI *PtrDrawThemeBackground)(HANDLE hTheme, HDC hdc, int iPartId, int iStateId, const RECT *pRect, OPTIONAL const RECT *pClipRect);
 typedef HRESULT (WINAPI *PtrGetThemePartSize)(HANDLE hTheme, HDC hdc, int iPartId, int iStateId, OPTIONAL RECT *prc, enum THEMESIZE eSize, OUT SIZE *psz);
+typedef HRESULT (WINAPI *PtrGetThemeColor)(HANDLE hTheme, int iPartId, int iStateId, int iPropId, OUT COLORREF *pColor);
 
 static PtrIsAppThemed pIsAppThemed = 0;
 static PtrIsThemeActive pIsThemeActive = 0;
@@ -135,8 +162,10 @@ static PtrGetThemeSysFont pGetThemeSysFont = 0;
 static PtrDrawThemeTextEx pDrawThemeTextEx = 0;
 static PtrDrawThemeBackground pDrawThemeBackground = 0;
 static PtrGetThemePartSize pGetThemePartSize = 0;
+static PtrGetThemeColor pGetThemeColor = 0;
 
 bool QVistaHelper::is_vista = false;
+QVistaHelper::VistaState QVistaHelper::cachedVistaState = QVistaHelper::Dirty;
 
 /******************************************************************************
 ** QVistaBackButton
@@ -232,10 +261,37 @@ bool QVistaHelper::isCompositionEnabled()
     return value;
 }
 
+bool QVistaHelper::isThemeActive()
+{
+    return is_vista && pIsThemeActive();
+}
+
+QVistaHelper::VistaState QVistaHelper::vistaState()
+{
+    if (cachedVistaState == Dirty)
+        cachedVistaState =
+            isCompositionEnabled() ? VistaAero : isThemeActive() ? VistaBasic : Classic;
+    return cachedVistaState;
+}
+
+QColor QVistaHelper::basicWindowFrameColor()
+{
+    DWORD rgb;
+    HANDLE hTheme = pOpenThemeData(qApp->desktop()->winId(), L"WINDOW");
+    pGetThemeColor(
+        hTheme, WIZ_WP_CAPTION, WIZ_CS_ACTIVE,
+        wizard->isActiveWindow() ? WIZ_TMT_FILLCOLORHINT : WIZ_TMT_BORDERCOLORHINT,
+        &rgb);
+    BYTE r = GetRValue(rgb);
+    BYTE g = GetGValue(rgb);
+    BYTE b = GetBValue(rgb);
+    return QColor(r, g, b);
+}
+
 bool QVistaHelper::setDWMTitleBar(TitleBarChangeType type)
 {
     bool value = false;
-    if (isCompositionEnabled()) {
+    if (vistaState() == VistaAero) {
         WIZ_MARGINS mar = {0};
         if (type == NormalTitleBar)
             mar.cyTopHeight = 0;
@@ -249,9 +305,10 @@ bool QVistaHelper::setDWMTitleBar(TitleBarChangeType type)
 
 void QVistaHelper::drawTitleBar(QPainter *painter)
 {
-    drawBlackRect(
-        QRect(0, 0, wizard->width(), titleBarSize() + topOffset()),
-        painter->paintEngine()->getDC());
+    if (vistaState() == VistaAero)
+        drawBlackRect(
+            QRect(0, 0, wizard->width(), titleBarSize() + topOffset()),
+            painter->paintEngine()->getDC());
 
     const int btnTop = backButton_->mapToParent(QPoint()).y();
     const int btnHeight = backButton_->size().height();
@@ -264,19 +321,33 @@ void QVistaHelper::drawTitleBar(QPainter *painter)
     const QFont font = QApplication::font("QWorkspaceTitleBar");
     const QFontMetrics fontMetrics(font);
     const QRect brect = fontMetrics.boundingRect(text);
-    const int textHeight = brect.height() + 2*glowSize();
-    const int textWidth = brect.width() + 2*glowSize();
+    int textHeight = brect.height();
+    int textWidth = brect.width();
+    if (vistaState() == VistaAero) {
+        textHeight += 2 * glowSize();
+        textWidth += 2 * glowSize();
+    }
     drawTitleText(
-        text,
+        painter, text,
         QRect(titleOffset(), verticalCenter - textHeight / 2, textWidth, textHeight),
         painter->paintEngine()->getDC());
 }
 
+void QVistaHelper::setTitleBarIconAndCaptionVisible(bool visible)
+{
+    if (is_vista) {
+        WIZ_WTA_OPTIONS opt;
+        opt.dwFlags = WIZ_WTNCA_NODRAWICON | WIZ_WTNCA_NODRAWCAPTION;
+        if (visible)
+            opt.dwMask = 0;
+        else
+            opt.dwMask = WIZ_WTNCA_NODRAWICON | WIZ_WTNCA_NODRAWCAPTION;
+        pSetWindowThemeAttribute(wizard->winId(), WIZ_WTA_NONCLIENT, &opt, sizeof(WIZ_WTA_OPTIONS));
+    }
+}
+
 bool QVistaHelper::winEvent(MSG* msg, long* result)
 {
-    if (!isCompositionEnabled())
-        return false;
-
     bool retval = true;
 
     switch (msg->message) {
@@ -301,7 +372,7 @@ bool QVistaHelper::winEvent(MSG* msg, long* result)
     case WM_NCCALCSIZE: {
         NCCALCSIZE_PARAMS* lpncsp = (NCCALCSIZE_PARAMS*)msg->lParam;
         *result = DefWindowProc(msg->hwnd, msg->message, msg->wParam, msg->lParam);
-        lpncsp->rgrc[0].top -= titleBarSize();
+        lpncsp->rgrc[0].top -= (vistaState() == VistaAero ? titleBarSize() : 0);
         break;
     }
     default:
@@ -369,8 +440,11 @@ void QVistaHelper::collapseTopFrameStrut()
 
 bool QVistaHelper::handleWinEvent(MSG *message, long *result)
 {
+    if (message->message == WIZ_WM_THEMECHANGED || message->message == WIZ_WM_DWMCOMPOSITIONCHANGED)
+        cachedVistaState = Dirty;
+
     bool status = false;
-    if (wizard->wizardStyle() == QWizard::AeroStyle) {
+    if (wizard->wizardStyle() == QWizard::AeroStyle && vistaState() == VistaAero) {
         status = winEvent(message, result);
         if (message->message == WM_NCCALCSIZE) {
             if (status)
@@ -386,7 +460,10 @@ void QVistaHelper::resizeEvent(QResizeEvent * event)
 {
     Q_UNUSED(event);
     rtTop = QRect (0, 0, wizard->width(), frameSize());
-    rtTitle = QRect (0, frameSize(), wizard->width(), captionSize() + topOffset());
+    int height = captionSize() + topOffset();
+    if (vistaState() == VistaBasic)
+        height -= titleBarSize();
+    rtTitle = QRect (0, frameSize(), wizard->width(), height);
 }
 
 void QVistaHelper::paintEvent(QPaintEvent *event)
@@ -424,7 +501,7 @@ void QVistaHelper::mouseMoveEvent(QMouseEvent *event)
         }
         wizard->setGeometry(rect);
 
-    } else {
+    } else if (vistaState() == VistaAero) {
         setMouseCursor(event->pos());
     }
     event->ignore();
@@ -439,13 +516,14 @@ void QVistaHelper::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-    if (rtTop.contains(event->pos()))
-        change = resizeTop;
-    else if (rtTitle.contains(event->pos()))
+    if (rtTitle.contains(event->pos())) {
         change = movePosition;
+    } else if (rtTop.contains(event->pos()))
+        change = (vistaState() == VistaAero) ? resizeTop : movePosition;
 
     if (change != noChange) {
-        setMouseCursor(event->pos());
+        if (vistaState() == VistaAero)
+            setMouseCursor(event->pos());
         pressed = true;
         pressedPos = event->pos();
     } else {
@@ -459,7 +537,8 @@ void QVistaHelper::mouseReleaseEvent(QMouseEvent *event)
     if (pressed) {
         pressed = false;
         wizard->releaseMouse();
-        setMouseCursor(event->pos());
+        if (vistaState() == VistaAero)
+            setMouseCursor(event->pos());
     }
     event->ignore();
 }
@@ -525,11 +604,11 @@ HFONT QVistaHelper::getCaptionFont(HANDLE hTheme)
     return CreateFontIndirect(&lf);
 }
 
-bool QVistaHelper::drawTitleText(const QString &text, const QRect &rect, HDC hdc)
+bool QVistaHelper::drawTitleText(QPainter *painter, const QString &text, const QRect &rect, HDC hdc)
 {
     bool value = false;
-    if(isCompositionEnabled()){
-        HANDLE hTheme= pOpenThemeData(qApp->desktop()->winId(), L"WINDOW");
+    if (vistaState() == VistaAero) {
+        HANDLE hTheme = pOpenThemeData(qApp->desktop()->winId(), L"WINDOW");
         if (!hTheme) return false;
         // Set up a memory DC and bitmap that we'll draw into
         HDC dcMem;
@@ -567,6 +646,8 @@ bool QVistaHelper::drawTitleText(const QString &text, const QRect &rect, HDC hdc
         DeleteObject(hCaptionFont);
         DeleteDC(dcMem);
         //ReleaseDC(hwnd, hdc);
+    } else if (vistaState() == VistaBasic) {
+        painter->drawText(rect, text);
     }
     return value;
 }
@@ -574,7 +655,7 @@ bool QVistaHelper::drawTitleText(const QString &text, const QRect &rect, HDC hdc
 bool QVistaHelper::drawBlackRect(const QRect &rect, HDC hdc)
 {
     bool value = false;
-    if (isCompositionEnabled()){
+    if (vistaState() == VistaAero) {
         // Set up a memory DC and bitmap that we'll draw into
         HDC dcMem;
         HBITMAP bmp;
@@ -618,11 +699,13 @@ bool QVistaHelper::resolveSymbols()
         if (pIsAppThemed) {
             pDrawThemeBackground = (PtrDrawThemeBackground)themeLib.resolve("DrawThemeBackground");
             pGetThemePartSize = (PtrGetThemePartSize)themeLib.resolve("GetThemePartSize");
+            pGetThemeColor = (PtrGetThemeColor)themeLib.resolve("GetThemeColor");
             pIsThemeActive = (PtrIsThemeActive)themeLib.resolve("IsThemeActive");
             pOpenThemeData = (PtrOpenThemeData)themeLib.resolve("OpenThemeData");
             pCloseThemeData = (PtrCloseThemeData)themeLib.resolve("CloseThemeData");
             pGetThemeSysFont = (PtrGetThemeSysFont)themeLib.resolve("GetThemeSysFont");
             pDrawThemeTextEx = (PtrDrawThemeTextEx)themeLib.resolve("DrawThemeTextEx");
+            pSetWindowThemeAttribute = (PtrSetWindowThemeAttribute)themeLib.resolve("SetWindowThemeAttribute");
         }
     }
 
@@ -633,11 +716,14 @@ bool QVistaHelper::resolveSymbols()
         && pIsAppThemed != 0
         && pDrawThemeBackground != 0
         && pGetThemePartSize != 0
+        && pGetThemeColor != 0
         && pIsThemeActive != 0
         && pOpenThemeData != 0
         && pCloseThemeData != 0
         && pGetThemeSysFont != 0
-        && pDrawThemeTextEx != 0);
+        && pDrawThemeTextEx != 0
+        && pSetWindowThemeAttribute != 0
+        );
 }
 
 int QVistaHelper::titleOffset()

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -129,8 +133,7 @@ QFileInfoPrivate::~QFileInfoPrivate()
     data = 0;
 }
 
-void
-QFileInfoPrivate::initFileEngine(const QString &file)
+void QFileInfoPrivate::initFileEngine(const QString &file)
 {
     detach();
     delete data->fileEngine;
@@ -188,10 +191,11 @@ bool QFileInfoPrivate::hasAccess(Access access) const
 }
 
 void QFileInfoPrivate::detach()
-{ qAtomicDetach(data); }
+{
+    qAtomicDetach(data);
+}
 
-QString
-QFileInfoPrivate::getFileName(QAbstractFileEngine::FileName name) const
+QString QFileInfoPrivate::getFileName(QAbstractFileEngine::FileName name) const
 {
     if(data->cache_enabled && data->fileNames.contains((int)name))
         return data->fileNames.value(name);
@@ -201,8 +205,7 @@ QFileInfoPrivate::getFileName(QAbstractFileEngine::FileName name) const
     return ret;
 }
 
-uint
-QFileInfoPrivate::getFileFlags(QAbstractFileEngine::FileFlags request) const
+uint QFileInfoPrivate::getFileFlags(QAbstractFileEngine::FileFlags request) const
 {
     // We split the testing into tests for for LinkType, BundleType and the rest.
     // In order to determine if a file is a symlink or not, we have to lstat().
@@ -251,8 +254,7 @@ QFileInfoPrivate::getFileFlags(QAbstractFileEngine::FileFlags request) const
     return flags & request;
 }
 
-QDateTime
-&QFileInfoPrivate::getFileTime(QAbstractFileEngine::FileTime request) const
+QDateTime &QFileInfoPrivate::getFileTime(QAbstractFileEngine::FileTime request) const
 {
     if (!data->cache_enabled)
         data->clearFlags();
@@ -455,9 +457,7 @@ QFileInfo::~QFileInfo()
 /*!
     \overload
 */
-
-bool
-QFileInfo::operator==(const QFileInfo &fileinfo) const
+bool QFileInfo::operator==(const QFileInfo &fileinfo) const
 {
     Q_D(const QFileInfo);
     // ### Qt 5: understand long and short file names on Windows
@@ -469,8 +469,8 @@ QFileInfo::operator==(const QFileInfo &fileinfo) const
     if(d->data->fileEngine->caseSensitive() != fileinfo.d_func()->data->fileEngine->caseSensitive())
         return false;
     if(fileinfo.size() == size()) { //if the size isn't the same...
-        QString file1 = absoluteFilePath(),
-                file2 = fileinfo.absoluteFilePath();
+        QString file1 = canonicalFilePath(),
+                file2 = fileinfo.canonicalFilePath();
         if(file1.length() == file2.length()) {
             if(!fileinfo.d_func()->data->fileEngine->caseSensitive()) {
                 for(int i = 0; i < file1.length(); i++) {
@@ -532,8 +532,7 @@ QFileInfo &QFileInfo::operator=(const QFileInfo &fileinfo)
     \sa isRelative(), QDir::setCurrent(), QDir::isRelativePath()
 */
 
-void
-QFileInfo::setFile(const QString &file)
+void QFileInfo::setFile(const QString &file)
 {
     Q_D(QFileInfo);
     d->initFileEngine(file);
@@ -551,8 +550,7 @@ QFileInfo::setFile(const QString &file)
     \sa isRelative()
 */
 
-void
-QFileInfo::setFile(const QFile &file)
+void QFileInfo::setFile(const QFile &file)
 {
     Q_D(QFileInfo);
     d->initFileEngine(file.fileName());
@@ -570,35 +568,35 @@ QFileInfo::setFile(const QFile &file)
     \sa isRelative()
 */
 
-void
-QFileInfo::setFile(const QDir &dir, const QString &file)
+void QFileInfo::setFile(const QDir &dir, const QString &file)
 {
     Q_D(QFileInfo);
     d->initFileEngine(dir.filePath(file));
 }
 
 /*!
-    Returns the absolute path including the file name.
+    Returns an absolute path including the file name.
 
     The absolute path name consists of the full path and the file
     name. On Unix this will always begin with the root, '/',
     directory. On Windows this will always begin 'D:/' where D is a
     drive letter, except for network shares that are not mapped to a
     drive letter, in which case the path will begin '//sharename/'.
+    QFileInfo will uppercase drive letters. Note that QDir does not do
+    this. The code snippet below shows this.
+
+    \snippet doc/src/snippets/code/src_corelib_io_qfileinfo.cpp newstuff
 
     This function returns the same as filePath(), unless isRelative()
-    is true.
+    is true. In contrast to canonicalFilePath(), symbolic links or
+    redundant "." or ".." elements are not necessarily removed.
 
     If the QFileInfo is empty it returns QDir::currentPath().
 
-    This function can be time consuming under Unix (in the order of
-    milliseconds).
-
-    \sa isRelative(), filePath()
+    \sa filePath(), canonicalFilePath(), isRelative()
 */
 
-QString
-QFileInfo::absoluteFilePath() const
+QString QFileInfo::absoluteFilePath() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -607,19 +605,15 @@ QFileInfo::absoluteFilePath() const
 }
 
 /*!
-    Returns the canonical path, i.e. a path without symbolic links or
-    redundant "." or ".." elements.
+    Returns the canonical path including the file name,
+    i.e. an absolute path without symbolic links or redundant "." or ".." elements.
 
-    On systems that do not have symbolic links this function will
-    always return the same string that absoluteFilePath() returns. If
-    the canonical path does not exist (normally due to dangling
-    symbolic links) canonicalFilePath() returns an empty string.
+    If the file does not exist, canonicalFilePath() returns an empty string.
 
-    \sa filePath(), absoluteFilePath()
+    \sa filePath(), absoluteFilePath(), dir()
 */
 
-QString
-QFileInfo::canonicalFilePath() const
+QString QFileInfo::canonicalFilePath() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -629,17 +623,25 @@ QFileInfo::canonicalFilePath() const
 
 
 /*!
-    Returns the file's path absolute path. This doesn't include the
+    Returns a file's path absolute path. This doesn't include the
     file name.
+
+    On Unix the absolute path will always begin with the root, '/',
+    directory. On Windows this will always begin 'D:/' where D is a
+    drive letter, except for network shares that are not mapped to a
+    drive letter, in which case the path will begin '//sharename/'.
+
+    This function returns the same as filePath(), unless isRelative()
+    is true. In contrast to canonicalPath() symbolic links or
+    redundant "." or ".." elements are not necessarily removed.
 
     \warning If the QFileInfo object was created with an empty QString,
               the behavior of this function is undefined.
 
-    \sa dir(), filePath(), fileName(), isRelative(), path()
+    \sa absoluteFilePath(), path(), canonicalPath(), fileName(), isRelative()
 */
 
-QString
-QFileInfo::absolutePath() const
+QString QFileInfo::absolutePath() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -648,19 +650,15 @@ QFileInfo::absolutePath() const
 }
 
 /*!
-    Returns the canonical path, i.e. a path without symbolic links or
-    redundant "." or ".." elements.
+    Returns the file's path canonical path (excluding the file name),
+    i.e. an absolute path without symbolic links or redundant "." or ".." elements.
 
-    On systems that do not have symbolic links this function will
-    always return the same string that absolutePath() returns. If the
-    canonical path does not exist (normally due to dangling symbolic
-    links) canonicalPath() returns an empty string.
+    If the file does not exist, canonicalPath() returns an empty string.
 
-    \sa absolutePath()
+    \sa path(), absolutePath()
 */
 
-QString
-QFileInfo::canonicalPath() const
+QString QFileInfo::canonicalPath() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -672,11 +670,14 @@ QFileInfo::canonicalPath() const
 /*!
     Returns the file's path. This doesn't include the file name.
 
-    \sa dir(), filePath(), fileName(), isRelative(), absolutePath()
+    Note that, if this QFileInfo object is given a path ending in a
+    slash, the name of the file is considered empty and this function
+    will return the entire path.
+
+    \sa filePath(), absolutePath(), canonicalPath(), dir(), fileName(), isRelative()
 */
 
-QString
-QFileInfo::path() const
+QString QFileInfo::path() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -701,8 +702,7 @@ QFileInfo::path() const
     \sa isAbsolute()
 */
 
-bool
-QFileInfo::isRelative() const
+bool QFileInfo::isRelative() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -719,8 +719,7 @@ QFileInfo::isRelative() const
     \sa filePath(), isRelative()
 */
 
-bool
-QFileInfo::makeAbsolute()
+bool QFileInfo::makeAbsolute()
 {
     Q_D(QFileInfo);
     if(!d->data->fileEngine || !d->data->fileEngine->isRelativePath())
@@ -732,10 +731,12 @@ QFileInfo::makeAbsolute()
 
 /*!
     Returns true if the file exists; otherwise returns false.
+
+    \note If the file is a symlink that points to a non existing
+     file, false is returned.
 */
 
-bool
-QFileInfo::exists() const
+bool QFileInfo::exists() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -751,8 +752,7 @@ QFileInfo::exists() const
     to detect changes on the file.
 */
 
-void
-QFileInfo::refresh()
+void QFileInfo::refresh()
 {
     Q_D(QFileInfo);
     d->reset();
@@ -762,11 +762,10 @@ QFileInfo::refresh()
     Returns the file name, including the path (which may be absolute
     or relative).
 
-    \sa isRelative(), absoluteFilePath()
+    \sa absoluteFilePath(), canonicalFilePath(), isRelative()
 */
 
-QString
-QFileInfo::filePath() const
+QString QFileInfo::filePath() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -780,11 +779,13 @@ QFileInfo::filePath() const
     Example:
     \snippet doc/src/snippets/code/src_corelib_io_qfileinfo.cpp 3
 
+    Note that, if this QFileInfo object is given a path ending in a
+    slash, the name of the file is considered empty.
+
     \sa isRelative(), filePath(), baseName(), extension()
 */
 
-QString
-QFileInfo::fileName() const
+QString QFileInfo::fileName() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -805,8 +806,7 @@ QFileInfo::fileName() const
     \sa isBundle(), filePath(), baseName(), extension()
 */
 
-QString
-QFileInfo::bundleName() const
+QString QFileInfo::bundleName() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -831,8 +831,7 @@ QFileInfo::bundleName() const
     \sa fileName(), suffix(), completeSuffix(), completeBaseName()
 */
 
-QString
-QFileInfo::baseName() const
+QString QFileInfo::baseName() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -852,8 +851,7 @@ QFileInfo::baseName() const
     \sa fileName(), suffix(), completeSuffix(), baseName()
 */
 
-QString
-QFileInfo::completeBaseName() const
+QString QFileInfo::completeBaseName() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -875,8 +873,7 @@ QFileInfo::completeBaseName() const
     \sa fileName(), suffix(), baseName(), completeBaseName()
 */
 
-QString
-QFileInfo::completeSuffix() const
+QString QFileInfo::completeSuffix() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -904,8 +901,7 @@ QFileInfo::completeSuffix() const
     \sa fileName(), completeSuffix(), baseName(), completeBaseName()
 */
 
-QString
-QFileInfo::suffix() const
+QString QFileInfo::suffix() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -934,11 +930,10 @@ QFileInfo::suffix() const
 
   \snippet doc/src/snippets/fileinfo/main.cpp 1
 
-  \sa dirPath(), filePath(), fileName(), isRelative(), absoluteDir()
+  \sa absolutePath(), filePath(), fileName(), isRelative(), absoluteDir()
 */
 
-QDir
-QFileInfo::dir() const
+QDir QFileInfo::dir() const
 {
     // ### Qt5: Maybe rename this to parentDirectory(), considering what it actually do?
     return QDir(path());
@@ -947,11 +942,10 @@ QFileInfo::dir() const
 /*!
     Returns the file's absolute path as a QDir object.
 
-    \sa filePath(), fileName(), isRelative(), dir()
+    \sa dir(), filePath(), fileName(), isRelative()
 */
 
-QDir
-QFileInfo::absoluteDir() const
+QDir QFileInfo::absoluteDir() const
 {
     return QDir(absolutePath());
 }
@@ -975,8 +969,7 @@ QDir QFileInfo::dir(bool absPath) const
     \sa isWritable(), isExecutable(), permission()
 */
 
-bool
-QFileInfo::isReadable() const
+bool QFileInfo::isReadable() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -990,9 +983,7 @@ QFileInfo::isReadable() const
     \sa isReadable(), isExecutable(), permission()
 */
 
-
-bool
-QFileInfo::isWritable() const
+bool QFileInfo::isWritable() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1006,8 +997,7 @@ QFileInfo::isWritable() const
     \sa isReadable(), isWritable(), permission()
 */
 
-bool
-QFileInfo::isExecutable() const
+bool QFileInfo::isExecutable() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1021,8 +1011,7 @@ QFileInfo::isExecutable() const
     \bold{Note:} This function returns true for the special entries
     "." and ".." on Unix, even though QDir::entryList threats them as shown.
 */
-bool
-QFileInfo::isHidden() const
+bool QFileInfo::isHidden() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1038,8 +1027,7 @@ QFileInfo::isHidden() const
     \sa isDir(), isSymLink(), isBundle()
 */
 
-bool
-QFileInfo::isFile() const
+bool QFileInfo::isFile() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1054,8 +1042,7 @@ QFileInfo::isFile() const
     \sa isFile(), isSymLink(), isBundle()
 */
 
-bool
-QFileInfo::isDir() const
+bool QFileInfo::isDir() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1072,8 +1059,7 @@ QFileInfo::isDir() const
     \sa isDir(), isSymLink(), isFile()
 */
 
-bool
-QFileInfo::isBundle() const
+bool QFileInfo::isBundle() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1093,11 +1079,13 @@ QFileInfo::isBundle() const
 
     \snippet doc/src/snippets/code/src_corelib_io_qfileinfo.cpp 9
 
+    \note If the symlink points to a non existing file, exists() returns
+     false.
+
     \sa isFile(), isDir(), symLinkTarget()
 */
 
-bool
-QFileInfo::isSymLink() const
+bool QFileInfo::isSymLink() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1111,8 +1099,7 @@ QFileInfo::isSymLink() const
   returns false.
 */
 
-bool
-QFileInfo::isRoot() const
+bool QFileInfo::isRoot() const
 {
     Q_D(const QFileInfo);
     if (!d->data->fileEngine)
@@ -1140,8 +1127,7 @@ QFileInfo::isRoot() const
 
     Use symLinkTarget() instead.
 */
-QString
-QFileInfo::readLink() const
+QString QFileInfo::readLink() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1160,8 +1146,7 @@ QFileInfo::readLink() const
     \sa ownerId(), group(), groupId()
 */
 
-QString
-QFileInfo::owner() const
+QString QFileInfo::owner() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1178,8 +1163,7 @@ QFileInfo::owner() const
     \sa owner(), group(), groupId()
 */
 
-uint
-QFileInfo::ownerId() const
+uint QFileInfo::ownerId() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1198,8 +1182,7 @@ QFileInfo::ownerId() const
     \sa groupId(), owner(), ownerId()
 */
 
-QString
-QFileInfo::group() const
+QString QFileInfo::group() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1216,8 +1199,7 @@ QFileInfo::group() const
     \sa group(), owner(), ownerId()
 */
 
-uint
-QFileInfo::groupId() const
+uint QFileInfo::groupId() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1239,8 +1221,7 @@ QFileInfo::groupId() const
     \sa isReadable(), isWritable(), isExecutable()
 */
 
-bool
-QFileInfo::permission(QFile::Permissions permissions) const
+bool QFileInfo::permission(QFile::Permissions permissions) const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1253,8 +1234,7 @@ QFileInfo::permission(QFile::Permissions permissions) const
     QFile::Permissions for the file.
 */
 
-QFile::Permissions
-QFileInfo::permissions() const
+QFile::Permissions QFileInfo::permissions() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1270,8 +1250,7 @@ QFileInfo::permissions() const
     \sa exists()
 */
 
-qint64
-QFileInfo::size() const
+qint64 QFileInfo::size() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1297,8 +1276,7 @@ QFileInfo::size() const
     \sa lastModified() lastRead()
 */
 
-QDateTime
-QFileInfo::created() const
+QDateTime QFileInfo::created() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1312,8 +1290,7 @@ QFileInfo::created() const
     \sa created() lastRead()
 */
 
-QDateTime
-QFileInfo::lastModified() const
+QDateTime QFileInfo::lastModified() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1330,8 +1307,7 @@ QFileInfo::lastModified() const
     \sa created() lastModified()
 */
 
-QDateTime
-QFileInfo::lastRead() const
+QDateTime QFileInfo::lastRead() const
 {
     Q_D(const QFileInfo);
     if(!d->data->fileEngine)
@@ -1343,8 +1319,7 @@ QFileInfo::lastRead() const
     Detaches all internal data.
 */
 
-void
-QFileInfo::detach()
+void QFileInfo::detach()
 {
     Q_D(QFileInfo);
     d->detach();
@@ -1375,8 +1350,7 @@ bool QFileInfo::caching() const
     \sa refresh(), caching()
 */
 
-void
-QFileInfo::setCaching(bool enable)
+void QFileInfo::setCaching(bool enable)
 {
     Q_D(QFileInfo);
     detach();

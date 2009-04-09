@@ -26,106 +26,113 @@
 
 #include "EntityReference.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSEntityReference)
+
 /* Hash table */
 
-static const HashEntry JSEntityReferenceTableEntries[] =
+static const HashTableValue JSEntityReferenceTableValues[2] =
 {
-    { "constructor", JSEntityReference::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsEntityReferenceConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityReferenceTable = 
-{
-    2, 1, JSEntityReferenceTableEntries, 1
-};
+static const HashTable JSEntityReferenceTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSEntityReferenceTableValues, 0 };
+#else
+    { 2, 1, JSEntityReferenceTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSEntityReferenceConstructorTableEntries[] =
+static const HashTableValue JSEntityReferenceConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityReferenceConstructorTable = 
-{
-    2, 1, JSEntityReferenceConstructorTableEntries, 1
-};
+static const HashTable JSEntityReferenceConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSEntityReferenceConstructorTableValues, 0 };
+#else
+    { 1, 0, JSEntityReferenceConstructorTableValues, 0 };
+#endif
 
 class JSEntityReferenceConstructor : public DOMObject {
 public:
     JSEntityReferenceConstructor(ExecState* exec)
+        : DOMObject(JSEntityReferenceConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSEntityReferencePrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSEntityReferenceConstructor::info = { "EntityReferenceConstructor", 0, &JSEntityReferenceConstructorTable, 0 };
+const ClassInfo JSEntityReferenceConstructor::s_info = { "EntityReferenceConstructor", 0, &JSEntityReferenceConstructorTable, 0 };
 
 bool JSEntityReferenceConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSEntityReferenceConstructor, DOMObject>(exec, &JSEntityReferenceConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSEntityReferenceConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSEntityReferencePrototypeTableEntries[] =
+static const HashTableValue JSEntityReferencePrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEntityReferencePrototypeTable = 
-{
-    2, 1, JSEntityReferencePrototypeTableEntries, 1
-};
+static const HashTable JSEntityReferencePrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSEntityReferencePrototypeTableValues, 0 };
+#else
+    { 1, 0, JSEntityReferencePrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSEntityReferencePrototype::info = { "EntityReferencePrototype", 0, &JSEntityReferencePrototypeTable, 0 };
+const ClassInfo JSEntityReferencePrototype::s_info = { "EntityReferencePrototype", 0, &JSEntityReferencePrototypeTable, 0 };
 
 JSObject* JSEntityReferencePrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSEntityReferencePrototype>(exec, "[[JSEntityReference.prototype]]");
+    return getDOMPrototype<JSEntityReference>(exec);
 }
 
-const ClassInfo JSEntityReference::info = { "EntityReference", &JSNode::info, &JSEntityReferenceTable, 0 };
+const ClassInfo JSEntityReference::s_info = { "EntityReference", &JSNode::s_info, &JSEntityReferenceTable, 0 };
 
-JSEntityReference::JSEntityReference(ExecState* exec, EntityReference* impl)
-    : JSNode(exec, impl)
+JSEntityReference::JSEntityReference(PassRefPtr<Structure> structure, PassRefPtr<EntityReference> impl)
+    : JSNode(structure, impl)
 {
-    setPrototype(JSEntityReferencePrototype::self(exec));
+}
+
+JSObject* JSEntityReference::createPrototype(ExecState* exec)
+{
+    return new (exec) JSEntityReferencePrototype(JSEntityReferencePrototype::createStructure(JSNodePrototype::self(exec)));
 }
 
 bool JSEntityReference::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSEntityReference, JSNode>(exec, &JSEntityReferenceTable, this, propertyName, slot);
+    return getStaticValueSlot<JSEntityReference, Base>(exec, &JSEntityReferenceTable, this, propertyName, slot);
 }
 
-JSValue* JSEntityReference::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsEntityReferenceConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    return static_cast<JSEntityReference*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSEntityReference::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSEntityReferenceConstructor>(exec);
 }
 
-JSValue* JSEntityReference::getConstructor(ExecState* exec)
-{
-    return KJS::cacheGlobalObject<JSEntityReferenceConstructor>(exec, "[[EntityReference.constructor]]");
-}
 
 }

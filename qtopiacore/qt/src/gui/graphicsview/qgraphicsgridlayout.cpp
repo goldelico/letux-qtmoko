@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,6 +55,15 @@
 
     \snippet doc/src/snippets/code/src_gui_graphicsview_qgraphicsgridlayout.cpp 0
 
+    The layout takes ownership of the items. In some cases when the layout
+    item also inherits from QGraphicsItem (such as QGraphicsWidget) there will be a
+    ambiguity in ownership because the layout item belongs to two ownership hierarchies.
+    See the documentation of QGraphicsLayoutItem::setOwnedByLayout() how to handle
+    this.
+    You can access each item in the layout by calling count() and itemAt(). Calling
+    removeAt() will remove an item from the layout, without
+    destroying it.
+    
     \sa QGraphicsLinearLayout, QGraphicsWidget
 */
 
@@ -83,8 +96,8 @@ QLayoutStyleInfo QGraphicsGridLayoutPrivate::styleInfo() const
     static QWidget *wid = 0;
     if (!wid)
         wid = new QWidget;
-    QGraphicsWidget *w = parentWidget();
-    QStyle *style = w ? w->style() : qApp->style();
+    QGraphicsItem *item = parentItem();
+    QStyle *style = (item && item->isWidget()) ? static_cast<QGraphicsWidget*>(item)->style() : qApp->style();
     return QLayoutStyleInfo(style, wid);
 }
 
@@ -102,6 +115,18 @@ QGraphicsGridLayout::QGraphicsGridLayout(QGraphicsLayoutItem *parent)
 */
 QGraphicsGridLayout::~QGraphicsGridLayout()
 {
+    for (int i = count() - 1; i >= 0; --i) {
+        QGraphicsLayoutItem *item = itemAt(i);
+        // The following lines can be removed, but this removes the item
+        // from the layout more efficiently than the implementation of 
+        // ~QGraphicsLayoutItem.
+        removeAt(i);
+        if (item) {
+            item->setParentLayoutItem(0);
+            if (item->ownedByLayout())
+                delete item;
+        }
+    }
 }
 
 /*!
@@ -127,10 +152,7 @@ void QGraphicsGridLayout::addItem(QGraphicsLayoutItem *item, int row, int column
 	return;
     }
 
-    if (item->isLayout())
-        d->addChildLayout(static_cast<QGraphicsLayout *>(item));
-    else
-        d->addChildWidget(static_cast<QGraphicsWidget *>(item));
+    d->addChildLayoutItem(item);
 
     new QGridLayoutItem(&d->engine, item, row, column, rowSpan, columnSpan, alignment);
     invalidate();
@@ -540,6 +562,8 @@ void QGraphicsGridLayout::removeAt(int index)
         return;
     }
     if (QGridLayoutItem *gridItem = d->engine.itemAt(index)) {
+        if (QGraphicsLayoutItem *layoutItem = gridItem->layoutItem())
+            layoutItem->setParentLayoutItem(0);
         d->engine.removeItem(gridItem);
         delete gridItem;
         invalidate();
@@ -566,7 +590,10 @@ void QGraphicsGridLayout::setGeometry(const QRectF &rect)
     QRectF effectiveRect = geometry();
     qreal left, top, right, bottom;
     getContentsMargins(&left, &top, &right, &bottom);
-
+    Qt::LayoutDirection visualDir = d->visualDirection();
+    d->engine.setVisualDirection(visualDir);
+    if (visualDir == Qt::RightToLeft)
+        qSwap(left, right);
     effectiveRect.adjust(+left, +top, -right, -bottom);
 #ifdef QT_DEBUG
     if (qt_graphicsLayoutDebug()) {

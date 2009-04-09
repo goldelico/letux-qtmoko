@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/effectwidget.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/effectwidget.h"

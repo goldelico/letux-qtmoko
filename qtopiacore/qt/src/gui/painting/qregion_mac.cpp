@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,8 +45,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QRegion::QRegionData QRegion::shared_empty = { Q_BASIC_ATOMIC_INITIALIZER(1), 0, 0 };
+QRegion::QRegionData QRegion::shared_empty = { Q_BASIC_ATOMIC_INITIALIZER(1), 0 };
 
+#if defined(Q_WS_MAC32) && !defined(QT_MAC_USE_COCOA)
 #define RGN_CACHE_SIZE 200
 #ifdef RGN_CACHE_SIZE
 static bool rgncache_init = false;
@@ -113,58 +118,132 @@ static OSStatus qt_mac_get_rgn_rect(UInt16 msg, RgnHandle, const Rect *rect, voi
 
 Q_GUI_EXPORT QRegion qt_mac_convert_mac_region(RgnHandle rgn)
 {
+    return QRegion::fromQDRgn(rgn);
+}
+
+QRegion QRegion::fromQDRgn(RgnHandle rgn)
+{
     QRegion ret;
     ret.detach();
-    RegionToRectsUPP cbk = NewRegionToRectsUPP(qt_mac_get_rgn_rect);
-    OSStatus oss = QDRegionToRects(rgn, kQDParseRegionFromTopLeft, cbk, (void *)&ret);
-    DisposeRegionToRectsUPP(cbk);
+    OSStatus oss = QDRegionToRects(rgn, kQDParseRegionFromTopLeft, qt_mac_get_rgn_rect, (void *)&ret);
     if(oss != noErr)
         return QRegion();
     return ret;
 }
 
-typedef OSStatus (*PtrHIShapeGetAsQDRgn)(HIShapeRef, RgnHandle);
-static PtrHIShapeGetAsQDRgn ptrHIShapeGetAsQDRgn = 0;
-
-QRegion qt_mac_convert_mac_region(HIShapeRef shape)
+/*!
+    \internal
+     Create's a RegionHandle, it's the caller's responsibility to release.
+*/
+RgnHandle QRegion::toQDRgn() const
 {
-    if (ptrHIShapeGetAsQDRgn == 0) {
-        QLibrary library(QLatin1String("/System/Library/Frameworks/Carbon.framework/Carbon"));
-        library.setLoadHints(QLibrary::ExportExternalSymbolsHint);
-		ptrHIShapeGetAsQDRgn = reinterpret_cast<PtrHIShapeGetAsQDRgn>(library.resolve("HIShapeGetAsQDRgn"));
+    RgnHandle rgnHandle = qt_mac_get_rgn();
+    if(d->qt_rgn && d->qt_rgn->numRects) {
+        RgnHandle tmp_rgn = qt_mac_get_rgn();
+        int n = d->qt_rgn->numRects;
+        const QRect *qt_r = (n == 1) ? &d->qt_rgn->extents : d->qt_rgn->rects.constData();
+        while (n--) {
+            SetRectRgn(tmp_rgn,
+                       qMax(SHRT_MIN, qt_r->x()),
+                       qMax(SHRT_MIN, qt_r->y()),
+                       qMin(SHRT_MAX, qt_r->right() + 1),
+                       qMin(SHRT_MAX, qt_r->bottom() + 1));
+            UnionRgn(rgnHandle, tmp_rgn, rgnHandle);
+            ++qt_r;
+        }
+        qt_mac_dispose_rgn(tmp_rgn);
     }
-
-    RgnHandle rgn = qt_mac_get_rgn();
-    ptrHIShapeGetAsQDRgn(shape, rgn);
-    QRegion ret = qt_mac_convert_mac_region(rgn);
-    qt_mac_dispose_rgn(rgn);
-    return ret;
+    return rgnHandle;
 }
+#endif
+
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+OSStatus QRegion::shape2QRegionHelper(int inMessage, HIShapeRef,
+                                      const CGRect *inRect, void *inRefcon)
+{
+    QRegion *region = static_cast<QRegion *>(inRefcon);
+    if (!region)
+        return paramErr;
+
+    switch (inMessage) {
+    case kHIShapeEnumerateRect:
+        *region += QRect(inRect->origin.x, inRect->origin.y,
+                         inRect->size.width, inRect->size.height);
+        break;
+    case kHIShapeEnumerateInit:
+        // Assume the region is already setup correctly
+    case kHIShapeEnumerateTerminate:
+    default:
+        break;
+    }
+    return noErr;
+}
+#endif
 
 /*!
     \internal
+     Create's a mutable shape, it's the caller's responsibility to release.
+     WARNING: this function clamps the coordinates to SHRT_MIN/MAX on 10.4 and below.
 */
-RgnHandle QRegion::handle(bool require_rgn) const
+HIMutableShapeRef QRegion::toHIMutableShape() const
 {
-    if(!d->rgn && (require_rgn || (d->qt_rgn && d->qt_rgn->numRects > 1))) {
-        d->rgn = qt_mac_get_rgn();
-        if(d->qt_rgn && d->qt_rgn->numRects) {
-            RgnHandle tmp_rgn = qt_mac_get_rgn();
+    HIMutableShapeRef shape = HIShapeCreateMutable();
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
+        if (d->qt_rgn && d->qt_rgn->numRects) {
             int n = d->qt_rgn->numRects;
-            const QRect *qt_r = (n == 1 ? &d->qt_rgn->extents : d->qt_rgn->rects.constData());
+            const QRect *qt_r = (n == 1) ? &d->qt_rgn->extents : d->qt_rgn->rects.constData();
             while (n--) {
-                SetRectRgn(tmp_rgn,
-                           qMax(SHRT_MIN, qt_r->x()),
-                           qMax(SHRT_MIN, qt_r->y()),
-                           qMin(SHRT_MAX, qt_r->right() + 1),
-                           qMin(SHRT_MAX, qt_r->bottom() + 1));
-                UnionRgn(d->rgn, tmp_rgn, d->rgn);
+                CGRect cgRect = CGRectMake(qt_r->x(), qt_r->y(), qt_r->width(), qt_r->height());
+                HIShapeUnionWithRect(shape, &cgRect);
                 ++qt_r;
             }
-            qt_mac_dispose_rgn(tmp_rgn);
         }
+    } else
+#endif
+    {
+#ifndef QT_MAC_USE_COCOA
+        QCFType<HIShapeRef> qdShape = HIShapeCreateWithQDRgn(QMacSmartQuickDrawRegion(toQDRgn()));
+        HIShapeUnion(qdShape, shape, shape);
+#endif
     }
-    return d->rgn;
+    return shape;
+}
+
+#if !defined(Q_WS_MAC64) && !defined(QT_MAC_USE_COCOA)
+typedef OSStatus (*PtrHIShapeGetAsQDRgn)(HIShapeRef, RgnHandle);
+static PtrHIShapeGetAsQDRgn ptrHIShapeGetAsQDRgn = 0;
+#endif
+
+
+QRegion QRegion::fromHIShapeRef(HIShapeRef shape)
+{
+    QRegion returnRegion;
+    returnRegion.detach();
+    // Begin gratuitous #if-defery
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
+# ifndef Q_WS_MAC64
+    if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5) {
+# endif
+        HIShapeEnumerate(shape, kHIShapeParseFromTopLeft, shape2QRegionHelper, &returnRegion);
+# ifndef Q_WS_MAC64
+    } else
+# endif
+#endif
+    {
+#if !defined(Q_WS_MAC64) && !defined(QT_MAC_USE_COCOA)
+        if (ptrHIShapeGetAsQDRgn == 0) {
+            QLibrary library(QLatin1String("/System/Library/Frameworks/Carbon.framework/Carbon"));
+            library.setLoadHints(QLibrary::ExportExternalSymbolsHint);
+                    ptrHIShapeGetAsQDRgn = reinterpret_cast<PtrHIShapeGetAsQDRgn>(library.resolve("HIShapeGetAsQDRgn"));
+        }
+        RgnHandle rgn = qt_mac_get_rgn();
+        ptrHIShapeGetAsQDRgn(shape, rgn);
+        returnRegion = QRegion::fromQDRgn(rgn);
+        qt_mac_dispose_rgn(rgn);
+#endif
+    }
+    return returnRegion;
 }
 
 QT_END_NAMESPACE

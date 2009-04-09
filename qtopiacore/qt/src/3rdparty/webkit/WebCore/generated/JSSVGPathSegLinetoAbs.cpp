@@ -23,119 +23,106 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGPathSegLinetoAbs.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGPathSegLineto.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGPathSegLinetoAbs)
+
 /* Hash table */
 
-static const HashEntry JSSVGPathSegLinetoAbsTableEntries[] =
+static const HashTableValue JSSVGPathSegLinetoAbsTableValues[3] =
 {
-    { "y", JSSVGPathSegLinetoAbs::YAttrNum, DontDelete, 0, 0 },
-    { "x", JSSVGPathSegLinetoAbs::XAttrNum, DontDelete, 0, 0 }
+    { "x", DontDelete, (intptr_t)jsSVGPathSegLinetoAbsX, (intptr_t)setJSSVGPathSegLinetoAbsX },
+    { "y", DontDelete, (intptr_t)jsSVGPathSegLinetoAbsY, (intptr_t)setJSSVGPathSegLinetoAbsY },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegLinetoAbsTable = 
-{
-    2, 2, JSSVGPathSegLinetoAbsTableEntries, 2
-};
+static const HashTable JSSVGPathSegLinetoAbsTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGPathSegLinetoAbsTableValues, 0 };
+#else
+    { 4, 3, JSSVGPathSegLinetoAbsTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGPathSegLinetoAbsPrototypeTableEntries[] =
+static const HashTableValue JSSVGPathSegLinetoAbsPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGPathSegLinetoAbsPrototypeTable = 
-{
-    2, 1, JSSVGPathSegLinetoAbsPrototypeTableEntries, 1
-};
+static const HashTable JSSVGPathSegLinetoAbsPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGPathSegLinetoAbsPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGPathSegLinetoAbsPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGPathSegLinetoAbsPrototype::info = { "SVGPathSegLinetoAbsPrototype", 0, &JSSVGPathSegLinetoAbsPrototypeTable, 0 };
+const ClassInfo JSSVGPathSegLinetoAbsPrototype::s_info = { "SVGPathSegLinetoAbsPrototype", 0, &JSSVGPathSegLinetoAbsPrototypeTable, 0 };
 
 JSObject* JSSVGPathSegLinetoAbsPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGPathSegLinetoAbsPrototype>(exec, "[[JSSVGPathSegLinetoAbs.prototype]]");
+    return getDOMPrototype<JSSVGPathSegLinetoAbs>(exec);
 }
 
-const ClassInfo JSSVGPathSegLinetoAbs::info = { "SVGPathSegLinetoAbs", &JSSVGPathSeg::info, &JSSVGPathSegLinetoAbsTable, 0 };
+const ClassInfo JSSVGPathSegLinetoAbs::s_info = { "SVGPathSegLinetoAbs", &JSSVGPathSeg::s_info, &JSSVGPathSegLinetoAbsTable, 0 };
 
-JSSVGPathSegLinetoAbs::JSSVGPathSegLinetoAbs(ExecState* exec, SVGPathSegLinetoAbs* impl)
-    : JSSVGPathSeg(exec, impl)
+JSSVGPathSegLinetoAbs::JSSVGPathSegLinetoAbs(PassRefPtr<Structure> structure, PassRefPtr<SVGPathSegLinetoAbs> impl, SVGElement* context)
+    : JSSVGPathSeg(structure, impl, context)
 {
-    setPrototype(JSSVGPathSegLinetoAbsPrototype::self(exec));
+}
+
+JSObject* JSSVGPathSegLinetoAbs::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGPathSegLinetoAbsPrototype(JSSVGPathSegLinetoAbsPrototype::createStructure(JSSVGPathSegPrototype::self(exec)));
 }
 
 bool JSSVGPathSegLinetoAbs::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGPathSegLinetoAbs, JSSVGPathSeg>(exec, &JSSVGPathSegLinetoAbsTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGPathSegLinetoAbs, Base>(exec, &JSSVGPathSegLinetoAbsTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGPathSegLinetoAbs::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGPathSegLinetoAbsX(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(impl());
-
-        return jsNumber(imp->x());
-    }
-    case YAttrNum: {
-        SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(impl());
-
-        return jsNumber(imp->y());
-    }
-    }
-    return 0;
+    SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(static_cast<JSSVGPathSegLinetoAbs*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->x());
 }
 
-void JSSVGPathSegLinetoAbs::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGPathSegLinetoAbsY(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGPathSegLinetoAbs, JSSVGPathSeg>(exec, propertyName, value, attr, &JSSVGPathSegLinetoAbsTable, this);
+    SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(static_cast<JSSVGPathSegLinetoAbs*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->y());
 }
 
-void JSSVGPathSegLinetoAbs::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGPathSegLinetoAbs::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case XAttrNum: {
-        SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(impl());
+    lookupPut<JSSVGPathSegLinetoAbs, Base>(exec, propertyName, value, &JSSVGPathSegLinetoAbsTable, this, slot);
+}
 
-        imp->setX(value->toFloat(exec));
-        break;
-    }
-    case YAttrNum: {
-        SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(impl());
+void setJSSVGPathSegLinetoAbsX(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->impl());
+    imp->setX(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->context())
+        static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->impl()->associatedAttributeName());
+}
 
-        imp->setY(value->toFloat(exec));
-        break;
-    }
-    }
-    SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGPathSeg>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGPathSeg>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+void setJSSVGPathSegLinetoAbsY(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGPathSegLinetoAbs* imp = static_cast<SVGPathSegLinetoAbs*>(static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->impl());
+    imp->setY(value->toFloat(exec));
+    if (static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->context())
+        static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGPathSegLinetoAbs*>(thisObject)->impl()->associatedAttributeName());
 }
 
 

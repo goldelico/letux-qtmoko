@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/accessible.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/accessible.qdoc -->
 <head>
-  <title>Qt 4.4: Accessibility</title>
+  <title>Qt 4.5: Accessibility</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">Accessibility<br /><span class="subtitle"></span>
 </h1>
@@ -27,11 +27,12 @@
 <li><a href="#implementing-accessible-plugins">Implementing Accessible Plugins</a></li>
 <li><a href="#implementing-interface-factories">Implementing Interface Factories</a></li>
 </ul>
+<li><a href="#further-reading">Further Reading</a></li>
 </ul>
 <a name="introduction"></a>
 <h2>Introduction</h2>
 <p>Accessibility in computer software is making applications usable for people with disabilities. This could be achieved by providing keyboard shortcuts, a high-contrast user interface that uses specially selected colors and fonts, or support for assistive tools such as screen readers and braille displays.</p>
-<p>An application does not usually communicate directly with assistive tools but through an assistive technology, which is a bridge for exchange of information between the applications and the tools. Information about user interface elements, such as buttons and scroll bars, is exposed to the assistive technologies. Qt currently supports three technologies: Microsoft Active Accessibility (MSAA), Mac OS X Accessibility, and Unix/X11 AT-SPI. On Unix/X11, support is preliminary. The individual technologies are abstracted from Qt, and there is only a single interface to consider. We will use MSAA throughout this document when we need to address technology related issues.</p>
+<p>An application does not usually communicate directly with assistive tools but through an assistive technology, which is a bridge for exchange of information between the applications and the tools. Information about user interface elements, such as buttons and scroll bars, is exposed to the assistive technologies. Qt supports Microsoft Active Accessibility (MSAA) on Windows and Mac OS X Accessibility on Mac OS X. On Unix/X11, support is preliminary. The individual technologies are abstracted from Qt, and there is only a single interface to consider. We will use MSAA throughout this document when we need to address technology related issues.</p>
 <p>In this overview document, we will examine the overall Qt accessibility architecture, and how to implement accessibility for custom widgets and elements.</p>
 <a name="architecture"></a>
 <h2>Architecture</h2>
@@ -273,10 +274,13 @@
      QAccessible::installFactory(sliderFactory);
      ...
  }</pre>
+<a name="further-reading"></a>
+<h2>Further Reading</h2>
+<p>The <a href="qt4-accessibility.html">Cross-Platform Accessibility Support in Qt 4</a> document contains a more general overview of Qt's accessibility features and discusses how it is used on each platform. issues</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

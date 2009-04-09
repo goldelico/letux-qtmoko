@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,10 +56,14 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QScript {
+QString numberToString(qsreal value);
+}
+
 using namespace QScript;
 
-PrettyPretty::PrettyPretty(QScriptEngine *e, QTextStream &o):
-    eng(QScriptEnginePrivate::get(e)), out(o), m_indentLevel(0)
+PrettyPretty::PrettyPretty(QTextStream &o):
+    out(o), m_indentLevel(0)
 {
 }
 
@@ -72,6 +80,72 @@ void PrettyPretty::acceptAsBlock(AST::Node *node)
     popIndentLevel();
     newlineAndIndent();
     out << "}";
+}
+
+int PrettyPretty::operatorPrecedenceLevel(int op)
+{
+    switch (op) {
+    case QSOperator::Div:
+    case QSOperator::Mod:
+    case QSOperator::Mul:
+        return 5;
+    case QSOperator::Add:
+    case QSOperator::Sub:
+        return 6;
+    case QSOperator::LShift:
+    case QSOperator::RShift:
+    case QSOperator::URShift:
+        return 7;
+    case QSOperator::Ge:
+    case QSOperator::Gt:
+    case QSOperator::In:
+    case QSOperator::InstanceOf:
+    case QSOperator::Le:
+    case QSOperator::Lt:
+        return 8;
+    case QSOperator::Equal:
+    case QSOperator::NotEqual:
+    case QSOperator::StrictEqual:
+    case QSOperator::StrictNotEqual:
+        return 9;
+    case QSOperator::BitAnd:
+        return 10;
+    case QSOperator::BitXor:
+        return 11;
+    case QSOperator::BitOr:
+        return 12;
+    case QSOperator::And:
+        return 13;
+    case QSOperator::Or:
+        return 14;
+    case QSOperator::InplaceAnd:
+    case QSOperator::InplaceSub:
+    case QSOperator::InplaceDiv:
+    case QSOperator::InplaceAdd:
+    case QSOperator::InplaceLeftShift:
+    case QSOperator::InplaceMod:
+    case QSOperator::InplaceMul:
+    case QSOperator::InplaceOr:
+    case QSOperator::InplaceRightShift:
+    case QSOperator::InplaceURightShift:
+    case QSOperator::InplaceXor:
+    case QSOperator::Assign:
+        return 16;
+    default:
+        Q_ASSERT_X(false, "PrettyPretty::operatorPrecedenceLevel()", "bad operator");
+    }
+    return 0;
+}
+
+int PrettyPretty::compareOperatorPrecedence(int op1, int op2)
+{
+    int prec1 = operatorPrecedenceLevel(op1);
+    int prec2 = operatorPrecedenceLevel(op2);
+    if (prec1 == prec2)
+        return 0;
+    if (prec1 > prec2)
+        return -1;
+    return 1;
 }
 
 QTextStream &PrettyPretty::operator () (AST::Node *node, int level)
@@ -108,7 +182,7 @@ void PrettyPretty::endVisit(AST::ThisExpression *node)
 
 bool PrettyPretty::visit(AST::IdentifierExpression *node)
 {
-    out << eng->toString(node->name);
+    out << QScriptEnginePrivate::toString(node->name);
     return true;
 }
 
@@ -155,7 +229,7 @@ void PrettyPretty::endVisit(AST::FalseLiteral *node)
 
 bool PrettyPretty::visit(AST::StringLiteral *node)
 {
-    QString lit = eng->toString(node->value);
+    QString lit = QScriptEnginePrivate::toString(node->value);
     lit.replace(QLatin1String("\\"), QLatin1String("\\\\"));
     out << "\"" << lit << "\"";
     return false;
@@ -168,7 +242,7 @@ void PrettyPretty::endVisit(AST::StringLiteral *node)
 
 bool PrettyPretty::visit(AST::NumericLiteral *node)
 {
-    out << QString::number(node->value);
+    out << QScript::numberToString(node->value);
     return true;
 }
 
@@ -179,9 +253,9 @@ void PrettyPretty::endVisit(AST::NumericLiteral *node)
 
 bool PrettyPretty::visit(AST::RegExpLiteral *node)
 {
-    out << "/" << eng->toString(node->pattern) << "/";
+    out << "/" << QScriptEnginePrivate::toString(node->pattern) << "/";
     if (node->flags)
-        out << eng->toString(node->flags);
+        out << QScript::Ecma::RegExp::flagsToString(node->flags);
 
     return true;
 }
@@ -274,7 +348,7 @@ void PrettyPretty::endVisit(AST::PropertyNameAndValueList *node)
 
 bool PrettyPretty::visit(AST::IdentifierPropertyName *node)
 {
-    out << eng->toString(node->id);
+    out << QScriptEnginePrivate::toString(node->id);
     return false;
 }
 
@@ -285,7 +359,7 @@ void PrettyPretty::endVisit(AST::IdentifierPropertyName *node)
 
 bool PrettyPretty::visit(AST::StringLiteralPropertyName *node)
 {
-    QString lit = eng->toString(node->id);
+    QString lit = QScriptEnginePrivate::toString(node->id);
     lit.replace(QLatin1String("\\"), QLatin1String("\\\\"));
     out << lit;
     return false;
@@ -324,7 +398,7 @@ void PrettyPretty::endVisit(AST::ArrayMemberExpression *node)
 bool PrettyPretty::visit(AST::FieldMemberExpression *node)
 {
     accept(node->base);
-    out << "." << eng->toString(node->name);
+    out << "." << QScriptEnginePrivate::toString(node->name);
     return false;
 }
 
@@ -475,9 +549,14 @@ void PrettyPretty::endVisit(AST::PreDecrementExpression *node)
 
 bool PrettyPretty::visit(AST::UnaryPlusExpression *node)
 {
-    Q_UNUSED(node);
     out << "+";
-    return true;
+    bool needParens = (node->expression->binaryExpressionCast() != 0);
+    if (needParens)
+        out << "(";
+    accept(node->expression);
+    if (needParens)
+        out << ")";
+    return false;
 }
 
 void PrettyPretty::endVisit(AST::UnaryPlusExpression *node)
@@ -487,9 +566,14 @@ void PrettyPretty::endVisit(AST::UnaryPlusExpression *node)
 
 bool PrettyPretty::visit(AST::UnaryMinusExpression *node)
 {
-    Q_UNUSED(node);
     out << "-";
-    return true;
+    bool needParens = (node->expression->binaryExpressionCast() != 0);
+    if (needParens)
+        out << "(";
+    accept(node->expression);
+    if (needParens)
+        out << ")";
+    return false;
 }
 
 void PrettyPretty::endVisit(AST::UnaryMinusExpression *node)
@@ -499,9 +583,14 @@ void PrettyPretty::endVisit(AST::UnaryMinusExpression *node)
 
 bool PrettyPretty::visit(AST::TildeExpression *node)
 {
-    Q_UNUSED(node);
     out << "~";
-    return true;
+    bool needParens = (node->expression->binaryExpressionCast() != 0);
+    if (needParens)
+        out << "(";
+    accept(node->expression);
+    if (needParens)
+        out << ")";
+    return false;
 }
 
 void PrettyPretty::endVisit(AST::TildeExpression *node)
@@ -511,9 +600,14 @@ void PrettyPretty::endVisit(AST::TildeExpression *node)
 
 bool PrettyPretty::visit(AST::NotExpression *node)
 {
-    Q_UNUSED(node);
     out << "!";
-    return true;
+    bool needParens = (node->expression->binaryExpressionCast() != 0);
+    if (needParens)
+        out << "(";
+    accept(node->expression);
+    if (needParens)
+        out << ")";
+    return false;
 }
 
 void PrettyPretty::endVisit(AST::NotExpression *node)
@@ -523,7 +617,13 @@ void PrettyPretty::endVisit(AST::NotExpression *node)
 
 bool PrettyPretty::visit(AST::BinaryExpression *node)
 {
+    bool needParens = node->left->binaryExpressionCast()
+                      && (compareOperatorPrecedence(node->left->binaryExpressionCast()->op, node->op) < 0);
+    if (needParens)
+        out << "(";
     accept(node->left);
+    if (needParens)
+        out << ")";
     QString s;
     switch (node->op) {
         case QSOperator::Add:
@@ -600,7 +700,13 @@ bool PrettyPretty::visit(AST::BinaryExpression *node)
             Q_ASSERT (0);
     }
     out << " " << s << " ";
+    needParens = node->right->binaryExpressionCast()
+                 && (compareOperatorPrecedence(node->right->binaryExpressionCast()->op, node->op) <= 0);
+    if (needParens)
+        out << "(";
     accept(node->right);
+    if (needParens)
+        out << ")";
     return false;
 }
 
@@ -697,7 +803,7 @@ void PrettyPretty::endVisit(AST::VariableStatement *node)
 
 bool PrettyPretty::visit(AST::VariableDeclaration *node)
 {
-    out << eng->toString(node->name);
+    out << QScriptEnginePrivate::toString(node->name);
     if (node->expression) {
         out << " = ";
         accept(node->expression);
@@ -853,7 +959,7 @@ bool PrettyPretty::visit(AST::ContinueStatement *node)
 {
     out << "continue";
     if (node->label) {
-        out << " " << eng->toString(node->label);
+        out << " " << QScriptEnginePrivate::toString(node->label);
     }
     out << ";";
     return false;
@@ -868,7 +974,7 @@ bool PrettyPretty::visit(AST::BreakStatement *node)
 {
     out << "break";
     if (node->label) {
-        out << " " << eng->toString(node->label);
+        out << " " << QScriptEnginePrivate::toString(node->label);
     }
     out << ";";
     return false;
@@ -989,7 +1095,7 @@ void PrettyPretty::endVisit(AST::DefaultClause *node)
 
 bool PrettyPretty::visit(AST::LabelledStatement *node)
 {
-    out << eng->toString(node->label) << ": ";
+    out << QScriptEnginePrivate::toString(node->label) << ": ";
     return true;
 }
 
@@ -1017,7 +1123,7 @@ bool PrettyPretty::visit(AST::TryStatement *node)
     out << "try ";
     acceptAsBlock(node->statement);
     if (node->catchExpression) {
-        out << " catch (" << eng->toString(node->catchExpression->name) << ") ";
+        out << " catch (" << QScriptEnginePrivate::toString(node->catchExpression->name) << ") ";
         acceptAsBlock(node->catchExpression->statement);
     }
     if (node->finallyExpression) {
@@ -1060,13 +1166,13 @@ bool PrettyPretty::visit(AST::FunctionDeclaration *node)
     out << "function";
 
     if (node->name)
-        out << " " << eng->toString(node->name);
+        out << " " << QScriptEnginePrivate::toString(node->name);
 
     // the arguments
     out << "(";
     for (AST::FormalParameterList *it = node->formals; it; it = it->next) {
         if (it->name)
-            out << eng->toString(it->name);
+            out << QScriptEnginePrivate::toString(it->name);
 
         if (it->next)
             out << ", ";
@@ -1099,13 +1205,13 @@ bool PrettyPretty::visit(AST::FunctionExpression *node)
     out << "function";
 
     if (node->name)
-        out << " " << eng->toString(node->name);
+        out << " " << QScriptEnginePrivate::toString(node->name);
 
     // the arguments
     out << "(";
     for (AST::FormalParameterList *it = node->formals; it; it = it->next) {
         if (it->name)
-            out << eng->toString(it->name);
+            out << QScriptEnginePrivate::toString(it->name);
 
         if (it->next)
             out << ", ";
@@ -1202,6 +1308,19 @@ bool PrettyPretty::visit(AST::StatementSourceElement *node)
 void PrettyPretty::endVisit(AST::StatementSourceElement *node)
 {
     Q_UNUSED(node);
+}
+
+bool PrettyPretty::visit(AST::DebuggerStatement *node)
+{
+    Q_UNUSED(node);
+    out << "debugger";
+    return true;
+}
+
+void PrettyPretty::endVisit(AST::DebuggerStatement *node)
+{
+    Q_UNUSED(node);
+    out << ";";
 }
 
 bool PrettyPretty::preVisit(AST::Node *node)

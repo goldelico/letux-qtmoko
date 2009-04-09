@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,6 +68,9 @@ class Q_GUI_EXPORT QTabWidget : public QWidget
     Q_PROPERTY(QSize iconSize READ iconSize WRITE setIconSize)
     Q_PROPERTY(Qt::TextElideMode elideMode READ elideMode WRITE setElideMode)
     Q_PROPERTY(bool usesScrollButtons READ usesScrollButtons WRITE setUsesScrollButtons)
+    Q_PROPERTY(bool documentMode READ documentMode WRITE setDocumentMode)
+    Q_PROPERTY(bool tabsClosable READ tabsClosable WRITE setTabsClosable)
+    Q_PROPERTY(bool movable READ isMovable WRITE setMovable)
 
 public:
     explicit QTabWidget(QWidget *parent = 0);
@@ -110,6 +117,12 @@ public:
     TabPosition tabPosition() const;
     void setTabPosition(TabPosition);
 
+    bool tabsClosable() const;
+    void setTabsClosable(bool closeable);
+
+    bool isMovable() const;
+    void setMovable(bool movable);
+
     enum TabShape { Rounded, Triangular };
     TabShape tabShape() const;
     void setTabShape(TabShape s);
@@ -129,6 +142,9 @@ public:
     bool usesScrollButtons() const;
     void setUsesScrollButtons(bool useButtons);
 
+    bool documentMode() const;
+    void setDocumentMode(bool set);
+
     void clear();
 
 public Q_SLOTS:
@@ -137,6 +153,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void currentChanged(int index);
+    void tabCloseRequested(int index);
 
 protected:
     virtual void tabInserted(int index);
@@ -221,6 +238,7 @@ private:
     Q_DISABLE_COPY(QTabWidget)
     Q_PRIVATE_SLOT(d_func(), void _q_showTab(int))
     Q_PRIVATE_SLOT(d_func(), void _q_removeTab(int))
+    Q_PRIVATE_SLOT(d_func(), void _q_tabMoved(int, int))
     void setUpLayout(bool = false);
     friend class Q3TabDialog;
 };

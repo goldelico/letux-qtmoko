@@ -1,43 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qdesigner_integration_p.h"
 #include "qdesigner_propertycommand_p.h"
-#include "qdesigner_propertycommentcommand_p.h"
 #include "qdesigner_propertyeditor_p.h"
 #include "qdesigner_objectinspector_p.h"
 #include "widgetdatabase_p.h"
@@ -46,6 +49,7 @@
 #include "qdesigner_widgetbox_p.h"
 #include "qtgradientmanager.h"
 #include "qtgradientutils.h"
+#include "qtresourcemodel_p.h"
 
 // sdk
 #include <QtDesigner/QDesignerFormEditorInterface>
@@ -70,10 +74,18 @@ namespace qdesigner_internal {
 // ---------------- DesignerIntegrationPrivate
 class QDesignerIntegrationPrivate {
 public:
-    QDesignerIntegrationPrivate() : m_gradientManager(0) {}
+    QDesignerIntegrationPrivate()
+        : m_gradientManager(0),
+          m_fileWatcherBehaviour(QDesignerIntegration::PromptAndReload),
+          m_resourceEditingEnabled(true),
+          m_slotNavigationEnabled(false)
+    {}
 
     QString m_gradientsPath;
     QtGradientManager *m_gradientManager;
+    QDesignerIntegration::ResourceFileWatcherBehaviour m_fileWatcherBehaviour;
+    bool m_resourceEditingEnabled;
+    bool m_slotNavigationEnabled;
 };
 
 // -------------- QDesignerIntegration
@@ -105,7 +117,6 @@ void QDesignerIntegration::initialize()
     // Extensions
     if (QDesignerPropertyEditor *designerPropertyEditor= qobject_cast<QDesignerPropertyEditor *>(core()->propertyEditor())) {
         connect(designerPropertyEditor, SIGNAL(propertyValueChanged(QString, QVariant, bool)), this, SLOT(updateProperty(QString, QVariant, bool)));
-        connect(designerPropertyEditor, SIGNAL(propertyCommentChanged(QString, QString)), this, SLOT(updatePropertyComment(QString, QString)));
         connect(designerPropertyEditor, SIGNAL(resetProperty(QString)), this, SLOT(resetProperty(QString)));
         connect(designerPropertyEditor, SIGNAL(addDynamicProperty(QString,QVariant)),
                 this, SLOT(addDynamicProperty(QString,QVariant)));
@@ -134,16 +145,18 @@ void QDesignerIntegration::initialize()
 
     QFile f(m_d->m_gradientsPath);
     if (f.open(QIODevice::ReadOnly)) {
-        QtGradientUtils::restoreState(m_d->m_gradientManager, f.readAll());
+        QtGradientUtils::restoreState(m_d->m_gradientManager, QString::fromAscii(f.readAll()));
         f.close();
     } else {
-        QFile defaultGradients(":/trolltech/designer/defaultgradients.xml");
+        QFile defaultGradients(QLatin1String(":/trolltech/designer/defaultgradients.xml"));
         if (defaultGradients.open(QIODevice::ReadOnly)) {
-            QtGradientUtils::restoreState(m_d->m_gradientManager, defaultGradients.readAll());
+            QtGradientUtils::restoreState(m_d->m_gradientManager, QString::fromAscii(defaultGradients.readAll()));
             defaultGradients.close();
         }
     }
 
+    if (WidgetDataBase *widgetDataBase = qobject_cast<WidgetDataBase*>(core()->widgetDataBase()))
+        widgetDataBase->grabStandardWidgetBoxIcons();
 }
 
 void QDesignerIntegration::updateProperty(const QString &name, const QVariant &value, bool enableSubPropertyHandling)
@@ -172,27 +185,6 @@ void QDesignerIntegration::updateProperty(const QString &name, const QVariant &v
 void QDesignerIntegration::updatePropertyPrivate(const QString &name, const QVariant &value)
 {
     updateProperty(name, value, true);
-}
-
-void QDesignerIntegration::updatePropertyComment(const QString &name, const QString &value)
-{
-    QDesignerFormWindowInterface *formWindow = core()->formWindowManager()->activeFormWindow();
-    if (!formWindow)
-        return;
-
-    Selection selection;
-    getSelection(selection);
-    if (selection.empty())
-        return;
-
-    SetPropertyCommentCommand *cmd = new SetPropertyCommentCommand(formWindow);
-    if (cmd->init(selection.selection(), name, value)) {
-        formWindow->commandHistory()->push(cmd);
-    } else {
-        delete cmd;
-        qDebug() << "** WARNING Unable to update property comment of " << name << '.';
-    }
-
 }
 
 void QDesignerIntegration::resetProperty(const QString &name)
@@ -324,24 +316,26 @@ void QDesignerIntegration::getSelection(Selection &s)
         // into the property editor only.
         if (s.empty())
             if (QObject *object = core()->propertyEditor()->object())
-                s.m_selectedObjects.push_back(object);
+                s.objects.push_back(object);
 
     } else {
+        // Just in case someone plugs in an old-style object inspector: Emulate selection
         s.clear();
-        // get single selection
-
-        QObject *object = core()->propertyEditor()->object();
-        QWidget *widget = qobject_cast<QWidget*>(object);
-
         QDesignerFormWindowInterface *formWindow = core()->formWindowManager()->activeFormWindow();
         if (!formWindow)
             return;
-        QDesignerFormWindowCursorInterface *cursor = formWindow->cursor();
 
-        if (widget && cursor->isWidgetSelected(widget)) {
-            s.m_cursorSelection.push_back(widget);
+        QObject *object = core()->propertyEditor()->object();
+        if (object->isWidgetType()) {
+            QWidget *widget = static_cast<QWidget*>(object);
+            QDesignerFormWindowCursorInterface *cursor = formWindow->cursor();
+            if (cursor->isWidgetSelected(widget)) {
+                s.managed.push_back(widget);
+            } else {
+                s.unmanaged.push_back(widget);
+            }
         } else {
-            s.m_selectedObjects.push_back(object);
+            s.objects.push_back(object);
         }
     }
 }
@@ -395,6 +389,18 @@ void QDesignerIntegration::emitObjectNameChanged(QDesignerFormWindowInterface *f
     emit objectNameChanged(formWindow, object, newName, oldName);
 }
 
+void QDesignerIntegration::emitNavigateToSlot(const QString &objectName,
+                                              const QString &signalSignature,
+                                              const QStringList &parameterNames)
+{
+     emit navigateToSlot(objectName, signalSignature, parameterNames);
+}
+
+void QDesignerIntegration::emitNavigateToSlot(const QString &slotSignature)
+{
+    emit navigateToSlot(slotSignature);
+}
+
 void QDesignerIntegration::requestHelp(const QDesignerFormEditorInterface *core, const QString &manual, const QString &document)
 {
     if (QDesignerIntegration *di = qobject_cast<QDesignerIntegration *>(core->integration()))
@@ -405,6 +411,38 @@ QDesignerResourceBrowserInterface *QDesignerIntegration::createResourceBrowser(Q
 {
     return 0;
 }
+
+void QDesignerIntegration::setResourceFileWatcherBehaviour(ResourceFileWatcherBehaviour behaviour)
+{
+    m_d->m_fileWatcherBehaviour = behaviour;
+    core()->resourceModel()->setWatcherEnabled(behaviour != QDesignerIntegration::NoWatcher);
+}
+
+QDesignerIntegration::ResourceFileWatcherBehaviour QDesignerIntegration::resourceFileWatcherBehaviour() const
+{
+    return m_d->m_fileWatcherBehaviour;
+}
+
+void QDesignerIntegration::setResourceEditingEnabled(bool enable)
+{
+    m_d->m_resourceEditingEnabled = enable;
+}
+
+bool QDesignerIntegration::isResourceEditingEnabled() const
+{
+    return m_d->m_resourceEditingEnabled;
+}
+
+void QDesignerIntegration::setSlotNavigationEnabled(bool enable)
+{
+    m_d->m_slotNavigationEnabled = enable;
+}
+
+bool QDesignerIntegration::isSlotNavigationEnabled() const
+{
+    return m_d->m_slotNavigationEnabled;
+}
+
 
 } // namespace qdesigner_internal
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -54,6 +58,7 @@
 #include "qscriptfunction_p.h"
 
 Q_DECLARE_METATYPE(QScriptContext*)
+Q_DECLARE_METATYPE(QScriptValueList)
 
 QT_BEGIN_NAMESPACE
 
@@ -127,6 +132,8 @@ QT_BEGIN_NAMESPACE
 
     \value Callable Instances of this class can be called as functions.
 
+    \value HasInstance Instances of this class implement [[HasInstance]].
+
     \sa extension()
 */
 
@@ -150,13 +157,17 @@ public:
 
     virtual void mark(const QScriptValueImpl &object, int generation);
     virtual bool resolve(const QScriptValueImpl &object, QScriptNameIdImpl *nameId,
-                         QScript::Member *member, QScriptValueImpl *base);
+                         QScript::Member *member, QScriptValueImpl *base,
+                         QScript::AccessMode access);
     virtual bool get(const QScriptValueImpl &obj, const QScript::Member &m,
                      QScriptValueImpl *result);
     virtual bool put(QScriptValueImpl *object, const QScript::Member &member,
                      const QScriptValueImpl &value);
     virtual bool removeMember(const QScriptValueImpl &object,
                               const QScript::Member &member);
+    virtual bool implementsHasInstance(const QScriptValueImpl &object);
+    virtual bool hasInstance(const QScriptValueImpl &object,
+                             const QScriptValueImpl &value);
     virtual QScriptClassDataIterator *newIterator(const QScriptValueImpl &object);
 
     QScriptClass *scriptClass() const;
@@ -201,19 +212,23 @@ void QScriptCustomClassData::mark(const QScriptValueImpl &, int)
 }
 
 bool QScriptCustomClassData::resolve(const QScriptValueImpl &object, QScriptNameIdImpl *nameId,
-                                     QScript::Member *member, QScriptValueImpl *base)
+                                     QScript::Member *member, QScriptValueImpl *base,
+                                     QScript::AccessMode access)
 {
     uint id = 0;
-    const QScriptClass::QueryFlags queryIn = QScriptClass::HandlesReadAccess
-                                             | QScriptClass::HandlesWriteAccess;
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object.engine());
+    QScriptClass::QueryFlags queryIn = 0;
+    if (access & QScript::Read)
+        queryIn |= QScriptClass::HandlesReadAccess;
+    if (access & QScript::Write)
+        queryIn |= QScriptClass::HandlesWriteAccess;
+    QScriptEnginePrivate *eng = object.engine();
     QScriptString str = eng->internedString(nameId);
     QScriptClass::QueryFlags queryOut;
-    queryOut = m_class->queryProperty(object, str, queryIn, &id);
+    queryOut = m_class->queryProperty(eng->toPublic(object), str, queryIn, &id);
     if (queryOut & queryIn) {
         if (base)
             *base = object;
-        QScriptValue::PropertyFlags flags = m_class->propertyFlags(object, str, id);
+        QScriptValue::PropertyFlags flags = m_class->propertyFlags(eng->toPublic(object), str, id);
         member->native(nameId, id, flags);
         return true;
     }
@@ -223,32 +238,49 @@ bool QScriptCustomClassData::resolve(const QScriptValueImpl &object, QScriptName
 bool QScriptCustomClassData::get(const QScriptValueImpl &object, const QScript::Member &member,
                                  QScriptValueImpl *result)
 {
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object.engine());
+    QScriptEnginePrivate *eng = object.engine();
     QScriptString str = eng->internedString(member.nameId());
-    *result = QScriptValuePrivate::valueOf(m_class->property(object, str, member.id()));
+    *result = eng->toImpl(m_class->property(eng->toPublic(object), str, member.id()));
     if (!result->isValid())
-        eng->newUndefined(result);
+        *result = eng->undefinedValue();
     return true;
 }
 
 bool QScriptCustomClassData::put(QScriptValueImpl *object, const QScript::Member &member,
                                  const QScriptValueImpl &value)
 {
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object->engine());
+    QScriptEnginePrivate *eng = object->engine();
     QScriptString str = eng->internedString(member.nameId());
-    QScriptValue publicObject = *object;
-    m_class->setProperty(publicObject, str, member.id(), value);
+    QScriptValue publicObject = eng->toPublic(*object);
+    m_class->setProperty(publicObject, str, member.id(), eng->toPublic(value));
     return true;
 }
 
 bool QScriptCustomClassData::removeMember(const QScriptValueImpl &object,
                                           const QScript::Member &member)
 {
-    QScriptEnginePrivate *eng = QScriptEnginePrivate::get(object.engine());
+    QScriptEnginePrivate *eng = object.engine();
     QScriptString str = eng->internedString(member.nameId());
-    QScriptValue publicObject = object;
+    QScriptValue publicObject = eng->toPublic(object);
     m_class->setProperty(publicObject, str, member.id(), QScriptValue());
     return true;
+}
+
+bool QScriptCustomClassData::implementsHasInstance(const QScriptValueImpl &object)
+{
+    if (object.classInfo() != QScriptClassPrivate::get(m_class)->classInfo())
+        return false;
+    return m_class->supportsExtension(QScriptClass::HasInstance);
+}
+
+bool QScriptCustomClassData::hasInstance(const QScriptValueImpl &object,
+                                         const QScriptValueImpl &value)
+{
+    QScriptEnginePrivate *eng = object.engine();
+    QScriptValueList arguments;
+    arguments << eng->toPublic(object) << eng->toPublic(value);
+    QVariant ret = m_class->extension(QScriptClass::HasInstance, qVariantFromValue(arguments));
+    return ret.toBool();
 }
 
 QScriptClassDataIterator *QScriptCustomClassData::newIterator(const QScriptValueImpl &object)
@@ -266,7 +298,8 @@ QScriptClass *QScriptCustomClassData::scriptClass() const
 QScriptCustomClassDataIterator::QScriptCustomClassDataIterator(const QScriptValueImpl &object,
                                                                QScriptClass *klass)
 {
-    m_it = klass->newIterator(object);
+    QScriptEnginePrivate *eng = object.engine();
+    m_it = klass->newIterator(eng->toPublic(object));
 }
 
 QScriptCustomClassDataIterator::~QScriptCustomClassDataIterator()
@@ -336,6 +369,7 @@ QScriptClassPrivate::~QScriptClassPrivate()
     if (m_classInfo) {
         // classInfo is owned by engine
         // set the data to the normal Object class data
+        delete m_classInfo->data();
         QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(engine);
         m_classInfo->setData(eng_p->m_class_object->data());
     }
@@ -359,15 +393,13 @@ QScriptClassInfo *QScriptClassPrivate::classInfo()
     if (name.isEmpty())
         name = QLatin1String("Object");
     m_classInfo = eng_p->registerClass(name, classType);
-    QScriptCustomClassData *data = new QScriptCustomClassData(q_func());
-    QExplicitlySharedDataPointer<QScriptClassData> ptr(data);
-    m_classInfo->setData(ptr);
+    m_classInfo->setData(new QScriptCustomClassData(q_func()));
     return m_classInfo;
 }
 
 QScriptClass *QScriptClassPrivate::classFromInfo(QScriptClassInfo *info)
 {
-    QScriptCustomClassData *data = static_cast<QScriptCustomClassData*>(info->data().data());
+    QScriptCustomClassData *data = static_cast<QScriptCustomClassData*>(info->data());
     Q_ASSERT(data != 0);
     return data->scriptClass();
 }
@@ -377,7 +409,7 @@ static QScriptValueImpl callScriptClassFunction(QScriptContextPrivate *ctx,
                                                 QScriptClassInfo *classInfo)
 {
     qMetaTypeId<QScriptContext*>();
-    if (QScriptClassData *data = classInfo->data().data()) {
+    if (QScriptClassData *data = classInfo->data()) {
         QScriptCustomClassData *customData = static_cast<QScriptCustomClassData*>(data);
         QScriptClass *klass = customData->scriptClass();
         QVariant arg = qVariantFromValue(QScriptContextPrivate::get(ctx));
@@ -630,6 +662,14 @@ bool QScriptClass::supportsExtension(Extension extension) const
   arguments to the script function are added up and returned:
 
   \snippet doc/src/snippets/code/src_script_qscriptclass.cpp 0
+
+  If you implement the HasInstance extension, Qt Script will call this
+  function as part of evaluating the \c{instanceof} operator, as
+  described in ECMA-262 Section 11.8.6. The \a argument is a
+  QScriptValueList containing two items: The first item is the object
+  that HasInstance is being applied to (an instance of your class),
+  and the second item can be any value. extension() should return true
+  if the value delegates behavior to the object, false otherwise.
 
   \sa supportsExtension()
 */

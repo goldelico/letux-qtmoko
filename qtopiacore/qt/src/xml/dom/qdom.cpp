@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXML module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -110,12 +114,6 @@ static void qt_split_namespace(QString& prefix, QString& name, const QString& qN
         name = qName.mid(i + 1);
     }
 }
-
-// ##### shouldn't this be a member of QDomDocumentPrivate?
-/*
-  Counter for the QDomNodeListPrivate timestamps.
-*/
-static volatile long qt_nodeListTime = 0;
 
 /**************************************************************
  *
@@ -222,6 +220,9 @@ public:
     uint length() const;
 
     QAtomicInt ref;
+    /*
+      This list contains the children of this node.
+     */
     QDomNodePrivate* node_impl;
     QString tagname;
     QString nsURI;
@@ -540,6 +541,35 @@ public:
     QDomDocumentTypePrivate* type;
 
     void saveDocument(QTextStream& stream, const int indent, QDomNode::EncodingPolicy encUsed) const;
+
+    /* \internal
+       Counter for the QDomNodeListPrivate timestamps.
+
+       This is a cache optimization, that might in some cases be effective. The
+       dilemma is that QDomNode::childNodes() returns a list, but the
+       implementation stores the children in a linked list. Hence, in order to
+       get the children out through childNodes(), a list must be populated each
+       time, which is O(N).
+
+       DOM has the requirement of node references being live, see DOM Core
+       Level 3, 1.1.1 The DOM Structure Model, which means that changes to the
+       underlying documents must be reflected in node lists.
+
+       This mechanism, nodeListTime, is a caching optimization that reduces the
+       amount of times the node list is rebuilt, by only doing so when the
+       document actually changes. However, a change to anywhere in any document
+       invalidate all lists, since no dependency tracking is done.
+
+       It functions by that all modifying functions(insertBefore() and so on)
+       increment the count; each QDomNodeListPrivate copies nodeListTime on
+       construction, and compares its own value to nodeListTime in order to
+       determine whether it needs to rebuild.
+
+       This is reentrant. The nodeListTime may overflow, but that's ok since we
+       check for equalness, not whether nodeListTime is smaller than the list's
+       stored timestamp.
+    */
+    long nodeListTime;
 };
 
 /**************************************************************
@@ -852,7 +882,7 @@ QDomImplementationPrivate* QDomImplementationPrivate::clone()
     \brief The QDomImplementation class provides information about the
     features of the DOM implementation.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     This class describes the features that are supported by the DOM
@@ -872,8 +902,8 @@ QDomImplementationPrivate* QDomImplementationPrivate::clone()
     documentation.
 
     The QDom classes have a few issues of nonconformance with the XML
-    specifications that cannot be fixed in Qt 4 without breaking backward  
-    compatibility. The QtXmlPatterns module and the QXmlStreamReader and  
+    specifications that cannot be fixed in Qt 4 without breaking backward
+    compatibility. The QtXmlPatterns module and the QXmlStreamReader and
     QXmlStreamWriter classes have a higher degree of a conformance.
 
     \sa hasFeature()
@@ -1080,6 +1110,7 @@ bool QDomImplementation::isNull()
 
 /*!
     \since 4.1
+    \nonreentrant
 
     Returns the invalid data policy, which specifies what should be done when
     a factory function in QDomDocument is passed invalid data.
@@ -1094,6 +1125,7 @@ QDomImplementation::InvalidDataPolicy QDomImplementation::invalidDataPolicy()
 
 /*!
     \since 4.1
+    \nonreentrant
 
     Sets the invalid data policy, which specifies what should be done when
     a factory function in QDomDocument is passed invalid data.
@@ -1123,7 +1155,7 @@ QDomNodeListPrivate::QDomNodeListPrivate(QDomNodePrivate *n_impl)
     node_impl = n_impl;
     if (node_impl)
         node_impl->ref.ref();
-    timestamp = -1;
+    timestamp = 0;
 }
 
 QDomNodeListPrivate::QDomNodeListPrivate(QDomNodePrivate *n_impl, const QString &name)
@@ -1133,7 +1165,7 @@ QDomNodeListPrivate::QDomNodeListPrivate(QDomNodePrivate *n_impl, const QString 
     if (node_impl)
         node_impl->ref.ref();
     tagname = name;
-    timestamp = -1;
+    timestamp = 0;
 }
 
 QDomNodeListPrivate::QDomNodeListPrivate(QDomNodePrivate *n_impl, const QString &_nsURI, const QString &localName)
@@ -1144,7 +1176,7 @@ QDomNodeListPrivate::QDomNodeListPrivate(QDomNodePrivate *n_impl, const QString 
         node_impl->ref.ref();
     tagname = localName;
     nsURI = _nsURI;
-    timestamp = -1;
+    timestamp = 0;
 }
 
 QDomNodeListPrivate::~QDomNodeListPrivate()
@@ -1167,7 +1199,11 @@ void QDomNodeListPrivate::createList()
 {
     if (!node_impl)
         return;
-    timestamp = qt_nodeListTime;
+
+    const QDomDocumentPrivate *const doc = node_impl->ownerDocument();
+    if (doc && timestamp != doc->nodeListTime)
+        timestamp = doc->nodeListTime;
+
     QDomNodePrivate* p = node_impl->first;
 
     list.clear();
@@ -1217,7 +1253,9 @@ QDomNodePrivate* QDomNodeListPrivate::item(int index)
 {
     if (!node_impl)
         return 0;
-    if (timestamp < qt_nodeListTime)
+
+    const QDomDocumentPrivate *const doc = node_impl->ownerDocument();
+    if (!doc || timestamp != doc->nodeListTime)
         createList();
 
     if (index >= list.size())
@@ -1230,10 +1268,13 @@ uint QDomNodeListPrivate::length() const
 {
     if (!node_impl)
         return 0;
-    if (timestamp < qt_nodeListTime) {
-        QDomNodeListPrivate *that = (QDomNodeListPrivate*)this;
+
+    const QDomDocumentPrivate *const doc = node_impl->ownerDocument();
+    if (!doc || timestamp != doc->nodeListTime) {
+        QDomNodeListPrivate *that = const_cast<QDomNodeListPrivate *>(this);
         that->createList();
     }
+
     return list.count();
 }
 
@@ -1248,7 +1289,7 @@ uint QDomNodeListPrivate::length() const
     \reentrant
     \brief The QDomNodeList class is a list of QDomNode objects.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     Lists can be obtained by QDomDocument::elementsByTagName() and
@@ -1503,7 +1544,9 @@ QDomNodePrivate* QDomNodePrivate::insertBefore(QDomNodePrivate* newChild, QDomNo
         return 0;
 
     // "mark lists as dirty"
-    qt_nodeListTime++;
+    QDomDocumentPrivate *const doc = ownerDocument();
+    if(doc)
+        doc->nodeListTime++;
 
     // Special handling for inserting a fragment. We just insert
     // all elements of the fragment instead of the fragment itself.
@@ -1596,7 +1639,9 @@ QDomNodePrivate* QDomNodePrivate::insertAfter(QDomNodePrivate* newChild, QDomNod
         return 0;
 
     // "mark lists as dirty"
-    qt_nodeListTime++;
+    QDomDocumentPrivate *const doc = ownerDocument();
+    if(doc)
+        doc->nodeListTime++;
 
     // Special handling for inserting a fragment. We just insert
     // all elements of the fragment instead of the fragment itself.
@@ -1685,7 +1730,9 @@ QDomNodePrivate* QDomNodePrivate::replaceChild(QDomNodePrivate* newChild, QDomNo
         return 0;
 
     // mark lists as dirty
-    qt_nodeListTime++;
+    QDomDocumentPrivate *const doc = ownerDocument();
+    if(doc)
+        doc->nodeListTime++;
 
     // Special handling for inserting a fragment. We just insert
     // all elements of the fragment instead of the fragment itself.
@@ -1774,7 +1821,9 @@ QDomNodePrivate* QDomNodePrivate::removeChild(QDomNodePrivate* oldChild)
         return 0;
 
     // "mark lists as dirty"
-    qt_nodeListTime++;
+    QDomDocumentPrivate *const doc = ownerDocument();
+    if(doc)
+        doc->nodeListTime++;
 
     // Perhaps oldChild was just created with "createElement" or that. In this case
     // its parent is QDomDocument but it is not part of the documents child list.
@@ -1817,7 +1866,7 @@ QDomDocumentPrivate* QDomNodePrivate::ownerDocument()
         p = p->parent();
     }
 
-    return (QDomDocumentPrivate*)p;
+    return static_cast<QDomDocumentPrivate *>(p);
 }
 
 QDomNodePrivate* QDomNodePrivate::cloneNode(bool deep)
@@ -1888,7 +1937,7 @@ void QDomNodePrivate::setLocation(int lineNumber, int columnNumber)
     \reentrant
     \brief The QDomNode class is the base class for all the nodes in a DOM tree.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
     \mainclass
 
@@ -3150,7 +3199,7 @@ bool QDomNamedNodeMapPrivate::containsNS(const QString& nsURI, const QString & l
     \brief The QDomNamedNodeMap class contains a collection of nodes
     that can be accessed by name.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     Note that QDomNamedNodeMap does not inherit from QDomNodeList.
@@ -3586,7 +3635,7 @@ void QDomDocumentTypePrivate::save(QTextStream& s, int, int indent) const
     \brief The QDomDocumentType class is the representation of the DTD
     in the document tree.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     The QDomDocumentType class allows read-only access to some of the
@@ -3759,7 +3808,7 @@ QDomNodePrivate* QDomDocumentFragmentPrivate::cloneNode(bool deep)
     \reentrant
     \brief The QDomDocumentFragment class is a tree of QDomNodes which is not usually a complete QDomDocument.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     If you want to do complex tree operations it is useful to have a
@@ -3893,7 +3942,7 @@ void QDomCharacterDataPrivate::appendData(const QString& arg)
     \reentrant
     \brief The QDomCharacterData class represents a generic string in the DOM.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     Character data as used in XML specifies a generic data string.
@@ -4209,7 +4258,7 @@ void QDomAttrPrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomAttr class represents one attribute of a QDomElement.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     For example, the following piece of XML produces an element with
@@ -4228,8 +4277,7 @@ void QDomAttrPrivate::save(QTextStream& s, int, int) const
 
     QDomAttr can return the name() and value() of an attribute. An
     attribute's value is set with setValue(). If specified() returns
-    true the value was either set in the document or set with
-    setValue(); otherwise the value hasn't been set. The node this
+    true the value was set with setValue(). The node this
     attribute is attached to (if any) is returned by ownerElement().
 
     For further information about the Document Object Model see
@@ -4287,8 +4335,7 @@ QString QDomAttr::name() const
 }
 
 /*!
-    Returns true if the attribute has either been expicitly specified
-    in the XML document or was set by the user with setValue().
+    Returns true if the attribute has been set by the user with setValue().
     Returns false if the value hasn't been specified or set.
 
     \sa setValue()
@@ -4521,7 +4568,7 @@ QString QDomElementPrivate::text()
 void QDomElementPrivate::save(QTextStream& s, int depth, int indent) const
 {
     if (!(prev && prev->isText()))
-        s << QString(depth * indent, QLatin1Char(' '));
+        s << QString(indent < 1 ? 0 : depth * indent, QLatin1Char(' '));
 
     QString qName(name);
     QString nsDecl(QLatin1String(""));
@@ -4583,18 +4630,25 @@ void QDomElementPrivate::save(QTextStream& s, int depth, int indent) const
         // has child nodes
         if (first->isText())
             s << '>';
-        else
-            s << '>' << endl;
-        QDomNodePrivate::save(s, depth + 1, indent);
-        if (!last->isText())
-            s << QString(depth * indent, QLatin1Char(' '));
+        else {
+            s << '>';
+
+            /* -1 disables new lines. */
+            if (indent != -1)
+                s << endl;
+        }
+        QDomNodePrivate::save(s, depth + 1, indent); if (!last->isText())
+            s << QString(indent < 1 ? 0 : depth * indent, QLatin1Char(' '));
 
         s << "</" << qName << '>';
     } else {
         s << "/>";
     }
-    if (!(next && next->isText()))
-        s << endl;
+    if (!(next && next->isText())) {
+        /* -1 disables new lines. */
+        if (indent != -1)
+            s << endl;
+    }
 }
 
 /**************************************************************
@@ -4610,7 +4664,7 @@ void QDomElementPrivate::save(QTextStream& s, int depth, int indent) const
     \reentrant
     \brief The QDomElement class represents one element in the DOM tree.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     Elements have a tagName() and zero or more attributes associated
@@ -5163,7 +5217,7 @@ void QDomTextPrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomText class represents text data in the parsed XML document.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     You can split the text in a QDomText object over two QDomText
@@ -5270,7 +5324,7 @@ void QDomCommentPrivate::save(QTextStream& s, int depth, int indent) const
 {
     /* We don't output whitespace if we would pollute a text node. */
     if (!(prev && prev->isText()))
-        s << QString(depth * indent, QLatin1Char(' '));
+        s << QString(indent < 1 ? 0 : depth * indent, QLatin1Char(' '));
 
     s << "<!--" << value;
     if (value.endsWith(QLatin1Char('-')))
@@ -5292,7 +5346,7 @@ void QDomCommentPrivate::save(QTextStream& s, int depth, int indent) const
     \reentrant
     \brief The QDomComment class represents an XML comment.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     A comment in the parsed XML such as this:
@@ -5394,7 +5448,7 @@ void QDomCDATASectionPrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomCDATASection class represents an XML CDATA section.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     CDATA sections are used to escape blocks of text containing
@@ -5515,7 +5569,7 @@ void QDomNotationPrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomNotation class represents an XML notation.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     A notation either declares, by name, the format of an unparsed
@@ -5708,7 +5762,7 @@ void QDomEntityPrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomEntity class represents an XML entity.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     This class represents an entity in an XML document, either parsed
@@ -5856,7 +5910,7 @@ void QDomEntityReferencePrivate::save(QTextStream& s, int, int) const
     \reentrant
     \brief The QDomEntityReference class represents an XML entity reference.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     A QDomEntityReference object may be inserted into the DOM tree
@@ -5976,7 +6030,7 @@ void QDomProcessingInstructionPrivate::save(QTextStream& s, int, int) const
     \brief The QDomProcessingInstruction class represents an XML processing
     instruction.
 
-    \module XML
+    \inmodule QtXml
     \ingroup xml-tools
 
     Processing instructions are used in XML to keep processor-specific
@@ -6091,7 +6145,8 @@ void QDomProcessingInstruction::setData(const QString& d)
  **************************************************************/
 
 QDomDocumentPrivate::QDomDocumentPrivate()
-    : QDomNodePrivate(0)
+    : QDomNodePrivate(0),
+      nodeListTime(1)
 {
     impl = new QDomImplementationPrivate;
     type = new QDomDocumentTypePrivate(this, this);
@@ -6100,7 +6155,8 @@ QDomDocumentPrivate::QDomDocumentPrivate()
 }
 
 QDomDocumentPrivate::QDomDocumentPrivate(const QString& aname)
-    : QDomNodePrivate(0)
+    : QDomNodePrivate(0),
+      nodeListTime(1)
 {
     impl = new QDomImplementationPrivate;
     type = new QDomDocumentTypePrivate(this, this);
@@ -6110,7 +6166,8 @@ QDomDocumentPrivate::QDomDocumentPrivate(const QString& aname)
 }
 
 QDomDocumentPrivate::QDomDocumentPrivate(QDomDocumentTypePrivate* dt)
-    : QDomNodePrivate(0)
+    : QDomNodePrivate(0),
+      nodeListTime(1)
 {
     impl = new QDomImplementationPrivate;
     if (dt != 0) {
@@ -6124,7 +6181,8 @@ QDomDocumentPrivate::QDomDocumentPrivate(QDomDocumentTypePrivate* dt)
 }
 
 QDomDocumentPrivate::QDomDocumentPrivate(QDomDocumentPrivate* n, bool deep)
-    : QDomNodePrivate(n, deep)
+    : QDomNodePrivate(n, deep),
+      nodeListTime(1)
 {
     impl = n->impl->clone();
     // Reference count is down to 0, so we set it to 1 here.
@@ -6154,13 +6212,17 @@ void QDomDocumentPrivate::clear()
     QDomNodePrivate::clear();
 }
 
+static void initializeReader(QXmlSimpleReader &reader, bool namespaceProcessing)
+{
+    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespaces"), namespaceProcessing);
+    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespace-prefixes"), !namespaceProcessing);
+    reader.setFeature(QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData"), false); // Shouldn't change in Qt 4
+}
+
 bool QDomDocumentPrivate::setContent(QXmlInputSource *source, bool namespaceProcessing, QString *errorMsg, int *errorLine, int *errorColumn)
 {
     QXmlSimpleReader reader;
-    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespaces"), namespaceProcessing);
-    reader.setFeature(QLatin1String("http://xml.org/sax/features/namespace-prefixes"), !namespaceProcessing);
-    reader.setFeature(QLatin1String("http://trolltech.com/xml/features/report-whitespace-only-CharData"), false);
-
+    initializeReader(reader, namespaceProcessing);
     return setContent(source, &reader, errorMsg, errorLine, errorColumn);
 }
 
@@ -6461,7 +6523,7 @@ void QDomDocumentPrivate::saveDocument(QTextStream& s, const int indent, QDomNod
     \reentrant
     \brief The QDomDocument class represents an XML document.
 
-    \module XML
+    \inmodule QtXml
     \mainclass
     \ingroup xml-tools
 
@@ -6691,6 +6753,23 @@ bool QDomDocument::setContent(QIODevice* dev, bool namespaceProcessing, QString 
 
 /*!
     \overload
+    \since 4.5
+
+    This function reads the XML document from the QXmlInputSource \a source,
+    returning true if the content was successfully parsed; otherwise returns false.
+
+*/
+bool QDomDocument::setContent(QXmlInputSource *source, bool namespaceProcessing, QString *errorMsg, int *errorLine, int *errorColumn )
+{
+    if (!impl)
+        impl = new QDomDocumentPrivate();
+    QXmlSimpleReader reader;
+    initializeReader(reader, namespaceProcessing);
+    return IMPL->setContent(source, &reader, errorMsg, errorLine, errorColumn);
+}
+
+/*!
+    \overload
 
     This function reads the XML document from the string \a text, returning
     true if the content was successfully parsed; otherwise returns false.
@@ -6756,6 +6835,8 @@ bool QDomDocument::setContent(QXmlInputSource *source, QXmlReader *reader, QStri
 
     This function uses \a indent as the amount of space to indent
     subelements.
+
+    If \a indent is -1, no whitespace at all is added.
 */
 QString QDomDocument::toString(int indent) const
 {

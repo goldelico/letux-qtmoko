@@ -21,285 +21,207 @@
 #include "config.h"
 
 
-#if ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#if ENABLE(SVG) && ENABLE(SVG_FILTERS)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGFEImageElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "CSSMutableStyleDeclaration.h"
 #include "CSSStyleDeclaration.h"
+#include "CSSValue.h"
 #include "JSCSSStyleDeclaration.h"
+#include "JSCSSValue.h"
 #include "JSSVGAnimatedBoolean.h"
 #include "JSSVGAnimatedLength.h"
 #include "JSSVGAnimatedString.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGFEImageElement.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGFEImageElement)
+
 /* Hash table */
 
-static const HashEntry JSSVGFEImageElementTableEntries[] =
+static const HashTableValue JSSVGFEImageElementTableValues[12] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "x", JSSVGFEImageElement::XAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmllang", JSSVGFEImageElement::XmllangAttrNum, DontDelete, 0, 0 },
-    { "height", JSSVGFEImageElement::HeightAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "xmlspace", JSSVGFEImageElement::XmlspaceAttrNum, DontDelete, 0, 0 },
-    { "externalResourcesRequired", JSSVGFEImageElement::ExternalResourcesRequiredAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEImageElementTableEntries[12] },
-    { "href", JSSVGFEImageElement::HrefAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEImageElementTableEntries[11] },
-    { "width", JSSVGFEImageElement::WidthAttrNum, DontDelete|ReadOnly, 0, &JSSVGFEImageElementTableEntries[13] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "result", JSSVGFEImageElement::ResultAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "y", JSSVGFEImageElement::YAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "className", JSSVGFEImageElement::ClassNameAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "style", JSSVGFEImageElement::StyleAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "href", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementHref, (intptr_t)0 },
+    { "xmllang", DontDelete, (intptr_t)jsSVGFEImageElementXmllang, (intptr_t)setJSSVGFEImageElementXmllang },
+    { "xmlspace", DontDelete, (intptr_t)jsSVGFEImageElementXmlspace, (intptr_t)setJSSVGFEImageElementXmlspace },
+    { "externalResourcesRequired", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementExternalResourcesRequired, (intptr_t)0 },
+    { "x", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementX, (intptr_t)0 },
+    { "y", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementY, (intptr_t)0 },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementHeight, (intptr_t)0 },
+    { "result", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementResult, (intptr_t)0 },
+    { "className", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementClassName, (intptr_t)0 },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsSVGFEImageElementStyle, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEImageElementTable = 
-{
-    2, 14, JSSVGFEImageElementTableEntries, 11
-};
+static const HashTable JSSVGFEImageElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSSVGFEImageElementTableValues, 0 };
+#else
+    { 33, 31, JSSVGFEImageElementTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGFEImageElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGFEImageElementPrototypeTableValues[2] =
 {
-    { 0, 0, 0, 0, 0 }
+    { "getPresentationAttribute", DontDelete|Function, (intptr_t)jsSVGFEImageElementPrototypeFunctionGetPresentationAttribute, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGFEImageElementPrototypeTable = 
-{
-    2, 1, JSSVGFEImageElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGFEImageElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGFEImageElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSSVGFEImageElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGFEImageElementPrototype::info = { "SVGFEImageElementPrototype", 0, &JSSVGFEImageElementPrototypeTable, 0 };
+const ClassInfo JSSVGFEImageElementPrototype::s_info = { "SVGFEImageElementPrototype", 0, &JSSVGFEImageElementPrototypeTable, 0 };
 
 JSObject* JSSVGFEImageElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGFEImageElementPrototype>(exec, "[[JSSVGFEImageElement.prototype]]");
+    return getDOMPrototype<JSSVGFEImageElement>(exec);
 }
 
-const ClassInfo JSSVGFEImageElement::info = { "SVGFEImageElement", &JSSVGElement::info, &JSSVGFEImageElementTable, 0 };
-
-JSSVGFEImageElement::JSSVGFEImageElement(ExecState* exec, SVGFEImageElement* impl)
-    : JSSVGElement(exec, impl)
+bool JSSVGFEImageElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    setPrototype(JSSVGFEImageElementPrototype::self(exec));
+    return getStaticFunctionSlot<JSObject>(exec, &JSSVGFEImageElementPrototypeTable, this, propertyName, slot);
+}
+
+const ClassInfo JSSVGFEImageElement::s_info = { "SVGFEImageElement", &JSSVGElement::s_info, &JSSVGFEImageElementTable, 0 };
+
+JSSVGFEImageElement::JSSVGFEImageElement(PassRefPtr<Structure> structure, PassRefPtr<SVGFEImageElement> impl)
+    : JSSVGElement(structure, impl)
+{
+}
+
+JSObject* JSSVGFEImageElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGFEImageElementPrototype(JSSVGFEImageElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 bool JSSVGFEImageElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGFEImageElement, JSSVGElement>(exec, &JSSVGFEImageElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGFEImageElement, Base>(exec, &JSSVGFEImageElementTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGFEImageElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGFEImageElementHref(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case HrefAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XmllangAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        return jsString(imp->xmllang());
-    }
-    case XmlspaceAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        return jsString(imp->xmlspace());
-    }
-    case ExternalResourcesRequiredAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedBoolean>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedBoolean>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedBoolean>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case XAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case YAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case WidthAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case HeightAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedLength>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedLength>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedLength>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ResultAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case ClassNameAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        ASSERT(exec && exec->dynamicInterpreter());
-
-        RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
-        Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-        if (activeFrame) {
-            SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-            if (extensions) {
-                if (extensions->hasGenericContext<SVGAnimatedString>(obj.get()))
-                    ASSERT(extensions->genericContext<SVGAnimatedString>(obj.get()) == imp);
-                else
-                    extensions->setGenericContext<SVGAnimatedString>(obj.get(), imp);
-            }
-        }
-
-        return toJS(exec, obj.get());
-    }
-    case StyleAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    }
-    return 0;
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->hrefAnimated();
+    return toJS(exec, obj.get(), imp);
 }
 
-void JSSVGFEImageElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGFEImageElementXmllang(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGFEImageElement, JSSVGElement>(exec, propertyName, value, attr, &JSSVGFEImageElementTable, this);
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmllang());
 }
 
-void JSSVGFEImageElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsSVGFEImageElementXmlspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case XmllangAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->xmlspace());
+}
 
-        imp->setXmllang(value->toString(exec));
-        break;
-    }
-    case XmlspaceAttrNum: {
-        SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(impl());
+JSValuePtr jsSVGFEImageElementExternalResourcesRequired(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedBoolean> obj = imp->externalResourcesRequiredAnimated();
+    return toJS(exec, obj.get(), imp);
+}
 
-        imp->setXmlspace(value->toString(exec));
-        break;
-    }
-    }
+JSValuePtr jsSVGFEImageElementX(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->xAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementY(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->yAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->widthAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedLength> obj = imp->heightAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementResult(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->resultAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementClassName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    RefPtr<SVGAnimatedString> obj = imp->classNameAnimated();
+    return toJS(exec, obj.get(), imp);
+}
+
+JSValuePtr jsSVGFEImageElementStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
+}
+
+void JSSVGFEImageElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSSVGFEImageElement, Base>(exec, propertyName, value, &JSSVGFEImageElementTable, this, slot);
+}
+
+void setJSSVGFEImageElementXmllang(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(thisObject)->impl());
+    imp->setXmllang(value->toString(exec));
+}
+
+void setJSSVGFEImageElementXmlspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(static_cast<JSSVGFEImageElement*>(thisObject)->impl());
+    imp->setXmlspace(value->toString(exec));
+}
+
+JSValuePtr jsSVGFEImageElementPrototypeFunctionGetPresentationAttribute(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSSVGFEImageElement::s_info))
+        return throwError(exec, TypeError);
+    JSSVGFEImageElement* castedThisObj = static_cast<JSSVGFEImageElement*>(asObject(thisValue));
+    SVGFEImageElement* imp = static_cast<SVGFEImageElement*>(castedThisObj->impl());
+    const UString& name = args.at(exec, 0)->toString(exec);
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getPresentationAttribute(name)));
+    return result;
 }
 
 
 }
 
-#endif // ENABLE(SVG) && ENABLE(SVG_EXPERIMENTAL_FEATURES)
+#endif // ENABLE(SVG) && ENABLE(SVG_FILTERS)

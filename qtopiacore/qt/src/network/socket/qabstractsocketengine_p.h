@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -57,6 +61,7 @@ QT_BEGIN_NAMESPACE
 
 class QAuthenticator;
 class QAbstractSocketEnginePrivate;
+class QNetworkProxy;
 
 class QAbstractSocketEngineReceiver {
 public:
@@ -64,6 +69,7 @@ public:
     virtual void readNotification()= 0;
     virtual void writeNotification()= 0;
     virtual void exceptionNotification()= 0;
+    virtual void connectionNotification()= 0;
 #ifndef QT_NO_NETWORKPROXY
     virtual void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator)= 0;
 #endif
@@ -74,7 +80,7 @@ class Q_AUTOTEST_EXPORT QAbstractSocketEngine : public QObject
     Q_OBJECT
 public:
 
-    static QAbstractSocketEngine *createSocketEngine(const QHostAddress &address, QAbstractSocket::SocketType socketType, QObject *parent);
+    static QAbstractSocketEngine *createSocketEngine(QAbstractSocket::SocketType socketType, const QNetworkProxy &, QObject *parent);
     static QAbstractSocketEngine *createSocketEngine(int socketDescripter, QObject *parent);
 
     QAbstractSocketEngine(QObject *parent = 0);
@@ -98,6 +104,7 @@ public:
     virtual bool isValid() const = 0;
 
     virtual bool connectToHost(const QHostAddress &address, quint16 port) = 0;
+    virtual bool connectToHostByName(const QString &name, quint16 port) = 0;
     virtual bool bind(const QHostAddress &address, quint16 port) = 0;
     virtual bool listen() = 0;
     virtual int accept() = 0;
@@ -120,11 +127,11 @@ public:
     virtual int option(SocketOption option) const = 0;
     virtual bool setOption(SocketOption option, int value) = 0;
 
-    virtual bool waitForRead(int msecs = 30000, bool *timedOut = 0) const = 0;
-    virtual bool waitForWrite(int msecs = 30000, bool *timedOut = 0) const = 0;
+    virtual bool waitForRead(int msecs = 30000, bool *timedOut = 0) = 0;
+    virtual bool waitForWrite(int msecs = 30000, bool *timedOut = 0) = 0;
     virtual bool waitForReadOrWrite(bool *readyToRead, bool *readyToWrite,
 			    bool checkRead, bool checkWrite,
-			    int msecs = 30000, bool *timedOut = 0) const = 0;
+                            int msecs = 30000, bool *timedOut = 0) = 0;
 
     QAbstractSocket::SocketError error() const;
     QString errorString() const;
@@ -148,6 +155,7 @@ public Q_SLOTS:
     void readNotification();
     void writeNotification();
     void exceptionNotification();
+    void connectionNotification();
 #ifndef QT_NO_NETWORKPROXY
     void proxyAuthenticationRequired(const QNetworkProxy &proxy, QAuthenticator *authenticator);
 #endif
@@ -196,7 +204,8 @@ class Q_AUTOTEST_EXPORT QSocketEngineHandler
 protected:
     QSocketEngineHandler();
     virtual ~QSocketEngineHandler();
-    virtual QAbstractSocketEngine *createSocketEngine(const QHostAddress &address, QAbstractSocket::SocketType socketType, QObject *parent) = 0;
+    virtual QAbstractSocketEngine *createSocketEngine(QAbstractSocket::SocketType socketType,
+                                                      const QNetworkProxy &, QObject *parent) = 0;
     virtual QAbstractSocketEngine *createSocketEngine(int socketDescripter, QObject *parent) = 0;
 
 private:

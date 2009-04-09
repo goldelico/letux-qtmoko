@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the plugins of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include "qsvgiconengine.h"
@@ -72,6 +76,8 @@ public:
     void stepSerialNum()
         { serialNum = lastSerialNum.fetchAndAddRelaxed(1); };
 
+    void loadDataForModeAndState(QSvgRenderer *renderer, QIcon::Mode mode, QIcon::State state);
+
     QHash<int, QString> svgFiles;
     QHash<int, QByteArray> *svgBuffers;
     QHash<int, QPixmap> *addedPixmaps;
@@ -107,61 +113,84 @@ QSvgIconEngine::~QSvgIconEngine()
 }
 
 
-QSize QSvgIconEngine::actualSize(const QSize &size, QIcon::Mode,
-                                 QIcon::State )
+QSize QSvgIconEngine::actualSize(const QSize &size, QIcon::Mode mode,
+                                 QIcon::State state)
 {
-    return size;
+    if (d->addedPixmaps) {
+        QPixmap pm = d->addedPixmaps->value(d->hashKey(mode, state));
+        if (!pm.isNull() && pm.size() == size)
+            return size;
+    }
+    
+    QSvgRenderer renderer;
+    d->loadDataForModeAndState(&renderer, mode, state);
+    if (renderer.isValid()) {
+        QSize defaultSize = renderer.defaultSize();
+        if (!defaultSize.isNull())
+            defaultSize.scale(size, Qt::KeepAspectRatio);
+        return defaultSize;
+    } else {
+        return QSize();
+    }
 }
 
+void QSvgIconEnginePrivate::loadDataForModeAndState(QSvgRenderer *renderer, QIcon::Mode mode, QIcon::State state)
+{
+    QByteArray buf;
+    if (svgBuffers) {
+        buf = svgBuffers->value(hashKey(mode, state));
+        if (buf.isEmpty())
+            buf = svgBuffers->value(hashKey(QIcon::Normal, QIcon::Off));
+    }
+    if (!buf.isEmpty()) {
+#ifndef QT_NO_COMPRESS
+        buf = qUncompress(buf);
+#endif
+        renderer->load(buf);
+    } else {
+        QString svgFile = svgFiles.value(hashKey(mode, state));
+        if (svgFile.isEmpty())
+            svgFile = svgFiles.value(hashKey(QIcon::Normal, QIcon::Off));
+        if (!svgFile.isEmpty())
+            renderer->load(svgFile);
+    }
+}
 
 QPixmap QSvgIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
                                QIcon::State state)
-{
+{   
     QPixmap pm;
-    QString pmckey(d->pmcKey(size, mode, state));
-    if (QPixmapCache::find(pmckey, pm))     // Note: OUT parameter
-        return pm;
 
     if (d->addedPixmaps) {
         pm = d->addedPixmaps->value(d->hashKey(mode, state));
-        if (!pm.isNull() && pm.size() != size)
-                pm = pm.scaled(size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        if (!pm.isNull() && pm.size() == size)
+            return pm;
     }
-    if (pm.isNull()) {
-        QSvgRenderer renderer;
-        QByteArray buf;
-        if (d->svgBuffers) {
-            buf = d->svgBuffers->value(d->hashKey(mode, state));
-            if (buf.isEmpty())
-                buf = d->svgBuffers->value(d->hashKey(QIcon::Normal, QIcon::Off));
-        }
-        if (!buf.isEmpty()) {
-#ifndef QT_NO_COMPRESS
-            buf = qUncompress(buf);
-#endif
-            renderer.load(buf);
-        }
-        else {
-            QString svgFile = d->svgFiles.value(d->hashKey(mode, state));
-            if (svgFile.isEmpty())
-                svgFile = d->svgFiles.value(d->hashKey(QIcon::Normal, QIcon::Off));
-            if (!svgFile.isEmpty())
-                renderer.load(svgFile);
-        }
-        if (renderer.isValid()) {
-            QImage img(size, QImage::Format_ARGB32_Premultiplied);
-            img.fill(0x00000000);
-            QPainter p(&img);
-            renderer.render(&p);
-            p.end();
-            pm = QPixmap::fromImage(img);
-            QStyleOption opt(0);
-            opt.palette = QApplication::palette();
-            QPixmap generated = QApplication::style()->generatedIconPixmap(mode, pm, &opt);
-            if (!generated.isNull())
-                pm = generated;
-        }
-    }
+
+    QSvgRenderer renderer;
+    d->loadDataForModeAndState(&renderer, mode, state);
+    if (!renderer.isValid())
+        return pm;
+
+    QSize actualSize = renderer.defaultSize();
+    if (!actualSize.isNull())
+        actualSize.scale(size, Qt::KeepAspectRatio);
+
+    QString pmckey(d->pmcKey(actualSize, mode, state));
+    if (QPixmapCache::find(pmckey, pm))
+        return pm;
+
+    QImage img(actualSize, QImage::Format_ARGB32_Premultiplied);
+    img.fill(0x00000000);
+    QPainter p(&img);
+    renderer.render(&p);
+    p.end();
+    pm = QPixmap::fromImage(img);
+    QStyleOption opt(0);
+    opt.palette = QApplication::palette();
+    QPixmap generated = QApplication::style()->generatedIconPixmap(mode, pm, &opt);
+    if (!generated.isNull())
+        pm = generated;
 
     if (!pm.isNull())
         QPixmapCache::insert(pmckey, pm);
@@ -187,7 +216,12 @@ void QSvgIconEngine::addFile(const QString &fileName, const QSize &,
         QString abs = fileName;
         if (fileName.at(0) != QLatin1Char(':'))
             abs = QFileInfo(fileName).absoluteFilePath();
-        if (abs.endsWith(key())) {
+        if (abs.endsWith(QLatin1String(".svg"), Qt::CaseInsensitive)
+#ifndef QT_NO_COMPRESS
+                || abs.endsWith(QLatin1String(".svgz"), Qt::CaseInsensitive)
+                || abs.endsWith(QLatin1String(".svg.gz"), Qt::CaseInsensitive))
+#endif
+        {
             QSvgRenderer renderer(abs);
             if (renderer.isValid()) {
                 d->stepSerialNum();

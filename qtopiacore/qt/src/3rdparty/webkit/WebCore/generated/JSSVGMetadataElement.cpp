@@ -23,46 +23,51 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGMetadataElement.h"
 
 #include <wtf/GetPtr.h>
 
 #include "SVGMetadataElement.h"
 
-using namespace KJS;
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGMetadataElement)
+
 /* Hash table for prototype */
 
-static const HashEntry JSSVGMetadataElementPrototypeTableEntries[] =
+static const HashTableValue JSSVGMetadataElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGMetadataElementPrototypeTable = 
-{
-    2, 1, JSSVGMetadataElementPrototypeTableEntries, 1
-};
+static const HashTable JSSVGMetadataElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGMetadataElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGMetadataElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGMetadataElementPrototype::info = { "SVGMetadataElementPrototype", 0, &JSSVGMetadataElementPrototypeTable, 0 };
+const ClassInfo JSSVGMetadataElementPrototype::s_info = { "SVGMetadataElementPrototype", 0, &JSSVGMetadataElementPrototypeTable, 0 };
 
 JSObject* JSSVGMetadataElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGMetadataElementPrototype>(exec, "[[JSSVGMetadataElement.prototype]]");
+    return getDOMPrototype<JSSVGMetadataElement>(exec);
 }
 
-const ClassInfo JSSVGMetadataElement::info = { "SVGMetadataElement", &JSSVGElement::info, 0, 0 };
+const ClassInfo JSSVGMetadataElement::s_info = { "SVGMetadataElement", &JSSVGElement::s_info, 0, 0 };
 
-JSSVGMetadataElement::JSSVGMetadataElement(ExecState* exec, SVGMetadataElement* impl)
-    : JSSVGElement(exec, impl)
+JSSVGMetadataElement::JSSVGMetadataElement(PassRefPtr<Structure> structure, PassRefPtr<SVGMetadataElement> impl)
+    : JSSVGElement(structure, impl)
 {
-    setPrototype(JSSVGMetadataElementPrototype::self(exec));
+}
+
+JSObject* JSSVGMetadataElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGMetadataElementPrototype(JSSVGMetadataElementPrototype::createStructure(JSSVGElementPrototype::self(exec)));
 }
 
 

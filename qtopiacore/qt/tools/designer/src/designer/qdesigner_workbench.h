@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -51,7 +55,8 @@ QT_BEGIN_NAMESPACE
 class QDesignerActions;
 class QDesignerToolWindow;
 class QDesignerFormWindow;
-struct Preferences;
+class DockedMainWindow;
+class QDesignerSettings;
 
 class QAction;
 class QActionGroup;
@@ -65,6 +70,7 @@ class QMdiSubWindow;
 class QCloseEvent;
 class QFont;
 class QtToolBarManager;
+class ToolBarManager;
 
 class QDesignerFormEditorInterface;
 class QDesignerFormWindowInterface;
@@ -85,8 +91,6 @@ public:
     UIMode mode() const;
 
     QDesignerFormEditorInterface *core() const;
-
-    QDesignerToolWindow *findToolWindow(QWidget *widget) const;
     QDesignerFormWindow *findFormWindow(QWidget *widget) const;
 
     QDesignerFormWindow *openForm(const QString &fileName, QString *errorMessage);
@@ -105,16 +109,14 @@ public:
     QActionGroup *modeActionGroup() const;
 
     QRect availableGeometry() const;
-    int marginHint() const;
+    QRect desktopGeometry() const;
 
-    void saveSettings() const;
-    void applyPreferences(const Preferences&);
+    int marginHint() const;
 
     bool readInForm(const QString &fileName) const;
     bool writeOutForm(QDesignerFormWindowInterface *formWindow, const QString &fileName) const;
     bool saveForm(QDesignerFormWindowInterface *fw);
     bool handleClose();
-    void closeAllToolWindows();
     bool readInBackup();
     void updateBackup(QDesignerFormWindowInterface* fwi);
 
@@ -123,84 +125,67 @@ signals:
     void initialized();
 
 public slots:
-    void addToolWindow(QDesignerToolWindow *toolWindow);
     void addFormWindow(QDesignerFormWindow *formWindow);
-    void removeToolWindow(QDesignerToolWindow *toolWindow);
     void removeFormWindow(QDesignerFormWindow *formWindow);
-    void setUIMode(UIMode mode);
     void bringAllToFront();
     void toggleFormMinimizationState();
-    void configureToolBars();
 
-// ### private slots:
+private slots:
     void switchToNeutralMode();
     void switchToDockedMode();
     void switchToTopLevelMode();
-
     void initializeCorePlugins();
-
-private slots:
-    void initialize();
-    void activateMdiAreaChildWindow(QMdiSubWindow*);
+    void handleCloseEvent(QCloseEvent *);
+    void slotFormWindowActivated(QDesignerFormWindow* fw);
     void updateWindowMenu(QDesignerFormWindowInterface *fw);
     void formWindowActionTriggered(QAction *a);
-    void showToolBars();
     void adjustMDIFormPositions();
     void minimizationStateChanged(QDesignerFormWindowInterface *formWindow, bool minimized);
 
+    void restoreUISettings();
+    void slotFileDropped(const QString &f);
+
 private:
-    QWidget *magicalParent() const;
+    QWidget *magicalParent(const QWidget *w) const;
     Qt::WindowFlags magicalWindowFlags(const QWidget *widgetForFlags) const;
-    QDockWidget *magicalDockWidget(QWidget *widget) const;
-
     QDesignerFormWindowManagerInterface *formWindowManager() const;
-
-    bool eventFilter(QObject *object, QEvent *event);
-
-private:
-    QDesignerFormWindow *loadForm(const QString &fileName, bool *uic3Converted, QString *errorMessage);
+    void closeAllToolWindows();
+    QDesignerToolWindow *widgetBoxToolWindow() const;
+    QDesignerFormWindow *loadForm(const QString &fileName, bool detectLineTermiantorMode, bool *uic3Converted, QString *errorMessage);
     void resizeForm(QDesignerFormWindow *fw,  const QWidget *mainContainer) const;
-    void saveGeometries();
+    void saveGeometriesForModeChange();
+    void saveGeometries(QDesignerSettings &settings) const;
+
     bool isFormWindowMinimized(const QDesignerFormWindow *fw);
     void setFormWindowMinimized(QDesignerFormWindow *fw, bool minimized);
-    void setDesignerUIFont(const QFont &);
-
-    void createToolBarManager(QMainWindow *mw);
-    void removeToolBarManager();
-    void updateToolBarMenu();
+    void saveSettings() const;
 
     QDesignerFormEditorInterface *m_core;
     qdesigner_internal::QDesignerIntegration *m_integration;
 
     QDesignerActions *m_actionManager;
-    QActionGroup *m_toolActions;
     QActionGroup *m_windowActions;
 
-    QMenu *m_fileMenu;
-    QMenu *m_editMenu;
-    QMenu *m_formMenu;
-    QMenu *m_toolMenu;
     QMenu *m_windowMenu;
-    QMenu *m_helpMenu;
 
     QMenuBar *m_globalMenuBar;
-    QToolBar *m_toolToolBar;
-    QToolBar *m_formToolBar;
-    QToolBar *m_editToolBar;
-    QToolBar *m_fileToolBar;
 
-    QtToolBarManager *m_toolBarManager;
+    struct TopLevelData {
+        ToolBarManager *toolbarManager;
+        QList<QToolBar *> toolbars;
+    };
+    TopLevelData m_topLevelData;
 
     UIMode m_mode;
+    DockedMainWindow *m_dockedMainWindow;
 
     QList<QDesignerToolWindow*> m_toolWindows;
     QList<QDesignerFormWindow*> m_formWindows;
 
-    QMdiArea *m_mdiArea;
     QMenu *m_toolbarMenu;
-    QAction *m_configureToolBars;
 
-    // Helper class to remember the position of a window while switching user interface modes.
+    // Helper class to remember the position of a window while switching user
+    // interface modes.
     class Position {
     public:
         Position(const QDockWidget *dockWidget);
@@ -214,14 +199,12 @@ private:
         QPoint position() const { return m_position; }
     private:
         bool m_minimized;
-        // Position referring to top-left corner (desktop in top-level mode or main window in MDI mode)
+        // Position referring to top-left corner (desktop in top-level mode or
+        // main window in MDI mode)
         QPoint m_position;
     };
     typedef  QHash<QWidget*, Position> PositionMap;
     PositionMap m_Positions;
-
-    QSet<QDesignerToolWindow*> m_toolWindowExtras;
-    QSet<QDesignerFormWindow*> m_formWindowExtras;
 
     enum State { StateInitializing, StateUp, StateClosing };
     State m_state;

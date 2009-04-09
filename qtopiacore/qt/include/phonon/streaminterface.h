@@ -1,1 +1,1 @@
-#include "../../src/phonon/../3rdparty/kdelibs/phonon/streaminterface.h"
+#include "../../src/phonon/../3rdparty/phonon/phonon/streaminterface.h"

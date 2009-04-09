@@ -3,6 +3,8 @@
  *
  * Copyright (C) 2006 Oliver Hunt <ojh16@student.canterbury.ac.nz>
  *           (C) 2006 Apple Computer Inc.
+ *           (C) 2007 Nikolas Zimmermann <zimmermann@kde.org>
+ *           (C) 2008 Rob Buis <buis@kde.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,37 +26,153 @@
 #include "config.h"
 
 #if ENABLE(SVG)
-
 #include "RenderSVGInlineText.h"
 
-#include "AffineTransform.h"
-#include "GraphicsContext.h"
+#include "FloatConversion.h"
+#include "RenderBlock.h"
+#include "RenderSVGRoot.h"
 #include "SVGInlineTextBox.h"
-#include "KCanvasRenderingStyle.h"
+#include "SVGRootInlineBox.h"
 
 namespace WebCore {
-    
-RenderSVGInlineText::RenderSVGInlineText(Node* n, StringImpl* str) 
+
+static inline bool isChildOfHiddenContainer(RenderObject* start)
+{
+    while (start) {
+        if (start->isSVGHiddenContainer())
+            return true;
+
+        start = start->parent();
+    }
+
+    return false;
+}
+
+RenderSVGInlineText::RenderSVGInlineText(Node* n, PassRefPtr<StringImpl> str) 
     : RenderText(n, str)
 {
 }
 
-void RenderSVGInlineText::absoluteRects(Vector<IntRect>& rects, int tx, int ty, bool)
+void RenderSVGInlineText::absoluteRects(Vector<IntRect>& rects, int, int, bool)
 {
-    FloatRect absoluteRect = absoluteTransform().mapRect(FloatRect(tx, ty, width(), height()));
-    rects.append(enclosingIntRect(absoluteRect));
+    rects.append(computeAbsoluteRectForRange(0, textLength()));
 }
 
-IntRect RenderSVGInlineText::selectionRect(bool clipToVisibleContent)
+void RenderSVGInlineText::absoluteQuads(Vector<FloatQuad>& quads, bool)
 {
-    IntRect rect = RenderText::selectionRect(clipToVisibleContent);
-    rect = parent()->absoluteTransform().mapRect(rect);
-    return rect;
+    quads.append(FloatRect(computeAbsoluteRectForRange(0, textLength())));
+}
+
+IntRect RenderSVGInlineText::selectionRect(bool)
+{
+    ASSERT(!needsLayout());
+
+    IntRect rect;
+    if (selectionState() == SelectionNone)
+        return rect;
+
+    // Early exit if we're ie. a <text> within a <defs> section.
+    if (isChildOfHiddenContainer(this))
+        return rect;
+
+    // Now calculate startPos and endPos for painting selection.
+    // We include a selection while endPos > 0
+    int startPos, endPos;
+    if (selectionState() == SelectionInside) {
+        // We are fully selected.
+        startPos = 0;
+        endPos = textLength();
+    } else {
+        selectionStartEnd(startPos, endPos);
+        if (selectionState() == SelectionStart)
+            endPos = textLength();
+        else if (selectionState() == SelectionEnd)
+            startPos = 0;
+    }
+
+    if (startPos == endPos)
+        return rect;
+
+    return computeAbsoluteRectForRange(startPos, endPos);
+}
+
+IntRect RenderSVGInlineText::computeAbsoluteRectForRange(int startPos, int endPos)
+{
+    IntRect rect;
+
+    RenderBlock* cb = containingBlock();
+    if (!cb || !cb->container())
+        return rect;
+
+    RenderSVGRoot* root = findSVGRootObject(parent());
+    if (!root)
+        return rect;
+
+    for (InlineTextBox* box = firstTextBox(); box; box = box->nextTextBox())
+        rect.unite(box->selectionRect(0, 0, startPos, endPos));
+
+    // Mimic RenderBox::computeAbsoluteRepaintRect() functionality. But only the subset needed for SVG and respecting SVG transformations.
+    FloatPoint absPos = cb->container()->localToAbsolute();
+
+    // Remove HTML parent translation offsets here! These need to be retrieved from the RenderSVGRoot object.
+    // But do take the containingBlocks's container position into account, ie. SVG text in scrollable <div>.
+    TransformationMatrix htmlParentCtm = root->RenderContainer::absoluteTransform();
+
+    FloatRect fixedRect(narrowPrecisionToFloat(rect.x() + absPos.x() - xPos() - htmlParentCtm.e()),
+                        narrowPrecisionToFloat(rect.y() + absPos.y() - yPos() - htmlParentCtm.f()), rect.width(), rect.height());
+    // FIXME: broken with CSS transforms
+    return enclosingIntRect(absoluteTransform().mapRect(fixedRect));
 }
 
 InlineTextBox* RenderSVGInlineText::createInlineTextBox()
 {
     return new (renderArena()) SVGInlineTextBox(this);
+}
+
+IntRect RenderSVGInlineText::localCaretRect(InlineBox* inlineBox, int caretOffset, int* extraWidthToEndOfLine)
+{
+    // SVG doesn't have any editable content where a caret rect would be needed
+    return IntRect();
+}
+
+VisiblePosition RenderSVGInlineText::positionForCoordinates(int x, int y)
+{
+    SVGInlineTextBox* textBox = static_cast<SVGInlineTextBox*>(firstTextBox());
+
+    if (!textBox || textLength() == 0)
+        return VisiblePosition(element(), 0, DOWNSTREAM);
+
+    SVGRootInlineBox* rootBox = textBox->svgRootInlineBox();
+    RenderObject* object = rootBox ? rootBox->object() : 0;
+
+    if (!object)
+        return VisiblePosition(element(), 0, DOWNSTREAM);
+
+    int offset = 0;
+
+    for (SVGInlineTextBox* box = textBox; box; box = static_cast<SVGInlineTextBox*>(box->nextTextBox())) {
+        if (box->svgCharacterHitsPosition(x + object->xPos(), y + object->yPos(), offset)) {
+            // If we're not at the end/start of the box, stop looking for other selected boxes.
+            if (box->direction() == LTR) {
+                if (offset <= (int) box->end() + 1)
+                    break;
+            } else {
+                if (offset > (int) box->start())
+                    break;
+            }
+        }
+    }
+
+    return VisiblePosition(element(), offset, DOWNSTREAM);
+}
+
+void RenderSVGInlineText::destroy()
+{
+    if (!documentBeingDestroyed()) {
+        setNeedsLayoutAndPrefWidthsRecalc();
+        repaint();
+    }
+    RenderText::destroy();
 }
 
 }

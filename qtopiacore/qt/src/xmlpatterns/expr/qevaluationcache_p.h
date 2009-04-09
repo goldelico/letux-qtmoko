@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -64,7 +68,7 @@ namespace QPatternist
     /**
      * @short Evaluates to the same result as its operand, but ensures the
      * operand is evaluated once even if this Expression is evaluated several
-     * times during a query run.
+     * times.
      *
      * EvaluationCache does this in a pipelined way, by delivering items from
      * its cache, which is stored in the DynamicContext. If the cache has less
@@ -72,9 +76,10 @@ namespace QPatternist
      * deliver but this time from the source, which it also populates into the
      * cache.
      *
-     * EvaluationCache is used as an optimization in order to avoid running expensive code
-     * paths multiple times, but also is sometimes a necessity: for instance,
-     * when objects must be unique, such as potentially in the case of node identity.
+     * EvaluationCache is used as an optimization in order to avoid running
+     * expensive code paths multiple times, but also is sometimes a necessity:
+     * for instance, when objects must be unique, such as potentially in the
+     * case of node identity.
      *
      * EvaluationCache is in particular used for variables, whose sole purpose
      * is to store it once(at least conceptually) and then use it in multiple
@@ -82,7 +87,8 @@ namespace QPatternist
      *
      * In some cases an EvaluationCache isn't necessary. For instance, when a
      * variable is only referenced once. In those cases EvaluationCache removes
-     * itself as an optimization; implemented in EvaluationCache::compress().
+     * itself as an optimization; implemented in compress().
+     *
      * @author Frans Englich <fenglich@trolltech.com>
      * @ingroup Patternist_expressions
      */
@@ -117,11 +123,15 @@ namespace QPatternist
         }
 
     private:
+        static DynamicContext::Ptr topFocusContext(const DynamicContext::Ptr &context);
         const VariableDeclaration::Ptr  m_declaration;
         /**
-         * This variable must not be called m_slot. If it so,
-         * a compiler bug on HP-UX-aCC-64 is triggered in the constructor
-         * initializor. See the preprocessor output.
+         * This variable must not be called m_slot. If it so, a compiler bug on
+         * HP-UX-aCC-64 is triggered in the constructor initializor. See the
+         * preprocessor output.
+         *
+         * Note that this is the cache slot, and is disjoint to any variable's
+         * regular slot.
          */
         const VariableSlotID            m_varSlot;
     };

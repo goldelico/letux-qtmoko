@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -353,6 +357,15 @@ void QTextFormatPrivate::recalcFont() const
                 if (f.fixedPitch() != value)
                     f.setFixedPitch(value);
                 break; }
+            case QTextFormat::FontStyleHint:
+                f.setStyleHint(static_cast<QFont::StyleHint>(props.at(i).value.toInt()), f.styleStrategy());
+                break;
+            case QTextFormat::FontStyleStrategy:
+                f.setStyleStrategy(static_cast<QFont::StyleStrategy>(props.at(i).value.toInt()));
+                break;
+            case QTextFormat::FontKerning:
+                f.setKerning(props.at(i).value.toBool());
+                break;
             default:
                 break;
             }
@@ -489,6 +502,9 @@ Q_GUI_EXPORT QDataStream &operator>>(QDataStream &stream, QTextFormat &fmt)
                                                 specified in percentage, with 100 as the default value.
     \value FontWordSpacing  Changes the default spacing between individual words. A positive value increases the word spacing
                                                  by the corresponding pixels; a negative value decreases the spacing.
+    \value FontStyleHint        Corresponds to the QFont::StyleHint property
+    \value FontStyleStrategy    Corresponds to the QFont::StyleStrategy property
+    \value FontKerning          Specifies whether the font has kerning turned on.
 
     \omitvalue FirstFontProperty
     \omitvalue LastFontProperty
@@ -502,7 +518,6 @@ Q_GUI_EXPORT QDataStream &operator>>(QDataStream &stream, QTextFormat &fmt)
     \value IsAnchor
     \value AnchorHref
     \value AnchorName
-
     \value ObjectType
 
     List properties
@@ -1159,8 +1174,8 @@ bool QTextFormat::operator==(const QTextFormat &rhs) const
                             normal text.
     \value AlignSubScript   Characters are placed below the baseline for
                             normal text.
-    \value AlignMiddle This is currently only implemented for inline objects. The center
-                       of the object is vertically aligned with the base line.
+    \value AlignMiddle The center of the object is vertically aligned with the base line.
+                       Currently, this is only implemented for inline objects.
     \value AlignBottom The bottom edge of the object is vertically aligned with
                        the base line.
     \value AlignTop    The top edge of the object is vertically aligned with
@@ -1374,6 +1389,74 @@ void QTextCharFormat::setUnderlineStyle(UnderlineStyle style)
 
 
 /*!
+    \since 4.5
+    \fn void QTextCharFormat::setFontStyleHint(QFont::StyleHint hint, QFont::StyleStrategy strategy)
+
+    Sets the font style \a hint and \a strategy.
+
+    Qt does not support style hints on X11 since this information is not provided by the window system.
+
+    \sa setFont()
+    \sa QFont::setStyleHint()
+*/
+
+
+/*!
+    \since 4.5
+    \fn void QTextCharFormat::setFontStyleStrategy(QFont::StyleStrategy strategy)
+
+    Sets the font style \a strategy.
+
+    \sa setFont()
+    \sa QFont::setStyleStrategy()
+*/
+
+
+/*!
+    \since 4.5
+    \fn void QTextCharFormat::setFontKerning(bool enable)
+    Enables kerning for this font if \a enable is true; otherwise disables it.
+
+    When kerning is enabled, glyph metrics do not add up anymore, even for
+    Latin text. In other words, the assumption that width('a') + width('b')
+    is equal to width("ab") is not neccesairly true.
+
+    \sa setFont()
+*/
+
+
+/*!
+    \fn QTextCharFormat::StyleHint QTextCharFormat::fontStyleHint() const
+    \since 4.5
+
+    Returns the font style hint.
+
+    \sa setFontStyleHint(), font()
+*/
+
+
+/*!
+    \since 4.5
+    \fn QTextCharFormat::StyleStrategy QTextCharFormat::fontStyleStrategy() const
+
+    Returns the current font style strategy.
+
+    \sa setFontStyleStrategy()
+    \sa font()
+*/
+
+
+/*!
+    \since 4.5
+    \fn  bool QTextCharFormat::fontKerning() const
+    Returns true if the the font kerning is enabled.
+
+    \sa setFontKerning()
+    \sa font()
+*/
+
+
+/*!
     \fn void QTextCharFormat::setFontFixedPitch(bool fixedPitch)
 
     If \a fixedPitch is true, sets the text format's font to be fixed pitch;
@@ -1479,7 +1562,7 @@ void QTextCharFormat::setUnderlineStyle(UnderlineStyle style)
     \fn void QTextCharFormat::setAnchorHref(const QString &value)
 
     Sets the hypertext link for the text format to the given \a value.
-    This is typically a URL like "http://www.trolltech.com/index.html".
+    This is typically a URL like "http://qtsoftware.com/index.html".
 
     The anchor will be displayed with the \a value as its display text;
     if you want to display different text call setAnchorNames().
@@ -1651,6 +1734,9 @@ void QTextCharFormat::setFont(const QFont &font)
     setFontWordSpacing(font.wordSpacing());
     if (font.letterSpacingType() == QFont::PercentageSpacing)
         setFontLetterSpacing(font.letterSpacing());
+    setFontStyleHint(font.styleHint());
+    setFontStyleStrategy(font.styleStrategy());
+    setFontKerning(font.kerning());
 }
 
 /*!
@@ -2042,6 +2128,8 @@ QTextListFormat::QTextListFormat(const QTextFormat &fmt)
     \fn void QTextListFormat::setIndent(int indentation)
 
     Sets the list format's \a indentation.
+    The indentation is multiplied by the QTextDocument::indentWidth
+    property to get the effective indent in pixels.
 
     \sa indent()
 */
@@ -2051,6 +2139,8 @@ QTextListFormat::QTextListFormat(const QTextFormat &fmt)
     \fn int QTextListFormat::indent() const
 
     Returns the list format's indentation.
+    The indentation is multiplied by the QTextDocument::indentWidth
+    property to get the effective indent in pixels.
 
     \sa setIndent()
 */
@@ -2649,7 +2739,6 @@ QTextImageFormat::QTextImageFormat(const QTextFormat &fmt)
     \sa setName()
 */
 
-
 /*!
     \fn void QTextImageFormat::setWidth(qreal width)
 
@@ -2659,6 +2748,7 @@ QTextImageFormat::QTextImageFormat(const QTextFormat &fmt)
 */
 
 
+// ### Qt5 qreal replace with a QTextLength
 /*!
     \fn qreal QTextImageFormat::width() const
 
@@ -2677,6 +2767,7 @@ QTextImageFormat::QTextImageFormat(const QTextFormat &fmt)
 */
 
 
+// ### Qt5 qreal replace with a QTextLength
 /*!
     \fn qreal QTextImageFormat::height() const
 

@@ -25,167 +25,173 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLHRElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLHRElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLHRElementTableEntries[] =
+static const HashTableValue JSHTMLHRElementTableValues[6] =
 {
-    { "align", JSHTMLHRElement::AlignAttrNum, DontDelete, 0, 0 },
-    { "width", JSHTMLHRElement::WidthAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSHTMLHRElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "size", JSHTMLHRElement::SizeAttrNum, DontDelete, 0, 0 },
-    { "noShade", JSHTMLHRElement::NoShadeAttrNum, DontDelete, 0, 0 }
+    { "align", DontDelete, (intptr_t)jsHTMLHRElementAlign, (intptr_t)setJSHTMLHRElementAlign },
+    { "noShade", DontDelete, (intptr_t)jsHTMLHRElementNoShade, (intptr_t)setJSHTMLHRElementNoShade },
+    { "size", DontDelete, (intptr_t)jsHTMLHRElementSize, (intptr_t)setJSHTMLHRElementSize },
+    { "width", DontDelete, (intptr_t)jsHTMLHRElementWidth, (intptr_t)setJSHTMLHRElementWidth },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLHRElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHRElementTable = 
-{
-    2, 5, JSHTMLHRElementTableEntries, 5
-};
+static const HashTable JSHTMLHRElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSHTMLHRElementTableValues, 0 };
+#else
+    { 17, 15, JSHTMLHRElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLHRElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLHRElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHRElementConstructorTable = 
-{
-    2, 1, JSHTMLHRElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLHRElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHRElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHRElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLHRElementConstructor : public DOMObject {
 public:
     JSHTMLHRElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLHRElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLHRElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLHRElementConstructor::info = { "HTMLHRElementConstructor", 0, &JSHTMLHRElementConstructorTable, 0 };
+const ClassInfo JSHTMLHRElementConstructor::s_info = { "HTMLHRElementConstructor", 0, &JSHTMLHRElementConstructorTable, 0 };
 
 bool JSHTMLHRElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLHRElementConstructor, DOMObject>(exec, &JSHTMLHRElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHRElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLHRElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLHRElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLHRElementPrototypeTable = 
-{
-    2, 1, JSHTMLHRElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLHRElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLHRElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLHRElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLHRElementPrototype::info = { "HTMLHRElementPrototype", 0, &JSHTMLHRElementPrototypeTable, 0 };
+const ClassInfo JSHTMLHRElementPrototype::s_info = { "HTMLHRElementPrototype", 0, &JSHTMLHRElementPrototypeTable, 0 };
 
 JSObject* JSHTMLHRElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLHRElementPrototype>(exec, "[[JSHTMLHRElement.prototype]]");
+    return getDOMPrototype<JSHTMLHRElement>(exec);
 }
 
-const ClassInfo JSHTMLHRElement::info = { "HTMLHRElement", &JSHTMLElement::info, &JSHTMLHRElementTable, 0 };
+const ClassInfo JSHTMLHRElement::s_info = { "HTMLHRElement", &JSHTMLElement::s_info, &JSHTMLHRElementTable, 0 };
 
-JSHTMLHRElement::JSHTMLHRElement(ExecState* exec, HTMLHRElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLHRElement::JSHTMLHRElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLHRElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLHRElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLHRElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLHRElementPrototype(JSHTMLHRElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLHRElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLHRElement, JSHTMLElement>(exec, &JSHTMLHRElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLHRElement, Base>(exec, &JSHTMLHRElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLHRElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLHRElementAlign(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AlignAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        return jsString(imp->align());
-    }
-    case NoShadeAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        return jsBoolean(imp->noShade());
-    }
-    case SizeAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        return jsString(imp->size());
-    }
-    case WidthAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        return jsString(imp->width());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->align());
 }
 
-void JSHTMLHRElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLHRElementNoShade(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLHRElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLHRElementTable, this);
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->noShade());
 }
 
-void JSHTMLHRElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLHRElementSize(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case AlignAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        imp->setAlign(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case NoShadeAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        imp->setNoShade(value->toBoolean(exec));
-        break;
-    }
-    case SizeAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        imp->setSize(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case WidthAttrNum: {
-        HTMLHRElement* imp = static_cast<HTMLHRElement*>(impl());
-
-        imp->setWidth(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->size());
 }
 
-JSValue* JSHTMLHRElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLHRElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLHRElementConstructor>(exec, "[[HTMLHRElement.constructor]]");
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->width());
 }
+
+JSValuePtr jsHTMLHRElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLHRElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLHRElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLHRElement, Base>(exec, propertyName, value, &JSHTMLHRElementTable, this, slot);
+}
+
+void setJSHTMLHRElementAlign(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(thisObject)->impl());
+    imp->setAlign(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLHRElementNoShade(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(thisObject)->impl());
+    imp->setNoShade(value->toBoolean(exec));
+}
+
+void setJSHTMLHRElementSize(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(thisObject)->impl());
+    imp->setSize(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLHRElementWidth(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLHRElement* imp = static_cast<HTMLHRElement*>(static_cast<JSHTMLHRElement*>(thisObject)->impl());
+    imp->setWidth(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLHRElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLHRElementConstructor>(exec);
+}
+
 
 }

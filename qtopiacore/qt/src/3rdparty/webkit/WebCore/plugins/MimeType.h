@@ -24,15 +24,16 @@
 #include <wtf/RefPtr.h>
 #include <wtf/RefCounted.h>
 
+#include "PluginData.h"
+
 namespace WebCore {
 
     class Plugin;
-    class PluginData;
     class String;
 
     class MimeType : public RefCounted<MimeType> {
     public:
-        MimeType(PassRefPtr<PluginData>, unsigned index);
+        static PassRefPtr<MimeType> create(PassRefPtr<PluginData> pluginData, unsigned index) { return adoptRef(new MimeType(pluginData, index)); }
         ~MimeType();
 
         const String &type() const;
@@ -41,6 +42,7 @@ namespace WebCore {
         PassRefPtr<Plugin> enabledPlugin() const;
 
     private:
+        MimeType(PassRefPtr<PluginData>, unsigned index);
         RefPtr<PluginData> m_pluginData;
         unsigned m_index;
     };

@@ -35,7 +35,7 @@ namespace WebCore
     class FrameLoaderClientQt;
     class FrameView;
     class HTMLFrameOwnerElement;
-    class PlatformScrollbar;
+    class Scrollbar;
 }
 class QWebPage;
 
@@ -72,13 +72,11 @@ public:
 
     inline QWebFrame *parentFrame() { return qobject_cast<QWebFrame*>(q->parent()); }
 
-    WebCore::PlatformScrollbar *horizontalScrollBar() const;
-    WebCore::PlatformScrollbar *verticalScrollBar() const;
+    WebCore::Scrollbar* horizontalScrollBar() const;
+    WebCore::Scrollbar* verticalScrollBar() const;
 
     Qt::ScrollBarPolicy horizontalScrollBarPolicy;
     Qt::ScrollBarPolicy verticalScrollBarPolicy; 
-
-    void updateBackground();
 
     static WebCore::Frame* core(QWebFrame*);
     static QWebFrame* kit(WebCore::Frame*);
@@ -100,6 +98,7 @@ public:
     QWebHitTestResultPrivate(const WebCore::HitTestResult &hitTest);
 
     QPoint pos;
+    QRect boundingRect;
     QString title;
     QString linkText;
     QUrl linkUrl;

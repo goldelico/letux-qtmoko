@@ -23,8 +23,9 @@
 #define EventNames_h
 
 #include "AtomicString.h"
+#include "ThreadGlobalData.h"
 
-namespace WebCore { namespace EventNames {
+namespace WebCore {
 
 #define DOM_EVENT_NAMES_FOR_EACH(macro) \
     \
@@ -34,12 +35,16 @@ namespace WebCore { namespace EventNames {
     macro(beforepaste) \
     macro(beforeunload) \
     macro(blur) \
+    macro(cached) \
     macro(change) \
+    macro(checking) \
     macro(click) \
+    macro(close) \
     macro(contextmenu) \
     macro(copy) \
     macro(cut) \
     macro(dblclick) \
+    macro(downloading) \
     macro(drag) \
     macro(dragend) \
     macro(dragenter) \
@@ -54,12 +59,17 @@ namespace WebCore { namespace EventNames {
     macro(keypress) \
     macro(keyup) \
     macro(load) \
+    macro(loadstart) \
+    macro(message) \
     macro(mousedown) \
     macro(mousemove) \
     macro(mouseout) \
     macro(mouseover) \
     macro(mouseup) \
     macro(mousewheel) \
+    macro(noupdate) \
+    macro(offline) \
+    macro(online) \
     macro(overflowchanged) \
     macro(paste) \
     macro(readystatechange) \
@@ -69,9 +79,11 @@ namespace WebCore { namespace EventNames {
     macro(search) \
     macro(select) \
     macro(selectstart) \
+    macro(storage) \
     macro(submit) \
     macro(textInput) \
     macro(unload) \
+    macro(updateready) \
     macro(zoom) \
     \
     macro(DOMActivate) \
@@ -84,20 +96,54 @@ namespace WebCore { namespace EventNames {
     macro(DOMNodeRemoved) \
     macro(DOMNodeRemovedFromDocument) \
     macro(DOMSubtreeModified) \
+    macro(DOMContentLoaded) \
     \
     macro(webkitBeforeTextInserted) \
     macro(webkitEditableContentChanged) \
     \
+    macro(canshowcurrentframe) \
+    macro(canplay) \
+    macro(canplaythrough) \
+    macro(dataunavailable) \
+    macro(durationchange) \
+    macro(emptied) \
+    macro(ended) \
+    macro(loadedfirstframe) \
+    macro(loadedmetadata) \
+    macro(pause) \
+    macro(play) \
+    macro(ratechange) \
+    macro(timeupdate) \
+    macro(volumechange) \
+    macro(waiting) \
+    \
+    macro(progress) \
+    macro(stalled) \
+    \
+    macro(webkitAnimationEnd) \
+    macro(webkitAnimationStart) \
+    macro(webkitAnimationIteration) \
+    \
+    macro(webkitTransitionEnd) \
+    \
 // end of DOM_EVENT_NAMES_FOR_EACH
 
-#ifndef DOM_EVENT_NAMES_HIDE_GLOBALS
-    #define DOM_EVENT_NAMES_DECLARE(name) extern const AtomicString name##Event;
-    DOM_EVENT_NAMES_FOR_EACH(DOM_EVENT_NAMES_DECLARE)
-    #undef DOM_EVENT_NAMES_DECLARE
-#endif
+    class EventNames {
+        int dummy; // Needed to make initialization macro work.
 
-    void init();
+    public:
+        EventNames();
 
-} }
+        #define DOM_EVENT_NAMES_DECLARE(name) AtomicString name##Event;
+        DOM_EVENT_NAMES_FOR_EACH(DOM_EVENT_NAMES_DECLARE)
+        #undef DOM_EVENT_NAMES_DECLARE
+    };
+
+    inline EventNames& eventNames()
+    {
+        return threadGlobalData().eventNames();
+    }
+
+}
 
 #endif

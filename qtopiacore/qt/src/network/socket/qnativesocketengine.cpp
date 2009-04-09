@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,7 +48,7 @@
 
     \reentrant
     \ingroup io
-    \module network
+    \inmodule QtNetwork
 
     QtSocketLayer provides basic socket functionality provided by the
     operating system. It also keeps track of what state the socket is
@@ -506,11 +510,47 @@ bool QNativeSocketEngine::connectToHost(const QHostAddress &address, quint16 por
     Q_CHECK_STATES(QNativeSocketEngine::connectToHost(),
                    QAbstractSocket::UnconnectedState, QAbstractSocket::ConnectingState, false);
 
+    d->peerAddress = address;
+    d->peerPort = port;
     bool connected = d->nativeConnect(address, port);
     if (connected)
         d->fetchConnectionParameters();
 
     return connected;
+}
+
+/*!
+    If there's a connection activity on the socket, process it. Then
+    notify our parent if there really was activity.
+*/
+void QNativeSocketEngine::connectionNotification()
+{
+    Q_D(QNativeSocketEngine);
+    Q_ASSERT(state() == QAbstractSocket::ConnectingState);
+
+    connectToHost(d->peerAddress, d->peerPort);
+    if (state() != QAbstractSocket::ConnectingState) {
+        // we changed states
+        QAbstractSocketEngine::connectionNotification();
+    }
+}
+
+/*!
+    Connects to the remote host name given by \a name on port \a
+    port. When this function is called, the upper-level will not
+    perform a hostname lookup.
+
+    The native socket engine does not support this operation,
+    but some other socket engines (notably proxy-based ones) do.
+*/
+bool QNativeSocketEngine::connectToHostByName(const QString &name, quint16 port)
+{
+    Q_UNUSED(name);
+    Q_UNUSED(port);
+    Q_D(QNativeSocketEngine);
+    d->setError(QAbstractSocket::UnsupportedSocketOperationError,
+                QNativeSocketEnginePrivate::OperationUnsupportedErrorString);
+    return false;
 }
 
 /*!
@@ -778,7 +818,7 @@ void QNativeSocketEngine::close()
     is to create a QSocketNotifier, passing the socket descriptor
     returned by socketDescriptor() to its constructor.
 */
-bool QNativeSocketEngine::waitForRead(int msecs, bool *timedOut) const
+bool QNativeSocketEngine::waitForRead(int msecs, bool *timedOut)
 {
     Q_D(const QNativeSocketEngine);
     Q_CHECK_VALID_SOCKETLAYER(QNativeSocketEngine::waitForRead(), false);
@@ -795,6 +835,8 @@ bool QNativeSocketEngine::waitForRead(int msecs, bool *timedOut) const
         d->setError(QAbstractSocket::SocketTimeoutError,
             QNativeSocketEnginePrivate::TimeOutErrorString);
         return false;
+    } else if (state() == QAbstractSocket::ConnectingState) {
+        connectToHost(d->peerAddress, d->peerPort);
     }
 
     return ret > 0;
@@ -815,7 +857,7 @@ bool QNativeSocketEngine::waitForRead(int msecs, bool *timedOut) const
     is to create a QSocketNotifier, passing the socket descriptor
     returned by socketDescriptor() to its constructor.
 */
-bool QNativeSocketEngine::waitForWrite(int msecs, bool *timedOut) const
+bool QNativeSocketEngine::waitForWrite(int msecs, bool *timedOut)
 {
     Q_D(const QNativeSocketEngine);
     Q_CHECK_VALID_SOCKETLAYER(QNativeSocketEngine::waitForWrite(), false);
@@ -826,12 +868,25 @@ bool QNativeSocketEngine::waitForWrite(int msecs, bool *timedOut) const
         *timedOut = false;
 
     int ret = d->nativeSelect(msecs, false);
+    // On Windows, the socket is in connected state if a call to
+    // select(writable) is successful. In this case we should not
+    // issue a second call to WSAConnect()
+#if defined (Q_WS_WIN)
+    if (ret > 0) {
+        setState(QAbstractSocket::ConnectedState);
+        d_func()->fetchConnectionParameters();
+        return true;
+    }
+#endif
+
     if (ret == 0) {
         if (timedOut)
             *timedOut = true;
         d->setError(QAbstractSocket::SocketTimeoutError,
                     QNativeSocketEnginePrivate::TimeOutErrorString);
         return false;
+    } else if (state() == QAbstractSocket::ConnectingState) {
+        connectToHost(d->peerAddress, d->peerPort);
     }
 
     return ret > 0;
@@ -839,7 +894,7 @@ bool QNativeSocketEngine::waitForWrite(int msecs, bool *timedOut) const
 
 bool QNativeSocketEngine::waitForReadOrWrite(bool *readyToRead, bool *readyToWrite,
                                       bool checkRead, bool checkWrite,
-                                      int msecs, bool *timedOut) const
+                                      int msecs, bool *timedOut)
 {
     Q_D(const QNativeSocketEngine);
     Q_CHECK_VALID_SOCKETLAYER(QNativeSocketEngine::waitForWrite(), false);
@@ -847,13 +902,26 @@ bool QNativeSocketEngine::waitForReadOrWrite(bool *readyToRead, bool *readyToWri
                       QAbstractSocket::UnconnectedState, false);
 
     int ret = d->nativeSelect(msecs, checkRead, checkWrite, readyToRead, readyToWrite);
+    // On Windows, the socket is in connected state if a call to
+    // select(writable) is successful. In this case we should not
+    // issue a second call to WSAConnect()
+#if defined (Q_WS_WIN)
+    if (checkWrite && ((readyToWrite && *readyToWrite) || !readyToWrite) && ret > 0) {
+        setState(QAbstractSocket::ConnectedState);
+        d_func()->fetchConnectionParameters();
+        return true;
+    }
+#endif    
     if (ret == 0) {
         if (timedOut)
             *timedOut = true;
         d->setError(QAbstractSocket::SocketTimeoutError,
                     QNativeSocketEnginePrivate::TimeOutErrorString);
         return false;
+    } else if (state() == QAbstractSocket::ConnectingState) {
+        connectToHost(d->peerAddress, d->peerPort);
     }
+
     return ret > 0;
 }
 
@@ -994,7 +1062,10 @@ protected:
 bool QWriteNotifier::event(QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
-        engine->writeNotification();
+        if (engine->state() == QAbstractSocket::ConnectingState)
+            engine->connectionNotification();
+        else
+            engine->writeNotification();
         return true;
     }
     return QSocketNotifier::event(e);

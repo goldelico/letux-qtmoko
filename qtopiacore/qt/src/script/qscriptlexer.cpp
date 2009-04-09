@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -59,14 +63,23 @@ QT_BEGIN_NAMESPACE
 
 extern double qstrtod(const char *s00, char const **se, bool *ok);
 
-#define shiftWindowsLineBreak() if(current == '\r' && next1 == '\n') shift(1);
+#define shiftWindowsLineBreak() \
+    do { \
+        if (((current == '\r') && (next1 == '\n')) \
+            || ((current == '\n') && (next1 == '\r'))) { \
+            shift(1); \
+        } \
+    } \
+    while (0)
 
+namespace QScript {
+extern qsreal integerFromString(const char *buf, int size, int radix);
+}
 
-QScript::Lexer::Lexer(QScriptEngine *eng)
-    : driver(0),
+QScript::Lexer::Lexer(QScriptEnginePrivate *eng)
+    : driver(eng),
       yylineno(0),
       size8(128), size16(128), restrKeyword(false),
-      extraIdentifiers(false),
       stackToken(-1), pos(0),
       code(0), length(0),
       bol(true),
@@ -76,12 +89,11 @@ QScript::Lexer::Lexer(QScriptEngine *eng)
       parenthesesState(IgnoreParentheses),
       prohibitAutomaticSemicolon(false)
 {
-    if (eng)
-        driver = QScriptEnginePrivate::get(eng);
     // allocate space for read buffers
     buffer8 = new char[size8];
     buffer16 = new QChar[size16];
-    pattern = flags = 0;
+    pattern = 0;
+    flags = 0;
 
 }
 
@@ -172,10 +184,10 @@ int QScript::Lexer::findReservedWord(const QChar *c, int size) const
         else if (c[0] == QLatin1Char('w') && c[1] == QLatin1Char('i')
                 && c[2] == QLatin1Char('t') && c[3] == QLatin1Char('h'))
             return QScriptGrammar::T_WITH;
-        else if (!extraIdentifiers && c[0] == QLatin1Char('t') && c[1] == QLatin1Char('r')
+        else if (c[0] == QLatin1Char('t') && c[1] == QLatin1Char('r')
                 && c[2] == QLatin1Char('u') && c[3] == QLatin1Char('e'))
             return QScriptGrammar::T_TRUE;
-        else if (!extraIdentifiers && c[0] == QLatin1Char('n') && c[1] == QLatin1Char('u')
+        else if (c[0] == QLatin1Char('n') && c[1] == QLatin1Char('u')
                 && c[2] == QLatin1Char('l') && c[3] == QLatin1Char('l'))
             return QScriptGrammar::T_NULL;
         else if (check_reserved) {
@@ -218,7 +230,7 @@ int QScript::Lexer::findReservedWord(const QChar *c, int size) const
                 && c[2] == QLatin1Char('n') && c[3] == QLatin1Char('s')
                 && c[4] == QLatin1Char('t'))
             return QScriptGrammar::T_CONST;
-        else if (!extraIdentifiers && c[0] == QLatin1Char('f') && c[1] == QLatin1Char('a')
+        else if (c[0] == QLatin1Char('f') && c[1] == QLatin1Char('a')
                 && c[2] == QLatin1Char('l') && c[3] == QLatin1Char('s')
                 && c[4] == QLatin1Char('e'))
             return QScriptGrammar::T_FALSE;
@@ -341,16 +353,16 @@ int QScript::Lexer::findReservedWord(const QChar *c, int size) const
                 && c[4] == QLatin1Char('t') && c[5] == QLatin1Char('i')
                 && c[6] == QLatin1Char('o') && c[7] == QLatin1Char('n'))
             return QScriptGrammar::T_FUNCTION;
+        else if (c[0] == QLatin1Char('d') && c[1] == QLatin1Char('e')
+                && c[2] == QLatin1Char('b') && c[3] == QLatin1Char('u')
+                && c[4] == QLatin1Char('g') && c[5] == QLatin1Char('g')
+                && c[6] == QLatin1Char('e') && c[7] == QLatin1Char('r'))
+            return QScriptGrammar::T_DEBUGGER;
         else if (check_reserved) {
             if (c[0] == QLatin1Char('a') && c[1] == QLatin1Char('b')
                     && c[2] == QLatin1Char('s') && c[3] == QLatin1Char('t')
                     && c[4] == QLatin1Char('r') && c[5] == QLatin1Char('a')
                     && c[6] == QLatin1Char('c') && c[7] == QLatin1Char('t'))
-                return QScriptGrammar::T_RESERVED_WORD;
-            else if (c[0] == QLatin1Char('d') && c[1] == QLatin1Char('e')
-                    && c[2] == QLatin1Char('b') && c[3] == QLatin1Char('u')
-                    && c[4] == QLatin1Char('g') && c[5] == QLatin1Char('g')
-                    && c[6] == QLatin1Char('e') && c[7] == QLatin1Char('r'))
                 return QScriptGrammar::T_RESERVED_WORD;
             else if (c[0] == QLatin1Char('v') && c[1] == QLatin1Char('o')
                     && c[2] == QLatin1Char('l') && c[3] == QLatin1Char('a')
@@ -548,7 +560,14 @@ int QScript::Lexer::lex()
             else if (current == 'u')
                 state = InUnicodeEscape;
             else {
-                record16(singleEscape(current));
+                if (isLineTerminator()) {
+                    shiftWindowsLineBreak();
+                    yylineno++;
+                    yycolumn = 0;
+                    bol = true;
+                } else {
+                    record16(singleEscape(current));
+                }
                 state = InString;
             }
             break;
@@ -723,42 +742,10 @@ int QScript::Lexer::lex()
     if (state == Number) {
         dval = qstrtod(buffer8, 0, 0);
     } else if (state == Hex) { // scan hex numbers
-        quint64 i;
-#if defined(Q_OS_WINCE)
-        // sscanf, swscanf is broken under CE. Need to
-        // use our own implementation
-        i = QString::fromAscii(buffer8).remove(0,2).toULongLong(NULL,16);
-#elif defined(_MSC_VER) && _MSC_VER >= 1400
-        sscanf_s(buffer8, "%llx", &i);
-#elif defined(Q_WS_WIN)
-        sscanf(buffer8, "%I64x", &i);
-#else
-        sscanf(buffer8, "%llx", &i);
-#endif
-#if defined Q_CC_MSVC && !defined Q_CC_MSVC_NET
-        dval = qint64(i);
-#else
-        dval = i;
-#endif
+        dval = QScript::integerFromString(buffer8, pos8, 16);
         state = Number;
     } else if (state == Octal) {   // scan octal number
-        quint64 ui;
-#if defined(Q_OS_WINCE)
-        // sscanf, swscanf is broken under CE. Need to
-        // use our own implementation
-        ui = QString::fromAscii(buffer8).toULongLong(NULL,8);
-#elif defined(_MSC_VER) && _MSC_VER >= 1400
-        sscanf_s(buffer8, "%llo", &ui);
-#elif defined(Q_WS_WIN)
-        sscanf(buffer8, "%I64o", &ui);
-#else
-        sscanf(buffer8, "%llo", &ui);
-#endif
-#if defined Q_CC_MSVC && !defined Q_CC_MSVC_NET
-        dval = qint64(ui);
-#else
-        dval = ui;
-#endif
+        dval = QScript::integerFromString(buffer8, pos8, 8);
         state = Number;
     }
 
@@ -1090,15 +1077,18 @@ bool QScript::Lexer::scanRegExp(RegExpBodyPrefix prefix)
         shift(1);
     }
 
+    flags = 0;
     while (isIdentLetter(current)) {
+        int flag = QScript::Ecma::RegExp::flagFromChar(current);
+        if (flag == 0) {
+            errmsg = QString::fromLatin1("Invalid regular expression flag '%0'")
+                     .arg(QChar(current));
+            return false;
+        }
+        flags |= flag;
         record16(current);
         shift(1);
     }
-
-    if (driver)
-        flags = driver->intern(buffer16, pos16);
-    else
-        flags = 0;
 
     return true;
 }

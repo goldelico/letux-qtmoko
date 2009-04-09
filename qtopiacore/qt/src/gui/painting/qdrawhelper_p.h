@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -63,12 +67,30 @@
 #include "QtGui/qscreen_qws.h"
 #endif
 
+// Disable MMX and SSE on Mac/PPC builds, or if the compiler
+// does not support -Xarch argument passing
+#if defined(QT_NO_MAC_XARCH) || (defined(Q_OS_DARWIN) && (defined(__ppc__) || defined(__ppc64__)))
+#undef QT_HAVE_SSE2
+#undef QT_HAVE_SSE
+#undef QT_HAVE_3DNOW
+#undef QT_HAVE_MMX
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #if defined(Q_CC_MSVC) && _MSCVER <= 1300 && !defined(Q_CC_INTEL)
 #define Q_STATIC_TEMPLATE_SPECIALIZATION static
 #else
 #define Q_STATIC_TEMPLATE_SPECIALIZATION
+#endif
+
+#if defined(Q_CC_RVCT)
+// RVCT doesn't like static template functions
+#  define Q_STATIC_TEMPLATE_FUNCTION
+#  define Q_STATIC_INLINE_FUNCTION inline
+#else
+#  define Q_STATIC_TEMPLATE_FUNCTION static
+#  define Q_STATIC_INLINE_FUNCTION static inline
 #endif
 
 /*******************************************************************************
@@ -87,37 +109,65 @@ struct QConicalGradientData;
 struct QSpanData;
 class QGradient;
 class QRasterBuffer;
+class QClipData;
 
 typedef QT_FT_SpanFunc ProcessSpans;
 typedef void (*BitmapBlitFunc)(QRasterBuffer *rasterBuffer,
                                int x, int y, quint32 color,
                                const uchar *bitmap,
                                int mapWidth, int mapHeight, int mapStride);
+
 typedef void (*AlphamapBlitFunc)(QRasterBuffer *rasterBuffer,
                                  int x, int y, quint32 color,
                                  const uchar *bitmap,
-                                 int mapWidth, int mapHeight, int mapStride);
+                                 int mapWidth, int mapHeight, int mapStride,
+                                 const QClipData *clip);
+
+typedef void (*AlphaRGBBlitFunc)(QRasterBuffer *rasterBuffer,
+                                 int x, int y, quint32 color,
+                                 const uint *rgbmask,
+                                 int mapWidth, int mapHeight, int mapStride,
+                                 const QClipData *clip);
+
 typedef void (*RectFillFunc)(QRasterBuffer *rasterBuffer,
                              int x, int y, int width, int height,
                              quint32 color);
+
+typedef void (*SrcOverBlendFunc)(uchar *destPixels, int dbpl,
+                                 const uchar *src, int spbl,
+                                 int w, int h,
+                                 int const_alpha);
+
+typedef void (*SrcOverScaleFunc)(uchar *destPixels, int dbpl,
+                                 const uchar *src, int spbl,
+                                 const QRectF &targetRect,
+                                 const QRectF &sourceRect,
+                                 const QRect &clipRect,
+                                 int const_alpha);
+
 
 struct DrawHelper {
     ProcessSpans blendColor;
     ProcessSpans blendGradient;
     BitmapBlitFunc bitmapBlit;
     AlphamapBlitFunc alphamapBlit;
+    AlphaRGBBlitFunc alphaRGBBlit;
     RectFillFunc fillRect;
 };
 
+extern SrcOverBlendFunc qBlendFunctions[QImage::NImageFormats][QImage::NImageFormats];
+extern SrcOverScaleFunc qScaleFunctions[QImage::NImageFormats][QImage::NImageFormats];
+
 extern DrawHelper qDrawHelper[QImage::NImageFormats];
+
 void qBlendTexture(int count, const QSpan *spans, void *userData);
 #if defined(Q_WS_QWS) && !defined(QT_NO_RASTERCALLBACKS)
 extern DrawHelper qDrawHelperCallback[QImage::NImageFormats];
 void qBlendTextureCallback(int count, const QSpan *spans, void *userData);
 #endif
 
-typedef void QT_FASTCALL (*CompositionFunction)(uint *dest, const uint *src, int length, uint const_alpha);
-typedef void QT_FASTCALL (*CompositionFunctionSolid)(uint *dest, int length, uint color, uint const_alpha);
+typedef void (QT_FASTCALL *CompositionFunction)(uint *dest, const uint *src, int length, uint const_alpha);
+typedef void (QT_FASTCALL *CompositionFunctionSolid)(uint *dest, int length, uint color, uint const_alpha);
 
 void qInitDrawhelperAsm();
 
@@ -220,8 +270,10 @@ struct QSpanData
     ProcessSpans unclipped_blend;
     BitmapBlitFunc bitmapBlit;
     AlphamapBlitFunc alphamapBlit;
+    AlphaRGBBlitFunc alphaRGBBlit;
     RectFillFunc fillRect;
     qreal m11, m12, m13, m21, m22, m23, m33, dx, dy;   // inverse xform matrix
+    const QClipData *clip;
     enum Type {
         None,
         Solid,
@@ -240,14 +292,28 @@ struct QSpanData
         QTextureData texture;
     };
 
-    void init(QRasterBuffer *rb, QRasterPaintEngine *pe = 0);
+    void init(QRasterBuffer *rb, const QRasterPaintEngine *pe);
     void setup(const QBrush &brush, int alpha);
     void setupMatrix(const QTransform &matrix, int bilinear);
     void initTexture(const QImage *image, int alpha, QTextureData::Type = QTextureData::Plain, const QRect &sourceRect = QRect());
     void adjustSpanMethods();
 };
 
-static inline uint BYTE_MUL(uint x, uint a) {
+
+static inline uint BYTE_MUL_RGB16(uint x, uint a) {
+    a += 1;
+    uint t = (((x & 0x07e0)*a) >> 8) & 0x07e0;
+    t |= (((x & 0xf81f)*(a>>2)) >> 6) & 0xf81f;
+    return t;
+}
+
+static inline uint BYTE_MUL_RGB16_32(uint x, uint a) {
+    uint t = (((x & 0xf81f07e0) >> 5)*a) & 0xf81f07e0;
+    t |= (((x & 0x07e0f81f)*a) >> 5) & 0x07e0f81f;
+    return t;
+}
+
+Q_STATIC_INLINE_FUNCTION uint BYTE_MUL(uint x, uint a) {
     uint t = (x & 0xff00ff) * a;
     t = (t + ((t >> 8) & 0xff00ff) + 0x800080) >> 8;
     t &= 0xff00ff;
@@ -451,12 +517,13 @@ qargb8565::qargb8565(const qrgb565 &v)
 qargb8565::operator quint32() const
 {
     const quint16 rgb = (data[2] << 8) | data[1];
+    const int a = data[0];
     const int r = (rgb & 0xf800);
     const int g = (rgb & 0x07e0);
     const int b = (rgb & 0x001f);
-    const int tr = (r >> 8) | (r >> 13);
-    const int tg = (g >> 3) | (g >> 9);
-    const int tb = (b << 3) | (b >> 2);
+    const int tr = qMin(a, (r >> 8) | (r >> 13));
+    const int tg = qMin(a, (g >> 3) | (g >> 9));
+    const int tb = qMin(a, (b << 3) | (b >> 2));
     return qRgba(tr, tg, tb, data[0]);
 }
 
@@ -1375,7 +1442,7 @@ public:
 } Q_PACKED;
 
 template <typename SRC>
-static inline quint32 qt_convertToRgb(SRC color);
+Q_STATIC_TEMPLATE_FUNCTION inline quint32 qt_convertToRgb(SRC color);
 
 template <>
 inline quint32 qt_convertToRgb(quint32 color)
@@ -1700,7 +1767,7 @@ do {                                          \
     }                                         \
 } while (0)
 
-static inline int qt_div_255(int x) { return (x + (x>>8) + 0x80) >> 8; }
+Q_STATIC_INLINE_FUNCTION int qt_div_255(int x) { return (x + (x>>8) + 0x80) >> 8; }
 
 inline ushort qConvertRgb32To16(uint c)
 {
@@ -1783,7 +1850,7 @@ static inline uint INTERPOLATE_PIXEL_255(uint x, uint a, uint y, uint b) {
     return (uint(t)) | (uint(t >> 24));
 }
 
-static inline uint BYTE_MUL(uint x, uint a) {
+Q_STATIC_INLINE_FUNCTION uint BYTE_MUL(uint x, uint a) {
     ulong t = (((ulong(x)) | ((ulong(x)) << 24)) & 0x00ff00ff00ff00ff) * a;
     t = (t + ((t >> 8) & 0xff00ff00ff00ff) + 0x80008000800080);
     t &= 0x00ff00ff00ff00ff;
@@ -1836,6 +1903,7 @@ const uint qt_bayer_matrix[16][16] = {
 
 #define ARGB_COMBINE_ALPHA(argb, alpha) \
     ((((argb >> 24) * alpha) >> 8) << 24) | (argb & 0x00ffffff)
+
 
 QT_END_NAMESPACE
 

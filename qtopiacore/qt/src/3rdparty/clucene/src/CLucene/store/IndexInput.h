@@ -1,15 +1,19 @@
-/*------------------------------------------------------------------------------
-* Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
-* 
-* Distributable under the terms of either the Apache License (Version 2.0) or 
-* the GNU Lesser General Public License, as specified in the COPYING file.
-------------------------------------------------------------------------------*/
+/*
+ * Copyright (C) 2003-2006 Ben van Klinken and the CLucene Team
+ *
+ * Distributable under the terms of either the Apache License (Version 2.0) or 
+ * the GNU Lesser General Public License, as specified in the COPYING file.
+ *
+ * Changes are Copyright(C) 2007, 2008 by Nokia Corporation and/or its subsidiary(-ies), all rights reserved.
+*/
 #ifndef _lucene_store_IndexInput_
 #define _lucene_store_IndexInput_
 
 #if defined(_LUCENE_PRAGMA_ONCE)
 # pragma once
 #endif
+
+#include <QtCore/QString>
 
 #include "CLucene/util/bufferedstream.h"
 #include "IndexOutput.h"
@@ -22,6 +26,8 @@ CL_NS_DEF(store)
    * @see IndexOutput
    */
 	class IndexInput: LUCENE_BASE {
+	private:
+		void skipChars( const int32_t count);
 	protected:
 		IndexInput();
 		IndexInput(const IndexInput& clone);
@@ -106,7 +112,7 @@ CL_NS_DEF(store)
 		/** The number of bytes in the file. */
 		virtual int64_t length() = 0;
 		
-		virtual const char* getDirectoryType() const = 0;
+		virtual QString getDirectoryType() const = 0;
 	};
 	
    /** Abstract base class for input from a file in a {@link Directory}.  A

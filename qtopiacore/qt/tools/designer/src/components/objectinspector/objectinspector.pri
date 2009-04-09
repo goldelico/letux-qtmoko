@@ -1,3 +1,4 @@
+include($$QT_SOURCE_TREE/tools/shared/findwidget/findwidget.pri)
 
 INCLUDEPATH += $$PWD
 

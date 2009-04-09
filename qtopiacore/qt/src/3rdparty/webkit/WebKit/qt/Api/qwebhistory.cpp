@@ -17,13 +17,15 @@
     Boston, MA 02110-1301, USA.
 */
 
+#include "config.h"
 #include "qwebhistory.h"
 #include "qwebhistory_p.h"
 
-#include "DeprecatedString.h"
 #include "PlatformString.h"
 #include "Image.h"
+#include "KURL.h"
 #include "Page.h"
+#include "PageGroup.h"
 
 #include <QSharedData>
 
@@ -46,6 +48,7 @@
   \row    \o originalUrl() \o The URL used to access the page.
   \row    \o lastVisited() \o The date and time of the user's last visit to the page.
   \row    \o icon()        \o The icon associated with the page that was provided by the server.
+  \row    \o userData()    \o The user specific data that was stored with the history item.
   \endtable
 
   \note QWebHistoryItem objects are value based and \l{explicitly shared}.
@@ -84,7 +87,9 @@ QWebHistoryItem::~QWebHistoryItem()
 */
 QUrl QWebHistoryItem::originalUrl() const
 {
-    return QUrl(d->item->originalURL().url());
+    if (d->item)
+        return QUrl(d->item->originalURL().string());
+    return QUrl();
 }
 
 
@@ -95,7 +100,9 @@ QUrl QWebHistoryItem::originalUrl() const
 */
 QUrl QWebHistoryItem::url() const
 {
-    return QUrl(d->item->url().url());
+    if (d->item)
+        return QUrl(d->item->url().string());
+    return QUrl();
 }
 
 
@@ -106,7 +113,9 @@ QUrl QWebHistoryItem::url() const
 */
 QString QWebHistoryItem::title() const
 {
-    return d->item->title();
+    if (d->item)
+        return d->item->title();
+    return QString();
 }
 
 
@@ -118,7 +127,9 @@ QString QWebHistoryItem::title() const
 QDateTime QWebHistoryItem::lastVisited() const
 {
     //FIXME : this will be wrong unless we correctly set lastVisitedTime ourselves
-    return QDateTime::fromTime_t((uint)d->item->lastVisitedTime());
+    if (d->item)
+        return QDateTime::fromTime_t((uint)d->item->lastVisitedTime());
+    return QDateTime();
 }
 
 
@@ -129,15 +140,52 @@ QDateTime QWebHistoryItem::lastVisited() const
 */
 QIcon QWebHistoryItem::icon() const
 {
-    return *d->item->icon()->getPixmap();
+    if (d->item)
+        return *d->item->icon()->nativeImageForCurrentFrame();
+    return QIcon();
 }
 
 /*!
+  \since 4.5
+  Returns the user specific data that was stored with the history item.
+
+  \sa setUserData()
+*/
+QVariant QWebHistoryItem::userData() const
+{
+    if (d->item)
+        return d->item->userData();
+    return QVariant();
+}
+
+/*!
+  \since 4.5
+
+ Stores user specific data \a userData with the history item.
+
+ \sa userData()
+*/
+void QWebHistoryItem::setUserData(const QVariant& userData)
+{
+    if (d->item)
+        d->item->setUserData(userData);
+}
+
+/*!*
   \internal
 */
 QWebHistoryItem::QWebHistoryItem(QWebHistoryItemPrivate *priv)
 {
     d = priv;
+}
+
+/*!
+    \since 4.5
+    Returns whether this is a valid history item.
+*/
+bool QWebHistoryItem::isValid() const
+{
+    return d->item;
 }
 
 /*!
@@ -189,6 +237,11 @@ void QWebHistory::clear()
     RefPtr<WebCore::HistoryItem> current = d->lst->currentItem();
     int capacity = d->lst->capacity();
     d->lst->setCapacity(0);    
+
+    WebCore::Page* page = d->lst->page();
+    if (page && page->groupPtr())
+        page->groupPtr()->removeVisitedLinks();
+
     d->lst->setCapacity(capacity);
     d->lst->addItem(current.get());
     d->lst->goToItem(current.get());
@@ -279,7 +332,7 @@ bool QWebHistory::canGoForward() const
 void QWebHistory::back()
 {
     d->lst->goBack();
-    WebCore::Page *page = d->lst->page();
+    WebCore::Page* page = d->lst->page();
     page->goToItem(currentItem().d->item, WebCore::FrameLoadTypeIndexedBackForward);
 }
 
@@ -292,7 +345,7 @@ void QWebHistory::back()
 void QWebHistory::forward()
 {
     d->lst->goForward();
-    WebCore::Page *page = d->lst->page();
+    WebCore::Page* page = d->lst->page();
     page->goToItem(currentItem().d->item, WebCore::FrameLoadTypeIndexedBackForward);
 }
 
@@ -304,7 +357,7 @@ void QWebHistory::forward()
 void QWebHistory::goToItem(const QWebHistoryItem &item)
 {
     d->lst->goToItem(item.d->item);
-    WebCore::Page *page = d->lst->page();
+    WebCore::Page* page = d->lst->page();
     page->goToItem(currentItem().d->item, WebCore::FrameLoadTypeIndexedBackForward);
 }
 
@@ -339,6 +392,15 @@ QWebHistoryItem QWebHistory::forwardItem() const
 }
 
 /*!
+  \since 4.5
+  Returns the index of the current item in history.
+*/
+int QWebHistory::currentItemIndex() const
+{
+    return d->lst->backListCount();
+}
+
+/*!
   Returns the item at index \a i in the history.
 */
 QWebHistoryItem QWebHistory::itemAt(int i) const
@@ -355,5 +417,27 @@ QWebHistoryItem QWebHistory::itemAt(int i) const
 int QWebHistory::count() const
 {
     return d->lst->entries().size();
+}
+
+/*!
+  \since 4.5
+  Returns the maximum number of items in the history.
+
+  \sa setMaximumItemCount()
+*/
+int QWebHistory::maximumItemCount() const
+{
+    return d->lst->capacity();
+}
+
+/*!
+  \since 4.5
+  Sets the maximum number of items in the history to \a count.
+
+  \sa maximumItemCount()
+*/
+void QWebHistory::setMaximumItemCount(int count)
+{
+    d->lst->setCapacity(count);
 }
 

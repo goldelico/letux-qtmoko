@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -86,11 +90,11 @@
 # define __NR_inotify_init      316
 # define __NR_inotify_add_watch 317
 # define __NR_inotify_rm_watch  318
-#elif defined (__SH4__)
+#elif defined (__sh__)
 # define __NR_inotify_init      290
 # define __NR_inotify_add_watch 291
 # define __NR_inotify_rm_watch  292
-#elif defined (__SH5__)
+#elif defined (__sh64__)
 # define __NR_inotify_init      318
 # define __NR_inotify_add_watch 319
 # define __NR_inotify_rm_watch  320
@@ -106,13 +110,17 @@
 # define __NR_inotify_init	240
 # define __NR_inotify_add_watch	241
 # define __NR_inotify_rm_watch	242
+#elif defined (__mc68000__)
+# define __NR_inotify_init      284
+# define __NR_inotify_add_watch 285
+# define __NR_inotify_rm_watch  286
 #else
 # error "This architecture is not supported. Please talk to qt-bugs@trolltech.com"
 #endif
 
 QT_BEGIN_NAMESPACE
 
-#ifdef QT_LSB
+#ifdef QT_LINUXBASE
 // ### the LSB doesn't standardize syscall, need to wait until glib2.4 is standardized
 static inline int syscall(...) { return -1; }
 #endif
@@ -157,6 +165,7 @@ struct inotify_event {
 #define IN_MOVE_SELF            0x00000800
 #define IN_UNMOUNT              0x00002000
 #define IN_Q_OVERFLOW           0x00004000
+#define IN_IGNORED              0x00008000
 
 #define IN_CLOSE                (IN_CLOSE_WRITE | IN_CLOSE_NOWRITE)
 #define IN_MOVE                 (IN_MOVED_FROM | IN_MOVED_TO)
@@ -239,6 +248,7 @@ QStringList QInotifyFileSystemWatcherEngine::addPaths(const QStringList &paths,
                                        | IN_ATTRIB
                                        | IN_MODIFY
                                        | IN_MOVE
+                                       | IN_MOVE_SELF
                                        | IN_DELETE_SELF
                                        )));
         if (wd <= 0) {
@@ -311,28 +321,42 @@ void QInotifyFileSystemWatcherEngine::readFromInotify()
     buffSize = read(inotifyFd, buffer.data(), buffSize);
     const char *at = buffer.data();
     const char * const end = at + buffSize;
+
+    QMap<int, inotify_event> eventForId;
     while (at < end) {
         const inotify_event *event = reinterpret_cast<const inotify_event *>(at);
-        // qDebug() << "inotify event, wd" << event->wd << "mask" << hex << event->mask;
 
-        int id = event->wd;
+        if (eventForId.contains(event->wd))
+            eventForId[event->wd].mask |= event->mask;
+        else
+            eventForId.insert(event->wd, *event);
+
+        at += sizeof(inotify_event) + event->len;
+    }
+
+    QMap<int, inotify_event>::const_iterator it = eventForId.constBegin();
+    while (it != eventForId.constEnd()) {
+        inotify_event event = *it;
+        ++it;
+
+        // qDebug() << "inotify event, wd" << event.wd << "mask" << hex << event.mask;
+
+        int id = event.wd;
         QString path = idToPath.value(id);
         if (path.isEmpty()) {
             // perhaps a directory?
             id = -id;
             path = idToPath.value(id);
-            if (path.isEmpty()) {
-                at += sizeof(inotify_event) + event->len;
+            if (path.isEmpty())
                 continue;
-            }
         }
 
         // qDebug() << "event for path" << path;
 
-        if ((event->mask & (IN_DELETE_SELF | IN_UNMOUNT)) != 0) {
+        if ((event.mask & (IN_DELETE_SELF | IN_MOVE_SELF | IN_UNMOUNT)) != 0) {
             pathToID.remove(path);
             idToPath.remove(id);
-            inotify_rm_watch(inotifyFd, event->wd);
+            inotify_rm_watch(inotifyFd, event.wd);
 
             if (id < 0)
                 emit directoryChanged(path, true);
@@ -344,8 +368,6 @@ void QInotifyFileSystemWatcherEngine::readFromInotify()
             else
                 emit fileChanged(path, false);
         }
-
-        at += sizeof(inotify_event) + event->len;
     }
 }
 

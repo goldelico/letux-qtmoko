@@ -1,43 +1,46 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qteditorfactory.h"
 #include "qtpropertybrowserutils_p.h"
-#include <QtGui/QCheckBox>
 #include <QtGui/QSpinBox>
 #include <QtGui/QScrollBar>
 #include <QtGui/QComboBox>
@@ -51,6 +54,7 @@
 #include <QtGui/QLabel>
 #include <QtGui/QToolButton>
 #include <QtGui/QColorDialog>
+#include <QtGui/QFontDialog>
 #include <QtGui/QSpacerItem>
 #include <QtCore/QMap>
 
@@ -142,6 +146,7 @@ public:
 
     void slotPropertyChanged(QtProperty *property, int value);
     void slotRangeChanged(QtProperty *property, int min, int max);
+    void slotSingleStepChanged(QtProperty *property, int step);
     void slotSetValue(int value);
 };
 
@@ -175,6 +180,19 @@ void QtSpinBoxFactoryPrivate::slotRangeChanged(QtProperty *property, int min, in
         editor->blockSignals(true);
         editor->setRange(min, max);
         editor->setValue(manager->value(property));
+        editor->blockSignals(false);
+    }
+}
+
+void QtSpinBoxFactoryPrivate::slotSingleStepChanged(QtProperty *property, int step)
+{
+    if (!m_createdEditors.contains(property))
+        return;
+    QListIterator<QSpinBox *> itEditor(m_createdEditors[property]);
+    while (itEditor.hasNext()) {
+        QSpinBox *editor = itEditor.next();
+        editor->blockSignals(true);
+        editor->setSingleStep(step);
         editor->blockSignals(false);
     }
 }
@@ -238,6 +256,8 @@ void QtSpinBoxFactory::connectPropertyManager(QtIntPropertyManager *manager)
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     connect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    connect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
 /*!
@@ -249,6 +269,7 @@ QWidget *QtSpinBoxFactory::createEditor(QtIntPropertyManager *manager, QtPropert
         QWidget *parent)
 {
     QSpinBox *editor = d_ptr->createEditor(property, parent);
+    editor->setSingleStep(manager->singleStep(property));
     editor->setRange(manager->minimum(property), manager->maximum(property));
     editor->setValue(manager->value(property));
     editor->setKeyboardTracking(false);
@@ -270,6 +291,8 @@ void QtSpinBoxFactory::disconnectPropertyManager(QtIntPropertyManager *manager)
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     disconnect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    disconnect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
 // QtSliderFactory
@@ -281,6 +304,7 @@ class QtSliderFactoryPrivate : public EditorFactoryPrivate<QSlider>
 public:
     void slotPropertyChanged(QtProperty *property, int value);
     void slotRangeChanged(QtProperty *property, int min, int max);
+    void slotSingleStepChanged(QtProperty *property, int step);
     void slotSetValue(int value);
 };
 
@@ -312,6 +336,19 @@ void QtSliderFactoryPrivate::slotRangeChanged(QtProperty *property, int min, int
         editor->blockSignals(true);
         editor->setRange(min, max);
         editor->setValue(manager->value(property));
+        editor->blockSignals(false);
+    }
+}
+
+void QtSliderFactoryPrivate::slotSingleStepChanged(QtProperty *property, int step)
+{
+    if (!m_createdEditors.contains(property))
+        return;
+    QListIterator<QSlider *> itEditor(m_createdEditors[property]);
+    while (itEditor.hasNext()) {
+        QSlider *editor = itEditor.next();
+        editor->blockSignals(true);
+        editor->setSingleStep(step);
         editor->blockSignals(false);
     }
 }
@@ -375,6 +412,8 @@ void QtSliderFactory::connectPropertyManager(QtIntPropertyManager *manager)
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     connect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    connect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
 /*!
@@ -387,6 +426,7 @@ QWidget *QtSliderFactory::createEditor(QtIntPropertyManager *manager, QtProperty
 {
     QSlider *editor = new QSlider(Qt::Horizontal, parent);
     d_ptr->initializeEditor(property, editor);
+    editor->setSingleStep(manager->singleStep(property));
     editor->setRange(manager->minimum(property), manager->maximum(property));
     editor->setValue(manager->value(property));
 
@@ -407,6 +447,8 @@ void QtSliderFactory::disconnectPropertyManager(QtIntPropertyManager *manager)
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     disconnect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    disconnect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
 // QtSliderFactory
@@ -418,6 +460,7 @@ class QtScrollBarFactoryPrivate : public  EditorFactoryPrivate<QScrollBar>
 public:
     void slotPropertyChanged(QtProperty *property, int value);
     void slotRangeChanged(QtProperty *property, int min, int max);
+    void slotSingleStepChanged(QtProperty *property, int step);
     void slotSetValue(int value);
 };
 
@@ -450,6 +493,19 @@ void QtScrollBarFactoryPrivate::slotRangeChanged(QtProperty *property, int min, 
         editor->blockSignals(true);
         editor->setRange(min, max);
         editor->setValue(manager->value(property));
+        editor->blockSignals(false);
+    }
+}
+
+void QtScrollBarFactoryPrivate::slotSingleStepChanged(QtProperty *property, int step)
+{
+    if (!m_createdEditors.contains(property))
+        return;
+    QListIterator<QScrollBar *> itEditor(m_createdEditors[property]);
+    while (itEditor.hasNext()) {
+        QScrollBar *editor = itEditor.next();
+        editor->blockSignals(true);
+        editor->setSingleStep(step);
         editor->blockSignals(false);
     }
 }
@@ -512,6 +568,8 @@ void QtScrollBarFactory::connectPropertyManager(QtIntPropertyManager *manager)
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     connect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    connect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
 /*!
@@ -524,6 +582,7 @@ QWidget *QtScrollBarFactory::createEditor(QtIntPropertyManager *manager, QtPrope
 {
     QScrollBar *editor = new QScrollBar(Qt::Horizontal, parent);
     d_ptr->initializeEditor(property, editor);
+    editor->setSingleStep(manager->singleStep(property));
     editor->setRange(manager->minimum(property), manager->maximum(property));
     editor->setValue(manager->value(property));
     connect(editor, SIGNAL(valueChanged(int)), this, SLOT(slotSetValue(int)));
@@ -543,58 +602,10 @@ void QtScrollBarFactory::disconnectPropertyManager(QtIntPropertyManager *manager
                 this, SLOT(slotPropertyChanged(QtProperty *, int)));
     disconnect(manager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    disconnect(manager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
 }
 
-// ------- QtBoolEdit: Encapsulates a check box in
-// an expanding horizontal layout and ensures that the whole area is mouse-sensitive.
-
-class QtBoolEdit : public QWidget {
-    Q_OBJECT
-public:
-    QtBoolEdit(QWidget *parent = 0);
-
-    Qt::CheckState checkState() const { return m_checkBox->checkState(); }
-    void setCheckState(Qt::CheckState state) { m_checkBox->setCheckState(state); }
-
-    bool isChecked() const { return m_checkBox->isChecked (); }
-    void setChecked(bool c) { m_checkBox->setChecked(c); }
-
-    QString text() const { return m_checkBox->text(); }
-    void setText(const QString &text) { m_checkBox->setText(text); }
-
-    bool blockCheckBoxSignals(bool block) { return m_checkBox->blockSignals(block); }
-
-signals:
-    void toggled(bool);
-
-protected:
-    void mousePressEvent(QMouseEvent * event);
-
-private:
-    QCheckBox *m_checkBox;
-};
-
-QtBoolEdit::QtBoolEdit(QWidget *parent) :
-    QWidget(parent),
-    m_checkBox(new QCheckBox(this))
-{
-    QHBoxLayout *lt = new QHBoxLayout;
-    setupTreeViewEditorMargin(lt);
-    lt->addWidget(m_checkBox);
-    setLayout(lt);
-    connect(m_checkBox, SIGNAL(toggled(bool)), this, SIGNAL(toggled(bool)));
-    setFocusProxy(m_checkBox);
-}
-
-void QtBoolEdit::mousePressEvent(QMouseEvent *event)
-{
-    if (event->buttons() == Qt::LeftButton) {
-        m_checkBox->click();
-        event->accept();
-    } else {
-        QWidget::mousePressEvent(event);
-    }
-}
 // QtCheckBoxFactory
 
 class QtCheckBoxFactoryPrivate : public EditorFactoryPrivate<QtBoolEdit>
@@ -717,6 +728,7 @@ public:
 
     void slotPropertyChanged(QtProperty *property, double value);
     void slotRangeChanged(QtProperty *property, double min, double max);
+    void slotSingleStepChanged(QtProperty *property, double step);
     void slotDecimalsChanged(QtProperty *property, int prec);
     void slotSetValue(double value);
 };
@@ -752,6 +764,25 @@ void QtDoubleSpinBoxFactoryPrivate::slotRangeChanged(QtProperty *property,
         editor->blockSignals(true);
         editor->setRange(min, max);
         editor->setValue(manager->value(property));
+        editor->blockSignals(false);
+    }
+}
+
+void QtDoubleSpinBoxFactoryPrivate::slotSingleStepChanged(QtProperty *property, double step)
+{
+    if (!m_createdEditors.contains(property))
+        return;
+
+    QtDoublePropertyManager *manager = q_ptr->propertyManager(property);
+    if (!manager)
+        return;
+
+    QList<QDoubleSpinBox *> editors = m_createdEditors[property];
+    QListIterator<QDoubleSpinBox *> itEditor(editors);
+    while (itEditor.hasNext()) {
+        QDoubleSpinBox *editor = itEditor.next();
+        editor->blockSignals(true);
+        editor->setSingleStep(step);
         editor->blockSignals(false);
     }
 }
@@ -834,6 +865,8 @@ void QtDoubleSpinBoxFactory::connectPropertyManager(QtDoublePropertyManager *man
                 this, SLOT(slotPropertyChanged(QtProperty *, double)));
     connect(manager, SIGNAL(rangeChanged(QtProperty *, double, double)),
                 this, SLOT(slotRangeChanged(QtProperty *, double, double)));
+    connect(manager, SIGNAL(singleStepChanged(QtProperty *, double)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     connect(manager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
 }
@@ -847,6 +880,7 @@ QWidget *QtDoubleSpinBoxFactory::createEditor(QtDoublePropertyManager *manager,
         QtProperty *property, QWidget *parent)
 {
     QDoubleSpinBox *editor = d_ptr->createEditor(property, parent);
+    editor->setSingleStep(manager->singleStep(property));
     editor->setDecimals(manager->decimals(property));
     editor->setRange(manager->minimum(property), manager->maximum(property));
     editor->setValue(manager->value(property));
@@ -869,6 +903,8 @@ void QtDoubleSpinBoxFactory::disconnectPropertyManager(QtDoublePropertyManager *
                 this, SLOT(slotPropertyChanged(QtProperty *, double)));
     disconnect(manager, SIGNAL(rangeChanged(QtProperty *, double, double)),
                 this, SLOT(slotRangeChanged(QtProperty *, double, double)));
+    disconnect(manager, SIGNAL(singleStepChanged(QtProperty *, double)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     disconnect(manager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
 }
@@ -1387,184 +1423,6 @@ void QtDateTimeEditFactory::disconnectPropertyManager(QtDateTimePropertyManager 
 {
     disconnect(manager, SIGNAL(valueChanged(QtProperty *, const QDateTime &)),
                 this, SLOT(slotPropertyChanged(QtProperty *, const QDateTime &)));
-}
-
-// QtKeqSequenceEdit
-
-class QtKeySequenceEdit : public QWidget
-{
-    Q_OBJECT
-public:
-    QtKeySequenceEdit(QWidget *parent = 0);
-
-    QKeySequence keySequence() const;
-    bool eventFilter(QObject *o, QEvent *e);
-public Q_SLOTS:
-    void setKeySequence(const QKeySequence &sequence);
-Q_SIGNALS:
-    void keySequenceChanged(const QKeySequence &sequence);
-protected:
-    void focusInEvent(QFocusEvent *e);
-    void focusOutEvent(QFocusEvent *e);
-    void keyPressEvent(QKeyEvent *e);
-    void keyReleaseEvent(QKeyEvent *e);
-    bool event(QEvent *e);
-private slots:
-    void slotClearShortcut();
-private:
-    void handleKeyEvent(QKeyEvent *e);
-    int translateModifiers(Qt::KeyboardModifiers state, const QString &text) const;
-
-    int m_num;
-    QKeySequence m_keySequence;
-    QLineEdit *m_lineEdit;
-};
-
-QtKeySequenceEdit::QtKeySequenceEdit(QWidget *parent)
-    : QWidget(parent), m_num(0), m_lineEdit(new QLineEdit(this))
-{
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->addWidget(m_lineEdit);
-    layout->setMargin(0);
-    m_lineEdit->installEventFilter(this);
-    m_lineEdit->setReadOnly(true);
-    m_lineEdit->setFocusProxy(this);
-    setFocusPolicy(m_lineEdit->focusPolicy());
-    setAttribute(Qt::WA_InputMethodEnabled);
-}
-
-bool QtKeySequenceEdit::eventFilter(QObject *o, QEvent *e)
-{
-    if (o == m_lineEdit && e->type() == QEvent::ContextMenu) {
-        QContextMenuEvent *c = static_cast<QContextMenuEvent *>(e);
-        QMenu *menu = m_lineEdit->createStandardContextMenu();
-        const QList<QAction *> actions = menu->actions();
-        QListIterator<QAction *> itAction(actions);
-        while (itAction.hasNext()) {
-            QAction *action = itAction.next();
-            action->setShortcut(QKeySequence());
-            QString actionString = action->text();
-            const int pos = actionString.lastIndexOf(QLatin1Char('\t'));
-            if (pos > 0)
-                actionString.remove(pos, actionString.length() - pos);
-            action->setText(actionString);
-        }
-        QAction *actionBefore = 0;
-        if (actions.count() > 0)
-            actionBefore = actions[0];
-        QAction *clearAction = new QAction(tr("Clear Shortcut"), menu);
-        menu->insertAction(actionBefore, clearAction);
-        menu->insertSeparator(actionBefore);
-        clearAction->setEnabled(!m_keySequence.isEmpty());
-        connect(clearAction, SIGNAL(triggered()), this, SLOT(slotClearShortcut()));
-        menu->exec(c->globalPos());
-        delete menu;
-        e->accept();
-        return true;
-    }
-
-    return QWidget::eventFilter(o, e);
-}
-
-void QtKeySequenceEdit::slotClearShortcut()
-{
-    if (m_keySequence.isEmpty())
-        return;
-    setKeySequence(QKeySequence());
-    emit keySequenceChanged(m_keySequence);
-}
-
-void QtKeySequenceEdit::handleKeyEvent(QKeyEvent *e)
-{
-    int nextKey = e->key();
-    if (nextKey == Qt::Key_Control || nextKey == Qt::Key_Shift ||
-            nextKey == Qt::Key_Meta || nextKey == Qt::Key_Alt ||
-            nextKey == Qt::Key_Super_L || nextKey == Qt::Key_AltGr)
-        return;
-
-    nextKey |= translateModifiers(e->modifiers(), e->text());
-    int k0 = m_keySequence[0];
-    int k1 = m_keySequence[1];
-    int k2 = m_keySequence[2];
-    int k3 = m_keySequence[3];
-    switch (m_num) {
-        case 0: k0 = nextKey; k1 = 0; k2 = 0; k3 = 0; break;
-        case 1: k1 = nextKey; k2 = 0; k3 = 0; break;
-        case 2: k2 = nextKey; k3 = 0; break;
-        case 3: k3 = nextKey; break;
-        default: break;
-    }
-    ++m_num;
-    if (m_num > 3)
-        m_num = 0;
-    m_keySequence = QKeySequence(k0, k1, k2, k3);
-    m_lineEdit->setText(m_keySequence.toString(QKeySequence::NativeText));
-    e->accept();
-    emit keySequenceChanged(m_keySequence);
-}
-
-void QtKeySequenceEdit::setKeySequence(const QKeySequence &sequence)
-{
-    if (sequence == m_keySequence)
-        return;
-    m_num = 0;
-    m_keySequence = sequence;
-    m_lineEdit->setText(m_keySequence.toString(QKeySequence::NativeText));
-}
-
-QKeySequence QtKeySequenceEdit::keySequence() const
-{
-    return m_keySequence;
-}
-
-int QtKeySequenceEdit::translateModifiers(Qt::KeyboardModifiers state, const QString &text) const
-{
-    int result = 0;
-    if ((state & Qt::ShiftModifier) && (text.size() == 0 || !text.at(0).isPrint() || text.at(0).isLetter() || text.at(0).isSpace()))
-        result |= Qt::SHIFT;
-    if (state & Qt::ControlModifier)
-        result |= Qt::CTRL;
-    if (state & Qt::MetaModifier)
-        result |= Qt::META;
-    if (state & Qt::AltModifier)
-        result |= Qt::ALT;
-    return result;
-}
-
-void QtKeySequenceEdit::focusInEvent(QFocusEvent *e)
-{
-    m_lineEdit->event(e);
-    m_lineEdit->selectAll();
-    QWidget::focusInEvent(e);
-}
-
-void QtKeySequenceEdit::focusOutEvent(QFocusEvent *e)
-{
-    m_num = 0;
-    m_lineEdit->event(e);
-    QWidget::focusOutEvent(e);
-}
-
-void QtKeySequenceEdit::keyPressEvent(QKeyEvent *e)
-{
-    handleKeyEvent(e);
-    e->accept();
-}
-
-void QtKeySequenceEdit::keyReleaseEvent(QKeyEvent *e)
-{
-    m_lineEdit->event(e);
-}
-
-bool QtKeySequenceEdit::event(QEvent *e)
-{
-    if (e->type() == QEvent::Shortcut ||
-            e->type() == QEvent::ShortcutOverride  ||
-            e->type() == QEvent::KeyRelease) {
-        e->accept();
-        return true;
-    }
-    return QWidget::event(e);
 }
 
 // QtKeySequenceEditorFactory
@@ -2404,6 +2262,7 @@ bool QtColorEditWidget::eventFilter(QObject *obj, QEvent *ev)
     }
     return QWidget::eventFilter(obj, ev);
 }
+
 // QtColorEditorFactoryPrivate
 
 class QtColorEditorFactoryPrivate : public EditorFactoryPrivate<QtColorEditWidget>
@@ -2508,6 +2367,220 @@ QWidget *QtColorEditorFactory::createEditor(QtColorPropertyManager *manager,
 void QtColorEditorFactory::disconnectPropertyManager(QtColorPropertyManager *manager)
 {
     disconnect(manager, SIGNAL(valueChanged(QtProperty*,QColor)), this, SLOT(slotPropertyChanged(QtProperty*,QColor)));
+}
+
+// QtFontEditWidget
+
+class QtFontEditWidget : public QWidget {
+    Q_OBJECT
+
+public:
+    QtFontEditWidget(QWidget *parent);
+
+    bool eventFilter(QObject *obj, QEvent *ev);
+
+public Q_SLOTS:
+    void setValue(const QFont &value);
+
+private Q_SLOTS:
+    void buttonClicked();
+
+Q_SIGNALS:
+    void valueChanged(const QFont &value);
+
+private:
+    QFont m_font;
+    QLabel *m_pixmapLabel;
+    QLabel *m_label;
+    QToolButton *m_button;
+};
+
+QtFontEditWidget::QtFontEditWidget(QWidget *parent) :
+    QWidget(parent),
+    m_pixmapLabel(new QLabel),
+    m_label(new QLabel),
+    m_button(new QToolButton)
+{
+    QHBoxLayout *lt = new QHBoxLayout(this);
+    setupTreeViewEditorMargin(lt);
+    lt->setSpacing(0);
+    lt->addWidget(m_pixmapLabel);
+    lt->addWidget(m_label);
+    lt->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Ignored));
+
+    m_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored);
+    m_button->setFixedWidth(20);
+    setFocusProxy(m_button);
+    setFocusPolicy(m_button->focusPolicy());
+    m_button->setText(tr("..."));
+    m_button->installEventFilter(this);
+    connect(m_button, SIGNAL(clicked()), this, SLOT(buttonClicked()));
+    lt->addWidget(m_button);
+    m_pixmapLabel->setPixmap(QtPropertyBrowserUtils::fontValuePixmap(m_font));
+    m_label->setText(QtPropertyBrowserUtils::fontValueText(m_font));
+}
+
+void QtFontEditWidget::setValue(const QFont &f)
+{
+    if (m_font != f) {
+        m_font = f;
+        m_pixmapLabel->setPixmap(QtPropertyBrowserUtils::fontValuePixmap(f));
+        m_label->setText(QtPropertyBrowserUtils::fontValueText(f));
+    }
+}
+
+void QtFontEditWidget::buttonClicked()
+{
+    bool ok = false;
+    QFont newFont = QFontDialog::getFont(&ok, m_font, this, tr("Select Font"));
+    if (ok && newFont != m_font) {
+        QFont f = m_font;
+        // prevent mask for unchanged attributes, don't change other attributes (like kerning, etc...)
+        if (m_font.family() != newFont.family())
+            f.setFamily(newFont.family());
+        if (m_font.pointSize() != newFont.pointSize())
+            f.setPointSize(newFont.pointSize());
+        if (m_font.bold() != newFont.bold())
+            f.setBold(newFont.bold());
+        if (m_font.italic() != newFont.italic())
+            f.setItalic(newFont.italic());
+        if (m_font.underline() != newFont.underline())
+            f.setUnderline(newFont.underline());
+        if (m_font.strikeOut() != newFont.strikeOut())
+            f.setStrikeOut(newFont.strikeOut());
+        setValue(f);
+        emit valueChanged(m_font);
+    }
+}
+
+bool QtFontEditWidget::eventFilter(QObject *obj, QEvent *ev)
+{
+    if (obj == m_button) {
+        switch (ev->type()) {
+        case QEvent::KeyPress:
+        case QEvent::KeyRelease: { // Prevent the QToolButton from handling Enter/Escape meant control the delegate
+            switch (static_cast<const QKeyEvent*>(ev)->key()) {
+            case Qt::Key_Escape:
+            case Qt::Key_Enter:
+            case Qt::Key_Return:
+                ev->ignore();
+                return true;
+            default:
+                break;
+            }
+        }
+            break;
+        default:
+            break;
+        }
+    }
+    return QWidget::eventFilter(obj, ev);
+}
+
+// QtFontEditorFactoryPrivate
+
+class QtFontEditorFactoryPrivate : public EditorFactoryPrivate<QtFontEditWidget>
+{
+    QtFontEditorFactory *q_ptr;
+    Q_DECLARE_PUBLIC(QtFontEditorFactory)
+public:
+
+    void slotPropertyChanged(QtProperty *property, const QFont &value);
+    void slotSetValue(const QFont &value);
+};
+
+void QtFontEditorFactoryPrivate::slotPropertyChanged(QtProperty *property,
+                const QFont &value)
+{
+    const PropertyToEditorListMap::iterator it = m_createdEditors.find(property);
+    if (it == m_createdEditors.end())
+        return;
+    QListIterator<QtFontEditWidget *> itEditor(it.value());
+
+    while (itEditor.hasNext())
+        itEditor.next()->setValue(value);
+}
+
+void QtFontEditorFactoryPrivate::slotSetValue(const QFont &value)
+{
+    QObject *object = q_ptr->sender();
+    const EditorToPropertyMap::ConstIterator ecend = m_editorToProperty.constEnd();
+    for (EditorToPropertyMap::ConstIterator itEditor = m_editorToProperty.constBegin(); itEditor != ecend; ++itEditor)
+        if (itEditor.key() == object) {
+            QtProperty *property = itEditor.value();
+            QtFontPropertyManager *manager = q_ptr->propertyManager(property);
+            if (!manager)
+                return;
+            manager->setValue(property, value);
+            return;
+        }
+}
+
+/*!
+    \class QtFontEditorFactory
+    \internal
+    \inmodule QtDesigner
+    \since 4.4
+
+    \brief The QtFontEditorFactory class provides font editing for
+    properties created by QtFontPropertyManager objects.
+
+    \sa QtAbstractEditorFactory, QtFontPropertyManager
+*/
+
+/*!
+    Creates a factory with the given \a parent.
+*/
+QtFontEditorFactory::QtFontEditorFactory(QObject *parent) :
+    QtAbstractEditorFactory<QtFontPropertyManager>(parent),
+    d_ptr(new QtFontEditorFactoryPrivate())
+{
+    d_ptr->q_ptr = this;
+}
+
+/*!
+    Destroys this factory, and all the widgets it has created.
+*/
+QtFontEditorFactory::~QtFontEditorFactory()
+{
+    qDeleteAll(d_ptr->m_editorToProperty.keys());
+    delete d_ptr;
+}
+
+/*!
+    \internal
+
+    Reimplemented from the QtAbstractEditorFactory class.
+*/
+void QtFontEditorFactory::connectPropertyManager(QtFontPropertyManager *manager)
+{
+    connect(manager, SIGNAL(valueChanged(QtProperty*,QFont)),
+            this, SLOT(slotPropertyChanged(QtProperty*,QFont)));
+}
+
+/*!
+    \internal
+
+    Reimplemented from the QtAbstractEditorFactory class.
+*/
+QWidget *QtFontEditorFactory::createEditor(QtFontPropertyManager *manager,
+        QtProperty *property, QWidget *parent)
+{
+    QtFontEditWidget *editor = d_ptr->createEditor(property, parent);
+    editor->setValue(manager->value(property));
+    connect(editor, SIGNAL(valueChanged(QFont)), this, SLOT(slotSetValue(QFont)));
+    connect(editor, SIGNAL(destroyed(QObject *)), this, SLOT(slotEditorDestroyed(QObject *)));
+    return editor;
+}
+
+/*!
+    \internal
+
+    Reimplemented from the QtAbstractEditorFactory class.
+*/
+void QtFontEditorFactory::disconnectPropertyManager(QtFontPropertyManager *manager)
+{
+    disconnect(manager, SIGNAL(valueChanged(QtProperty*,QFont)), this, SLOT(slotPropertyChanged(QtProperty*,QFont)));
 }
 
 #if QT_VERSION >= 0x040400

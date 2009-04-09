@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,6 +49,7 @@
 # include <qaccessible.h>
 #endif
 #include <qpainter.h>
+#include <qstylepainter.h>
 #include <qevent.h>
 #include <qmainwindow.h>
 #include <qtoolbar.h>
@@ -74,6 +79,7 @@ public:
     explicit QMenuBarExtension(QWidget *parent);
 
     QSize sizeHint() const;
+    void paintEvent(QPaintEvent *);
 };
 
 QMenuBarExtension::QMenuBarExtension(QWidget *parent)
@@ -87,12 +93,27 @@ QMenuBarExtension::QMenuBarExtension(QWidget *parent)
     setIcon(style()->standardIcon(QStyle::SP_ToolBarHorizontalExtensionButton, 0, parentWidget()));
 }
 
+void QMenuBarExtension::paintEvent(QPaintEvent *)
+{
+    QStylePainter p(this);
+    QStyleOptionToolButton opt;
+    initStyleOption(&opt);
+    // We do not need to draw both extention arrows
+    opt.features &= ~QStyleOptionToolButton::HasMenu;
+    p.drawComplexControl(QStyle::CC_ToolButton, opt);
+}
+
+
 QSize QMenuBarExtension::sizeHint() const
 {
     int ext = style()->pixelMetric(QStyle::PM_ToolBarExtensionExtent, 0, parentWidget());
     return QSize(ext, ext);
 }
 
+
+/*!
+    \internal
+*/
 QAction *QMenuBarPrivate::actionAt(QPoint p) const
 {
     Q_Q(const QMenuBar);
@@ -263,16 +284,16 @@ void QMenuBarPrivate::setKeyboardMode(bool b)
     if(b) {
         QWidget *fw = qApp->focusWidget();
         if (fw != q)
-            keyboardFocusWidget = qApp->focusWidget();
+            keyboardFocusWidget = fw;
         if(!currentAction && !actionList.isEmpty())
             setCurrentAction(actionList.first());
-        q->setFocus();
+        q->setFocus(Qt::MenuBarFocusReason);
     } else {
         if(!popupState)
             setCurrentAction(0);
         if(keyboardFocusWidget) {
             if (qApp->focusWidget() == q)
-                keyboardFocusWidget->setFocus();
+                keyboardFocusWidget->setFocus(Qt::MenuBarFocusReason);
             keyboardFocusWidget = 0;
         }
     }
@@ -578,15 +599,22 @@ void QMenuBar::initStyleOption(QStyleOptionMenuItem *option, const QAction *acti
     own geometry to the top of the parent widget and changes it
     appropriately whenever the parent is resized.
 
-    In most main window style applications you would use the menuBar()
-    provided in QMainWindow, adding \l{QMenu}s to the menu bar and
-    adding \l{QAction}s to the popup menus.
+    \section1 Usage
+
+    In most main window style applications you would use the
+    \l{QMainWindow::}{menuBar()} function provided in QMainWindow,
+    adding \l{QMenu}s to the menu bar and adding \l{QAction}s to the
+    pop-up menus.
 
     Example (from the \l{mainwindows/menus}{Menus} example):
 
     \snippet examples/mainwindows/menus/mainwindow.cpp 9
 
     Menu items may be removed with removeAction().
+
+    Widgets can be added to menus by using instances of the QWidgetAction
+    class to hold them. These actions can then be inserted into menus
+    in the usual way; see the QMenu documentation for more details.
 
     \section1 Platform Dependent Look and Feel
 
@@ -1052,9 +1080,11 @@ void QMenuBar::mouseReleaseEvent(QMouseEvent *e)
     d->mouseDown = false;
     QAction *action = d->actionAt(e->pos());
     if((d->closePopupMode && action == d->currentAction) || !action || !action->menu()) {
+        //we set the current action before activating
+        //so that we let the leave event set the current back to 0
+        d->setCurrentAction(action, false);
         if(action)
             d->activateAction(action, QAction::Trigger);
-        d->setCurrentAction(action, false);
     }
     d->closePopupMode = 0;
 }
@@ -1100,23 +1130,51 @@ void QMenuBar::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Left: {
         if(d->currentAction) {
             QAction *nextAction = 0;
+            bool allowActiveAndDisabled =
+                    style()->styleHint(QStyle::SH_Menu_AllowActiveAndDisabled, 0, this);
+
             for(int i=0; i<(int)d->actionList.count(); i++) {
                 if(d->actionList.at(i) == (QAction*)d->currentAction) {
-                    if(key == Qt::Key_Left) {
-                        if(i > 0)
-                            nextAction = d->actionList.at(i-1);
+                    if (key == Qt::Key_Left) {
+                        while (i > 0) {
+                            i--;
+                            if (allowActiveAndDisabled || d->actionList[i]->isEnabled()) {
+                                nextAction = d->actionList.at(i);
+                                break;
+                            }
+                        }
                     } else {
-                        if(i < d->actionList.count()-1)
-                            nextAction = d->actionList.at(i+1);
+                        while (i < d->actionList.count()-1) {
+                            i++;
+                            if (allowActiveAndDisabled || d->actionList[i]->isEnabled()) {
+                                nextAction = d->actionList.at(i);
+                                break;
+                            }
+                        }
                     }
                     break;
+
                 }
             }
+
             if(!nextAction) {
-                if(key == Qt::Key_Left)
-                    nextAction = d->actionList.last();
-                else
-                    nextAction = d->actionList.first();
+                if (key == Qt::Key_Left) {
+                    for (int i = d->actionList.size() - 1 ; i >= 0 ; --i) {
+                        if (allowActiveAndDisabled || d->actionList[i]->isEnabled()) {
+                            nextAction = d->actionList.at(i);
+                            i--;
+                            break;
+                        }
+                    }
+                } else {
+                    for (int i = 0 ; i < d->actionList.count() ; ++i) {
+                        if (allowActiveAndDisabled || d->actionList[i]->isEnabled()) {
+                            nextAction = d->actionList.at(i);
+                            i++;
+                            break;
+                        }
+                    }
+                }
             }
             if(nextAction) {
                 d->setCurrentAction(nextAction, d->popupState, true);
@@ -1494,6 +1552,8 @@ bool QMenuBar::eventFilter(QObject *object, QEvent *event)
             }
             // fall through
             case QEvent::MouseButtonPress:
+            case QEvent::MouseButtonRelease:
+            case QEvent::MouseMove:
             case QEvent::FocusIn:
             case QEvent::FocusOut:
             case QEvent::ActivationChange:

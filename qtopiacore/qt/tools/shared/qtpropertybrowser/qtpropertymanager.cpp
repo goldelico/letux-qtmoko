@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -40,6 +44,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QLocale>
 #include <QtCore/QMap>
+#include <QtCore/QTimer>
 #include <QtGui/QIcon>
 #include <QtCore/QMetaEnum>
 #include <QtGui/QFontDatabase>
@@ -620,10 +625,11 @@ public:
 
     struct Data
     {
-        Data() : val(0), minVal(-INT_MAX), maxVal(INT_MAX) {}
+        Data() : val(0), minVal(-INT_MAX), maxVal(INT_MAX), singleStep(1) {}
         int val;
         int minVal;
         int maxVal;
+        int singleStep;
         int minimumValue() const { return minVal; }
         int maximumValue() const { return maxVal; }
         void setMinimumValue(int newMinVal) { setSimpleMinimumData(this, newMinVal); }
@@ -680,6 +686,16 @@ public:
 */
 
 /*!
+    \fn void QtIntPropertyManager::singleStepChanged(QtProperty *property, int step)
+
+    This signal is emitted whenever a property created by this manager
+    changes its single step property, passing a pointer to the
+    \a property and the new \a step value
+
+    \sa setSingleStep()
+*/
+
+/*!
     Creates a manager with the given \a parent.
 */
 QtIntPropertyManager::QtIntPropertyManager(QObject *parent)
@@ -694,6 +710,7 @@ QtIntPropertyManager::QtIntPropertyManager(QObject *parent)
 */
 QtIntPropertyManager::~QtIntPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -728,6 +745,18 @@ int QtIntPropertyManager::minimum(const QtProperty *property) const
 int QtIntPropertyManager::maximum(const QtProperty *property) const
 {
     return getMaximum<int>(d_ptr->m_values, property, 0);
+}
+
+/*!
+    Returns the given \a property's step value.
+
+    The step is typically used to increment or decrement a property value while pressing an arrow key.
+
+    \sa setSingleStep()
+*/
+int QtIntPropertyManager::singleStep(const QtProperty *property) const
+{
+    return getData<int>(d_ptr->m_values, &QtIntPropertyManagerPrivate::Data::singleStep, property, 0);
 }
 
 /*!
@@ -822,6 +851,34 @@ void QtIntPropertyManager::setRange(QtProperty *property, int minVal, int maxVal
 }
 
 /*!
+    Sets the step value for the given \a property to \a step.
+
+    The step is typically used to increment or decrement a property value while pressing an arrow key.
+
+    \sa step()
+*/
+void QtIntPropertyManager::setSingleStep(QtProperty *property, int step)
+{
+    const QtIntPropertyManagerPrivate::PropertyValueMap::iterator it = d_ptr->m_values.find(property);
+    if (it == d_ptr->m_values.end())
+        return;
+
+    QtIntPropertyManagerPrivate::Data data = it.value();
+
+    if (step < 0)
+        step = 0;
+
+    if (data.singleStep == step)
+        return;
+
+    data.singleStep = step;
+
+    it.value() = data;
+
+    emit singleStepChanged(property, data.singleStep);
+}
+
+/*!
     \reimp
 */
 void QtIntPropertyManager::initializeProperty(QtProperty *property)
@@ -847,10 +904,11 @@ public:
 
     struct Data
     {
-        Data() : val(0), minVal(-INT_MAX), maxVal(INT_MAX), decimals(2) {}
+        Data() : val(0), minVal(-INT_MAX), maxVal(INT_MAX), singleStep(1), decimals(2) {}
         double val;
         double minVal;
         double maxVal;
+        double singleStep;
         int decimals;
         double minimumValue() const { return minVal; }
         double maximumValue() const { return maxVal; }
@@ -919,6 +977,16 @@ public:
 */
 
 /*!
+    \fn void QtDoublePropertyManager::singleStepChanged(QtProperty *property, double step)
+
+    This signal is emitted whenever a property created by this manager
+    changes its single step property, passing a pointer to the
+    \a property and the new \a step value
+
+    \sa setSingleStep()
+*/
+
+/*!
     Creates a manager with the given \a parent.
 */
 QtDoublePropertyManager::QtDoublePropertyManager(QObject *parent)
@@ -933,6 +1001,7 @@ QtDoublePropertyManager::QtDoublePropertyManager(QObject *parent)
 */
 QtDoublePropertyManager::~QtDoublePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -967,6 +1036,18 @@ double QtDoublePropertyManager::minimum(const QtProperty *property) const
 double QtDoublePropertyManager::maximum(const QtProperty *property) const
 {
     return getMaximum<double>(d_ptr->m_values, property, 0.0);
+}
+
+/*!
+    Returns the given \a property's step value.
+
+    The step is typically used to increment or decrement a property value while pressing an arrow key.
+
+    \sa setSingleStep()
+*/
+double QtDoublePropertyManager::singleStep(const QtProperty *property) const
+{
+    return getData<double>(d_ptr->m_values, &QtDoublePropertyManagerPrivate::Data::singleStep, property, 0);
 }
 
 /*!
@@ -1008,6 +1089,34 @@ void QtDoublePropertyManager::setValue(QtProperty *property, double val)
                 &QtDoublePropertyManager::propertyChanged,
                 &QtDoublePropertyManager::valueChanged,
                 property, val, setSubPropertyValue);
+}
+
+/*!
+    Sets the step value for the given \a property to \a step.
+
+    The step is typically used to increment or decrement a property value while pressing an arrow key.
+
+    \sa step()
+*/
+void QtDoublePropertyManager::setSingleStep(QtProperty *property, double step)
+{
+    const QtDoublePropertyManagerPrivate::PropertyValueMap::iterator it = d_ptr->m_values.find(property);
+    if (it == d_ptr->m_values.end())
+        return;
+
+    QtDoublePropertyManagerPrivate::Data data = it.value();
+
+    if (step < 0)
+        step = 0;
+
+    if (data.singleStep == step)
+        return;
+
+    data.singleStep = step;
+
+    it.value() = data;
+
+    emit singleStepChanged(property, data.singleStep);
 }
 
 /*!
@@ -1197,6 +1306,7 @@ QtStringPropertyManager::QtStringPropertyManager(QObject *parent)
 */
 QtStringPropertyManager::~QtStringPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1360,6 +1470,7 @@ QtBoolPropertyManager::QtBoolPropertyManager(QObject *parent)
 */
 QtBoolPropertyManager::~QtBoolPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1402,8 +1513,8 @@ static QIcon drawCheckBox(bool value)
     // (if it is smaller, it can't be helped)
     const int indicatorWidth = style->pixelMetric(QStyle::PM_IndicatorWidth, &opt);
     const int indicatorHeight = style->pixelMetric(QStyle::PM_IndicatorHeight, &opt);
-    const int listViewIconSize = style->pixelMetric(QStyle::PM_ListViewIconSize);
-    const int pixmapWidth = qMax(indicatorWidth, listViewIconSize);
+    const int listViewIconSize = indicatorWidth;
+    const int pixmapWidth = indicatorWidth;
     const int pixmapHeight = qMax(indicatorHeight, listViewIconSize);
 
     opt.rect = QRect(0, 0, indicatorWidth, indicatorHeight);
@@ -1555,6 +1666,7 @@ QtDatePropertyManager::QtDatePropertyManager(QObject *parent)
 */
 QtDatePropertyManager::~QtDatePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1759,6 +1871,7 @@ QtTimePropertyManager::QtTimePropertyManager(QObject *parent)
 */
 QtTimePropertyManager::~QtTimePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1875,6 +1988,7 @@ QtDateTimePropertyManager::QtDateTimePropertyManager(QObject *parent)
 */
 QtDateTimePropertyManager::~QtDateTimePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1987,6 +2101,7 @@ QtKeySequencePropertyManager::QtKeySequencePropertyManager(QObject *parent)
 */
 QtKeySequencePropertyManager::~QtKeySequencePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -2097,6 +2212,7 @@ QtCharPropertyManager::QtCharPropertyManager(QObject *parent)
 */
 QtCharPropertyManager::~QtCharPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -2271,6 +2387,7 @@ QtLocalePropertyManager::QtLocalePropertyManager(QObject *parent)
 */
 QtLocalePropertyManager::~QtLocalePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -2508,6 +2625,7 @@ QtPointPropertyManager::QtPointPropertyManager(QObject *parent)
 */
 QtPointPropertyManager::~QtPointPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -2739,6 +2857,7 @@ QtPointFPropertyManager::QtPointFPropertyManager(QObject *parent)
 */
 QtPointFPropertyManager::~QtPointFPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -3051,6 +3170,7 @@ QtSizePropertyManager::QtSizePropertyManager(QObject *parent)
 */
 QtSizePropertyManager::~QtSizePropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -3406,6 +3526,7 @@ QtSizeFPropertyManager::QtSizeFPropertyManager(QObject *parent)
 */
 QtSizeFPropertyManager::~QtSizeFPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -3815,6 +3936,7 @@ QtRectPropertyManager::QtRectPropertyManager(QObject *parent)
 */
 QtRectPropertyManager::~QtRectPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -4231,6 +4353,7 @@ QtRectFPropertyManager::QtRectFPropertyManager(QObject *parent)
 */
 QtRectFPropertyManager::~QtRectFPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -4610,6 +4733,7 @@ QtEnumPropertyManager::QtEnumPropertyManager(QObject *parent)
 */
 QtEnumPropertyManager::~QtEnumPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -4868,7 +4992,9 @@ void QtFlagPropertyManagerPrivate::slotPropertyDestroyed(QtProperty *property)
     subproperties representing each flag, i.e. a flag property's value
     is the binary combination of the subproperties' values. A
     property's value can be retrieved and set using the value() and
-    setValue() slots respectively.
+    setValue() slots respectively. The combination of flags is represented
+    by single int value - that's why it's possible to store up to
+    32 independent flags in one flag property.
 
     The subproperties are created by a QtBoolPropertyManager object. This
     manager can be retrieved using the subBoolPropertyManager() function. In
@@ -4925,6 +5051,7 @@ QtFlagPropertyManager::QtFlagPropertyManager(QObject *parent)
 */
 QtFlagPropertyManager::~QtFlagPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -5258,6 +5385,7 @@ QtSizePolicyPropertyManager::QtSizePolicyPropertyManager(QObject *parent)
 */
 QtSizePolicyPropertyManager::~QtSizePolicyPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -5314,13 +5442,13 @@ QString QtSizePolicyPropertyManager::valueText(const QtProperty *property) const
         return QString();
 
     const QSizePolicy sp = it.value();
-
     const QtMetaEnumProvider *mep = metaEnumProvider();
-    QString str = tr("[%1, %2, %3, %4]")
-            .arg(mep->policyEnumNames().at(mep->sizePolicyToIndex(sp.horizontalPolicy())))
-            .arg(mep->policyEnumNames().at(mep->sizePolicyToIndex(sp.verticalPolicy())))
-            .arg(sp.horizontalStretch())
-            .arg(sp.verticalStretch());
+    const int hIndex = mep->sizePolicyToIndex(sp.horizontalPolicy());
+    const int vIndex = mep->sizePolicyToIndex(sp.verticalPolicy());
+    //! Unknown size policy on reading invalid uic3 files
+    const QString hPolicy = hIndex != -1 ? mep->policyEnumNames().at(hIndex) : tr("<Invalid>");
+    const QString vPolicy = vIndex != -1 ? mep->policyEnumNames().at(vIndex) : tr("<Invalid>");
+    const QString str = tr("[%1, %2, %3, %4]").arg(hPolicy, vPolicy).arg(sp.horizontalStretch()).arg(sp.verticalStretch());
     return str;
 }
 
@@ -5436,7 +5564,13 @@ void QtSizePolicyPropertyManager::uninitializeProperty(QtProperty *property)
     d_ptr->m_values.remove(property);
 }
 
-// QtFontPropertyManager
+// QtFontPropertyManager:
+// QtFontPropertyManagerPrivate has a mechanism for reacting
+// to QApplication::fontDatabaseChanged() [4.5], which is emitted
+// when someone loads an application font. The signals are compressed
+// using a timer with interval 0, which then causes the family
+// enumeration manager to re-set its strings and index values
+// for each property.
 
 Q_GLOBAL_STATIC(QFontDatabase, fontDatabase)
 
@@ -5452,11 +5586,13 @@ public:
     void slotEnumChanged(QtProperty *property, int value);
     void slotBoolChanged(QtProperty *property, bool value);
     void slotPropertyDestroyed(QtProperty *property);
+    void slotFontDatabaseChanged();
+    void slotFontDatabaseDelayedChange();
+
+    QStringList m_familyNames;
 
     typedef QMap<const QtProperty *, QFont> PropertyValueMap;
     PropertyValueMap m_values;
-
-    QStringList m_familyNames;
 
     QtIntPropertyManager *m_intPropertyManager;
     QtEnumPropertyManager *m_enumPropertyManager;
@@ -5479,12 +5615,13 @@ public:
     QMap<const QtProperty *, QtProperty *> m_kerningToProperty;
 
     bool m_settingValue;
+    QTimer *m_fontDatabaseChangeTimer;
 };
 
-QtFontPropertyManagerPrivate::QtFontPropertyManagerPrivate()
+QtFontPropertyManagerPrivate::QtFontPropertyManagerPrivate() :
+    m_settingValue(false),
+    m_fontDatabaseChangeTimer(0)
 {
-    m_familyNames = fontDatabase()->families();
-    m_settingValue = false;
 }
 
 void QtFontPropertyManagerPrivate::slotIntChanged(QtProperty *property, int value)
@@ -5562,6 +5699,40 @@ void QtFontPropertyManagerPrivate::slotPropertyDestroyed(QtProperty *property)
     }
 }
 
+void  QtFontPropertyManagerPrivate::slotFontDatabaseChanged()
+{
+    if (!m_fontDatabaseChangeTimer) {
+        m_fontDatabaseChangeTimer = new QTimer(q_ptr);
+        m_fontDatabaseChangeTimer->setInterval(0);
+        m_fontDatabaseChangeTimer->setSingleShot(true);
+        QObject::connect(m_fontDatabaseChangeTimer, SIGNAL(timeout()), q_ptr, SLOT(slotFontDatabaseDelayedChange()));
+    }
+    if (!m_fontDatabaseChangeTimer->isActive())
+        m_fontDatabaseChangeTimer->start();
+}
+
+void QtFontPropertyManagerPrivate::slotFontDatabaseDelayedChange()
+{
+    typedef QMap<const QtProperty *, QtProperty *> PropertyPropertyMap;
+    // rescan available font names
+    const QStringList oldFamilies = m_familyNames;
+    m_familyNames = fontDatabase()->families();
+
+    // Adapt all existing properties
+    if (!m_propertyToFamily.empty()) {
+        PropertyPropertyMap::const_iterator cend = m_propertyToFamily.constEnd();
+        for (PropertyPropertyMap::const_iterator it = m_propertyToFamily.constBegin(); it != cend; ++it) {
+            QtProperty *familyProp = it.value();
+            const int oldIdx = m_enumPropertyManager->value(familyProp);
+            int newIdx = m_familyNames.indexOf(oldFamilies.at(oldIdx));
+            if (newIdx < 0)
+                newIdx = 0;
+            m_enumPropertyManager->setEnumNames(familyProp, m_familyNames);
+            m_enumPropertyManager->setValue(familyProp, newIdx);
+        }
+    }
+}
+
 /*!
     \class QtFontPropertyManager
     \internal
@@ -5607,6 +5778,9 @@ QtFontPropertyManager::QtFontPropertyManager(QObject *parent)
 {
     d_ptr = new QtFontPropertyManagerPrivate;
     d_ptr->q_ptr = this;
+#if QT_VERSION >= 0x040500
+    QObject::connect(qApp, SIGNAL(fontDatabaseChanged()), this, SLOT(slotFontDatabaseChanged()));
+#endif
 
     d_ptr->m_intPropertyManager = new QtIntPropertyManager(this);
     connect(d_ptr->m_intPropertyManager, SIGNAL(valueChanged(QtProperty *, int)),
@@ -5631,6 +5805,7 @@ QtFontPropertyManager::QtFontPropertyManager(QObject *parent)
 */
 QtFontPropertyManager::~QtFontPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -5700,8 +5875,7 @@ QString QtFontPropertyManager::valueText(const QtProperty *property) const
     if (it == d_ptr->m_values.constEnd())
         return QString();
 
-    const QFont f = it.value();
-    return tr("[%1, %2]").arg(f.family()).arg(f.pointSize());
+    return QtPropertyBrowserUtils::fontValueText(it.value());
 }
 
 /*!
@@ -5713,21 +5887,7 @@ QIcon QtFontPropertyManager::valueIcon(const QtProperty *property) const
     if (it == d_ptr->m_values.constEnd())
         return QIcon();
 
-    QFont f = it.value();
-
-    QImage img(16, 16, QImage::Format_ARGB32_Premultiplied);
-    img.fill(0);
-    QPainter p(&img);
-    p.setRenderHint(QPainter::TextAntialiasing, true);
-    p.setRenderHint(QPainter::Antialiasing, true);
-    f.setPointSize(13);
-    p.setFont(f);
-    QTextOption t;
-    t.setAlignment(Qt::AlignCenter);
-    p.drawText(QRect(0, 0, 16, 16), QString(QLatin1Char('A')), t);
-    //p.drawRect(QRect(0, 0, 15, 15));
-    QPixmap pix = QPixmap::fromImage(img);
-    return QIcon(pix);
+    return QtPropertyBrowserUtils::fontValueIcon(it.value());
 }
 
 /*!
@@ -5778,6 +5938,8 @@ void QtFontPropertyManager::initializeProperty(QtProperty *property)
 
     QtProperty *familyProp = d_ptr->m_enumPropertyManager->addProperty();
     familyProp->setPropertyName(tr("Family"));
+    if (d_ptr->m_familyNames.empty())
+        d_ptr->m_familyNames = fontDatabase()->families();
     d_ptr->m_enumPropertyManager->setEnumNames(familyProp, d_ptr->m_familyNames);
     int idx = d_ptr->m_familyNames.indexOf(val.family());
     if (idx == -1)
@@ -6010,6 +6172,7 @@ QtColorPropertyManager::QtColorPropertyManager(QObject *parent)
 */
 QtColorPropertyManager::~QtColorPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -6226,6 +6389,7 @@ QtCursorPropertyManager::QtCursorPropertyManager(QObject *parent)
 */
 QtCursorPropertyManager::~QtCursorPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 

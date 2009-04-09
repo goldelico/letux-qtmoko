@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,7 +56,23 @@
 
 QT_BEGIN_NAMESPACE
 
-void QSvgAnimation::draw(QPainter *)
+#define QT_SVG_DRAW_SHAPE(command)                  \
+    applyStyle(p, states);                          \
+    qreal oldOpacity = p->opacity();                \
+    QBrush oldBrush = p->brush();                   \
+    QPen oldPen = p->pen();                         \
+    p->setPen(Qt::NoPen);                           \
+    p->setOpacity(oldOpacity * states.fillOpacity); \
+    command;                                        \
+    p->setOpacity(oldOpacity);                      \
+    p->setPen(oldPen);                              \
+    p->setBrush(Qt::NoBrush);                       \
+    command;                                        \
+    p->setBrush(oldBrush);                          \
+    revertStyle(p, states);
+
+
+void QSvgAnimation::draw(QPainter *, QSvgExtraStates &)
 {
     qWarning("<animation> no implemented");
 }
@@ -83,11 +103,9 @@ QRectF QSvgCircle::bounds() const
     }
 }
 
-void QSvgCircle::draw(QPainter *p)
+void QSvgCircle::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
-    p->drawEllipse(m_bounds);
-    revertStyle(p);
+    QT_SVG_DRAW_SHAPE(p->drawEllipse(m_bounds));
 }
 
 QSvgArc::QSvgArc(QSvgNode *parent, const QPainterPath &path)
@@ -96,11 +114,11 @@ QSvgArc::QSvgArc(QSvgNode *parent, const QPainterPath &path)
     m_cachedBounds = path.boundingRect();
 }
 
-void QSvgArc::draw(QPainter *p)
+void QSvgArc::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
     p->drawPath(cubic);
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
 QSvgEllipse::QSvgEllipse(QSvgNode *parent, const QRectF &rect)
@@ -120,11 +138,9 @@ QRectF QSvgEllipse::bounds() const
     }
 }
 
-void QSvgEllipse::draw(QPainter *p)
+void QSvgEllipse::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
-    p->drawEllipse(m_bounds);
-    revertStyle(p);
+    QT_SVG_DRAW_SHAPE(p->drawEllipse(m_bounds));
 }
 
 QSvgImage::QSvgImage(QSvgNode *parent, const QImage &image,
@@ -138,11 +154,11 @@ QSvgImage::QSvgImage(QSvgNode *parent, const QImage &image,
         m_bounds.setHeight(m_image.height());
 }
 
-void QSvgImage::draw(QPainter *p)
+void QSvgImage::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
     p->drawImage(m_bounds, m_image);
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
 
@@ -152,11 +168,11 @@ QSvgLine::QSvgLine(QSvgNode *parent, const QLineF &line)
 }
 
 
-void QSvgLine::draw(QPainter *p)
+void QSvgLine::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
     p->drawLine(m_bounds);
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
 QSvgPath::QSvgPath(QSvgNode *parent, const QPainterPath &qpath)
@@ -166,11 +182,9 @@ QSvgPath::QSvgPath(QSvgNode *parent, const QPainterPath &qpath)
     m_cachedBounds = m_path.boundingRect();
 }
 
-void QSvgPath::draw(QPainter *p)
+void QSvgPath::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
-    p->drawPath(m_path);
-    revertStyle(p);
+    QT_SVG_DRAW_SHAPE(p->drawPath(m_path));
 }
 
 QRectF QSvgPath::bounds() const
@@ -201,11 +215,9 @@ QRectF QSvgPolygon::bounds() const
     }
 }
 
-void QSvgPolygon::draw(QPainter *p)
+void QSvgPolygon::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
-    p->drawPolygon(m_poly);
-    revertStyle(p);
+    QT_SVG_DRAW_SHAPE(p->drawPolygon(m_poly));
 }
 
 
@@ -215,9 +227,9 @@ QSvgPolyline::QSvgPolyline(QSvgNode *parent, const QPolygonF &poly)
 
 }
 
-void QSvgPolyline::draw(QPainter *p)
+void QSvgPolyline::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
     if (p->brush().style() != Qt::NoBrush) {
         QPen save = p->pen();
         p->setPen(QPen(Qt::NoPen));
@@ -225,7 +237,7 @@ void QSvgPolyline::draw(QPainter *p)
         p->setPen(save);
     }
     p->drawPolyline(m_poly);
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
 QSvgRect::QSvgRect(QSvgNode *node, const QRectF &rect, int rx, int ry)
@@ -246,93 +258,166 @@ QRectF QSvgRect::bounds() const
     }
 }
 
-void QSvgRect::draw(QPainter *p)
+void QSvgRect::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
-
-    if (m_rx || m_ry)
-        p->drawRoundedRect(m_rect, m_rx, m_ry, Qt::RelativeSize);
-    else
-        p->drawRect(m_rect);
-    revertStyle(p);
+    if (m_rx || m_ry) {
+        QT_SVG_DRAW_SHAPE(p->drawRoundedRect(m_rect, m_rx, m_ry, Qt::RelativeSize));
+    } else {
+        QT_SVG_DRAW_SHAPE(p->drawRect(m_rect));
+    }
 }
 
 QSvgText::QSvgText(QSvgNode *parent, const QPointF &coord)
-    : QSvgNode(parent), m_coord(coord),
-      m_textAlignment(Qt::AlignLeft)
+    : QSvgNode(parent)
+    , m_coord(coord)
+    , m_textAlignment(Qt::AlignLeft)
+    , m_scale(1)
+    , m_appendSpace(false)
+    , m_type(TEXT)
+    , m_size(0, 0)
 {
+    m_paragraphs.push_back(QString());
+    m_formatRanges.push_back(QList<QTextLayout::FormatRange>());
 }
 
 QSvgText::~QSvgText()
 {
 }
 
+void QSvgText::setTextArea(const QSizeF &size)
+{
+    m_size = size;
+    m_type = TEXTAREA;
+}
+
 //QRectF QSvgText::bounds() const {}
 
-void QSvgText::draw(QPainter *p)
+void QSvgText::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
 
     QSvgFontStyle *fontStyle = static_cast<QSvgFontStyle*>(
         styleProperty(QSvgStyleProperty::FONT));
     if (fontStyle && fontStyle->svgFont()) {
-        fontStyle->svgFont()->draw(p, m_coord, m_text, fontStyle->pointSize());
-        revertStyle(p);
+        // SVG fonts not fully supported...
+        QString text = m_paragraphs.front();
+        for (int i = 1; i < m_paragraphs.size(); ++i) {
+            text.append(QLatin1Char('\n'));
+            text.append(m_paragraphs[i]);
+        }
+        fontStyle->svgFont()->draw(p, m_coord, text, fontStyle->pointSize(), m_textAlignment);
+        revertStyle(p, states);
         return;
     }
 
-    QTextLayout tl(m_text);
-    //QTextOption op = tl.textOption();
-    //op.setAlignment(m_textAlignment);
-    //tl.setTextOption(op);
-    tl.setAdditionalFormats(m_formatRanges);
-    tl.beginLayout();
+    // Scale the font to its correct size.
+    QTransform oldTransform = p->worldTransform();
+    p->scale(1 / m_scale, 1 / m_scale);
+
     qreal y = 0;
     bool initial = true;
-    qreal px = m_coord.x();
-    qreal py = m_coord.y();
+    qreal px = m_coord.x() * m_scale;
+    qreal py = m_coord.y() * m_scale;
+    QSizeF scaledSize = m_size * m_scale;
 
-    forever {
-        QTextLine line = tl.createLine();
-        if (!line.isValid())
+    if (m_type == TEXTAREA) {
+        if (m_textAlignment == Qt::AlignHCenter)
+            px += scaledSize.width() / 2;
+        else if (m_textAlignment == Qt::AlignRight)
+            px += scaledSize.width();
+    }
+
+    QRectF bounds;
+    if (m_size.height() != 0)
+        bounds = QRectF(0, 0, 1, scaledSize.height());
+
+    for (int i = 0; i < m_paragraphs.size(); ++i) {
+        QTextLayout tl(m_paragraphs[i]);
+        QTextOption op = tl.textOption();
+        op.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+        tl.setTextOption(op);
+        tl.setAdditionalFormats(m_formatRanges[i]);
+        tl.beginLayout();
+        forever {
+            QTextLine line = tl.createLine();
+            if (!line.isValid())
+                break;
+
+            if (m_size.width() != 0)
+                line.setLineWidth(scaledSize.width());
+        }
+        tl.endLayout();
+
+        bool endOfBoundsReached = false;
+        for (int i = 0; i < tl.lineCount(); ++i) {
+            QTextLine line = tl.lineAt(i);
+
+            qreal x = 0;
+            if (m_textAlignment == Qt::AlignHCenter)
+                x -= line.naturalTextWidth() / 2;
+            else if (m_textAlignment == Qt::AlignRight)
+                x -= line.naturalTextWidth();
+
+            if (initial && m_type == TEXT)
+                y -= line.ascent();
+            initial = false;
+
+            line.setPosition(QPointF(x, y));
+            if ((m_size.width() != 0 && line.naturalTextWidth() > scaledSize.width())
+                || (m_size.height() != 0 && y + line.height() > scaledSize.height())) {
+                bounds.setHeight(y);
+                endOfBoundsReached = true;
+                break;
+            }
+
+            y += 1.1 * line.height();
+        }
+        tl.draw(p, QPointF(px, py), QVector<QTextLayout::FormatRange>(), bounds);
+
+        if (endOfBoundsReached)
             break;
     }
-    for (int i = 0; i < tl.lineCount(); ++i) {
-        QTextLine line = tl.lineAt(i);
 
-        line.setPosition(QPointF(0, y-line.ascent()));
-        y += line.height();
-
-        if (initial) {
-            qreal w = line.naturalTextWidth();
-            px = m_coord.x();
-            py = m_coord.y();
-            if (m_textAlignment == Qt::AlignHCenter) {
-                px = m_coord.x() - w / 2;
-            }
-            else if (m_textAlignment == Qt::AlignRight) {
-                px = m_coord.x() - w;
-            }
-            initial = false;
-        }
-    }
-    tl.endLayout();
-    tl.draw(p, QPointF(px, py));
-
-    revertStyle(p);
+    p->setWorldTransform(oldTransform, false);
+    revertStyle(p, states);
 }
 
-void QSvgText::insertText(const QString &text)
+void QSvgText::insertText(const QString &text, WhitespaceMode mode)
 {
-    if (!m_formats.isEmpty()) {
-        QTextLayout::FormatRange range;
-        range.start = m_text.length();
-        range.length = text.length();
-        range.format = m_formats.top();
-        m_formatRanges.append(range);
+    bool isTSpan = (m_formats.count() == 2);
+    QString newText(text);
+    newText.replace(QLatin1Char('\t'), QLatin1Char(' '));
+    newText.replace(QLatin1Char('\n'), QLatin1Char(' '));
+
+    bool prependSpace = !m_appendSpace && !isTSpan && (mode == Default) && !m_paragraphs.back().isEmpty() && newText.startsWith(QLatin1Char(' '));
+    if (m_appendSpace || prependSpace)
+        m_paragraphs.back().append(QLatin1Char(' '));
+
+    bool appendSpaceNext = (!isTSpan && (mode == Default) && newText.endsWith(QLatin1Char(' ')));
+
+    if (mode == Default) {
+        newText = newText.simplified();
+        if (newText.isEmpty())
+            appendSpaceNext = false;
     }
 
-    m_text += text;
+    if (!m_formats.isEmpty()) {
+        QTextLayout::FormatRange range;
+        range.start = m_paragraphs.back().length();
+        range.length = newText.length();
+        range.format = m_formats.top();
+        if (m_appendSpace) {
+            Q_ASSERT(!m_formatRanges.back().isEmpty());
+            ++m_formatRanges.back().back().length;
+        } else if (prependSpace) {
+            --range.start;
+            ++range.length;
+        }
+        m_formatRanges.back().append(range);
+    }
+
+    m_appendSpace = appendSpaceNext;
+    m_paragraphs.back() += newText;
 }
 
 void QSvgText::insertFormat(const QTextCharFormat &format)
@@ -342,14 +427,34 @@ void QSvgText::insertFormat(const QTextCharFormat &format)
         mergedFormat = m_formats.top();
         mergedFormat.merge(format);
     }
-
     m_formats.push(mergedFormat);
+}
+
+void QSvgText::insertLineBreak()
+{
+    if (m_type == TEXTAREA) {
+        if (m_paragraphs.back().isEmpty())
+            insertText(QLatin1String(" "), Preserve);
+        m_appendSpace = false;
+        m_paragraphs.push_back(QString());
+        m_formatRanges.push_back(QList<QTextLayout::FormatRange>());
+    }
 }
 
 void QSvgText::popFormat()
 {
     if (m_formats.count() > 1)
         m_formats.pop();
+}
+
+qreal QSvgText::scale() const
+{
+    return m_scale;
+}
+
+void QSvgText::setScale(qreal scale)
+{
+    m_scale = scale;
 }
 
 const QTextCharFormat &QSvgText::topFormat() const
@@ -362,39 +467,32 @@ void QSvgText::setTextAlignment(const Qt::Alignment &alignment)
     m_textAlignment = alignment;
 }
 
-void QSvgTextArea::draw(QPainter *p)
-{
-    applyStyle(p);
-
-    revertStyle(p);
-}
-
 QSvgUse::QSvgUse(const QPointF &start, QSvgNode *parent, QSvgNode *node)
     : QSvgNode(parent), m_link(node), m_start(start)
 {
 
 }
 
-void QSvgUse::draw(QPainter *p)
+void QSvgUse::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
 
     if (!m_start.isNull()) {
         p->translate(m_start);
     }
-    m_link->draw(p);
+    m_link->draw(p, states);
     if (!m_start.isNull()) {
         p->translate(-m_start);
     }
 
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
-void QSvgVideo::draw(QPainter *p)
+void QSvgVideo::draw(QPainter *p, QSvgExtraStates &states)
 {
-    applyStyle(p);
+    applyStyle(p, states);
 
-    revertStyle(p);
+    revertStyle(p, states);
 }
 
 QSvgNode::Type QSvgAnimation::type() const
@@ -449,12 +547,7 @@ QSvgNode::Type QSvgRect::type() const
 
 QSvgNode::Type QSvgText::type() const
 {
-    return TEXT;
-}
-
-QSvgNode::Type QSvgTextArea::type() const
-{
-    return TEXTAREA;
+    return m_type;
 }
 
 QSvgNode::Type QSvgUse::type() const
@@ -481,19 +574,19 @@ QRectF QSvgUse::bounds() const
     return m_bounds;
 }
 
-QRectF QSvgUse::transformedBounds(const QMatrix &mat) const
+QRectF QSvgUse::transformedBounds(const QTransform &transform) const
 {
     QRectF bounds;
-    QMatrix m = mat;
+    QTransform t = transform;
 
     if (m_link)  {
-        QSvgTransformStyle *trans = m_style.transform;
-        if (trans) {
-            m = trans->qmatrix() * m;
+        QSvgTransformStyle *transStyle = m_style.transform;
+        if (transStyle) {
+            t = transStyle->qtransform() * t;
         }
-        m.translate(m_start.x(), m_start.y());
+        t.translate(m_start.x(), m_start.y());
 
-        bounds = m_link->transformedBounds(m);
+        bounds = m_link->transformedBounds(t);
 
         return bounds;
     }

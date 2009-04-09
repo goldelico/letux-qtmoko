@@ -28,124 +28,132 @@
 #include "Document.h"
 #include "HTMLFormElement.h"
 #include "HTMLObjectElement.h"
+#include "JSDOMBinding.h"
 #include "JSDocument.h"
 #include "JSHTMLFormElement.h"
+#include "JSHTMLObjectElementCustom.h"
 #include "JSSVGDocument.h"
-#include "PlatformString.h"
+#include "KURL.h"
 #include "SVGDocument.h"
-#include "kjs_dom.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLObjectElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLObjectElementTableEntries[] =
+static const HashTableValue JSHTMLObjectElementTableValues[20] =
 {
-    { "contentDocument", JSHTMLObjectElement::ContentDocumentAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "declare", JSHTMLObjectElement::DeclareAttrNum, DontDelete, 0, 0 },
-    { "type", JSHTMLObjectElement::TypeAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "form", JSHTMLObjectElement::FormAttrNum, DontDelete|ReadOnly, 0, &JSHTMLObjectElementTableEntries[20] },
-    { 0, 0, 0, 0, 0 },
-    { "codeType", JSHTMLObjectElement::CodeTypeAttrNum, DontDelete, 0, 0 },
-    { "vspace", JSHTMLObjectElement::VspaceAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "width", JSHTMLObjectElement::WidthAttrNum, DontDelete, 0, 0 },
-    { "border", JSHTMLObjectElement::BorderAttrNum, DontDelete, 0, 0 },
-    { "tabIndex", JSHTMLObjectElement::TabIndexAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "standby", JSHTMLObjectElement::StandbyAttrNum, DontDelete, 0, 0 },
-    { "hspace", JSHTMLObjectElement::HspaceAttrNum, DontDelete, 0, 0 },
-    { "height", JSHTMLObjectElement::HeightAttrNum, DontDelete, 0, &JSHTMLObjectElementTableEntries[25] },
-    { "codeBase", JSHTMLObjectElement::CodeBaseAttrNum, DontDelete, 0, 0 },
-    { "archive", JSHTMLObjectElement::ArchiveAttrNum, DontDelete, 0, &JSHTMLObjectElementTableEntries[22] },
-    { "code", JSHTMLObjectElement::CodeAttrNum, DontDelete, 0, &JSHTMLObjectElementTableEntries[21] },
-    { "align", JSHTMLObjectElement::AlignAttrNum, DontDelete, 0, &JSHTMLObjectElementTableEntries[23] },
-    { "data", JSHTMLObjectElement::DataAttrNum, DontDelete, 0, 0 },
-    { "name", JSHTMLObjectElement::NameAttrNum, DontDelete, 0, &JSHTMLObjectElementTableEntries[24] },
-    { "useMap", JSHTMLObjectElement::UseMapAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSHTMLObjectElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "form", DontDelete|ReadOnly, (intptr_t)jsHTMLObjectElementForm, (intptr_t)0 },
+    { "code", DontDelete, (intptr_t)jsHTMLObjectElementCode, (intptr_t)setJSHTMLObjectElementCode },
+    { "align", DontDelete, (intptr_t)jsHTMLObjectElementAlign, (intptr_t)setJSHTMLObjectElementAlign },
+    { "archive", DontDelete, (intptr_t)jsHTMLObjectElementArchive, (intptr_t)setJSHTMLObjectElementArchive },
+    { "border", DontDelete, (intptr_t)jsHTMLObjectElementBorder, (intptr_t)setJSHTMLObjectElementBorder },
+    { "codeBase", DontDelete, (intptr_t)jsHTMLObjectElementCodeBase, (intptr_t)setJSHTMLObjectElementCodeBase },
+    { "codeType", DontDelete, (intptr_t)jsHTMLObjectElementCodeType, (intptr_t)setJSHTMLObjectElementCodeType },
+    { "data", DontDelete, (intptr_t)jsHTMLObjectElementData, (intptr_t)setJSHTMLObjectElementData },
+    { "declare", DontDelete, (intptr_t)jsHTMLObjectElementDeclare, (intptr_t)setJSHTMLObjectElementDeclare },
+    { "height", DontDelete, (intptr_t)jsHTMLObjectElementHeight, (intptr_t)setJSHTMLObjectElementHeight },
+    { "hspace", DontDelete, (intptr_t)jsHTMLObjectElementHspace, (intptr_t)setJSHTMLObjectElementHspace },
+    { "name", DontDelete, (intptr_t)jsHTMLObjectElementName, (intptr_t)setJSHTMLObjectElementName },
+    { "standby", DontDelete, (intptr_t)jsHTMLObjectElementStandby, (intptr_t)setJSHTMLObjectElementStandby },
+    { "type", DontDelete, (intptr_t)jsHTMLObjectElementType, (intptr_t)setJSHTMLObjectElementType },
+    { "useMap", DontDelete, (intptr_t)jsHTMLObjectElementUseMap, (intptr_t)setJSHTMLObjectElementUseMap },
+    { "vspace", DontDelete, (intptr_t)jsHTMLObjectElementVspace, (intptr_t)setJSHTMLObjectElementVspace },
+    { "width", DontDelete, (intptr_t)jsHTMLObjectElementWidth, (intptr_t)setJSHTMLObjectElementWidth },
+    { "contentDocument", DontDelete|ReadOnly, (intptr_t)jsHTMLObjectElementContentDocument, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLObjectElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLObjectElementTable = 
-{
-    2, 26, JSHTMLObjectElementTableEntries, 20
-};
+static const HashTable JSHTMLObjectElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSHTMLObjectElementTableValues, 0 };
+#else
+    { 66, 63, JSHTMLObjectElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLObjectElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLObjectElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLObjectElementConstructorTable = 
-{
-    2, 1, JSHTMLObjectElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLObjectElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLObjectElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLObjectElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLObjectElementConstructor : public DOMObject {
 public:
     JSHTMLObjectElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLObjectElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLObjectElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLObjectElementConstructor::info = { "HTMLObjectElementConstructor", 0, &JSHTMLObjectElementConstructorTable, 0 };
+const ClassInfo JSHTMLObjectElementConstructor::s_info = { "HTMLObjectElementConstructor", 0, &JSHTMLObjectElementConstructorTable, 0 };
 
 bool JSHTMLObjectElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLObjectElementConstructor, DOMObject>(exec, &JSHTMLObjectElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLObjectElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLObjectElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLObjectElementPrototypeTableValues[2] =
 {
-    { "getSVGDocument", JSHTMLObjectElement::GetSVGDocumentFuncNum, DontDelete|Function, 0, 0 }
+    { "getSVGDocument", DontDelete|Function, (intptr_t)jsHTMLObjectElementPrototypeFunctionGetSVGDocument, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLObjectElementPrototypeTable = 
-{
-    2, 1, JSHTMLObjectElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLObjectElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLObjectElementPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSHTMLObjectElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLObjectElementPrototype::info = { "HTMLObjectElementPrototype", 0, &JSHTMLObjectElementPrototypeTable, 0 };
+const ClassInfo JSHTMLObjectElementPrototype::s_info = { "HTMLObjectElementPrototype", 0, &JSHTMLObjectElementPrototypeTable, 0 };
 
 JSObject* JSHTMLObjectElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLObjectElementPrototype>(exec, "[[JSHTMLObjectElement.prototype]]");
+    return getDOMPrototype<JSHTMLObjectElement>(exec);
 }
 
 bool JSHTMLObjectElementPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLObjectElementPrototypeFunction, JSObject>(exec, &JSHTMLObjectElementPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLObjectElementPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLObjectElement::info = { "HTMLObjectElement", &JSHTMLElement::info, &JSHTMLObjectElementTable, 0 };
+const ClassInfo JSHTMLObjectElement::s_info = { "HTMLObjectElement", &JSHTMLElement::s_info, &JSHTMLObjectElementTable, 0 };
 
-JSHTMLObjectElement::JSHTMLObjectElement(ExecState* exec, HTMLObjectElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLObjectElement::JSHTMLObjectElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLObjectElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLObjectElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLObjectElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLObjectElementPrototype(JSHTMLObjectElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLObjectElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -156,252 +164,244 @@ bool JSHTMLObjectElement::getOwnPropertySlot(ExecState* exec, const Identifier& 
     }
     if (customGetOwnPropertySlot(exec, propertyName, slot))
         return true;
-    return getStaticValueSlot<JSHTMLObjectElement, JSHTMLElement>(exec, &JSHTMLObjectElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLObjectElement, Base>(exec, &JSHTMLObjectElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLObjectElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLObjectElementForm(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case FormAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->form()));
-    }
-    case CodeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->code());
-    }
-    case AlignAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->align());
-    }
-    case ArchiveAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->archive());
-    }
-    case BorderAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->border());
-    }
-    case CodeBaseAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->codeBase());
-    }
-    case CodeTypeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->codeType());
-    }
-    case DataAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->data());
-    }
-    case DeclareAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsBoolean(imp->declare());
-    }
-    case HeightAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->height());
-    }
-    case HspaceAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsNumber(imp->hspace());
-    }
-    case NameAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->name());
-    }
-    case StandbyAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->standby());
-    }
-    case TabIndexAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsNumber(imp->tabIndex());
-    }
-    case TypeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case UseMapAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->useMap());
-    }
-    case VspaceAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsNumber(imp->vspace());
-    }
-    case WidthAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return jsString(imp->width());
-    }
-    case ContentDocumentAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        return checkNodeSecurity(exec, imp->contentDocument()) ? toJS(exec, WTF::getPtr(imp->contentDocument())) : jsUndefined();
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->form()));
 }
 
-void JSHTMLObjectElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLObjectElementCode(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (customPut(exec, propertyName, value, attr))
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->code());
+}
+
+JSValuePtr jsHTMLObjectElementAlign(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->align());
+}
+
+JSValuePtr jsHTMLObjectElementArchive(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->archive());
+}
+
+JSValuePtr jsHTMLObjectElementBorder(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->border());
+}
+
+JSValuePtr jsHTMLObjectElementCodeBase(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->codeBase());
+}
+
+JSValuePtr jsHTMLObjectElementCodeType(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->codeType());
+}
+
+JSValuePtr jsHTMLObjectElementData(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->data());
+}
+
+JSValuePtr jsHTMLObjectElementDeclare(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->declare());
+}
+
+JSValuePtr jsHTMLObjectElementHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->height());
+}
+
+JSValuePtr jsHTMLObjectElementHspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->hspace());
+}
+
+JSValuePtr jsHTMLObjectElementName(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->name());
+}
+
+JSValuePtr jsHTMLObjectElementStandby(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->standby());
+}
+
+JSValuePtr jsHTMLObjectElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
+}
+
+JSValuePtr jsHTMLObjectElementUseMap(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->useMap());
+}
+
+JSValuePtr jsHTMLObjectElementVspace(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->vspace());
+}
+
+JSValuePtr jsHTMLObjectElementWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->width());
+}
+
+JSValuePtr jsHTMLObjectElementContentDocument(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->impl());
+    return checkNodeSecurity(exec, imp->contentDocument()) ? toJS(exec, WTF::getPtr(imp->contentDocument())) : jsUndefined();
+}
+
+JSValuePtr jsHTMLObjectElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLObjectElement*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLObjectElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    if (customPut(exec, propertyName, value, slot))
         return;
-    lookupPut<JSHTMLObjectElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLObjectElementTable, this);
+    lookupPut<JSHTMLObjectElement, Base>(exec, propertyName, value, &JSHTMLObjectElementTable, this, slot);
 }
 
-void JSHTMLObjectElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void setJSHTMLObjectElementCode(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    switch (token) {
-    case CodeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setCode(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case AlignAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setAlign(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case ArchiveAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setArchive(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case BorderAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setBorder(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case CodeBaseAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setCodeBase(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case CodeTypeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setCodeType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DataAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setData(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DeclareAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setDeclare(value->toBoolean(exec));
-        break;
-    }
-    case HeightAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setHeight(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case HspaceAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setHspace(value->toInt32(exec));
-        break;
-    }
-    case NameAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setName(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case StandbyAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setStandby(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case TabIndexAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setTabIndex(value->toInt32(exec));
-        break;
-    }
-    case TypeAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case UseMapAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setUseMap(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case VspaceAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setVspace(value->toInt32(exec));
-        break;
-    }
-    case WidthAttrNum: {
-        HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(impl());
-
-        imp->setWidth(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setCode(valueToStringWithNullCheck(exec, value));
 }
 
-JSValue* JSHTMLObjectElement::getConstructor(ExecState* exec)
+void setJSHTMLObjectElementAlign(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSHTMLObjectElementConstructor>(exec, "[[HTMLObjectElement.constructor]]");
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setAlign(valueToStringWithNullCheck(exec, value));
 }
-JSValue* JSHTMLObjectElementPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+void setJSHTMLObjectElementArchive(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    if (!thisObj->inherits(&JSHTMLObjectElement::info))
-      return throwError(exec, TypeError);
-
-    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLObjectElement::GetSVGDocumentFuncNum: {
-        ExceptionCode ec = 0;
-        if (!checkNodeSecurity(exec, imp->getSVGDocument(ec)))
-            return jsUndefined();
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getSVGDocument(ec)));
-        setDOMException(exec, ec);
-        return result;
-    }
-    }
-    return 0;
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setArchive(valueToStringWithNullCheck(exec, value));
 }
+
+void setJSHTMLObjectElementBorder(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setBorder(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementCodeBase(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setCodeBase(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementCodeType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setCodeType(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementData(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setData(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementDeclare(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setDeclare(value->toBoolean(exec));
+}
+
+void setJSHTMLObjectElementHeight(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setHeight(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementHspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setHspace(value->toInt32(exec));
+}
+
+void setJSHTMLObjectElementName(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setName(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementStandby(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setStandby(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementUseMap(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setUseMap(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLObjectElementVspace(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setVspace(value->toInt32(exec));
+}
+
+void setJSHTMLObjectElementWidth(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(static_cast<JSHTMLObjectElement*>(thisObject)->impl());
+    imp->setWidth(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLObjectElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLObjectElementConstructor>(exec);
+}
+
+JSValuePtr jsHTMLObjectElementPrototypeFunctionGetSVGDocument(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLObjectElement::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLObjectElement* castedThisObj = static_cast<JSHTMLObjectElement*>(asObject(thisValue));
+    HTMLObjectElement* imp = static_cast<HTMLObjectElement*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    if (!checkNodeSecurity(exec, imp->getSVGDocument(ec)))
+        return jsUndefined();
+
+
+    JSC::JSValuePtr result = toJS(exec, WTF::getPtr(imp->getSVGDocument(ec)));
+    setDOMException(exec, ec);
+    return result;
+}
+
 
 }

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -343,6 +347,33 @@ QT_BEGIN_NAMESPACE
   required. You don't need to call it yourself.
 */
 
+/*! \fn T *QSharedDataPointer::clone()
+    \since 4.5
+
+  Creates and returns a deep copy of the current data. This function
+  is called by detach() when the reference count is greater than 1 in
+  order to create the new copy. This function uses the \e {operator
+  new} and calls the copy constructor of the type T.
+
+  This function is provided so that you may support "virtual copy
+  constructors" for your own types. In order to so, you should declare
+  a template-specialization of this function for your own type, like
+  the example below:
+
+  \code
+      template<>
+      EmployeeData *QSharedDataPointer<EmployeeData>::clone()
+      {
+          return d->clone();
+      }
+  \endcode
+
+  In the example above, the template specialization for the clone()
+  function calls the \e {EmployeeData::clone()} virtual function. A
+  class derived from EmployeeData could override that function and
+  return the proper polymorphic type.
+*/
+
 /*! 
   \class QExplicitlySharedDataPointer
   \brief The QExplicitlySharedDataPointer class represents a pointer to an explicitly shared object.
@@ -352,7 +383,7 @@ QT_BEGIN_NAMESPACE
   \mainclass
 
   QExplicitlySharedDataPointer\<T\> makes writing your own explicitly
-  shared classes easy. QExplicitlySharedDataPointre implements
+  shared classes easy. QExplicitlySharedDataPointer implements
   \l {thread-safe} reference counting, ensuring that adding
   QExplicitlySharedDataPointers to your \l {reentrant} classes won't
   make them non-reentrant.
@@ -383,12 +414,8 @@ QT_BEGIN_NAMESPACE
   \sa QSharedData, QSharedDataPointer
 */
 
-/*! \fn T& QExplicitlySharedDataPointer::operator*()
+/*! \fn T& QExplicitlySharedDataPointer::operator*() const
   Provides access to the shared data object's members.
-*/
-
-/*! \fn const T& QExplicitlySharedDataPointer::operator*() const
-  Provides const access to the shared data object's members.
 */
 
 /*! \fn T* QExplicitlySharedDataPointer::operator->()
@@ -500,6 +527,17 @@ QT_BEGIN_NAMESPACE
   detach() is \e not called automatically anywhere in the member
   functions of this class. If you find that you are calling detach()
   everywhere in your code, consider using QSharedDataPointer instead.
+*/
+
+/*! \fn T *QExplicitlySharedDataPointer::clone()
+    \since 4.5
+
+  Creates and returns a deep copy of the current data. This function
+  is called by detach() when the reference count is greater than 1 in
+  order to create the new copy. This function uses the \e {operator
+  new} and calls the copy constructor of the type T.
+
+  See QSharedDataPointer::clone() for an explanation of how to use it.
 */
 
 /*!

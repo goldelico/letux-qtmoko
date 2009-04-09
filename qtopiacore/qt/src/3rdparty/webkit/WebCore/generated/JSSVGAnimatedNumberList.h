@@ -18,45 +18,56 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGAnimatedNumberList_H
-#define JSSVGAnimatedNumberList_H
+#ifndef JSSVGAnimatedNumberList_h
+#define JSSVGAnimatedNumberList_h
 
 
 #if ENABLE(SVG)
 
-#include "kjs_binding.h"
+#include "JSDOMBinding.h"
+#include <runtime/JSGlobalObject.h>
+#include <runtime/ObjectPrototype.h>
 
 namespace WebCore {
 
-class JSSVGAnimatedNumberList : public KJS::DOMObject {
+class JSSVGAnimatedNumberList : public DOMObject {
+    typedef DOMObject Base;
 public:
-    JSSVGAnimatedNumberList(KJS::ExecState*, SVGAnimatedNumberList*);
+    JSSVGAnimatedNumberList(PassRefPtr<JSC::Structure>, PassRefPtr<SVGAnimatedNumberList>, SVGElement* context);
     virtual ~JSSVGAnimatedNumberList();
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        BaseValAttrNum, AnimValAttrNum
-    };
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+
     SVGAnimatedNumberList* impl() const { return m_impl.get(); }
+    SVGElement* context() const { return m_context.get(); }
+
 private:
-    RefPtr<SVGAnimatedNumberList> m_impl;
+    RefPtr<SVGElement> m_context;
+    RefPtr<SVGAnimatedNumberList > m_impl;
 };
 
-KJS::JSValue* toJS(KJS::ExecState*, SVGAnimatedNumberList*);
-SVGAnimatedNumberList* toSVGAnimatedNumberList(KJS::JSValue*);
+JSC::JSValuePtr toJS(JSC::ExecState*, SVGAnimatedNumberList*, SVGElement* context);
+SVGAnimatedNumberList* toSVGAnimatedNumberList(JSC::JSValuePtr);
 
-class JSSVGAnimatedNumberListPrototype : public KJS::JSObject {
+class JSSVGAnimatedNumberListPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGAnimatedNumberListPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(exec->lexicalInterpreter()->builtinObjectPrototype()) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGAnimatedNumberListPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsSVGAnimatedNumberListBaseVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGAnimatedNumberListAnimVal(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

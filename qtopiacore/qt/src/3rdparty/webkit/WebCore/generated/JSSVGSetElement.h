@@ -18,11 +18,11 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGSetElement_H
-#define JSSVGSetElement_H
+#ifndef JSSVGSetElement_h
+#define JSSVGSetElement_h
 
 
-#if ENABLE(SVG)
+#if ENABLE(SVG_ANIMATION)
 
 #include "JSSVGAnimationElement.h"
 
@@ -31,25 +31,27 @@ namespace WebCore {
 class SVGSetElement;
 
 class JSSVGSetElement : public JSSVGAnimationElement {
+    typedef JSSVGAnimationElement Base;
 public:
-    JSSVGSetElement(KJS::ExecState*, SVGSetElement*);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGSetElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGSetElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
 };
 
 
-class JSSVGSetElementPrototype : public KJS::JSObject {
+class JSSVGSetElementPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSSVGSetElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGAnimationElementPrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSSVGSetElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
 
 } // namespace WebCore
 
-#endif // ENABLE(SVG)
+#endif // ENABLE(SVG_ANIMATION)
 
 #endif

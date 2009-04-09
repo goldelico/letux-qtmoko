@@ -1,36 +1,40 @@
 /****************************************************************************
- * ** * ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+ * ** * ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
  * **
  * ** This file is part of the Patternist project on Trolltech Labs.
  * **
- * ** Commercial Usage
+ * ** $QT_BEGIN_LICENSE:LGPL$
+** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
  * **
  * ** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
  * ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
@@ -42,6 +46,10 @@
 #include <QTextCodec>
 
 #include "qcoloroutput_p.h"
+
+// TODO: rename insertMapping() to insertColorMapping()
+// TODO: Use a smart pointer for managing ColorOutputPrivate *d;
+// TODO: break out the C++ example into a snippet file
 
 /* This include must appear here, because if it appears at the beginning of the file for
  * instance, it breaks build -- "qglobal.h:628: error: template with
@@ -168,6 +176,29 @@ const char *const ColorOutputPrivate::backgrounds[] =
  It can be convenient to subclass ColorOutput with a private scope, such that the
  functions are directly available in the class using it.
 
+ \section1 Usage
+
+ To output messages, call write() or writeUncolored(). write() takes as second
+ argument an integer, which ColorOutput uses as a lookup key to find the color
+ it should color the text in. The mapping from keys to colors is done using
+ insertMapping(). Typically this is used by having enums for the various kinds
+ of messages, which subsequently are registered.
+
+ \code
+ enum MyMessage
+ {
+    Error,
+    Important
+ };
+
+ ColorOutput output;
+ output.insertMapping(Error, ColorOutput::RedForeground);
+ output.insertMapping(Import, ColorOutput::BlueForeground);
+
+ output.write("This is important", Important);
+ output.write("Jack, I'm only the selected official!", Error);
+ \endcode
+
  \sa {http://tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html}                        {Bash Prompt HOWTO, 6.1. Colours}
      {http://linuxgazette.net/issue51/livingston-blade.html}                    {Linux Gazette, Tweaking Eterm, Edward Livingston-Blade}
      {http://www.ecma-international.org/publications/standards/Ecma-048.htm}    {Standard ECMA-48, Control Functions for Coded Character Sets, ECMA International},
@@ -186,6 +217,8 @@ const char *const ColorOutputPrivate::backgrounds[] =
  Sets the color mapping to be \a cMapping.
 
  Negative values are disallowed.
+
+ \sa colorMapping(), insertMapping()
  */
 void ColorOutput::setColorMapping(const ColorMapping &cMapping)
 {
@@ -194,6 +227,8 @@ void ColorOutput::setColorMapping(const ColorMapping &cMapping)
 
 /*!
  Returns the color mappings in use.
+
+ \sa setColorMapping(), insertMapping()
  */
 ColorOutput::ColorMapping ColorOutput::colorMapping() const
 {
@@ -224,7 +259,7 @@ ColorOutput::~ColorOutput()
  is initialized to not color at all.
 
  If \a message is empty, effects are undefined.
- 
+
  \a message will be printed as is. For instance, no line endings will be inserted.
  */
 void ColorOutput::write(const QString &message, int colorID)
@@ -235,7 +270,7 @@ void ColorOutput::write(const QString &message, int colorID)
 /*!
  Writes \a message to \c stderr as if for instance
  QTextStream would have been used, and adds a line ending at the end.
- 
+
  This function can be practical to use such that one can use ColorOutput for all forms of writing.
  */
 void ColorOutput::writeUncolored(const QString &message)
@@ -304,6 +339,8 @@ QString ColorOutput::colorify(const QString &message, int colorID) const
 
   This is a convenience function for creating a ColorOutput::ColorMapping instance and
   calling setColorMapping().
+
+  \sa colorMapping(), setColorMapping()
  */
 void ColorOutput::insertMapping(int colorID, const ColorCode colorCode)
 {

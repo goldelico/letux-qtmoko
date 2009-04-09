@@ -25,303 +25,410 @@
 #include <wtf/GetPtr.h>
 
 #include "Event.h"
-#include "EventTargetNode.h"
-#include "JSEventTargetNode.h"
-#include "PlatformString.h"
-#include "kjs_dom.h"
+#include "EventTarget.h"
+#include "JSEventTarget.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSEvent)
+
 /* Hash table */
 
-static const HashEntry JSEventTableEntries[] =
+static const HashTableValue JSEventTableValues[13] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "srcElement", JSEvent::SrcElementAttrNum, DontDelete|ReadOnly, 0, &JSEventTableEntries[16] },
-    { "bubbles", JSEvent::BubblesAttrNum, DontDelete|ReadOnly, 0, &JSEventTableEntries[13] },
-    { "currentTarget", JSEvent::CurrentTargetAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "type", JSEvent::TypeAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "returnValue", JSEvent::ReturnValueAttrNum, DontDelete, 0, 0 },
-    { "constructor", JSEvent::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "target", JSEvent::TargetAttrNum, DontDelete|ReadOnly, 0, &JSEventTableEntries[12] },
-    { 0, 0, 0, 0, 0 },
-    { "eventPhase", JSEvent::EventPhaseAttrNum, DontDelete|ReadOnly, 0, &JSEventTableEntries[14] },
-    { "cancelable", JSEvent::CancelableAttrNum, DontDelete|ReadOnly, 0, &JSEventTableEntries[15] },
-    { "timeStamp", JSEvent::TimeStampAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "cancelBubble", JSEvent::CancelBubbleAttrNum, DontDelete, 0, 0 },
-    { "clipboardData", JSEvent::ClipboardDataAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "type", DontDelete|ReadOnly, (intptr_t)jsEventType, (intptr_t)0 },
+    { "target", DontDelete|ReadOnly, (intptr_t)jsEventTarget, (intptr_t)0 },
+    { "currentTarget", DontDelete|ReadOnly, (intptr_t)jsEventCurrentTarget, (intptr_t)0 },
+    { "eventPhase", DontDelete|ReadOnly, (intptr_t)jsEventEventPhase, (intptr_t)0 },
+    { "bubbles", DontDelete|ReadOnly, (intptr_t)jsEventBubbles, (intptr_t)0 },
+    { "cancelable", DontDelete|ReadOnly, (intptr_t)jsEventCancelable, (intptr_t)0 },
+    { "timeStamp", DontDelete|ReadOnly, (intptr_t)jsEventTimeStamp, (intptr_t)0 },
+    { "srcElement", DontDelete|ReadOnly, (intptr_t)jsEventSrcElement, (intptr_t)0 },
+    { "returnValue", DontDelete, (intptr_t)jsEventReturnValue, (intptr_t)setJSEventReturnValue },
+    { "cancelBubble", DontDelete, (intptr_t)jsEventCancelBubble, (intptr_t)setJSEventCancelBubble },
+    { "clipboardData", DontDelete|ReadOnly, (intptr_t)jsEventClipboardData, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsEventConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEventTable = 
-{
-    2, 17, JSEventTableEntries, 12
-};
+static const HashTable JSEventTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 127, JSEventTableValues, 0 };
+#else
+    { 35, 31, JSEventTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSEventConstructorTableEntries[] =
+static const HashTableValue JSEventConstructorTableValues[20] =
 {
-    { "MOUSEOUT", Event::MOUSEOUT, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEOVER", Event::MOUSEOVER, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "CAPTURING_PHASE", Event::CAPTURING_PHASE, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[23] },
-    { 0, 0, 0, 0, 0 },
-    { "MOUSEDOWN", Event::MOUSEDOWN, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[22] },
-    { "AT_TARGET", Event::AT_TARGET, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[19] },
-    { 0, 0, 0, 0, 0 },
-    { "DRAGDROP", Event::DRAGDROP, DontDelete|ReadOnly, 0, 0 },
-    { "KEYUP", Event::KEYUP, DontDelete|ReadOnly, 0, 0 },
-    { "SELECT", Event::SELECT, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "BLUR", Event::BLUR, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "MOUSEMOVE", Event::MOUSEMOVE, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "CLICK", Event::CLICK, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[20] },
-    { "MOUSEUP", Event::MOUSEUP, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[21] },
-    { "BUBBLING_PHASE", Event::BUBBLING_PHASE, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEDRAG", Event::MOUSEDRAG, DontDelete|ReadOnly, 0, 0 },
-    { "DBLCLICK", Event::DBLCLICK, DontDelete|ReadOnly, 0, &JSEventConstructorTableEntries[24] },
-    { "KEYDOWN", Event::KEYDOWN, DontDelete|ReadOnly, 0, 0 },
-    { "KEYPRESS", Event::KEYPRESS, DontDelete|ReadOnly, 0, 0 },
-    { "FOCUS", Event::FOCUS, DontDelete|ReadOnly, 0, 0 },
-    { "CHANGE", Event::CHANGE, DontDelete|ReadOnly, 0, 0 }
+    { "CAPTURING_PHASE", DontDelete|ReadOnly, (intptr_t)jsEventCAPTURING_PHASE, (intptr_t)0 },
+    { "AT_TARGET", DontDelete|ReadOnly, (intptr_t)jsEventAT_TARGET, (intptr_t)0 },
+    { "BUBBLING_PHASE", DontDelete|ReadOnly, (intptr_t)jsEventBUBBLING_PHASE, (intptr_t)0 },
+    { "MOUSEDOWN", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEDOWN, (intptr_t)0 },
+    { "MOUSEUP", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEUP, (intptr_t)0 },
+    { "MOUSEOVER", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEOVER, (intptr_t)0 },
+    { "MOUSEOUT", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEOUT, (intptr_t)0 },
+    { "MOUSEMOVE", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEMOVE, (intptr_t)0 },
+    { "MOUSEDRAG", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEDRAG, (intptr_t)0 },
+    { "CLICK", DontDelete|ReadOnly, (intptr_t)jsEventCLICK, (intptr_t)0 },
+    { "DBLCLICK", DontDelete|ReadOnly, (intptr_t)jsEventDBLCLICK, (intptr_t)0 },
+    { "KEYDOWN", DontDelete|ReadOnly, (intptr_t)jsEventKEYDOWN, (intptr_t)0 },
+    { "KEYUP", DontDelete|ReadOnly, (intptr_t)jsEventKEYUP, (intptr_t)0 },
+    { "KEYPRESS", DontDelete|ReadOnly, (intptr_t)jsEventKEYPRESS, (intptr_t)0 },
+    { "DRAGDROP", DontDelete|ReadOnly, (intptr_t)jsEventDRAGDROP, (intptr_t)0 },
+    { "FOCUS", DontDelete|ReadOnly, (intptr_t)jsEventFOCUS, (intptr_t)0 },
+    { "BLUR", DontDelete|ReadOnly, (intptr_t)jsEventBLUR, (intptr_t)0 },
+    { "SELECT", DontDelete|ReadOnly, (intptr_t)jsEventSELECT, (intptr_t)0 },
+    { "CHANGE", DontDelete|ReadOnly, (intptr_t)jsEventCHANGE, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEventConstructorTable = 
-{
-    2, 25, JSEventConstructorTableEntries, 19
-};
+static const HashTable JSEventConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 8191, JSEventConstructorTableValues, 0 };
+#else
+    { 68, 63, JSEventConstructorTableValues, 0 };
+#endif
 
 class JSEventConstructor : public DOMObject {
 public:
     JSEventConstructor(ExecState* exec)
+        : DOMObject(JSEventConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSEventPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSEventConstructor::info = { "EventConstructor", 0, &JSEventConstructorTable, 0 };
+const ClassInfo JSEventConstructor::s_info = { "EventConstructor", 0, &JSEventConstructorTable, 0 };
 
 bool JSEventConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSEventConstructor, DOMObject>(exec, &JSEventConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSEventConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSEventPrototypeTableEntries[] =
+static const HashTableValue JSEventPrototypeTableValues[23] =
 {
-    { "BUBBLING_PHASE", Event::BUBBLING_PHASE, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[27] },
-    { 0, 0, 0, 0, 0 },
-    { "MOUSEMOVE", Event::MOUSEMOVE, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[24] },
-    { "FOCUS", Event::FOCUS, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEOUT", Event::MOUSEOUT, DontDelete|ReadOnly, 0, 0 },
-    { "CHANGE", Event::CHANGE, DontDelete|ReadOnly, 0, 0 },
-    { "BLUR", Event::BLUR, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEOVER", Event::MOUSEOVER, DontDelete|ReadOnly, 0, 0 },
-    { "KEYDOWN", Event::KEYDOWN, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "DRAGDROP", Event::DRAGDROP, DontDelete|ReadOnly, 0, 0 },
-    { "stopPropagation", JSEvent::StopPropagationFuncNum, DontDelete|Function, 0, 0 },
-    { "AT_TARGET", Event::AT_TARGET, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[23] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "MOUSEUP", Event::MOUSEUP, DontDelete|ReadOnly, 0, 0 },
-    { "CAPTURING_PHASE", Event::CAPTURING_PHASE, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[22] },
-    { "SELECT", Event::SELECT, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "CLICK", Event::CLICK, DontDelete|ReadOnly, 0, 0 },
-    { "KEYUP", Event::KEYUP, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEDOWN", Event::MOUSEDOWN, DontDelete|ReadOnly, 0, 0 },
-    { "MOUSEDRAG", Event::MOUSEDRAG, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[25] },
-    { "DBLCLICK", Event::DBLCLICK, DontDelete|ReadOnly, 0, &JSEventPrototypeTableEntries[26] },
-    { "KEYPRESS", Event::KEYPRESS, DontDelete|ReadOnly, 0, 0 },
-    { "preventDefault", JSEvent::PreventDefaultFuncNum, DontDelete|Function, 0, 0 },
-    { "initEvent", JSEvent::InitEventFuncNum, DontDelete|Function, 3, 0 }
+    { "CAPTURING_PHASE", DontDelete|ReadOnly, (intptr_t)jsEventCAPTURING_PHASE, (intptr_t)0 },
+    { "AT_TARGET", DontDelete|ReadOnly, (intptr_t)jsEventAT_TARGET, (intptr_t)0 },
+    { "BUBBLING_PHASE", DontDelete|ReadOnly, (intptr_t)jsEventBUBBLING_PHASE, (intptr_t)0 },
+    { "MOUSEDOWN", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEDOWN, (intptr_t)0 },
+    { "MOUSEUP", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEUP, (intptr_t)0 },
+    { "MOUSEOVER", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEOVER, (intptr_t)0 },
+    { "MOUSEOUT", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEOUT, (intptr_t)0 },
+    { "MOUSEMOVE", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEMOVE, (intptr_t)0 },
+    { "MOUSEDRAG", DontDelete|ReadOnly, (intptr_t)jsEventMOUSEDRAG, (intptr_t)0 },
+    { "CLICK", DontDelete|ReadOnly, (intptr_t)jsEventCLICK, (intptr_t)0 },
+    { "DBLCLICK", DontDelete|ReadOnly, (intptr_t)jsEventDBLCLICK, (intptr_t)0 },
+    { "KEYDOWN", DontDelete|ReadOnly, (intptr_t)jsEventKEYDOWN, (intptr_t)0 },
+    { "KEYUP", DontDelete|ReadOnly, (intptr_t)jsEventKEYUP, (intptr_t)0 },
+    { "KEYPRESS", DontDelete|ReadOnly, (intptr_t)jsEventKEYPRESS, (intptr_t)0 },
+    { "DRAGDROP", DontDelete|ReadOnly, (intptr_t)jsEventDRAGDROP, (intptr_t)0 },
+    { "FOCUS", DontDelete|ReadOnly, (intptr_t)jsEventFOCUS, (intptr_t)0 },
+    { "BLUR", DontDelete|ReadOnly, (intptr_t)jsEventBLUR, (intptr_t)0 },
+    { "SELECT", DontDelete|ReadOnly, (intptr_t)jsEventSELECT, (intptr_t)0 },
+    { "CHANGE", DontDelete|ReadOnly, (intptr_t)jsEventCHANGE, (intptr_t)0 },
+    { "stopPropagation", DontDelete|Function, (intptr_t)jsEventPrototypeFunctionStopPropagation, (intptr_t)0 },
+    { "preventDefault", DontDelete|Function, (intptr_t)jsEventPrototypeFunctionPreventDefault, (intptr_t)0 },
+    { "initEvent", DontDelete|Function, (intptr_t)jsEventPrototypeFunctionInitEvent, (intptr_t)3 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSEventPrototypeTable = 
-{
-    2, 28, JSEventPrototypeTableEntries, 22
-};
+static const HashTable JSEventPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 8191, JSEventPrototypeTableValues, 0 };
+#else
+    { 68, 63, JSEventPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSEventPrototype::info = { "EventPrototype", 0, &JSEventPrototypeTable, 0 };
+static const HashTable* getJSEventPrototypeTable(ExecState* exec)
+{
+    return getHashTableForGlobalData(exec->globalData(), &JSEventPrototypeTable);
+}
+const ClassInfo JSEventPrototype::s_info = { "EventPrototype", 0, 0, getJSEventPrototypeTable };
 
 JSObject* JSEventPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSEventPrototype>(exec, "[[JSEvent.prototype]]");
+    return getDOMPrototype<JSEvent>(exec);
 }
 
 bool JSEventPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticPropertySlot<JSEventPrototypeFunction, JSEventPrototype, JSObject>(exec, &JSEventPrototypeTable, this, propertyName, slot);
+    return getStaticPropertySlot<JSEventPrototype, JSObject>(exec, getJSEventPrototypeTable(exec), this, propertyName, slot);
 }
 
-JSValue* JSEventPrototype::getValueProperty(ExecState*, int token) const
+static const HashTable* getJSEventTable(ExecState* exec)
 {
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
+    return getHashTableForGlobalData(exec->globalData(), &JSEventTable);
 }
+const ClassInfo JSEvent::s_info = { "Event", 0, 0, getJSEventTable };
 
-const ClassInfo JSEvent::info = { "Event", 0, &JSEventTable, 0 };
-
-JSEvent::JSEvent(ExecState* exec, Event* impl)
-    : m_impl(impl)
+JSEvent::JSEvent(PassRefPtr<Structure> structure, PassRefPtr<Event> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSEventPrototype::self(exec));
 }
 
 JSEvent::~JSEvent()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSEvent::createPrototype(ExecState* exec)
+{
+    return new (exec) JSEventPrototype(JSEventPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSEvent::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSEvent, KJS::DOMObject>(exec, &JSEventTable, this, propertyName, slot);
+    return getStaticValueSlot<JSEvent, Base>(exec, getJSEventTable(exec), this, propertyName, slot);
 }
 
-JSValue* JSEvent::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsEventType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TypeAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsString(imp->type());
-    }
-    case TargetAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->target()));
-    }
-    case CurrentTargetAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->currentTarget()));
-    }
-    case EventPhaseAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsNumber(imp->eventPhase());
-    }
-    case BubblesAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsBoolean(imp->bubbles());
-    }
-    case CancelableAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsBoolean(imp->cancelable());
-    }
-    case TimeStampAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsNumber(imp->timeStamp());
-    }
-    case SrcElementAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->srcElement()));
-    }
-    case ReturnValueAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsBoolean(imp->returnValue());
-    }
-    case CancelBubbleAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        return jsBoolean(imp->cancelBubble());
-    }
-    case ClipboardDataAttrNum: {
-        return clipboardData(exec);
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
 }
 
-void JSEvent::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsEventTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSEvent, KJS::DOMObject>(exec, propertyName, value, attr, &JSEventTable, this);
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->target()));
 }
 
-void JSEvent::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsEventCurrentTarget(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case ReturnValueAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        imp->setReturnValue(value->toBoolean(exec));
-        break;
-    }
-    case CancelBubbleAttrNum: {
-        Event* imp = static_cast<Event*>(impl());
-
-        imp->setCancelBubble(value->toBoolean(exec));
-        break;
-    }
-    }
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->currentTarget()));
 }
 
-JSValue* JSEvent::getConstructor(ExecState* exec)
+JSValuePtr jsEventEventPhase(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSEventConstructor>(exec, "[[Event.constructor]]");
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->eventPhase());
 }
-JSValue* JSEventPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsEventBubbles(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSEvent::info))
-      return throwError(exec, TypeError);
-
-    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(thisObj)->impl());
-
-    switch (id) {
-    case JSEvent::StopPropagationFuncNum: {
-
-        imp->stopPropagation();
-        return jsUndefined();
-    }
-    case JSEvent::PreventDefaultFuncNum: {
-
-        imp->preventDefault();
-        return jsUndefined();
-    }
-    case JSEvent::InitEventFuncNum: {
-        String eventTypeArg = args[0]->toString(exec);
-        bool canBubbleArg = args[1]->toBoolean(exec);
-        bool cancelableArg = args[2]->toBoolean(exec);
-
-        imp->initEvent(eventTypeArg, canBubbleArg, cancelableArg);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->bubbles());
 }
-Event* toEvent(KJS::JSValue* val)
+
+JSValuePtr jsEventCancelable(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return val->isObject(&JSEvent::info) ? static_cast<JSEvent*>(val)->impl() : 0;
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->cancelable());
+}
+
+JSValuePtr jsEventTimeStamp(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->timeStamp());
+}
+
+JSValuePtr jsEventSrcElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->srcElement()));
+}
+
+JSValuePtr jsEventReturnValue(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->returnValue());
+}
+
+JSValuePtr jsEventCancelBubble(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->cancelBubble());
+}
+
+JSValuePtr jsEventClipboardData(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSEvent*>(asObject(slot.slotBase()))->clipboardData(exec);
+}
+
+JSValuePtr jsEventConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSEvent*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSEvent::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSEvent, Base>(exec, propertyName, value, getJSEventTable(exec), this, slot);
+}
+
+void setJSEventReturnValue(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(thisObject)->impl());
+    imp->setReturnValue(value->toBoolean(exec));
+}
+
+void setJSEventCancelBubble(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    Event* imp = static_cast<Event*>(static_cast<JSEvent*>(thisObject)->impl());
+    imp->setCancelBubble(value->toBoolean(exec));
+}
+
+JSValuePtr JSEvent::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSEventConstructor>(exec);
+}
+
+JSValuePtr jsEventPrototypeFunctionStopPropagation(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSEvent::s_info))
+        return throwError(exec, TypeError);
+    JSEvent* castedThisObj = static_cast<JSEvent*>(asObject(thisValue));
+    Event* imp = static_cast<Event*>(castedThisObj->impl());
+
+    imp->stopPropagation();
+    return jsUndefined();
+}
+
+JSValuePtr jsEventPrototypeFunctionPreventDefault(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSEvent::s_info))
+        return throwError(exec, TypeError);
+    JSEvent* castedThisObj = static_cast<JSEvent*>(asObject(thisValue));
+    Event* imp = static_cast<Event*>(castedThisObj->impl());
+
+    imp->preventDefault();
+    return jsUndefined();
+}
+
+JSValuePtr jsEventPrototypeFunctionInitEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSEvent::s_info))
+        return throwError(exec, TypeError);
+    JSEvent* castedThisObj = static_cast<JSEvent*>(asObject(thisValue));
+    Event* imp = static_cast<Event*>(castedThisObj->impl());
+    const UString& eventTypeArg = args.at(exec, 0)->toString(exec);
+    bool canBubbleArg = args.at(exec, 1)->toBoolean(exec);
+    bool cancelableArg = args.at(exec, 2)->toBoolean(exec);
+
+    imp->initEvent(eventTypeArg, canBubbleArg, cancelableArg);
+    return jsUndefined();
+}
+
+// Constant getters
+
+JSValuePtr jsEventCAPTURING_PHASE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsEventAT_TARGET(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSValuePtr jsEventBUBBLING_PHASE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(3));
+}
+
+JSValuePtr jsEventMOUSEDOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1));
+}
+
+JSValuePtr jsEventMOUSEUP(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2));
+}
+
+JSValuePtr jsEventMOUSEOVER(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4));
+}
+
+JSValuePtr jsEventMOUSEOUT(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(8));
+}
+
+JSValuePtr jsEventMOUSEMOVE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(16));
+}
+
+JSValuePtr jsEventMOUSEDRAG(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(32));
+}
+
+JSValuePtr jsEventCLICK(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(64));
+}
+
+JSValuePtr jsEventDBLCLICK(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(128));
+}
+
+JSValuePtr jsEventKEYDOWN(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(256));
+}
+
+JSValuePtr jsEventKEYUP(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(512));
+}
+
+JSValuePtr jsEventKEYPRESS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(1024));
+}
+
+JSValuePtr jsEventDRAGDROP(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(2048));
+}
+
+JSValuePtr jsEventFOCUS(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(4096));
+}
+
+JSValuePtr jsEventBLUR(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(8192));
+}
+
+JSValuePtr jsEventSELECT(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(16384));
+}
+
+JSValuePtr jsEventCHANGE(ExecState* exec, const Identifier&, const PropertySlot&)
+{
+    return jsNumber(exec, static_cast<int>(32768));
+}
+
+Event* toEvent(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSEvent::s_info) ? static_cast<JSEvent*>(asObject(value))->impl() : 0;
 }
 
 }

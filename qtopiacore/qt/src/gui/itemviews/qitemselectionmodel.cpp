@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -274,11 +278,12 @@ QModelIndexList QItemSelectionRange::indexes() const
 {
     QModelIndex index;
     QModelIndexList result;
-    if (isValid()) {
+    if (isValid() && model()) {
         for (int column = left(); column <= right(); ++column) {
             for (int row = top(); row <= bottom(); ++row) {
                 index = model()->index(row, column, parent());
-                if (model()->flags(index) & Qt::ItemIsSelectable)
+                Qt::ItemFlags flags = model()->flags(index);
+                if ((flags & Qt::ItemIsSelectable) && (flags & Qt::ItemIsEnabled))
                     result.append(index);
             }
         }
@@ -381,10 +386,12 @@ void QItemSelection::select(const QModelIndex &topLeft, const QModelIndex &botto
 
 bool QItemSelection::contains(const QModelIndex &index) const
 {
-    QList<QItemSelectionRange>::const_iterator it = begin();
-    for (; it != end(); ++it)
-        if ((*it).contains(index))
-            return true;
+    if (index.flags() & Qt::ItemIsSelectable) {
+        QList<QItemSelectionRange>::const_iterator it = begin();
+        for (; it != end(); ++it)
+            if ((*it).contains(index))
+                return true;
+    }
     return false;
 }
 
@@ -532,7 +539,8 @@ QItemSelection QItemSelectionModelPrivate::expandSelection(const QItemSelection 
             int colCount = model->columnCount(parent);
             QModelIndex tl = model->index(selection.at(i).top(), 0, parent);
             QModelIndex br = model->index(selection.at(i).bottom(), colCount - 1, parent);
-            expanded.append(QItemSelectionRange(tl, br));
+            //we need to merge because the same row could have already been inserted
+            expanded.merge(QItemSelection(tl, br), QItemSelectionModel::Select);
         }
     }
     if (command & QItemSelectionModel::Columns) {
@@ -541,7 +549,8 @@ QItemSelection QItemSelectionModelPrivate::expandSelection(const QItemSelection 
             int rowCount = model->rowCount(parent);
             QModelIndex tl = model->index(0, selection.at(i).left(), parent);
             QModelIndex br = model->index(rowCount - 1, selection.at(i).right(), parent);
-            expanded.append(QItemSelectionRange(tl, br));
+            //we need to merge because the same column could have already been inserted
+            expanded.merge(QItemSelection(tl, br), QItemSelectionModel::Select);
         }
     }
     return expanded;
@@ -678,6 +687,24 @@ void QItemSelectionModelPrivate::_q_layoutAboutToBeChanged()
 {
     savedPersistentIndexes.clear();
     savedPersistentCurrentIndexes.clear();
+
+    // special case for when all indexes are selected
+    if (ranges.isEmpty() && currentSelection.count() == 1) {
+        QItemSelectionRange range = currentSelection.first();
+        QModelIndex parent = range.parent();
+        if (range.top() == 0
+            && range.left() == 0
+            && range.bottom() == model->rowCount(parent) - 1
+            && range.right() == model->columnCount(parent) - 1) {
+            tableSelected = true;
+            tableParent = parent;
+            tableColCount = model->columnCount(parent);
+            tableRowCount = model->rowCount(parent);
+            return;
+        }
+    }
+    tableSelected = false;
+
     QModelIndexList indexes = ranges.indexes();
     QModelIndexList::const_iterator it;
     for (it = indexes.constBegin(); it != indexes.constEnd(); ++it)
@@ -742,6 +769,21 @@ static QItemSelection mergeIndexes(const QList<QPersistentModelIndex> &indexes)
 */
 void QItemSelectionModelPrivate::_q_layoutChanged()
 {
+    // special case for when all indexes are selected
+    if (tableSelected && tableColCount == model->columnCount(tableParent)
+        && tableRowCount == model->rowCount(tableParent)) {
+        ranges.clear();
+        currentSelection.clear();
+        int bottom = tableRowCount - 1;
+        int right = tableColCount - 1;
+        QModelIndex tl = model->index(0, 0, tableParent);
+        QModelIndex br = model->index(bottom, right, tableParent);
+        currentSelection << QItemSelectionRange(tl, br);
+        tableParent = QModelIndex();
+        tableSelected = false;
+        return;
+    }
+
     if (savedPersistentCurrentIndexes.isEmpty() && savedPersistentIndexes.isEmpty()) {
         // either the selection was actually empty, or we
         // didn't get the layoutAboutToBeChanged() signal
@@ -1011,7 +1053,6 @@ void QItemSelectionModel::select(const QItemSelection &selection, QItemSelection
     QItemSelection newSelection = d->ranges;
     newSelection.merge(d->currentSelection, d->currentCommand);
     emitSelectionChanged(newSelection, old);
-    return;
 }
 
 /*!
@@ -1126,8 +1167,10 @@ bool QItemSelectionModel::isSelected(const QModelIndex &index) const
             selected = d->currentSelection.contains(index);
     }
 
-    if (selected && (d->model->flags(index) & Qt::ItemIsSelectable))
-        return true;
+    if (selected) {
+        Qt::ItemFlags flags = d->model->flags(index);
+        return (flags & Qt::ItemIsSelectable);
+    }
 
     return false;
 }
@@ -1173,11 +1216,15 @@ bool QItemSelectionModel::isRowSelected(int row, const QModelIndex &parent) cons
         joined += d->currentSelection;
     int colCount = d->model->columnCount(parent);
     for (int column = 0; column < colCount; ++column) {
-        for (it = joined.constBegin(); it != joined.constEnd(); ++it)
+        for (it = joined.constBegin(); it != joined.constEnd(); ++it) {
             if ((*it).contains(row, column, parent)) {
-                column = qMax(column, (*it).right());
-                break;
+                Qt::ItemFlags flags = d->model->index(row, column, parent).flags();
+                if ((flags & Qt::ItemIsSelectable) && (flags & Qt::ItemIsEnabled)) {
+                    column = qMax(column, (*it).right());
+                    break;
+                }
             }
+        }
         if (it == joined.constEnd())
             return false;
     }
@@ -1231,8 +1278,11 @@ bool QItemSelectionModel::isColumnSelected(int column, const QModelIndex &parent
     for (int row = 0; row < rowCount; ++row) {
          for (it = joined.constBegin(); it != joined.constEnd(); ++it) {
              if ((*it).contains(row, column, parent)) {
-                 row = qMax(row, (*it).bottom());
-                 break;
+                 Qt::ItemFlags flags = d->model->index(row, column, parent).flags();
+                 if ((flags & Qt::ItemIsSelectable) && (flags & Qt::ItemIsEnabled)) {
+                     row = qMax(row, (*it).bottom());
+                     break;
+                 }
              }
          }
          if (it == joined.constEnd())
@@ -1253,9 +1303,19 @@ bool QItemSelectionModel::rowIntersectsSelection(int row, const QModelIndex &par
 
     QItemSelection sel = d->ranges;
     sel.merge(d->currentSelection, d->currentCommand);
-    for (int i = 0; i < sel.count(); ++i)
-        if (sel.at(i).top() <= row && sel.at(i).bottom() >= row)
-            return true;
+    for (int i = 0; i < sel.count(); ++i) {
+        int top = sel.at(i).top();
+        int bottom = sel.at(i).bottom();
+        int left = sel.at(i).left();
+        int right = sel.at(i).right();
+        if (top <= row && bottom >= row) {
+            Qt::ItemFlags leftFlags = d->model->index(row, left, parent).flags();
+            Qt::ItemFlags rightFlags = d->model->index(row, right, parent).flags();
+            if ((leftFlags & Qt::ItemIsSelectable) && (leftFlags & Qt::ItemIsEnabled)
+                && (rightFlags & Qt::ItemIsSelectable) && (rightFlags & Qt::ItemIsEnabled))
+                return true;
+        }
+    }
 
     return false;
 }
@@ -1272,9 +1332,19 @@ bool QItemSelectionModel::columnIntersectsSelection(int column, const QModelInde
 
     QItemSelection sel = d->ranges;
     sel.merge(d->currentSelection, d->currentCommand);
-    for (int i = 0; i < sel.count(); ++i)
-        if (sel.at(i).left() <= column && sel.at(i).right() >= column)
-            return true;
+    for (int i = 0; i < sel.count(); ++i) {
+        int left = sel.at(i).left();
+        int right = sel.at(i).right();
+        int top =  sel.at(i).top();
+        int bottom =  sel.at(i).bottom();
+        if (left <= column && right >= column) {
+            Qt::ItemFlags topFlags = d->model->index(top, column, parent).flags();
+            Qt::ItemFlags bottomFlags = d->model->index(bottom, column, parent).flags();
+            if ((topFlags & Qt::ItemIsSelectable) && (topFlags & Qt::ItemIsEnabled)
+                && (bottomFlags & Qt::ItemIsSelectable) && (bottomFlags & Qt::ItemIsEnabled))
+                return true;
+        }
+    }
 
     return false;
 }
@@ -1288,7 +1358,7 @@ bool QItemSelectionModel::columnIntersectsSelection(int column, const QModelInde
 bool QItemSelectionModel::hasSelection() const
 {
     Q_D(const QItemSelectionModel);
-    if (d->currentCommand == Toggle || d->currentCommand == Deselect) {
+    if (d->currentCommand & (Toggle | Deselect)) {
         QItemSelection sel = d->ranges;
         sel.merge(d->currentSelection, d->currentCommand);
         return !sel.isEmpty();
@@ -1320,16 +1390,26 @@ QModelIndexList QItemSelectionModel::selectedIndexes() const
 QModelIndexList QItemSelectionModel::selectedRows(int column) const
 {
     QModelIndexList indexes;
-    QItemSelection ranges = selection();
+    //the QSet contains pairs of parent modelIndex
+    //and row number
+    QSet< QPair<QModelIndex, int> > rowsSeen;
+
+    const QItemSelection ranges = selection();
     for (int i = 0; i < ranges.count(); ++i) {
-        QModelIndex parent = ranges.at(i).parent();
-        int right = ranges.at(i).model()->columnCount(parent) - 1;
-        if (ranges.at(i).left() == 0 && ranges.at(i).right() == right)
-            for (int r = ranges.at(i).top(); r <= ranges.at(i).bottom(); ++r)
-                indexes.append(ranges.at(i).model()->index(r, column, parent));
+        const QItemSelectionRange &range = ranges.at(i);
+        QModelIndex parent = range.parent();
+        for (int row = range.top(); row <= range.bottom(); row++) {
+            QPair<QModelIndex, int> rowDef = qMakePair(parent, row);
+            if (!rowsSeen.contains(rowDef)) {
+                rowsSeen << rowDef;
+                if (isRowSelected(row, parent)) {
+                    indexes.append(model()->index(row, column, parent));
+                }
+            }
+        }
     }
-    // remove duplicates
-    return indexes.toSet().toList();
+
+    return indexes;
 }
 
 /*!
@@ -1342,16 +1422,26 @@ QModelIndexList QItemSelectionModel::selectedRows(int column) const
 QModelIndexList QItemSelectionModel::selectedColumns(int row) const
 {
     QModelIndexList indexes;
-    QItemSelection ranges = selection();
+    //the QSet contains pairs of parent modelIndex
+    //and column number
+    QSet< QPair<QModelIndex, int> > columnsSeen;
+
+    const QItemSelection ranges = selection();
     for (int i = 0; i < ranges.count(); ++i) {
-        QModelIndex parent = ranges.at(i).parent();
-        int bottom = ranges.at(i).model()->rowCount(parent) - 1;
-        if (ranges.at(i).top() == 0 && ranges.at(i).bottom() == bottom)
-            for (int c = ranges.at(i).left(); c <= ranges.at(i).right(); ++c)
-                indexes.append(ranges.at(i).model()->index(row, c, parent));
+        const QItemSelectionRange &range = ranges.at(i);
+        QModelIndex parent = range.parent();
+        for (int column = range.left(); column <= range.right(); column++) {
+            QPair<QModelIndex, int> columnDef = qMakePair(parent, column);
+            if (!columnsSeen.contains(columnDef)) {
+                columnsSeen << columnDef;
+                if (isColumnSelected(column, parent)) {
+                    indexes.append(model()->index(row, column, parent));
+                }
+            }
+        }
     }
-    // remove duplicates
-    return indexes.toSet().toList();
+
+    return indexes;
 }
 
 /*!

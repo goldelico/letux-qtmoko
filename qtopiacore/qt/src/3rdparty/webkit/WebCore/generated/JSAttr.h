@@ -18,48 +18,59 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSAttr_H
-#define JSAttr_H
+#ifndef JSAttr_h
+#define JSAttr_h
 
 #include "JSEventTargetNode.h"
-
+#include "Attr.h"
 namespace WebCore {
 
 class Attr;
 
 class JSAttr : public JSEventTargetNode {
+    typedef JSEventTargetNode Base;
 public:
-    JSAttr(KJS::ExecState*, Attr*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSAttr(PassRefPtr<JSC::Structure>, PassRefPtr<Attr>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    static KJS::JSValue* getConstructor(KJS::ExecState*);
-    enum {
-        // Attributes
-        NameAttrNum, SpecifiedAttrNum, ValueAttrNum, OwnerElementAttrNum, 
-        StyleAttrNum, 
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
 
-        // The Constructor Attribute
-        ConstructorAttrNum
-    };
+    static JSC::JSValuePtr getConstructor(JSC::ExecState*);
 
     // Custom attributes
-    void setValue(KJS::ExecState*, KJS::JSValue*);
+    void setValue(JSC::ExecState*, JSC::JSValuePtr);
+    Attr* impl() const
+    {
+        return static_cast<Attr*>(Base::impl());
+    }
 };
 
+Attr* toAttr(JSC::JSValuePtr);
 
-class JSAttrPrototype : public KJS::JSObject {
+class JSAttrPrototype : public JSC::JSObject {
 public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    JSAttrPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSEventTargetNodePrototype::self(exec)) { }
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    JSAttrPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
 };
+
+// Attributes
+
+JSC::JSValuePtr jsAttrName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsAttrSpecified(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsAttrValue(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSAttrValue(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsAttrOwnerElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsAttrStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsAttrConstructor(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

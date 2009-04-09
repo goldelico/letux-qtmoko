@@ -23,127 +23,114 @@
 
 #if ENABLE(SVG)
 
-#include "Document.h"
-#include "Frame.h"
-#include "SVGDocumentExtensions.h"
 #include "SVGElement.h"
-#include "SVGAnimatedTemplate.h"
 #include "JSSVGAnimatedNumber.h"
 
 #include <wtf/GetPtr.h>
 
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSSVGAnimatedNumber)
+
 /* Hash table */
 
-static const HashEntry JSSVGAnimatedNumberTableEntries[] =
+static const HashTableValue JSSVGAnimatedNumberTableValues[3] =
 {
-    { "baseVal", JSSVGAnimatedNumber::BaseValAttrNum, DontDelete, 0, 0 },
-    { "animVal", JSSVGAnimatedNumber::AnimValAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "baseVal", DontDelete, (intptr_t)jsSVGAnimatedNumberBaseVal, (intptr_t)setJSSVGAnimatedNumberBaseVal },
+    { "animVal", DontDelete|ReadOnly, (intptr_t)jsSVGAnimatedNumberAnimVal, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedNumberTable = 
-{
-    2, 2, JSSVGAnimatedNumberTableEntries, 2
-};
+static const HashTable JSSVGAnimatedNumberTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSSVGAnimatedNumberTableValues, 0 };
+#else
+    { 4, 3, JSSVGAnimatedNumberTableValues, 0 };
+#endif
 
 /* Hash table for prototype */
 
-static const HashEntry JSSVGAnimatedNumberPrototypeTableEntries[] =
+static const HashTableValue JSSVGAnimatedNumberPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSSVGAnimatedNumberPrototypeTable = 
-{
-    2, 1, JSSVGAnimatedNumberPrototypeTableEntries, 1
-};
+static const HashTable JSSVGAnimatedNumberPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSSVGAnimatedNumberPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSSVGAnimatedNumberPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSSVGAnimatedNumberPrototype::info = { "SVGAnimatedNumberPrototype", 0, &JSSVGAnimatedNumberPrototypeTable, 0 };
+const ClassInfo JSSVGAnimatedNumberPrototype::s_info = { "SVGAnimatedNumberPrototype", 0, &JSSVGAnimatedNumberPrototypeTable, 0 };
 
 JSObject* JSSVGAnimatedNumberPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSSVGAnimatedNumberPrototype>(exec, "[[JSSVGAnimatedNumber.prototype]]");
+    return getDOMPrototype<JSSVGAnimatedNumber>(exec);
 }
 
-const ClassInfo JSSVGAnimatedNumber::info = { "SVGAnimatedNumber", 0, &JSSVGAnimatedNumberTable, 0 };
+const ClassInfo JSSVGAnimatedNumber::s_info = { "SVGAnimatedNumber", 0, &JSSVGAnimatedNumberTable, 0 };
 
-JSSVGAnimatedNumber::JSSVGAnimatedNumber(ExecState* exec, SVGAnimatedNumber* impl)
-    : m_impl(impl)
+JSSVGAnimatedNumber::JSSVGAnimatedNumber(PassRefPtr<Structure> structure, PassRefPtr<SVGAnimatedNumber> impl, SVGElement* context)
+    : DOMObject(structure)
+    , m_context(context)
+    , m_impl(impl)
 {
-    setPrototype(JSSVGAnimatedNumberPrototype::self(exec));
 }
 
 JSSVGAnimatedNumber::~JSSVGAnimatedNumber()
 {
-    SVGDocumentExtensions::forgetGenericContext<SVGAnimatedNumber>(m_impl.get());
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
+}
+
+JSObject* JSSVGAnimatedNumber::createPrototype(ExecState* exec)
+{
+    return new (exec) JSSVGAnimatedNumberPrototype(JSSVGAnimatedNumberPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
 
 bool JSSVGAnimatedNumber::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSSVGAnimatedNumber, KJS::DOMObject>(exec, &JSSVGAnimatedNumberTable, this, propertyName, slot);
+    return getStaticValueSlot<JSSVGAnimatedNumber, Base>(exec, &JSSVGAnimatedNumberTable, this, propertyName, slot);
 }
 
-JSValue* JSSVGAnimatedNumber::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsSVGAnimatedNumberBaseVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(impl());
-
-        return jsNumber(imp->baseVal());
-    }
-    case AnimValAttrNum: {
-        SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(impl());
-
-        return jsNumber(imp->animVal());
-    }
-    }
-    return 0;
+    SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(static_cast<JSSVGAnimatedNumber*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->baseVal());
 }
 
-void JSSVGAnimatedNumber::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsSVGAnimatedNumberAnimVal(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSSVGAnimatedNumber, KJS::DOMObject>(exec, propertyName, value, attr, &JSSVGAnimatedNumberTable, this);
+    SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(static_cast<JSSVGAnimatedNumber*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->animVal());
 }
 
-void JSSVGAnimatedNumber::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSSVGAnimatedNumber::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case BaseValAttrNum: {
-        SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(impl());
-
-        imp->setBaseVal(value->toFloat(exec));
-        break;
-    }
-    }
-    SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(impl());
-
-    ASSERT(exec && exec->dynamicInterpreter());
-    Frame* activeFrame = static_cast<ScriptInterpreter*>(exec->dynamicInterpreter())->frame();
-    if (!activeFrame)
-        return;
-
-    SVGDocumentExtensions* extensions = (activeFrame->document() ? activeFrame->document()->accessSVGExtensions() : 0);
-    if (extensions && extensions->hasGenericContext<SVGAnimatedNumber>(imp)) {
-        const SVGElement* context = extensions->genericContext<SVGAnimatedNumber>(imp);
-        ASSERT(context);
-
-        context->notifyAttributeChange();
-    }
-
+    lookupPut<JSSVGAnimatedNumber, Base>(exec, propertyName, value, &JSSVGAnimatedNumberTable, this, slot);
 }
 
-KJS::JSValue* toJS(KJS::ExecState* exec, SVGAnimatedNumber* obj)
+void setJSSVGAnimatedNumberBaseVal(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheDOMObject<SVGAnimatedNumber, JSSVGAnimatedNumber>(exec, obj);
+    SVGAnimatedNumber* imp = static_cast<SVGAnimatedNumber*>(static_cast<JSSVGAnimatedNumber*>(thisObject)->impl());
+    imp->setBaseVal(value->toFloat(exec));
+    if (static_cast<JSSVGAnimatedNumber*>(thisObject)->context())
+        static_cast<JSSVGAnimatedNumber*>(thisObject)->context()->svgAttributeChanged(static_cast<JSSVGAnimatedNumber*>(thisObject)->impl()->associatedAttributeName());
 }
-SVGAnimatedNumber* toSVGAnimatedNumber(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, SVGAnimatedNumber* object, SVGElement* context)
 {
-    return val->isObject(&JSSVGAnimatedNumber::info) ? static_cast<JSSVGAnimatedNumber*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSSVGAnimatedNumber>(exec, object, context);
+}
+SVGAnimatedNumber* toSVGAnimatedNumber(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSSVGAnimatedNumber::s_info) ? static_cast<JSSVGAnimatedNumber*>(asObject(value))->impl() : 0;
 }
 
 }

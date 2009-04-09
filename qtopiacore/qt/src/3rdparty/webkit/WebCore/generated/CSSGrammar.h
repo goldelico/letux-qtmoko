@@ -41,6 +41,7 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
+     TOKEN_EOF = 0,
      UNIMPORTANT_TOK = 258,
      WHITESPACE = 259,
      SGML_CD = 260,
@@ -51,49 +52,61 @@
      CONTAINS = 265,
      STRING = 266,
      IDENT = 267,
-     HEX = 268,
-     IDSEL = 269,
-     IMPORT_SYM = 270,
-     PAGE_SYM = 271,
-     MEDIA_SYM = 272,
-     FONT_FACE_SYM = 273,
-     CHARSET_SYM = 274,
-     NAMESPACE_SYM = 275,
-     WEBKIT_RULE_SYM = 276,
-     WEBKIT_DECLS_SYM = 277,
-     WEBKIT_VALUE_SYM = 278,
-     WEBKIT_MEDIAQUERY_SYM = 279,
-     IMPORTANT_SYM = 280,
-     MEDIA_ONLY = 281,
-     MEDIA_NOT = 282,
-     MEDIA_AND = 283,
-     QEMS = 284,
-     EMS = 285,
-     EXS = 286,
-     PXS = 287,
-     CMS = 288,
-     MMS = 289,
-     INS = 290,
-     PTS = 291,
-     PCS = 292,
-     DEGS = 293,
-     RADS = 294,
-     GRADS = 295,
-     MSECS = 296,
-     SECS = 297,
-     HERZ = 298,
-     KHERZ = 299,
-     DIMEN = 300,
-     PERCENTAGE = 301,
-     FLOATTOKEN = 302,
-     INTEGER = 303,
-     URI = 304,
-     FUNCTION = 305,
-     NOTFUNCTION = 306,
-     UNICODERANGE = 307
+     NTH = 268,
+     HEX = 269,
+     IDSEL = 270,
+     IMPORT_SYM = 271,
+     PAGE_SYM = 272,
+     MEDIA_SYM = 273,
+     FONT_FACE_SYM = 274,
+     CHARSET_SYM = 275,
+     NAMESPACE_SYM = 276,
+     WEBKIT_RULE_SYM = 277,
+     WEBKIT_DECLS_SYM = 278,
+     WEBKIT_KEYFRAME_RULE_SYM = 279,
+     WEBKIT_KEYFRAMES_SYM = 280,
+     WEBKIT_VALUE_SYM = 281,
+     WEBKIT_MEDIAQUERY_SYM = 282,
+     WEBKIT_SELECTOR_SYM = 283,
+     WEBKIT_VARIABLES_SYM = 284,
+     WEBKIT_DEFINE_SYM = 285,
+     VARIABLES_FOR = 286,
+     WEBKIT_VARIABLES_DECLS_SYM = 287,
+     ATKEYWORD = 288,
+     IMPORTANT_SYM = 289,
+     MEDIA_ONLY = 290,
+     MEDIA_NOT = 291,
+     MEDIA_AND = 292,
+     QEMS = 293,
+     EMS = 294,
+     EXS = 295,
+     PXS = 296,
+     CMS = 297,
+     MMS = 298,
+     INS = 299,
+     PTS = 300,
+     PCS = 301,
+     DEGS = 302,
+     RADS = 303,
+     GRADS = 304,
+     TURNS = 305,
+     MSECS = 306,
+     SECS = 307,
+     HERZ = 308,
+     KHERZ = 309,
+     DIMEN = 310,
+     PERCENTAGE = 311,
+     FLOATTOKEN = 312,
+     INTEGER = 313,
+     URI = 314,
+     FUNCTION = 315,
+     NOTFUNCTION = 316,
+     UNICODERANGE = 317,
+     VARCALL = 318
    };
 #endif
 /* Tokens.  */
+#define TOKEN_EOF 0
 #define UNIMPORTANT_TOK 258
 #define WHITESPACE 259
 #define SGML_CD 260
@@ -104,78 +117,89 @@
 #define CONTAINS 265
 #define STRING 266
 #define IDENT 267
-#define HEX 268
-#define IDSEL 269
-#define IMPORT_SYM 270
-#define PAGE_SYM 271
-#define MEDIA_SYM 272
-#define FONT_FACE_SYM 273
-#define CHARSET_SYM 274
-#define NAMESPACE_SYM 275
-#define WEBKIT_RULE_SYM 276
-#define WEBKIT_DECLS_SYM 277
-#define WEBKIT_VALUE_SYM 278
-#define WEBKIT_MEDIAQUERY_SYM 279
-#define IMPORTANT_SYM 280
-#define MEDIA_ONLY 281
-#define MEDIA_NOT 282
-#define MEDIA_AND 283
-#define QEMS 284
-#define EMS 285
-#define EXS 286
-#define PXS 287
-#define CMS 288
-#define MMS 289
-#define INS 290
-#define PTS 291
-#define PCS 292
-#define DEGS 293
-#define RADS 294
-#define GRADS 295
-#define MSECS 296
-#define SECS 297
-#define HERZ 298
-#define KHERZ 299
-#define DIMEN 300
-#define PERCENTAGE 301
-#define FLOATTOKEN 302
-#define INTEGER 303
-#define URI 304
-#define FUNCTION 305
-#define NOTFUNCTION 306
-#define UNICODERANGE 307
+#define NTH 268
+#define HEX 269
+#define IDSEL 270
+#define IMPORT_SYM 271
+#define PAGE_SYM 272
+#define MEDIA_SYM 273
+#define FONT_FACE_SYM 274
+#define CHARSET_SYM 275
+#define NAMESPACE_SYM 276
+#define WEBKIT_RULE_SYM 277
+#define WEBKIT_DECLS_SYM 278
+#define WEBKIT_KEYFRAME_RULE_SYM 279
+#define WEBKIT_KEYFRAMES_SYM 280
+#define WEBKIT_VALUE_SYM 281
+#define WEBKIT_MEDIAQUERY_SYM 282
+#define WEBKIT_SELECTOR_SYM 283
+#define WEBKIT_VARIABLES_SYM 284
+#define WEBKIT_DEFINE_SYM 285
+#define VARIABLES_FOR 286
+#define WEBKIT_VARIABLES_DECLS_SYM 287
+#define ATKEYWORD 288
+#define IMPORTANT_SYM 289
+#define MEDIA_ONLY 290
+#define MEDIA_NOT 291
+#define MEDIA_AND 292
+#define QEMS 293
+#define EMS 294
+#define EXS 295
+#define PXS 296
+#define CMS 297
+#define MMS 298
+#define INS 299
+#define PTS 300
+#define PCS 301
+#define DEGS 302
+#define RADS 303
+#define GRADS 304
+#define TURNS 305
+#define MSECS 306
+#define SECS 307
+#define HERZ 308
+#define KHERZ 309
+#define DIMEN 310
+#define PERCENTAGE 311
+#define FLOATTOKEN 312
+#define INTEGER 313
+#define URI 314
+#define FUNCTION 315
+#define NOTFUNCTION 316
+#define UNICODERANGE 317
+#define VARCALL 318
 
 
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 128 "../css/CSSGrammar.y"
+#line 57 "../css/CSSGrammar.y"
 {
-    CSSRule* rule;
-    CSSSelector* selector;
-    bool ok;
-    MediaList *mediaList;
-    CSSMediaRule* mediaRule;
-    CSSRuleList* ruleList;
-    ParseString string;
-    float val;
-    int prop_id;
-    int attribute;
-    CSSSelector::Relation relation;
-    bool b;
-    int i;
-    char tok;
-    Value value;
-    ValueList* valueList;
+    bool boolean;
+    char character;
+    int integer;
+    double number;
+    CSSParserString string;
 
+    CSSRule* rule;
+    CSSRuleList* ruleList;
+    CSSSelector* selector;
+    Vector<CSSSelector*>* selectorList;
+    CSSSelector::Relation relation;
+    MediaList* mediaList;
     MediaQuery* mediaQuery;
-    MediaQueryExp* mediaQueryExp;
-    Vector<MediaQueryExp*>* mediaQueryExpList;
     MediaQuery::Restrictor mediaQueryRestrictor;
+    MediaQueryExp* mediaQueryExp;
+    CSSParserValue value;
+    CSSParserValueList* valueList;
+    Vector<MediaQueryExp*>* mediaQueryExpList;
+    WebKitCSSKeyframeRule* keyframeRule;
+    WebKitCSSKeyframesRule* keyframesRule;
+    float val;
 }
 /* Line 1489 of yacc.c.  */
-#line 177 "WebCore/tmp/../generated/CSSGrammar.tab.h"
+#line 201 "WebCore/tmp/../generated/CSSGrammar.tab.h"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

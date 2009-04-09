@@ -28,149 +28,132 @@
 #include "Element.h"
 #include "HTMLCollection.h"
 #include "HTMLDocument.h"
-#include "HTMLElement.h"
 #include "JSElement.h"
 #include "JSHTMLCollection.h"
-#include "JSHTMLElement.h"
-#include "JSNodeList.h"
-#include "NameNodeList.h"
-#include "NodeList.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLDocument)
+
 /* Hash table */
 
-static const HashEntry JSHTMLDocumentTableEntries[] =
+static const HashTableValue JSHTMLDocumentTableValues[17] =
 {
-    { "domain", JSHTMLDocument::DomainAttrNum, DontDelete, 0, &JSHTMLDocumentTableEntries[27] },
-    { 0, 0, 0, 0, 0 },
-    { "height", JSHTMLDocument::HeightAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[37] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "forms", JSHTMLDocument::FormsAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[29] },
-    { "applets", JSHTMLDocument::AppletsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "cookie", JSHTMLDocument::CookieAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "designMode", JSHTMLDocument::DesignModeAttrNum, DontDelete, 0, &JSHTMLDocumentTableEntries[36] },
-    { 0, 0, 0, 0, 0 },
-    { "URL", JSHTMLDocument::URLAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "title", JSHTMLDocument::TitleAttrNum, DontDelete, 0, &JSHTMLDocumentTableEntries[31] },
-    { "scripts", JSHTMLDocument::ScriptsAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[38] },
-    { "anchors", JSHTMLDocument::AnchorsAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[30] },
-    { "body", JSHTMLDocument::BodyAttrNum, DontDelete, 0, &JSHTMLDocumentTableEntries[35] },
-    { "referrer", JSHTMLDocument::ReferrerAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[32] },
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLDocument::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "images", JSHTMLDocument::ImagesAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[33] },
-    { 0, 0, 0, 0, 0 },
-    { "bgColor", JSHTMLDocument::BgColorAttrNum, DontDelete, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "links", JSHTMLDocument::LinksAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[28] },
-    { "embeds", JSHTMLDocument::EmbedsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "plugins", JSHTMLDocument::PluginsAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "lastModified", JSHTMLDocument::LastModifiedAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "all", JSHTMLDocument::AllAttrNum, 0, 0, 0 },
-    { "location", JSHTMLDocument::LocationAttrNum, DontDelete, 0, 0 },
-    { "width", JSHTMLDocument::WidthAttrNum, DontDelete|ReadOnly, 0, &JSHTMLDocumentTableEntries[34] },
-    { "dir", JSHTMLDocument::DirAttrNum, DontDelete, 0, 0 },
-    { "fgColor", JSHTMLDocument::FgColorAttrNum, DontDelete, 0, 0 },
-    { "alinkColor", JSHTMLDocument::AlinkColorAttrNum, DontDelete, 0, 0 },
-    { "linkColor", JSHTMLDocument::LinkColorAttrNum, DontDelete, 0, 0 },
-    { "vlinkColor", JSHTMLDocument::VlinkColorAttrNum, DontDelete, 0, 0 }
+    { "embeds", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentEmbeds, (intptr_t)0 },
+    { "plugins", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentPlugins, (intptr_t)0 },
+    { "scripts", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentScripts, (intptr_t)0 },
+    { "all", 0, (intptr_t)jsHTMLDocumentAll, (intptr_t)setJSHTMLDocumentAll },
+    { "width", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentWidth, (intptr_t)0 },
+    { "height", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentHeight, (intptr_t)0 },
+    { "dir", DontDelete, (intptr_t)jsHTMLDocumentDir, (intptr_t)setJSHTMLDocumentDir },
+    { "designMode", DontDelete, (intptr_t)jsHTMLDocumentDesignMode, (intptr_t)setJSHTMLDocumentDesignMode },
+    { "compatMode", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentCompatMode, (intptr_t)0 },
+    { "activeElement", DontDelete|ReadOnly, (intptr_t)jsHTMLDocumentActiveElement, (intptr_t)0 },
+    { "bgColor", DontDelete, (intptr_t)jsHTMLDocumentBgColor, (intptr_t)setJSHTMLDocumentBgColor },
+    { "fgColor", DontDelete, (intptr_t)jsHTMLDocumentFgColor, (intptr_t)setJSHTMLDocumentFgColor },
+    { "alinkColor", DontDelete, (intptr_t)jsHTMLDocumentAlinkColor, (intptr_t)setJSHTMLDocumentAlinkColor },
+    { "linkColor", DontDelete, (intptr_t)jsHTMLDocumentLinkColor, (intptr_t)setJSHTMLDocumentLinkColor },
+    { "vlinkColor", DontDelete, (intptr_t)jsHTMLDocumentVlinkColor, (intptr_t)setJSHTMLDocumentVlinkColor },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLDocumentConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDocumentTable = 
-{
-    2, 39, JSHTMLDocumentTableEntries, 27
-};
+static const HashTable JSHTMLDocumentTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 255, JSHTMLDocumentTableValues, 0 };
+#else
+    { 36, 31, JSHTMLDocumentTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLDocumentConstructorTableEntries[] =
+static const HashTableValue JSHTMLDocumentConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDocumentConstructorTable = 
-{
-    2, 1, JSHTMLDocumentConstructorTableEntries, 1
-};
+static const HashTable JSHTMLDocumentConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLDocumentConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLDocumentConstructorTableValues, 0 };
+#endif
 
 class JSHTMLDocumentConstructor : public DOMObject {
 public:
     JSHTMLDocumentConstructor(ExecState* exec)
+        : DOMObject(JSHTMLDocumentConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLDocumentPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLDocumentConstructor::info = { "HTMLDocumentConstructor", 0, &JSHTMLDocumentConstructorTable, 0 };
+const ClassInfo JSHTMLDocumentConstructor::s_info = { "HTMLDocumentConstructor", 0, &JSHTMLDocumentConstructorTable, 0 };
 
 bool JSHTMLDocumentConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLDocumentConstructor, DOMObject>(exec, &JSHTMLDocumentConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLDocumentConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLDocumentPrototypeTableEntries[] =
+static const HashTableValue JSHTMLDocumentPrototypeTableValues[9] =
 {
-    { "close", JSHTMLDocument::CloseFuncNum, DontDelete|Function, 0, &JSHTMLDocumentPrototypeTableEntries[10] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "releaseEvents", JSHTMLDocument::ReleaseEventsFuncNum, DontDelete|Function, 0, 0 },
-    { "clear", JSHTMLDocument::ClearFuncNum, DontDelete|Function, 0, 0 },
-    { "write", JSHTMLDocument::WriteFuncNum, DontDelete|Function, 1, &JSHTMLDocumentPrototypeTableEntries[9] },
-    { "open", JSHTMLDocument::OpenFuncNum, DontDelete|Function, 0, 0 },
-    { "getElementsByName", JSHTMLDocument::GetElementsByNameFuncNum, DontDelete|Function, 1, 0 },
-    { "getElementById", JSHTMLDocument::GetElementByIdFuncNum, DontDelete|Function, 1, 0 },
-    { "writeln", JSHTMLDocument::WritelnFuncNum, DontDelete|Function, 1, 0 },
-    { "captureEvents", JSHTMLDocument::CaptureEventsFuncNum, DontDelete|Function, 0, 0 }
+    { "open", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionOpen, (intptr_t)0 },
+    { "close", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionClose, (intptr_t)0 },
+    { "write", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionWrite, (intptr_t)1 },
+    { "writeln", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionWriteln, (intptr_t)1 },
+    { "clear", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionClear, (intptr_t)0 },
+    { "captureEvents", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionCaptureEvents, (intptr_t)0 },
+    { "releaseEvents", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionReleaseEvents, (intptr_t)0 },
+    { "hasFocus", DontDelete|Function, (intptr_t)jsHTMLDocumentPrototypeFunctionHasFocus, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDocumentPrototypeTable = 
-{
-    2, 11, JSHTMLDocumentPrototypeTableEntries, 9
-};
+static const HashTable JSHTMLDocumentPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSHTMLDocumentPrototypeTableValues, 0 };
+#else
+    { 17, 15, JSHTMLDocumentPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLDocumentPrototype::info = { "HTMLDocumentPrototype", 0, &JSHTMLDocumentPrototypeTable, 0 };
+const ClassInfo JSHTMLDocumentPrototype::s_info = { "HTMLDocumentPrototype", 0, &JSHTMLDocumentPrototypeTable, 0 };
 
 JSObject* JSHTMLDocumentPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLDocumentPrototype>(exec, "[[JSHTMLDocument.prototype]]");
+    return getDOMPrototype<JSHTMLDocument>(exec);
 }
 
 bool JSHTMLDocumentPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSHTMLDocumentPrototypeFunction, JSObject>(exec, &JSHTMLDocumentPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSHTMLDocumentPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSHTMLDocument::info = { "HTMLDocument", &JSDocument::info, &JSHTMLDocumentTable, 0 };
+const ClassInfo JSHTMLDocument::s_info = { "HTMLDocument", &JSDocument::s_info, &JSHTMLDocumentTable, 0 };
 
-JSHTMLDocument::JSHTMLDocument(ExecState* exec, HTMLDocument* impl)
-    : JSDocument(exec, impl)
+JSHTMLDocument::JSHTMLDocument(PassRefPtr<Structure> structure, PassRefPtr<HTMLDocument> impl)
+    : JSDocument(structure, impl)
 {
-    setPrototype(JSHTMLDocumentPrototype::self(exec));
+}
+
+JSObject* JSHTMLDocument::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLDocumentPrototype(JSHTMLDocumentPrototype::createStructure(JSDocumentPrototype::self(exec)));
 }
 
 bool JSHTMLDocument::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
@@ -179,286 +162,238 @@ bool JSHTMLDocument::getOwnPropertySlot(ExecState* exec, const Identifier& prope
         slot.setCustom(this, nameGetter);
         return true;
     }
-    return getStaticValueSlot<JSHTMLDocument, JSDocument>(exec, &JSHTMLDocumentTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLDocument, Base>(exec, &JSHTMLDocumentTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLDocument::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLDocumentEmbeds(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TitleAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->title());
-    }
-    case ReferrerAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->referrer());
-    }
-    case DomainAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->domain());
-    }
-    case URLAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->URL());
-    }
-    case BodyAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->body()));
-    }
-    case ImagesAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->images()));
-    }
-    case AppletsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->applets()));
-    }
-    case LinksAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->links()));
-    }
-    case FormsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->forms()));
-    }
-    case AnchorsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->anchors()));
-    }
-    case CookieAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->cookie());
-    }
-    case EmbedsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->embeds()));
-    }
-    case PluginsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->plugins()));
-    }
-    case ScriptsAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->scripts()));
-    }
-    case LastModifiedAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->lastModified());
-    }
-    case AllAttrNum: {
-        return all(exec);
-    }
-    case LocationAttrNum: {
-        return location(exec);
-    }
-    case WidthAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsNumber(imp->width());
-    }
-    case HeightAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsNumber(imp->height());
-    }
-    case DirAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->dir());
-    }
-    case DesignModeAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->designMode());
-    }
-    case BgColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->bgColor());
-    }
-    case FgColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->fgColor());
-    }
-    case AlinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->alinkColor());
-    }
-    case LinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->linkColor());
-    }
-    case VlinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        return jsString(imp->vlinkColor());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->embeds()));
 }
 
-void JSHTMLDocument::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLDocumentPlugins(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLDocument, JSDocument>(exec, propertyName, value, attr, &JSHTMLDocumentTable, this);
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->plugins()));
 }
 
-void JSHTMLDocument::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLDocumentScripts(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case TitleAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setTitle(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DomainAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setDomain(value->toString(exec));
-        break;
-    }
-    case BodyAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setBody(toHTMLElement(value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    case CookieAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setCookie(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case AllAttrNum: {
-        setAll(exec, value);
-        break;
-    }
-    case LocationAttrNum: {
-        setLocation(exec, value);
-        break;
-    }
-    case DirAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setDir(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DesignModeAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setDesignMode(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case BgColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setBgColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case FgColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setFgColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case AlinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setAlinkColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case LinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setLinkColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case VlinkColorAttrNum: {
-        HTMLDocument* imp = static_cast<HTMLDocument*>(impl());
-
-        imp->setVlinkColor(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->scripts()));
 }
 
-JSValue* JSHTMLDocument::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLDocumentAll(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLDocumentConstructor>(exec, "[[HTMLDocument.constructor]]");
+    return static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->all(exec);
 }
-JSValue* JSHTMLDocumentPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsHTMLDocumentWidth(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSHTMLDocument::info))
-      return throwError(exec, TypeError);
-
-    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObj)->impl());
-
-    switch (id) {
-    case JSHTMLDocument::OpenFuncNum: {
-        return static_cast<JSHTMLDocument*>(thisObj)->open(exec, args);
-    }
-    case JSHTMLDocument::CloseFuncNum: {
-
-        imp->close();
-        return jsUndefined();
-    }
-    case JSHTMLDocument::WriteFuncNum: {
-        return static_cast<JSHTMLDocument*>(thisObj)->write(exec, args);
-    }
-    case JSHTMLDocument::WritelnFuncNum: {
-        return static_cast<JSHTMLDocument*>(thisObj)->writeln(exec, args);
-    }
-    case JSHTMLDocument::GetElementsByNameFuncNum: {
-        String elementName = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementsByName(elementName)));
-        return result;
-    }
-    case JSHTMLDocument::GetElementByIdFuncNum: {
-        String elementId = args[0]->toString(exec);
-
-
-        KJS::JSValue* result = toJS(exec, WTF::getPtr(imp->getElementById(elementId)));
-        return result;
-    }
-    case JSHTMLDocument::ClearFuncNum: {
-        return static_cast<JSHTMLDocument*>(thisObj)->clear(exec, args);
-    }
-    case JSHTMLDocument::CaptureEventsFuncNum: {
-
-        imp->captureEvents();
-        return jsUndefined();
-    }
-    case JSHTMLDocument::ReleaseEventsFuncNum: {
-
-        imp->releaseEvents();
-        return jsUndefined();
-    }
-    }
-    return 0;
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->width());
 }
+
+JSValuePtr jsHTMLDocumentHeight(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->height());
+}
+
+JSValuePtr jsHTMLDocumentDir(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->dir());
+}
+
+JSValuePtr jsHTMLDocumentDesignMode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->designMode());
+}
+
+JSValuePtr jsHTMLDocumentCompatMode(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->compatMode());
+}
+
+JSValuePtr jsHTMLDocumentActiveElement(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->activeElement()));
+}
+
+JSValuePtr jsHTMLDocumentBgColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->bgColor());
+}
+
+JSValuePtr jsHTMLDocumentFgColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->fgColor());
+}
+
+JSValuePtr jsHTMLDocumentAlinkColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->alinkColor());
+}
+
+JSValuePtr jsHTMLDocumentLinkColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->linkColor());
+}
+
+JSValuePtr jsHTMLDocumentVlinkColor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->vlinkColor());
+}
+
+JSValuePtr jsHTMLDocumentConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSHTMLDocument*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+void JSHTMLDocument::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLDocument, Base>(exec, propertyName, value, &JSHTMLDocumentTable, this, slot);
+}
+
+void setJSHTMLDocumentAll(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    static_cast<JSHTMLDocument*>(thisObject)->setAll(exec, value);
+}
+
+void setJSHTMLDocumentDir(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setDir(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentDesignMode(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setDesignMode(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentBgColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setBgColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentFgColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setFgColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentAlinkColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setAlinkColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentLinkColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setLinkColor(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLDocumentVlinkColor(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLDocument* imp = static_cast<HTMLDocument*>(static_cast<JSHTMLDocument*>(thisObject)->impl());
+    imp->setVlinkColor(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLDocument::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLDocumentConstructor>(exec);
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionOpen(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    return castedThisObj->open(exec, args);
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionClose(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    HTMLDocument* imp = static_cast<HTMLDocument*>(castedThisObj->impl());
+
+    imp->close();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionWrite(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    return castedThisObj->write(exec, args);
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionWriteln(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    return castedThisObj->writeln(exec, args);
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionClear(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    HTMLDocument* imp = static_cast<HTMLDocument*>(castedThisObj->impl());
+
+    imp->clear();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionCaptureEvents(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    HTMLDocument* imp = static_cast<HTMLDocument*>(castedThisObj->impl());
+
+    imp->captureEvents();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionReleaseEvents(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    HTMLDocument* imp = static_cast<HTMLDocument*>(castedThisObj->impl());
+
+    imp->releaseEvents();
+    return jsUndefined();
+}
+
+JSValuePtr jsHTMLDocumentPrototypeFunctionHasFocus(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSHTMLDocument::s_info))
+        return throwError(exec, TypeError);
+    JSHTMLDocument* castedThisObj = static_cast<JSHTMLDocument*>(asObject(thisValue));
+    HTMLDocument* imp = static_cast<HTMLDocument*>(castedThisObj->impl());
+
+
+    JSC::JSValuePtr result = jsBoolean(imp->hasFocus());
+    return result;
+}
+
 
 }

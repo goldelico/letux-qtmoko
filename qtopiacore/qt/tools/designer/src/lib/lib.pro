@@ -13,6 +13,8 @@ isEmpty(QT_MAJOR_VERSION) {
    VERSION=$${QT_MAJOR_VERSION}.$${QT_MINOR_VERSION}.$${QT_PATCH_VERSION}
 }
 
+unix:QMAKE_PKGCONFIG_REQUIRES += QtXml
+
 include(../../../../src/qt_targets.pri)
 QMAKE_TARGET_PRODUCT = Designer
 QMAKE_TARGET_DESCRIPTION = Graphical user interface designer.
@@ -58,8 +60,8 @@ include(uilib/uilib.pri)
 include(shared/shared.pri)
 PRECOMPILED_HEADER=lib_pch.h
 
-include(../components/component.pri)
 include(../sharedcomponents.pri)
+include(../components/component.pri)
 
 target.path=$$[QT_INSTALL_LIBS]
 INSTALLS        += target

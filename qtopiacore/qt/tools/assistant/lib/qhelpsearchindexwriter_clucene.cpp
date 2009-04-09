@@ -1,44 +1,51 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "qhelpenginecore.h"
 #include "qhelp_global.h"
+#include "fulltextsearch/qhits_p.h"
+#include "fulltextsearch/qquery_p.h"
 #include "fulltextsearch/qanalyzer_p.h"
 #include "fulltextsearch/qdocument_p.h"
+#include "fulltextsearch/qsearchable_p.h"
 #include "fulltextsearch/qindexreader_p.h"
 #include "fulltextsearch/qindexwriter_p.h"
 #include "qhelpsearchindexwriter_clucene_p.h"
@@ -99,8 +106,8 @@ private:
     QString readData(const QByteArray &data)
     {
         QTextStream textStream(data);
-        QString charSet = QHelpGlobal::charsetFromData(data);
-        textStream.setCodec(QTextCodec::codecForName(charSet.toLatin1().constData()));
+        QByteArray charSet = QHelpGlobal::charsetFromData(data).toLatin1();
+        textStream.setCodec(QTextCodec::codecForName(charSet.constData()));
 
         QString stream = textStream.readAll();
         if (stream.isNull() || stream.isEmpty())
@@ -111,48 +118,41 @@ private:
 
     QString parseData() const
     {
-        QString parsedContent;
-        int length = data.length();
+        const int length = data.length();
         const QChar *buf = data.unicode();
 
-        QChar str[64];
-        QChar c = buf[0];
+        QString parsedContent;
+        parsedContent.reserve(length);
+
         bool valid = true;
-        int j = 0, i = 0;
+        int j = 0, count = 0;
 
+        QChar c;
         while (j < length) {
-            if ( c == QLatin1Char('<') || c == QLatin1Char('&') ) {
+            c = buf[j++];
+            if (c == QLatin1Char('<') || c == QLatin1Char('&')) {
+                if (count > 1)
+                    parsedContent.append(QLatin1Char(' '));
+                count = 0;
                 valid = false;
-                if ( i > 1 )
-                    parsedContent += QLatin1String(" ") + QString(str,i);
-
-                i = 0;
-                c = buf[++j];
                 continue;
             }
-            if ( ( c == QLatin1Char('>') || c == QLatin1Char(';') ) && !valid ) {
+            if ((c == QLatin1Char('>') || c == QLatin1Char(';')) && !valid) {
                 valid = true;
-                c = buf[++j];
                 continue;
             }
-            if ( !valid ) {
-                c = buf[++j];
+            if (!valid)
                 continue;
-            }
-            if ( ( c.isLetterOrNumber() || c == QLatin1Char('_') ) && i < 63 ) {
-                str[i] = c.toLower();
-                ++i;
+
+            if (c.isLetterOrNumber() || c.isPrint()) {
+                ++count;
+                parsedContent.append(c.toLower());
             } else {
-                if ( i > 1 )
-                    parsedContent += QLatin1String(" ") + QString(str,i);
-
-                i = 0;
+                if (count > 1)
+                    parsedContent.append(QLatin1Char(' '));
+                count = 0;
             }
-            c = buf[++j];
         }
-
-        if ( i > 1 )
-            parsedContent += QLatin1String(" ") + QString(str,i);
 
         return parsedContent;
     }
@@ -188,15 +188,14 @@ void QHelpSearchIndexWriter::cancelIndexing()
 }
 
 void QHelpSearchIndexWriter::updateIndex(const QString &collectionFile,
-                                         const QString &indexFilesFolder,
-                                         bool reindex)
+    const QString &indexFilesFolder, bool reindex)
 {
-    QMutexLocker locker(&mutex);
-
+    mutex.lock();
     this->m_cancel = false;
     this->m_reindex = reindex;
     this->m_collectionFile = collectionFile;
     this->m_indexFilesFolder = indexFilesFolder;
+    mutex.unlock();
 
     start(QThread::NormalPriority);
 }
@@ -249,7 +248,7 @@ void QHelpSearchIndexWriter::run()
     }
 
     QString indexPath = m_indexFilesFolder;
-    
+
     QFileInfo fInfo(indexPath);
     if (fInfo.exists() && !fInfo.isWritable()) {
         qWarning("Full Text Search, could not create index (missing permissions).");
@@ -280,7 +279,7 @@ void QHelpSearchIndexWriter::run()
         // check if it's locked, and if the other instance is running
         if (!otherInstancesRunning && QCLuceneIndexReader::isLocked(indexPath))
             QCLuceneIndexReader::unlock(indexPath);
-        
+
         if (QCLuceneIndexReader::isLocked(indexPath)) {
             // poll unless indexing finished to fake progress
             while (QCLuceneIndexReader::isLocked(indexPath)) {
@@ -313,10 +312,22 @@ void QHelpSearchIndexWriter::run()
                         indexMap.remove(namespaceName);
                         removeDocuments(indexPath, namespaceName);
                     }
+
+                    if (indexMap.contains(namespaceName)) {
+                        // make sure we really have content indexed for namespace
+                        // NOTE: Extra variable just for GCC 3.3.5
+                        QLatin1String key("namespace");
+                        QCLuceneTermQuery query(QCLuceneTerm(key, namespaceName));
+                        QCLuceneIndexSearcher indexSearcher(indexPath);
+                        QCLuceneHits hits = indexSearcher.search(query);
+                        if (hits.length() <= 0)
+                            indexMap.remove(namespaceName);
+                    }
                 }
             }
             writer = new QCLuceneIndexWriter(indexPath, analyzer, false);
         } else {
+            indexMap.clear();
             writer = new QCLuceneIndexWriter(indexPath, analyzer, true);
         }
 #if !defined(QT_NO_EXCEPTIONS)
@@ -326,6 +337,8 @@ void QHelpSearchIndexWriter::run()
     }
 #endif
 
+    writer->setMergeFactor(100);
+    writer->setMinMergeDocs(1000);
     writer->setMaxFieldLength(QCLuceneIndexWriter::DEFAULT_MAX_FIELD_LENGTH);
 
     QStringList namespaces;
@@ -354,9 +367,9 @@ void QHelpSearchIndexWriter::run()
                 break;
         } else {
             bool bail = false;
-            foreach (const QStringList attributes, attributeSets) {
-                const QList<QUrl> docFiles = indexableFiles(&engine, namespaceName,
-                    attributes);
+            foreach (const QStringList& attributes, attributeSets) {
+                const QList<QUrl> docFiles = indexableFiles(&engine,
+                    namespaceName, attributes);
                 if (!addDocuments(docFiles, engine, attributes, namespaceName,
                     writer, analyzer)) {
                     bail = true;
@@ -366,6 +379,7 @@ void QHelpSearchIndexWriter::run()
             if (bail)
                 break;
         }
+
         mutexLocker.relock();
         if (!m_cancel) {
             QString path(engine.documentationFileName(namespaceName));
@@ -381,7 +395,7 @@ void QHelpSearchIndexWriter::run()
     mutexLocker.relock();
     if (!m_cancel) {
         mutexLocker.unlock();
-    
+
         QStringList indexedNamespaces = indexMap.keys();
         foreach(const QString& namespaceName, indexedNamespaces) {
             mutexLocker.relock();
@@ -400,33 +414,31 @@ void QHelpSearchIndexWriter::run()
 }
 
 bool QHelpSearchIndexWriter::addDocuments(const QList<QUrl> docFiles,
-                                          const QHelpEngineCore &engine,
-                                          const QStringList &attributes,
-                                          const QString &namespaceName,
-                                          QCLuceneIndexWriter *writer,
-                                          QCLuceneAnalyzer &analyzer)
+    const QHelpEngineCore &engine, const QStringList &attributes,
+    const QString &namespaceName, QCLuceneIndexWriter *writer,
+    QCLuceneAnalyzer &analyzer)
 {
-    foreach(const QUrl& url, docFiles) {
-        mutex.lock();
-        if (m_cancel) {
-            mutex.unlock();
-            return false;
-        }
-        mutex.unlock();
+    QMutexLocker locker(&mutex);
+    const QString attrList = attributes.join(QLatin1String(" "));
 
+    locker.unlock();
+    foreach(const QUrl& url, docFiles) {
         QCLuceneDocument document;
         DocumentHelper helper(url.toString(), engine.fileData(url));
-        const QString list = attributes.join(QLatin1String(" "));
-        if (helper.addFieldsToDocument(&document, namespaceName, list))
+        if (helper.addFieldsToDocument(&document, namespaceName, attrList))
             writer->addDocument(document, analyzer);
-        document.clear();
+
+        locker.relock();
+        if (m_cancel)
+            return false;
+        locker.unlock();
     }
 
     return true;
 }
 
 void QHelpSearchIndexWriter::removeDocuments(const QString &indexPath,
-                                             const QString &namespaceName)
+    const QString &namespaceName)
 {
     if (namespaceName.isEmpty() || QCLuceneIndexReader::isLocked(indexPath))
         return;
@@ -439,24 +451,25 @@ void QHelpSearchIndexWriter::removeDocuments(const QString &indexPath,
 }
 
 bool QHelpSearchIndexWriter::writeIndexMap(QHelpEngineCore& engine,
-                                    const QMap<QString, QDateTime>& indexMap)
+    const QMap<QString, QDateTime>& indexMap)
 {
     QByteArray bArray;
+
     QDataStream data(&bArray, QIODevice::ReadWrite);
-    
     data << indexMap;
-    return engine.setCustomValue(QLatin1String("CluceneIndexedNamespaces")
-        , bArray);
+
+    return engine.setCustomValue(QLatin1String("CluceneIndexedNamespaces"),
+        bArray);
 }
 
 QList<QUrl> QHelpSearchIndexWriter::indexableFiles(QHelpEngineCore *helpEngine,
-                                                   const QString &namespaceName,
-                                                   const QStringList &attributes) const
+    const QString &namespaceName, const QStringList &attributes) const
 {
-    QList<QUrl> docFiles =
-                helpEngine->files(namespaceName, attributes, QLatin1String("html"));
+    QList<QUrl> docFiles = helpEngine->files(namespaceName, attributes,
+        QLatin1String("html"));
     docFiles += helpEngine->files(namespaceName, attributes, QLatin1String("htm"));
     docFiles += helpEngine->files(namespaceName, attributes, QLatin1String("txt"));
+
     return docFiles;
 }
 

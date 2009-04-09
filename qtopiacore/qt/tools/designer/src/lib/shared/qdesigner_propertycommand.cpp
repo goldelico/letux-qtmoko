@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,6 +45,7 @@
 #include "qdesigner_propertyeditor_p.h"
 #include "qdesigner_integration_p.h"
 #include "spacer_widget_p.h"
+#include "qdesigner_propertysheet_p.h"
 
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerFormWindowInterface>
@@ -76,6 +81,8 @@ QString fontMask(unsigned m)
         rc += QLatin1String("Family");
     if (m & QFont::SizeResolved)
         rc += QLatin1String("Size ");
+    if (m & QFont::WeightResolved)
+        rc += QLatin1String("Bold ");
     if (m & QFont::StyleResolved)
         rc += QLatin1String("Style ");
     if (m & QFont::UnderlineResolved)
@@ -160,8 +167,10 @@ void checkSizes(QDesignerFormWindowInterface *fw, const QSize &size, QSize *form
  * which are represented as a mask, and to apply them while leaving the others intact. */
 
 enum RectSubPropertyMask {  SubPropertyX=1, SubPropertyY = 2, SubPropertyWidth = 4, SubPropertyHeight = 8 };
-enum SizePolicySubPropertyMask { SubPropertyHSizePolicy = 1, SubPropertyHStretch = 2, SubPropertyVSizePolicy =4, SubPropertyVStretch = 8 };
-enum AlignmentSubPropertyMask { SubPropertyHorizontalAlignment=1, SubPropertyVerticalAlignment=2 };
+enum SizePolicySubPropertyMask { SubPropertyHSizePolicy = 1, SubPropertyHStretch = 2, SubPropertyVSizePolicy = 4, SubPropertyVStretch = 8 };
+enum AlignmentSubPropertyMask { SubPropertyHorizontalAlignment = 1, SubPropertyVerticalAlignment = 2 };
+enum StringSubPropertyMask { SubPropertyStringValue = 1, SubPropertyStringComment = 2, SubPropertyStringTranslatable = 4, SubPropertyStringDisambiguation = 8 };
+enum KeySequenceSubPropertyMask { SubPropertyKeySequenceValue = 1, SubPropertyKeySequenceComment = 2, SubPropertyKeySequenceTranslatable = 4, SubPropertyKeySequenceDisambiguation = 8 };
 
 enum CommonSubPropertyMask { SubPropertyAll = 0xFFFFFFFF };
 
@@ -195,6 +204,26 @@ unsigned compareSubProperties(const QSizePolicy & sp1, const QSizePolicy & sp2)
     COMPARE_SUBPROPERTY(sp1, sp2, horizontalStretch, rc, SubPropertyHStretch)
     COMPARE_SUBPROPERTY(sp1, sp2, verticalPolicy,    rc, SubPropertyVSizePolicy)
     COMPARE_SUBPROPERTY(sp1, sp2, verticalStretch,   rc, SubPropertyVStretch)
+    return rc;
+}
+// find changed subproperties of qdesigner_internal::PropertySheetStringValue
+unsigned compareSubProperties(const qdesigner_internal::PropertySheetStringValue & str1, const qdesigner_internal::PropertySheetStringValue & str2)
+{
+    unsigned rc = 0;
+    COMPARE_SUBPROPERTY(str1, str2, value,          rc, SubPropertyStringValue)
+    COMPARE_SUBPROPERTY(str1, str2, comment,        rc, SubPropertyStringComment)
+    COMPARE_SUBPROPERTY(str1, str2, translatable,   rc, SubPropertyStringTranslatable)
+    COMPARE_SUBPROPERTY(str1, str2, disambiguation, rc, SubPropertyStringDisambiguation)
+    return rc;
+}
+// find changed subproperties of qdesigner_internal::PropertySheetKeySequenceValue
+unsigned compareSubProperties(const qdesigner_internal::PropertySheetKeySequenceValue & str1, const qdesigner_internal::PropertySheetKeySequenceValue & str2)
+{
+    unsigned rc = 0;
+    COMPARE_SUBPROPERTY(str1, str2, value,          rc, SubPropertyKeySequenceValue)
+    COMPARE_SUBPROPERTY(str1, str2, comment,        rc, SubPropertyKeySequenceComment)
+    COMPARE_SUBPROPERTY(str1, str2, translatable,   rc, SubPropertyKeySequenceTranslatable)
+    COMPARE_SUBPROPERTY(str1, str2, disambiguation, rc, SubPropertyKeySequenceDisambiguation)
     return rc;
 }
 
@@ -301,6 +330,10 @@ unsigned compareSubProperties(const QVariant & q1, const QVariant & q2, qdesigne
     default:
         if (q1.userType() == qMetaTypeId<qdesigner_internal::PropertySheetIconValue>())
             return qvariant_cast<qdesigner_internal::PropertySheetIconValue>(q1).compare(qvariant_cast<qdesigner_internal::PropertySheetIconValue>(q2));
+        else if (q1.userType() == qMetaTypeId<qdesigner_internal::PropertySheetStringValue>())
+            return compareSubProperties(qvariant_cast<qdesigner_internal::PropertySheetStringValue>(q1), qvariant_cast<qdesigner_internal::PropertySheetStringValue>(q2));
+        else if (q1.userType() == qMetaTypeId<qdesigner_internal::PropertySheetKeySequenceValue>())
+            return compareSubProperties(qvariant_cast<qdesigner_internal::PropertySheetKeySequenceValue>(q1), qvariant_cast<qdesigner_internal::PropertySheetKeySequenceValue>(q2));
         // Enumerations, flags
         switch (specialProperty) {
         case qdesigner_internal::SP_Alignment:
@@ -346,6 +379,30 @@ QSizePolicy applySizePolicySubProperty(const QSizePolicy &oldValue, const QSizeP
     SET_SUBPROPERTY(rc, newValue, horizontalStretch, setHorizontalStretch, mask, SubPropertyHStretch)
     SET_SUBPROPERTY(rc, newValue, verticalPolicy,    setVerticalPolicy,    mask, SubPropertyVSizePolicy)
     SET_SUBPROPERTY(rc, newValue, verticalStretch,   setVerticalStretch,   mask, SubPropertyVStretch)
+    return rc;
+}
+
+// apply changed subproperties to a qdesigner_internal::PropertySheetStringValue
+qdesigner_internal::PropertySheetStringValue applyStringSubProperty(const qdesigner_internal::PropertySheetStringValue &oldValue,
+            const qdesigner_internal::PropertySheetStringValue &newValue, unsigned mask)
+{
+    qdesigner_internal::PropertySheetStringValue rc = oldValue;
+    SET_SUBPROPERTY(rc, newValue, value, setValue, mask, SubPropertyStringValue)
+    SET_SUBPROPERTY(rc, newValue, comment, setComment, mask, SubPropertyStringComment)
+    SET_SUBPROPERTY(rc, newValue, translatable, setTranslatable, mask, SubPropertyStringTranslatable)
+    SET_SUBPROPERTY(rc, newValue, disambiguation, setDisambiguation, mask, SubPropertyStringDisambiguation)
+    return rc;
+}
+
+// apply changed subproperties to a qdesigner_internal::PropertySheetKeySequenceValue
+qdesigner_internal::PropertySheetKeySequenceValue applyKeySequenceSubProperty(const qdesigner_internal::PropertySheetKeySequenceValue &oldValue,
+            const qdesigner_internal::PropertySheetKeySequenceValue &newValue, unsigned mask)
+{
+    qdesigner_internal::PropertySheetKeySequenceValue rc = oldValue;
+    SET_SUBPROPERTY(rc, newValue, value, setValue, mask, SubPropertyKeySequenceValue)
+    SET_SUBPROPERTY(rc, newValue, comment, setComment, mask, SubPropertyKeySequenceComment)
+    SET_SUBPROPERTY(rc, newValue, translatable, setTranslatable, mask, SubPropertyKeySequenceTranslatable)
+    SET_SUBPROPERTY(rc, newValue, disambiguation, setDisambiguation, mask, SubPropertyKeySequenceDisambiguation)
     return rc;
 }
 
@@ -474,6 +531,16 @@ PropertyHelper::Value applySubProperty(const QVariant &oldValue, const QVariant 
             PropertySheetIconValue icon = qvariant_cast<qdesigner_internal::PropertySheetIconValue>(oldValue);
             icon.assign(qvariant_cast<qdesigner_internal::PropertySheetIconValue>(newValue), mask);
             return PropertyHelper::Value(qVariantFromValue(icon), icon.mask());
+        } else if (oldValue.userType() == qMetaTypeId<qdesigner_internal::PropertySheetStringValue>()) {
+            qdesigner_internal::PropertySheetStringValue str = applyStringSubProperty(
+                        qvariant_cast<qdesigner_internal::PropertySheetStringValue>(oldValue),
+                        qvariant_cast<qdesigner_internal::PropertySheetStringValue>(newValue), mask);
+            return PropertyHelper::Value(qVariantFromValue(str), changed);
+        } else if (oldValue.userType() == qMetaTypeId<qdesigner_internal::PropertySheetKeySequenceValue>()) {
+            qdesigner_internal::PropertySheetKeySequenceValue key = applyKeySequenceSubProperty(
+                        qvariant_cast<qdesigner_internal::PropertySheetKeySequenceValue>(oldValue),
+                        qvariant_cast<qdesigner_internal::PropertySheetKeySequenceValue>(newValue), mask);
+            return PropertyHelper::Value(qVariantFromValue(key), changed);
         }
         // Enumerations, flags
         switch (specialProperty) {
@@ -505,6 +572,10 @@ enum SpecialProperty getSpecialProperty(const QString& propertyName)
         return SP_Icon;
     if (propertyName == QLatin1String("currentTabName"))
         return SP_CurrentTabName;
+    if (propertyName == QLatin1String("currentItemName"))
+        return SP_CurrentItemName;
+    if (propertyName == QLatin1String("currentPageName"))
+        return SP_CurrentPageName;
     if (propertyName == QLatin1String("geometry"))
         return SP_Geometry;
     if (propertyName == QLatin1String("windowTitle"))
@@ -519,6 +590,8 @@ enum SpecialProperty getSpecialProperty(const QString& propertyName)
         return SP_AutoDefault;
     if (propertyName == QLatin1String("shortcut"))
         return SP_Shortcut;
+    if (propertyName == QLatin1String("orientation"))
+        return SP_Orientation;
     return SP_None;
 }
 
@@ -609,12 +682,17 @@ unsigned PropertyHelper::updateMask() const
     case SP_LayoutName:
     case SP_SpacerName:
     case SP_CurrentTabName:
+    case SP_CurrentItemName:
+    case SP_CurrentPageName:
         if (m_objectType != OT_FreeAction)
-            rc |=  UpdateObjectInspector;
+            rc |= UpdateObjectInspector;
         break;
-    case  SP_Icon:
+    case SP_Icon:
         if (m_objectType == OT_AssociatedAction)
-            rc |=  UpdateObjectInspector;
+            rc |= UpdateObjectInspector;
+        break;
+    case SP_Orientation: // for updating splitter icon
+        rc |= UpdateObjectInspector;
         break;
     default:
         break;
@@ -644,8 +722,11 @@ void PropertyHelper::updateObject(QDesignerFormWindowInterface *fw, const QVaria
     switch (m_objectType) {
     case OT_Widget: {
         switch (m_specialProperty) {
-        case SP_ObjectName:
-            QDesignerFormWindowCommand::updateBuddies(fw, oldValue.toString(), newValue.toString());
+        case SP_ObjectName: {
+            const QString oldName = qVariantValue<PropertySheetStringValue>(oldValue).value();
+            const QString newName = qVariantValue<PropertySheetStringValue>(newValue).value();
+            QDesignerFormWindowCommand::updateBuddies(fw, oldName, newName);
+        }
             break;
         default:
             break;
@@ -665,8 +746,11 @@ void PropertyHelper::updateObject(QDesignerFormWindowInterface *fw, const QVaria
     case SP_ObjectName:
     case SP_LayoutName:
     case SP_SpacerName:
-        if (QDesignerIntegration *integr = integration(fw))
-            integr->emitObjectNameChanged(fw, m_object, newValue.toString(), m_oldValue.first.toString());
+        if (QDesignerIntegration *integr = integration(fw)) {
+            const QString oldName = qVariantValue<PropertySheetStringValue>(oldValue).value();
+            const QString newName = qVariantValue<PropertySheetStringValue>(newValue).value();
+            integr->emitObjectNameChanged(fw, m_object, newName, oldName);
+        }
         break;
     default:
         break;
@@ -862,6 +946,10 @@ bool PropertyListCommand::add(QObject *object, const QString &propertyName)
     const int index = sheet->indexOf(propertyName);
     if (index == -1)
         return false;
+
+    if (QDesignerPropertySheet *exSheet = qobject_cast<QDesignerPropertySheet*>(core()->extensionManager()->extension(object, Q_TYPEID(QDesignerPropertySheetExtension))))
+        if (!exSheet->isEnabled(index))
+            return false;
 
     const PropertyDescription description(propertyName, sheet, index);
 
@@ -1118,10 +1206,10 @@ unsigned SetPropertyCommand::subPropertyMask(const QVariant &newValue, QObject *
 void SetPropertyCommand::setDescription()
 {
     if (propertyHelperList().size() == 1) {
-        setText(QApplication::translate("Command", "changed '%1' of '%2'").arg(propertyName()).arg(propertyHelperList()[0].object()->objectName()));
+        setText(QApplication::translate("Command", "Changed '%1' of '%2'").arg(propertyName()).arg(propertyHelperList()[0].object()->objectName()));
     } else {
         int count = propertyHelperList().size();
-        setText(QApplication::translate("Command", "changed '%1' of %2 objects", "", QCoreApplication::UnicodeUTF8, count).arg(propertyName()).arg(count));
+        setText(QApplication::translate("Command", "Changed '%1' of %n objects", "", QCoreApplication::UnicodeUTF8, count).arg(propertyName()));
     }
 }
 
@@ -1197,10 +1285,10 @@ bool ResetPropertyCommand::init(const ObjectList &list, const QString &aproperty
 void ResetPropertyCommand::setDescription()
 {
     if (propertyHelperList().size() == 1) {
-        setText(QApplication::translate("Command", "reset '%1' of '%2'").arg(propertyName()).arg(propertyHelperList()[0].object()->objectName()));
+        setText(QApplication::translate("Command", "Reset '%1' of '%2'").arg(propertyName()).arg(propertyHelperList()[0].object()->objectName()));
     } else {
         int count = propertyHelperList().size();
-        setText(QApplication::translate("Command", "reset '%1' of %2 objects", "", QCoreApplication::UnicodeUTF8, count).arg(propertyName()).arg(count));
+        setText(QApplication::translate("Command", "Reset '%1' of %n objects", "", QCoreApplication::UnicodeUTF8, count).arg(propertyName()));
     }
 }
 
@@ -1289,10 +1377,10 @@ void AddDynamicPropertyCommand::undo()
 void AddDynamicPropertyCommand::setDescription()
 {
     if (m_selection.size() == 1) {
-        setText(QApplication::translate("Command", "add dynamic property '%1' to '%2'").arg(m_propertyName).arg(m_selection.first()->objectName()));
+        setText(QApplication::translate("Command", "Add dynamic property '%1' to '%2'").arg(m_propertyName).arg(m_selection.first()->objectName()));
     } else {
         int count = m_selection.size();
-        setText(QApplication::translate("Command", "add dynamic property '%1' to %2 objects", "", QCoreApplication::UnicodeUTF8, count).arg(m_propertyName).arg(count));
+        setText(QApplication::translate("Command", "Add dynamic property '%1' to %n objects", "", QCoreApplication::UnicodeUTF8, count).arg(m_propertyName));
     }
 }
 
@@ -1378,10 +1466,10 @@ void RemoveDynamicPropertyCommand::undo()
 void RemoveDynamicPropertyCommand::setDescription()
 {
     if (m_objectToValueAndChanged.size() == 1) {
-        setText(QApplication::translate("Command", "remove dynamic property '%1' from '%2'").arg(m_propertyName).arg(m_objectToValueAndChanged.constBegin().key()->objectName()));
+        setText(QApplication::translate("Command", "Remove dynamic property '%1' from '%2'").arg(m_propertyName).arg(m_objectToValueAndChanged.constBegin().key()->objectName()));
     } else {
         int count = m_objectToValueAndChanged.size();
-        setText(QApplication::translate("Command", "remove dynamic property '%1' from %2 objects", "", QCoreApplication::UnicodeUTF8, count).arg(m_propertyName).arg(count));
+        setText(QApplication::translate("Command", "Remove dynamic property '%1' from %n objects", "", QCoreApplication::UnicodeUTF8, count).arg(m_propertyName));
     }
 }
 

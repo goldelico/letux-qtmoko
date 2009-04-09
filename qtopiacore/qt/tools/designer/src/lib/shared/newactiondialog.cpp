@@ -1,44 +1,52 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include "newactiondialog_p.h"
+#include "ui_newactiondialog.h"
+#include "richtexteditor_p.h"
 #include "actioneditor_p.h"
 #include "formwindowbase_p.h"
 #include "qdesigner_utils_p.h"
+#include "iconloader_p.h"
+
 #include <QtDesigner/abstractformwindow.h>
 #include <QtDesigner/abstractformeditor.h>
 
@@ -48,58 +56,99 @@
 QT_BEGIN_NAMESPACE
 
 namespace qdesigner_internal {
+// -------------------- ActionData
 
-NewActionDialog::NewActionDialog(ActionEditor *parent)
-    : QDialog(parent, Qt::Sheet),
-      m_actionEditor(parent)
+ActionData::ActionData() :
+    checkable(false)
 {
-    ui.setupUi(this);
+}
+
+// Returns a combination of ChangeMask flags
+unsigned ActionData::compare(const ActionData &rhs) const
+{
+    unsigned rc = 0;
+    if (text != rhs.text)
+        rc |= TextChanged;
+    if (name != rhs.name)
+        rc |= NameChanged;
+    if (toolTip != rhs.toolTip)
+        rc |= ToolTipChanged ;
+    if (icon != rhs.icon)
+        rc |= IconChanged ;
+    if (checkable != rhs.checkable)
+        rc |= CheckableChanged;
+    if (keysequence != rhs.keysequence)
+        rc |= KeysequenceChanged ;
+    return rc;
+}
+
+// -------------------- NewActionDialog
+NewActionDialog::NewActionDialog(ActionEditor *parent) :
+    QDialog(parent, Qt::Sheet),
+    m_ui(new Ui::NewActionDialog),
+    m_actionEditor(parent)
+{
+    m_ui->setupUi(this);
+    
+    m_ui->tooltipEditor->setTextPropertyValidationMode(ValidationRichText);
+    connect(m_ui->toolTipToolButton, SIGNAL(clicked()), this, SLOT(slotEditToolTip()));
+
+    m_ui->keysequenceResetToolButton->setIcon(createIconSet(QLatin1String("resetproperty.png")));
+    connect(m_ui->keysequenceResetToolButton, SIGNAL(clicked()), this, SLOT(slotResetKeySequence()));
+
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
-    ui.editActionText->setFocus();
+    m_ui->editActionText->setFocus();
     m_auto_update_object_name = true;
     updateButtons();
 
     QDesignerFormWindowInterface *form = parent->formWindow();
-    ui.iconSelector->setFormEditor(form->core());
+    m_ui->iconSelector->setFormEditor(form->core());
     FormWindowBase *formBase = qobject_cast<FormWindowBase *>(form);
 
     if (formBase) {
-        ui.iconSelector->setPixmapCache(formBase->pixmapCache());
-        ui.iconSelector->setIconCache(formBase->iconCache());
+        m_ui->iconSelector->setPixmapCache(formBase->pixmapCache());
+        m_ui->iconSelector->setIconCache(formBase->iconCache());
     }
-}
-
-PropertySheetIconValue NewActionDialog::actionIcon() const
-{
-    return ui.iconSelector->icon();
-}
-
-void NewActionDialog::setActionData(const QString &text, const QString &name, const PropertySheetIconValue &icon)
-{
-    ui.editActionText->setText(text);
-    ui.editObjectName->setText(name);
-    ui.iconSelector->setIcon(icon);
-    m_auto_update_object_name = false;
-    updateButtons();
 }
 
 NewActionDialog::~NewActionDialog()
 {
-}
-
-void NewActionDialog::accept()
-{
-    QDialog::accept();
+    delete m_ui;
 }
 
 QString NewActionDialog::actionText() const
 {
-    return ui.editActionText->text();
+    return m_ui->editActionText->text();
 }
 
 QString NewActionDialog::actionName() const
 {
-    return ui.editObjectName->text();
+    return m_ui->editObjectName->text();
+}
+
+ActionData NewActionDialog::actionData() const
+{
+    ActionData rc;
+    rc.text = actionText();
+    rc.name = actionName();
+    rc.toolTip = m_ui->tooltipEditor->text();
+    rc.icon = m_ui->iconSelector->icon();
+    rc.checkable = m_ui->checkableCheckBox->checkState() == Qt::Checked;
+    rc.keysequence = m_ui->keySequenceEdit->keySequence();
+    return rc;
+}
+
+void NewActionDialog::setActionData(const ActionData &d)
+{
+    m_ui->editActionText->setText(d.text);
+    m_ui->editObjectName->setText(d.name);
+    m_ui->iconSelector->setIcon(d.icon);
+    m_ui->tooltipEditor->setText(d.toolTip);
+    m_ui->keySequenceEdit->setKeySequence(d.keysequence);
+    m_ui->checkableCheckBox->setCheckState(d.checkable ? Qt::Checked : Qt::Unchecked);
+
+    m_auto_update_object_name = false;
+    updateButtons();
 }
 
 void NewActionDialog::on_editActionText_textEdited(const QString &text)
@@ -108,7 +157,7 @@ void NewActionDialog::on_editActionText_textEdited(const QString &text)
         m_auto_update_object_name = true;
 
     if (m_auto_update_object_name)
-        ui.editObjectName->setText(ActionEditor::actionTextToName(text));
+        m_ui->editObjectName->setText(ActionEditor::actionTextToName(text));
 
     updateButtons();
 }
@@ -119,9 +168,27 @@ void NewActionDialog::on_editObjectName_textEdited(const QString&)
     m_auto_update_object_name = false;
 }
 
+void NewActionDialog::slotEditToolTip()
+{
+    const QString oldToolTip = m_ui->tooltipEditor->text();
+    RichTextEditorDialog richTextDialog(m_actionEditor->core(), this);
+    richTextDialog.setText(oldToolTip);
+    if (richTextDialog.showDialog() == QDialog::Rejected)
+        return;
+    const QString newToolTip = richTextDialog.text();
+    if (newToolTip != oldToolTip)
+        m_ui->tooltipEditor->setText(newToolTip);
+}
+
+void NewActionDialog::slotResetKeySequence()
+{
+    m_ui->keySequenceEdit->setKeySequence(QKeySequence());
+    m_ui->keySequenceEdit->setFocus(Qt::MouseFocusReason);
+}
+
 void NewActionDialog::updateButtons()
 {
-    QPushButton *okButton = ui.buttonBox->button(QDialogButtonBox::Ok);
+    QPushButton *okButton = m_ui->buttonBox->button(QDialogButtonBox::Ok);
     okButton->setEnabled(!actionText().isEmpty() && !actionName().isEmpty());
 }
 

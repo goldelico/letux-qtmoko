@@ -24,145 +24,196 @@
 
 #include <wtf/GetPtr.h>
 
-#include "ExceptionCode.h"
 #include "JSDOMWindow.h"
+#include "KURL.h"
 #include "KeyboardEvent.h"
-#include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSKeyboardEvent)
+
 /* Hash table */
 
-static const HashEntry JSKeyboardEventTableEntries[] =
+static const HashTableValue JSKeyboardEventTableValues[9] =
 {
-    { "shiftKey", JSKeyboardEvent::ShiftKeyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "altGraphKey", JSKeyboardEvent::AltGraphKeyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "keyIdentifier", JSKeyboardEvent::KeyIdentifierAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "altKey", JSKeyboardEvent::AltKeyAttrNum, DontDelete|ReadOnly, 0, &JSKeyboardEventTableEntries[8] },
-    { 0, 0, 0, 0, 0 },
-    { "keyLocation", JSKeyboardEvent::KeyLocationAttrNum, DontDelete|ReadOnly, 0, &JSKeyboardEventTableEntries[7] },
-    { "ctrlKey", JSKeyboardEvent::CtrlKeyAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "metaKey", JSKeyboardEvent::MetaKeyAttrNum, DontDelete|ReadOnly, 0, 0 }
+    { "keyIdentifier", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventKeyIdentifier, (intptr_t)0 },
+    { "keyLocation", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventKeyLocation, (intptr_t)0 },
+    { "ctrlKey", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventCtrlKey, (intptr_t)0 },
+    { "shiftKey", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventShiftKey, (intptr_t)0 },
+    { "altKey", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventAltKey, (intptr_t)0 },
+    { "metaKey", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventMetaKey, (intptr_t)0 },
+    { "altGraphKey", DontDelete|ReadOnly, (intptr_t)jsKeyboardEventAltGraphKey, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsKeyboardEventConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSKeyboardEventTable = 
+static const HashTable JSKeyboardEventTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 31, JSKeyboardEventTableValues, 0 };
+#else
+    { 18, 15, JSKeyboardEventTableValues, 0 };
+#endif
+
+/* Hash table for constructor */
+
+static const HashTableValue JSKeyboardEventConstructorTableValues[1] =
 {
-    2, 9, JSKeyboardEventTableEntries, 7
+    { 0, 0, 0, 0 }
 };
+
+static const HashTable JSKeyboardEventConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSKeyboardEventConstructorTableValues, 0 };
+#else
+    { 1, 0, JSKeyboardEventConstructorTableValues, 0 };
+#endif
+
+class JSKeyboardEventConstructor : public DOMObject {
+public:
+    JSKeyboardEventConstructor(ExecState* exec)
+        : DOMObject(JSKeyboardEventConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
+    {
+        putDirect(exec->propertyNames().prototype, JSKeyboardEventPrototype::self(exec), None);
+    }
+    virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
+
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
+};
+
+const ClassInfo JSKeyboardEventConstructor::s_info = { "KeyboardEventConstructor", 0, &JSKeyboardEventConstructorTable, 0 };
+
+bool JSKeyboardEventConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
+{
+    return getStaticValueSlot<JSKeyboardEventConstructor, DOMObject>(exec, &JSKeyboardEventConstructorTable, this, propertyName, slot);
+}
 
 /* Hash table for prototype */
 
-static const HashEntry JSKeyboardEventPrototypeTableEntries[] =
+static const HashTableValue JSKeyboardEventPrototypeTableValues[2] =
 {
-    { "initKeyboardEvent", JSKeyboardEvent::InitKeyboardEventFuncNum, DontDelete|Function, 11, 0 }
+    { "initKeyboardEvent", DontDelete|Function, (intptr_t)jsKeyboardEventPrototypeFunctionInitKeyboardEvent, (intptr_t)11 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSKeyboardEventPrototypeTable = 
-{
-    2, 1, JSKeyboardEventPrototypeTableEntries, 1
-};
+static const HashTable JSKeyboardEventPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSKeyboardEventPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSKeyboardEventPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSKeyboardEventPrototype::info = { "KeyboardEventPrototype", 0, &JSKeyboardEventPrototypeTable, 0 };
+const ClassInfo JSKeyboardEventPrototype::s_info = { "KeyboardEventPrototype", 0, &JSKeyboardEventPrototypeTable, 0 };
 
 JSObject* JSKeyboardEventPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSKeyboardEventPrototype>(exec, "[[JSKeyboardEvent.prototype]]");
+    return getDOMPrototype<JSKeyboardEvent>(exec);
 }
 
 bool JSKeyboardEventPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSKeyboardEventPrototypeFunction, JSObject>(exec, &JSKeyboardEventPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSKeyboardEventPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSKeyboardEvent::info = { "KeyboardEvent", &JSUIEvent::info, &JSKeyboardEventTable, 0 };
+const ClassInfo JSKeyboardEvent::s_info = { "KeyboardEvent", &JSUIEvent::s_info, &JSKeyboardEventTable, 0 };
 
-JSKeyboardEvent::JSKeyboardEvent(ExecState* exec, KeyboardEvent* impl)
-    : JSUIEvent(exec, impl)
+JSKeyboardEvent::JSKeyboardEvent(PassRefPtr<Structure> structure, PassRefPtr<KeyboardEvent> impl)
+    : JSUIEvent(structure, impl)
 {
-    setPrototype(JSKeyboardEventPrototype::self(exec));
+}
+
+JSObject* JSKeyboardEvent::createPrototype(ExecState* exec)
+{
+    return new (exec) JSKeyboardEventPrototype(JSKeyboardEventPrototype::createStructure(JSUIEventPrototype::self(exec)));
 }
 
 bool JSKeyboardEvent::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSKeyboardEvent, JSUIEvent>(exec, &JSKeyboardEventTable, this, propertyName, slot);
+    return getStaticValueSlot<JSKeyboardEvent, Base>(exec, &JSKeyboardEventTable, this, propertyName, slot);
 }
 
-JSValue* JSKeyboardEvent::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsKeyboardEventKeyIdentifier(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case KeyIdentifierAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsString(imp->keyIdentifier());
-    }
-    case KeyLocationAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsNumber(imp->keyLocation());
-    }
-    case CtrlKeyAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsBoolean(imp->ctrlKey());
-    }
-    case ShiftKeyAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsBoolean(imp->shiftKey());
-    }
-    case AltKeyAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsBoolean(imp->altKey());
-    }
-    case MetaKeyAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsBoolean(imp->metaKey());
-    }
-    case AltGraphKeyAttrNum: {
-        KeyboardEvent* imp = static_cast<KeyboardEvent*>(impl());
-
-        return jsBoolean(imp->altGraphKey());
-    }
-    }
-    return 0;
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->keyIdentifier());
 }
 
-JSValue* JSKeyboardEventPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSValuePtr jsKeyboardEventKeyLocation(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSKeyboardEvent::info))
-      return throwError(exec, TypeError);
-
-    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(thisObj)->impl());
-
-    switch (id) {
-    case JSKeyboardEvent::InitKeyboardEventFuncNum: {
-        AtomicString type = args[0]->toString(exec);
-        bool canBubble = args[1]->toBoolean(exec);
-        bool cancelable = args[2]->toBoolean(exec);
-        DOMWindow* view = toDOMWindow(args[3]);
-        String keyIdentifier = args[4]->toString(exec);
-        bool keyLocationOk;
-        unsigned keyLocation = args[5]->toInt32(exec, keyLocationOk);
-        if (!keyLocationOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-        bool ctrlKey = args[6]->toBoolean(exec);
-        bool altKey = args[7]->toBoolean(exec);
-        bool shiftKey = args[8]->toBoolean(exec);
-        bool metaKey = args[9]->toBoolean(exec);
-        bool altGraphKey = args[10]->toBoolean(exec);
-
-        imp->initKeyboardEvent(type, canBubble, cancelable, view, keyIdentifier, keyLocation, ctrlKey, altKey, shiftKey, metaKey, altGraphKey);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->keyLocation());
 }
+
+JSValuePtr jsKeyboardEventCtrlKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->ctrlKey());
+}
+
+JSValuePtr jsKeyboardEventShiftKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->shiftKey());
+}
+
+JSValuePtr jsKeyboardEventAltKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->altKey());
+}
+
+JSValuePtr jsKeyboardEventMetaKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->metaKey());
+}
+
+JSValuePtr jsKeyboardEventAltGraphKey(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->altGraphKey());
+}
+
+JSValuePtr jsKeyboardEventConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
+{
+    return static_cast<JSKeyboardEvent*>(asObject(slot.slotBase()))->getConstructor(exec);
+}
+JSValuePtr JSKeyboardEvent::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSKeyboardEventConstructor>(exec);
+}
+
+JSValuePtr jsKeyboardEventPrototypeFunctionInitKeyboardEvent(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSKeyboardEvent::s_info))
+        return throwError(exec, TypeError);
+    JSKeyboardEvent* castedThisObj = static_cast<JSKeyboardEvent*>(asObject(thisValue));
+    KeyboardEvent* imp = static_cast<KeyboardEvent*>(castedThisObj->impl());
+    const UString& type = args.at(exec, 0)->toString(exec);
+    bool canBubble = args.at(exec, 1)->toBoolean(exec);
+    bool cancelable = args.at(exec, 2)->toBoolean(exec);
+    DOMWindow* view = toDOMWindow(args.at(exec, 3));
+    const UString& keyIdentifier = args.at(exec, 4)->toString(exec);
+    unsigned keyLocation = args.at(exec, 5)->toInt32(exec);
+    bool ctrlKey = args.at(exec, 6)->toBoolean(exec);
+    bool altKey = args.at(exec, 7)->toBoolean(exec);
+    bool shiftKey = args.at(exec, 8)->toBoolean(exec);
+    bool metaKey = args.at(exec, 9)->toBoolean(exec);
+    bool altGraphKey = args.at(exec, 10)->toBoolean(exec);
+
+    imp->initKeyboardEvent(type, canBubble, cancelable, view, keyIdentifier, keyLocation, ctrlKey, altKey, shiftKey, metaKey, altGraphKey);
+    return jsUndefined();
+}
+
 
 }

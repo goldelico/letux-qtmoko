@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -39,6 +43,9 @@
 #include "qnetworkinterface_p.h"
 
 #include "qdebug.h"
+#include "qendian.h"
+
+#ifndef QT_NO_NETWORKINTERFACE
 
 QT_BEGIN_NAMESPACE
 
@@ -185,6 +192,26 @@ QNetworkAddressEntry::~QNetworkAddressEntry()
 }
 
 /*!
+    Returns true if this network address entry is the same as \a
+    other.
+*/
+bool QNetworkAddressEntry::operator==(const QNetworkAddressEntry &other) const
+{
+    if (d == other.d) return true;
+    if (!d || !other.d) return false;
+    return d->address == other.d->address &&
+        d->netmask == other.d->netmask &&
+        d->broadcast == other.d->broadcast;
+}
+
+/*!
+    \fn bool QNetworkAddressEntry::operator!=(const QNetworkAddressEntry &other) const
+
+    Returns true if this network address entry is different from \a
+    other.
+*/
+
+/*!
     This function returns one IPv4 or IPv6 address found, that was
     found in a network interface.
 */
@@ -212,6 +239,8 @@ void QNetworkAddressEntry::setIp(const QHostAddress &newIp)
     length. For a prefix length of 64 bits (the most common value),
     the netmask will be expressed as a QHostAddress holding the
     address FFFF:FFFF:FFFF:FFFF::
+
+    \sa prefixLength()
 */
 QHostAddress QNetworkAddressEntry::netmask() const
 {
@@ -220,11 +249,54 @@ QHostAddress QNetworkAddressEntry::netmask() const
 
 /*!
     Sets the netmask that this QNetworkAddressEntry object contains to
-    \a newNetmask.
+    \a newNetmask. Setting the netmask also sets the prefix length to
+    match the new netmask.
+
+    \sa setPrefixLength()
 */
 void QNetworkAddressEntry::setNetmask(const QHostAddress &newNetmask)
 {
-    d->netmask = newNetmask;
+    if (newNetmask.protocol() != ip().protocol()) {
+        d->netmask = QNetmaskAddress();
+        return;
+    }
+
+    d->netmask.setAddress(newNetmask);
+}
+
+/*!
+    \since 4.5
+    Returns the prefix length of this IP address. The prefix length
+    matches the number of bits set to 1 in the netmask (see
+    netmask()). For IPv4 addresses, the value is between 0 and 32. For
+    IPv6 addresses, it's contained between 0 and 128 and is the
+    preferred form of representing addresses.
+
+    This function returns -1 if the prefix length could not be
+    determined (i.e., netmask() returns a null QHostAddress()).
+
+    \sa netmask()
+*/
+int QNetworkAddressEntry::prefixLength() const
+{
+    return d->netmask.prefixLength();
+}
+
+/*!
+    \since 4.5
+    Sets the prefix length of this IP address to \a length. The value
+    of \a length must be valid for this type of IP address: between 0
+    and 32 for IPv4 addresses, between 0 and 128 for IPv6
+    addresses. Setting to any invalid value is equivalent to setting
+    to -1, which means "no prefix length".
+
+    Setting the prefix length also sets the netmask (see netmask()).
+
+    \sa setNetmask()
+*/
+void QNetworkAddressEntry::setPrefixLength(int length)
+{
+    d->netmask.setPrefixLength(d->address.protocol(), length);
 }
 
 /*!
@@ -353,6 +425,20 @@ bool QNetworkInterface::isValid() const
 }
 
 /*!
+    \since 4.5
+    Returns the interface system index, if known. This is an integer
+    assigned by the operating system to identify this interface and it
+    generally doesn't change. It matches the scope ID field in IPv6
+    addresses.
+
+    If the index isn't known, this function returns 0.
+*/
+int QNetworkInterface::index() const
+{
+    return d ? d->index : 0;
+}
+
+/*!
     Returns the name of this network interface. On Unix systems, this
     is a string containing the type of the interface and optionally a
     sequence number, such as "eth0", "lo" or "pcn0". On Windows, it's
@@ -361,6 +447,25 @@ bool QNetworkInterface::isValid() const
 QString QNetworkInterface::name() const
 {
     return d ? d->name : QString();
+}
+
+/*!
+    \since 4.5
+
+    Returns the human-readable name of this network interface on
+    Windows, such as "Local Area Connection", if the name could be
+    determined. If it couldn't, this function returns the same as
+    name(). The human-readable name is a name that the user can modify
+    in the Windows Control Panel, so it may change during the
+    execution of the program.
+
+    On Unix, this function currently always returns the same as
+    name(), since Unix systems don't store a configuration for
+    human-readable names.
+*/
+QString QNetworkInterface::humanReadableName() const
+{
+    return d ? !d->friendlyName.isEmpty() ? d->friendlyName : name() : QString();
 }
 
 /*!
@@ -506,3 +611,5 @@ QDebug operator<<(QDebug debug, const QNetworkInterface &networkInterface)
 #endif
 
 QT_END_NAMESPACE
+
+#endif // QT_NO_NETWORKINTERFACE

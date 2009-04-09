@@ -1,37 +1,41 @@
 /****************************************************************************)
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -91,13 +95,13 @@ QT_BEGIN_NAMESPACE
   and setMaximumTime().
 
   \section1 Using a Pop-up Calendar Widget
-  
+
   QDateTimeEdit can be configured to allow a QCalendarWidget to be used
   to select dates. This is enabled by setting the calendarPopup property.
   Additionally, you can supply a custom calendar widget for use as the
   calendar pop-up by calling the setCalendarWidget() function. The existing
   calendar widget can be retrieved with calendarWidget().
-  
+
   \table 100%
   \row \o \inlineimage windowsxp-datetimeedit.png Screenshot of a Windows XP style date time editing widget
        \o A date time editing widget shown in the \l{Windows XP Style Widget Gallery}{Windows XP widget style}.
@@ -424,6 +428,8 @@ void QDateTimeEdit::setDateTimeRange(const QDateTime &min, const QDateTime &max)
   not a valid QDate object, this function does nothing.
 
   By default, this property contains a date that refers to September 14, 1752.
+  The minimum date must be at least the first day in year 100, otherwise
+  setMinimumDate() has no effect.
 
   \sa minimumTime(), maximumTime(), setDateRange()
 */
@@ -811,10 +817,7 @@ QString QDateTimeEdit::sectionText(Section section) const
 
     d->updateCache(d->value, d->displayText());
     const int sectionIndex = d->absoluteIndex(section, 0);
-    if (sectionIndex < 0)
-        return QString();
-
-    return d->sectionText(d->displayText(), sectionIndex, d->sectionPos(sectionIndex));
+    return d->sectionText(sectionIndex);
 }
 
 /*!
@@ -915,6 +918,7 @@ void QDateTimeEdit::setCalendarPopup(bool enable)
     Q_D(QDateTimeEdit);
     if (enable == d->calendarPopup)
         return;
+    setAttribute(Qt::WA_MacShowFocusRect, !enable);
     d->calendarPopup = enable;
 #ifdef QT_KEYPAD_NAVIGATION
     if (!enable)
@@ -972,22 +976,33 @@ QSize QDateTimeEdit::sizeHint() const
         }
         w += 2; // cursor blinking space
 
-        QStyleOptionSpinBox opt;
-        initStyleOption(&opt);
         QSize hint(w, h);
-        QSize extra(35, 6);
-        opt.rect.setSize(hint + extra);
-        extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
-                                                QStyle::SC_SpinBoxEditField, this).size();
-        // get closer to final result by repeating the calculation
-        opt.rect.setSize(hint + extra);
-        extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
-                                                QStyle::SC_SpinBoxEditField, this).size();
-        hint += extra;
 
-        opt.rect = rect();
-        d->cachedSizeHint = style()->sizeFromContents(QStyle::CT_SpinBox, &opt, hint, this)
-                            .expandedTo(QApplication::globalStrut());
+#ifdef Q_WS_MAC
+        if (d->calendarPopupEnabled()) {
+            QStyleOptionComboBox opt;
+            d->cachedSizeHint = style()->sizeFromContents(QStyle::CT_ComboBox, &opt, hint, this);
+        } else {
+#else
+        {
+#endif
+            QSize extra(35, 6);
+            QStyleOptionSpinBox opt;
+            initStyleOption(&opt);
+            opt.rect.setSize(hint + extra);
+            extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
+                                                QStyle::SC_SpinBoxEditField, this).size();
+            // get closer to final result by repeating the calculation
+            opt.rect.setSize(hint + extra);
+            extra += hint - style()->subControlRect(QStyle::CC_SpinBox, &opt,
+                                                QStyle::SC_SpinBoxEditField, this).size();
+            hint += extra;
+
+            opt.rect = rect();
+            d->cachedSizeHint = style()->sizeFromContents(QStyle::CT_SpinBox, &opt, hint, this)
+                                .expandedTo(QApplication::globalStrut());
+        }
+
         d->cachedMinimumSizeHint = d->cachedSizeHint;
         // essentially make minimumSizeHint return the same as sizeHint for datetimeedits
     }
@@ -1092,7 +1107,7 @@ void QDateTimeEdit::keyPressEvent(QKeyEvent *event)
         if (QApplication::keypadNavigationEnabled() && !hasEditFocus()
             && !event->text().isEmpty() && event->text().at(0).isLetterOrNumber()) {
             setEditFocus(true);
-            
+
             //hide cursor
             d->edit->d_func()->setCursorVisible(false);
             if (d->edit->d_func()->cursorTimer > 0)
@@ -1105,7 +1120,7 @@ void QDateTimeEdit::keyPressEvent(QKeyEvent *event)
 #endif
         if (!d->isSeparatorKey(event)) {
             inserted = select = !event->text().isEmpty() && event->text().at(0).isPrint()
-                                && !(event->modifiers() & ~(Qt::ShiftModifier|Qt::KeypadModifier));
+                       && !(event->modifiers() & ~(Qt::ShiftModifier|Qt::KeypadModifier));
             break;
         }
     case Qt::Key_Left:
@@ -1139,8 +1154,8 @@ void QDateTimeEdit::keyPressEvent(QKeyEvent *event)
         }
         const bool forward = event->key() != Qt::Key_Left && event->key() != Qt::Key_Backtab
                              && (event->key() != Qt::Key_Tab || !(event->modifiers() & Qt::ShiftModifier));
-        int newSection = d->nextPrevSection(d->currentSectionIndex, forward);
 #ifdef QT_KEYPAD_NAVIGATION
+        int newSection = d->nextPrevSection(d->currentSectionIndex, forward);
         if (QApplication::keypadNavigationEnabled()) {
             if (d->focusOnButton) {
                 newSection = forward ? 0 : d->sectionNodes.size() - 1;
@@ -1157,12 +1172,10 @@ void QDateTimeEdit::keyPressEvent(QKeyEvent *event)
         if (newSection & ~(QDateTimeParser::TimeSectionMask | QDateTimeParser::DateSectionMask))
             return;
 #endif
-        d->edit->deselect();
-        d->edit->setCursorPosition(d->sectionPos(newSection));
-        QDTEDEBUG << d->sectionPos(newSection);
+        //key tab and backtab will be managed thrgout QWidget::event
+        if (event->key() != Qt::Key_Backtab && event->key() != Qt::Key_Tab)
+            focusNextPrevChild(forward);
 
-        if (select)
-            d->setSelected(newSection, true);
         return; }
     }
     QAbstractSpinBox::keyPressEvent(event);
@@ -1171,9 +1184,12 @@ void QDateTimeEdit::keyPressEvent(QKeyEvent *event)
             QString str = d->displayText();
             int pos = d->edit->cursorPosition();
             if (validate(str, pos) == QValidator::Acceptable
-                && (d->sectionNode(oldCurrent).count != 1 || d->sectionSize(oldCurrent) == d->sectionMaxSize(oldCurrent))) {
-                QDTEDEBUG << "Setting currentsection to" << d->closestSection(d->edit->cursorPosition(), true) << event->key()
-                          << oldCurrent;
+                && (d->sectionNodes.at(oldCurrent).count != 1
+                    || d->sectionMaxSize(oldCurrent) == d->sectionSize(oldCurrent)
+                    || d->skipToNextSection(oldCurrent, d->value.toDateTime(), d->sectionText(oldCurrent)))) {
+                QDTEDEBUG << "Setting currentsection to"
+                          << d->closestSection(d->edit->cursorPosition(), true) << event->key()
+                          << oldCurrent << str;
                 const int tmp = d->closestSection(d->edit->cursorPosition(), true);
                 if (tmp >= 0)
                     d->currentSectionIndex = tmp;
@@ -1259,19 +1275,19 @@ void QDateTimeEdit::focusInEvent(QFocusEvent *event)
 bool QDateTimeEdit::focusNextPrevChild(bool next)
 {
     Q_D(QDateTimeEdit);
-    if (!focusWidget())
-        return false;
-
     const int newSection = d->nextPrevSection(d->currentSectionIndex, next);
     switch (d->sectionType(newSection)) {
     case QDateTimeParser::NoSection:
     case QDateTimeParser::FirstSection:
     case QDateTimeParser::LastSection:
-        break;
+        return QAbstractSpinBox::focusNextPrevChild(next);
     default:
+        d->edit->deselect();
+        d->edit->setCursorPosition(d->sectionPos(newSection));
+        QDTEDEBUG << d->sectionPos(newSection);
+        d->setSelected(newSection, true);
         return false;
     }
-    return QAbstractSpinBox::focusNextPrevChild(next);
 }
 
 /*!
@@ -1285,9 +1301,9 @@ void QDateTimeEdit::stepBy(int steps)
     // with keypad navigation and not editFocus, left right change the date/time by a fixed amount.
     if (QApplication::keypadNavigationEnabled() && !hasEditFocus()) {
         // if date based, shift by day.  else shift by 15min
-        if (d->sections & DateSections_Mask)
+        if (d->sections & DateSections_Mask) {
             setDateTime(dateTime().addDays(steps));
-        else {
+        } else {
             int minutes = time().hour()*60 + time().minute();
             int blocks = minutes/15;
             blocks += steps;
@@ -1858,7 +1874,7 @@ void QDateTimeEditPrivate::updateCache(const QVariant &val, const QString &str) 
   parses and validates \a input
 */
 
-QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &/*position*/,
+QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &position,
                                                      QValidator::State &state, bool fixup) const
 {
     if (input.isEmpty()) {
@@ -1894,7 +1910,7 @@ QDateTime QDateTimeEditPrivate::validateAndInterpret(QString &input, int &/*posi
             return minimum.toDateTime();
         }
     }
-    StateNode tmp = parse(input, value.toDateTime(), fixup);
+    StateNode tmp = parse(input, position, value.toDateTime(), fixup);
     input = tmp.input;
     state = QValidator::State(int(tmp.state));
     if (state == QValidator::Acceptable) {

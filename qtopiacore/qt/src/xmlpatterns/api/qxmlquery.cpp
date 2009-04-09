@@ -1,42 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtXMLPatterns module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #include <QtCore/QBuffer>
 #include <QtCore/QStringList>
+#include <QtXmlPatterns/QXmlFormatter>
 
 #include "qacceltreeresourceloader_p.h"
 #include "qcommonvalues_p.h"
@@ -47,8 +52,6 @@
 
 #include "qxmlquery.h"
 #include "qxmlquery_p.h"
-
-Q_DECLARE_METATYPE(QIODevice *)
 
 QT_BEGIN_NAMESPACE
 
@@ -88,7 +91,7 @@ QT_BEGIN_NAMESPACE
   an example of how to use QXmlQuery to query non-XML data, see the
   documentation for QAbstractXmlNodeModel.
 
-  \section1 Running Queries
+  \section1 Running XQueries
 
   To run a query set up with QXmlQuery, call one of the evaluation
   functions.
@@ -120,6 +123,38 @@ QT_BEGIN_NAMESPACE
   but the query must evaluate to a sequence of strings.
 
   \endlist
+
+  \section1 Running XPath Expressions
+
+  The XPath language is a subset of the XQuery language, so
+  running an XPath expression is the same as running an XQuery
+  query. Pass the XPath expression to QXmlQuery using setQuery().
+
+  \section1 Running XSLT stylesheets
+
+  Running an XSLT stylesheet is like running an XQuery, except that
+  when you construct your QXmlQuery, you must pass QXmlQuery::XSLT20
+  to tell QXmlQuery to interpret whatever it gets from setQuery() as
+  an XSLT stylesheet instead of as an XQuery. You must also set the
+  input document by calling setFocus().
+
+  \snippet doc/src/snippets/code/src_xmlpatterns_api_qxmlquery.cpp 7
+
+  \note Currently, setFocus() must be called \e before setQuery() when
+  using XSLT.
+
+  Another way to run an XSLT stylesheet is to use the \c xmlpatterns
+  command line utility.
+
+  \code
+  xmlpatterns myStylesheet.xsl myInput.xml
+  \endcode
+
+  \note For the current release, XSLT support should be considered
+        experimental. See section \l{QtXmlPatterns Module#XSLT
+        2.0}{XSLT conformance} for details.
+
+  Stylesheet parameters are bound using bindVariable().
 
   \section1 Binding A Query To A Starting Node
 
@@ -167,7 +202,7 @@ QT_BEGIN_NAMESPACE
 
   When setQuery() is called, the query text is compiled into an
   internal data structure and optimized. The optimized form can
-  then be reused for multiple evaluations of the query.  Since the
+  then be reused for multiple evaluations of the query. Since the
   compile-and-optimize process can be expensive, repeating it for
   the same query should be avoided by using a separate instance of
   QXmlQuery for each query text.
@@ -178,11 +213,36 @@ QT_BEGIN_NAMESPACE
 
   An instance of QCoreApplication must exist before QXmlQuery can be
   used.
+
+  \section1 Event Handling
+
+  When QXmlQuery accesses resources (e.g., calling \c fn:doc() to load a file,
+  or accessing a device via a bound variable), the event loop is used, which
+  means events will be processed. To avoid processing events when QXmlQuery
+  accesses resources, create your QXmlQuery instance in a separate thread.
  */
 
 /*!
-  Constructs an empty query. A default constructed query cannot be
-  evaluated until setQuery() has been called.
+ \enum QXmlQuery::QueryLanguage
+ \since 4.5
+
+ Specifies whether you want QXmlQuery to interpret the input to
+ setQuery() as an XQuery or as an XSLT stylesheet.
+
+ \value XQuery10 XQuery 1.0.
+ \value XSLT20 XSLT 2.0
+
+ \sa setQuery()
+ */
+
+// ### Qt5: Merge constructor overloads
+/*!
+  Constructs an invalid, empty query that cannot be used until
+  setQuery() is called.
+
+  \note This constructor must not be used if you intend to use
+  this QXmlQuery to process XSL-T stylesheets. The other constructor
+  must be used in that case.
  */
 QXmlQuery::QXmlQuery() : d(new QXmlQueryPrivate())
 {
@@ -195,15 +255,40 @@ QXmlQuery::QXmlQuery() : d(new QXmlQueryPrivate())
  */
 QXmlQuery::QXmlQuery(const QXmlQuery &other) : d(new QXmlQueryPrivate(*other.d))
 {
+    /* First we have invoked QXmlQueryPrivate's synthesized copy constructor.
+     * Keep this section in sync with QXmlQuery::operator=(). */
+    d->detach();
 }
 
 /*!
   Constructs a query that will use \a np as its name pool. The query
   cannot be evaluated until setQuery() has been called.
  */
-QXmlQuery::QXmlQuery(const QXmlNamePool &np) : d(new QXmlQueryPrivate())
+QXmlQuery::QXmlQuery(const QXmlNamePool &np) : d(new QXmlQueryPrivate(np))
 {
-    d->namePool = np;
+}
+
+/*!
+
+  Constructs a query that will be used to run Xqueries or XSL-T
+  stylesheets, depending on the value of \a queryLanguage. It will use
+  \a np as its name pool.
+
+  \note If your QXmlQuery will process XSL-T stylesheets, this
+  constructor must be used. The default constructor can only
+  create instances of QXmlQuery for running XQueries.
+
+  \note The XSL-T support in this release is considered experimental.
+  See the \l{QtXmlPatterns Module#XSLT 2.0}{XSLT conformance} for
+  details.
+
+ \since 4.5
+ \sa queryLanguage()
+ */
+QXmlQuery::QXmlQuery(QueryLanguage queryLanguage,
+                     const QXmlNamePool &np) : d(new QXmlQueryPrivate(np))
+{
+    d->queryLanguage = queryLanguage;
 }
 
 /*!
@@ -219,8 +304,13 @@ QXmlQuery::~QXmlQuery()
  */
 QXmlQuery &QXmlQuery::operator=(const QXmlQuery &other)
 {
+    /* Keep this section in sync with QXmlQuery::QXmlQuery(const QXmlQuery &).
+     */
     if(d != other.d)
+    {
         *d = *other.d;
+        d->detach();
+    }
 
     return *this;
 }
@@ -307,12 +397,23 @@ QAbstractMessageHandler *QXmlQuery::messageHandler() const
   which are explained in the \l {http://www.w3.org/TR/xquery/}
   {XQuery language}.
 
+  If \a sourceCode is \c null or not readable, or if \a documentURI is not
+  a valid URI, behavior is undefined.
   \sa isValid()
  */
 void QXmlQuery::setQuery(QIODevice *sourceCode, const QUrl &documentURI)
 {
-    Q_ASSERT_X(sourceCode, Q_FUNC_INFO, "A null QIODevice pointer cannot be passed.");
-    Q_ASSERT_X(sourceCode->isReadable(), Q_FUNC_INFO, "The device must be readable.");
+    if(!sourceCode)
+    {
+        qWarning("A null QIODevice pointer cannot be passed.");
+        return;
+    }
+
+    if(!sourceCode->isReadable())
+    {
+        qWarning("The device must be readable.");
+        return;
+    }
 
     d->queryURI = QXmlQueryPrivate::normalizeQueryURI(documentURI);
     d->expression(sourceCode);
@@ -369,12 +470,11 @@ void QXmlQuery::setQuery(const QUrl &queryURI, const QUrl &baseURI)
 
     d->queryURI = QXmlQueryPrivate::normalizeQueryURI(baseURI.isEmpty() ? queryURI : baseURI);
 
-    QNetworkAccessManager networkManager;
     QPatternist::AutoPtr<QIODevice> result;
 
     try
     {
-        result.reset(QPatternist::AccelTreeResourceLoader::load(canonicalURI, &networkManager,
+        result.reset(QPatternist::AccelTreeResourceLoader::load(canonicalURI, d->m_networkAccessDelegator,
                                                                 d->staticContext()));
     }
     catch(const QPatternist::Exception)
@@ -397,7 +497,7 @@ void QXmlQuery::setQuery(const QUrl &queryURI, const QUrl &baseURI)
 
   \a name must not be \e null. \a {name}.isNull() must return false.
   If \a name has already been bound by a previous bindVariable() call,
-  its previous binding will be overriden.
+  its previous binding will be overridden.
 
   If \a {value} is null so that \a {value}.isNull() returns true, and
   \a {name} already has a binding, the effect is to remove the
@@ -416,23 +516,21 @@ void QXmlQuery::setQuery(const QUrl &queryURI, const QUrl &baseURI)
  */
 void QXmlQuery::bindVariable(const QXmlName &name, const QXmlItem &value)
 {
-    Q_ASSERT_X(!name.isNull(), Q_FUNC_INFO, "The name cannot be null.");
-
-    if(d->variableBindings.contains(name))
+    if(name.isNull())
     {
-        /* If the type of the variable changed(as opposed to only the value),
-         * we will have to recompile. */
-        if(QXmlQueryPrivate::isSameType(d->variableBindings.value(name), value) || value.isNull())
-            d->updateVariableValues = true;
-        else
-            d->recompileRequired();
+        qWarning("The variable name cannot be null.");
+        return;
     }
 
-    if(value.isNull() || d->deviceBindings.contains(name))
+    const QPatternist::VariableLoader::Ptr vl(d->variableLoader());
+    const QVariant variant(qVariantFromValue(value));
+
+    /* If the type of the variable changed(as opposed to only the value),
+     * we will have to recompile. */
+    if(vl->invalidationRequired(name, variant) || value.isNull())
         d->recompileRequired();
 
-    d->deviceBindings.take(name);
-    d->variableBindings.insert(name, value);
+    vl->addBinding(name, variant);
 }
 
 /*!
@@ -471,7 +569,7 @@ void QXmlQuery::bindVariable(const QString &localName, const QXmlItem &value)
 
   \a name must not be \e null. \a {name}.isNull() must return false.
   If \a name has already been bound, its previous binding will be
-  overriden. The URI that \a name evaluates to is arbitrary and may
+  overridden. The URI that \a name evaluates to is arbitrary and may
   change.
 
   If the type of the variable binding changes (e.g., if a previous
@@ -485,23 +583,41 @@ void QXmlQuery::bindVariable(const QString &localName, const QXmlItem &value)
 */
 void QXmlQuery::bindVariable(const QXmlName &name, QIODevice *device)
 {
-    Q_ASSERT_X(!device || device->isReadable(), Q_FUNC_INFO, "A readable QIODevice must be passed.");
-
-    if(!device)
+    if(device && !device->isReadable())
     {
-        d->variableBindings.take(name);
-        d->deviceBindings.take(name);
-        d->recompileRequired();
+        qWarning("A null, or readable QIODevice must be passed.");
         return;
     }
 
-    if(d->deviceBindings.contains(name))
-        d->updateVariableValues = true;
-    else
-        d->recompileRequired();
+    if(name.isNull())
+    {
+        qWarning("The variable name cannot be null.");
+        return;
+    }
 
-    d->variableBindings.take(name);
-    d->deviceBindings.insert(name, device);
+    const QPatternist::VariableLoader::Ptr vl(d->variableLoader());
+
+    if(device)
+    {
+        const QVariant variant(qVariantFromValue(device));
+
+        if(vl->invalidationRequired(name, variant))
+            d->recompileRequired();
+
+        vl->addBinding(name, variant);
+
+        /* We need to tell the resource loader to discard its document, because
+         * the underlying QIODevice has changed, but the variable name is the
+         * same which means that the URI is the same, and hence the resource
+         * loader will return the document for the old QIODevice.
+         */
+        d->resourceLoader()->clear(QUrl(QLatin1String("tag:trolltech.com,2007:QtXmlPatterns:QIODeviceVariable:") + d->namePool.d->stringForLocalName(name.localName())));
+    }
+    else
+    {
+        vl->removeBinding(name);
+        d->recompileRequired();
+    }
 }
 
 /*!
@@ -528,7 +644,7 @@ void QXmlQuery::bindVariable(const QString &localName, QIODevice *device)
   does not take ownership of \a callback.
 
   If an error occurs during the evaluation, error messages are sent to
-  messageHandler() and false is returned.
+  messageHandler() and \c false is returned.
 
   If this query \l {isValid()} {is invalid}, \c{false} is returned
   and the behavior is undefined. If \a callback is null,
@@ -538,8 +654,11 @@ void QXmlQuery::bindVariable(const QString &localName, QIODevice *device)
  */
 bool QXmlQuery::evaluateTo(QAbstractXmlReceiver *callback) const
 {
-    Q_ASSERT_X(callback, Q_FUNC_INFO,
-               "A valid callback must be passed. Otherwise the result cannot be sent anywhere.");
+    if(!callback)
+    {
+        qWarning("A non-null callback must be passed.");
+        return false;
+    }
 
     if(isValid())
     {
@@ -586,7 +705,11 @@ bool QXmlQuery::evaluateTo(QAbstractXmlReceiver *callback) const
  */
 bool QXmlQuery::evaluateTo(QStringList *target) const
 {
-    Q_ASSERT_X(target, Q_FUNC_INFO, "The pointer to the QStringList cannot be null.");
+    if(!target)
+    {
+        qWarning("A non-null callback must be passed.");
+        return false;
+    }
 
     if(isValid())
     {
@@ -630,16 +753,55 @@ bool QXmlQuery::evaluateTo(QStringList *target) const
 }
 
 /*!
+  Evaluates the query or stylesheet, and writes the output to \a target.
+
+  QXmlSerializer is used to write the output to \a target. In a future
+  release, it is expected that this function will be changed to
+  respect serialization options set in the stylesheet.
+
+  If an error occurs during the evaluation, error messages are sent to
+  messageHandler() and \c false is returned.
+
+  If \a target is \c null, or is not opened in at least
+  QIODevice::WriteOnly mode, the behavior is undefined.  QXmlQuery
+  does not take ownership of \a target.
+
+  \since 4.5
+  \overload
+ */
+bool QXmlQuery::evaluateTo(QIODevice *target) const
+{
+    if(!target)
+    {
+        qWarning("The pointer to the device cannot be null.");
+        return false;
+    }
+
+    if(!target->isWritable())
+    {
+        qWarning("The device must be writable.");
+        return false;
+    }
+
+    QXmlSerializer serializer(*this, target);
+    return evaluateTo(&serializer);
+}
+
+/*!
   Starts the evaluation and makes it available in \a result.  If \a
   result is null, the behavior is undefined. The evaluation takes
   place incrementally (lazy evaluation), as the caller uses
-  QXmlResultItems::next() to get the enxt result.
+  QXmlResultItems::next() to get the next result.
 
   \sa QXmlResultItems::next()
 */
 void QXmlQuery::evaluateTo(QXmlResultItems *result) const
 {
-    Q_ASSERT_X(result, Q_FUNC_INFO, "A null pointer cannot be passed to QXmlQuery::evaluateTo.");
+    if(!result)
+    {
+        qWarning("A null pointer cannot be passed.");
+        return;
+    }
 
     if(isValid())
     {
@@ -666,6 +828,36 @@ void QXmlQuery::evaluateTo(QXmlResultItems *result) const
         result->d_ptr->iterator= QPatternist::CommonValues::emptyIterator;
         result->d_ptr->hasError = true;
     }
+}
+
+/*!
+  Evaluates the query, and serializes the output as XML to \a output.
+
+  If an error occurs during the evaluation, error messages are sent to
+  messageHandler(), the content of \a output is undefined and \c false is
+  returned, otherwise \c true is returned.
+
+  If \a output is \c null behavior is undefined. QXmlQuery
+  does not take ownership of \a output.
+
+  Internally, the class QXmlFormatter is used for this.
+ \since 4.5
+ */
+bool QXmlQuery::evaluateTo(QString *output) const
+{
+    Q_ASSERT_X(output, Q_FUNC_INFO,
+               "The input cannot be null");
+
+    QBuffer outputDevice;
+    outputDevice.open(QIODevice::ReadWrite);
+
+    QXmlFormatter formatter(*this, &outputDevice);
+    const bool success = evaluateTo(&formatter);
+
+    outputDevice.close();
+    *output = QString::fromUtf8(outputDevice.data().constData());
+
+    return success;
 }
 
 /*!
@@ -736,14 +928,244 @@ QXmlNamePool QXmlQuery::namePool() const
   The focus can be accessed using the context item expression, i.e.,
   dot (".").
 
-  By default, the focus is not set but is undefined. It will therefore
-  result in a dynamic error, \c{XPDY0002}, if the query is evaluated
-  without a focus. In fact, the focus must be set before the query is
-  set with setQuery().
+  By default, the focus is not set and is undefined. It will
+  therefore result in a dynamic error, \c XPDY0002, if the focus
+  is attempted to be accessed. The focus must be set before the
+  query is set with setQuery().
+
+  There is no behavior defined for setting an item which is null.
+
  */
 void QXmlQuery::setFocus(const QXmlItem &item)
 {
     d->contextItem = item;
+}
+
+/**
+ * This function should be a private member function of QXmlQuery,
+ * but we don't dare that due to our weird compilers. */
+template<typename TInputType>
+static bool setFocusHelper(QXmlQuery *const queryInstance,
+                           const TInputType &focusValue)
+{
+    /* We call resourceLoader(), so we have ensured that we have a resourceLoader
+     * that we will share in our copy. */
+    queryInstance->d->resourceLoader();
+
+    QXmlQuery focusQuery(*queryInstance);
+
+    /* The copy constructor doesn't allow us to copy an existing QXmlQuery and
+     * changing the language at the same time so we need to use private API. */
+    focusQuery.d->queryLanguage = QXmlQuery::XQuery10;
+
+    Q_ASSERT(focusQuery.queryLanguage() == QXmlQuery::XQuery10);
+    focusQuery.bindVariable(QChar::fromLatin1('u'), focusValue);
+    focusQuery.setQuery(QLatin1String("doc($u)"));
+    Q_ASSERT(focusQuery.isValid());
+
+    QXmlResultItems focusResult;
+
+    focusQuery.evaluateTo(&focusResult);
+    const QXmlItem focusItem(focusResult.next());
+
+    if(focusItem.isNull() || focusResult.hasError())
+        return false;
+    else
+    {
+        queryInstance->setFocus(focusItem);
+        return true;
+    }
+}
+
+/*!
+  \since 4.5
+  \overload
+
+  Sets the focus to be the document located at \a documentURI and
+  returns true. If \a documentURI cannot be loaded, false is returned.
+  It is undefined at what time the document may be loaded. When
+  loading the document, the message handler and URI resolver set on
+  this QXmlQuery are used.
+
+  If \a documentURI is empty or is not a valid URI, the behavior of
+  this function is undefined.
+ */
+bool QXmlQuery::setFocus(const QUrl &documentURI)
+{
+    Q_ASSERT_X(documentURI.isValid() && !documentURI.isEmpty(),
+               Q_FUNC_INFO,
+               "The URI passed must be valid.");
+
+    return setFocusHelper(this, QVariant(documentURI));
+}
+
+/*!
+
+  Sets the focus to be the \a document read from the QIODevice and
+  returns true. If \a document cannot be loaded, false is returned.
+
+  QXmlQuery does not take ownership of \a document. The user
+  guarantees that a document is available from the \a document device
+  and that the document is not empty. The device must be opened in at
+  least read-only mode. \a document must stay in scope as long as the
+  current query is active.
+
+ \since 4.5
+ \overload
+ */
+bool QXmlQuery::setFocus(QIODevice *document)
+{
+    if(!document)
+    {
+        qWarning("A null QIODevice pointer cannot be passed.");
+        return false;
+    }
+
+    if(!document->isReadable())
+    {
+        qWarning("The device must be readable.");
+        return false;
+    }
+
+    return setFocusHelper(this, document);
+}
+
+/*!
+  Returns a value indicating what this QXmlQuery is being used for.
+  The default is QXmlQuery::XQuery10, which means the QXmlQuery is
+  being used for running XQuery and XPath queries. QXmlQuery::XSLT20
+  can also be returned, which indicates the QXmlQuery is for running
+  XSL-T spreadsheets.
+
+ \since 4.5
+ */
+QXmlQuery::QueryLanguage QXmlQuery::queryLanguage() const
+{
+    return d->queryLanguage;
+}
+
+/*!
+  Sets the \a name of the initial template. The initial template is
+  the one the processor calls first, instead of attempting to match a
+  template to the context node (if any). If an initial template is not
+  set, the standard order of template invocation will be used.
+
+  This function only applies when using QXmlQuery to process XSL-T
+  stylesheets. The name becomes part of the compiled stylesheet.
+  Therefore, this function must be called before calling setQuery().
+
+  If the stylesheet has no template named \a name, the processor will
+  use the standard order of template invocation.
+
+  \since 4.5
+  \sa initialTemplateName()
+ */
+void QXmlQuery::setInitialTemplateName(const QXmlName &name)
+{
+    d->initialTemplateName = name;
+}
+
+/*!
+  \overload
+
+  Sets the name of the initial template to \a localName, which must be
+  a valid \l{QXmlName::localName()} {local name}. The initial template
+  is the one the processor calls first, instead of attempting to match
+  a template to the context node (if any). If an initial template is
+  not set, the standard order of template invocation will be used.
+
+  This function only applies when using QXmlQuery to process XSL-T
+  stylesheets. The name becomes part of the compiled stylesheet.
+  Therefore, this function must be called before calling setQuery().
+
+  If \a localName is not a valid \l{QXmlName::localName()} {local
+  name}, the effect is undefined. If the stylesheet has no template
+  named \a localName, the processor will use the standard order of
+  template invocation.
+
+  \since 4.5
+  \sa initialTemplateName()
+ */
+void QXmlQuery::setInitialTemplateName(const QString &localName)
+{
+    Q_ASSERT_X(QXmlName::isNCName(localName),
+               Q_FUNC_INFO,
+               "The name passed must be a valid NCName.");
+    setInitialTemplateName(QXmlName(d->namePool, localName));
+}
+
+/*!
+  Returns the name of the XSL-T stylesheet template that the processor
+  will call first when running an XSL-T stylesheet. This function only
+  applies when using QXmlQuery to process XSL-T stylesheets. By
+  default, no initial template is set. In that case, a default
+  constructed QXmlName is returned.
+
+  \since 4.5
+ */
+QXmlName QXmlQuery::initialTemplateName() const
+{
+    return d->initialTemplateName;
+}
+
+/*!
+  Sets the network manager to \a newManager.
+  QXmlQuery does not take ownership of \a newManager.
+
+  \sa networkAccessManager()
+  \since 4.5
+ */
+void QXmlQuery::setNetworkAccessManager(QNetworkAccessManager *newManager)
+{
+    d->m_networkAccessDelegator->m_genericManager = newManager;
+}
+
+/*!
+  Returns the network manager, or 0 if it has not been set.
+
+  \sa setNetworkAccessManager()
+  \since 4.5
+ */
+QNetworkAccessManager *QXmlQuery::networkAccessManager() const
+{
+    return d->m_networkAccessDelegator->m_genericManager;
+}
+
+/*!
+  Binds the result of the query \a query, to a variable by name \a name.
+
+  Evaluation of \a query will be commenced when this function is called.
+
+  If \a query is invalid, behavior is undefined. \a query will be copied.
+
+  \since 4.5
+  \sa isValid()
+ */
+void QXmlQuery::bindVariable(const QXmlName &name, const QXmlQuery &query)
+{
+    Q_ASSERT_X(query.isValid(), Q_FUNC_INFO, "The query being bound must be valid.");
+
+    const QPatternist::VariableLoader::Ptr vl(d->variableLoader());
+    const QVariant variant(qVariantFromValue(query));
+
+    if(vl->invalidationRequired(name, variant))
+        d->recompileRequired();
+
+    vl->addBinding(name, variant);
+}
+
+/*!
+ \overload
+
+ Has the same behavior and effects as the function being overloaded, but takes
+ the variable name \a localName as a QString. \a query is used as in the
+ overloaded function.
+
+  \since 4.5
+ */
+void QXmlQuery::bindVariable(const QString &localName, const QXmlQuery &query)
+{
+    return bindVariable(QXmlName(d->namePool, localName), query);
 }
 
 QT_END_NAMESPACE

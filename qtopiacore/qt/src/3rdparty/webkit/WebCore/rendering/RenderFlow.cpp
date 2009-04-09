@@ -47,7 +47,7 @@ RenderFlow::~RenderFlow()
 
 #endif
 
-RenderFlow* RenderFlow::createAnonymousFlow(Document* doc, RenderStyle* style)
+RenderFlow* RenderFlow::createAnonymousFlow(Document* doc, PassRefPtr<RenderStyle> style)
 {
     RenderFlow* result;
     if (style->display() == INLINE)
@@ -85,6 +85,16 @@ RenderFlow* RenderFlow::continuationBefore(RenderObject* beforeChild)
 
 void RenderFlow::addChildWithContinuation(RenderObject* newChild, RenderObject* beforeChild)
 {
+    if (beforeChild && (beforeChild->parent()->isTableRow() || beforeChild->parent()->isTableSection() || beforeChild->parent()->isTable())) {
+        RenderObject* anonymousTablePart = beforeChild->parent();
+        ASSERT(anonymousTablePart->isAnonymous());
+        while (!anonymousTablePart->isTable()) {
+            anonymousTablePart = anonymousTablePart->parent();
+            ASSERT(anonymousTablePart->isAnonymous());
+        }
+        return anonymousTablePart->addChild(newChild, beforeChild);
+    }
+
     RenderFlow* flow = continuationBefore(beforeChild);
     ASSERT(!beforeChild || beforeChild->parent()->isRenderBlock() ||
                 beforeChild->parent()->isRenderInline());
@@ -300,7 +310,7 @@ void RenderFlow::dirtyLinesFromChangedChild(RenderObject* child)
     }
 }
 
-short RenderFlow::lineHeight(bool firstLine, bool isRootLineBox) const
+int RenderFlow::lineHeight(bool firstLine, bool /*isRootLineBox*/) const
 {
     if (firstLine) {
         RenderStyle* s = style(firstLine);
@@ -336,7 +346,7 @@ void RenderFlow::dirtyLineBoxes(bool fullLayout, bool isRootLineBox)
     }
 }
 
-InlineBox* RenderFlow::createInlineBox(bool makePlaceHolderBox, bool isRootLineBox, bool isOnlyRun)
+InlineBox* RenderFlow::createInlineBox(bool makePlaceHolderBox, bool isRootLineBox, bool /*isOnlyRun*/)
 {
     checkConsistency();
 
@@ -367,7 +377,8 @@ void RenderFlow::paintLines(PaintInfo& paintInfo, int tx, int ty)
 {
     // Only paint during the foreground/selection phases.
     if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection && paintInfo.phase != PaintPhaseOutline 
-        && paintInfo.phase != PaintPhaseSelfOutline && paintInfo.phase != PaintPhaseChildOutlines)
+        && paintInfo.phase != PaintPhaseSelfOutline && paintInfo.phase != PaintPhaseChildOutlines && paintInfo.phase != PaintPhaseTextClip
+        && paintInfo.phase != PaintPhaseMask)
         return;
 
     bool inlineFlow = isInlineFlow();
@@ -511,7 +522,7 @@ IntRect RenderFlow::absoluteClippedOverflowRect()
             int x = r.x();
             int y = r.y();
             IntRect boxRect(0, 0, cb->layer()->width(), cb->layer()->height());
-            cb->layer()->subtractScrollOffset(x, y); // For overflow:auto/scroll/hidden.
+            cb->layer()->subtractScrolledContentOffset(x, y); // For overflow:auto/scroll/hidden.
             IntRect repaintRect(x, y, r.width(), r.height());
             r = intersection(repaintRect, boxRect);
         }
@@ -540,7 +551,7 @@ IntRect RenderFlow::absoluteClippedOverflowRect()
 int RenderFlow::lowestPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    if (!includeOverflowInterior && hasOverflowClip())
+    if (!includeOverflowInterior && (hasOverflowClip() || hasControlClip()))
         return includeSelf && m_width > 0 ? overflowHeight(false) : 0;
 
     int bottom = includeSelf && m_width > 0 ? m_height : 0;
@@ -564,7 +575,7 @@ int RenderFlow::lowestPosition(bool includeOverflowInterior, bool includeSelf) c
 int RenderFlow::rightmostPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    if (!includeOverflowInterior && hasOverflowClip())
+    if (!includeOverflowInterior && (hasOverflowClip() || hasControlClip()))
         return includeSelf && m_height > 0 ? overflowWidth(false) : 0;
 
     int right = includeSelf && m_height > 0 ? m_width : 0;
@@ -588,7 +599,7 @@ int RenderFlow::rightmostPosition(bool includeOverflowInterior, bool includeSelf
 int RenderFlow::leftmostPosition(bool includeOverflowInterior, bool includeSelf) const
 {
     ASSERT(!isInlineFlow());
-    if (!includeOverflowInterior && hasOverflowClip())
+    if (!includeOverflowInterior && (hasOverflowClip() || hasControlClip()))
         return includeSelf && m_height > 0 ? overflowLeft(false) : m_width;
 
     int left = includeSelf && m_height > 0 ? 0 : m_width;
@@ -609,11 +620,11 @@ int RenderFlow::leftmostPosition(bool includeOverflowInterior, bool includeSelf)
     return left;
 }
 
-IntRect RenderFlow::caretRect(int offset, EAffinity affinity, int* extraWidthToEndOfLine)
+IntRect RenderFlow::localCaretRect(InlineBox* inlineBox, int caretOffset, int* extraWidthToEndOfLine)
 {
     // Do the normal calculation in most cases.
     if (firstChild() || style()->display() == INLINE)
-        return RenderContainer::caretRect(offset, affinity, extraWidthToEndOfLine);
+        return RenderContainer::localCaretRect(inlineBox, caretOffset, extraWidthToEndOfLine);
 
     // This is a special case:
     // The element is not an inline element, and it's empty. So we have to
@@ -673,20 +684,17 @@ IntRect RenderFlow::caretRect(int offset, EAffinity affinity, int* extraWidthToE
             // So *extraWidthToEndOfLine will always be 0 here.
 
             int myRight = x + caretWidth;
-            int ignore;
-            absolutePositionForContent(myRight, ignore);
+            // FIXME: why call localToAbsoluteForContent() twice here, too?
+            FloatPoint absRightPoint = localToAbsoluteForContent(FloatPoint(myRight, 0));
 
             int containerRight = containingBlock()->xPos() + containingBlockWidth();
-            absolutePositionForContent(containerRight, ignore);
+            FloatPoint absContainerPoint = localToAbsoluteForContent(FloatPoint(containerRight, 0));
 
-            *extraWidthToEndOfLine = containerRight - myRight;
+            *extraWidthToEndOfLine = absContainerPoint.x() - absRightPoint.x();
         }
     }
 
-    int absx, absy;
-    absolutePositionForContent(absx, absy);
-    x += absx;
-    int y = absy + paddingTop() + borderTop();
+    int y = paddingTop() + borderTop();
 
     return IntRect(x, y, caretWidth, height);
 }
@@ -712,15 +720,13 @@ void RenderFlow::addFocusRingRects(GraphicsContext* graphicsContext, int tx, int
 
         for (RenderObject* curr = firstChild(); curr; curr = curr->nextSibling())
             if (!curr->isText() && !curr->isListMarker()) {
-                int x = 0;
-                int y = 0;
+                FloatPoint pos;
+                // FIXME: This doesn't work correctly with transforms.
                 if (curr->layer()) 
-                    curr->absolutePosition(x, y);
-                else {
-                    x = tx + curr->xPos();
-                    y = ty + curr->yPos();
-                }
-                curr->addFocusRingRects(graphicsContext, x, y);
+                    pos = curr->localToAbsolute();
+                else
+                    pos = FloatPoint(tx + curr->xPos(), ty + curr->yPos());
+                curr->addFocusRingRects(graphicsContext, pos.x(), pos.y());
             }
     }
 
@@ -756,20 +762,19 @@ void RenderFlow::paintOutline(GraphicsContext* graphicsContext, int tx, int ty)
         graphicsContext->clearFocusRing();
     }
 
-    if (style()->outlineStyleIsAuto() || style()->outlineStyle() <= BHIDDEN)
+    if (style()->outlineStyleIsAuto() || style()->outlineStyle() == BNONE)
         return;
 
-    Vector<IntRect*> rects;
+    Vector<IntRect> rects;
 
-    rects.append(new IntRect);
+    rects.append(IntRect());
     for (InlineRunBox* curr = firstLineBox(); curr; curr = curr->nextLineBox())
-        rects.append(new IntRect(curr->xPos(), curr->yPos(), curr->width(), curr->height()));
+        rects.append(IntRect(curr->xPos(), curr->yPos(), curr->width(), curr->height()));
 
-    rects.append(new IntRect);
+    rects.append(IntRect());
 
     for (unsigned i = 1; i < rects.size() - 1; i++)
-        paintOutlineForLine(graphicsContext, tx, ty, *rects.at(i - 1), *rects.at(i), *rects.at(i + 1));
-    deleteAllValues(rects);
+        paintOutlineForLine(graphicsContext, tx, ty, rects.at(i - 1), rects.at(i), rects.at(i + 1));
 }
 
 void RenderFlow::paintOutlineForLine(GraphicsContext* graphicsContext, int tx, int ty,
@@ -850,6 +855,12 @@ void RenderFlow::paintOutlineForLine(GraphicsContext* graphicsContext, int tx, i
                    BSBottom, oc, style()->color(), os,
                    (!nextline.isEmpty() && l - ow < tx + nextline.right()) ? -ow : ow,
                    ow);
+}
+
+void RenderFlow::calcMargins(int containerWidth)
+{
+    m_marginLeft = style()->marginLeft().calcMinValue(containerWidth);
+    m_marginRight = style()->marginRight().calcMinValue(containerWidth);
 }
 
 #ifndef NDEBUG

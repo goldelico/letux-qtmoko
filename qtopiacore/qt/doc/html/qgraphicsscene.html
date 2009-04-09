@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/gui/graphicsview/qgraphicsscene.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/graphicsview/qgraphicsscene.cpp -->
 <head>
-  <title>Qt 4.4: QGraphicsScene Class Reference</title>
+  <title>Qt 4.5: QGraphicsScene Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QGraphicsScene Class Reference<br /><span class="small-subtitle">[<a href="qtgui.html">QtGui</a> module]</span>
 </h1>
@@ -23,158 +23,164 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qgraphicsscene.html#ItemIndexMethod-enum">ItemIndexMethod</a></b> { BspTreeIndex, NoIndex }</li>
-<li><div class="fn"/>enum <b><a href="qgraphicsscene.html#SceneLayer-enum">SceneLayer</a></b> { ItemLayer, BackgroundLayer, ForegroundLayer, AllLayers }</li>
-<li><div class="fn"/>flags <b><a href="qgraphicsscene.html#SceneLayer-enum">SceneLayers</a></b></li>
+<li><div class="fn"></div>enum <b><a href="qgraphicsscene.html#ItemIndexMethod-enum">ItemIndexMethod</a></b> { BspTreeIndex, NoIndex }</li>
+<li><div class="fn"></div>enum <b><a href="qgraphicsscene.html#SceneLayer-enum">SceneLayer</a></b> { ItemLayer, BackgroundLayer, ForegroundLayer, AllLayers }</li>
+<li><div class="fn"></div>flags <b><a href="qgraphicsscene.html#SceneLayer-enum">SceneLayers</a></b></li>
 </ul>
 <a name="properties"></a>
 <h3>Properties</h3>
 <p><table width="100%" border="0" cellpadding="0" cellspacing="0">
 <tr><td width="45%" valign="top"><ul>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#backgroundBrush-prop">backgroundBrush</a></b> : QBrush</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#bspTreeDepth-prop">bspTreeDepth</a></b> : int</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#font-prop">font</a></b> : QFont</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#foregroundBrush-prop">foregroundBrush</a></b> : QBrush</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#backgroundBrush-prop">backgroundBrush</a></b> : QBrush</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#bspTreeDepth-prop">bspTreeDepth</a></b> : int</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#font-prop">font</a></b> : QFont</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#foregroundBrush-prop">foregroundBrush</a></b> : QBrush</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#itemIndexMethod-prop">itemIndexMethod</a></b> : ItemIndexMethod</li>
 </ul></td><td valign="top"><ul>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#itemIndexMethod-prop">itemIndexMethod</a></b> : ItemIndexMethod</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#palette-prop">palette</a></b> : QPalette</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#sceneRect-prop">sceneRect</a></b> : QRectF</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#palette-prop">palette</a></b> : QPalette</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#sceneRect-prop">sceneRect</a></b> : QRectF</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#sortCacheEnabled-prop">sortCacheEnabled</a></b> : bool</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#stickyFocus-prop">stickyFocus</a></b> : bool</li>
 </ul>
 </td></tr>
 </table></p>
 <ul>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#QGraphicsScene">QGraphicsScene</a></b> ( QObject * <i>parent</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#QGraphicsScene-2">QGraphicsScene</a></b> ( const QRectF &amp; <i>sceneRect</i>, QObject * <i>parent</i> = 0 )</li>
-<li><div class="fn"/><b><a href="qgraphicsscene.html#QGraphicsScene-3">QGraphicsScene</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>width</i>, qreal <i>height</i>, QObject * <i>parent</i> = 0 )</li>
-<li><div class="fn"/>virtual <b><a href="qgraphicsscene.html#dtor.QGraphicsScene">~QGraphicsScene</a></b> ()</li>
-<li><div class="fn"/>QGraphicsWidget * <b><a href="qgraphicsscene.html#activeWindow">activeWindow</a></b> () const</li>
-<li><div class="fn"/>QGraphicsEllipseItem * <b><a href="qgraphicsscene.html#addEllipse">addEllipse</a></b> ( const QRectF &amp; <i>rect</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>QGraphicsEllipseItem * <b><a href="qgraphicsscene.html#addEllipse-2">addEllipse</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#addItem">addItem</a></b> ( QGraphicsItem * <i>item</i> )</li>
-<li><div class="fn"/>QGraphicsLineItem * <b><a href="qgraphicsscene.html#addLine">addLine</a></b> ( const QLineF &amp; <i>line</i>, const QPen &amp; <i>pen</i> = QPen() )</li>
-<li><div class="fn"/>QGraphicsLineItem * <b><a href="qgraphicsscene.html#addLine-2">addLine</a></b> ( qreal <i>x1</i>, qreal <i>y1</i>, qreal <i>x2</i>, qreal <i>y2</i>, const QPen &amp; <i>pen</i> = QPen() )</li>
-<li><div class="fn"/>QGraphicsPathItem * <b><a href="qgraphicsscene.html#addPath">addPath</a></b> ( const QPainterPath &amp; <i>path</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>QGraphicsPixmapItem * <b><a href="qgraphicsscene.html#addPixmap">addPixmap</a></b> ( const QPixmap &amp; <i>pixmap</i> )</li>
-<li><div class="fn"/>QGraphicsPolygonItem * <b><a href="qgraphicsscene.html#addPolygon">addPolygon</a></b> ( const QPolygonF &amp; <i>polygon</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>QGraphicsRectItem * <b><a href="qgraphicsscene.html#addRect">addRect</a></b> ( const QRectF &amp; <i>rect</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>QGraphicsRectItem * <b><a href="qgraphicsscene.html#addRect-2">addRect</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
-<li><div class="fn"/>QGraphicsSimpleTextItem * <b><a href="qgraphicsscene.html#addSimpleText">addSimpleText</a></b> ( const QString &amp; <i>text</i>, const QFont &amp; <i>font</i> = QFont() )</li>
-<li><div class="fn"/>QGraphicsTextItem * <b><a href="qgraphicsscene.html#addText">addText</a></b> ( const QString &amp; <i>text</i>, const QFont &amp; <i>font</i> = QFont() )</li>
-<li><div class="fn"/>QGraphicsProxyWidget * <b><a href="qgraphicsscene.html#addWidget">addWidget</a></b> ( QWidget * <i>widget</i>, Qt::WindowFlags <i>wFlags</i> = 0 )</li>
-<li><div class="fn"/>QBrush <b><a href="qgraphicsscene.html#backgroundBrush-prop">backgroundBrush</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qgraphicsscene.html#bspTreeDepth-prop">bspTreeDepth</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#clearFocus">clearFocus</a></b> ()</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#collidingItems">collidingItems</a></b> ( const QGraphicsItem * <i>item</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
-<li><div class="fn"/>QGraphicsItemGroup * <b><a href="qgraphicsscene.html#createItemGroup">createItemGroup</a></b> ( const QList&lt;QGraphicsItem *&gt; &amp; <i>items</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#destroyItemGroup">destroyItemGroup</a></b> ( QGraphicsItemGroup * <i>group</i> )</li>
-<li><div class="fn"/>QGraphicsItem * <b><a href="qgraphicsscene.html#focusItem">focusItem</a></b> () const</li>
-<li><div class="fn"/>QFont <b><a href="qgraphicsscene.html#font-prop">font</a></b> () const</li>
-<li><div class="fn"/>QBrush <b><a href="qgraphicsscene.html#foregroundBrush-prop">foregroundBrush</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qgraphicsscene.html#hasFocus">hasFocus</a></b> () const</li>
-<li><div class="fn"/>qreal <b><a href="qgraphicsscene.html#height">height</a></b> () const</li>
-<li><div class="fn"/>virtual QVariant <b><a href="qgraphicsscene.html#inputMethodQuery">inputMethodQuery</a></b> ( Qt::InputMethodQuery <i>query</i> ) const</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#invalidate-2">invalidate</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, SceneLayers <i>layers</i> = AllLayers )</li>
-<li><div class="fn"/>QGraphicsItem * <b><a href="qgraphicsscene.html#itemAt">itemAt</a></b> ( const QPointF &amp; <i>position</i> ) const</li>
-<li><div class="fn"/>QGraphicsItem * <b><a href="qgraphicsscene.html#itemAt-2">itemAt</a></b> ( qreal <i>x</i>, qreal <i>y</i> ) const</li>
-<li><div class="fn"/>ItemIndexMethod <b><a href="qgraphicsscene.html#itemIndexMethod-prop">itemIndexMethod</a></b> () const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items">items</a></b> () const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-2">items</a></b> ( const QPointF &amp; <i>pos</i> ) const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-3">items</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-4">items</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-5">items</a></b> ( const QPolygonF &amp; <i>polygon</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-6">items</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
-<li><div class="fn"/>QRectF <b><a href="qgraphicsscene.html#itemsBoundingRect">itemsBoundingRect</a></b> () const</li>
-<li><div class="fn"/>QGraphicsItem * <b><a href="qgraphicsscene.html#mouseGrabberItem">mouseGrabberItem</a></b> () const</li>
-<li><div class="fn"/>QPalette <b><a href="qgraphicsscene.html#palette-prop">palette</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#removeItem">removeItem</a></b> ( QGraphicsItem * <i>item</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#render">render</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>target</i> = QRectF(), const QRectF &amp; <i>source</i> = QRectF(), Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::KeepAspectRatio )</li>
-<li><div class="fn"/>QRectF <b><a href="qgraphicsscene.html#sceneRect-prop">sceneRect</a></b> () const</li>
-<li><div class="fn"/>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#selectedItems">selectedItems</a></b> () const</li>
-<li><div class="fn"/>QPainterPath <b><a href="qgraphicsscene.html#selectionArea">selectionArea</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setActiveWindow">setActiveWindow</a></b> ( QGraphicsWidget * <i>widget</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#backgroundBrush-prop">setBackgroundBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#bspTreeDepth-prop">setBspTreeDepth</a></b> ( int <i>depth</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setFocus">setFocus</a></b> ( Qt::FocusReason <i>focusReason</i> = Qt::OtherFocusReason )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setFocusItem">setFocusItem</a></b> ( QGraphicsItem * <i>item</i>, Qt::FocusReason <i>focusReason</i> = Qt::OtherFocusReason )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#font-prop">setFont</a></b> ( const QFont &amp; <i>font</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#foregroundBrush-prop">setForegroundBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#itemIndexMethod-prop">setItemIndexMethod</a></b> ( ItemIndexMethod <i>method</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#palette-prop">setPalette</a></b> ( const QPalette &amp; <i>palette</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#sceneRect-prop">setSceneRect</a></b> ( const QRectF &amp; <i>rect</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#sceneRect-prop">setSceneRect</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setSelectionArea">setSelectionArea</a></b> ( const QPainterPath &amp; <i>path</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setSelectionArea-2">setSelectionArea</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ItemSelectionMode <i>mode</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#setStyle">setStyle</a></b> ( QStyle * <i>style</i> )</li>
-<li><div class="fn"/>QStyle * <b><a href="qgraphicsscene.html#style">style</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#update-2">update</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</li>
-<li><div class="fn"/>QList&lt;QGraphicsView *&gt; <b><a href="qgraphicsscene.html#views">views</a></b> () const</li>
-<li><div class="fn"/>qreal <b><a href="qgraphicsscene.html#width">width</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#QGraphicsScene">QGraphicsScene</a></b> ( QObject * <i>parent</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#QGraphicsScene-2">QGraphicsScene</a></b> ( const QRectF &amp; <i>sceneRect</i>, QObject * <i>parent</i> = 0 )</li>
+<li><div class="fn"></div><b><a href="qgraphicsscene.html#QGraphicsScene-3">QGraphicsScene</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>width</i>, qreal <i>height</i>, QObject * <i>parent</i> = 0 )</li>
+<li><div class="fn"></div>virtual <b><a href="qgraphicsscene.html#dtor.QGraphicsScene">~QGraphicsScene</a></b> ()</li>
+<li><div class="fn"></div>QGraphicsWidget * <b><a href="qgraphicsscene.html#activeWindow">activeWindow</a></b> () const</li>
+<li><div class="fn"></div>QGraphicsEllipseItem * <b><a href="qgraphicsscene.html#addEllipse">addEllipse</a></b> ( const QRectF &amp; <i>rect</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>QGraphicsEllipseItem * <b><a href="qgraphicsscene.html#addEllipse-2">addEllipse</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#addItem">addItem</a></b> ( QGraphicsItem * <i>item</i> )</li>
+<li><div class="fn"></div>QGraphicsLineItem * <b><a href="qgraphicsscene.html#addLine">addLine</a></b> ( const QLineF &amp; <i>line</i>, const QPen &amp; <i>pen</i> = QPen() )</li>
+<li><div class="fn"></div>QGraphicsLineItem * <b><a href="qgraphicsscene.html#addLine-2">addLine</a></b> ( qreal <i>x1</i>, qreal <i>y1</i>, qreal <i>x2</i>, qreal <i>y2</i>, const QPen &amp; <i>pen</i> = QPen() )</li>
+<li><div class="fn"></div>QGraphicsPathItem * <b><a href="qgraphicsscene.html#addPath">addPath</a></b> ( const QPainterPath &amp; <i>path</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>QGraphicsPixmapItem * <b><a href="qgraphicsscene.html#addPixmap">addPixmap</a></b> ( const QPixmap &amp; <i>pixmap</i> )</li>
+<li><div class="fn"></div>QGraphicsPolygonItem * <b><a href="qgraphicsscene.html#addPolygon">addPolygon</a></b> ( const QPolygonF &amp; <i>polygon</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>QGraphicsRectItem * <b><a href="qgraphicsscene.html#addRect">addRect</a></b> ( const QRectF &amp; <i>rect</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>QGraphicsRectItem * <b><a href="qgraphicsscene.html#addRect-2">addRect</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, const QPen &amp; <i>pen</i> = QPen(), const QBrush &amp; <i>brush</i> = QBrush() )</li>
+<li><div class="fn"></div>QGraphicsSimpleTextItem * <b><a href="qgraphicsscene.html#addSimpleText">addSimpleText</a></b> ( const QString &amp; <i>text</i>, const QFont &amp; <i>font</i> = QFont() )</li>
+<li><div class="fn"></div>QGraphicsTextItem * <b><a href="qgraphicsscene.html#addText">addText</a></b> ( const QString &amp; <i>text</i>, const QFont &amp; <i>font</i> = QFont() )</li>
+<li><div class="fn"></div>QGraphicsProxyWidget * <b><a href="qgraphicsscene.html#addWidget">addWidget</a></b> ( QWidget * <i>widget</i>, Qt::WindowFlags <i>wFlags</i> = 0 )</li>
+<li><div class="fn"></div>QBrush <b><a href="qgraphicsscene.html#backgroundBrush-prop">backgroundBrush</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qgraphicsscene.html#bspTreeDepth-prop">bspTreeDepth</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#clearFocus">clearFocus</a></b> ()</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#collidingItems">collidingItems</a></b> ( const QGraphicsItem * <i>item</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
+<li><div class="fn"></div>QGraphicsItemGroup * <b><a href="qgraphicsscene.html#createItemGroup">createItemGroup</a></b> ( const QList&lt;QGraphicsItem *&gt; &amp; <i>items</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#destroyItemGroup">destroyItemGroup</a></b> ( QGraphicsItemGroup * <i>group</i> )</li>
+<li><div class="fn"></div>QGraphicsItem * <b><a href="qgraphicsscene.html#focusItem">focusItem</a></b> () const</li>
+<li><div class="fn"></div>QFont <b><a href="qgraphicsscene.html#font-prop">font</a></b> () const</li>
+<li><div class="fn"></div>QBrush <b><a href="qgraphicsscene.html#foregroundBrush-prop">foregroundBrush</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qgraphicsscene.html#hasFocus">hasFocus</a></b> () const</li>
+<li><div class="fn"></div>qreal <b><a href="qgraphicsscene.html#height">height</a></b> () const</li>
+<li><div class="fn"></div>virtual QVariant <b><a href="qgraphicsscene.html#inputMethodQuery">inputMethodQuery</a></b> ( Qt::InputMethodQuery <i>query</i> ) const</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#invalidate-2">invalidate</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, SceneLayers <i>layers</i> = AllLayers )</li>
+<li><div class="fn"></div>bool <b><a href="qgraphicsscene.html#sortCacheEnabled-prop">isSortCacheEnabled</a></b> () const</li>
+<li><div class="fn"></div>QGraphicsItem * <b><a href="qgraphicsscene.html#itemAt">itemAt</a></b> ( const QPointF &amp; <i>position</i> ) const</li>
+<li><div class="fn"></div>QGraphicsItem * <b><a href="qgraphicsscene.html#itemAt-2">itemAt</a></b> ( qreal <i>x</i>, qreal <i>y</i> ) const</li>
+<li><div class="fn"></div>ItemIndexMethod <b><a href="qgraphicsscene.html#itemIndexMethod-prop">itemIndexMethod</a></b> () const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items">items</a></b> () const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-2">items</a></b> ( const QPointF &amp; <i>pos</i> ) const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-3">items</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-4">items</a></b> ( const QRectF &amp; <i>rectangle</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-5">items</a></b> ( const QPolygonF &amp; <i>polygon</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#items-6">items</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ItemSelectionMode <i>mode</i> = Qt::IntersectsItemShape ) const</li>
+<li><div class="fn"></div>QRectF <b><a href="qgraphicsscene.html#itemsBoundingRect">itemsBoundingRect</a></b> () const</li>
+<li><div class="fn"></div>QGraphicsItem * <b><a href="qgraphicsscene.html#mouseGrabberItem">mouseGrabberItem</a></b> () const</li>
+<li><div class="fn"></div>QPalette <b><a href="qgraphicsscene.html#palette-prop">palette</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#removeItem">removeItem</a></b> ( QGraphicsItem * <i>item</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#render">render</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>target</i> = QRectF(), const QRectF &amp; <i>source</i> = QRectF(), Qt::AspectRatioMode <i>aspectRatioMode</i> = Qt::KeepAspectRatio )</li>
+<li><div class="fn"></div>QRectF <b><a href="qgraphicsscene.html#sceneRect-prop">sceneRect</a></b> () const</li>
+<li><div class="fn"></div>QList&lt;QGraphicsItem *&gt; <b><a href="qgraphicsscene.html#selectedItems">selectedItems</a></b> () const</li>
+<li><div class="fn"></div>QPainterPath <b><a href="qgraphicsscene.html#selectionArea">selectionArea</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setActiveWindow">setActiveWindow</a></b> ( QGraphicsWidget * <i>widget</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#backgroundBrush-prop">setBackgroundBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#bspTreeDepth-prop">setBspTreeDepth</a></b> ( int <i>depth</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setFocus">setFocus</a></b> ( Qt::FocusReason <i>focusReason</i> = Qt::OtherFocusReason )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setFocusItem">setFocusItem</a></b> ( QGraphicsItem * <i>item</i>, Qt::FocusReason <i>focusReason</i> = Qt::OtherFocusReason )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#font-prop">setFont</a></b> ( const QFont &amp; <i>font</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#foregroundBrush-prop">setForegroundBrush</a></b> ( const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#itemIndexMethod-prop">setItemIndexMethod</a></b> ( ItemIndexMethod <i>method</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#palette-prop">setPalette</a></b> ( const QPalette &amp; <i>palette</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#sceneRect-prop">setSceneRect</a></b> ( const QRectF &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#sceneRect-prop">setSceneRect</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setSelectionArea">setSelectionArea</a></b> ( const QPainterPath &amp; <i>path</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setSelectionArea-2">setSelectionArea</a></b> ( const QPainterPath &amp; <i>path</i>, Qt::ItemSelectionMode <i>mode</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#sortCacheEnabled-prop">setSortCacheEnabled</a></b> ( bool <i>enabled</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#stickyFocus-prop">setStickyFocus</a></b> ( bool <i>enabled</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#setStyle">setStyle</a></b> ( QStyle * <i>style</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qgraphicsscene.html#stickyFocus-prop">stickyFocus</a></b> () const</li>
+<li><div class="fn"></div>QStyle * <b><a href="qgraphicsscene.html#style">style</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#update-2">update</a></b> ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</li>
+<li><div class="fn"></div>QList&lt;QGraphicsView *&gt; <b><a href="qgraphicsscene.html#views">views</a></b> () const</li>
+<li><div class="fn"></div>qreal <b><a href="qgraphicsscene.html#width">width</a></b> () const</li>
 </ul>
 <ul>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#advance">advance</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#clear">clear</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#clearSelection">clearSelection</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#invalidate">invalidate</a></b> ( const QRectF &amp; <i>rect</i> = QRectF(), SceneLayers <i>layers</i> = AllLayers )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#update">update</a></b> ( const QRectF &amp; <i>rect</i> = QRectF() )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#advance">advance</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#clear">clear</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#clearSelection">clearSelection</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#invalidate">invalidate</a></b> ( const QRectF &amp; <i>rect</i> = QRectF(), SceneLayers <i>layers</i> = AllLayers )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#update">update</a></b> ( const QRectF &amp; <i>rect</i> = QRectF() )</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#changed">changed</a></b> ( const QList&lt;QRectF&gt; &amp; <i>region</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#sceneRectChanged">sceneRectChanged</a></b> ( const QRectF &amp; <i>rect</i> )</li>
-<li><div class="fn"/>void <b><a href="qgraphicsscene.html#selectionChanged">selectionChanged</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#changed">changed</a></b> ( const QList&lt;QRectF&gt; &amp; <i>region</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#sceneRectChanged">sceneRectChanged</a></b> ( const QRectF &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>void <b><a href="qgraphicsscene.html#selectionChanged">selectionChanged</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
 <ul>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#contextMenuEvent">contextMenuEvent</a></b> ( QGraphicsSceneContextMenuEvent * <i>contextMenuEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#dragEnterEvent">dragEnterEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#dragLeaveEvent">dragLeaveEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#dragMoveEvent">dragMoveEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#drawBackground">drawBackground</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>rect</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#drawForeground">drawForeground</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>rect</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#drawItems">drawItems</a></b> ( QPainter * <i>painter</i>, int <i>numItems</i>, QGraphicsItem *[] <i>items</i>, const QStyleOptionGraphicsItem[] <i>options</i>, QWidget * <i>widget</i> = 0 )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#dropEvent">dropEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual bool <b><a href="qgraphicsscene.html#event">event</a></b> ( QEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#focusInEvent">focusInEvent</a></b> ( QFocusEvent * <i>focusEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#focusOutEvent">focusOutEvent</a></b> ( QFocusEvent * <i>focusEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#helpEvent">helpEvent</a></b> ( QGraphicsSceneHelpEvent * <i>helpEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#inputMethodEvent">inputMethodEvent</a></b> ( QInputMethodEvent * <i>event</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#keyPressEvent">keyPressEvent</a></b> ( QKeyEvent * <i>keyEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#keyReleaseEvent">keyReleaseEvent</a></b> ( QKeyEvent * <i>keyEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#mouseDoubleClickEvent">mouseDoubleClickEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#mouseMoveEvent">mouseMoveEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#mousePressEvent">mousePressEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#mouseReleaseEvent">mouseReleaseEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qgraphicsscene.html#wheelEvent">wheelEvent</a></b> ( QGraphicsSceneWheelEvent * <i>wheelEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#contextMenuEvent">contextMenuEvent</a></b> ( QGraphicsSceneContextMenuEvent * <i>contextMenuEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#dragEnterEvent">dragEnterEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#dragLeaveEvent">dragLeaveEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#dragMoveEvent">dragMoveEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#drawBackground">drawBackground</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#drawForeground">drawForeground</a></b> ( QPainter * <i>painter</i>, const QRectF &amp; <i>rect</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#drawItems">drawItems</a></b> ( QPainter * <i>painter</i>, int <i>numItems</i>, QGraphicsItem *[] <i>items</i>, const QStyleOptionGraphicsItem[] <i>options</i>, QWidget * <i>widget</i> = 0 )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#dropEvent">dropEvent</a></b> ( QGraphicsSceneDragDropEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qgraphicsscene.html#event">event</a></b> ( QEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#focusInEvent">focusInEvent</a></b> ( QFocusEvent * <i>focusEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#focusOutEvent">focusOutEvent</a></b> ( QFocusEvent * <i>focusEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#helpEvent">helpEvent</a></b> ( QGraphicsSceneHelpEvent * <i>helpEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#inputMethodEvent">inputMethodEvent</a></b> ( QInputMethodEvent * <i>event</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#keyPressEvent">keyPressEvent</a></b> ( QKeyEvent * <i>keyEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#keyReleaseEvent">keyReleaseEvent</a></b> ( QKeyEvent * <i>keyEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#mouseDoubleClickEvent">mouseDoubleClickEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#mouseMoveEvent">mouseMoveEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#mousePressEvent">mousePressEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#mouseReleaseEvent">mouseReleaseEvent</a></b> ( QGraphicsSceneMouseEvent * <i>mouseEvent</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qgraphicsscene.html#wheelEvent">wheelEvent</a></b> ( QGraphicsSceneWheelEvent * <i>wheelEvent</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 </ul>
 <a name="protected-slots"></a>
 <h3>Protected Slots</h3>
 <ul>
-<li><div class="fn"/>bool <b><a href="qgraphicsscene.html#focusNextPrevChild">focusNextPrevChild</a></b> ( bool <i>next</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qgraphicsscene.html#focusNextPrevChild">focusNextPrevChild</a></b> ( bool <i>next</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -245,8 +251,8 @@
 <p><a href="qgraphicsscene.html#render">QGraphicsScene::render</a>() calls <a href="qgraphicsscene.html#drawBackground">drawBackground</a>() to draw the scene background. For more detailed control over how the background is drawn, you can reimplement <a href="qgraphicsscene.html#drawBackground">drawBackground</a>() in a subclass of <a href="qgraphicsscene.html">QGraphicsScene</a>.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QBrush backgroundBrush () const</b></li>
-<li><div class="fn"/><b>void setBackgroundBrush ( const QBrush &amp; <i>brush</i> )</b></li>
+<li><div class="fn"></div><b>QBrush backgroundBrush () const</b></li>
+<li><div class="fn"></div><b>void setBackgroundBrush ( const QBrush &amp; <i>brush</i> )</b></li>
 </ul>
 <h3 class="fn"><a name="bspTreeDepth-prop"></a>bspTreeDepth : int</h3>
 <p>This property holds the depth of QGraphicsScene's BSP index tree.</p>
@@ -259,8 +265,8 @@
 <p>This property was introduced in Qt 4.3.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>int bspTreeDepth () const</b></li>
-<li><div class="fn"/><b>void setBspTreeDepth ( int <i>depth</i> )</b></li>
+<li><div class="fn"></div><b>int bspTreeDepth () const</b></li>
+<li><div class="fn"></div><b>void setBspTreeDepth ( int <i>depth</i> )</b></li>
 </ul>
 <p>See also <a href="qgraphicsscene.html#itemIndexMethod-prop">itemIndexMethod</a>.</p>
 <h3 class="fn"><a name="font-prop"></a>font : <a href="qfont.html">QFont</a></h3>
@@ -271,8 +277,8 @@
 <p>This property was introduced in Qt 4.4.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QFont font () const</b></li>
-<li><div class="fn"/><b>void setFont ( const QFont &amp; <i>font</i> )</b></li>
+<li><div class="fn"></div><b>QFont font () const</b></li>
+<li><div class="fn"></div><b>void setFont ( const QFont &amp; <i>font</i> )</b></li>
 </ul>
 <p>See also <a href="qwidget.html#font-prop">QWidget::font</a>, <a href="qapplication.html#setFont">QApplication::setFont</a>(), <a href="qgraphicsscene.html#palette-prop">palette</a>, and <a href="qgraphicsscene.html#style">style</a>().</p>
 <h3 class="fn"><a name="foregroundBrush-prop"></a>foregroundBrush : <a href="qbrush.html">QBrush</a></h3>
@@ -292,8 +298,8 @@
 <p><a href="qgraphicsscene.html#render">QGraphicsScene::render</a>() calls <a href="qgraphicsscene.html#drawForeground">drawForeground</a>() to draw the scene foreground. For more detailed control over how the foreground is drawn, you can reimplement the <a href="qgraphicsscene.html#drawForeground">drawForeground</a>() function in a <a href="qgraphicsscene.html">QGraphicsScene</a> subclass.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QBrush foregroundBrush () const</b></li>
-<li><div class="fn"/><b>void setForegroundBrush ( const QBrush &amp; <i>brush</i> )</b></li>
+<li><div class="fn"></div><b>QBrush foregroundBrush () const</b></li>
+<li><div class="fn"></div><b>void setForegroundBrush ( const QBrush &amp; <i>brush</i> )</b></li>
 </ul>
 <h3 class="fn"><a name="itemIndexMethod-prop"></a>itemIndexMethod : <a href="qgraphicsscene.html#ItemIndexMethod-enum">ItemIndexMethod</a></h3>
 <p>This property holds the item indexing method.</p>
@@ -301,8 +307,8 @@
 <p>For the common case, the default index method <a href="qgraphicsscene.html#ItemIndexMethod-enum">BspTreeIndex</a> works fine. If your scene uses many animations and you are experiencing slowness, you can disable indexing by calling <tt>setItemIndexMethod(NoIndex)</tt>.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>ItemIndexMethod itemIndexMethod () const</b></li>
-<li><div class="fn"/><b>void setItemIndexMethod ( ItemIndexMethod <i>method</i> )</b></li>
+<li><div class="fn"></div><b>ItemIndexMethod itemIndexMethod () const</b></li>
+<li><div class="fn"></div><b>void setItemIndexMethod ( ItemIndexMethod <i>method</i> )</b></li>
 </ul>
 <p>See also <a href="qgraphicsscene.html#bspTreeDepth-prop">bspTreeDepth</a>.</p>
 <h3 class="fn"><a name="palette-prop"></a>palette : <a href="qpalette.html">QPalette</a></h3>
@@ -313,8 +319,8 @@
 <p>This property was introduced in Qt 4.4.</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QPalette palette () const</b></li>
-<li><div class="fn"/><b>void setPalette ( const QPalette &amp; <i>palette</i> )</b></li>
+<li><div class="fn"></div><b>QPalette palette () const</b></li>
+<li><div class="fn"></div><b>void setPalette ( const QPalette &amp; <i>palette</i> )</b></li>
 </ul>
 <p>See also <a href="qwidget.html#palette-prop">QWidget::palette</a>, <a href="qapplication.html#setPalette">QApplication::setPalette</a>(), <a href="qgraphicsscene.html#font-prop">font</a>, and <a href="qgraphicsscene.html#style">style</a>().</p>
 <h3 class="fn"><a name="sceneRect-prop"></a>sceneRect : <a href="qrectf.html">QRectF</a></h3>
@@ -323,11 +329,31 @@
 <p>If unset, or if set to a null <a href="qrectf.html">QRectF</a>, sceneRect() will return the largest bounding rect of all items on the scene since the scene was created (i.e&#x2e;, a rectangle that grows when items are added to or moved in the scene, but never shrinks).</p>
 <p>Access functions:</p>
 <ul>
-<li><div class="fn"/><b>QRectF sceneRect () const</b></li>
-<li><div class="fn"/><b>void setSceneRect ( const QRectF &amp; <i>rect</i> )</b></li>
-<li><div class="fn"/><b>void setSceneRect ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</b></li>
+<li><div class="fn"></div><b>QRectF sceneRect () const</b></li>
+<li><div class="fn"></div><b>void setSceneRect ( const QRectF &amp; <i>rect</i> )</b></li>
+<li><div class="fn"></div><b>void setSceneRect ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</b></li>
 </ul>
 <p>See also <a href="qgraphicsscene.html#width">width</a>(), <a href="qgraphicsscene.html#height">height</a>(), and <a href="qgraphicsview.html#sceneRect-prop">QGraphicsView::sceneRect</a>.</p>
+<h3 class="fn"><a name="sortCacheEnabled-prop"></a>sortCacheEnabled : bool</h3>
+<p>This property holds whether sort caching is enabled.</p>
+<p>When enabled, this property adds a cache that speeds up sorting and transformations for scenes with deep hierarchies (i.e&#x2e;, items with many levels of descendents), at the cost of using more memory (approx. 100 more bytes of memory per item).</p>
+<p>Items that are not part of a deep hierarchy suffer no penalty from this cache.</p>
+<p>This property was introduced in Qt 4.5.</p>
+<p>Access functions:</p>
+<ul>
+<li><div class="fn"></div><b>bool isSortCacheEnabled () const</b></li>
+<li><div class="fn"></div><b>void setSortCacheEnabled ( bool <i>enabled</i> )</b></li>
+</ul>
+<h3 class="fn"><a name="stickyFocus-prop"></a>stickyFocus : bool</h3>
+<p>This property holds whether or not clicking the scene will clear focus.</p>
+<p>If this property is false (the default), then clicking on the scene background or on an item that does not accept focus, will clear focus. Otherwise, focus will remain unchanged.</p>
+<p>The focus change happens in response to a mouse press. You can reimplement <a href="qgraphicsscene.html#mousePressEvent">mousePressEvent</a>() in a subclass of <a href="qgraphicsscene.html">QGraphicsScene</a> to toggle this property based on where the user has clicked.</p>
+<p>Access functions:</p>
+<ul>
+<li><div class="fn"></div><b>bool stickyFocus () const</b></li>
+<li><div class="fn"></div><b>void setStickyFocus ( bool <i>enabled</i> )</b></li>
+</ul>
+<p>See also <a href="qgraphicsscene.html#clearFocus">clearFocus</a>() and <a href="qgraphicsscene.html#setFocusItem">setFocusItem</a>().</p>
 <hr />
 <h2>Member Function Documentation</h2>
 <h3 class="fn"><a name="QGraphicsScene"></a>QGraphicsScene::QGraphicsScene ( <a href="qobject.html">QObject</a> * <i>parent</i> = 0 )</h3>
@@ -350,7 +376,6 @@
 <p>If the item is visible (i.e&#x2e;, <a href="qgraphicsitem.html#isVisible">QGraphicsItem::isVisible</a>() returns true), <a href="qgraphicsscene.html">QGraphicsScene</a> will emit <a href="qgraphicsscene.html#changed">changed</a>() once control goes back to the event loop.</p>
 <p>See also <a href="qgraphicsscene.html#addLine">addLine</a>(), <a href="qgraphicsscene.html#addPath">addPath</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addRect">addRect</a>(), <a href="qgraphicsscene.html#addText">addText</a>(), <a href="qgraphicsscene.html#addItem">addItem</a>(), and <a href="qgraphicsscene.html#addWidget">addWidget</a>().</p>
 <h3 class="fn"><a name="addEllipse-2"></a><a href="qgraphicsellipseitem.html">QGraphicsEllipseItem</a> * QGraphicsScene::addEllipse ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, const <a href="qpen.html">QPen</a> &amp; <i>pen</i> = QPen(), const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> = QBrush() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>This convenience function is equivalent to calling addEllipse(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>pen</i>, <i>brush</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="addItem"></a>void QGraphicsScene::addItem ( <a href="qgraphicsitem.html">QGraphicsItem</a> * <i>item</i> )</h3>
@@ -365,7 +390,6 @@
 <p>If the item is visible (i.e&#x2e;, <a href="qgraphicsitem.html#isVisible">QGraphicsItem::isVisible</a>() returns true), <a href="qgraphicsscene.html">QGraphicsScene</a> will emit <a href="qgraphicsscene.html#changed">changed</a>() once control goes back to the event loop.</p>
 <p>See also <a href="qgraphicsscene.html#addEllipse">addEllipse</a>(), <a href="qgraphicsscene.html#addPath">addPath</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addRect">addRect</a>(), <a href="qgraphicsscene.html#addText">addText</a>(), <a href="qgraphicsscene.html#addItem">addItem</a>(), and <a href="qgraphicsscene.html#addWidget">addWidget</a>().</p>
 <h3 class="fn"><a name="addLine-2"></a><a href="qgraphicslineitem.html">QGraphicsLineItem</a> * QGraphicsScene::addLine ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x1</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y1</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x2</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y2</i>, const <a href="qpen.html">QPen</a> &amp; <i>pen</i> = QPen() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>This convenience function is equivalent to calling addLine(<a href="qlinef.html">QLineF</a>(<i>x1</i>, <i>y1</i>, <i>x2</i>, <i>y2</i>), <i>pen</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="addPath"></a><a href="qgraphicspathitem.html">QGraphicsPathItem</a> * QGraphicsScene::addPath ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, const <a href="qpen.html">QPen</a> &amp; <i>pen</i> = QPen(), const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> = QBrush() )</h3>
@@ -389,7 +413,6 @@
 <p>If the item is visible (i.e&#x2e;, <a href="qgraphicsitem.html#isVisible">QGraphicsItem::isVisible</a>() returns true), <a href="qgraphicsscene.html">QGraphicsScene</a> will emit <a href="qgraphicsscene.html#changed">changed</a>() once control goes back to the event loop.</p>
 <p>See also <a href="qgraphicsscene.html#addEllipse">addEllipse</a>(), <a href="qgraphicsscene.html#addLine">addLine</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addText">addText</a>(), <a href="qgraphicsscene.html#addItem">addItem</a>(), and <a href="qgraphicsscene.html#addWidget">addWidget</a>().</p>
 <h3 class="fn"><a name="addRect-2"></a><a href="qgraphicsrectitem.html">QGraphicsRectItem</a> * QGraphicsScene::addRect ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, const <a href="qpen.html">QPen</a> &amp; <i>pen</i> = QPen(), const <a href="qbrush.html">QBrush</a> &amp; <i>brush</i> = QBrush() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>This convenience function is equivalent to calling addRect(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>pen</i>, <i>brush</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="addSimpleText"></a><a href="qgraphicssimpletextitem.html">QGraphicsSimpleTextItem</a> * QGraphicsScene::addSimpleText ( const <a href="qstring.html">QString</a> &amp; <i>text</i>, const <a href="qfont.html">QFont</a> &amp; <i>font</i> = QFont() )</h3>
@@ -406,6 +429,7 @@
 <p>Creates a new <a href="qgraphicsproxywidget.html">QGraphicsProxyWidget</a> for <i>widget</i>, adds it to the scene, and returns a pointer to the proxy. <i>wFlags</i> set the default window flags for the embedding proxy widget.</p>
 <p>The item's position is initialized to (0, 0).</p>
 <p>If the item is visible (i.e&#x2e;, <a href="qgraphicsitem.html#isVisible">QGraphicsItem::isVisible</a>() returns true), <a href="qgraphicsscene.html">QGraphicsScene</a> will emit <a href="qgraphicsscene.html#changed">changed</a>() once control goes back to the event loop.</p>
+<p>Note that widgets with the <a href="qt.html#WidgetAttribute-enum">Qt::WA_PaintOnScreen</a> widget attribute set and widgets that wrap an external application or controller are not supported. Examples are <a href="qglwidget.html">QGLWidget</a> and QAxWidget.</p>
 <p>See also <a href="qgraphicsscene.html#addEllipse">addEllipse</a>(), <a href="qgraphicsscene.html#addLine">addLine</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addPixmap">addPixmap</a>(), <a href="qgraphicsscene.html#addRect">addRect</a>(), <a href="qgraphicsscene.html#addText">addText</a>(), <a href="qgraphicsscene.html#addSimpleText">addSimpleText</a>(), and <a href="qgraphicsscene.html#addItem">addItem</a>().</p>
 <h3 class="fn"><a name="advance"></a>void QGraphicsScene::advance ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
 <p>This slot <i>advances</i> the scene by one step, by calling <a href="qgraphicsitem.html#advance">QGraphicsItem::advance</a>() for all items on the scene. This is done in two phases: in the first phase, all items are notified that the scene is about to change, and in the second phase all items are notified that they can move. In the first phase, <a href="qgraphicsitem.html#advance">QGraphicsItem::advance</a>() is called passing a value of 0 as an argument, and 1 is passed in the second phase.</p>
@@ -483,6 +507,7 @@
 <h3 class="fn"><a name="event"></a>bool QGraphicsScene::event ( <a href="qevent.html">QEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>Processes the event <i>event</i>, and dispatches it to the respective event handlers.</p>
 <p>In addition to calling the convenience event handlers, this function is responsible for converting mouse move events to hover events for when there is no mouse grabber item. Hover events are delivered directly to items; there is no convenience function for them.</p>
+<p>Unlike <a href="qwidget.html">QWidget</a>, <a href="qgraphicsscene.html">QGraphicsScene</a> does not have the convenience functions <a href="qwidget.html#enterEvent">enterEvent()</a> and <a href="qwidget.html#leaveEvent">leaveEvent()</a>. Use this function to obtain those events instead.</p>
 <p>Reimplemented from <a href="qobject.html#event">QObject</a>.</p>
 <p>See also <a href="qgraphicsscene.html#contextMenuEvent">contextMenuEvent</a>(), <a href="qgraphicsscene.html#keyPressEvent">keyPressEvent</a>(), <a href="qgraphicsscene.html#keyReleaseEvent">keyReleaseEvent</a>(), <a href="qgraphicsscene.html#mousePressEvent">mousePressEvent</a>(), <a href="qgraphicsscene.html#mouseMoveEvent">mouseMoveEvent</a>(), <a href="qgraphicsscene.html#mouseReleaseEvent">mouseReleaseEvent</a>(), <a href="qgraphicsscene.html#mouseDoubleClickEvent">mouseDoubleClickEvent</a>(), <a href="qgraphicsscene.html#focusInEvent">focusInEvent</a>(), and <a href="qgraphicsscene.html#focusOutEvent">focusOutEvent</a>().</p>
 <h3 class="fn"><a name="focusInEvent"></a>void QGraphicsScene::focusInEvent ( <a href="qfocusevent.html">QFocusEvent</a> * <i>focusEvent</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
@@ -568,11 +593,9 @@
 <p>Returns a list of all items on the scene, in no particular order.</p>
 <p>See also <a href="qgraphicsscene.html#addItem">addItem</a>() and <a href="qgraphicsscene.html#removeItem">removeItem</a>().</p>
 <h3 class="fn"><a name="items-2"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( const <a href="qpointf.html">QPointF</a> &amp; <i>pos</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>Returns all visible items at position <i>pos</i> in the scene. The items are listed in descending Z order (i.e&#x2e;, the first item in the list is the top-most item, and the last item is the bottom-most item).</p>
 <p>See also <a href="qgraphicsscene.html#itemAt">itemAt</a>().</p>
 <h3 class="fn"><a name="items-3"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
 <p>This convenience function is equivalent to calling items(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>mode</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="items-4"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
@@ -708,8 +731,8 @@
 <p>See also <a href="qgraphicsscene.html#height">height</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

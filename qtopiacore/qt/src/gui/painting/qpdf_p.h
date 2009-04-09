@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -55,8 +59,9 @@
 #include "private/qfontengine_p.h"
 #include "QtGui/qprinter.h"
 #include "private/qfontsubset_p.h"
-#include "private/qpaintengine_p.h"
+#include "private/qpaintengine_alpha_p.h"
 #include "qprintengine.h"
+#include "qbuffer.h"
 
 #ifndef QT_NO_PRINTER
 
@@ -75,16 +80,40 @@ namespace QPdf {
     class ByteStream
     {
     public:
-        ByteStream(QByteArray *b) :ba(b) {}
-        ByteStream &operator <<(char chr) { *ba += chr; return *this; }
-        ByteStream &operator <<(const char *str) { *ba += str; return *this; }
-        ByteStream &operator <<(const QByteArray &str) { *ba += str; return *this; }
-        ByteStream &operator <<(qreal val) { char buf[256]; *ba += qt_real_to_string(val, buf); return *this; }
-        ByteStream &operator <<(int val) { char buf[256]; *ba += qt_int_to_string(val, buf); return *this; }
-        ByteStream &operator <<(const QPointF &p) { char buf[256]; *ba += qt_real_to_string(p.x(), buf);
-            *ba += qt_real_to_string(p.y(), buf); return *this; }
+        // fileBacking means that ByteStream will buffer the contents on disk
+        // if the size exceeds a certain threshold. In this case, if a byte
+        // array was passed in, its contents may no longer correspond to the
+        // ByteStream contents.
+        explicit ByteStream(bool fileBacking = false);
+        explicit ByteStream(QByteArray *ba, bool fileBacking = false);
+        ~ByteStream();
+        ByteStream &operator <<(char chr);
+        ByteStream &operator <<(const char *str);
+        ByteStream &operator <<(const QByteArray &str);
+        ByteStream &operator <<(const ByteStream &src);
+        ByteStream &operator <<(qreal val);
+        ByteStream &operator <<(int val);
+        ByteStream &operator <<(const QPointF &p);
+        // Note that the stream may be invalidated by calls that insert data.
+        QIODevice *stream();
+        void clear();
+
+        static inline int maxMemorySize() { return 100000000; }
+        static inline int chunkSize()     { return 10000000; }
+
+    protected:
+        void constructor_helper(QIODevice *dev);
+        void constructor_helper(QByteArray *ba);
+
     private:
-        QByteArray *ba;
+        void prepareBuffer();
+
+    private:
+        QIODevice *dev;
+        QByteArray ba;
+        bool fileBackingEnabled;
+        bool fileBackingActive;
+        bool handleDirty;
     };
 
     enum PathFlags {
@@ -136,7 +165,6 @@ class QPdfPage : public QPdf::ByteStream
 {
 public:
     QPdfPage();
-    QByteArray content() { return data; }
 
     QVector<uint> images;
     QVector<uint> graphicStates;
@@ -148,13 +176,12 @@ public:
 
     QSize pageSize;
 private:
-    QByteArray data;
 };
 
 
 class QPdfBaseEnginePrivate;
 
-class QPdfBaseEngine : public QPaintEngine, public QPrintEngine
+class QPdfBaseEngine : public QAlphaPaintEngine, public QPrintEngine
 {
     Q_DECLARE_PRIVATE(QPdfBaseEngine)
 public:
@@ -189,9 +216,11 @@ public:
 
 private:
     void updateClipPath(const QPainterPath & path, Qt::ClipOperation op);
+
+    friend int qt_printerRealNumCopies(QPaintEngine *);
 };
 
-class QPdfBaseEnginePrivate : public QPaintEnginePrivate
+class QPdfBaseEnginePrivate : public QAlphaPaintEnginePrivate
 {
     Q_DECLARE_PUBLIC(QPdfBaseEngine)
 public:
@@ -224,6 +253,7 @@ public:
     bool hasBrush;
     bool simplePen;
     qreal opacity;
+    bool useAlphaEngine;
 
     QHash<QFontEngine::FaceId, QFontSubset *> fonts;
 

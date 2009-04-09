@@ -1,69 +1,69 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 #ifndef QDESIGNER_SETTINGS_H
 #define QDESIGNER_SETTINGS_H
 
+#include "designer_enums.h"
+#include <shared_settings_p.h>
 #include <QtCore/QMap>
 #include <QtCore/QRect>
-#include <QtCore/QSettings>
 #include <QtCore/QStringList>
+#include <QtCore/QVariant>
 
 QT_BEGIN_NAMESPACE
 
-struct Preferences;
+class QDesignerFormEditorInterface;
+class QDesignerSettingsInterface;
+struct ToolWindowFontSettings;
 
-namespace qdesigner_internal {
-    class PreviewConfigurationWidgetState;
-    class PreviewConfiguration;
-}
-
-class QDesignerSettings : public QSettings
+class QDesignerSettings : public qdesigner_internal::QDesignerSharedSettings
 {
 public:
-    QDesignerSettings();
+    QDesignerSettings(QDesignerFormEditorInterface *core);
 
-    QStringList formTemplatePaths() const;
-    void setFormTemplatePaths(const QStringList &paths);
+    void setValue(const QString &key, const QVariant &value);
+    QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
 
-    QString formTemplate() const;
-    void setFormTemplate(const QString &t);
-
-    void setGeometryFor(QWidget *w, const QRect &fallBack = QRect()) const;
+    void restoreGeometry(QWidget *w, QRect fallBack = QRect()) const;
     void saveGeometryFor(const QWidget *w);
 
     QStringList recentFilesList() const;
@@ -72,37 +72,21 @@ public:
     void setShowNewFormOnStartup(bool showIt);
     bool showNewFormOnStartup() const;
 
-    void setPreferences(const Preferences&);
-    Preferences preferences() const;
+    void setUiMode(UIMode mode);
+    UIMode uiMode() const;
 
-    QByteArray mainWindowState() const;
-    void setMainWindowState(const QByteArray &mainWindowState);
+    void setToolWindowFont(const ToolWindowFontSettings &fontSettings);
+    ToolWindowFontSettings toolWindowFont() const;
 
-    QByteArray toolBoxState() const;
-    void setToolBoxState(const QByteArray &state);
+    QByteArray mainWindowState(UIMode mode) const;
+    void setMainWindowState(UIMode mode, const QByteArray &mainWindowState);
 
-    QByteArray toolBarsState() const;
-    void setToolBarsState(const QByteArray &mainWindowState);
+    QByteArray toolBarsState(UIMode mode) const;
+    void setToolBarsState(UIMode mode, const QByteArray &mainWindowState);
 
     void clearBackup();
     void setBackup(const QMap<QString, QString> &map);
     QMap<QString, QString> backup() const;
-
-    static const QStringList &defaultFormTemplatePaths();
-
-    qdesigner_internal::PreviewConfiguration previewConfiguration() const;
-    void setPreviewConfiguration(const qdesigner_internal::PreviewConfiguration &pc);
-
-    qdesigner_internal::PreviewConfigurationWidgetState previewConfigurationWidgetState() const;
-    void setPreviewConfigurationWidgetState(const qdesigner_internal::PreviewConfigurationWidgetState &pc);
-
-    int actionEditorViewMode() const;
-    void setActionEditorViewMode(int vm);
-
-private:
-    void setGeometryHelper(QWidget *w, const QString &key, const QRect &fallBack) const;
-    void saveGeometryHelper(const QWidget *w, const QString &key);
-    QStringList additionalFormTemplatePaths() const;
 };
 
 QT_END_NAMESPACE

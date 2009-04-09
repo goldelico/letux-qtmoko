@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -121,7 +125,7 @@ bool Reader::readIndex()
 
     if (entryTable.isEmpty())
         return false;
-    
+
     QFile docFile(documentFile);
     if (!docFile.open(QFile::ReadOnly))
         return false;
@@ -181,17 +185,17 @@ void Reader::setIndexFile(const QString &namespaceName, const QString &attribute
     documentFile = indexPath + QLatin1String("/indexdoc40.") + extention;
 }
 
-bool Reader::splitSearchTerm(const QString &searchTerm, QStringList *terms, 
+bool Reader::splitSearchTerm(const QString &searchTerm, QStringList *terms,
                                   QStringList *termSeq, QStringList *seqWords)
 {
     QString term = searchTerm;
-    
+
     term = term.simplified();
     term = term.replace(QLatin1String("\'"), QLatin1String("\""));
     term = term.replace(QLatin1String("`"), QLatin1String("\""));
     term = term.replace(QLatin1String("-"), QLatin1String(" "));
     term = term.replace(QRegExp(QLatin1String("\\s[\\S]?\\s")), QLatin1String(" "));
- 
+
     *terms = term.split(QLatin1Char(' '));
     QStringList::iterator it = terms->begin();
     for (; it != terms->end(); ++it) {
@@ -233,8 +237,8 @@ void Reader::searchInIndex(const QStringList &terms)
 {
     foreach (const QString term, terms) {
         QVector<Document> documents;
-        
-        for(IndexTable::ConstIterator it = searchIndexTable.begin(); 
+
+        for(IndexTable::ConstIterator it = searchIndexTable.begin();
             it != searchIndexTable.end(); ++it) {
             EntryTable entryTable = it.value().first;
             DocumentList documentList = it.value().second;
@@ -259,7 +263,7 @@ void Reader::searchInIndex(const QStringList &terms)
                 }
 
                 bool found = false;
-                for(QList<TermInfo>::Iterator tit = termList.begin(); 
+                for(QList<TermInfo>::Iterator tit = termList.begin();
                     tit != termList.end(); ++tit) {
                     TermInfo *t = &(*tit);
                     if(t->term == term) {
@@ -286,10 +290,10 @@ QVector<DocumentInfo> Reader::hits()
     for(QList<TermInfo>::Iterator it = termList.begin(); it != termList.end(); ++it) {
         TermInfo *t = &(*it);
         QVector<DocumentInfo> docs = t->documents;
-        for(QVector<DocumentInfo>::Iterator minDoc_it = documents.begin(); 
+        for(QVector<DocumentInfo>::Iterator minDoc_it = documents.begin();
             minDoc_it != documents.end(); ) {
             bool found = false;
-            for (QVector<DocumentInfo>::ConstIterator doc_it = docs.constBegin(); 
+            for (QVector<DocumentInfo>::ConstIterator doc_it = docs.constBegin();
                 doc_it != docs.constEnd(); ++doc_it ) {
                 if ( (*minDoc_it).docNumber == (*doc_it).docNumber ) {
                     (*minDoc_it).frequency += (*doc_it).frequency;
@@ -314,7 +318,7 @@ bool Reader::searchForPattern(const QStringList &patterns, const QStringList &wo
     if (data.isEmpty())
         return false;
 
-    for(QHash<QString, PosEntry*>::ConstIterator mit = 
+    for(QHash<QString, PosEntry*>::ConstIterator mit =
         miniIndex.begin(); mit != miniIndex.end(); ++mit) {
             delete mit.value();
     }
@@ -389,7 +393,7 @@ bool Reader::searchForPattern(const QStringList &patterns, const QStringList &wo
     return false;
 }
 
-QVector<Document> Reader::setupDummyTerm(const QStringList &terms, 
+QVector<Document> Reader::setupDummyTerm(const QStringList &terms,
                                               const EntryTable &entryTable)
 {
     QList<Term> termList;
@@ -416,7 +420,7 @@ QVector<Document> Reader::setupDummyTerm(const QStringList &terms,
     return maxList;
 }
 
-QStringList Reader::getWildcardTerms(const QString &term, 
+QStringList Reader::getWildcardTerms(const QString &term,
                                           const EntryTable &entryTable)
 {
     QStringList lst;
@@ -470,7 +474,7 @@ void Reader::buildMiniIndex(const QString &string)
 
 void Reader::reset()
 {
-    for(IndexTable::Iterator it = indexTable.begin(); 
+    for(IndexTable::Iterator it = indexTable.begin();
         it != indexTable.end(); ++it) {
         cleanupIndex(it.value().first);
         it.value().second.clear();
@@ -479,7 +483,7 @@ void Reader::reset()
 
 void Reader::cleanupIndex(EntryTable &entryTable)
 {
-    for(EntryTable::ConstIterator it = 
+    for(EntryTable::ConstIterator it =
         entryTable.begin(); it != entryTable.end(); ++it) {
             delete it.value();
     }
@@ -540,7 +544,7 @@ QHelpSearchEngine::SearchHit QHelpSearchIndexReader::hit(int index) const
 void QHelpSearchIndexReader::run()
 {
     mutex.lock();
-    
+
     if (m_cancel) {
         mutex.unlock();
         return;
@@ -550,7 +554,7 @@ void QHelpSearchIndexReader::run()
     const QLatin1String key("DefaultSearchNamespaces");
     const QString collectionFile(this->m_collectionFile);
     const QString indexPath = m_indexFilesFolder;
-    
+
     mutex.unlock();
 
     QString queryTerm;
@@ -560,7 +564,7 @@ void QHelpSearchIndexReader::run()
             break;
         }
     }
-        
+
     if (queryTerm.isEmpty())
         return;
 
@@ -585,14 +589,14 @@ void QHelpSearchIndexReader::run()
         }
         mutex.unlock();
 
-        const QList<QStringList> attributeSets = 
+        const QList<QStringList> attributeSets =
             engine.filterAttributeSets(namespaceName);
 
         foreach (QStringList attributes, attributeSets) {
             // read all index files
             m_reader.setIndexFile(namespaceName, attributes.join(QLatin1String("@")));
             if (!m_reader.readIndex()) {
-                qWarning("Full Text Search, could not read file for namespace: %s.", 
+                qWarning("Full Text Search, could not read file for namespace: %s.",
                     namespaceName.toUtf8().constData());
             }
         }
@@ -600,12 +604,12 @@ void QHelpSearchIndexReader::run()
 
     // get the current filter attributes and minimize the index files table
     m_reader.filterFilesForAttributes(engine.filterAttributes(engine.currentFilter()));
-    
+
     hitList.clear();
     QStringList terms, termSeq, seqWords;
     if (m_reader.initCheck() && // check if we could read anything
         m_reader.splitSearchTerm(queryTerm, &terms, &termSeq, &seqWords) ) {
-        
+
         // search for term(s)
         m_reader.searchInIndex(terms);    // TODO: should this be interruptible as well ???
 

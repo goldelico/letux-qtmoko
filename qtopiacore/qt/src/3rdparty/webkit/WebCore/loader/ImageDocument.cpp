@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,47 +43,61 @@
 #include "Text.h"
 #include "XMLTokenizer.h"
 
-#if PLATFORM(MAC)
-#include "ImageDocumentMac.h"
-#endif 
-
 using std::min;
 
 namespace WebCore {
 
-using namespace EventNames;
 using namespace HTMLNames;
 
 class ImageEventListener : public EventListener {
 public:
-    ImageEventListener(ImageDocument* doc) : m_doc(doc) { }
-    
+    static PassRefPtr<ImageEventListener> create(ImageDocument* document) { return adoptRef(new ImageEventListener(document)); }
     virtual void handleEvent(Event*, bool isWindowEvent);
+
 private:
+    ImageEventListener(ImageDocument* document) : m_doc(document) { }
     ImageDocument* m_doc;
 };
     
 class ImageTokenizer : public Tokenizer {
 public:
     ImageTokenizer(ImageDocument* doc) : m_doc(doc) {}
-        
+
     virtual bool write(const SegmentedString&, bool appendData);
     virtual void finish();
     virtual bool isWaitingForScripts() const;
     
     virtual bool wantsRawData() const { return true; }
     virtual bool writeRawData(const char* data, int len);
+
 private:
     ImageDocument* m_doc;
 };
 
-bool ImageTokenizer::write(const SegmentedString& s, bool appendData)
+class ImageDocumentElement : public HTMLImageElement {
+public:
+    ImageDocumentElement(ImageDocument* doc)
+        : HTMLImageElement(imgTag, doc)
+        , m_imageDocument(doc)
+    {
+    }
+
+    virtual ~ImageDocumentElement();
+    virtual void willMoveToNewOwnerDocument();
+
+private:
+    ImageDocument* m_imageDocument;
+};
+
+// --------
+
+bool ImageTokenizer::write(const SegmentedString&, bool)
 {
     ASSERT_NOT_REACHED();
     return false;
 }
 
-bool ImageTokenizer::writeRawData(const char* data, int len)
+bool ImageTokenizer::writeRawData(const char*, int)
 {
     CachedImage* cachedImage = m_doc->cachedImage();
     cachedImage->data(m_doc->frame()->loader()->documentLoader()->mainResourceData(), false);
@@ -102,16 +116,22 @@ void ImageTokenizer::finish()
         // If this is a multipart image, make a copy of the current part, since the resource data
         // will be overwritten by the next part.
         if (m_doc->frame()->loader()->documentLoader()->isLoadingMultipartContent())
-            data = new SharedBuffer(data->data(), data->size());
+            data = data->copy();
 
         cachedImage->data(data.release(), true);
         cachedImage->finish();
 
         cachedImage->setResponse(m_doc->frame()->loader()->documentLoader()->response());
-        
-        IntSize size = cachedImage->imageSize();
-        if (size.width())
-            m_doc->setTitle(imageTitle(cachedImage->response().suggestedFilename(), size));
+
+        IntSize size = cachedImage->imageSize(m_doc->frame()->pageZoomFactor());
+        if (size.width()) {
+            // Compute the title, we use the filename of the resource, falling
+            // back on the hostname if there is no path.
+            String fileName = m_doc->url().lastPathComponent();
+            if (fileName.isEmpty())
+                fileName = m_doc->url().host();
+            m_doc->setTitle(imageTitle(fileName, size));
+        }
 
         m_doc->imageChanged();
     }
@@ -125,12 +145,14 @@ bool ImageTokenizer::isWaitingForScripts() const
     return false;
 }
     
-ImageDocument::ImageDocument(DOMImplementation* implementation, Frame* frame)
-    : HTMLDocument(implementation, frame)
+// --------
+
+ImageDocument::ImageDocument(Frame* frame)
+    : HTMLDocument(frame)
     , m_imageElement(0)
     , m_imageSizeIsKnown(false)
     , m_didShrinkImage(false)
-    , m_shouldShrinkImage(true)
+    , m_shouldShrinkImage(shouldShrinkToFit())
 {
     setParseMode(Compat);
 }
@@ -152,27 +174,30 @@ void ImageDocument::createDocumentStructure()
     
     rootElement->appendChild(body, ec);
     
-    RefPtr<Element> imageElement = createElementNS(xhtmlNamespaceURI, "img", ec);
+    RefPtr<ImageDocumentElement> imageElement = new ImageDocumentElement(this);
     
-    m_imageElement = static_cast<HTMLImageElement *>(imageElement.get());
-    m_imageElement->setAttribute(styleAttr, "-webkit-user-select: none");        
-    m_imageElement->setLoadManually(true);
-    m_imageElement->setSrc(URL());
+    imageElement->setAttribute(styleAttr, "-webkit-user-select: none");        
+    imageElement->setLoadManually(true);
+    imageElement->setSrc(url().string());
     
     body->appendChild(imageElement, ec);
     
-    if (!shouldShrinkToFit())
-        return;
-    
-    // Add event listeners
-    RefPtr<EventListener> listener = new ImageEventListener(this);
-    addWindowEventListener("resize", listener, false);
-    m_imageElement->addEventListener("click", listener.release(), false);
+    if (shouldShrinkToFit()) {
+        // Add event listeners
+        RefPtr<EventListener> listener = ImageEventListener::create(this);
+        addWindowEventListener("resize", listener, false);
+        imageElement->addEventListener("click", listener.release(), false);
+    }
+
+    m_imageElement = imageElement.get();
 }
 
 float ImageDocument::scale() const
 {
-    IntSize imageSize = m_imageElement->cachedImage()->imageSize();
+    if (!m_imageElement)
+        return 1.0f;
+
+    IntSize imageSize = m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor());
     IntSize windowSize = IntSize(frame()->view()->width(), frame()->view()->height());
     
     float widthScale = (float)windowSize.width() / imageSize.width();
@@ -183,7 +208,10 @@ float ImageDocument::scale() const
 
 void ImageDocument::resizeImageToFit()
 {
-    IntSize imageSize = m_imageElement->cachedImage()->imageSize();
+    if (!m_imageElement)
+        return;
+
+    IntSize imageSize = m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor());
 
     float scale = this->scale();
     m_imageElement->setWidth(static_cast<int>(imageSize.width() * scale));
@@ -212,7 +240,7 @@ void ImageDocument::imageClicked(int x, int y)
         int scrollX = static_cast<int>(x / scale - (float)frame()->view()->width() / 2);
         int scrollY = static_cast<int>(y / scale - (float)frame()->view()->height() / 2);
         
-        frame()->view()->setContentsPos(scrollX, scrollY);
+        frame()->view()->setScrollPosition(IntPoint(scrollX, scrollY));
     }
 }
 
@@ -223,25 +251,24 @@ void ImageDocument::imageChanged()
     if (m_imageSizeIsKnown)
         return;
 
-    if (m_imageElement->cachedImage()->imageSize().isEmpty())
+    if (m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor()).isEmpty())
         return;
     
     m_imageSizeIsKnown = true;
     
-    if (!shouldShrinkToFit())
-        return;
-    
-    // Force resizing of the image
-    windowSizeChanged();
+    if (shouldShrinkToFit()) {
+        // Force resizing of the image
+        windowSizeChanged();
+    }
 }
 
 void ImageDocument::restoreImageSize()
 {
-    if (!m_imageSizeIsKnown)
+    if (!m_imageElement || !m_imageSizeIsKnown)
         return;
     
-    m_imageElement->setWidth(m_imageElement->cachedImage()->imageSize().width());
-    m_imageElement->setHeight(m_imageElement->cachedImage()->imageSize().height());
+    m_imageElement->setWidth(m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor()).width());
+    m_imageElement->setHeight(m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor()).height());
     
     ExceptionCode ec;
     if (imageFitsInWindow())
@@ -254,7 +281,10 @@ void ImageDocument::restoreImageSize()
 
 bool ImageDocument::imageFitsInWindow() const
 {
-    IntSize imageSize = m_imageElement->cachedImage()->imageSize();
+    if (!m_imageElement)
+        return true;
+
+    IntSize imageSize = m_imageElement->cachedImage()->imageSize(frame()->pageZoomFactor());
     IntSize windowSize = IntSize(frame()->view()->width(), frame()->view()->height());
     
     return imageSize.width() <= windowSize.width() && imageSize.height() <= windowSize.height();    
@@ -262,7 +292,7 @@ bool ImageDocument::imageFitsInWindow() const
 
 void ImageDocument::windowSizeChanged()
 {
-    if (!m_imageSizeIsKnown)
+    if (!m_imageElement || !m_imageSizeIsKnown)
         return;
 
     bool fitsInWindow = imageFitsInWindow();
@@ -309,14 +339,33 @@ bool ImageDocument::shouldShrinkToFit() const
         frame()->page()->mainFrame() == frame();
 }
 
-void ImageEventListener::handleEvent(Event* event, bool isWindowEvent)
+// --------
+
+void ImageEventListener::handleEvent(Event* event, bool)
 {
-    if (event->type() == resizeEvent)
+    if (event->type() == eventNames().resizeEvent)
         m_doc->windowSizeChanged();
-    else if (event->type() == clickEvent) {
+    else if (event->type() == eventNames().clickEvent) {
         MouseEvent* mouseEvent = static_cast<MouseEvent*>(event);
         m_doc->imageClicked(mouseEvent->x(), mouseEvent->y());
     }
+}
+
+// --------
+
+ImageDocumentElement::~ImageDocumentElement()
+{
+    if (m_imageDocument)
+        m_imageDocument->disconnectImageElement();
+}
+
+void ImageDocumentElement::willMoveToNewOwnerDocument()
+{
+    if (m_imageDocument) {
+        m_imageDocument->disconnectImageElement();
+        m_imageDocument = 0;
+    }
+    HTMLImageElement::willMoveToNewOwnerDocument();
 }
 
 }

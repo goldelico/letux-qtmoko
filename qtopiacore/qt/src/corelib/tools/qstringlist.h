@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -68,6 +72,7 @@ public:
     inline QStringList(const QList<QString> &l) : QList<QString>(l) { }
 
     inline void sort();
+    inline int removeDuplicates();
 
     inline QString join(const QString &sep) const;
 
@@ -88,6 +93,8 @@ public:
     inline QStringList &replaceInStrings(const QRegExp &rx, const QString &after);
     inline int indexOf(const QRegExp &rx, int from = 0) const;
     inline int lastIndexOf(const QRegExp &rx, int from = -1) const;
+    inline int indexOf(QRegExp &rx, int from = 0) const;
+    inline int lastIndexOf(QRegExp &rx, int from = -1) const;
 #endif
 #if !defined(Q_NO_USING_KEYWORD)
     using QList<QString>::indexOf;
@@ -120,6 +127,7 @@ public:
 
 namespace QtPrivate {
     void Q_CORE_EXPORT QStringList_sort(QStringList *that);
+    int Q_CORE_EXPORT QStringList_removeDuplicates(QStringList *that);
     QString Q_CORE_EXPORT QStringList_join(const QStringList *that, const QString &sep);
     QStringList Q_CORE_EXPORT QStringList_filter(const QStringList *that, const QString &str,
                                                Qt::CaseSensitivity cs);
@@ -133,12 +141,19 @@ namespace QtPrivate {
     QStringList Q_CORE_EXPORT QStringList_filter(const QStringList *that, const QRegExp &re);
     int Q_CORE_EXPORT QStringList_indexOf(const QStringList *that, const QRegExp &rx, int from);
     int Q_CORE_EXPORT QStringList_lastIndexOf(const QStringList *that, const QRegExp &rx, int from);
+    int Q_CORE_EXPORT QStringList_indexOf(const QStringList *that, QRegExp &rx, int from);
+    int Q_CORE_EXPORT QStringList_lastIndexOf(const QStringList *that, QRegExp &rx, int from);
 #endif
 }
 
 inline void QStringList::sort()
 {
     QtPrivate::QStringList_sort(this);
+}
+
+inline int QStringList::removeDuplicates()
+{
+    return QtPrivate::QStringList_removeDuplicates(this);
 }
 
 inline QString QStringList::join(const QString &sep) const
@@ -180,6 +195,16 @@ inline int QStringList::indexOf(const QRegExp &rx, int from) const
 }
 
 inline int QStringList::lastIndexOf(const QRegExp &rx, int from) const
+{
+    return QtPrivate::QStringList_lastIndexOf(this, rx, from);
+}
+
+inline int QStringList::indexOf(QRegExp &rx, int from) const
+{
+    return QtPrivate::QStringList_indexOf(this, rx, from);
+}
+
+inline int QStringList::lastIndexOf(QRegExp &rx, int from) const
 {
     return QtPrivate::QStringList_lastIndexOf(this, rx, from);
 }

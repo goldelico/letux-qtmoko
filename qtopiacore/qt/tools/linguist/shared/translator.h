@@ -1,471 +1,223 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#ifndef TRANSLATOR_H
-#define TRANSLATOR_H
+#ifndef METATRANSLATOR_H
+#define METATRANSLATOR_H
 
-#include <QByteArray>
+#include "translatormessage.h"
+
 #include <QDir>
 #include <QList>
 #include <QLocale>
-#include <QMap>
-#include <QObject>
 #include <QString>
-#include <QStringList>
-#include <QTranslator>
 
-#include <private/qtranslator_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QIODevice;
-class QTextCodec;
-class TranslatorPrivate;
-template <typename T> class QList;
-
-class TranslatorMessage
-{
-public:
-    enum Type { Unfinished, Finished, Obsolete };
-
-    TranslatorMessage();
-    TranslatorMessage(const QByteArray &context, const QByteArray &sourceText,
-        const QByteArray &comment, const QByteArray &userData,
-        const QString &fileName, int lineNumber,
-        const QStringList& translations = QStringList(),
-        bool utf8 = false, Type type = Unfinished, bool plural = false);
-
-    uint hash() const { return m_hash; }
-    QByteArray context() const { return m_context; }
-    QByteArray sourceText() const { return m_sourcetext; }
-    QByteArray comment() const { return m_comment; }
-
-    void setTranslations(const QStringList &translations)
-        { m_translations = translations; }
-    QStringList translations() const
-        { return m_translations; }
-    void setTranslation(const QString &translation)
-        { m_translations = QStringList(translation); }
-    QString translation() const { return m_translations.value(0); }
-    bool isTranslated() const
-    {
-        foreach (const QString &trans, m_translations)
-            if (!trans.isEmpty())
-                return true;
-        return false;
-    }
-
-    enum Prefix { NoPrefix, Hash, HashContext, HashContextSourceText,
-                  HashContextSourceTextComment };
-    void write(QDataStream & s, bool strip = false,
-                Prefix prefix = HashContextSourceTextComment) const;
-    Prefix commonPrefix(const TranslatorMessage&) const;
-
-    bool operator==(const TranslatorMessage& m) const;
-    bool operator<(const TranslatorMessage& m) const;
-
-    QString fileName() const { return m_fileName; }
-    void setFileName(const QString &fileName) { m_fileName = fileName; }
-    int lineNumber() const { return m_lineNumber; }
-    void setLineNumber(int lineNumber) { m_lineNumber = lineNumber; }
-    QByteArray userData() const { return m_userData; }
-    void setUserData(const QByteArray &userData) { m_userData = userData; }
-
-    bool isNull() const { return m_sourcetext.isNull() && m_lineNumber == -1 && m_translations.isEmpty(); }
-
-    void setType( Type nt ) { ty = nt; }
-    Type type() const { return ty; }
-    bool utf8() const { return utfeight; }
-    bool isPlural() const { return m_plural; }
-    void setPlural(bool isplural) { m_plural = isplural; }
-
-private:
-    uint        m_hash;
-    QByteArray  m_context;
-    QByteArray  m_sourcetext;
-    QByteArray  m_comment;
-    QByteArray  m_userData;
-    QStringList m_translations;
-    QString     m_fileName;
-    int         m_lineNumber;
-
-    enum Tag { Tag_End = 1, Tag_SourceText16, Tag_Translation, Tag_Context16,
-               Tag_Obsolete1, Tag_SourceText, Tag_Context, Tag_Comment,
-               Tag_Obsolete2 };
-
-    bool utfeight;
-    Type ty;
-    bool m_plural;
-};
-
-
 Q_DECLARE_TYPEINFO(TranslatorMessage, Q_MOVABLE_TYPE);
 
-class Translator : public QObject
+class QIODevice;
+
+// A struct of "interesting" data passed to and from the load and save routines
+class ConversionData
 {
-    Q_OBJECT
+public:
+    ConversionData() :
+        m_verbose(false),
+        m_ignoreUnfinished(false),
+        m_sortContexts(false),
+        m_noUiLines(false),
+        m_saveMode(SaveEverything)
+    {}
+
+    // tag manipulation
+    const QStringList &dropTags() const { return m_dropTags; }
+    QStringList &dropTags() { return m_dropTags; }
+    const QDir &targetDir() const { return m_targetDir; }
+    bool isVerbose() const { return m_verbose; }
+    bool ignoreUnfinished() const { return m_ignoreUnfinished; }
+    bool sortContexts() const { return m_sortContexts; }
+
+    void appendError(const QString &error) { m_errors.append(error); }
+    QString error() const { return  m_errors.join(QLatin1String("\n")); }
+    QStringList errors() const { return  m_errors; }
+    void clearErrors() { m_errors.clear(); }
 
 public:
-    explicit Translator(QObject *parent = 0);
-    virtual ~Translator();
+    QString m_defaultContext;
+    QByteArray m_codecForSource; // CPP specific
+    QString m_sourceFileName;
+    QString m_targetFileName;
+    QDir m_sourceDir;
+    QDir m_targetDir; // FIXME: TS spefic
+    QStringList m_dropTags;  // tags to be dropped 
+    QStringList m_errors;
+    bool m_verbose;
+    bool m_ignoreUnfinished;
+    bool m_sortContexts;
+    bool m_noUiLines;
+    TranslatorSaveMode m_saveMode;
+};
 
-    virtual TranslatorMessage findMessage(const QByteArray &context,
-        const QByteArray &sourceText, const QByteArray &comment,
-        const QString &fileName = QString(), int lineNumber = -1) const;
+class Translator
+{
+public:
+    Translator();
 
-    void clear();
+    bool load(const QString &filename, ConversionData &err, const QString &format /*= "auto"*/);
+    bool save(const QString &filename, ConversionData &err, const QString &format /*= "auto"*/) const;
+    bool release(QFile *iod, ConversionData &cd) const;
 
-    enum SaveMode { Everything, Stripped };
+    bool contains(const QString &context, const QString &sourceText,
+        const QString &comment) const;
+    TranslatorMessage find(const QString &context,
+        const QString &sourceText, const QString &comment) const;
 
-    bool save(const QString & filename, SaveMode mode = Everything);
-    bool save(QIODevice *iod, SaveMode mode = Everything);
+    TranslatorMessage find(const QString &context,
+        const QString &comment, const TranslatorMessage::References &refs) const;
 
-    void insert(const TranslatorMessage &);
-    void remove(const TranslatorMessage &);
-    void remove(const QByteArray &context, const QByteArray &sourceText) {
-        remove(TranslatorMessage(context, sourceText, "", "", QString(), -1));
-    }
-    bool contains(const QByteArray &context, const QByteArray &sourceText,
-        const QByteArray & comment = QByteArray()) const;
+    bool contains(const QString &context) const;
+    TranslatorMessage find(const QString &context) const;
 
-    bool contains(const QByteArray &context, const QByteArray &comment,
-        const QString &fileName, int lineNumber) const;
+    void replace(const TranslatorMessage &msg);
+    void replaceSorted(const TranslatorMessage &msg);
+    void extend(const TranslatorMessage &msg); // Only for single-location messages
+    void append(const TranslatorMessage &msg);
+    void appendSorted(const TranslatorMessage &msg);
 
-    void squeeze(SaveMode = Everything);
-    void unsqueeze();
+    void stripObsoleteMessages();
+    void stripFinishedMessages();
+    void stripEmptyContexts();
+    void stripNonPluralForms();
+    void stripIdenticalSourceTranslations();
+    void dropTranslations();
+    QList<TranslatorMessage> findDuplicates() const;
+    void makeFileNamesAbsolute(const QDir &originalPath);
 
+    void setCodecName(const QByteArray &name);
+    QByteArray codecName() const { return m_codecName; }
+
+    QString languageCode() const { return m_language; }
+    QString sourceLanguageCode() const { return m_sourceLanguage; }
+
+    enum LocationsType { NoLocations, RelativeLocations, AbsoluteLocations };
+    void setLocationsType(LocationsType lt) { m_locationsType = lt; }
+    LocationsType locationsType() const { return m_locationsType; }
+
+    static QString makeLanguageCode(QLocale::Language language, QLocale::Country country);
+    static void languageAndCountry(const QString &languageCode,
+        QLocale::Language *lang, QLocale::Country *country);
+    void setLanguageCode(const QString &languageCode) { m_language = languageCode; }
+    void setSourceLanguageCode(const QString &languageCode) { m_sourceLanguage = languageCode; }
+    static QString guessLanguageCodeFromFileName(const QString &fileName);
     QList<TranslatorMessage> messages() const;
+    QList<TranslatorMessage> translatedMessages() const;
+    static QStringList normalizedTranslations(const TranslatorMessage &m,
+        QLocale::Language lang, QLocale::Country country);
+    QStringList normalizedTranslations(const TranslatorMessage &m, ConversionData &cd, bool *ok) const;
 
-    bool isEmpty() const;
+    int messageCount() const { return m_messages.size(); }
+    TranslatorMessage &message(int i) { return m_messages[i]; }
+    const TranslatorMessage &message(int i) const { return m_messages.at(i); }
+    void dump() const;
 
-    void setNumerusRules(const QByteArray &rules);
+    // additional file format specific data
+    // note: use '<fileformat>:' as prefix for file format specific members,
+    // e.g. "po-flags", "po-msgid_plural"
+    typedef TranslatorMessage::ExtraData ExtraData;
+    QString extra(const QString &ba) const;
+    void setExtra(const QString &ba, const QString &var);
+    bool hasExtra(const QString &ba) const;
+    const ExtraData &extras() const { return m_extra; }
+    void setExtras(const ExtraData &extras) { m_extra = extras; }
+
+    // registration of file formats
+    typedef bool (*SaveFunction)(const Translator &, QIODevice &out, ConversionData &data);
+    typedef bool (*LoadFunction)(Translator &, QIODevice &in, ConversionData &data);
+    struct FileFormat {
+        QString extension; // such as "ts", "xlf", ...
+        QString description; // human-readable description
+        LoadFunction loader;
+        SaveFunction saver;
+        enum FileType { SourceCode, TranslationSource, TranslationBinary } fileType;
+        int priority; // 0 = highest, -1 = invisible
+    };
+    static void registerFileFormat(const FileFormat &format);
+    static QList<FileFormat> &registeredFileFormats();
+
+    enum VariantSeparators {
+        DefaultVariantSeparator = 0x2762, // some weird character nobody ever heard of :-D
+        InternalVariantSeparator = 0x9c // unicode "STRING TERMINATOR"
+    };
 
 private:
-    Q_DISABLE_COPY(Translator)
-    TranslatorPrivate *d;
-};
+    typedef QList<TranslatorMessage> TMM;       // int stores the sequence position.
 
-static const uchar englishStyleRules[] =
-    { EQ, 1 };
-static const uchar frenchStyleRules[] =
-    { LEQ, 1 };
-static const uchar latvianRules[] =
-    { MOD_10 | EQ, 1, AND, MOD_100 | NEQ, 11, NEWRULE,
-      NEQ, 0 };
-static const uchar irishStyleRules[] =
-    { EQ, 1, NEWRULE,
-      EQ, 2 };
-static const uchar czechRules[] =
-    { MOD_100 | EQ, 1, NEWRULE,
-      MOD_100 | BETWEEN, 2, 4 };
-static const uchar slovakRules[] =
-    { EQ, 1, NEWRULE,
-      BETWEEN, 2, 4 };
-static const uchar macedonianRules[] =
-    { MOD_10 | EQ, 1, NEWRULE,
-      MOD_10 | EQ, 2 };
-static const uchar lithuanianRules[] =
-    { MOD_10 | EQ, 1, AND, MOD_100 | NEQ, 11, NEWRULE,
-      MOD_10 | EQ, 2, AND, MOD_100 | NOT_BETWEEN, 10, 19 };
-static const uchar russianStyleRules[] =
-    { MOD_10 | EQ, 1, AND, MOD_100 | NEQ, 11, NEWRULE,
-      MOD_10 | BETWEEN, 2, 4, AND, MOD_100 | NOT_BETWEEN, 10, 19 };
-static const uchar polishRules[] =
-    { EQ, 1, NEWRULE,
-      MOD_10 | BETWEEN, 2, 4, AND, MOD_100 | NOT_BETWEEN, 10, 19 };
-static const uchar romanianRules[] =
-    { EQ, 1, NEWRULE,
-      EQ, 0, OR, MOD_100 | BETWEEN, 1, 19 };
-static const uchar slovenianRules[] =
-    { MOD_100 | EQ, 1, NEWRULE,
-      MOD_100 | EQ, 2, NEWRULE,
-      MOD_100 | BETWEEN, 3, 4 };
-static const uchar malteseRules[] =
-    { EQ, 1, NEWRULE,
-      EQ, 0, OR, MOD_100 | BETWEEN, 1, 10, NEWRULE,
-      MOD_100 | BETWEEN, 11, 19 };
-static const uchar welshRules[] =
-    { EQ, 0, NEWRULE,
-      EQ, 1, NEWRULE,
-      BETWEEN, 2, 5, NEWRULE,
-      EQ, 6 };
-static const uchar arabicRules[] =
-    { EQ, 0, NEWRULE,
-      EQ, 1, NEWRULE,
-      EQ, 2, NEWRULE,
-      MOD_100 | BETWEEN, 3, 10, NEWRULE,
-      MOD_100 | NEQ, 0 };
+    TMM m_messages;
+    QByteArray m_codecName;
+    LocationsType m_locationsType;
 
-static const char * const japaneseStyleForms[] = { "Unique Form", 0 };
-static const char * const englishStyleForms[] = { "Singular", "Plural", 0 };
-static const char * const frenchStyleForms[] = { "Singular", "Plural", 0 };
-static const char * const latvianForms[] = { "Singular", "Plural", "Nullar", 0 };
-static const char * const irishStyleForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const czechForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const slovakForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const macedonianForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const lithuanianForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const russianStyleForms[] = { "Singular", "Dual", "Plural", 0 };
-static const char * const polishForms[] = { "Singular", "Paucal", "Plural", 0 };
-static const char * const romanianForms[] =
-    { "Singular", "Plural Form for 2 to 19", "Plural", 0 };
-static const char * const slovenianForms[] = { "Singular", "Dual", "Trial", "Plural", 0 };
-static const char * const malteseForms[] =
-    { "Singular", "Plural Form for 2 to 10", "Plural Form for 11 to 19", "Plural", 0 };
-static const char * const welshForms[] =
-    { "Nullar", "Singular", "Dual", "Sexal", "Plural", 0 };
-static const char * const arabicForms[] =
-    { "Nullar", "Singular", "Dual", "Minority Plural", "Plural", "Plural Form for 100, 200, ...", 0 };
-
-#define EOL QLocale::C
-
-static const QLocale::Language japaneseStyleLanguages[] = {
-    QLocale::Afan,
-    QLocale::Armenian,
-    QLocale::Bhutani,
-    QLocale::Bislama,
-    QLocale::Burmese,
-    QLocale::Chinese,
-    QLocale::FijiLanguage,
-    QLocale::Guarani,
-    QLocale::Hungarian,
-    QLocale::Indonesian,
-    QLocale::Japanese,
-    QLocale::Javanese,
-    QLocale::Korean,
-    QLocale::Malay,
-    QLocale::NauruLanguage,
-    QLocale::Persian,
-    QLocale::Sundanese,
-    QLocale::Thai,
-    QLocale::Tibetan,
-    QLocale::Vietnamese,
-    QLocale::Yoruba,
-    QLocale::Zhuang,
-    EOL
+    // A string beginning with a 2 or 3 letter language code (ISO 639-1
+    // or ISO-639-2), followed by the optional country variant to distinguish
+    //  between country-specific variations of the language. The language code
+    // and country code are always separated by '_'
+    // Note that the language part can also be a 3-letter ISO 639-2 code.
+    // Legal examples:
+    // 'pt'         portuguese, assumes portuguese from portugal
+    // 'pt_BR'      Brazilian portuguese (ISO 639-1 language code)
+    // 'por_BR'     Brazilian portuguese (ISO 639-2 language code)
+    QString m_language;
+    QString m_sourceLanguage;
+    ExtraData m_extra;
 };
-
-static const QLocale::Language englishStyleLanguages[] = {
-    QLocale::Abkhazian,
-    QLocale::Afar,
-    QLocale::Afrikaans,
-    QLocale::Albanian,
-    QLocale::Amharic,
-    QLocale::Assamese,
-    QLocale::Aymara,
-    QLocale::Azerbaijani,
-    QLocale::Bashkir,
-    QLocale::Basque,
-    QLocale::Bengali,
-    QLocale::Bihari,
-    // Missing: Bokmal,
-    QLocale::Bulgarian,
-    QLocale::Cambodian,
-    QLocale::Catalan,
-    QLocale::Cornish,
-    QLocale::Corsican,
-    QLocale::Danish,
-    QLocale::Dutch,
-    QLocale::English,
-    QLocale::Esperanto,
-    QLocale::Estonian,
-    QLocale::Faroese,
-    QLocale::Finnish,
-    // Missing: Friulian,
-    QLocale::Frisian,
-    QLocale::Galician,
-    QLocale::Georgian,
-    QLocale::German,
-    QLocale::Greek,
-    QLocale::Greenlandic,
-    QLocale::Gujarati,
-    QLocale::Hausa,
-    QLocale::Hebrew,
-    QLocale::Hindi,
-    QLocale::Icelandic,
-    QLocale::Interlingua,
-    QLocale::Interlingue,
-    QLocale::Italian,
-    QLocale::Kannada,
-    QLocale::Kashmiri,
-    QLocale::Kazakh,
-    QLocale::Kinyarwanda,
-    QLocale::Kirghiz,
-    QLocale::Kurdish,
-    QLocale::Kurundi,
-    QLocale::Laothian,
-    QLocale::Latin,
-    // Missing: Letzeburgesch,
-    QLocale::Lingala,
-    QLocale::Malagasy,
-    QLocale::Malayalam,
-    QLocale::Marathi,
-    QLocale::Mongolian,
-    // Missing: Nahuatl,
-    QLocale::Nepali,
-    // Missing: Northern Sotho,
-    QLocale::Norwegian,
-    QLocale::Nynorsk,
-    QLocale::Occitan,
-    QLocale::Oriya,
-    QLocale::Pashto,
-    QLocale::Portuguese,
-    QLocale::Punjabi,
-    QLocale::Quechua,
-    QLocale::RhaetoRomance,
-    QLocale::Sesotho,
-    QLocale::Setswana,
-    QLocale::Shona,
-    QLocale::Sindhi,
-    QLocale::Singhalese,
-    QLocale::Siswati,
-    QLocale::Somali,
-    QLocale::Spanish,
-    QLocale::Swahili,
-    QLocale::Swedish,
-    QLocale::Tagalog,
-    QLocale::Tajik,
-    QLocale::Tamil,
-    QLocale::Tatar,
-    QLocale::Telugu,
-    QLocale::TongaLanguage,
-    QLocale::Tsonga,
-    QLocale::Turkish,
-    QLocale::Turkmen,
-    QLocale::Twi,
-    QLocale::Uigur,
-    QLocale::Uzbek,
-    QLocale::Volapuk,
-    QLocale::Wolof,
-    QLocale::Xhosa,
-    QLocale::Yiddish,
-    QLocale::Zulu,
-    EOL
-};
-static const QLocale::Language frenchStyleLanguages[] = {
-    // keep synchronized with frenchStyleCountries
-    QLocale::Breton,
-    QLocale::French,
-    QLocale::Portuguese,
-    // Missing: Filipino,
-    QLocale::Tigrinya,
-    // Missing: Walloon
-    EOL
-};
-static const QLocale::Language latvianLanguage[] = { QLocale::Latvian, EOL };
-static const QLocale::Language irishStyleLanguages[] = {
-    QLocale::Divehi,
-    QLocale::Gaelic,
-    QLocale::Inuktitut,
-    QLocale::Inupiak,
-    QLocale::Irish,
-    QLocale::Manx,
-    QLocale::Maori,
-    // Missing: Sami,
-    QLocale::Samoan,
-    QLocale::Sanskrit,
-    EOL
-};
-static const QLocale::Language czechLanguage[] = { QLocale::Czech, EOL };
-static const QLocale::Language slovakLanguage[] = { QLocale::Slovak, EOL };
-static const QLocale::Language macedonianLanguage[] = { QLocale::Macedonian, EOL };
-static const QLocale::Language lithuanianLanguage[] = { QLocale::Lithuanian, EOL };
-static const QLocale::Language russianStyleLanguages[] = {
-    QLocale::Bosnian,
-    QLocale::Byelorussian,
-    QLocale::Croatian,
-    QLocale::Russian,
-    QLocale::Serbian,
-    QLocale::SerboCroatian,
-    QLocale::Ukrainian,
-    EOL
-};
-static const QLocale::Language polishLanguage[] = { QLocale::Polish, EOL };
-static const QLocale::Language romanianLanguages[] = {
-    QLocale::Moldavian,
-    QLocale::Romanian,
-    EOL
-};
-static const QLocale::Language slovenianLanguage[] = { QLocale::Slovenian, EOL };
-static const QLocale::Language malteseLanguage[] = { QLocale::Maltese, EOL };
-static const QLocale::Language welshLanguage[] = { QLocale::Welsh, EOL };
-static const QLocale::Language arabicLanguage[] = { QLocale::Arabic, EOL };
-
-static const QLocale::Country frenchStyleCountries[] = {
-    // keep synchronized with frenchStyleLanguages
-    QLocale::AnyCountry,
-    QLocale::AnyCountry,
-    QLocale::Brazil,
-    QLocale::AnyCountry
-};
-
-struct NumerusTableEntry {
-    const uchar *rules;
-    int rulesSize;
-    const char * const *forms;
-    const QLocale::Language *languages;
-    const QLocale::Country *countries;
-};
-
-static const NumerusTableEntry numerusTable[] = {
-    { 0, 0, japaneseStyleForms, japaneseStyleLanguages, 0 },
-    { englishStyleRules, sizeof(englishStyleRules), englishStyleForms, englishStyleLanguages, 0 },
-    { frenchStyleRules, sizeof(frenchStyleRules), frenchStyleForms, frenchStyleLanguages,
-      frenchStyleCountries },
-    { latvianRules, sizeof(latvianRules), latvianForms, latvianLanguage, 0 },
-    { irishStyleRules, sizeof(irishStyleRules), irishStyleForms, irishStyleLanguages, 0 },
-    { czechRules, sizeof(czechRules), czechForms, czechLanguage, 0 },
-    { slovakRules, sizeof(slovakRules), slovakForms, slovakLanguage, 0 },
-    { macedonianRules, sizeof(macedonianRules), macedonianForms, macedonianLanguage, 0 },
-    { lithuanianRules, sizeof(lithuanianRules), lithuanianForms, lithuanianLanguage, 0 },
-    { russianStyleRules, sizeof(russianStyleRules), russianStyleForms, russianStyleLanguages, 0 },
-    { polishRules, sizeof(polishRules), polishForms, polishLanguage, 0 },
-    { romanianRules, sizeof(romanianRules), romanianForms, romanianLanguages, 0 },
-    { slovenianRules, sizeof(slovenianRules), slovenianForms, slovenianLanguage, 0 },
-    { malteseRules, sizeof(malteseRules), malteseForms, malteseLanguage, 0 },
-    { welshRules, sizeof(welshRules), welshForms, welshLanguage, 0 },
-    { arabicRules, sizeof(arabicRules), arabicForms, arabicLanguage, 0 }
-};
-
-static const int NumerusTableSize = sizeof(numerusTable) / sizeof(numerusTable[0]);
 
 bool getNumerusInfo(QLocale::Language language, QLocale::Country country,
                            QByteArray *rules, QStringList *forms);
 
+/*
+  This is a quick hack. The proper way to handle this would be
+  to extend Translator's interface.
+*/
+#define ContextComment "QT_LINGUIST_INTERNAL_CONTEXT_COMMENT"
+
 QT_END_NAMESPACE
 
-#endif // TRANSLATOR_H
+#endif

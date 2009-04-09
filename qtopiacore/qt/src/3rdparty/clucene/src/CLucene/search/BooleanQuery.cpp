@@ -204,7 +204,7 @@ CL_NS_DEF(search)
 		return ret;
       }
 
-	float_t BooleanQuery::BooleanWeight::getValue() { return parentQuery->getBoost(); }
+	qreal BooleanQuery::BooleanWeight::getValue() { return parentQuery->getBoost(); }
 	Query* BooleanQuery::BooleanWeight::getQuery() { return (Query*)parentQuery; }
 
 
@@ -225,8 +225,8 @@ CL_NS_DEF(search)
 		this->weights.clear();
 	}
 
-    float_t BooleanQuery::BooleanWeight::sumOfSquaredWeights() {
-      float_t sum = 0.0f;
+    qreal BooleanQuery::BooleanWeight::sumOfSquaredWeights() {
+      qreal sum = 0.0f;
       for (uint32_t i = 0 ; i < weights.size(); i++) {
         BooleanClause* c = (*clauses)[i];
         Weight* w = weights[i];
@@ -237,7 +237,7 @@ CL_NS_DEF(search)
       return sum ;
     }
 
-    void BooleanQuery::BooleanWeight::normalize(float_t norm) {
+    void BooleanQuery::BooleanWeight::normalize(qreal norm) {
       norm *= parentQuery->getBoost();                         // incorporate boost
       for (uint32_t i = 0 ; i < weights.size(); i++) {
         BooleanClause* c = (*clauses)[i];
@@ -300,7 +300,7 @@ CL_NS_DEF(search)
 	void BooleanQuery::BooleanWeight::explain(IndexReader* reader, int32_t doc, Explanation* result){
       int32_t coord = 0;
       int32_t maxCoord = 0;
-      float_t sum = 0.0f;
+      qreal sum = 0.0f;
       Explanation* sumExpl = _CLNEW Explanation;
       for (uint32_t i = 0 ; i < weights.size(); i++) {
         BooleanClause* c = (*clauses)[i];
@@ -340,7 +340,7 @@ CL_NS_DEF(search)
       }
 
       sumExpl->setDescription(_T("sum of:"));
-	  float_t coordFactor = parentQuery->getSimilarity(searcher)->coord(coord, maxCoord);
+	  qreal coordFactor = parentQuery->getSimilarity(searcher)->coord(coord, maxCoord);
 	  if (coordFactor == 1.0f){                      // coord is no-op
         result->set(*sumExpl);                       // eliminate wrapper
 		_CLDELETE(sumExpl);

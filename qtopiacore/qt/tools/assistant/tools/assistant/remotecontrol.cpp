@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,12 +76,12 @@ StdInListenerWin::~StdInListenerWin()
 void StdInListenerWin::run()
 {
     bool ok = true;
-    char chBuf[4096]; 
+    char chBuf[4096];
     DWORD dwRead;
     HANDLE hStdin, hStdinDup;
 
-    hStdin = GetStdHandle(STD_INPUT_HANDLE); 
-    if (hStdin == INVALID_HANDLE_VALUE) 
+    hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    if (hStdin == INVALID_HANDLE_VALUE)
         return;
 
     DuplicateHandle(GetCurrentProcess(), hStdin,
@@ -90,21 +94,21 @@ void StdInListenerWin::run()
         ok = ReadFile(hStdinDup, chBuf, 4096, &dwRead, NULL);
         if (ok && dwRead != 0)
             emit receivedCommand(QString::fromLocal8Bit(chBuf));
-    }   
+    }
 }
 #endif
 
 RemoteControl::RemoteControl(MainWindow *mainWindow, QHelpEngine *helpEngine)
     : QObject(mainWindow)
+    , m_mainWindow(mainWindow)
+    , m_helpEngine(helpEngine)
+    , m_debug(false)
+    , m_caching(true)
+    , m_syncContents(false)
+    , m_expandTOC(-3)
+
 {
-    m_mainWindow = mainWindow;
-    m_helpEngine = helpEngine;
-    m_debug = false;
-    m_caching = true;
-    m_syncContents = false;
-    m_expandTOC = -3;
-    connect(m_mainWindow, SIGNAL(initDone()),
-        this, SLOT(applyCache()));
+    connect(m_mainWindow, SIGNAL(initDone()), this, SLOT(applyCache()));
 #ifdef Q_OS_WIN
     StdInListenerWin *l = new StdInListenerWin(this);
     connect(l, SIGNAL(receivedCommand(const QString&)),
@@ -113,8 +117,7 @@ RemoteControl::RemoteControl(MainWindow *mainWindow, QHelpEngine *helpEngine)
 #else
     QSocketNotifier *notifier = new QSocketNotifier(fileno(stdin),
         QSocketNotifier::Read, this);
-    connect(notifier, SIGNAL(activated(int)),
-        this, SLOT(receivedData()));
+    connect(notifier, SIGNAL(activated(int)), this, SLOT(receivedData()));
     notifier->setEnabled(true);
 #endif
 }
@@ -123,13 +126,13 @@ void RemoteControl::receivedData()
 {
     QByteArray ba;
     while (true) {
-	int c = getc(stdin);
-	if (c == EOF)
-	    break;
-	if (c)
-	    ba.append(c);
-	if (c == '\n')
-	    break;
+        char c = getc(stdin);
+        if (c == EOF || c == '\0')
+            break;
+        if (c)
+            ba.append(c);
+         if (c == '\n')
+             break;
     }
     handleCommandString(QString::fromLocal8Bit(ba));
 }
@@ -185,10 +188,8 @@ void RemoteControl::handleCommandString(const QString &cmdString)
                 if (url.isRelative())
                     url = CentralWidget::instance()->currentSource().resolved(url);
                 if (m_caching) {
+                    clearCache();
                     m_setSource = url;
-                    m_syncContents = false;
-                    m_activateKeyword.clear();
-                    m_activateIdentifier.clear();
                 } else {
                     CentralWidget::instance()->setSource(url);
                 }
@@ -200,10 +201,8 @@ void RemoteControl::handleCommandString(const QString &cmdString)
                 m_mainWindow->syncContents();
         } else if (cmd == QLatin1String("activatekeyword")) {
             if (m_caching) {
+                clearCache();
                 m_activateKeyword = arg;
-                m_syncContents = false;
-                m_setSource.clear();
-                m_activateIdentifier.clear();
             } else {
                 m_mainWindow->setIndexString(arg);
                 if (!arg.isEmpty())
@@ -211,10 +210,8 @@ void RemoteControl::handleCommandString(const QString &cmdString)
             }
         } else if (cmd == QLatin1String("activateidentifier")) {
             if (m_caching) {
+                clearCache();
                 m_activateIdentifier = arg;
-                m_setSource.clear();
-                m_syncContents = false;
-                m_activateKeyword.clear();
             } else {
                 QMap<QString, QUrl> links =
                     m_helpEngine->linksForIdentifier(arg);
@@ -232,7 +229,14 @@ void RemoteControl::handleCommandString(const QString &cmdString)
             if (m_caching)
                 m_expandTOC = depth;
             else
-                m_mainWindow->expandTOC(depth);            
+                m_mainWindow->expandTOC(depth);
+        } else if (cmd == QLatin1String("setcurrentfilter")) {
+            if (m_caching) {
+                clearCache();
+                m_currentFilter = arg;
+            } else {
+                m_helpEngine->setCurrentFilter(arg);
+            }
         } else {
             return;
         }
@@ -248,22 +252,32 @@ void RemoteControl::applyCache()
         CentralWidget::instance()->setSource(m_setSource);
     } else if (!m_activateKeyword.isEmpty()) {
         m_mainWindow->setIndexString(m_activateKeyword);
-        if (!m_activateKeyword.isEmpty())
-            m_helpEngine->indexWidget()->activateCurrentItem();
+        m_helpEngine->indexWidget()->activateCurrentItem();
     } else if (!m_activateIdentifier.isEmpty()) {
         QMap<QString, QUrl> links =
             m_helpEngine->linksForIdentifier(m_activateIdentifier);
         if (links.count())
             CentralWidget::instance()->setSource(links.constBegin().value());
+    } else if (!m_currentFilter.isEmpty()) {
+        m_helpEngine->setCurrentFilter(m_currentFilter);
     }
-    
+
     if (m_syncContents)
         m_mainWindow->syncContents();
-    
+
     if (m_expandTOC != -3)
         m_mainWindow->expandTOC(m_expandTOC);
 
     m_caching = false;
+}
+
+void RemoteControl::clearCache()
+{
+    m_currentFilter.clear();
+    m_setSource.clear();
+    m_syncContents = false;
+    m_activateKeyword.clear();
+    m_activateIdentifier.clear();
 }
 
 QT_END_NAMESPACE

@@ -18,8 +18,8 @@
     Boston, MA 02110-1301, USA.
 */
 
-#ifndef JSSVGPathElement_H
-#define JSSVGPathElement_H
+#ifndef JSSVGPathElement_h
+#define JSSVGPathElement_h
 
 
 #if ENABLE(SVG)
@@ -31,57 +31,86 @@ namespace WebCore {
 class SVGPathElement;
 
 class JSSVGPathElement : public JSSVGElement {
+    typedef JSSVGElement Base;
 public:
-    JSSVGPathElement(KJS::ExecState*, SVGPathElement*);
-    virtual bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    KJS::JSValue* getValueProperty(KJS::ExecState*, int token) const;
-    virtual void put(KJS::ExecState*, const KJS::Identifier&, KJS::JSValue*, int attr = KJS::None);
-    void putValueProperty(KJS::ExecState*, int, KJS::JSValue*, int attr);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
+    JSSVGPathElement(PassRefPtr<JSC::Structure>, PassRefPtr<SVGPathElement>);
+    static JSC::JSObject* createPrototype(JSC::ExecState*);
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::PropertySlot&);
+    virtual void put(JSC::ExecState*, const JSC::Identifier& propertyName, JSC::JSValuePtr, JSC::PutPropertySlot&);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
 
-    enum {
-        // Attributes
-        PathLengthAttrNum, RequiredFeaturesAttrNum, RequiredExtensionsAttrNum, SystemLanguageAttrNum, 
-        XmllangAttrNum, XmlspaceAttrNum, ExternalResourcesRequiredAttrNum, ClassNameAttrNum, 
-        StyleAttrNum, TransformAttrNum, NearestViewportElementAttrNum, FarthestViewportElementAttrNum, 
-        PathSegListAttrNum, NormalizedPathSegListAttrNum, AnimatedPathSegListAttrNum, AnimatedNormalizedPathSegListAttrNum, 
-
-        // Functions
-        GetTotalLengthFuncNum, GetPointAtLengthFuncNum, GetPathSegAtLengthFuncNum, CreateSVGPathSegClosePathFuncNum, 
-        CreateSVGPathSegMovetoAbsFuncNum, CreateSVGPathSegMovetoRelFuncNum, CreateSVGPathSegLinetoAbsFuncNum, CreateSVGPathSegLinetoRelFuncNum, 
-        CreateSVGPathSegCurvetoCubicAbsFuncNum, CreateSVGPathSegCurvetoCubicRelFuncNum, CreateSVGPathSegCurvetoQuadraticAbsFuncNum, CreateSVGPathSegCurvetoQuadraticRelFuncNum, 
-        CreateSVGPathSegArcAbsFuncNum, CreateSVGPathSegArcRelFuncNum, CreateSVGPathSegLinetoHorizontalAbsFuncNum, CreateSVGPathSegLinetoHorizontalRelFuncNum, 
-        CreateSVGPathSegLinetoVerticalAbsFuncNum, CreateSVGPathSegLinetoVerticalRelFuncNum, CreateSVGPathSegCurvetoCubicSmoothAbsFuncNum, CreateSVGPathSegCurvetoCubicSmoothRelFuncNum, 
-        CreateSVGPathSegCurvetoQuadraticSmoothAbsFuncNum, CreateSVGPathSegCurvetoQuadraticSmoothRelFuncNum, HasExtensionFuncNum, GetBBoxFuncNum, 
-        GetCTMFuncNum, GetScreenCTMFuncNum, GetTransformToElementFuncNum
-    };
-};
-
-
-class JSSVGPathElementPrototype : public KJS::JSObject {
-public:
-    static KJS::JSObject* self(KJS::ExecState* exec);
-    virtual const KJS::ClassInfo* classInfo() const { return &info; }
-    static const KJS::ClassInfo info;
-    bool getOwnPropertySlot(KJS::ExecState*, const KJS::Identifier&, KJS::PropertySlot&);
-    JSSVGPathElementPrototype(KJS::ExecState* exec)
-        : KJS::JSObject(JSSVGElementPrototype::self(exec)) { }
-};
-
-class JSSVGPathElementPrototypeFunction : public KJS::InternalFunctionImp {
-public:
-    JSSVGPathElementPrototypeFunction(KJS::ExecState* exec, int i, int len, const KJS::Identifier& name)
-        : KJS::InternalFunctionImp(static_cast<KJS::FunctionPrototype*>(exec->lexicalInterpreter()->builtinFunctionPrototype()), name)
-        , id(i)
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
     {
-        put(exec, exec->propertyNames().length, KJS::jsNumber(len), KJS::DontDelete|KJS::ReadOnly|KJS::DontEnum);
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
     }
-    virtual KJS::JSValue* callAsFunction(KJS::ExecState*, KJS::JSObject*, const KJS::List&);
 
-private:
-    int id;
 };
+
+
+class JSSVGPathElementPrototype : public JSC::JSObject {
+public:
+    static JSC::JSObject* self(JSC::ExecState*);
+    virtual const JSC::ClassInfo* classInfo() const { return &s_info; }
+    static const JSC::ClassInfo s_info;
+    virtual bool getOwnPropertySlot(JSC::ExecState*, const JSC::Identifier&, JSC::PropertySlot&);
+    static PassRefPtr<JSC::Structure> createStructure(JSC::JSValuePtr prototype)
+    {
+        return JSC::Structure::create(prototype, JSC::TypeInfo(JSC::ObjectType));
+    }
+    JSSVGPathElementPrototype(PassRefPtr<JSC::Structure> structure) : JSC::JSObject(structure) { }
+};
+
+// Functions
+
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetTotalLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetPointAtLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetPathSegAtLength(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegClosePath(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegMovetoRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegArcRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoHorizontalRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegLinetoVerticalRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoCubicSmoothRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothAbs(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionCreateSVGPathSegCurvetoQuadraticSmoothRel(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionHasExtension(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetPresentationAttribute(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetBBox(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetScreenCTM(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+JSC::JSValuePtr jsSVGPathElementPrototypeFunctionGetTransformToElement(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr, const JSC::ArgList&);
+// Attributes
+
+JSC::JSValuePtr jsSVGPathElementPathLength(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementRequiredFeatures(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementRequiredExtensions(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementSystemLanguage(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementXmllang(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathElementXmllang(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathElementXmlspace(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+void setJSSVGPathElementXmlspace(JSC::ExecState*, JSC::JSObject*, JSC::JSValuePtr);
+JSC::JSValuePtr jsSVGPathElementExternalResourcesRequired(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementClassName(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementStyle(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementTransform(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementNearestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementFarthestViewportElement(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementPathSegList(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementNormalizedPathSegList(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementAnimatedPathSegList(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
+JSC::JSValuePtr jsSVGPathElementAnimatedNormalizedPathSegList(JSC::ExecState*, const JSC::Identifier&, const JSC::PropertySlot&);
 
 } // namespace WebCore
 

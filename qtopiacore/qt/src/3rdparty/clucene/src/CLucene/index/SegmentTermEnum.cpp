@@ -272,7 +272,7 @@ CL_NS_DEF(index)
 
 		//Have the buffer grown if needed
 		if ( bufferLength <= _term->textLength() )
-			growBuffer(_term->textLength() );		  // copy term text into buffer
+			growBuffer(_term->textLength(), true );		  // copy term text into buffer
 		else
 			_tcsncpy(buffer,_term->text(),bufferLength); //just copy the buffer
 	}
@@ -336,9 +336,8 @@ CL_NS_DEF(index)
 		//chars in buffer and the new ones yet to be read
 		uint32_t totalLength = start + length;
 
-		//TODO: check this, not copying buffer every time.
 		if (static_cast<uint32_t>(bufferLength) < totalLength+1)
-			growBuffer(totalLength);
+			growBuffer(totalLength, false);
 
 		//Read a length number of characters into the buffer from position start in the inputStream input
 		input->readChars(buffer, start, length);
@@ -355,7 +354,7 @@ CL_NS_DEF(index)
 		return reuse;
 	}
 
-	void SegmentTermEnum::growBuffer(const uint32_t length) {
+	void SegmentTermEnum::growBuffer(const uint32_t length, bool force_copy) {
 	//Func - Instantiate a buffer of length length+1
 	//Pre  - length > 0
 	//Post - pre(buffer) has been deleted with its contents. A new buffer
@@ -381,7 +380,7 @@ CL_NS_DEF(index)
 		else
 			buffer = (TCHAR*)realloc(buffer, sizeof(TCHAR) * (bufferLength+1));
 
-		if ( copy ){
+		if ( copy || force_copy){
 			//Copy the text of term into buffer
 			_tcsncpy(buffer,_term->text(),bufferLength);
 		}

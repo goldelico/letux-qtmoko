@@ -28,140 +28,142 @@
 #include "CSSStyleDeclaration.h"
 #include "CSSStyleRule.h"
 #include "JSCSSStyleDeclaration.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCSSStyleRule)
+
 /* Hash table */
 
-static const HashEntry JSCSSStyleRuleTableEntries[] =
+static const HashTableValue JSCSSStyleRuleTableValues[4] =
 {
-    { "selectorText", JSCSSStyleRule::SelectorTextAttrNum, DontDelete, 0, &JSCSSStyleRuleTableEntries[3] },
-    { 0, 0, 0, 0, 0 },
-    { "style", JSCSSStyleRule::StyleAttrNum, DontDelete|ReadOnly, 0, 0 },
-    { "constructor", JSCSSStyleRule::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "selectorText", DontDelete, (intptr_t)jsCSSStyleRuleSelectorText, (intptr_t)setJSCSSStyleRuleSelectorText },
+    { "style", DontDelete|ReadOnly, (intptr_t)jsCSSStyleRuleStyle, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCSSStyleRuleConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSStyleRuleTable = 
-{
-    2, 4, JSCSSStyleRuleTableEntries, 3
-};
+static const HashTable JSCSSStyleRuleTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSCSSStyleRuleTableValues, 0 };
+#else
+    { 8, 7, JSCSSStyleRuleTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCSSStyleRuleConstructorTableEntries[] =
+static const HashTableValue JSCSSStyleRuleConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSStyleRuleConstructorTable = 
-{
-    2, 1, JSCSSStyleRuleConstructorTableEntries, 1
-};
+static const HashTable JSCSSStyleRuleConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCSSStyleRuleConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCSSStyleRuleConstructorTableValues, 0 };
+#endif
 
 class JSCSSStyleRuleConstructor : public DOMObject {
 public:
     JSCSSStyleRuleConstructor(ExecState* exec)
+        : DOMObject(JSCSSStyleRuleConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCSSStyleRulePrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCSSStyleRuleConstructor::info = { "CSSStyleRuleConstructor", 0, &JSCSSStyleRuleConstructorTable, 0 };
+const ClassInfo JSCSSStyleRuleConstructor::s_info = { "CSSStyleRuleConstructor", 0, &JSCSSStyleRuleConstructorTable, 0 };
 
 bool JSCSSStyleRuleConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCSSStyleRuleConstructor, DOMObject>(exec, &JSCSSStyleRuleConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSStyleRuleConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCSSStyleRulePrototypeTableEntries[] =
+static const HashTableValue JSCSSStyleRulePrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSStyleRulePrototypeTable = 
-{
-    2, 1, JSCSSStyleRulePrototypeTableEntries, 1
-};
+static const HashTable JSCSSStyleRulePrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCSSStyleRulePrototypeTableValues, 0 };
+#else
+    { 1, 0, JSCSSStyleRulePrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCSSStyleRulePrototype::info = { "CSSStyleRulePrototype", 0, &JSCSSStyleRulePrototypeTable, 0 };
+const ClassInfo JSCSSStyleRulePrototype::s_info = { "CSSStyleRulePrototype", 0, &JSCSSStyleRulePrototypeTable, 0 };
 
 JSObject* JSCSSStyleRulePrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCSSStyleRulePrototype>(exec, "[[JSCSSStyleRule.prototype]]");
+    return getDOMPrototype<JSCSSStyleRule>(exec);
 }
 
-const ClassInfo JSCSSStyleRule::info = { "CSSStyleRule", &JSCSSRule::info, &JSCSSStyleRuleTable, 0 };
+const ClassInfo JSCSSStyleRule::s_info = { "CSSStyleRule", &JSCSSRule::s_info, &JSCSSStyleRuleTable, 0 };
 
-JSCSSStyleRule::JSCSSStyleRule(ExecState* exec, CSSStyleRule* impl)
-    : JSCSSRule(exec, impl)
+JSCSSStyleRule::JSCSSStyleRule(PassRefPtr<Structure> structure, PassRefPtr<CSSStyleRule> impl)
+    : JSCSSRule(structure, impl)
 {
-    setPrototype(JSCSSStyleRulePrototype::self(exec));
+}
+
+JSObject* JSCSSStyleRule::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCSSStyleRulePrototype(JSCSSStyleRulePrototype::createStructure(JSCSSRulePrototype::self(exec)));
 }
 
 bool JSCSSStyleRule::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSCSSStyleRule, JSCSSRule>(exec, &JSCSSStyleRuleTable, this, propertyName, slot);
+    return getStaticValueSlot<JSCSSStyleRule, Base>(exec, &JSCSSStyleRuleTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSStyleRule::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsCSSStyleRuleSelectorText(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case SelectorTextAttrNum: {
-        CSSStyleRule* imp = static_cast<CSSStyleRule*>(impl());
-
-        return jsStringOrNull(imp->selectorText());
-    }
-    case StyleAttrNum: {
-        CSSStyleRule* imp = static_cast<CSSStyleRule*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->style()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    CSSStyleRule* imp = static_cast<CSSStyleRule*>(static_cast<JSCSSStyleRule*>(asObject(slot.slotBase()))->impl());
+    return jsStringOrNull(exec, imp->selectorText());
 }
 
-void JSCSSStyleRule::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsCSSStyleRuleStyle(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSCSSStyleRule, JSCSSRule>(exec, propertyName, value, attr, &JSCSSStyleRuleTable, this);
+    CSSStyleRule* imp = static_cast<CSSStyleRule*>(static_cast<JSCSSStyleRule*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->style()));
 }
 
-void JSCSSStyleRule::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsCSSStyleRuleConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case SelectorTextAttrNum: {
-        CSSStyleRule* imp = static_cast<CSSStyleRule*>(impl());
-
-        ExceptionCode ec = 0;
-        imp->setSelectorText(valueToStringWithNullCheck(exec, value), ec);
-        setDOMException(exec, ec);
-        break;
-    }
-    }
+    return static_cast<JSCSSStyleRule*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSCSSStyleRule::getConstructor(ExecState* exec)
+void JSCSSStyleRule::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSCSSStyleRuleConstructor>(exec, "[[CSSStyleRule.constructor]]");
+    lookupPut<JSCSSStyleRule, Base>(exec, propertyName, value, &JSCSSStyleRuleTable, this, slot);
 }
+
+void setJSCSSStyleRuleSelectorText(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    CSSStyleRule* imp = static_cast<CSSStyleRule*>(static_cast<JSCSSStyleRule*>(thisObject)->impl());
+    ExceptionCode ec = 0;
+    imp->setSelectorText(valueToStringWithNullCheck(exec, value), ec);
+    setDOMException(exec, ec);
+}
+
+JSValuePtr JSCSSStyleRule::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSCSSStyleRuleConstructor>(exec);
+}
+
 
 }

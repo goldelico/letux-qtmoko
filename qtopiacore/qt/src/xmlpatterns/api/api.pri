@@ -5,7 +5,10 @@ HEADERS += $$PWD/qabstractxmlforwarditerator_p.h                            \
            $$PWD/qabstractxmlnodemodel_p.h                                  \
            $$PWD/qabstractxmlreceiver.h                                     \
            $$PWD/qabstractxmlreceiver_p.h                                   \
+           $$PWD/qdeviceresourceloader_p.h                                  \
            $$PWD/qiodevicedelegate_p.h                                      \
+           $$PWD/qnetworkaccessdelegator_p.h                                \
+           $$PWD/qresourcedelegator_p.h                                     \
            $$PWD/qsimplexmlnodemodel.h                                      \
            $$PWD/qsourcelocation.h                                          \
            $$PWD/quriloader_p.h                                             \
@@ -28,6 +31,8 @@ SOURCES += $$PWD/qvariableloader.cpp                                        \
            $$PWD/qabstractxmlnodemodel.cpp                                  \
            $$PWD/qabstractxmlreceiver.cpp                                   \
            $$PWD/qiodevicedelegate.cpp                                      \
+           $$PWD/qnetworkaccessdelegator.cpp                                \
+           $$PWD/qresourcedelegator.cpp                                     \
            $$PWD/qsimplexmlnodemodel.cpp                                    \
            $$PWD/qsourcelocation.cpp                                        \
            $$PWD/quriloader.cpp                                             \

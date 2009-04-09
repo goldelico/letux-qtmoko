@@ -15,7 +15,7 @@ HEADERS += $$PWD/qabstractdatetime_p.h              \
            $$PWD/qboolean_p.h                       \
            $$PWD/qcommonvalues_p.h                  \
            $$PWD/qdate_p.h                          \
-           $$PWD/qdatetime_p.h                      \
+           $$PWD/qschemadatetime_p.h                \
            $$PWD/qdaytimeduration_p.h               \
            $$PWD/qdecimal_p.h                       \
            $$PWD/qderivedinteger_p.h                \
@@ -30,7 +30,7 @@ HEADERS += $$PWD/qabstractdatetime_p.h              \
            $$PWD/qinteger_p.h                       \
            $$PWD/qitem_p.h                          \
            $$PWD/qnodebuilder_p.h                   \
-           $$PWD/qnumeric_p.h                       \
+           $$PWD/qschemanumeric_p.h                 \
            $$PWD/qqnamevalue_p.h                    \
            $$PWD/qresourceloader_p.h                \
            $$PWD/qsorttuple.cpp                     \
@@ -54,7 +54,7 @@ SOURCES += $$PWD/qabstractdatetime.cpp        \
            $$PWD/qboolean.cpp                 \
            $$PWD/qcommonvalues.cpp            \
            $$PWD/qdate.cpp                    \
-           $$PWD/qdatetime.cpp                \
+           $$PWD/qschemadatetime.cpp          \
            $$PWD/qdaytimeduration.cpp         \
            $$PWD/qdecimal.cpp                 \
            $$PWD/qduration.cpp                \
@@ -68,7 +68,7 @@ SOURCES += $$PWD/qabstractdatetime.cpp        \
            $$PWD/qitem.cpp                    \
            $$PWD/qnodebuilder.cpp             \
            $$PWD/qnodemodel.cpp               \
-           $$PWD/qnumeric.cpp                 \
+           $$PWD/qschemanumeric.cpp           \
            $$PWD/qqnamevalue.cpp              \
            $$PWD/qresourceloader.cpp          \
            $$PWD/qsorttuple.cpp               \

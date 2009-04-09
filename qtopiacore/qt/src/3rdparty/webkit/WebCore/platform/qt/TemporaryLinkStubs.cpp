@@ -4,6 +4,7 @@
  * Copyright (C) 2006 George Staikos <staikos@kde.org>
  * Copyright (C) 2006 Dirk Mueller <mueller@kde.org>
  * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2008 Collabora, Ltd.
  *
  * All rights reserved.
  *
@@ -32,6 +33,8 @@
 #include "config.h"
 
 #include "AXObjectCache.h"
+#include "DNS.h"
+#include "CString.h"
 #include "CachedResource.h"
 #include "CookieJar.h"
 #include "Cursor.h"
@@ -47,7 +50,6 @@
 #include "FileSystem.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
-#include "GlobalHistory.h"
 #include "IconLoader.h"
 #include "IntPoint.h"
 #include "KURL.h"
@@ -58,25 +60,70 @@
 #include "NotImplemented.h"
 #include "Path.h"
 #include "PlatformMouseEvent.h"
+#include "PluginDatabase.h"
+#include "PluginPackage.h"
+#include "PluginView.h"
 #include "RenderTheme.h"
+#include "SharedBuffer.h"
 #include "SystemTime.h"
 #include "TextBoundaries.h"
 #include "Widget.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 using namespace WebCore;
 
-void FrameView::updateBorder() { notImplemented(); }
+#if (!defined(Q_WS_X11) && !defined(Q_WS_WIN) && !defined(Q_WS_MAC32)) || defined(Q_OS_WINCE)
 
-bool AXObjectCache::gAccessibilityEnabled = false;
+bool PluginPackage::fetchInfo() { notImplemented(); return false; }
+unsigned PluginPackage::hash() const { notImplemented(); return 0; }
+bool PluginPackage::equal(const PluginPackage&, const PluginPackage&) { notImplemented(); return false; }
+int PluginPackage::compareFileVersion(const PlatformModuleVersion&) const { notImplemented(); return -1; }
+
+void PluginView::setNPWindowRect(const IntRect&) { notImplemented(); }
+const char* PluginView::userAgent() { notImplemented(); return 0; }
+#if ENABLE(NETSCAPE_PLUGIN_API)
+const char* PluginView::userAgentStatic() { notImplemented(); return 0; }
+#endif
+void PluginView::invalidateRect(NPRect*) { notImplemented(); }
+void PluginView::invalidateRect(const IntRect&) { notImplemented(); }
+void PluginView::invalidateRegion(NPRegion) { notImplemented(); }
+void PluginView::forceRedraw() { notImplemented(); }
+void PluginView::setFocus() { Widget::setFocus(); }
+void PluginView::show() { Widget::show(); }
+void PluginView::hide() { Widget::hide(); }
+void PluginView::paint(GraphicsContext*, const IntRect&) { notImplemented(); }
+void PluginView::setParent(ScrollView* view) { Widget::setParent(view); }
+void PluginView::setParentVisible(bool) { notImplemented(); }
+void PluginView::updatePluginWidget() { notImplemented(); }
+void PluginView::handleKeyboardEvent(KeyboardEvent*) { notImplemented(); }
+void PluginView::handleMouseEvent(MouseEvent*) { notImplemented(); }
+NPError PluginView::handlePostReadFile(Vector<char>&, uint32, const char*) { notImplemented(); return NPERR_GENERIC_ERROR; }
+NPError PluginView::getValue(NPNVariable, void*) { notImplemented(); return NPERR_GENERIC_ERROR; }
+#if ENABLE(NETSCAPE_PLUGIN_API)
+NPError PluginView::getValueStatic(NPNVariable, void*) { return NPERR_GENERIC_ERROR; }
+#endif
+PluginView::~PluginView() {}
+#endif
+
+#if defined(Q_OS_WINCE)
+Vector<String> PluginDatabase::defaultPluginDirectories() { notImplemented(); return Vector<String>(); }
+void PluginDatabase::getPluginPathsInDirectories(HashSet<String>& paths) const { notImplemented(); }
+bool PluginDatabase::isPreferredPluginDirectory(const String& directory) { notImplemented(); return false; }
+#endif
 
 namespace WebCore {
 
-Vector<String> supportedKeySizes() { notImplemented(); return Vector<String>(); }
+void getSupportedKeySizes(Vector<String>&) { notImplemented(); }
 String signedPublicKeyAndChallengeString(unsigned keySizeIndex, const String &challengeString, const KURL &url) { return String(); }
 
-float userIdleTime() { notImplemented(); return 0.0; }
+#if !defined(Q_OS_WIN)
+// defined in win/SystemTimeWin.cpp, which is compiled for the Qt/Windows port
+float userIdleTime() { notImplemented(); return FLT_MAX; } // return an arbitrarily high userIdleTime so that releasing pages from the page cache isn't postponed
+#endif
+
+void prefetchDNS(const String& hostname) { notImplemented(); }
 
 }
 

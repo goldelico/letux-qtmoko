@@ -2,15 +2,15 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/src/sql/models/qsqltablemodel.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/sql/models/qsqltablemodel.cpp -->
 <head>
-  <title>Qt 4.4: QSqlTableModel Class Reference</title>
+  <title>Qt 4.5: QSqlTableModel Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QSqlTableModel Class Reference<br /><span class="small-subtitle">[<a href="qtsql.html">QtSql</a> module]</span>
 </h1>
@@ -23,85 +23,85 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"/>enum <b><a href="qsqltablemodel.html#EditStrategy-enum">EditStrategy</a></b> { OnFieldChange, OnRowChange, OnManualSubmit }</li>
+<li><div class="fn"></div>enum <b><a href="qsqltablemodel.html#EditStrategy-enum">EditStrategy</a></b> { OnFieldChange, OnRowChange, OnManualSubmit }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"/><b><a href="qsqltablemodel.html#QSqlTableModel">QSqlTableModel</a></b> ( QObject * <i>parent</i> = 0, QSqlDatabase <i>db</i> = QSqlDatabase() )</li>
-<li><div class="fn"/>virtual <b><a href="qsqltablemodel.html#dtor.QSqlTableModel">~QSqlTableModel</a></b> ()</li>
-<li><div class="fn"/>QSqlDatabase <b><a href="qsqltablemodel.html#database">database</a></b> () const</li>
-<li><div class="fn"/>EditStrategy <b><a href="qsqltablemodel.html#editStrategy">editStrategy</a></b> () const</li>
-<li><div class="fn"/>int <b><a href="qsqltablemodel.html#fieldIndex">fieldIndex</a></b> ( const QString &amp; <i>fieldName</i> ) const</li>
-<li><div class="fn"/>QString <b><a href="qsqltablemodel.html#filter">filter</a></b> () const</li>
-<li><div class="fn"/>bool <b><a href="qsqltablemodel.html#insertRecord">insertRecord</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>record</i> )</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#insertRows">insertRows</a></b> ( int <i>row</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
-<li><div class="fn"/>bool <b><a href="qsqltablemodel.html#isDirty">isDirty</a></b> ( const QModelIndex &amp; <i>index</i> ) const</li>
-<li><div class="fn"/>QSqlIndex <b><a href="qsqltablemodel.html#primaryKey">primaryKey</a></b> () const</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#removeColumns">removeColumns</a></b> ( int <i>column</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#removeRows">removeRows</a></b> ( int <i>row</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#revertRow">revertRow</a></b> ( int <i>row</i> )</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#select">select</a></b> ()</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#setData">setData</a></b> ( const QModelIndex &amp; <i>index</i>, const QVariant &amp; <i>value</i>, int <i>role</i> = Qt::EditRole )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#setEditStrategy">setEditStrategy</a></b> ( EditStrategy <i>strategy</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#setFilter">setFilter</a></b> ( const QString &amp; <i>filter</i> )</li>
-<li><div class="fn"/>bool <b><a href="qsqltablemodel.html#setRecord">setRecord</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>record</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#setSort">setSort</a></b> ( int <i>column</i>, Qt::SortOrder <i>order</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#setTable">setTable</a></b> ( const QString &amp; <i>tableName</i> )</li>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#sort">sort</a></b> ( int <i>column</i>, Qt::SortOrder <i>order</i> )</li>
-<li><div class="fn"/>QString <b><a href="qsqltablemodel.html#tableName">tableName</a></b> () const</li>
+<li><div class="fn"></div><b><a href="qsqltablemodel.html#QSqlTableModel">QSqlTableModel</a></b> ( QObject * <i>parent</i> = 0, QSqlDatabase <i>db</i> = QSqlDatabase() )</li>
+<li><div class="fn"></div>virtual <b><a href="qsqltablemodel.html#dtor.QSqlTableModel">~QSqlTableModel</a></b> ()</li>
+<li><div class="fn"></div>QSqlDatabase <b><a href="qsqltablemodel.html#database">database</a></b> () const</li>
+<li><div class="fn"></div>EditStrategy <b><a href="qsqltablemodel.html#editStrategy">editStrategy</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qsqltablemodel.html#fieldIndex">fieldIndex</a></b> ( const QString &amp; <i>fieldName</i> ) const</li>
+<li><div class="fn"></div>QString <b><a href="qsqltablemodel.html#filter">filter</a></b> () const</li>
+<li><div class="fn"></div>bool <b><a href="qsqltablemodel.html#insertRecord">insertRecord</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>record</i> )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#insertRows">insertRows</a></b> ( int <i>row</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
+<li><div class="fn"></div>bool <b><a href="qsqltablemodel.html#isDirty">isDirty</a></b> ( const QModelIndex &amp; <i>index</i> ) const</li>
+<li><div class="fn"></div>QSqlIndex <b><a href="qsqltablemodel.html#primaryKey">primaryKey</a></b> () const</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#removeColumns">removeColumns</a></b> ( int <i>column</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#removeRows">removeRows</a></b> ( int <i>row</i>, int <i>count</i>, const QModelIndex &amp; <i>parent</i> = QModelIndex() )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#revertRow">revertRow</a></b> ( int <i>row</i> )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#select">select</a></b> ()</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#setData">setData</a></b> ( const QModelIndex &amp; <i>index</i>, const QVariant &amp; <i>value</i>, int <i>role</i> = Qt::EditRole )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#setEditStrategy">setEditStrategy</a></b> ( EditStrategy <i>strategy</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#setFilter">setFilter</a></b> ( const QString &amp; <i>filter</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qsqltablemodel.html#setRecord">setRecord</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>record</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#setSort">setSort</a></b> ( int <i>column</i>, Qt::SortOrder <i>order</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#setTable">setTable</a></b> ( const QString &amp; <i>tableName</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#sort">sort</a></b> ( int <i>column</i>, Qt::SortOrder <i>order</i> )</li>
+<li><div class="fn"></div>QString <b><a href="qsqltablemodel.html#tableName">tableName</a></b> () const</li>
 </ul>
 <ul>
-<li><div class="fn"/>15 public functions inherited from <a href="qsqlquerymodel.html#public-functions">QSqlQueryModel</a></li>
-<li><div class="fn"/>1 public function inherited from <a href="qabstracttablemodel.html#public-functions">QAbstractTableModel</a></li>
-<li><div class="fn"/>34 public functions inherited from <a href="qabstractitemmodel.html#public-functions">QAbstractItemModel</a></li>
-<li><div class="fn"/>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
+<li><div class="fn"></div>15 public functions inherited from <a href="qsqlquerymodel.html#public-functions">QSqlQueryModel</a></li>
+<li><div class="fn"></div>1 public function inherited from <a href="qabstracttablemodel.html#public-functions">QAbstractTableModel</a></li>
+<li><div class="fn"></div>34 public functions inherited from <a href="qabstractitemmodel.html#public-functions">QAbstractItemModel</a></li>
+<li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
 <ul>
-<li><div class="fn"/>virtual void <b><a href="qsqltablemodel.html#revert">revert</a></b> ()</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#revertAll">revertAll</a></b> ()</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#submit">submit</a></b> ()</li>
-<li><div class="fn"/>bool <b><a href="qsqltablemodel.html#submitAll">submitAll</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qsqltablemodel.html#revert">revert</a></b> ()</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#revertAll">revertAll</a></b> ()</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#submit">submit</a></b> ()</li>
+<li><div class="fn"></div>bool <b><a href="qsqltablemodel.html#submitAll">submitAll</a></b> ()</li>
 </ul>
 <ul>
-<li><div class="fn"/>2 public slots inherited from <a href="qabstractitemmodel.html#public-slots">QAbstractItemModel</a></li>
-<li><div class="fn"/>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
+<li><div class="fn"></div>2 public slots inherited from <a href="qabstractitemmodel.html#public-slots">QAbstractItemModel</a></li>
+<li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
 <ul>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#beforeDelete">beforeDelete</a></b> ( int <i>row</i> )</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#beforeInsert">beforeInsert</a></b> ( QSqlRecord &amp; <i>record</i> )</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#beforeUpdate">beforeUpdate</a></b> ( int <i>row</i>, QSqlRecord &amp; <i>record</i> )</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#primeInsert">primeInsert</a></b> ( int <i>row</i>, QSqlRecord &amp; <i>record</i> )</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#beforeDelete">beforeDelete</a></b> ( int <i>row</i> )</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#beforeInsert">beforeInsert</a></b> ( QSqlRecord &amp; <i>record</i> )</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#beforeUpdate">beforeUpdate</a></b> ( int <i>row</i>, QSqlRecord &amp; <i>record</i> )</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#primeInsert">primeInsert</a></b> ( int <i>row</i>, QSqlRecord &amp; <i>record</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>14 signals inherited from <a href="qabstractitemmodel.html#signals">QAbstractItemModel</a></li>
-<li><div class="fn"/>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
+<li><div class="fn"></div>14 signals inherited from <a href="qabstractitemmodel.html#signals">QAbstractItemModel</a></li>
+<li><div class="fn"></div>1 signal inherited from <a href="qobject.html#signals">QObject</a></li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
 <ul>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#deleteRowFromTable">deleteRowFromTable</a></b> ( int <i>row</i> )</li>
-<li><div class="fn"/>QModelIndex <b><a href="qsqltablemodel.html#indexInQuery">indexInQuery</a></b> ( const QModelIndex &amp; <i>item</i> ) const</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#insertRowIntoTable">insertRowIntoTable</a></b> ( const QSqlRecord &amp; <i>values</i> )</li>
-<li><div class="fn"/>virtual QString <b><a href="qsqltablemodel.html#orderByClause">orderByClause</a></b> () const</li>
-<li><div class="fn"/>virtual QString <b><a href="qsqltablemodel.html#selectStatement">selectStatement</a></b> () const</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#setPrimaryKey">setPrimaryKey</a></b> ( const QSqlIndex &amp; <i>key</i> )</li>
-<li><div class="fn"/>void <b><a href="qsqltablemodel.html#setQuery">setQuery</a></b> ( const QSqlQuery &amp; <i>query</i> )</li>
-<li><div class="fn"/>virtual bool <b><a href="qsqltablemodel.html#updateRowInTable">updateRowInTable</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>values</i> )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#deleteRowFromTable">deleteRowFromTable</a></b> ( int <i>row</i> )</li>
+<li><div class="fn"></div>QModelIndex <b><a href="qsqltablemodel.html#indexInQuery">indexInQuery</a></b> ( const QModelIndex &amp; <i>item</i> ) const</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#insertRowIntoTable">insertRowIntoTable</a></b> ( const QSqlRecord &amp; <i>values</i> )</li>
+<li><div class="fn"></div>virtual QString <b><a href="qsqltablemodel.html#orderByClause">orderByClause</a></b> () const</li>
+<li><div class="fn"></div>virtual QString <b><a href="qsqltablemodel.html#selectStatement">selectStatement</a></b> () const</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#setPrimaryKey">setPrimaryKey</a></b> ( const QSqlIndex &amp; <i>key</i> )</li>
+<li><div class="fn"></div>void <b><a href="qsqltablemodel.html#setQuery">setQuery</a></b> ( const QSqlQuery &amp; <i>query</i> )</li>
+<li><div class="fn"></div>virtual bool <b><a href="qsqltablemodel.html#updateRowInTable">updateRowInTable</a></b> ( int <i>row</i>, const QSqlRecord &amp; <i>values</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"/>3 protected functions inherited from <a href="qsqlquerymodel.html#protected-functions">QSqlQueryModel</a></li>
-<li><div class="fn"/>14 protected functions inherited from <a href="qabstractitemmodel.html#protected-functions">QAbstractItemModel</a></li>
-<li><div class="fn"/>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
+<li><div class="fn"></div>3 protected functions inherited from <a href="qsqlquerymodel.html#protected-functions">QSqlQueryModel</a></li>
+<li><div class="fn"></div>14 protected functions inherited from <a href="qabstractitemmodel.html#protected-functions">QAbstractItemModel</a></li>
+<li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
-<li><div class="fn"/>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
-<li><div class="fn"/>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
+<li><div class="fn"></div>1 property inherited from <a href="qobject.html#properties">QObject</a></li>
+<li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -290,8 +290,8 @@
 <p>See also <a href="qsqlrecord.html#isGenerated">QSqlRecord::isGenerated</a>() and <a href="qsqltablemodel.html#setData">setData</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

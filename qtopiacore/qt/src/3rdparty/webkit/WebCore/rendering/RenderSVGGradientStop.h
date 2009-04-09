@@ -24,7 +24,6 @@
 #define RenderSVGGradientStop_h
 
 #if ENABLE(SVG)
-
 #include "RenderObject.h"
 
 namespace WebCore {
@@ -32,17 +31,25 @@ namespace WebCore {
     class SVGGradientElement;
     class SVGStopElement;
     
-    // This class exists mostly so we can here about gradient stop style changes
+    // This class exists mostly so we can hear about gradient stop style changes
     class RenderSVGGradientStop : public RenderObject {
     public:
         RenderSVGGradientStop(SVGStopElement*);
         virtual ~RenderSVGGradientStop();
-        
+
         virtual const char* renderName() const { return "RenderSVGGradientStop"; }
-        
+
         virtual void layout();
-        virtual void setStyle(RenderStyle*);
-        
+
+        // This override is needed to prevent crashing on <svg><stop /></svg>
+        // RenderObject's default impl asks the parent Object and RenderSVGRoot
+        // asks all child RenderObjects for overflow rects, thus infinite loop.
+        // https://bugs.webkit.org/show_bug.cgi?id=20400
+        virtual IntRect absoluteClippedOverflowRect() { return IntRect(); }
+    
+    protected:
+        virtual void styleDidChange(RenderStyle::Diff, const RenderStyle* oldStyle);
+
     private:
         SVGGradientElement* gradientElement() const;
     };

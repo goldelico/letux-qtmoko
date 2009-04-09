@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 #include "qwindowsxpstyle.h"
@@ -41,6 +45,7 @@
 
 #include <private/qobject_p.h>
 #include <private/qpaintengine_raster_p.h>
+#include <private/qapplication_p.h>
 #include <qlibrary.h>
 #include <qpainter.h>
 #include <qpaintengine.h>
@@ -254,8 +259,12 @@ void QWindowsXPStylePrivate::cleanup(bool force)
 
     use_xp = false;
     cleanupHandleMap();
-    if (limboWidget)
-        limboWidget->deleteLater();
+    if (limboWidget) {
+        if (qApp->closingDown())
+            delete limboWidget;
+        else
+            limboWidget->deleteLater();
+    }
     delete tabbody;
     limboWidget = 0;
     tabbody = 0;
@@ -853,7 +862,7 @@ void QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
 
         // Drawing the part into the backing store
         if (pDrawThemeBackgroundEx != 0) {
-	    RECT rect(themeData.toRECT(area));
+            RECT rect(themeData.toRECT(area));
             pDrawThemeBackgroundEx(themeData.handle(), dc, themeData.partId, themeData.stateId, &rect, &drawOptions);
         } else {
             // Set the clip region, if used..
@@ -908,7 +917,7 @@ void QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
             format = QImage::Format_RGB32;
             // The image data we got from the theme engine does not have any transparency,
             // thus the alpha channel is set to 0.
-            // However, Format_RGB32 requires the alpha part to be set to 0xff, thus 
+            // However, Format_RGB32 requires the alpha part to be set to 0xff, thus
             // we must flip it from 0x00 to 0xff
             swapAlphaChannel(rect, true);
             alphaType = NoAlpha;
@@ -978,7 +987,7 @@ void QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
     }
 
     // Cache the pixmap to avoid expensive swapAlphaChannel() calls
-    if (!haveCachedPixmap && ((w * h) < 2000) && w && h) {
+    if (!haveCachedPixmap && w && h) {
         QPixmap pix = QPixmap::fromImage(img).copy(rect);
         QPixmapCache::insert(pixmapCacheKey, pix);
 #ifdef DEBUG_XP_STYLE
@@ -1268,31 +1277,22 @@ void QWindowsXPStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt
     case PE_FrameTabBarBase:
         if (const QStyleOptionTabBarBase *tbb
                 = qstyleoption_cast<const QStyleOptionTabBarBase *>(option)) {
-            QRegion region(tbb->rect);
             p->save();
             switch (tbb->shape) {
             case QTabBar::RoundedNorth:
-                region -= tbb->selectedTabRect.adjusted(-1, 0 , 1, 0);
-                p->setClipRegion(region);
                 p->setPen(QPen(tbb->palette.dark(), 0));
                 p->drawLine(tbb->rect.topLeft(), tbb->rect.topRight());
                 break;
             case QTabBar::RoundedWest:
-                region -= tbb->selectedTabRect.adjusted(0, -1 , 0, 1);
-                p->setClipRegion(region);
                 p->setPen(QPen(tbb->palette.dark(), 0));
                 p->drawLine(tbb->rect.left(), tbb->rect.top(), tbb->rect.left(), tbb->rect.bottom());
                 break;
             case QTabBar::RoundedSouth:
-                region -= tbb->selectedTabRect.adjusted(-1, 0 , 1, 0);
-                p->setClipRegion(region);
                 p->setPen(QPen(tbb->palette.dark(), 0));
                 p->drawLine(tbb->rect.left(), tbb->rect.top(),
                             tbb->rect.right(), tbb->rect.top());
                 break;
             case QTabBar::RoundedEast:
-                region -= tbb->selectedTabRect.adjusted(0, -1 , 0, 1);
-                p->setClipRegion(region);
                 p->setPen(QPen(tbb->palette.dark(), 0));
                 p->drawLine(tbb->rect.topLeft(), tbb->rect.bottomLeft());
                 break;
@@ -1355,19 +1355,12 @@ void QWindowsXPStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt
             stateId = flags & State_On ? TS_HOTCHECKED : TS_HOT;
         else if (flags & State_On)
             stateId = TS_CHECKED;
+        else if (!(flags & State_AutoRaise))
+            stateId = TS_HOT;
         else
             stateId = TS_NORMAL;
         if (option->direction == Qt::RightToLeft)
             hMirrored = true;
-        break;
-
-    case PE_IndicatorArrowDown:
-        name = QLatin1String("TOOLBAR");
-        partId = TP_SPLITBUTTONDROPDOWN;
-        if (!(flags & State_Enabled))
-            stateId = TS_DISABLED;
-        else
-            stateId = TS_NORMAL;
         break;
 
     case PE_IndicatorCheckBox:
@@ -1445,9 +1438,25 @@ case PE_Frame:
             }
         }
     }
-    case PE_FrameLineEdit:
-        if (qstyleoption_cast<const QStyleOptionFrame *>(option))
-        {
+    case PE_FrameLineEdit: {
+        // we try to check if this lineedit is a delegate on a QAbstractItemView-derived class.
+        QWidget *parentWidget = 0;
+        if (widget)
+            parentWidget = widget->parentWidget();
+        if (parentWidget)
+            parentWidget = parentWidget->parentWidget();
+        if (widget && widget->inherits("QLineEdit")
+            && parentWidget && parentWidget->inherits("QAbstractItemView")) {
+            QPen oldPen = p->pen();
+            // Inner white border
+            p->setPen(QPen(option->palette.base().color(), 1));
+            p->drawRect(option->rect.adjusted(1, 1, -2, -2));
+            // Outer dark border
+            p->setPen(QPen(option->palette.shadow().color(), 1));
+            p->drawRect(option->rect.adjusted(0, 0, -1, -1));
+            p->setPen(oldPen);
+            return;
+        } else if (qstyleoption_cast<const QStyleOptionFrame *>(option)) {
             name = QLatin1String("EDIT");
             partId = EP_EDITTEXT;
             noContent = true;
@@ -1457,6 +1466,7 @@ case PE_Frame:
                 stateId = ETS_NORMAL;
         }
         break;
+    }
 
     case PE_PanelLineEdit:
         if (const QStyleOptionFrame *panel = qstyleoption_cast<const QStyleOptionFrame *>(option)) {
@@ -1467,7 +1477,7 @@ case PE_Frame:
             bool usePalette = false;
             bool isEnabled = flags & State_Enabled;
             uint resolve_mask = panel->palette.resolve();
-            
+
 #ifndef QT_NO_SPINBOX
             //Since spin box includes a line edit we need to resolve the palette on the spin box instead
             if (widget) {
@@ -1937,7 +1947,7 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
 
                 QRect ir = btn->rect;
                 QStyleOptionButton newBtn = *btn;
-                newBtn.rect = QRect(ir.right() - mbiw - 1, (ir.height()/2) - (mbih/2), mbiw, mbih);
+                newBtn.rect = QRect(ir.right() - mbiw - 1, 1 + (ir.height()/2) - (mbih/2), mbiw, mbih);
                 drawPrimitive(PE_IndicatorArrowDown, &newBtn, p, widget);
             }
             return;
@@ -1961,13 +1971,10 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
             bool lastTab = tab->position == QStyleOptionTab::End;
             bool firstTab = tab->position == QStyleOptionTab::Beginning;
             bool onlyOne = tab->position == QStyleOptionTab::OnlyOneTab;
-            //bool previousSelected = (tab->selectedPosition == QStyleOptionTab::PreviousIsSelected);
-            //bool nextSelected = (tab->selectedPosition == QStyleOptionTab::NextIsSelected);
             bool leftAligned = styleHint(SH_TabBar_Alignment, tab, widget) == Qt::AlignLeft;
             bool centerAligned = styleHint(SH_TabBar_Alignment, tab, widget) == Qt::AlignCenter;
-            //bool rightAligned = styleHint(SH_TabBar_Alignment, tab, widget) == Qt::AlignRight;
             int borderThickness = pixelMetric(PM_DefaultFrameWidth, option, widget);
-            int tabOverlap = onlyOne ? 0 : pixelMetric(PM_TabBarTabOverlap, option, widget);
+            int tabOverlap = pixelMetric(PM_TabBarTabOverlap, option, widget);
 
             if (isDisabled)
                 stateId = TIS_DISABLED;
@@ -2000,37 +2007,38 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
                 firstTab = lastTab;
                 lastTab = temp;
             }
-
+            bool begin = firstTab || onlyOne;
+            bool end = lastTab || onlyOne;
             switch (tab->shape) {
             case QTabBar::RoundedNorth:
                 if (selected)
-                    rect.adjust(firstTab ? 0 : -tabOverlap, 0, lastTab ? 0 : tabOverlap, borderThickness);
+                    rect.adjust(begin ? 0 : -tabOverlap, 0, end ? 0 : tabOverlap, borderThickness);
                 else
-                    rect.adjust(firstTab ? tabOverlap : 0, tabOverlap, lastTab ? -tabOverlap : 0, 0);
+                    rect.adjust(begin? tabOverlap : 0, tabOverlap, end ? -tabOverlap : 0, 0);
                 break;
             case QTabBar::RoundedSouth:
                 //vMirrored = true;
                 rotate = 180; // Not 100% correct, but works
                 if (selected)
-                    rect.adjust(firstTab ? 0 : -tabOverlap , -borderThickness, lastTab ? 0 : tabOverlap, 0);
+                    rect.adjust(begin ? 0 : -tabOverlap , -borderThickness, end ? 0 : tabOverlap, 0);
                 else
-                    rect.adjust(firstTab ? tabOverlap : 0, 0, lastTab ? -tabOverlap : 0 , -tabOverlap);
+                    rect.adjust(begin ? tabOverlap : 0, 0, end ? -tabOverlap : 0 , -tabOverlap);
                 break;
             case QTabBar::RoundedEast:
                 rotate = 90;
                 if (selected) {
-                    rect.adjust(-borderThickness, firstTab ? 0 : -tabOverlap, 0, lastTab ? 0 : tabOverlap);
+                    rect.adjust(-borderThickness, begin ? 0 : -tabOverlap, 0, end ? 0 : tabOverlap);
                 }else{
-                    rect.adjust(0, firstTab ? tabOverlap : 0, -tabOverlap, lastTab ? -tabOverlap : 0);
+                    rect.adjust(0, begin ? tabOverlap : 0, -tabOverlap, end ? -tabOverlap : 0);
                 }
                 break;
             case QTabBar::RoundedWest:
                 hMirrored = true;
                 rotate = 90;
                 if (selected) {
-                    rect.adjust(0, firstTab ? 0 : -tabOverlap, borderThickness, lastTab ? 0 : tabOverlap);
+                    rect.adjust(0, begin ? 0 : -tabOverlap, borderThickness, end ? 0 : tabOverlap);
                 }else{
-                    rect.adjust(tabOverlap, firstTab ? tabOverlap : 0, 0, lastTab ? -tabOverlap : 0);
+                    rect.adjust(tabOverlap, begin ? tabOverlap : 0, 0, end ? -tabOverlap : 0);
                 }
                 break;
             default:
@@ -2081,7 +2089,7 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
             bool checked = checkable ? menuitem->checked : false;
 
             // windows always has a check column, regardless whether we have an icon or not
-            int checkcol = qMax(menuitem->maxIconWidth, 20);
+            int checkcol = qMax(menuitem->maxIconWidth, 12);
 
             int x, y, w, h;
             rect.getRect(&x, &y, &w, &h);
@@ -2250,13 +2258,13 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
             QRect titleRect = r;
 
             if (dwOpt->closable) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarCloseButton, dwOpt, widget).pixmap(10, 10);
-                titleRect.adjust(0, 0, -pm.size().width() - mw - buttonMargin, 0);
+                QSize sz = standardIcon(QStyle::SP_TitleBarCloseButton, dwOpt, widget).actualSize(QSize(10, 10));
+                titleRect.adjust(0, 0, -sz.width() - mw - buttonMargin, 0);
             }
 
             if (dwOpt->floatable) {
-                QPixmap pm = standardIcon(QStyle::SP_TitleBarMaxButton, dwOpt, widget).pixmap(10, 10);
-                titleRect.adjust(0, 0, -pm.size().width() - mw - buttonMargin, 0);
+                QSize sz = standardIcon(QStyle::SP_TitleBarMaxButton, dwOpt, widget).actualSize(QSize(10, 10));
+                titleRect.adjust(0, 0, -sz.width() - mw - buttonMargin, 0);
             }
 
             if (isFloating) {
@@ -2494,7 +2502,7 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                 }
                 if (!cmb->editable) {
                     QRect re = subControlRect(CC_ComboBox, option, SC_ComboBoxEditField, widget);
-                    if (widget && widget->hasFocus()) {
+                    if (option->state & State_HasFocus) {
                         p->fillRect(re, option->palette.highlight());
                         p->setPen(option->palette.highlightedText().color());
                         p->setBackground(option->palette.highlight());
@@ -2677,11 +2685,11 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                 if (slider->orientation == Qt::Horizontal) {
                     partId = TKP_TRACK;
                     stateId = TRS_NORMAL;
-                    theme.rect = QRect(0, theme.rect.center().y() - 2, slrect.width(), 4);
+                    theme.rect = QRect(slrect.left(), theme.rect.center().y() - 2, slrect.width(), 4);
                 } else {
                     partId = TKP_TRACKVERT;
                     stateId = TRVS_NORMAL;
-                    theme.rect = QRect(theme.rect.center().x() - 2, 0, 4, slrect.height());
+                    theme.rect = QRect(theme.rect.center().x() - 2, slrect.top(), 4, slrect.height());
                 }
                 theme.partId = partId;
                 theme.stateId = stateId;
@@ -2741,8 +2749,12 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                         break;
                     v = nextInterval;
                 }
-                if (lines.size() > 0)
+                if (lines.size() > 0) {
+                    p->save();
+                    p->translate(slrect.topLeft());
                     p->drawLines(lines.constData(), lines.size());
+                    p->restore();
+                }
             }
             if (sub & SC_SliderHandle) {
                 theme.rect = subControlRect(CC_Slider, option, SC_SliderHandle, widget);
@@ -2796,127 +2808,96 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
         }
         break;
 #endif
-
+#ifndef QT_NO_TOOLBUTTON
     case CC_ToolButton:
-        if (const QStyleOptionToolButton *toolbutton = qstyleoption_cast<const QStyleOptionToolButton *>(option))
-        {
-            XPThemeData theme(widget, p, QLatin1String("TOOLBAR"));
-            QToolButton *tb = (QToolButton*)widget;
-
+        if (const QStyleOptionToolButton *toolbutton
+            = qstyleoption_cast<const QStyleOptionToolButton *>(option)) {
             QRect button, menuarea;
             button = subControlRect(cc, toolbutton, SC_ToolButton, widget);
             menuarea = subControlRect(cc, toolbutton, SC_ToolButtonMenu, widget);
 
-            State bflags = flags, mflags = flags;
+            State bflags = toolbutton->state & ~State_Sunken;
+            State mflags = bflags;
 
-            if (toolbutton->activeSubControls == SC_ToolButton)
-                bflags |= State_Sunken;
-            else if (toolbutton->activeSubControls == SC_ToolButtonMenu)
-                mflags |= State_Sunken;
+            if (bflags & State_AutoRaise) {
+                if (!(bflags & State_MouseOver) || !(bflags & State_Enabled)) {
+                    bflags &= ~State_Raised;
+                }
+            }
 
-            if (sub & SC_ToolButton) {
-                theme.rect = subControlRect(CC_ToolButton, option, SC_ToolButton, widget);
-                QWidget *pW = tb ? static_cast<QWidget *>(tb->parent()) : 0;
-
-                // ########## CE_ToolButtonLabel
-                if (toolbutton->features & QStyleOptionToolButton::Arrow) {
-                    Qt::ArrowType type = toolbutton->arrowType;
-
-#define TBL_STATE(prefix) \
-                    if (tb && !tb->isEnabled()) \
-                        stateId = prefix##_DISABLED; \
-                    else if (bflags & (State_Sunken | State_On)) \
-                        stateId = prefix##_PRESSED; \
-                    else if (bflags & State_MouseOver) \
-                        stateId = prefix##_HOT; \
-                    else \
-                        stateId = prefix##_NORMAL;
-
-                    switch(type)
-                    {
-                    case Qt::RightArrow:
-                        partId = SPNP_UPHORZ;
-                        TBL_STATE(UPHZS);
-                        break;
-                    case Qt::LeftArrow:
-                        partId = SPNP_DOWNHORZ;
-                        TBL_STATE(DNHZS);
-                        break;
-                    case Qt::UpArrow:
-                        partId = SPNP_UP;
-                        TBL_STATE(UPS);
-                        break;
-                    case Qt::DownArrow:
-                    default:
-                        partId = SPNP_DOWN;
-                        TBL_STATE(DNS);
-                        break;
-                    }
-                    theme.name = QLatin1String("SPIN");
-                    theme.partId = partId;
-                    theme.stateId = stateId;
-                    d->drawBackground(theme);
-                } else if (bflags & (State_Sunken | State_On | State_Raised)) {
-                    if (sub & SC_ToolButtonMenu) {
-                        partId = TP_SPLITBUTTON;
-                        if (!flags & State_Enabled)
+            if (toolbutton->state & State_Sunken) {
+                if (toolbutton->activeSubControls & SC_ToolButton) {
+                    bflags |= State_Sunken;
+                    mflags |= State_MouseOver | State_Sunken;
+                } else if (toolbutton->activeSubControls & SC_ToolButtonMenu) {
+                    mflags |= State_Sunken;
+                    bflags |= State_MouseOver;
+                }
+            }
+            
+            QStyleOption tool(0);
+            tool.palette = toolbutton->palette;
+            if (toolbutton->subControls & SC_ToolButton) {
+                if (flags & (State_Sunken | State_On | State_Raised) || !(flags & State_AutoRaise)) {
+                    if (toolbutton->features & QStyleOptionToolButton::MenuButtonPopup) {
+                        XPThemeData theme(widget, p, QLatin1String("TOOLBAR"));
+                        theme.partId = TP_SPLITBUTTON;
+                        theme.rect = button;
+                        if (!bflags & State_Enabled)
                             stateId = TS_DISABLED;
-                        else if (flags & State_Sunken)
+                        else if (bflags & State_Sunken)
                             stateId = TS_PRESSED;
-                        else if (flags & State_MouseOver)
+                        else if (bflags & State_MouseOver || !(flags & State_AutoRaise))
                             stateId = flags & State_On ? TS_HOTCHECKED : TS_HOT;
-                        else if (flags & State_On)
+                        else if (bflags & State_On)
                             stateId = TS_CHECKED;
                         else
                             stateId = TS_NORMAL;
                         if (option->direction == Qt::RightToLeft)
                             theme.mirrorHorizontally = true;
-
-                        theme.partId = partId;
                         theme.stateId = stateId;
                         d->drawBackground(theme);
                     } else {
-                        if (widget && !qobject_cast<QToolBar*>(widget->parentWidget()) && !(bflags & State_AutoRaise))
-                            drawPrimitive(PE_PanelButtonBevel, option, p, widget);
+                        tool.rect = button;
+                        tool.state = bflags;
+                        if (widget && !qobject_cast<QToolBar*>(widget->parentWidget())
+                                   && !(bflags & State_AutoRaise))
+                            drawPrimitive(PE_PanelButtonBevel, &tool, p, widget);
                         else
-                            drawPrimitive(PE_PanelButtonTool, option, p, widget);
+                            drawPrimitive(PE_PanelButtonTool, &tool, p, widget);
                     }
-                } else if (pW &&
-                           !pW->palette().brush(pW->backgroundRole()).texture().isNull()) {
-                    p->drawTiledPixmap(r, pW->palette().brush(pW->backgroundRole()).texture(), tb->pos());
                 }
             }
 
+            if (toolbutton->state & State_HasFocus) {
+                QStyleOptionFocusRect fr;
+                fr.QStyleOption::operator=(*toolbutton);
+                fr.rect.adjust(3, 3, -3, -3);
+                if (toolbutton->features & QStyleOptionToolButton::MenuButtonPopup)
+                    fr.rect.adjust(0, 0, -pixelMetric(QStyle::PM_MenuButtonIndicator,
+                                                      toolbutton, widget), 0);
+                drawPrimitive(PE_FrameFocusRect, &fr, p, widget);
+            }
             QStyleOptionToolButton label = *toolbutton;
-            int fw = pixelMetric(PM_DefaultFrameWidth, option, widget);
+            label.state = bflags;
+            int fw = 2;
             label.rect = button.adjusted(fw, fw, -fw, -fw);
-            label.features &= ~QStyleOptionToolButton::Arrow;
             drawControl(CE_ToolButtonLabel, &label, p, widget);
 
-            if (sub & SC_ToolButtonMenu) {
-                QStyleOptionToolButton menuOption = *toolbutton;
-                menuOption.state = mflags;
-                menuOption.rect = subControlRect(CC_ToolButton, option, SC_ToolButtonMenu, widget);
-                drawPrimitive(PE_IndicatorButtonDropDown, &menuOption, p, widget);
+            if (toolbutton->subControls & SC_ToolButtonMenu) {
+                tool.rect = menuarea;
+                tool.state = mflags;
+                drawPrimitive(PE_IndicatorButtonDropDown, &tool, p, widget);
             } else if (toolbutton->features & QStyleOptionToolButton::HasMenu) {
+                int mbi = pixelMetric(PM_MenuButtonIndicator, toolbutton, widget);
                 QRect ir = toolbutton->rect;
                 QStyleOptionToolButton newBtn = *toolbutton;
-                int hShift = (option->state & State_Sunken) ? pixelMetric(PM_ButtonShiftHorizontal, option, widget) : 0;
-                int vShift = (option->state & State_Sunken) ? pixelMetric(PM_ButtonShiftVertical, option, widget) : 0;
-                newBtn.rect = QRect(ir.right() - 7 + hShift, ir.height() - 7 + vShift, 6, 6);
-                QWindowsStyle::drawPrimitive(PE_IndicatorArrowDown, &newBtn, p, widget);
+                newBtn.rect = QRect(ir.right() + 4 - mbi, ir.height() - mbi + 4, mbi - 5, mbi - 5);
+                drawPrimitive(PE_IndicatorArrowDown, &newBtn, p, widget);
             }
-
-            //if (tb->hasFocus() && !tb->focusProxy()) {
-            //    Q3StyleOptionFocusRect option(0);
-            //    option.rect = tb->rect();
-            //    option.rect.adjust(3, 3, -3, -3);
-            //    option.palette = pal;
-            //    option.state = State_Default;
-            //    drawPrimitive(PE_FrameFocusRect, &option, p, tb);
-            //}
         }
         break;
+#endif // QT_NO_TOOLBUTTON
 
     case CC_TitleBar:
         {
@@ -3202,9 +3183,9 @@ int QWindowsXPStyle::pixelMetric(PixelMetric pm, const QStyleOption *option, con
         break;
 
     case PM_DefaultFrameWidth:
-        if (qobject_cast<const QListView*>(widget)) 
+        if (qobject_cast<const QListView*>(widget))
             res = 2;
-        else 
+        else
             res = 1;
         break;
     case PM_MenuPanelWidth:
@@ -3227,7 +3208,7 @@ int QWindowsXPStyle::pixelMetric(PixelMetric pm, const QStyleOption *option, con
                 break;
             case QTabBar::RoundedSouth:
             case QTabBar::TriangularSouth:
-                res = 3;
+                res = 2;
                 break;
             case QTabBar::RoundedEast:
             case QTabBar::TriangularEast:
@@ -3531,7 +3512,8 @@ QRect QWindowsXPStyle::subControlRect(ComplexControl cc, const QStyleOptionCompl
                 {
                     const int controlTop = 6;
                     const int controlHeight = height - controlTop - 3;
-                    QSize iconSize = tb->icon.pixmap(pixelMetric(PM_SmallIconSize), QIcon::Normal).size();
+                    const int iconExtent = pixelMetric(PM_SmallIconSize);
+                    QSize iconSize = tb->icon.actualSize(QSize(iconExtent, iconExtent));
                     if (tb->icon.isNull())
                         iconSize = QSize(controlHeight, controlHeight);
                     int hPad = (controlHeight - iconSize.height())/2;
@@ -3761,6 +3743,10 @@ int QWindowsXPStyle::styleHint(StyleHint hint, const QStyleOption *option, const
         }
 #endif // QT_NO_RUBBERBAND
 
+    case SH_ItemView_DrawDelegateFrame:
+        res = 1;
+        break;
+
     default:
         res =QWindowsStyle::styleHint(hint, option, widget, returnData);
     }
@@ -3771,7 +3757,10 @@ int QWindowsXPStyle::styleHint(StyleHint hint, const QStyleOption *option, const
 /*! \reimp */
 QPalette QWindowsXPStyle::standardPalette() const
 {
-    return QWindowsStyle::standardPalette();
+    if (QWindowsXPStylePrivate::useXP() && QApplicationPrivate::sys_pal)
+        return *QApplicationPrivate::sys_pal;
+    else
+        return QWindowsStyle::standardPalette();
 }
 
 /*!

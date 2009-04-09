@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/backendcapabilities_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/backendcapabilities_p.h"

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -41,6 +45,75 @@
 #include <abstractintrospection_p.h>
 
 #include <QtGui/QWidget>
+
+namespace {
+
+class Qt3Members
+  {
+  public:
+      static Qt3Members *instance();
+      QMap<QString, QStringList> getSignals() const { return m_classNameToSignals; }
+      QMap<QString, QStringList> getSlots() const { return m_classNameToSlots; }
+  private:
+      Qt3Members();
+      static Qt3Members *m_instance;
+      QMap<QString, QStringList> m_classNameToSignals;
+      QMap<QString, QStringList> m_classNameToSlots;
+  };
+
+Qt3Members *Qt3Members::m_instance = 0;
+
+Qt3Members::Qt3Members()
+{
+    m_classNameToSignals[QLatin1String("QTextEdit")].append(QLatin1String("currentFontChanged(QFont)"));
+    m_classNameToSignals[QLatin1String("QTextEdit")].append(QLatin1String("currentColorChanged(QColor)"));
+    m_classNameToSignals[QLatin1String("QTabWidget")].append(QLatin1String("currentChanged(QWidget*)"));
+    m_classNameToSignals[QLatin1String("QTabWidget")].append(QLatin1String("selected(QString)"));
+    m_classNameToSignals[QLatin1String("QTabBar")].append(QLatin1String("selected(int)"));
+    m_classNameToSignals[QLatin1String("QMenuBar")].append(QLatin1String("activated(int)"));
+    m_classNameToSignals[QLatin1String("QMenuBar")].append(QLatin1String("highlighted(int)"));
+    m_classNameToSignals[QLatin1String("QMenu")].append(QLatin1String("activated(int)"));
+    m_classNameToSignals[QLatin1String("QMenu")].append(QLatin1String("highlighted(int)"));
+    m_classNameToSignals[QLatin1String("QLineEdit")].append(QLatin1String("lostFocus()"));
+    m_classNameToSignals[QLatin1String("QDial")].append(QLatin1String("dialPressed()"));
+    m_classNameToSignals[QLatin1String("QDial")].append(QLatin1String("dialMoved(int)"));
+    m_classNameToSignals[QLatin1String("QDial")].append(QLatin1String("dialReleased()"));
+    m_classNameToSignals[QLatin1String("QComboBox")].append(QLatin1String("textChanged(QString)"));
+    m_classNameToSignals[QLatin1String("QActionGroup")].append(QLatin1String("selected(QAction*)"));
+    m_classNameToSignals[QLatin1String("QAction")].append(QLatin1String("activated(int)"));
+    m_classNameToSignals[QLatin1String("QAbstractSocket")].append(QLatin1String("connectionClosed()"));
+    m_classNameToSignals[QLatin1String("QAbstractSocket")].append(QLatin1String("delayedCloseFinished()"));
+
+    m_classNameToSlots[QLatin1String("QWidget")].append(QLatin1String("setShown(bool)"));
+    m_classNameToSlots[QLatin1String("QToolButton")].append(QLatin1String("setTextPosition(QToolButton::TextPosition)"));
+    m_classNameToSlots[QLatin1String("QToolButton")].append(QLatin1String("setUsesBigPixmap(bool)"));
+    m_classNameToSlots[QLatin1String("QToolButton")].append(QLatin1String("setUsesTextLabel(bool)"));
+    m_classNameToSlots[QLatin1String("QTextEdit")].append(QLatin1String("setModified(bool)"));
+    m_classNameToSlots[QLatin1String("QTextEdit")].append(QLatin1String("setColor(QColor)"));
+    m_classNameToSlots[QLatin1String("QTabWidget")].append(QLatin1String("setCurrentPage(int)"));
+    m_classNameToSlots[QLatin1String("QTabWidget")].append(QLatin1String("showPage(QWidget*)"));
+    m_classNameToSlots[QLatin1String("QTabWidget")].append(QLatin1String("removePage(QWidget*)"));
+    m_classNameToSlots[QLatin1String("QTabBar")].append(QLatin1String("setCurrentTab(int)"));
+    m_classNameToSlots[QLatin1String("QStatusBar")].append(QLatin1String("message(QString,int)"));
+    m_classNameToSlots[QLatin1String("QStatusBar")].append(QLatin1String("clear()"));
+    m_classNameToSlots[QLatin1String("QSplashScreen")].append(QLatin1String("message(QString,int)"));
+    m_classNameToSlots[QLatin1String("QSplashScreen")].append(QLatin1String("clear()"));
+    m_classNameToSlots[QLatin1String("QSlider")].append(QLatin1String("addStep()"));
+    m_classNameToSlots[QLatin1String("QSlider")].append(QLatin1String("subtractStep()"));
+    m_classNameToSlots[QLatin1String("QAbstractButton")].append(QLatin1String("setOn(bool)"));
+    m_classNameToSlots[QLatin1String("QAction")].append(QLatin1String("setOn(bool)"));
+    m_classNameToSlots[QLatin1String("QErrorMessage")].append(QLatin1String("message(QString)"));
+    m_classNameToSlots[QLatin1String("QTimer")].append(QLatin1String("changeInterval(int)"));
+    m_classNameToSlots[QLatin1String("QTimer")].append(QLatin1String("start(int,bool)"));
+}
+
+Qt3Members *Qt3Members::instance()
+{
+    if (!m_instance)
+        m_instance = new Qt3Members();
+    return m_instance;
+}
+}
 
 QT_BEGIN_NAMESPACE
 
@@ -127,7 +200,7 @@ int QDesignerMemberSheet::count() const
 
 int QDesignerMemberSheet::indexOf(const QString &name) const
 {
-    return d->m_meta->indexOfMethod(name.toUtf8());
+    return d->m_meta->indexOfMethod(name);
 }
 
 QString QDesignerMemberSheet::memberName(int index) const
@@ -246,6 +319,37 @@ bool QDesignerMemberSheet::signalMatchesSlot(const QString &signal, const QStrin
     } while (false);
 
     return result;
+}
+
+bool QDesignerMemberSheet::isQt3Signal(int index) const
+{
+    if (!isSignal(index))
+        return false;
+
+    const QString className = declaredInClass(index);
+    const QString signalSignature = signature(index);
+
+    QMap<QString, QStringList> qt3signals = Qt3Members::instance()->getSignals();
+    QMap<QString, QStringList>::const_iterator it = qt3signals.constFind(className);
+    if (it != qt3signals.constEnd() && (*it).contains(signalSignature))
+        return true;
+
+    return false;
+}
+
+bool QDesignerMemberSheet::isQt3Slot(int index) const
+{
+    if (!isSlot(index))
+        return false;
+
+    const QString className = declaredInClass(index);
+    const QString slotSignature = signature(index);
+
+    QMap<QString, QStringList> qt3slots = Qt3Members::instance()->getSlots();
+    QMap<QString, QStringList>::const_iterator it = qt3slots.constFind(className);
+    if (it != qt3slots.constEnd() && (*it).contains(slotSignature))
+        return true;
+    return false;
 }
 
 // ------------ QDesignerMemberSheetFactory

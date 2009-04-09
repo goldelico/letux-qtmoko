@@ -10,5 +10,10 @@ int main(int, char **)
 {
     tdata_t buffer = _TIFFmalloc(128);
     _TIFFfree(buffer);
+
+    // some libtiff implementations where TIFF_VERSION >= 42 do not
+    // have TIFFReadRGBAImageOriented(), so let's check for it
+    TIFFReadRGBAImageOriented(0, 0, 0, 0, 0, 0);
+
     return 0;
 }

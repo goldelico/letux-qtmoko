@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -297,8 +301,10 @@ public:
 
     void slotValueChanged(QtProperty *property, int val);
     void slotRangeChanged(QtProperty *property, int min, int max);
+    void slotSingleStepChanged(QtProperty *property, int step);
     void slotValueChanged(QtProperty *property, double val);
     void slotRangeChanged(QtProperty *property, double min, double max);
+    void slotSingleStepChanged(QtProperty *property, double step);
     void slotDecimalsChanged(QtProperty *property, int prec);
     void slotValueChanged(QtProperty *property, bool val);
     void slotValueChanged(QtProperty *property, const QString &val);
@@ -350,6 +356,7 @@ public:
     QMap<QtProperty *, QtVariantProperty *> m_internalToProperty;
 
     const QString m_constraintAttribute;
+    const QString m_singleStepAttribute;
     const QString m_decimalsAttribute;
     const QString m_enumIconsAttribute;
     const QString m_enumNamesAttribute;
@@ -361,6 +368,7 @@ public:
 
 QtVariantPropertyManagerPrivate::QtVariantPropertyManagerPrivate() :
     m_constraintAttribute(QLatin1String("constraint")),
+    m_singleStepAttribute(QLatin1String("singleStep")),
     m_decimalsAttribute(QLatin1String("decimals")),
     m_enumIconsAttribute(QLatin1String("enumIcons")),
     m_enumNamesAttribute(QLatin1String("enumNames")),
@@ -476,6 +484,12 @@ void QtVariantPropertyManagerPrivate::slotRangeChanged(QtProperty *property, int
     }
 }
 
+void QtVariantPropertyManagerPrivate::slotSingleStepChanged(QtProperty *property, int step)
+{
+    if (QtVariantProperty *varProp = m_internalToProperty.value(property, 0))
+        emit q_ptr->attributeChanged(varProp, m_singleStepAttribute, QVariant(step));
+}
+
 void QtVariantPropertyManagerPrivate::slotValueChanged(QtProperty *property, double val)
 {
     valueChanged(property, QVariant(val));
@@ -487,6 +501,12 @@ void QtVariantPropertyManagerPrivate::slotRangeChanged(QtProperty *property, dou
         emit q_ptr->attributeChanged(varProp, m_minimumAttribute, QVariant(min));
         emit q_ptr->attributeChanged(varProp, m_maximumAttribute, QVariant(max));
     }
+}
+
+void QtVariantPropertyManagerPrivate::slotSingleStepChanged(QtProperty *property, double step)
+{
+    if (QtVariantProperty *varProp = m_internalToProperty.value(property, 0))
+        emit q_ptr->attributeChanged(varProp, m_singleStepAttribute, QVariant(step));
 }
 
 void QtVariantPropertyManagerPrivate::slotDecimalsChanged(QtProperty *property, int prec)
@@ -778,12 +798,20 @@ void QtVariantPropertyManagerPrivate::slotFlagNamesChanged(QtProperty *property,
         \o maximum
         \o QVariant::Int
     \row
+        \o
+        \o singleStep
+        \o QVariant::Int
+    \row
         \o \c double
         \o minimum
         \o QVariant::Double
     \row
         \o
         \o maximum
+        \o QVariant::Double
+    \row
+        \o
+        \o singleStep
         \o QVariant::Double
     \row
         \o
@@ -830,7 +858,7 @@ void QtVariantPropertyManagerPrivate::slotFlagNamesChanged(QtProperty *property,
         \o constraint
         \o QVariant::Rect
     \row
-        \o QRect
+        \o QRectF
         \o constraint
         \o QVariant::RectF
     \row
@@ -905,17 +933,22 @@ QtVariantPropertyManager::QtVariantPropertyManager(QObject *parent)
     d_ptr->m_typeToPropertyManager[QVariant::Int] = intPropertyManager;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Int][d_ptr->m_minimumAttribute] = QVariant::Int;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Int][d_ptr->m_maximumAttribute] = QVariant::Int;
+    d_ptr->m_typeToAttributeToAttributeType[QVariant::Int][d_ptr->m_singleStepAttribute] = QVariant::Int;
     d_ptr->m_typeToValueType[QVariant::Int] = QVariant::Int;
     connect(intPropertyManager, SIGNAL(valueChanged(QtProperty *, int)),
                 this, SLOT(slotValueChanged(QtProperty *, int)));
     connect(intPropertyManager, SIGNAL(rangeChanged(QtProperty *, int, int)),
                 this, SLOT(slotRangeChanged(QtProperty *, int, int)));
+    connect(intPropertyManager, SIGNAL(singleStepChanged(QtProperty *, int)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, int)));
     // DoublePropertyManager
     QtDoublePropertyManager *doublePropertyManager = new QtDoublePropertyManager(this);
     d_ptr->m_typeToPropertyManager[QVariant::Double] = doublePropertyManager;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_minimumAttribute] =
             QVariant::Double;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_maximumAttribute] =
+            QVariant::Double;
+    d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_singleStepAttribute] =
             QVariant::Double;
     d_ptr->m_typeToAttributeToAttributeType[QVariant::Double][d_ptr->m_decimalsAttribute] =
             QVariant::Int;
@@ -924,6 +957,8 @@ QtVariantPropertyManager::QtVariantPropertyManager(QObject *parent)
                 this, SLOT(slotValueChanged(QtProperty *, double)));
     connect(doublePropertyManager, SIGNAL(rangeChanged(QtProperty *, double, double)),
                 this, SLOT(slotRangeChanged(QtProperty *, double, double)));
+    connect(doublePropertyManager, SIGNAL(singleStepChanged(QtProperty *, double)),
+                this, SLOT(slotSingleStepChanged(QtProperty *, double)));
     connect(doublePropertyManager, SIGNAL(decimalsChanged(QtProperty *, int)),
                 this, SLOT(slotDecimalsChanged(QtProperty *, int)));
     // BoolPropertyManager
@@ -1204,6 +1239,7 @@ QtVariantPropertyManager::QtVariantPropertyManager(QObject *parent)
 */
 QtVariantPropertyManager::~QtVariantPropertyManager()
 {
+    clear();
     delete d_ptr;
 }
 
@@ -1406,12 +1442,16 @@ QVariant QtVariantPropertyManager::attributeValue(const QtProperty *property, co
             return intManager->maximum(internProp);
         if (attribute == d_ptr->m_minimumAttribute)
             return intManager->minimum(internProp);
+        if (attribute == d_ptr->m_singleStepAttribute)
+            return intManager->singleStep(internProp);
         return QVariant();
     } else if (QtDoublePropertyManager *doubleManager = qobject_cast<QtDoublePropertyManager *>(manager)) {
         if (attribute == d_ptr->m_maximumAttribute)
             return doubleManager->maximum(internProp);
         if (attribute == d_ptr->m_minimumAttribute)
             return doubleManager->minimum(internProp);
+        if (attribute == d_ptr->m_singleStepAttribute)
+            return doubleManager->singleStep(internProp);
         if (attribute == d_ptr->m_decimalsAttribute)
             return doubleManager->decimals(internProp);
         return QVariant();
@@ -1645,12 +1685,16 @@ void QtVariantPropertyManager::setAttribute(QtProperty *property,
             intManager->setMaximum(internProp, qVariantValue<int>(value));
         else if (attribute == d_ptr->m_minimumAttribute)
             intManager->setMinimum(internProp, qVariantValue<int>(value));
+        else if (attribute == d_ptr->m_singleStepAttribute)
+            intManager->setSingleStep(internProp, qVariantValue<int>(value));
         return;
     } else if (QtDoublePropertyManager *doubleManager = qobject_cast<QtDoublePropertyManager *>(manager)) {
         if (attribute == d_ptr->m_maximumAttribute)
             doubleManager->setMaximum(internProp, qVariantValue<double>(value));
         if (attribute == d_ptr->m_minimumAttribute)
             doubleManager->setMinimum(internProp, qVariantValue<double>(value));
+        if (attribute == d_ptr->m_singleStepAttribute)
+            doubleManager->setSingleStep(internProp, qVariantValue<double>(value));
         if (attribute == d_ptr->m_decimalsAttribute)
             doubleManager->setDecimals(internProp, qVariantValue<int>(value));
         return;
@@ -1821,6 +1865,7 @@ public:
     QtEnumEditorFactory        *m_comboBoxFactory;
     QtCursorEditorFactory      *m_cursorEditorFactory;
     QtColorEditorFactory       *m_colorEditorFactory;
+    QtFontEditorFactory        *m_fontEditorFactory;
 
     QMap<QtAbstractEditorFactoryBase *, int> m_factoryToType;
     QMap<int, QtAbstractEditorFactoryBase *> m_typeToFactory;
@@ -1939,6 +1984,10 @@ QtVariantEditorFactory::QtVariantEditorFactory(QObject *parent)
     d_ptr->m_factoryToType[d_ptr->m_colorEditorFactory] = QVariant::Color;
     d_ptr->m_typeToFactory[QVariant::Color] = d_ptr->m_colorEditorFactory;
 
+    d_ptr->m_fontEditorFactory = new QtFontEditorFactory(this);
+    d_ptr->m_factoryToType[d_ptr->m_fontEditorFactory] = QVariant::Font;
+    d_ptr->m_typeToFactory[QVariant::Font] = d_ptr->m_fontEditorFactory;
+
     d_ptr->m_comboBoxFactory = new QtEnumEditorFactory(this);
     const int enumId = QtVariantPropertyManager::enumTypeId();
     d_ptr->m_factoryToType[d_ptr->m_comboBoxFactory] = enumId;
@@ -2043,9 +2092,9 @@ void QtVariantEditorFactory::connectPropertyManager(QtVariantPropertyManager *ma
     QList<QtColorPropertyManager *> colorPropertyManagers = qFindChildren<QtColorPropertyManager *>(manager);
     QListIterator<QtColorPropertyManager *> itColor(colorPropertyManagers);
     while (itColor.hasNext()) {
-        QtColorPropertyManager *mgr = itColor.next();
-        d_ptr->m_colorEditorFactory->addPropertyManager(mgr);
-        d_ptr->m_spinBoxFactory->addPropertyManager(mgr->subIntPropertyManager());
+        QtColorPropertyManager *manager = itColor.next();
+        d_ptr->m_colorEditorFactory->addPropertyManager(manager);
+        d_ptr->m_spinBoxFactory->addPropertyManager(manager->subIntPropertyManager());
     }
 
     QList<QtEnumPropertyManager *> enumPropertyManagers = qFindChildren<QtEnumPropertyManager *>(manager);
@@ -2065,6 +2114,7 @@ void QtVariantEditorFactory::connectPropertyManager(QtVariantPropertyManager *ma
     QListIterator<QtFontPropertyManager *> itFont(fontPropertyManagers);
     while (itFont.hasNext()) {
         QtFontPropertyManager *manager = itFont.next();
+        d_ptr->m_fontEditorFactory->addPropertyManager(manager);
         d_ptr->m_spinBoxFactory->addPropertyManager(manager->subIntPropertyManager());
         d_ptr->m_comboBoxFactory->addPropertyManager(manager->subEnumPropertyManager());
         d_ptr->m_checkBoxFactory->addPropertyManager(manager->subBoolPropertyManager());
@@ -2186,9 +2236,9 @@ void QtVariantEditorFactory::disconnectPropertyManager(QtVariantPropertyManager 
     QList<QtColorPropertyManager *> colorPropertyManagers = qFindChildren<QtColorPropertyManager *>(manager);
     QListIterator<QtColorPropertyManager *> itColor(colorPropertyManagers);
     while (itColor.hasNext()) {
-        QtColorPropertyManager *mgr = itColor.next();
-        d_ptr->m_colorEditorFactory->removePropertyManager(mgr);
-        d_ptr->m_spinBoxFactory->removePropertyManager(mgr->subIntPropertyManager());
+        QtColorPropertyManager *manager = itColor.next();
+        d_ptr->m_colorEditorFactory->removePropertyManager(manager);
+        d_ptr->m_spinBoxFactory->removePropertyManager(manager->subIntPropertyManager());
     }
 
     QList<QtEnumPropertyManager *> enumPropertyManagers = qFindChildren<QtEnumPropertyManager *>(manager);
@@ -2208,6 +2258,7 @@ void QtVariantEditorFactory::disconnectPropertyManager(QtVariantPropertyManager 
     QListIterator<QtFontPropertyManager *> itFont(fontPropertyManagers);
     while (itFont.hasNext()) {
         QtFontPropertyManager *manager = itFont.next();
+        d_ptr->m_fontEditorFactory->removePropertyManager(manager);
         d_ptr->m_spinBoxFactory->removePropertyManager(manager->subIntPropertyManager());
         d_ptr->m_comboBoxFactory->removePropertyManager(manager->subEnumPropertyManager());
         d_ptr->m_checkBoxFactory->removePropertyManager(manager->subBoolPropertyManager());

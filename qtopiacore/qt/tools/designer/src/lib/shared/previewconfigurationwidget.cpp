@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -43,6 +47,8 @@
 #include "previewconfigurationwidget_p.h"
 #include "ui_previewconfigurationwidget.h"
 #include "previewmanager_p.h"
+#include "abstractsettings_p.h"
+#include "shared_settings_p.h"
 
 #include <iconloader_p.h>
 #include <stylesheeteditor_p.h>
@@ -56,7 +62,6 @@
 #include <QtCore/QPair>
 #include <QtCore/QList>
 #include <QtCore/QDebug>
-#include <QtCore/QSettings>
 #include <QtCore/QFileInfo>
 #include <QtCore/QSharedData>
 
@@ -72,8 +77,6 @@ QT_END_NAMESPACE
 QT_BEGIN_NAMESPACE
 
 static const char *skinExtensionC = "skin";
-static const char *enabledKey = "Enabled";
-static const char *userDeviceSkinsKey= "UserDeviceSkins";
 
 namespace {
     // Pair of skin name, path
@@ -109,121 +112,18 @@ static const Skins &defaultSkins() {
 }
 
 namespace qdesigner_internal {
-// ------------ PreviewConfigurationWidgetStateData
-
-class PreviewConfigurationWidgetStateData : public QSharedData {
-public:
-    PreviewConfigurationWidgetStateData() : m_enabled(false) {}
-    PreviewConfigurationWidgetStateData(const QStringList &userDeviceSkins, bool enabled);
-
-    bool m_enabled;
-    QStringList m_userDeviceSkins;
-};
-
-PreviewConfigurationWidgetStateData::PreviewConfigurationWidgetStateData(const QStringList &userDeviceSkins, bool enabled) :
-    m_enabled(enabled),
-    m_userDeviceSkins(userDeviceSkins)
-{
-}
-
-// ------------ PreviewConfigurationWidgetState
-PreviewConfigurationWidgetState::PreviewConfigurationWidgetState() :
-    m_d(new PreviewConfigurationWidgetStateData)
-{
-}
-
-PreviewConfigurationWidgetState::PreviewConfigurationWidgetState(const QStringList &skins, bool e) :
-    m_d(new PreviewConfigurationWidgetStateData(skins, e))
-{
-}
-
-void PreviewConfigurationWidgetState::clear()
-{
-    PreviewConfigurationWidgetStateData &d = *m_d;
-    d.m_enabled = false;
-    d.m_userDeviceSkins.clear();
-}
-
-PreviewConfigurationWidgetState::PreviewConfigurationWidgetState(const PreviewConfigurationWidgetState &o) :
-    m_d(o.m_d)
-{
-}
-
-PreviewConfigurationWidgetState& PreviewConfigurationWidgetState::operator=(const PreviewConfigurationWidgetState &o)
-{
-    m_d.operator=(o.m_d);
-    return *this;
-}
-
-PreviewConfigurationWidgetState::~PreviewConfigurationWidgetState()
-{
-}
-
-bool PreviewConfigurationWidgetState::isEnabled() const
-{
-    return m_d->m_enabled;
-}
-
-void PreviewConfigurationWidgetState::setEnabled(bool e)
-{
-    m_d->m_enabled = e;
-}
-
-QStringList PreviewConfigurationWidgetState::userDeviceSkins() const
-{
-    return m_d->m_userDeviceSkins;
-}
-
-void PreviewConfigurationWidgetState::setUserDeviceSkins(const QStringList &u)
-{
-     m_d->m_userDeviceSkins = u;
-}
-
-void PreviewConfigurationWidgetState::toSettings(const QString &prefix, QSettings &settings) const
-{
-    const PreviewConfigurationWidgetStateData &d = *m_d;
-    settings.beginGroup(prefix);
-    settings.setValue(QLatin1String(enabledKey), d.m_enabled);
-    settings.setValue(QLatin1String(userDeviceSkinsKey), d.m_userDeviceSkins);
-    settings.endGroup();
-}
-
-void PreviewConfigurationWidgetState::fromSettings(const QString &prefix, const QSettings &settings)
-{
-    clear();
-
-    QString key = prefix;
-    key += QLatin1Char('/');
-    const int prefixSize = key.size();
-
-    key += QLatin1String(enabledKey);
-
-    PreviewConfigurationWidgetStateData &d = *m_d;
-    d.m_enabled = settings.value(key, false).toBool();
-
-    key.replace(prefixSize, key.size() - prefixSize, QLatin1String(userDeviceSkinsKey));
-    d.m_userDeviceSkins = settings.value(key, QStringList()).toStringList();
-}
-
-PreviewConfiguration PreviewConfigurationWidgetState::previewConfiguration(const PreviewConfiguration &serializedConfiguration) const
-{
-    return isEnabled() ? serializedConfiguration : PreviewConfiguration();
-}
 
 // ------------- PreviewConfigurationWidgetPrivate
 class PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate {
 public:
-    PreviewConfigurationWidgetPrivate(QGroupBox *g);
-
-    PreviewConfigurationWidgetState  previewConfigurationWidgetState() const;
-    void setPreviewConfigurationWidgetState(const PreviewConfigurationWidgetState &pc);
-
-    PreviewConfiguration previewConfiguration() const;
-    void setPreviewConfiguration(const PreviewConfiguration &pc);
+    PreviewConfigurationWidgetPrivate(QDesignerFormEditorInterface *core, QGroupBox *g);
 
     void slotEditAppStyleSheet();
     void slotDeleteSkinEntry();
     void slotSkinChanged(int index);
+
+    void retrieveSettings();
+    void storeSettings() const;
 
     QAbstractButton *appStyleSheetChangeButton() const { return m_ui.m_appStyleSheetChangeButton; }
     QAbstractButton *skinRemoveButton() const { return m_ui.m_skinRemoveButton; }
@@ -232,6 +132,9 @@ public:
     QDesignerFormEditorInterface *m_core;
 
 private:
+    PreviewConfiguration previewConfiguration() const;
+    void setPreviewConfiguration(const PreviewConfiguration &pc);
+
     QStringList userSkins() const;
     void addUserSkins(const QStringList &files);
     bool canRemoveSkin(int index) const;
@@ -246,8 +149,9 @@ private:
     int m_lastSkinIndex; // required in case browse fails
 };
 
-PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::PreviewConfigurationWidgetPrivate(QGroupBox *g) :
-    m_core(0),
+PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::PreviewConfigurationWidgetPrivate(
+        QDesignerFormEditorInterface *core, QGroupBox *g) :
+    m_core(core),
     m_defaultStyle(PreviewConfigurationWidget::tr("Default")),
     m_parent(g),
     m_firstUserSkinIndex(0),
@@ -260,6 +164,7 @@ PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::PreviewConfigurat
     QStringList styleItems(m_defaultStyle);
     styleItems += QStyleFactory::keys();
     m_ui.m_styleCombo->addItems(styleItems);
+
     // sheet
     m_ui.m_appStyleSheetLineEdit->setTextPropertyValidationMode(qdesigner_internal::ValidationStyleSheet);
     m_ui.m_appStyleSheetClearButton->setIcon(qdesigner_internal::createIconSet(QString::fromUtf8("resetproperty.png")));
@@ -275,10 +180,12 @@ PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::PreviewConfigurat
     for (Skins::const_iterator it = skins.constBegin(); it != scend; ++it)
         m_ui.m_skinCombo->addItem (it->first, QVariant(it->second));
     m_browseSkinIndex = m_firstUserSkinIndex = skins.size();
-    m_ui.m_skinCombo->addItem (PreviewConfigurationWidget::tr("Browse..."), QString());
+    m_ui.m_skinCombo->addItem(PreviewConfigurationWidget::tr("Browse..."), QString());
 
     m_ui.m_skinCombo->setMaxVisibleItems (qMax(15, 2 * m_browseSkinIndex));
     m_ui.m_skinCombo->setEditable(false);
+
+    retrieveSettings();
 }
 
 bool PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::canRemoveSkin(int index) const
@@ -307,17 +214,6 @@ void PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::addUserSkins
             qWarning() << "Unable to access the skin directory '" << *it << "'.";
         }
     }
-}
-
-PreviewConfigurationWidgetState PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::previewConfigurationWidgetState() const
-{
-    return PreviewConfigurationWidgetState(userSkins(), m_parent->isChecked());
-}
-
-void PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::setPreviewConfigurationWidgetState(const PreviewConfigurationWidgetState &ps)
-{
-    m_parent->setChecked(ps.isEnabled());
-    addUserSkins(ps.userDeviceSkins());
 }
 
 PreviewConfiguration PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::previewConfiguration() const
@@ -382,6 +278,22 @@ void  PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::slotSkinCha
     }
 }
 
+void PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::retrieveSettings()
+{
+    QDesignerSharedSettings settings(m_core);
+    m_parent->setChecked(settings.isCustomPreviewConfigurationEnabled());
+    setPreviewConfiguration(settings.customPreviewConfiguration());
+    addUserSkins(settings.userDeviceSkins());
+}
+
+void PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::storeSettings() const
+{
+    QDesignerSharedSettings settings(m_core);
+    settings.setCustomPreviewConfigurationEnabled(m_parent->isChecked());
+    settings.setCustomPreviewConfiguration(previewConfiguration());
+    settings.setUserDeviceSkins(userSkins());
+}
+
 int  PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::browseSkin()
 {
     QFileDialog dlg(m_parent);
@@ -428,13 +340,16 @@ int  PreviewConfigurationWidget::PreviewConfigurationWidgetPrivate::browseSkin()
 }
 
 // ------------- PreviewConfigurationWidget
-PreviewConfigurationWidget::PreviewConfigurationWidget(QWidget *parent) :
+PreviewConfigurationWidget::PreviewConfigurationWidget(QDesignerFormEditorInterface *core,
+                                                       QWidget *parent) :
     QGroupBox(parent),
-    m_impl(new PreviewConfigurationWidgetPrivate(this))
+    m_impl(new PreviewConfigurationWidgetPrivate(core, this))
 {
     connect(m_impl->appStyleSheetChangeButton(), SIGNAL(clicked()), this, SLOT(slotEditAppStyleSheet()));
     connect(m_impl->skinRemoveButton(), SIGNAL(clicked()), this, SLOT(slotDeleteSkinEntry()));
     connect(m_impl->skinCombo(), SIGNAL(currentIndexChanged(int)), this, SLOT(slotSkinChanged(int)));
+
+    m_impl->retrieveSettings();
 }
 
 PreviewConfigurationWidget::~PreviewConfigurationWidget()
@@ -442,29 +357,9 @@ PreviewConfigurationWidget::~PreviewConfigurationWidget()
     delete m_impl;
 }
 
-void PreviewConfigurationWidget::setCore(QDesignerFormEditorInterface *core)
+void PreviewConfigurationWidget::saveState()
 {
-    m_impl->m_core = core;
-}
-
-PreviewConfigurationWidgetState PreviewConfigurationWidget::previewConfigurationWidgetState() const
-{
-    return m_impl->previewConfigurationWidgetState();
-}
-
-void PreviewConfigurationWidget::setPreviewConfigurationWidgetState(const PreviewConfigurationWidgetState &pc)
-{
-    m_impl->setPreviewConfigurationWidgetState(pc);
-}
-
-PreviewConfiguration PreviewConfigurationWidget::previewConfiguration() const
-{
-    return m_impl->previewConfiguration();
-}
-
-void PreviewConfigurationWidget::setPreviewConfiguration(const PreviewConfiguration &pc)
-{
-    m_impl->setPreviewConfiguration(pc);
+    m_impl->storeSettings();
 }
 
 void PreviewConfigurationWidget::slotEditAppStyleSheet()
@@ -481,6 +376,7 @@ void PreviewConfigurationWidget::slotSkinChanged(int index)
 {
     m_impl->slotSkinChanged(index);
 }
+
 }
 
 QT_END_NAMESPACE

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006 Apple Computer, Inc.  All rights reserved.
+ * Copyright (C) 2005, 2006, 2008 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,6 +30,7 @@
 
 namespace WebCore {
 
+class CSSPrimitiveValue;
 class HTMLElement;
 class StyleChange;
 
@@ -37,20 +38,34 @@ class ApplyStyleCommand : public CompositeEditCommand {
 public:
     enum EPropertyLevel { PropertyDefault, ForceBlockProperties };
 
-    ApplyStyleCommand(Document*, CSSStyleDeclaration*, EditAction = EditActionChangeAttributes, EPropertyLevel = PropertyDefault);
-    ApplyStyleCommand(Document*, CSSStyleDeclaration*, const Position& start, const Position& end, EditAction = EditActionChangeAttributes, EPropertyLevel = PropertyDefault);
-    ApplyStyleCommand(Element*, bool = false, EditAction = EditActionChangeAttributes);
+    static PassRefPtr<ApplyStyleCommand> create(Document* document, CSSStyleDeclaration* style, EditAction action = EditActionChangeAttributes, EPropertyLevel level = PropertyDefault)
+    {
+        return adoptRef(new ApplyStyleCommand(document, style, action, level));
+    }
+    static PassRefPtr<ApplyStyleCommand> create(Document* document, CSSStyleDeclaration* style, const Position& start, const Position& end, EditAction action = EditActionChangeAttributes, EPropertyLevel level = PropertyDefault)
+    {
+        return adoptRef(new ApplyStyleCommand(document, style, start, end, action, level));
+    }
+    static PassRefPtr<ApplyStyleCommand> create(PassRefPtr<Element> element, bool removeOnly = false, EditAction action = EditActionChangeAttributes)
+    {
+        return adoptRef(new ApplyStyleCommand(element, removeOnly, action));
+    }
+
+private:
+    ApplyStyleCommand(Document*, CSSStyleDeclaration*, EditAction, EPropertyLevel);
+    ApplyStyleCommand(Document*, CSSStyleDeclaration*, const Position& start, const Position& end, EditAction, EPropertyLevel);
+    ApplyStyleCommand(PassRefPtr<Element>, bool removeOnly, EditAction);
 
     virtual void doApply();
     virtual EditAction editingAction() const;
 
     CSSMutableStyleDeclaration* style() const { return m_style.get(); }
 
-private:
     // style-removal helpers
     bool isHTMLStyleNode(CSSMutableStyleDeclaration*, HTMLElement*);
     void removeHTMLStyleNode(HTMLElement*);
     void removeHTMLFontStyle(CSSMutableStyleDeclaration*, HTMLElement*);
+    void removeHTMLBidiEmbeddingStyle(CSSMutableStyleDeclaration*, HTMLElement*);
     void removeCSSStyle(CSSMutableStyleDeclaration*, HTMLElement*);
     void removeBlockStyle(CSSMutableStyleDeclaration*, const Position& start, const Position& end);
     void removeInlineStyle(PassRefPtr<CSSMutableStyleDeclaration>, const Position& start, const Position& end);
@@ -66,6 +81,7 @@ private:
     void applyBlockStyle(CSSMutableStyleDeclaration*);
     void applyRelativeFontStyleChange(CSSMutableStyleDeclaration*);
     void applyInlineStyle(CSSMutableStyleDeclaration*);
+    void applyInlineStyleToRange(CSSMutableStyleDeclaration*, const Position& start, const Position& end);
     void addBlockStyle(const StyleChange&, HTMLElement*);
     void addInlineStyleIfNeeded(CSSMutableStyleDeclaration*, Node* start, Node* end);
     bool splitTextAtStartIfNeeded(const Position& start, const Position& end);
@@ -79,6 +95,9 @@ private:
     void surroundNodeRangeWithElement(Node* start, Node* end, Element* element);
     float computedFontSize(const Node*);
     void joinChildTextNodes(Node*, const Position& start, const Position& end);
+
+    HTMLElement* splitAncestorsWithUnicodeBidi(Node*, bool before, RefPtr<CSSPrimitiveValue> allowedDirection);
+    void removeEmbeddingUpToEnclosingBlock(Node* node, Node* unsplitAncestor);
 
     void updateStartEnd(const Position& newStart, const Position& newEnd);
     Position startPosition();

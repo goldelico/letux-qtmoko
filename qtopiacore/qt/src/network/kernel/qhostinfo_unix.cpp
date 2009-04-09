@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -45,11 +49,15 @@ static const int RESOLVER_TIMEOUT = 2000;
 #include "qiodevice.h"
 #include <qbytearray.h>
 #include <qlibrary.h>
+#include <qurl.h>
+#include <qfile.h>
 #include <private/qmutexpool_p.h>
 
 extern "C" {
+#include <sys/types.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <resolv.h>
 }
 
 #if defined (QT_NO_GETADDRINFO)
@@ -72,8 +80,15 @@ QT_BEGIN_NAMESPACE
 #  define Q_ADDRCONFIG          AI_ADDRCONFIG
 #endif
 
+typedef struct __res_state *res_state_ptr;
+
 typedef int (*res_init_proto)(void);
 static res_init_proto local_res_init = 0;
+typedef int (*res_ninit_proto)(res_state_ptr);
+static res_ninit_proto local_res_ninit = 0;
+typedef void (*res_nclose_proto)(res_state_ptr);
+static res_nclose_proto local_res_nclose = 0;
+static res_state_ptr local_res = 0;
 
 static void resolveLibrary()
 {
@@ -81,9 +96,25 @@ static void resolveLibrary()
     QLibrary lib(QLatin1String("resolv"));
     if (!lib.load())
         return;
+
     local_res_init = res_init_proto(lib.resolve("__res_init"));
     if (!local_res_init)
         local_res_init = res_init_proto(lib.resolve("res_init"));
+
+    local_res_ninit = res_ninit_proto(lib.resolve("__res_ninit"));
+    if (!local_res_ninit)
+        local_res_ninit = res_ninit_proto(lib.resolve("res_ninit"));
+
+    if (!local_res_ninit) {
+        // if we can't get a thread-safe context, we have to use the global _res state
+        local_res = res_state_ptr(lib.resolve("_res"));
+    } else {
+        local_res_nclose = res_nclose_proto(lib.resolve("res_nclose"));
+        if (!local_res_nclose)
+            local_res_nclose = res_nclose_proto(lib.resolve("__res_nclose"));
+        if (!local_res_nclose)
+            local_res_ninit = 0;
+    }
 #endif
 }
 
@@ -281,6 +312,68 @@ QString QHostInfo::localHostName()
         return QString();
     hostName[sizeof(hostName) - 1] = '\0';
     return QString::fromLocal8Bit(hostName);
+}
+
+QString QHostInfo::localDomainName()
+{
+    resolveLibrary();
+    if (local_res_ninit) {
+        // using thread-safe version
+        res_state_ptr state = res_state_ptr(qMalloc(sizeof(*state)));
+        memset(state, 0, sizeof(*state));
+        local_res_ninit(state);
+        QString domainName = QUrl::fromAce(state->defdname);
+        if (domainName.isEmpty())
+            domainName = QUrl::fromAce(state->dnsrch[0]);
+        local_res_nclose(state);
+        qFree(state);
+
+        return domainName;
+    }
+
+    if (local_res_init && local_res) {
+        // using thread-unsafe version
+
+#if defined(QT_NO_GETADDRINFO)
+        // We have to call res_init to be sure that _res was initialized
+        // So, for systems without getaddrinfo (which is thread-safe), we lock the mutex too
+        QMutexLocker locker(::getHostByNameMutex());
+#endif
+        local_res_init();
+        QString domainName = QUrl::fromAce(local_res->defdname);
+        if (domainName.isEmpty())
+            domainName = QUrl::fromAce(local_res->dnsrch[0]);
+        return domainName;
+    }
+
+    // nothing worked, try doing it by ourselves:
+    QFile resolvconf;
+#if defined(_PATH_RESCONF)
+    resolvconf.setFileName(QFile::decodeName(_PATH_RESCONF));
+#else
+    resolvconf.setFileName(QLatin1String("/etc/resolv.conf"));
+#endif
+    if (!resolvconf.open(QIODevice::ReadOnly))
+        return QString();       // failure
+
+    QString domainName;
+    while (!resolvconf.atEnd()) {
+        QByteArray line = resolvconf.readLine().trimmed();
+        if (line.startsWith("domain "))
+            return QUrl::fromAce(line.mid(sizeof "domain " - 1).trimmed());
+
+        // in case there's no "domain" line, fall back to the first "search" entry
+        if (domainName.isEmpty() && line.startsWith("search ")) {
+            QByteArray searchDomain = line.mid(sizeof "search " - 1).trimmed();
+            int pos = searchDomain.indexOf(' ');
+            if (pos != -1)
+                searchDomain.truncate(pos);
+            domainName = QUrl::fromAce(searchDomain);
+        }
+    }
+
+    // return the fallen-back-to searched domain
+    return domainName;
 }
 
 QT_END_NAMESPACE

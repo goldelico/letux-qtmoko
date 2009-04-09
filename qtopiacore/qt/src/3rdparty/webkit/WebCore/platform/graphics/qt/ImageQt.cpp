@@ -34,8 +34,9 @@
 #include "FloatRect.h"
 #include "PlatformString.h"
 #include "GraphicsContext.h"
-#include "AffineTransform.h"
+#include "TransformationMatrix.h"
 #include "NotImplemented.h"
+#include "StillImageQt.h"
 #include "qwebsettings.h"
 
 #include <QPixmap>
@@ -49,20 +50,6 @@
 #include <QDebug>
 
 #include <math.h>
-
-namespace WebCore {
-class StillImage : public Image {
-public:
-    StillImage(const QPixmap& pixmap);
-
-    virtual IntSize size() const;
-    virtual QPixmap* getPixmap() const;
-    virtual void draw(GraphicsContext*, const FloatRect& dstRect, const FloatRect& srcRect, CompositeOperator);
-
-private:
-    QPixmap m_pixmap;
-};
-}
 
 // This function loads resources into WebKit
 static QPixmap loadResourcePixmap(const char *name)
@@ -86,8 +73,9 @@ void FrameData::clear()
 {
     if (m_frame) {
         m_frame = 0;
-        m_duration = 0.0f;
-        m_hasAlpha = true;
+        // NOTE: We purposefully don't reset metadata here, so that even if we
+        // throw away previously-decoded data, animation loops can still access
+        // properties like frame durations without re-decoding.
     }
 }
 
@@ -97,16 +85,33 @@ void FrameData::clear()
 // Image Class
 // ================================================
 
-Image* Image::loadPlatformResource(const char* name)
+PassRefPtr<Image> Image::loadPlatformResource(const char* name)
 {
-    return new StillImage(loadResourcePixmap(name));
+    return StillImage::create(loadResourcePixmap(name));
 }
 
     
-void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const AffineTransform& patternTransform,
+void Image::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const TransformationMatrix& patternTransform,
                         const FloatPoint& phase, CompositeOperator op, const FloatRect& destRect)
 {
-    notImplemented();
+    QPixmap* framePixmap = nativeImageForCurrentFrame();
+    if (!framePixmap) // If it's too early we won't have an image yet.
+        return;
+
+    QPixmap pixmap = *framePixmap;
+    QRect tr = QRectF(tileRect).toRect();
+    if (tr.x() || tr.y() || tr.width() != pixmap.width() || tr.height() != pixmap.height()) {
+        pixmap = pixmap.copy(tr);
+    }
+
+    QBrush b(pixmap);
+    b.setMatrix(patternTransform);
+    ctxt->save();
+    ctxt->setCompositeOperation(op);
+    QPainter* p = ctxt->platformContext();
+    p->setBrushOrigin(phase);
+    p->fillRect(destRect, b);
+    ctxt->restore();
 }
 
 void BitmapImage::initPlatformData()
@@ -121,6 +126,8 @@ void BitmapImage::invalidatePlatformData()
 void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst,
                        const FloatRect& src, CompositeOperator op)
 {
+    startAnimation();
+
     QPixmap* image = nativeImageForCurrentFrame();
     if (!image)
         return;
@@ -144,69 +151,12 @@ void BitmapImage::draw(GraphicsContext* ctxt, const FloatRect& dst,
     painter->drawPixmap(dst, *image, src);
 
     ctxt->restore();
-
-    startAnimation();
-}
-
-void BitmapImage::drawPattern(GraphicsContext* ctxt, const FloatRect& tileRect, const AffineTransform& patternTransform,
-                              const FloatPoint& phase, CompositeOperator op, const FloatRect& destRect)
-{
-    QPixmap* framePixmap = nativeImageForCurrentFrame();
-    if (!framePixmap) // If it's too early we won't have an image yet.
-        return;
-
-    QPixmap pixmap = *framePixmap;
-    QRect tr = QRectF(tileRect).toRect();
-    if (tr.x() || tr.y() || tr.width() != pixmap.width() || tr.height() != pixmap.height()) {
-        pixmap = pixmap.copy(tr);
-    }
-
-    QBrush b(pixmap);
-    b.setMatrix(patternTransform);
-    ctxt->save();
-    ctxt->setCompositeOperation(op);
-    QPainter* p = ctxt->platformContext();
-    p->setBrushOrigin(phase);
-    p->fillRect(destRect, b);
-    ctxt->restore();
 }
 
 void BitmapImage::checkForSolidColor()
 {
     // FIXME: It's easy to implement this optimization. Just need to check the RGBA32 buffer to see if it is 1x1.
     m_isSolidColor = false;
-}
-
-QPixmap* BitmapImage::getPixmap() const
-{
-    return const_cast<BitmapImage*>(this)->frameAtIndex(0);
-}
-
-StillImage::StillImage(const QPixmap& pixmap)
-    : m_pixmap(pixmap)
-{}
-
-IntSize StillImage::size() const
-{
-    return IntSize(m_pixmap.width(), m_pixmap.height());
-}
-
-QPixmap* StillImage::getPixmap() const
-{
-    return const_cast<QPixmap*>(&m_pixmap);
-}
-
-void StillImage::draw(GraphicsContext* ctxt, const FloatRect& dst,
-                      const FloatRect& src, CompositeOperator op)
-{
-    if (m_pixmap.isNull())
-        return;
-
-    ctxt->save();
-    ctxt->setCompositeOperation(op);
-    QPainter* painter(ctxt->platformContext());
-    painter->drawPixmap(dst, m_pixmap, src);
-    ctxt->restore();
 }
 
 }

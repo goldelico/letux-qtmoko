@@ -1,39 +1,47 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+//#define WINVER 0x0500
+#define _WIN32_WINNT 0x0400
+
 
 #include "qthread.h"
 #include "qthread_p.h"
@@ -54,6 +62,8 @@
 #define _MT
 #endif
 #include <process.h>
+#else
+#include "qfunctions_wince.h"
 #endif
 
 #ifndef QT_NO_THREAD
@@ -72,6 +82,14 @@ void qt_create_tls()
     qt_current_thread_data_tls_index = TlsAlloc();
 }
 
+static void qt_free_tls()
+{
+    if (qt_current_thread_data_tls_index != TLS_OUT_OF_INDEXES) {
+        TlsFree(qt_current_thread_data_tls_index);
+        qt_current_thread_data_tls_index = TLS_OUT_OF_INDEXES;
+    }
+}
+Q_DESTRUCTOR_FUNCTION(qt_free_tls)
 
 /*
     QThreadData
@@ -111,7 +129,7 @@ QThreadData *QThreadData::current()
                     FALSE,
                     DUPLICATE_SAME_ACCESS);
 #else
-			realHandle = (HANDLE)GetCurrentThreadId();
+                        realHandle = (HANDLE)GetCurrentThreadId();
 #endif
             qt_watch_adopted_thread(realHandle, threadData->thread);
         }
@@ -216,6 +234,38 @@ void qt_adopted_thread_watcher_function(void *)
     }
 }
 
+#if !defined(QT_NO_DEBUG) && defined(Q_CC_MSVC) && !defined(Q_OS_WINCE)
+
+#ifndef Q_OS_WIN64
+#  define ULONG_PTR DWORD
+#endif
+
+typedef struct tagTHREADNAME_INFO
+{
+    DWORD dwType;      // must be 0x1000
+    LPCSTR szName;     // pointer to name (in user addr space)
+    HANDLE dwThreadID; // thread ID (-1=caller thread)
+    DWORD dwFlags;     // reserved for future use, must be zero
+} THREADNAME_INFO;
+
+void qt_set_thread_name(HANDLE threadId, LPCSTR threadName)
+{
+    THREADNAME_INFO info;
+    info.dwType = 0x1000;
+    info.szName = threadName;
+    info.dwThreadID = threadId;
+    info.dwFlags = 0;
+
+    __try
+    {
+        RaiseException(0x406D1388, 0, sizeof(info)/sizeof(DWORD), (const ULONG_PTR*)&info);
+    }
+    __except (EXCEPTION_CONTINUE_EXECUTION)
+    {
+    }
+}
+#endif // !QT_NO_DEBUG && Q_CC_MSVC && !Q_OS_WINCE
+
 /**************************************************************************
  ** QThreadPrivate
  *************************************************************************/
@@ -244,6 +294,14 @@ unsigned int __stdcall QThreadPrivate::start(void *arg)
     // ### TODO: allow the user to create a custom event dispatcher
     if (QCoreApplication::instance())
         createEventDispatcher(data);
+
+#if !defined(QT_NO_DEBUG) && defined(Q_CC_MSVC) && !defined(Q_OS_WINCE)
+    // sets the name of the current thread.
+    QByteArray objectName = thr->objectName().toLocal8Bit();
+    qt_set_thread_name((HANDLE)-1,
+                       objectName.isEmpty() ?
+                       thr->metaObject()->className() : objectName.constData());
+#endif
 
     emit thr->started();
     QThread::setTerminationEnabled(true);
@@ -304,6 +362,16 @@ int QThread::idealThreadCount()
     return sysinfo.dwNumberOfProcessors;
 }
 
+void QThread::yieldCurrentThread()
+{
+#ifndef Q_OS_WINCE
+    if (QSysInfo::WindowsVersion & QSysInfo::WV_NT_based)
+        SwitchToThread();
+    else
+#endif
+        ::Sleep(0);
+}
+
 void QThread::sleep(unsigned long secs)
 {
     ::Sleep(secs * 1000);
@@ -358,11 +426,11 @@ void QThread::start(Priority priority)
     d->priority = priority;
     switch (d->priority) {
     case IdlePriority:
-	if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
-	    prio = THREAD_PRIORITY_LOWEST;
-	} else {
-	    prio = THREAD_PRIORITY_IDLE;
-	}
+        if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
+            prio = THREAD_PRIORITY_LOWEST;
+        } else {
+            prio = THREAD_PRIORITY_IDLE;
+        }
         break;
 
     case LowestPriority:
@@ -386,11 +454,11 @@ void QThread::start(Priority priority)
         break;
 
     case TimeCriticalPriority:
-	if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
-	    prio = THREAD_PRIORITY_HIGHEST;
-	} else {
-	    prio = THREAD_PRIORITY_TIME_CRITICAL;
-	}
+        if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
+            prio = THREAD_PRIORITY_HIGHEST;
+        } else {
+            prio = THREAD_PRIORITY_TIME_CRITICAL;
+        }
         break;
 
     case InheritPriority:
@@ -502,11 +570,11 @@ void QThread::setPriority(Priority priority)
     d->priority = priority;
     switch (d->priority) {
     case IdlePriority:
-	if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
-	    prio = THREAD_PRIORITY_LOWEST;
-	} else {
-	    prio = THREAD_PRIORITY_IDLE;
-	}
+        if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
+            prio = THREAD_PRIORITY_LOWEST;
+        } else {
+            prio = THREAD_PRIORITY_IDLE;
+        }
         break;
 
     case LowestPriority:
@@ -530,11 +598,11 @@ void QThread::setPriority(Priority priority)
         break;
 
     case TimeCriticalPriority:
-	if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
-	    prio = THREAD_PRIORITY_HIGHEST;
-	} else {
-	    prio = THREAD_PRIORITY_TIME_CRITICAL;
-	}
+        if (QSysInfo::WindowsVersion & QSysInfo::WV_DOS_based) {
+            prio = THREAD_PRIORITY_HIGHEST;
+        } else {
+            prio = THREAD_PRIORITY_TIME_CRITICAL;
+        }
         break;
 
     case InheritPriority:

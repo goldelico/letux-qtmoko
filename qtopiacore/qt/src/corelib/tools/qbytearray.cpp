@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,19 +57,31 @@
 #include <ctype.h>
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define IS_RAW_DATA(d) ((d)->data != (d)->array)
 
 QT_BEGIN_NAMESPACE
 
+
+int qFindByteArray(
+    const char *haystack0, int haystackLen, int from,
+    const char *needle0, int needleLen);
+
+
 int qAllocMore(int alloc, int extra)
 {
+    if (alloc == 0 && extra == 0)
+        return 0;
     const int page = 1 << 12;
     int nalloc;
     alloc += extra;
     if (alloc < 1<<6) {
         nalloc = (1<<3) + ((alloc >>3) << 3);
     } else  {
+        // don't do anything if the loop will overflow signed int.
+        if (alloc >= INT_MAX/2)
+            return INT_MAX;
         nalloc = (alloc < page) ? 1 << 3 : page;
         while (nalloc < alloc) {
             if (nalloc <= 0)
@@ -403,7 +419,8 @@ quint16 qChecksum(const char *data, uint len)
     return ~crc & 0xffff;
 }
 
-/*! \fn QByteArray qCompress(const QByteArray& data, int compressionLevel)
+/*!     
+    \fn QByteArray qCompress(const QByteArray& data, int compressionLevel)
 
     \relates QByteArray
 
@@ -488,8 +505,9 @@ QByteArray qCompress(const uchar* data, int nbytes, int compressionLevel)
 
     \bold{Note:} If you want to use this function to uncompress external
     data compressed using zlib, you first need to prepend four bytes to the
-    byte array that contain the expected length of the uncompressed data
-    encoded in big-endian order (most significant byte first).
+    byte array that contain the expected length (as an unsigned integer)
+    of the uncompressed data encoded in big-endian order (most significant
+    byte first).
 
     \sa qCompress()
 */
@@ -931,6 +949,7 @@ QByteArray &QByteArray::operator=(const char *str)
 */
 
 /*! \fn QByteArray::operator const char *() const
+    \fn QByteArray::operator const void *() const
 
     Returns a pointer to the data stored in the byte array. The
     pointer can be used to access the bytes that compose the array.
@@ -940,6 +959,9 @@ QByteArray &QByteArray::operator=(const char *str)
     This operator is mostly useful to pass a byte array to a function
     that accepts a \c{const char *}.
 
+    You can disable this operator by defining \c
+    QT_NO_CAST_FROM_BYTEARRAY when you compile your applications.
+
     Note: A QByteArray can store any byte values including '\\0's,
     but most functions that take \c{char *} arguments assume that the
     data ends at the first '\\0' they encounter.
@@ -947,14 +969,14 @@ QByteArray &QByteArray::operator=(const char *str)
     \sa constData()
 */
 
-/*! \fn QByteArray::operator const void *() const
+/*!
+  \macro QT_NO_CAST_FROM_BYTEARRAY
+  \relates QByteArray
 
-    Returns a void pointer to the data.
+  Disables automatic conversions from QByteArray to
+  const char * or const void *.
 
-    This operator is mostly useful to pass a byte array to a function
-    that accepts a void *.
-
-    \sa constData()
+  \sa QT_NO_CAST_TO_ASCII, QT_NO_CAST_FROM_ASCII
 */
 
 /*! \fn char *QByteArray::data()
@@ -1382,6 +1404,26 @@ void QByteArray::expand(int i)
 }
 
 /*!
+   \internal
+   Return a QByteArray that is sure to be NUL-terminated.
+
+   By default, all QByteArray have an extra NUL at the end,
+   guaranteeing that assumption. However, if QByteArray::fromRawData
+   is used, then the NUL is there only if the user put it there. We
+   can't be sure.
+*/
+QByteArray QByteArray::nulTerminated() const
+{
+    // is this fromRawData?
+    if (d->data == d->array)
+        return *this;           // no, then we're sure we're zero terminated
+
+    QByteArray copy(*this);
+    copy.detach();
+    return copy;
+}
+
+/*!
     Prepends the byte array \a ba to this byte array and returns a
     reference to this byte array.
 
@@ -1509,6 +1551,31 @@ QByteArray& QByteArray::append(const char *str)
             realloc(qAllocMore(d->size + len, sizeof(Data)));
         memcpy(d->data + d->size, str, len + 1); // include null terminator
         d->size += len;
+    }
+    return *this;
+}
+
+/*!
+    \overload append()
+
+    Appends the first \a len characters of the string \a str to this byte
+    array and returns a reference to this byte array.
+
+    If \a len is negative, the length of the string will be determined
+    automatically using qstrlen(). If \a len is zero or the length of the
+    string is zero, nothing will be appended to the byte array.
+*/
+
+QByteArray &QByteArray::append(const char *str, int len)
+{
+    if (len < 0)
+        len = qstrlen(str);
+    if (str && len) {
+        if (d->ref != 1 || d->size + len > d->alloc)
+            realloc(qAllocMore(d->size + len, sizeof(Data)));
+        memcpy(d->data + d->size, str, len); // include null terminator
+        d->size += len;
+        d->data[d->size] = '\0';
     }
     return *this;
 }
@@ -1655,15 +1722,37 @@ QByteArray &QByteArray::remove(int pos, int len)
 
 QByteArray &QByteArray::replace(int pos, int len, const QByteArray &after)
 {
-    QByteArray copy(after);
-    remove(pos, len);
-    return insert(pos, copy);
+    if (len == after.d->size) {
+        detach();
+        memmove(d->data + pos, after.d->data, len*sizeof(char));
+        return *this;
+    } else {
+        QByteArray copy(after);
+        // ### optimise me
+        remove(pos, len);
+        return insert(pos, copy);
+    }
 }
 
 /*! \fn QByteArray &QByteArray::replace(int pos, int len, const char *after)
 
     \overload
 */
+QByteArray &QByteArray::replace(int pos, int len, const char *after)
+{
+    int alen = qstrlen(after);
+    if (len == alen) {
+        detach();
+        memcpy(d->data + pos, after, len*sizeof(char));
+        return *this;
+    } else {
+        remove(pos, len);
+        return qbytearray_insert(this, pos, after, alen);
+    }
+}
+
+// ### optimise all other replace method, by offering
+// QByteArray::replace(const char *before, int blen, const char *after, int alen)
 
 /*!
     \overload
@@ -1677,28 +1766,74 @@ QByteArray &QByteArray::replace(int pos, int len, const QByteArray &after)
 
 QByteArray &QByteArray::replace(const QByteArray &before, const QByteArray &after)
 {
-    if (isNull() || before == after)
+    if (isNull() || before.d == after.d)
         return *this;
 
     QByteArray aft = after;
     if (after.d == d)
         aft.detach();
+    
+    return replace(before.constData(), before.size(), aft.constData(), aft.size());
+}
 
-    QByteArrayMatcher matcher(before);
+/*!
+    \fn QByteArray &QByteArray::replace(const char *before, const QByteArray &after)
+    \overload
+
+    Replaces every occurrence of the string \a before with the
+    byte array \a after.
+*/
+
+QByteArray &QByteArray::replace(const char *c, const QByteArray &after)
+{
+    QByteArray aft = after;
+    if (after.d == d)
+        aft.detach();
+    
+    return replace(c, qstrlen(c), aft.constData(), aft.size());
+}
+
+/*!
+    \fn QByteArray &QByteArray::replace(const char *before, int bsize, const char *after, int asize)
+    \overload
+
+    Replaces every occurrence of the string \a before with the string \a after.
+    Since the sizes of the strings are given by \a bsize and \a asize, they
+    may contain zero characters and do not need to be zero-terminated.
+*/
+
+QByteArray &QByteArray::replace(const char *before, int bsize, const char *after, int asize)
+{
+    if (isNull() || (before == after && bsize == asize))
+        return *this;
+
+    // protect against before or after being part of this
+    const char *a = after;
+    const char *b = before;
+    if (after >= d->data && after < d->data + d->size) {
+        char *copy = (char *)malloc(asize);
+        memcpy(copy, after, asize);
+        a = copy;
+    }
+    if (before >= d->data && before < d->data + d->size) {
+        char *copy = (char *)malloc(bsize);
+        memcpy(copy, before, bsize);
+        b = copy;
+    }
+    
+    QByteArrayMatcher matcher(before, bsize);
     int index = 0;
-    const int bl = before.d->size;
-    const int al = aft.d->size;
     int len = d->size;
     char *d = data();
 
-    if (bl == al) {
-        if (bl) {
+    if (bsize == asize) {
+        if (bsize) {
             while ((index = matcher.indexIn(*this, index)) != -1) {
-                memcpy(d + index, aft.constData(), al);
-                index += bl;
+                memcpy(d + index, after, asize);
+                index += bsize;
             }
         }
-    } else if (al < bl) {
+    } else if (asize < bsize) {
         uint to = 0;
         uint movestart = 0;
         uint num = 0;
@@ -1712,11 +1847,11 @@ QByteArray &QByteArray::replace(const QByteArray &before, const QByteArray &afte
             } else {
                 to = index;
             }
-            if (al) {
-                memcpy(d + to, aft.constData(), al);
-                to += al;
+            if (asize) {
+                memcpy(d + to, after, asize);
+                to += asize;
             }
-            index += bl;
+            index += bsize;
             movestart = index;
             num++;
         }
@@ -1724,7 +1859,7 @@ QByteArray &QByteArray::replace(const QByteArray &before, const QByteArray &afte
             int msize = len - movestart;
             if (msize > 0)
                 memmove(d + to, d + movestart, msize);
-            resize(len - num*(bl-al));
+            resize(len - num*(bsize-asize));
         }
     } else {
         // the most complex case. We don't want to lose performance by doing repeated
@@ -1737,16 +1872,16 @@ QByteArray &QByteArray::replace(const QByteArray &before, const QByteArray &afte
                 if (index == -1)
                     break;
                 indices[pos++] = index;
-                index += bl;
+                index += bsize;
                 // avoid infinite loop
-                if (!bl)
+                if (!bsize)
                     index++;
             }
             if (!pos)
                 break;
 
             // we have a table of replacement positions, use them for fast replacing
-            int adjust = pos*(al-bl);
+            int adjust = pos*(asize-bsize);
             // index has to be adjusted in case we get back into the loop above.
             if (index != -1)
                 index += adjust;
@@ -1760,29 +1895,29 @@ QByteArray &QByteArray::replace(const QByteArray &before, const QByteArray &afte
 
             while(pos) {
                 pos--;
-                int movestart = indices[pos] + bl;
-                int insertstart = indices[pos] + pos*(al-bl);
-                int moveto = insertstart + al;
+                int movestart = indices[pos] + bsize;
+                int insertstart = indices[pos] + pos*(asize-bsize);
+                int moveto = insertstart + asize;
                 memmove(d + moveto, d + movestart, (moveend - movestart));
-                if (aft.size())
-                    memcpy(d + insertstart, aft.constData(), al);
-                moveend = movestart - bl;
+                if (asize)
+                    memcpy(d + insertstart, after, asize);
+                moveend = movestart - bsize;
             }
         }
     }
+
+    if (a != after)
+        ::free((char *)a);
+    if (b != before)
+        ::free((char *)b);
+    
+    
     return *this;
 }
 
 
-/*! \fn QByteArray &QByteArray::replace(const char *before, const QByteArray &after)
-    \overload
-
-    Replaces every occurrence of the string \a before with the
-    byte array \a after.
-*/
-
-
-/*! \fn QByteArray &QByteArray::replace(const QByteArray &before, const char *after)
+/*!
+    \fn QByteArray &QByteArray::replace(const QByteArray &before, const char *after)
     \overload
 
     Replaces every occurrence of the byte array \a before with the
@@ -1897,6 +2032,55 @@ QList<QByteArray> QByteArray::split(char sep) const
     return list;
 }
 
+/*!
+    \since 4.5
+
+    Returns a copy of this byte array repeated the specified number of \a times.
+
+    If \a times is less than 1, an empty byte array is returned.
+
+    Example:
+
+    \code
+        QByteArray ba("ab");
+        ba.repeated(4);             // returns "abababab"
+    \endcode
+*/
+QByteArray QByteArray::repeated(int times) const
+{
+    if (d->size == 0)
+        return *this;
+
+    if (times <= 1) {
+        if (times == 1)
+            return *this;
+        return QByteArray();
+    }
+
+    const int resultSize = times * d->size;
+
+    QByteArray result;
+    result.reserve(resultSize);
+    if (result.d->alloc != resultSize)
+        return QByteArray(); // not enough memory
+
+    qMemCopy(result.d->data, d->data, d->size);
+
+    int sizeSoFar = d->size;
+    char *end = result.d->data + sizeSoFar;
+
+    const int halfResultSize = resultSize >> 1;
+    while (sizeSoFar <= halfResultSize) {
+        qMemCopy(end, result.d->data, sizeSoFar);
+        end += sizeSoFar;
+        sizeSoFar <<= 1;
+    }
+    qMemCopy(end, result.d->data, resultSize - sizeSoFar);
+    result.d->data[resultSize] = '\0';
+    result.d->size = resultSize;
+    return result;
+}
+
 #define REHASH(a) \
     if (ol_minus_1 < sizeof(uint) * CHAR_BIT) \
         hashHaystack -= (a) << ol_minus_1; \
@@ -1915,40 +2099,17 @@ QList<QByteArray> QByteArray::split(char sep) const
 
 int QByteArray::indexOf(const QByteArray &ba, int from) const
 {
-    const int l = d->size;
     const int ol = ba.d->size;
-    if (from > d->size || ol + from > l)
-        return -1;
     if (ol == 0)
         return from;
     if (ol == 1)
         return indexOf(*ba.d->data, from);
 
-    if (l > 500 && ol > 5)
-        return QByteArrayMatcher(ba).indexIn(*this, from);
+    const int l = d->size;
+    if (from > d->size || ol + from > l)
+        return -1;
 
-    const char *needle = ba.d->data;
-    const char *haystack = d->data + from;
-    const char *end = d->data + (l - ol);
-    const uint ol_minus_1 = ol - 1;
-    uint hashNeedle = 0, hashHaystack = 0;
-    int idx;
-    for (idx = 0; idx < ol; ++idx) {
-        hashNeedle = ((hashNeedle<<1) + needle[idx]);
-        hashHaystack = ((hashHaystack<<1) + haystack[idx]);
-    }
-    hashHaystack -= *(haystack + ol_minus_1);
-
-    while (haystack <= end) {
-        hashHaystack += *(haystack + ol_minus_1);
-        if (hashHaystack == hashNeedle  && *needle == *haystack
-             && memcmp(needle, haystack, ol) == 0)
-            return haystack - d->data;
-
-        REHASH(*haystack);
-        ++haystack;
-    }
-    return -1;
+    return qFindByteArray(d->data, d->size, from, ba.d->data, ol);
 }
 
 /*! \fn int QByteArray::indexOf(const QString &str, int from) const
@@ -1978,6 +2139,20 @@ int QByteArray::indexOf(const QByteArray &ba, int from) const
     \a str in the byte array, searching forward from index position \a
     from. Returns -1 if \a str could not be found.
 */
+int QByteArray::indexOf(const char *c, int from) const
+{
+    const int ol = qstrlen(c);
+    if (ol == 1)
+        return indexOf(*c, from);
+    
+    const int l = d->size;
+    if (from > d->size || ol + from > l)
+        return -1;
+    if (ol == 0)
+        return from;
+
+    return qFindByteArray(d->data, d->size, from, c, ol);
+}
 
 /*!
     \overload
@@ -2006,7 +2181,43 @@ int QByteArray::indexOf(char ch, int from) const
     return -1;
 }
 
+
+static int lastIndexOfHelper(const char *haystack, int l, const char *needle, int ol, int from)
+{
+    int delta = l - ol;
+    if (from < 0)
+        from = delta;
+    if (from < 0 || from > l)
+        return -1;
+    if (from > delta)
+        from = delta;
+
+    const char *end = haystack;
+    haystack += from;
+    const uint ol_minus_1 = ol - 1;
+    const char *n = needle + ol_minus_1;
+    const char *h = haystack + ol_minus_1;
+    uint hashNeedle = 0, hashHaystack = 0;
+    int idx;
+    for (idx = 0; idx < ol; ++idx) {
+        hashNeedle = ((hashNeedle<<1) + *(n-idx));
+        hashHaystack = ((hashHaystack<<1) + *(h-idx));
+    }
+    hashHaystack -= *haystack;
+    while (haystack >= end) {
+        hashHaystack += *haystack;
+        if (hashHaystack == hashNeedle && memcmp(needle, haystack, ol) == 0)
+            return haystack - end;
+        --haystack;
+        REHASH(*(haystack + ol));
+    }
+    return -1;
+
+}
+
 /*!
+    \fn int QByteArray::lastIndexOf(const QByteArray &ba, int from) const
+
     Returns the index position of the last occurrence of the byte
     array \a ba in this byte array, searching backward from index
     position \a from. If \a from is -1 (the default), the search
@@ -2021,39 +2232,10 @@ int QByteArray::indexOf(char ch, int from) const
 int QByteArray::lastIndexOf(const QByteArray &ba, int from) const
 {
     const int ol = ba.d->size;
-    const int l = d->size;
-    int delta = l - ol;
-    if (from < 0)
-        from = delta;
-    if (from < 0 || from > l)
-        return -1;
-    if (from > delta)
-        from = delta;
     if (ol == 1)
         return lastIndexOf(*ba.d->data, from);
 
-    const char *needle = ba.d->data;
-    const char *haystack = d->data + from;
-    const char *end = d->data;
-    const uint ol_minus_1 = ol - 1;
-    const char *n = needle + ol_minus_1;
-    const char *h = haystack + ol_minus_1;
-    uint hashNeedle = 0, hashHaystack = 0;
-    int idx;
-    for (idx = 0; idx < ol; ++idx) {
-        hashNeedle = ((hashNeedle<<1) + *(n-idx));
-        hashHaystack = ((hashHaystack<<1) + *(h-idx));
-    }
-    hashHaystack -= *haystack;
-    while (haystack >= end) {
-        hashHaystack += *haystack;
-        if (hashHaystack == hashNeedle && memcmp(needle, haystack, ol) == 0)
-            return haystack-d->data;
-        --haystack;
-        REHASH(*(haystack + ol));
-    }
-    return -1;
-
+    return lastIndexOfHelper(d->data, d->size, ba.d->data, ol, from);
 }
 
 /*! \fn int QByteArray::lastIndexOf(const QString &str, int from) const
@@ -2084,6 +2266,14 @@ int QByteArray::lastIndexOf(const QByteArray &ba, int from) const
     from. If \a from is -1 (the default), the search starts at the
     last (size() - 1) byte. Returns -1 if \a str could not be found.
 */
+int QByteArray::lastIndexOf(const char *str, int from) const
+{
+    const int ol = qstrlen(str);
+    if (ol == 1)
+        return lastIndexOf(*str, from);
+
+    return lastIndexOfHelper(d->data, d->size, str, ol, from);
+}
 
 /*!
     \overload
@@ -2146,11 +2336,7 @@ int QByteArray::count(const QByteArray &ba) const
 
 int QByteArray::count(const char *str) const
 {
-    int num = 0;
-    int i = -1;
-    while ((i = indexOf(str, i + 1)) != -1)
-        ++num;
-    return num;
+    return count(fromRawData(str, qstrlen(str)));
 }
 
 /*!
@@ -2956,7 +3142,7 @@ qlonglong QByteArray::toLongLong(bool *ok, int base) const
     }
 #endif
 
-    return QLocalePrivate::bytearrayToLongLong(constData(), base, ok);
+    return QLocalePrivate::bytearrayToLongLong(nulTerminated().constData(), base, ok);
 }
 
 /*!
@@ -2989,7 +3175,7 @@ qulonglong QByteArray::toULongLong(bool *ok, int base) const
     }
 #endif
 
-    return QLocalePrivate::bytearrayToUnsLongLong(constData(), base, ok);
+    return QLocalePrivate::bytearrayToUnsLongLong(nulTerminated().constData(), base, ok);
 }
 
 
@@ -3204,7 +3390,7 @@ ushort QByteArray::toUShort(bool *ok, int base) const
 
 double QByteArray::toDouble(bool *ok) const
 {
-    return QLocalePrivate::bytearrayToDouble(constData(), ok);
+    return QLocalePrivate::bytearrayToDouble(nulTerminated().constData(), ok);
 }
 
 /*!
@@ -3687,37 +3873,16 @@ QByteArray QByteArray::toHex() const
     return hex;
 }
 
-/*!
-    \since 4.4
-
-    Returns a decoded copy of the URI/URL-style percent-encoded \a input.
-    The \a percent parameter allows you to replace the '%' character for
-    another (for instance, '_' or '=').
-
-    For example:
-    \code
-        QByteArray text = QByteArray::fromPercentEncoding("Qt%20is%20great%33");
-        text.data();            // returns "Qt is great!"
-    \endcode
-
-    \sa toPercentEncoding(), QUrl::fromPercentEncoding()
-*/
-QByteArray QByteArray::fromPercentEncoding(const QByteArray &input, char percent)
+static void q_fromPercentEncoding(QByteArray *ba, char percent)
 {
-    if (input.isNull())
-        return QByteArray();       // preserve null
-    if (input.isEmpty())
-        return QByteArray(input.data(), 0);
+    if (ba->isEmpty())
+        return;
 
-    QByteArray tmp;
-    tmp.resize(input.size());   // percent-encoding is always less
-                                // than or equal in size
-
-    char *data = tmp.data();
-    const char *inputPtr = input.constData();
+    char *data = ba->data();
+    const char *inputPtr = data;
 
     int i = 0;
-    int len = input.count();
+    int len = ba->count();
     int outlen = 0;
     int a, b;
     char c;
@@ -3744,7 +3909,39 @@ QByteArray QByteArray::fromPercentEncoding(const QByteArray &input, char percent
         ++outlen;
     }
 
-    tmp.resize(outlen);
+    if (outlen != len)
+        ba->truncate(outlen);
+}
+
+void q_fromPercentEncoding(QByteArray *ba)
+{
+    q_fromPercentEncoding(ba, '%');
+}
+
+/*!
+    \since 4.4
+
+    Returns a decoded copy of the URI/URL-style percent-encoded \a input.
+    The \a percent parameter allows you to replace the '%' character for
+    another (for instance, '_' or '=').
+
+    For example:
+    \code
+        QByteArray text = QByteArray::fromPercentEncoding("Qt%20is%20great%33");
+        text.data();            // returns "Qt is great!"
+    \endcode
+
+    \sa toPercentEncoding(), QUrl::fromPercentEncoding()
+*/
+QByteArray QByteArray::fromPercentEncoding(const QByteArray &input, char percent)
+{
+    if (input.isNull())
+        return QByteArray();       // preserve null
+    if (input.isEmpty())
+        return QByteArray(input.data(), 0);
+
+    QByteArray tmp = input;
+    q_fromPercentEncoding(&tmp, percent);
     return tmp;
 }
 
@@ -3764,6 +3961,57 @@ static inline char toHexHelper(char c)
 {
     static const char hexnumbers[] = "0123456789ABCDEF";
     return hexnumbers[c & 0xf];
+}
+
+static void q_toPercentEncoding(QByteArray *ba, const char *dontEncode, const char *alsoEncode, char percent)
+{
+    if (ba->isEmpty())
+        return;
+
+    QByteArray input = *ba;
+    int len = input.count();
+    const char *inputData = input.constData();
+    char *output = 0;
+    int length = 0;
+
+    for (int i = 0; i < len; ++i) {
+        unsigned char c = *inputData++;
+        if (((c >= 0x61 && c <= 0x7A) // ALPHA
+             || (c >= 0x41 && c <= 0x5A) // ALPHA
+             || (c >= 0x30 && c <= 0x39) // DIGIT
+             || c == 0x2D // -
+             || c == 0x2E // .
+             || c == 0x5F // _
+             || c == 0x7E // ~
+             || q_strchr(dontEncode, c))
+            && !q_strchr(alsoEncode, c)) {
+            if (output)
+                output[length] = c;
+            ++length;
+        } else {
+            if (!output) {
+                // detach now
+                ba->resize(len*3); // worst case
+                output = ba->data();
+            }
+            output[length++] = percent;
+            output[length++] = toHexHelper((c & 0xf0) >> 4);
+            output[length++] = toHexHelper(c & 0xf);
+        }
+    }
+    if (output)
+        ba->truncate(length);
+}
+
+void q_toPercentEncoding(QByteArray *ba, const char *exclude, const char *include)
+{
+    q_toPercentEncoding(ba, exclude, include, '%');
+}
+
+void q_normalizePercentEncoding(QByteArray *ba, const char *exclude)
+{
+    q_fromPercentEncoding(ba, '%');
+    q_toPercentEncoding(ba, exclude, 0, '%');
 }
 
 /*!
@@ -3803,16 +4051,6 @@ QByteArray QByteArray::toPercentEncoding(const QByteArray &exclude, const QByteA
     if (isEmpty())
         return QByteArray(data(), 0);
 
-    QVarLengthArray<char> output(size() * 3);
-
-    int len = count();
-    char *data = output.data();
-    const char *inputData = constData();
-    int length = 0;
-
-    const char * dontEncode = 0;
-    if (!exclude.isEmpty()) dontEncode = exclude.constData();
-
     QByteArray include2 = include;
     if (percent != '%')                        // the default
         if ((percent >= 0x61 && percent <= 0x7A) // ALPHA
@@ -3824,47 +4062,10 @@ QByteArray QByteArray::toPercentEncoding(const QByteArray &exclude, const QByteA
             || percent == 0x7E) // ~
         include2 += percent;
 
-    if (include2.isEmpty()) {
-        for (int i = 0; i < len; ++i) {
-            unsigned char c = *inputData++;
-            if ((c >= 0x61 && c <= 0x7A) // ALPHA
-                || (c >= 0x41 && c <= 0x5A) // ALPHA
-                || (c >= 0x30 && c <= 0x39) // DIGIT
-                || c == 0x2D // -
-                || c == 0x2E // .
-                || c == 0x5F // _
-                || c == 0x7E // ~
-                || q_strchr(dontEncode, c)) {
-                data[length++] = c;
-            } else {
-                data[length++] = percent;
-                data[length++] = toHexHelper((c & 0xf0) >> 4);
-                data[length++] = toHexHelper(c & 0xf);
-            }
-        }
-    } else {
-        const char * alsoEncode = include2.constData();
-        for (int i = 0; i < len; ++i) {
-            unsigned char c = *inputData++;
-            if (((c >= 0x61 && c <= 0x7A) // ALPHA
-                || (c >= 0x41 && c <= 0x5A) // ALPHA
-                || (c >= 0x30 && c <= 0x39) // DIGIT
-                || c == 0x2D // -
-                || c == 0x2E // .
-                || c == 0x5F // _
-                || c == 0x7E // ~
-                || q_strchr(dontEncode, c))
-                && !q_strchr(alsoEncode, c)) {
-                data[length++] = c;
-            } else {
-                data[length++] = percent;
-                data[length++] = toHexHelper((c & 0xf0) >> 4);
-                data[length++] = toHexHelper(c & 0xf);
-            }
-        }
-    }
+    QByteArray result = *this;
+    q_toPercentEncoding(&result, exclude.nulTerminated().constData(), include2.nulTerminated().constData(), percent);
 
-    return QByteArray(output.data(), length);
+    return result;
 }
 
 /*! \typedef QByteArray::ConstIterator

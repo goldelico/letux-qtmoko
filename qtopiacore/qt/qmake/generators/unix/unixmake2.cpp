@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the qmake application of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -672,6 +676,13 @@ UnixMakefileGenerator::writeMakeParts(QTextStream &t)
           << (project->isEmpty("QMAKE_PKGINFO_TYPEINFO") ? QString::fromLatin1("????") : project->first("QMAKE_PKGINFO_TYPEINFO").left(4))
           << "\" >" << pkginfo << endl;
     }
+    if(!project->first("QMAKE_BUNDLE_RESOURCE_FILE").isEmpty()) {
+        QString resources = escapeFilePath(project->first("QMAKE_BUNDLE_RESOURCE_FILE"));
+        QString destdir = escapeFilePath(project->first("DESTDIR") + project->first("QMAKE_BUNDLE") + "/Contents/Resources");
+        t << resources << ": " << "\n\t";
+        t << mkdir_p_asstring(destdir) << "\n\t";
+        t << "@touch " << resources << "\n\t" << endl;
+    }
     if(!project->isEmpty("QMAKE_BUNDLE")) {
         //copy the plist
         QString info_plist = escapeFilePath(fileFixify(project->first("QMAKE_INFO_PLIST"))),
@@ -726,16 +737,19 @@ UnixMakefileGenerator::writeMakeParts(QTextStream &t)
                 path += project->first(bundle_data[i] + ".path");
                 path = Option::fixPathToLocalOS(path);
                 for(int file = 0; file < files.count(); file++) {
+                    QString src = fileFixify(files[file], FileFixifyAbsolute);
+                    if (!QFile::exists(src))
+                        src = files[file];
                     const QString dst = path + Option::dir_sep + fileInfo(files[file]).fileName();
-                    t << dst << ": " << files[file] << "\n\t"
+                    t << dst << ": " << src << "\n\t"
                       << mkdir_p_asstring(path) << "\n\t";
                     QFileInfo fi(fileInfo(files[file]));
                     if(fi.isDir())
                         t << "@$(DEL_FILE) -r " << dst << "\n\t"
-                          << "@$(COPY_DIR) " << files[file] << " " << dst << endl;
+                          << "@$(COPY_DIR) " << src << " " << dst << endl;
                     else
                         t << "@$(DEL_FILE) " << dst << "\n\t"
-                          << "@$(COPY_FILE) " << files[file] << " " << dst << endl;
+                          << "@$(COPY_FILE) " << src << " " << dst << endl;
                 }
             }
         }
@@ -1433,7 +1447,8 @@ UnixMakefileGenerator::writePkgConfigFile()
         pkgConfiglibDir = "-L${libdir}";
         pkgConfiglibName = "-l" + lname.left(lname.length()-Option::libtool_ext.length());
     }
-    t << pkgConfiglibDir << " " << pkgConfiglibName << " ";
+    t << pkgConfiglibDir << " " << pkgConfiglibName << " " << endl;
+    t << "Libs.private: ";
     for(QStringList::ConstIterator it = libs.begin(); it != libs.end(); ++it) {
         t << project->values((*it)).join(" ") << " ";
     }
@@ -1448,6 +1463,13 @@ UnixMakefileGenerator::writePkgConfigFile()
       << project->values("QMAKE_PKGCONFIG_CFLAGS").join(" ")
         //      << varGlue("DEFINES","-D"," -D"," ")
       << " -I${includedir}" << endl;
+
+    // requires
+    const QString requires = project->values("QMAKE_PKGCONFIG_REQUIRES").join(" ");
+    if (!requires.isEmpty()) {
+        t << "Requires: " << requires << endl;
+    }
+
     t << endl;
 }
 

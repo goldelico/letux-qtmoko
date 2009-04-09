@@ -46,7 +46,7 @@ namespace WebCore {
     // FIXME: merge with PluginDatabase in the future
     class PluginData : public RefCounted<PluginData> {
     public:
-        PluginData(const Page*);
+        static PassRefPtr<PluginData> create(const Page* page) { return adoptRef(new PluginData(page)); }
         ~PluginData();
 
         void disconnectPage() { m_page = 0; }
@@ -56,10 +56,12 @@ namespace WebCore {
         const Vector<MimeClassInfo*>& mimes() const { return m_mimes; }
 
         bool supportsMimeType(const String& mimeType) const;
+        String pluginNameForMimeType(const String& mimeType) const;
 
         static void refresh();
 
     private:
+        PluginData(const Page*);
         void initPlugins();
 
         Vector<PluginInfo*> m_plugins;

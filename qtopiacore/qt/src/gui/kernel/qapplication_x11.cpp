@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -78,6 +82,15 @@
 #include "qmetaobject.h"
 #include "qtimer.h"
 #include "qlibrary.h"
+#include <private/qgraphicssystemfactory_p.h>
+
+#if !defined (QT_NO_TABLET)
+extern "C" {
+#   define class c_class  //XIproto.h has a name member named 'class' which the c++ compiler doesn't like
+#   include <wacomcfg.h>
+#   undef class
+}
+#endif
 
 //#define ALIEN_DEBUG
 
@@ -200,6 +213,7 @@ static const char * x11_atomnames = {
 
     "_NET_WM_STATE\0"
     "_NET_WM_STATE_ABOVE\0"
+    "_NET_WM_STATE_BELOW\0"
     "_NET_WM_STATE_FULLSCREEN\0"
     "_NET_WM_STATE_MAXIMIZED_HORZ\0"
     "_NET_WM_STATE_MAXIMIZED_VERT\0"
@@ -208,6 +222,7 @@ static const char * x11_atomnames = {
     "_NET_WM_STATE_DEMANDS_ATTENTION\0"
 
     "_NET_WM_USER_TIME\0"
+    "_NET_WM_USER_TIME_WINDOW\0"
     "_NET_WM_FULL_PLACEMENT\0"
 
     "_NET_WM_WINDOW_TYPE\0"
@@ -235,6 +250,8 @@ static const char * x11_atomnames = {
     "_NET_SUPPORTING_WM_CHECK\0"
 
     "_NET_WM_CM_S0\0"
+
+    "_NET_SYSTEM_TRAY_VISUAL\0"
 
     // Property formats
     "COMPOUND_TEXT\0"
@@ -293,9 +310,6 @@ static const char *appBTNCol        = 0;                // application btn color
 static const char *mwGeometry        = 0;                // main widget geometry
 static const char *mwTitle        = 0;                // main widget title
 char    *qt_ximServer        = 0;                // XIM Server will connect to
-#if 0
-static bool        noxim                = false;        // connect to xim or not
-#endif
 static bool        appSync                = false;        // X11 synchronization
 #if defined(QT_DEBUG)
 static bool        appNoGrab        = false;        // X11 grabbing enabled
@@ -367,8 +381,10 @@ XIMStyle        qt_xim_preferred_style = 0;
 int qt_ximComposingKeycode=0;
 QTextCodec * qt_input_mapper = 0;
 
-extern bool     qt_check_clipboard_sentinel(); //def in qclipboard_x11.cpp
-extern bool        qt_check_selection_sentinel(); //def in qclipboard_x11.cpp
+extern bool qt_check_clipboard_sentinel(); //def in qclipboard_x11.cpp
+extern bool qt_check_selection_sentinel(); //def in qclipboard_x11.cpp
+extern bool qt_xfixes_clipboard_changed(Window clipboardOwner, Time timestamp); //def in qclipboard_x11.cpp
+extern bool qt_xfixes_selection_changed(Window selectionOwner, Time timestamp); //def in qclipboard_x11.cpp
 
 static void        qt_save_rootinfo();
 Q_GUI_EXPORT bool qt_try_modal(QWidget *, XEvent *);
@@ -382,6 +398,109 @@ extern bool qt_xdnd_dragging;
 // gui or non-gui from qapplication.cpp
 extern bool qt_is_gui_used;
 
+/*! 
+    \internal
+    Try to resolve a \a symbol from \a library with the version specified
+    by \a vernum.
+
+    Note that, in the case of the Xfixes library, \a vernum is not the same as
+    \c XFIXES_MAJOR - it is a part of soname and may differ from the Xfixes
+    version.
+*/
+static void* qt_load_library_runtime(const char *library, int vernum,
+                                     int highestVernum, const char *symbol)
+{
+    QList<int> versions;
+    // we try to load in the following order:
+    // explicit version -> the default one -> (from the highest (highestVernum) to the lowest (vernum) )
+    if (vernum != -1)
+        versions << vernum;
+    versions << -1;
+    if (vernum != -1) {
+        for(int i = highestVernum; i > vernum; --i)
+            versions << i;
+    }
+    Q_FOREACH(int version, versions) {
+        QLatin1String libName(library);
+        QLibrary xfixesLib(libName, version);
+        if (xfixesLib.load()) {
+            void *ptr = xfixesLib.resolve(symbol);
+            if (ptr)
+                return ptr;
+        }
+    }
+    return 0;
+}
+
+#ifndef QT_NO_XINPUT
+# ifdef QT_RUNTIME_XINPUT
+#  define XINPUT_LOAD_RUNTIME(vernum, symbol, symbol_type) \
+    (symbol_type)qt_load_library_runtime("libXi", vernum, 6, #symbol);
+#  define XINPUT_LOAD(symbol) \
+    XINPUT_LOAD_RUNTIME(1, symbol, Ptr##symbol)
+# else // not runtime XInput
+#  define XINPUT_LOAD(symbol) symbol
+# endif // QT_RUNTIME_XINPUT
+#else // not using Xinput at all
+# define XINPUT_LOAD(symbol) 0
+#endif // QT_NO_XINPUT
+
+#ifndef QT_NO_XFIXES
+# ifdef QT_RUNTIME_XFIXES
+#  define XFIXES_LOAD_RUNTIME(vernum, symbol, symbol_type) \
+    (symbol_type)qt_load_library_runtime("libXfixes", vernum, 4, #symbol);
+#  define XFIXES_LOAD_V1(symbol) \
+    XFIXES_LOAD_RUNTIME(1, symbol, Ptr##symbol)
+#  define XFIXES_LOAD_V2(symbol) \
+    XFIXES_LOAD_RUNTIME(2, symbol, Ptr##symbol)
+
+# else // not runtime Xfixes
+
+#  if XFIXES_MAJOR >= 2
+#   define XFIXES_LOAD_V1(symbol) symbol
+#   define XFIXES_LOAD_V2(symbol) symbol
+#  elif XFIXES_MAJOR >= 1
+#   define XFIXES_LOAD_V1(symbol) symbol
+#   define XFIXES_LOAD_V2(symbol) 0
+#  else
+#   error Unsupported version of Xfixes
+#  endif
+# endif // QT_RUNTIME_XFIXES
+#else // not using Xfixes at all
+# define XFIXES_LOAD_V1(symbol) 0
+# define XFIXES_LOAD_V2(symbol) 0
+#endif // QT_NO_XFIXES
+
+#ifndef QT_NO_XFIXES
+
+struct qt_xfixes_selection_event_data
+{
+    // which selection to filter out.
+    Atom selection;
+};
+
+#if defined(Q_C_CALLBACKS)
+extern "C" {
+#endif
+
+static Bool qt_xfixes_scanner(Display*, XEvent *event, XPointer arg)
+{
+    qt_xfixes_selection_event_data *data =
+        reinterpret_cast<qt_xfixes_selection_event_data*>(arg);
+    if (event->type == X11->xfixes_eventbase + XFixesSelectionNotify) {
+        XFixesSelectionNotifyEvent *xfixes_event = reinterpret_cast<XFixesSelectionNotifyEvent*>(event);
+        if (xfixes_event->selection == data->selection)
+            return true;
+    }
+    return false;
+}
+
+#if defined(Q_C_CALLBACKS)
+}
+#endif
+
+#endif // QT_NO_XFIXES
+
 class QETWidget : public QWidget                // event translator widget
 {
 public:
@@ -393,7 +512,7 @@ public:
     bool translateWheelEvent(int global_x, int global_y, int delta, Qt::MouseButtons buttons,
                              Qt::KeyboardModifiers modifiers, Qt::Orientation orient);
 #if !defined (QT_NO_TABLET)
-    bool translateXinputEvent(const XEvent*, const QTabletDeviceData *tablet);
+    bool translateXinputEvent(const XEvent*, QTabletDeviceData *tablet);
 #endif
     bool translatePropertyEvent(const XEvent *);
 
@@ -434,6 +553,8 @@ public:
         XSetWMNormalHints(X11->display, internalWinId(), &sh);
 
         setAttribute(Qt::WA_Mapped);
+        if (testAttribute(Qt::WA_DontShowOnScreen))
+            return;
         d_func()->topData()->waitingForMapNotify = 1;
         XMapWindow(X11->display, internalWinId());
     }
@@ -549,6 +670,8 @@ static int qt_x_errhandler(Display *dpy, XErrorEvent *err)
             extensionName = "RANDR";
         else if (err->request_code == X11->xinput_major)
             extensionName = "XInputExtension";
+        else if (err->request_code == X11->mitshm_major)
+            extensionName = "MIT-SHM";
 
         char minor_str[256];
         if (extensionName) {
@@ -632,6 +755,26 @@ Q_GUI_EXPORT void qt_x11_apply_settings_in_all_apps()
 }
 
 /*! \internal
+    Gets the current KDE 3 or 4 home path
+*/
+QString QApplicationPrivate::kdeHome()
+{
+    static QString kdeHomePath;
+    if (kdeHomePath.isEmpty()) {
+        kdeHomePath = QString::fromLocal8Bit(qgetenv("KDEHOME"));
+        if (kdeHomePath.isEmpty()) {
+            int kdeSessionVersion = QString::fromLocal8Bit(qgetenv("KDE_SESSION_VERSION")).toInt();
+            QDir homeDir(QDir::homePath());
+            QString kdeConfDir(QLatin1String("/.kde"));
+            if (4 == kdeSessionVersion && homeDir.exists(QLatin1String(".kde4")))
+                kdeConfDir = QLatin1String("/.kde4");
+            kdeHomePath = QDir::homePath() + kdeConfDir;
+        }
+    }
+    return kdeHomePath;
+}
+
+/*! \internal
     apply the settings to the application
 */
 bool QApplicationPrivate::x11_apply_settings()
@@ -665,23 +808,23 @@ bool QApplicationPrivate::x11_apply_settings()
     QPalette pal(Qt::black);
     int groupCount = 0;
     strlist = settings.value(QLatin1String("Palette/active")).toStringList();
-    if (strlist.count() == QPalette::NColorRoles) {
+    if (!strlist.isEmpty()) {
         ++groupCount;
-        for (i = 0; i < QPalette::NColorRoles; i++)
+        for (i = 0; i < qMin(strlist.count(), int(QPalette::NColorRoles)); i++)
             pal.setColor(QPalette::Active, (QPalette::ColorRole) i,
                          QColor(strlist[i]));
     }
     strlist = settings.value(QLatin1String("Palette/inactive")).toStringList();
-    if (strlist.count() == QPalette::NColorRoles) {
+    if (!strlist.isEmpty()) {
         ++groupCount;
-        for (i = 0; i < QPalette::NColorRoles; i++)
+        for (i = 0; i < qMin(strlist.count(), int(QPalette::NColorRoles)); i++)
             pal.setColor(QPalette::Inactive, (QPalette::ColorRole) i,
                          QColor(strlist[i]));
     }
     strlist = settings.value(QLatin1String("Palette/disabled")).toStringList();
-    if (strlist.count() == QPalette::NColorRoles) {
+    if (!strlist.isEmpty()) {
         ++groupCount;
-        for (i = 0; i < QPalette::NColorRoles; i++)
+        for (i = 0; i < qMin(strlist.count(), int(QPalette::NColorRoles)); i++)
             pal.setColor(QPalette::Disabled, (QPalette::ColorRole) i,
                          QColor(strlist[i]));
     }
@@ -689,11 +832,24 @@ bool QApplicationPrivate::x11_apply_settings()
     if (groupCount == QPalette::NColorGroups)
         QApplicationPrivate::setSystemPalette(pal);
 
+    int kdeSessionVersion = QString::fromLocal8Bit(qgetenv("KDE_SESSION_VERSION")).toInt();
+ 
     if (!appFont) {
-        QString str = settings.value(QLatin1String("font")).toString();
-        if (!str.isEmpty()) {
-            QFont font(QApplication::font());
-            font.fromString(str);
+        QFont font(QApplication::font());
+        QString fontDescription;
+        // Override Qt font if KDE4 settings can be used
+        if (4 == kdeSessionVersion) {
+            QSettings kdeSettings(kdeHome() + QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
+            fontDescription = kdeSettings.value(QLatin1String("font")).toString();
+            if (fontDescription.isEmpty()) {
+                // KDE stores fonts without quotes
+                fontDescription = kdeSettings.value(QLatin1String("font")).toStringList().join(QLatin1String(","));
+            }
+        }
+        if (fontDescription.isEmpty())
+            fontDescription = settings.value(QLatin1String("font")).toString();
+        if (!fontDescription .isEmpty()) {
+            font.fromString(fontDescription );
             QApplicationPrivate::setSystemFont(font);
         }
     }
@@ -712,6 +868,25 @@ bool QApplicationPrivate::x11_apply_settings()
 
     // read new QStyle
     QString stylename = settings.value(QLatin1String("style")).toString();
+    if (stylename.isEmpty() && !QApplicationPrivate::styleOverride && X11->use_xrender) {
+        QStringList availableStyles = QStyleFactory::keys();
+        // Override Qt style if KDE4 settings can be used
+        if (4 == kdeSessionVersion) {
+            QSettings kdeSettings(kdeHome() + QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
+            QString kde4Style = kdeSettings.value(QLatin1String("widgetStyle"),
+                                                  QLatin1String("Oxygen")).toString();
+            foreach (const QString &style, availableStyles) {
+                if (style.toLower() == kde4Style.toLower())
+                    stylename = kde4Style;
+            }
+        // Set QGtkStyle for GNOME
+        } else if (X11->desktopEnvironment == DE_GNOME) {
+            QString gtkStyleKey = QString::fromLatin1("GTK+");
+            if (availableStyles.contains(gtkStyleKey))
+                stylename = gtkStyleKey;
+        }
+    }
+
     if (QCoreApplication::startingUp()) {
         if (!stylename.isEmpty() && !QApplicationPrivate::styleOverride)
             QApplicationPrivate::styleOverride = new QString(stylename);
@@ -775,17 +950,19 @@ bool QApplicationPrivate::x11_apply_settings()
     QApplication::setEffectEnabled(Qt::UI_AnimateToolBox,
                                    effects.contains(QLatin1String("animatetoolbox")));
 
-    settings.beginGroup(QLatin1String("Font Substitutions"));
-    QStringList fontsubs = settings.childKeys();
-    if (!fontsubs.isEmpty()) {
-        QStringList::Iterator it = fontsubs.begin();
-        for (; it != fontsubs.end(); ++it) {
-            QString fam = *it;
-            QStringList subs = settings.value(fam).toStringList();
-            QFont::insertSubstitutions(fam, subs);
+    if (!X11->has_fontconfig) {
+        settings.beginGroup(QLatin1String("Font Substitutions"));
+        QStringList fontsubs = settings.childKeys();
+        if (!fontsubs.isEmpty()) {
+            QStringList::Iterator it = fontsubs.begin();
+            for (; it != fontsubs.end(); ++it) {
+                QString fam = *it;
+                QStringList subs = settings.value(fam).toStringList();
+                QFont::insertSubstitutions(fam, subs);
+            }
         }
+        settings.endGroup();
     }
-    settings.endGroup();
 
     qt_use_rtl_extensions =
         settings.value(QLatin1String("useRtlExtensions"), false).toBool();
@@ -859,14 +1036,12 @@ static void qt_set_input_encoding()
         XFree((char *)data);
 }
 
-// Reads a KDE3 color setting
+// Reads a KDE color setting
 static QColor kdeColor(const QString &key)
 {
-    QString kdeHome = QString::fromLocal8Bit(qgetenv("KDEHOME"));
-    if (kdeHome.isEmpty())
-        kdeHome = QDir::homePath() + QLatin1String("/.kde");
-    QSettings settings(kdeHome + QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
-    QVariant variant = settings.value(key);
+    QSettings kdeSettings(QApplicationPrivate::kdeHome() +
+                          QLatin1String("/share/config/kdeglobals"), QSettings::IniFormat);
+    QVariant variant = kdeSettings.value(key);
     if (variant.isValid()) {
         QStringList values = variant.toStringList();
         if (values.size() == 3) {
@@ -1045,7 +1220,6 @@ static void qt_set_x11_resources(const char* font = 0, const char* fg = 0,
 
         QApplicationPrivate::setSystemFont(fnt);
     }
-
     bool kdeColors = (QApplication::desktopSettingsAware() && X11->desktopEnvironment == DE_KDE);
 
     if (kdeColors || (button || !resBG.isEmpty() || !resFG.isEmpty())) {// set app colors
@@ -1088,23 +1262,33 @@ static void qt_set_x11_resources(const char* font = 0, const char* fg = 0,
             // Setup KDE palette
             QColor color;
             color = kdeColor(QLatin1String("buttonBackground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Button/BackgroundNormal"));
             if (color.isValid())
                 btn = color;
 
             color = kdeColor(QLatin1String("background"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Window/BackgroundNormal"));
             if (color.isValid())
                 bg = color;
 
             color = kdeColor(QLatin1String("foreground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:View/ForegroundNormal"));
             if (color.isValid()) {
                 fg = color;
             }
 
             color = kdeColor(QLatin1String("windowForeground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Window/ForegroundNormal"));
             if (color.isValid())
                 wfg = color;
 
             color = kdeColor(QLatin1String("windowBackground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:View/BackgroundNormal"));
             if (color.isValid())
                 base = color;
         }
@@ -1121,23 +1305,31 @@ static void qt_set_x11_resources(const char* font = 0, const char* fg = 0,
             highlight = QColor(selectBackground);
             highlightText = QColor(selectForeground);
         }
-            // Use KDE3 color settings if present
+        // Use KDE3 or KDE4 color settings if present
         if (kdeColors) {
             QColor color = kdeColor(QLatin1String("selectBackground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Selection/BackgroundNormal"));
             if (color.isValid())
                 highlight = color;
 
             color = kdeColor(QLatin1String("selectForeground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Selection/ForegroundNormal"));
             if (color.isValid())
                 highlightText = color;
 
             color = kdeColor(QLatin1String("alternateBackground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:View/BackgroundAlternate"));
             if (color.isValid())
                 pal.setColor(QPalette::AlternateBase, color);
             else
                 pal.setBrush(QPalette::AlternateBase, pal.base().color().darker(110));
 
             color = kdeColor(QLatin1String("buttonForeground"));
+            if (!color.isValid())
+                color = kdeColor(QLatin1String("Colors:Button/ForegroundNormal"));
             if (color.isValid())
                 pal.setColor(QPalette::ButtonText, color);
         }
@@ -1307,13 +1499,46 @@ static void qt_get_net_virtual_roots()
     }
 }
 
-static void qt_net_update_user_time(QWidget *tlw)
+void qt_net_remove_user_time(QWidget *tlw)
+{
+    Q_ASSERT(tlw);
+    QTLWExtra *extra = tlw->d_func()->maybeTopData();
+    if (extra && extra->userTimeWindow) {
+        Q_ASSERT(tlw->internalWinId());
+        XDeleteProperty(X11->display, tlw->internalWinId(), ATOM(_NET_WM_USER_TIME_WINDOW));
+        XDestroyWindow(X11->display, extra->userTimeWindow);
+        extra->userTimeWindow = 0;
+    }
+}
+
+void qt_net_update_user_time(QWidget *tlw, unsigned long timestamp)
 {
     Q_ASSERT(tlw);
     Q_ASSERT(tlw->isWindow());
     Q_ASSERT(tlw->testAttribute(Qt::WA_WState_Created));
-    XChangeProperty(X11->display, tlw->internalWinId(), ATOM(_NET_WM_USER_TIME),
-                    XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &X11->userTime, 1);
+    QTLWExtra *extra = tlw->d_func()->topData();
+    WId wid = tlw->internalWinId();
+    const bool isSupportedByWM = X11->isSupportedByWM(ATOM(_NET_WM_USER_TIME_WINDOW));
+    if (extra->userTimeWindow || isSupportedByWM) {
+        if (!extra->userTimeWindow) {
+            extra->userTimeWindow = XCreateSimpleWindow(X11->display,
+                                                        tlw->internalWinId(),
+                                                        -1, -1, 1, 1, 0, 0, 0);
+            wid = extra->userTimeWindow;
+            XChangeProperty(X11->display, tlw->internalWinId(), ATOM(_NET_WM_USER_TIME_WINDOW),
+                            XA_WINDOW, 32, PropModeReplace,
+                            (unsigned char *)&wid, 1);
+            XDeleteProperty(X11->display, tlw->internalWinId(), ATOM(_NET_WM_USER_TIME));
+        } else if (!isSupportedByWM) {
+            // WM no longer supports it, then we should remove the
+            // _NET_WM_USER_TIME_WINDOW atom.
+            qt_net_remove_user_time(tlw);
+        } else {
+            wid = extra->userTimeWindow;
+        }
+    }
+    XChangeProperty(X11->display, wid, ATOM(_NET_WM_USER_TIME),
+                    XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &timestamp, 1);
 }
 
 static void qt_check_focus_model()
@@ -1328,21 +1553,25 @@ static void qt_check_focus_model()
 }
 
 #ifndef QT_NO_TABLET
-static bool isXInputSupported(Display *dpy)
-{
-    Bool exists;
-    XExtensionVersion *version;
-    exists = XQueryExtension(dpy, "XInputExtension", &X11->xinput_major,
-                             &X11->xinput_eventbase, &X11->xinput_errorbase);
-    if (!exists)
-        return false;
-    version = XGetExtensionVersion(dpy, "XInputExtension");
-    if (!version || version == reinterpret_cast<XExtensionVersion *>(NoSuchExtension))
-        return false;
 
-    XFree(version);
-    return true;
-}
+#if !defined (Q_OS_IRIX)
+// from include/Xwacom.h
+#  define XWACOM_PARAM_TOOLID 322
+#  define XWACOM_PARAM_TOOLSERIAL 323
+
+typedef WACOMCONFIG * (*PtrWacomConfigInit) (Display*, WACOMERRORFUNC);
+typedef WACOMDEVICE * (*PtrWacomConfigOpenDevice) (WACOMCONFIG*, const char*);
+typedef int *(*PtrWacomConfigGetRawParam) (WACOMDEVICE*, int, int*, int, unsigned*);
+typedef int (*PtrWacomConfigCloseDevice) (WACOMDEVICE *);
+typedef void (*PtrWacomConfigTerm) (WACOMCONFIG *);
+
+static PtrWacomConfigInit ptrWacomConfigInit = 0;
+static PtrWacomConfigOpenDevice ptrWacomConfigOpenDevice = 0;
+static PtrWacomConfigGetRawParam ptrWacomConfigGetRawParam = 0;
+static PtrWacomConfigCloseDevice ptrWacomConfigCloseDevice = 0;
+static PtrWacomConfigTerm ptrWacomConfigTerm = 0;
+#endif
+
 #endif
 
 /*****************************************************************************
@@ -1365,9 +1594,9 @@ static void getXDefault(const char *group, const char *key, double *val)
 {
     char *str = XGetDefault(X11->display, group, key);
     if (str) {
-        char *end = 0;
-        double v = strtod(str, &end);
-        if (str != end)
+        bool ok;
+        double v = QByteArray(str).toDouble(&ok);
+        if (ok)
             *val = v;
     }
 }
@@ -1432,11 +1661,17 @@ void qt_init(QApplicationPrivate *priv, int,
     X11->xinput_eventbase = 0;
     X11->xinput_errorbase = 0;
 
+    // MIT-SHM
+    X11->use_mitshm = false;
+    X11->mitshm_major = 0;
+
     X11->sip_serial = 0;
     X11->net_supported_list = 0;
     X11->net_virtual_root_list = 0;
     X11->wm_client_leader = 0;
     X11->screens = 0;
+    X11->argbVisuals = 0;
+    X11->argbColormaps = 0;
     X11->screenCount = 0;
     X11->time = CurrentTime;
     X11->userTime = CurrentTime;
@@ -1475,7 +1710,7 @@ void qt_init(QApplicationPrivate *priv, int,
         X11->pattern_fills[i].screen = -1;
 #endif
 
-    X11->startupId = 0;
+    X11->startupId = X11->originalStartupId = 0;
 
     int argc = priv->argc;
     char **argv = priv->argv;
@@ -1547,10 +1782,6 @@ void qt_init(QApplicationPrivate *priv, int,
         } else if (arg == "-im") {
             if (++i < argc)
                 qt_ximServer = argv[i];
-#if 0
-        } else if (arg == "-noxim") {
-            noxim=true;
-#endif
         } else if (arg == "-ncols") {   // xv and netscape use this name
             if (++i < argc)
                 X11->color_count = qMax(0,atoi(argv[i]));
@@ -1594,9 +1825,9 @@ void qt_init(QApplicationPrivate *priv, int,
             if (!X11->colormap)
                 X11->custom_cmap = true;
         }
-#if defined(QT_DEBUG)
         else if (arg == "-sync")
             appSync = !appSync;
+#if defined(QT_DEBUG)
         else if (arg == "-nograb")
             appNoGrab = !appNoGrab;
         else if (arg == "-dograb")
@@ -1654,6 +1885,8 @@ void qt_init(QApplicationPrivate *priv, int,
         X11->screenCount = ScreenCount(X11->display);
 
         X11->screens = new QX11InfoData[X11->screenCount];
+        X11->argbVisuals = new Visual *[X11->screenCount];
+        X11->argbColormaps = new Colormap[X11->screenCount];
 
         for (int s = 0; s < X11->screenCount; s++) {
             QX11InfoData *screen = X11->screens + s;
@@ -1663,6 +1896,9 @@ void qt_init(QApplicationPrivate *priv, int,
                            / (DisplayWidthMM(X11->display, s)*10);
             screen->dpiY = (DisplayHeight(X11->display, s) * 254 + DisplayHeightMM(X11->display, s)*5)
                            / (DisplayHeightMM(X11->display, s)*10);
+
+            X11->argbVisuals[s] = 0;
+            X11->argbColormaps[s] = 0;
         }
 
 
@@ -1689,6 +1925,31 @@ void qt_init(QApplicationPrivate *priv, int,
             }
         }
 #endif // QT_NO_XRENDER
+
+#ifndef QT_NO_MITSHM
+        int mitshm_minor;
+        int mitshm_major;
+        int mitshm_eventbase;
+        int mitshm_errorbase;
+        int mitshm_pixmaps;
+        if (XQueryExtension(X11->display, "MIT-SHM", &X11->mitshm_major,
+                            &mitshm_eventbase, &mitshm_errorbase)
+            && XShmQueryVersion(X11->display, &mitshm_major, &mitshm_minor,
+                                &mitshm_pixmaps))
+        {
+            QString displayName = QLatin1String(XDisplayName(NULL));
+
+            // apparently MITSHM only works for local displays, so do a quick check here
+            // to determine whether the display is local or not (not 100 % accurate)
+            bool local = displayName.isEmpty() || displayName.lastIndexOf(QLatin1Char(':')) == 0;
+            if (local && (qgetenv("QT_X11_NO_MITSHM").toInt() == 0))
+                X11->use_mitshm = mitshm_pixmaps;
+        }
+#endif // QT_NO_MITSHM
+
+        // initialize the graphics system - order is imporant here - it must be done before
+        // the QColormap::initialize() call
+        QApplicationPrivate::graphics_system = QGraphicsSystemFactory::create(QApplicationPrivate::graphics_system_name);
         QColormap::initialize();
 
         // Support protocols
@@ -1704,10 +1965,40 @@ void qt_init(QApplicationPrivate *priv, int,
 #ifndef QT_NO_XRANDR
         // See if XRandR is supported on the connected display
         if (XQueryExtension(X11->display, "RANDR", &X11->xrandr_major,
-                            &X11->xrandr_eventbase, &X11->xrandr_errorbase)
-            && XRRQueryExtension(X11->display, &X11->xrandr_eventbase, &X11->xrandr_errorbase)) {
-            // XRandR is supported
-            X11->use_xrandr = true;
+                            &X11->xrandr_eventbase, &X11->xrandr_errorbase)) {
+
+#  ifdef QT_RUNTIME_XRANDR
+            X11->ptrXRRSelectInput = 0;
+            X11->ptrXRRUpdateConfiguration = 0;
+            X11->ptrXRRRootToScreen = 0;
+            X11->ptrXRRQueryExtension = 0;
+            QLibrary xrandrLib(QLatin1String("Xrandr"), 2);
+            if (!xrandrLib.load()) { // try without the version number
+                xrandrLib.setFileName(QLatin1String("Xrandr"));
+                xrandrLib.load();
+            }
+            if (xrandrLib.isLoaded()) {
+                X11->ptrXRRSelectInput =
+                    (PtrXRRSelectInput) xrandrLib.resolve("XRRSelectInput");
+                X11->ptrXRRUpdateConfiguration =
+                    (PtrXRRUpdateConfiguration) xrandrLib.resolve("XRRUpdateConfiguration");
+                X11->ptrXRRRootToScreen =
+                    (PtrXRRRootToScreen) xrandrLib.resolve("XRRRootToScreen");
+                X11->ptrXRRQueryExtension =
+                    (PtrXRRQueryExtension) xrandrLib.resolve("XRRQueryExtension");
+            }
+#  else
+            X11->ptrXRRSelectInput = XRRSelectInput;
+            X11->ptrXRRUpdateConfiguration = XRRUpdateConfiguration;
+            X11->ptrXRRRootToScreen = XRRRootToScreen;
+            X11->ptrXRRQueryExtension = XRRQueryExtension;
+#  endif
+
+            if (X11->ptrXRRQueryExtension
+                && X11->ptrXRRQueryExtension(X11->display, &X11->xrandr_eventbase, &X11->xrandr_errorbase)) {
+                // XRandR is supported
+                X11->use_xrandr = true;
+            }
         }
 #endif // QT_NO_XRANDR
 
@@ -1726,50 +2017,38 @@ void qt_init(QApplicationPrivate *priv, int,
 #endif // QT_NO_XRENDER
 
 #ifndef QT_NO_XFIXES
-#ifdef QT_RUNTIME_XFIXES
-        QLibrary xfixesLib(QLatin1String("Xfixes"), 3);
-        bool xfixesFound = xfixesLib.load();
-        if (!xfixesFound) { //try without the version number
-            xfixesLib.setFileName(QLatin1String("Xfixes"));
-            xfixesFound = xfixesLib.load();
-        }
-        if (xfixesFound) {
-            X11->ptrXFixesQueryExtension =
-                (PtrXFixesQueryExtension) xfixesLib.resolve("XFixesQueryExtension");
-            X11->ptrXFixesQueryVersion =
-                (PtrXFixesQueryVersion) xfixesLib.resolve("XFixesQueryVersion");
-            X11->ptrXFixesSetCursorName =
-                (PtrXFixesSetCursorName) xfixesLib.resolve("XFixesSetCursorName");
-
-            xfixesFound = X11->ptrXFixesQueryExtension
-                          && X11->ptrXFixesQueryVersion
-                          && X11->ptrXFixesSetCursorName;
-        }
-#else
-        bool xfixesFound = true;
-        X11->ptrXFixesQueryExtension = XFixesQueryExtension;
-        X11->ptrXFixesSetCursorName = XFixesSetCursorName;
-        X11->ptrXFixesQueryVersion = XFixesQueryVersion;
-#endif // QT_RUNTIME_XFIXES
-
         // See if Xfixes is supported on the connected display
-        if (xfixesFound
-            && XQueryExtension(X11->display, "XFIXES", &X11->xfixes_major,
-                             &X11->xfixes_eventbase, &X11->xfixes_errorbase)
-            && X11->ptrXFixesQueryExtension(X11->display, &X11->xfixes_eventbase,
-                                            &X11->xfixes_errorbase)) {
-            // Xfixes is supported.
-            // Note: the XFixes protocol version is negotiated using QueryVersion.
-            // We supply the highest version we support, the X server replies with
-            // the highest version it supports, but no higher than the version we
-            // asked for. The version sent back is the protocol version the X server
-            // will use to talk us. If this call is removed, the behavior of the
-            // X server when it receives an XFixes request is undefined.
-            int major = 3;
-            int minor = 0;
-            X11->ptrXFixesQueryVersion(X11->display, &major, &minor);
-            X11->use_xfixes = (major >= 2);
-            X11->xfixes_major = major;
+        if (XQueryExtension(X11->display, "XFIXES", &X11->xfixes_major,
+                            &X11->xfixes_eventbase, &X11->xfixes_errorbase)) {
+            X11->ptrXFixesQueryExtension  = XFIXES_LOAD_V1(XFixesQueryExtension);
+            X11->ptrXFixesQueryVersion    = XFIXES_LOAD_V1(XFixesQueryVersion);
+            X11->ptrXFixesSetCursorName   = XFIXES_LOAD_V2(XFixesSetCursorName);
+            X11->ptrXFixesSelectSelectionInput = XFIXES_LOAD_V2(XFixesSelectSelectionInput);
+
+            if(X11->ptrXFixesQueryExtension && X11->ptrXFixesQueryVersion
+               && X11->ptrXFixesQueryExtension(X11->display, &X11->xfixes_eventbase,
+                                               &X11->xfixes_errorbase)) {
+                // Xfixes is supported.
+                // Note: the XFixes protocol version is negotiated using QueryVersion.
+                // We supply the highest version we support, the X server replies with
+                // the highest version it supports, but no higher than the version we
+                // asked for. The version sent back is the protocol version the X server
+                // will use to talk us. If this call is removed, the behavior of the
+                // X server when it receives an XFixes request is undefined.
+                int major = 3;
+                int minor = 0;
+                X11->ptrXFixesQueryVersion(X11->display, &major, &minor);
+                X11->use_xfixes = (major >= 1);
+                X11->xfixes_major = major;
+            }
+        }
+        if (X11->use_xfixes && X11->ptrXFixesSelectSelectionInput) {
+            const unsigned long eventMask =
+                XFixesSetSelectionOwnerNotifyMask | XFixesSelectionWindowDestroyNotifyMask | XFixesSelectionClientCloseNotifyMask;
+            X11->ptrXFixesSelectSelectionInput(X11->display, QX11Info::appRootWindow(0),
+                                               XA_PRIMARY, eventMask);
+            X11->ptrXFixesSelectSelectionInput(X11->display, QX11Info::appRootWindow(0),
+                                               ATOM(CLIPBOARD), eventMask);
         }
 #endif // QT_NO_XFIXES
 
@@ -1816,6 +2095,24 @@ void qt_init(QApplicationPrivate *priv, int,
         X11->ptrXineramaQueryExtension = XineramaQueryExtension;
 #endif // QT_RUNTIME_XINERAMA
 #endif // QT_NO_XINERAMA
+
+#ifndef QT_NO_XINPUT
+        // See if Xinput is supported on the connected display
+        X11->ptrXCloseDevice = 0;
+        X11->ptrXListInputDevices = 0;
+        X11->ptrXOpenDevice = 0;
+        X11->ptrXFreeDeviceList = 0;
+        X11->ptrXSelectExtensionEvent = 0;
+        X11->use_xinput = XQueryExtension(X11->display, "XInputExtension", &X11->xinput_major,
+                                          &X11->xinput_eventbase, &X11->xinput_errorbase);
+        if (X11->use_xinput) {
+            X11->ptrXCloseDevice = XINPUT_LOAD(XCloseDevice);
+            X11->ptrXListInputDevices = XINPUT_LOAD(XListInputDevices);
+            X11->ptrXOpenDevice = XINPUT_LOAD(XOpenDevice);
+            X11->ptrXFreeDeviceList = XINPUT_LOAD(XFreeDeviceList);
+            X11->ptrXSelectExtensionEvent = XINPUT_LOAD(XSelectExtensionEvent);
+        }
+#endif // QT_NO_XINPUT
 
 #if !defined(QT_NO_FONTCONFIG)
         int dpi = 0;
@@ -1922,7 +2219,7 @@ void qt_init(QApplicationPrivate *priv, int,
 
 #ifndef QT_NO_XRANDR
             if (X11->use_xrandr)
-                XRRSelectInput(X11->display, QX11Info::appRootWindow(screen), True);
+                X11->ptrXRRSelectInput(X11->display, QX11Info::appRootWindow(screen), True);
 #endif // QT_NO_XRANDR
         }
     }
@@ -2031,18 +2328,18 @@ void qt_init(QApplicationPrivate *priv, int,
         }
 
 #if !defined (QT_NO_TABLET)
-        if (isXInputSupported(X11->display)) {
+        if (X11->use_xinput) {
             int ndev,
                 i,
                 j;
             bool gotStylus,
                 gotEraser;
-            XDeviceInfo *devices, *devs;
+            XDeviceInfo *devices = 0, *devs;
             XInputClassInfo *ip;
             XAnyClassPtr any;
             XValuatorInfoPtr v;
             XAxisInfoPtr a;
-            XDevice *dev;
+            XDevice *dev = 0;
 
 #if !defined(Q_OS_IRIX)
             // XFree86 divides a stylus and eraser into 2 devices, so we must do for both...
@@ -2051,14 +2348,17 @@ void qt_init(QApplicationPrivate *priv, int,
             const QString XFREENAMEERASER = QLatin1String("eraser");
 #endif
 
-            devices = XListInputDevices(X11->display, &ndev);
-            if (!devices) {
-                qWarning("QApplication: Failed to get list of devices");
-                ndev = -1;
+            if (X11->ptrXListInputDevices) {
+                devices = X11->ptrXListInputDevices(X11->display, &ndev);
+                if (!devices)
+                    qWarning("QApplication: Failed to get list of tablet devices");
             }
+            if (!devices)
+                ndev = -1;
             QTabletEvent::TabletDevice deviceType;
-            dev = 0;
-            for (devs = devices, i = 0; i < ndev; i++, devs++) {
+            for (devs = devices, i = 0; i < ndev && devs; i++, devs++) {
+                dev = 0;
+                deviceType = QTabletEvent::NoDevice;
                 gotStylus = false;
                 gotEraser = false;
 
@@ -2078,9 +2378,12 @@ void qt_init(QApplicationPrivate *priv, int,
                     gotEraser = true;
                 }
 #endif
+                if (deviceType == QTabletEvent::NoDevice)
+                    continue;
 
                 if (gotStylus || gotEraser) {
-                    dev = XOpenDevice(X11->display, devs->id);
+                    if (X11->ptrXOpenDevice)
+                        dev = X11->ptrXOpenDevice(X11->display, devs->id);
 
                     if (!dev)
                         continue;
@@ -2096,9 +2399,10 @@ void qt_init(QApplicationPrivate *priv, int,
                     device_data.xinput_button_release = -1;
                     device_data.xinput_proximity_in = -1;
                     device_data.xinput_proximity_out = -1;
+                    device_data.widgetToGetPress = 0;
 
                     if (dev->num_classes > 0) {
-                        for (ip = dev->classes, j = 0; j < devs->num_classes;
+                        for (ip = dev->classes, j = 0; j < dev->num_classes;
                              ip++, j++) {
                             switch (ip->input_class) {
                             case KeyClass:
@@ -2199,12 +2503,15 @@ void qt_init(QApplicationPrivate *priv, int,
                     tablet_devices()->append(device_data);
                 } // if (gotStylus || gotEraser)
             }
-            XFreeDeviceList(devices);
+            if (X11->ptrXFreeDeviceList)
+                X11->ptrXFreeDeviceList(devices);
         }
 #endif // QT_NO_TABLET
 
         X11->startupId = getenv("DESKTOP_STARTUP_ID");
-        putenv(strdup("DESKTOP_STARTUP_ID="));
+        X11->originalStartupId = X11->startupId;
+        static char desktop_startup_id[] = "DESKTOP_STARTUP_ID=";
+        putenv(desktop_startup_id);
 
    } else {
         // read some non-GUI settings when not using the X server...
@@ -2236,6 +2543,27 @@ void qt_init(QApplicationPrivate *priv, int,
             settings.endGroup(); // Qt
         }
     }
+
+#if !defined (Q_OS_IRIX) && !defined (QT_NO_TABLET)
+    QLibrary wacom(QString::fromLatin1("wacomcfg"), 0); // version 0 is the latest release at time of writing this.
+    if (wacom.load()) {
+        // NOTE: C casts instead of reinterpret_cast for GCC 3.3.x
+        ptrWacomConfigInit = (PtrWacomConfigInit)wacom.resolve("WacomConfigInit");
+        ptrWacomConfigOpenDevice = (PtrWacomConfigOpenDevice)wacom.resolve("WacomConfigOpenDevice");
+        ptrWacomConfigGetRawParam  = (PtrWacomConfigGetRawParam)wacom.resolve("WacomConfigGetRawParam");
+        ptrWacomConfigCloseDevice = (PtrWacomConfigCloseDevice)wacom.resolve("WacomConfigCloseDevice");
+        ptrWacomConfigTerm = (PtrWacomConfigTerm)wacom.resolve("WacomConfigTerm");
+
+        if (ptrWacomConfigInit == 0 || ptrWacomConfigOpenDevice == 0 || ptrWacomConfigGetRawParam == 0
+                || ptrWacomConfigCloseDevice == 0 || ptrWacomConfigTerm == 0) { // either we have all, or we have none.
+            ptrWacomConfigInit = 0;
+            ptrWacomConfigOpenDevice = 0;
+            ptrWacomConfigGetRawParam  = 0;
+            ptrWacomConfigCloseDevice = 0;
+            ptrWacomConfigTerm = 0;
+        }
+    }
+#endif
 }
 
 
@@ -2288,7 +2616,19 @@ void qt_cleanup()
         QCursorData::cleanup();
         QFont::cleanup();
         QColormap::cleanup();
+
+#if !defined (QT_NO_TABLET)
+        QTabletDeviceDataList *devices = qt_tablet_devices();
+        if (X11->ptrXCloseDevice)
+            for (int i = 0; i < devices->size(); ++i)
+                X11->ptrXCloseDevice(X11->display, (XDevice*)devices->at(i).device);
+        devices->clear();
+#endif
     }
+
+    // restore original value back. This is also done in QWidgetPrivate::show_sys.
+    if (X11->originalStartupId)
+        putenv(X11->originalStartupId);
 
 #ifndef QT_NO_XRENDER
     for (int i = 0; i < X11->solid_fill_count; ++i) {
@@ -2300,11 +2640,6 @@ void qt_cleanup()
             XRenderFreePicture(X11->display, X11->pattern_fills[i].picture);
     }
 #endif
-#if !defined (QT_NO_TABLET)
-    QTabletDeviceDataList *devices = qt_tablet_devices();
-    for (int i = 0; i < devices->size(); ++i)
-        XCloseDevice(X11->display, (XDevice*)devices->at(i).device);
-#endif
 
 #if !defined(QT_NO_IM)
     delete QApplicationPrivate::inputContext;
@@ -2312,14 +2647,25 @@ void qt_cleanup()
 #endif
 
     // Reset the error handlers
+    if (qt_is_gui_used)
+        XSync(X11->display, False); // sync first to process all possible errors
     XSetErrorHandler(original_x_errhandler);
     XSetIOErrorHandler(original_xio_errhandler);
+
+    if (X11->argbColormaps) {
+        for (int s = 0; s < X11->screenCount; s++) {
+            if (X11->argbColormaps[s])
+                XFreeColormap(X11->display, X11->argbColormaps[s]);
+        }
+    }
 
     if (qt_is_gui_used && !X11->foreignDisplay)
         XCloseDisplay(X11->display);                // close X display
     X11->display = 0;
 
     delete [] X11->screens;
+    delete [] X11->argbVisuals;
+    delete [] X11->argbColormaps;
 
     if (X11->foreignDisplay) {
         delete [] (char *)appName;
@@ -2447,7 +2793,6 @@ void QApplicationPrivate::applyX11SpecificCommandLineArguments(QWidget *main_wid
         return;
     beenHereDoneThat = true;
     Q_ASSERT(main_widget->testAttribute(Qt::WA_WState_Created));
-    XSetWMProperties(X11->display, main_widget->effectiveWinId(), 0, 0, qApp->d_func()->argv, qApp->d_func()->argc, 0, 0, 0);
     if (mwTitle) {
         XStoreName(X11->display, main_widget->effectiveWinId(), (char*)mwTitle);
         QByteArray net_wm_name = QString::fromLocal8Bit(mwTitle).toUtf8();
@@ -2590,9 +2935,12 @@ QWidget *QApplication::topLevelAt(const QPoint &p)
                     Q_ASSERT(widget->testAttribute(Qt::WA_WState_Created));
                     Window wid = widget->internalWinId();
                     while (ctarget && !w) {
+                        X11->ignoreBadwindow();
                         XTranslateCoordinates(X11->display,
                                               QX11Info::appRootWindow(screen),
                                               ctarget, x, y, &unused, &unused, &ctarget);
+                        if (X11->badwindow())
+                            break;
                         if (ctarget == wid) {
                             // Found!
                             w = widget;
@@ -2831,6 +3179,13 @@ int QApplication::x11ProcessEvent(XEvent* event)
     default:
         break;
     }
+#ifndef QT_NO_XFIXES
+    if (X11->use_xfixes && event->type == (X11->xfixes_eventbase + XFixesSelectionNotify)) {
+        XFixesSelectionNotifyEvent *req =
+            reinterpret_cast<XFixesSelectionNotifyEvent *>(event);
+        X11->time = req->selection_timestamp;
+    }
+#endif
 
     QETWidget *widget = (QETWidget*)QWidget::find((WId)event->xany.window);
 
@@ -2968,17 +3323,18 @@ int QApplication::x11ProcessEvent(XEvent* event)
     if (widget->x11Event(event))                // send through widget filter
         return 1;
 #if !defined (QT_NO_TABLET)
-    QTabletDeviceDataList *tablets = qt_tablet_devices();
-    for (int i = 0; i < tablets->size(); ++i) {
-        const QTabletDeviceData &tab = tablets->at(i);
-        if ((event->type == tab.xinput_motion
+    if (!qt_xdnd_dragging) {
+        QTabletDeviceDataList *tablets = qt_tablet_devices();
+        for (int i = 0; i < tablets->size(); ++i) {
+            QTabletDeviceData &tab = tablets->operator [](i);
+            if (event->type == tab.xinput_motion
             || event->type == tab.xinput_button_release
             || event->type == tab.xinput_button_press
             || event->type == tab.xinput_proximity_in
-            || event->type == tab.xinput_proximity_out)
-            && ! qt_xdnd_dragging) {
-            widget->translateXinputEvent(event, &tab);
-            return 0;
+            || event->type == tab.xinput_proximity_out) {
+                widget->translateXinputEvent(event, &tab);
+                return 0;
+            }
         }
     }
 #endif
@@ -2986,10 +3342,10 @@ int QApplication::x11ProcessEvent(XEvent* event)
 #ifndef QT_NO_XRANDR
     if (X11->use_xrandr && event->type == (X11->xrandr_eventbase + RRScreenChangeNotify)) {
         // update Xlib internals with the latest screen configuration
-        XRRUpdateConfiguration(event);
+        X11->ptrXRRUpdateConfiguration(event);
 
         // update the size for desktop widget
-        int scr = XRRRootToScreen(X11->display, event->xany.window);
+        int scr = X11->ptrXRRRootToScreen(X11->display, event->xany.window);
         QWidget *w = desktop()->screen(scr);
         QSize oldSize(w->size());
         w->data->crect.setWidth(DisplayWidth(X11->display, scr));
@@ -3001,6 +3357,33 @@ int QApplication::x11ProcessEvent(XEvent* event)
         }
     }
 #endif // QT_NO_XRANDR
+
+#ifndef QT_NO_XFIXES
+    if (X11->use_xfixes && event->type == (X11->xfixes_eventbase + XFixesSelectionNotify)) {
+        XFixesSelectionNotifyEvent *req = reinterpret_cast<XFixesSelectionNotifyEvent *>(event);
+
+        // compress all XFixes events related to this selection
+        // we don't want to handle old SelectionNotify events.
+        qt_xfixes_selection_event_data xfixes_event;
+        xfixes_event.selection = req->selection;
+        for (XEvent ev;;) {
+            if (!XCheckIfEvent(X11->display, &ev, &qt_xfixes_scanner, (XPointer)&xfixes_event))
+                break;
+        }
+
+        if (req->selection == ATOM(CLIPBOARD)) {
+            if (qt_xfixes_clipboard_changed(req->owner, req->selection_timestamp)) {
+                emit clipboard()->changed(QClipboard::Clipboard);
+                emit clipboard()->dataChanged();
+            }
+        } else if (req->selection == XA_PRIMARY) {
+            if (qt_xfixes_selection_changed(req->owner, req->selection_timestamp)) {
+                emit clipboard()->changed(QClipboard::Selection);
+                emit clipboard()->selectionChanged();
+            }
+        }
+    }
+#endif // QT_NO_XFIXES
 
     switch (event->type) {
 
@@ -3017,7 +3400,7 @@ int QApplication::x11ProcessEvent(XEvent* event)
             return 1;
         }
         if (event->type == ButtonPress)
-            qt_net_update_user_time(widget->window());
+            qt_net_update_user_time(widget->window(), X11->userTime);
         // fall through intended
     case MotionNotify:
 #if !defined(QT_NO_TABLET)
@@ -3044,7 +3427,7 @@ int QApplication::x11ProcessEvent(XEvent* event)
         break;
 
     case XKeyPress:                                // keyboard event
-        qt_net_update_user_time(widget->window());
+        qt_net_update_user_time(widget->window(), X11->userTime);
         // fallthrough intended
     case XKeyRelease:
         {
@@ -3234,8 +3617,9 @@ int QApplication::x11ProcessEvent(XEvent* event)
         qt_last_mouse_receiver = enter;
 
         if (enter && QApplicationPrivate::tryModalHelper(enter, 0)) {
-            curWin = enter->effectiveWinId();
-            static_cast<QETWidget *>(enter)->translateMouseEvent(&ev); //we don't get MotionNotify, emulate it
+            QWidget *nativeEnter = enter->internalWinId() ? enter : enter->nativeParentWidget();
+            curWin = nativeEnter->internalWinId();
+            static_cast<QETWidget *>(nativeEnter)->translateMouseEvent(&ev); //we don't get MotionNotify, emulate it
         } else {
             curWin = 0;
             qt_last_mouse_receiver = 0;
@@ -3248,7 +3632,7 @@ int QApplication::x11ProcessEvent(XEvent* event)
             Q_ASSERT(widget->testAttribute(Qt::WA_WState_Created));
             widget->d_func()->topData()->waitingForMapNotify = 0;
 
-            if (widget->windowType() != Qt::Popup) {
+            if (widget->windowType() != Qt::Popup && !widget->testAttribute(Qt::WA_DontShowOnScreen)) {
                 widget->setAttribute(Qt::WA_Mapped, false);
                 if (widget->isVisible()) {
                     widget->d_func()->topData()->spont_unmapped = 1;
@@ -3360,7 +3744,7 @@ int QApplication::x11ProcessEvent(XEvent* event)
         if (! req || (ATOM(XdndSelection) && req->selection == ATOM(XdndSelection)))
             break;
 
-        if (qt_clipboard) {
+        if (qt_clipboard && !X11->use_xfixes) {
             QClipboardEvent e(reinterpret_cast<QEventPrivate*>(event));
             QApplication::sendSpontaneousEvent(qt_clipboard, &e);
         }
@@ -3379,17 +3763,16 @@ int QApplication::x11ProcessEvent(XEvent* event)
         }
         break;
     }
-
     case PropertyNotify:
         // some properties changed
         if (event->xproperty.window == QX11Info::appRootWindow(0)) {
             // root properties for the first screen
-            if (event->xproperty.atom == ATOM(_QT_CLIPBOARD_SENTINEL)) {
+            if (!X11->use_xfixes && event->xproperty.atom == ATOM(_QT_CLIPBOARD_SENTINEL)) {
                 if (qt_check_clipboard_sentinel()) {
                     emit clipboard()->changed(QClipboard::Clipboard);
                     emit clipboard()->dataChanged();
                 }
-            } else if (event->xproperty.atom == ATOM(_QT_SELECTION_SENTINEL)) {
+            } else if (!X11->use_xfixes && event->xproperty.atom == ATOM(_QT_SELECTION_SENTINEL)) {
                 if (qt_check_selection_sentinel()) {
                     emit clipboard()->changed(QClipboard::Selection);
                     emit clipboard()->selectionChanged();
@@ -3398,7 +3781,7 @@ int QApplication::x11ProcessEvent(XEvent* event)
                 if (event->xproperty.atom == ATOM(RESOURCE_MANAGER))
                     qt_set_x11_resources();
                 else if (event->xproperty.atom == ATOM(_QT_SETTINGS_TIMESTAMP))
-                    QApplicationPrivate::x11_apply_settings();
+                    qt_set_x11_resources();
             }
         }
         if (event->xproperty.window == QX11Info::appRootWindow()) {
@@ -3865,7 +4248,7 @@ bool QETWidget::translateMouseEvent(const XEvent *event)
 #if defined(Q_OS_IRIX) && !defined(QT_NO_TABLET)
             QTabletDeviceDataList *tablets = qt_tablet_devices();
             for (int i = 0; i < tablets->size(); ++i) {
-                const QTabletDeviceData &tab = tablets->at(i);
+                QTabletDeviceData &tab = tablets->operator[](i);
                 XEvent myEv;
                 if (XCheckTypedEvent(X11->display, tab.xinput_button_press, &myEv)) {
                         if (translateXinputEvent(&myEv, &tab)) {
@@ -3905,7 +4288,7 @@ bool QETWidget::translateMouseEvent(const XEvent *event)
 #if defined(Q_OS_IRIX) && !defined(QT_NO_TABLET)
             QTabletDeviceDataList *tablets = qt_tablet_devices();
             for (int i = 0; i < tablets->size(); ++i) {
-                const QTabletDeviceData &tab = tablets->at(i);
+                QTabletDeviceData &tab = tablets->operator[](i);
                 XEvent myEv;
                 if (XCheckTypedEvent(X11->display, tab.xinput_button_press, &myEv)) {
                         if (translateXinputEvent(&myEv, &tab)) {
@@ -4100,7 +4483,75 @@ bool QETWidget::translateWheelEvent(int global_x, int global_y, int delta,
 // XInput Translation Event
 //
 #if !defined (QT_NO_TABLET)
-bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *tablet)
+
+#if !defined (Q_OS_IRIX)
+void fetchWacomToolId(int &deviceType, qint64 &serialId)
+{
+    if (ptrWacomConfigInit == 0) // we actually have the lib
+        return;
+    WACOMCONFIG *config = ptrWacomConfigInit(X11->display, 0);
+    if (config == 0)
+        return;
+    const char *name = "stylus"; // TODO get this from the X config instead (users may have called it differently)
+    WACOMDEVICE *device = ptrWacomConfigOpenDevice (config, name);
+    if (device == 0)
+        return;
+    unsigned keys[1];
+    int serialInt;
+    ptrWacomConfigGetRawParam (device, XWACOM_PARAM_TOOLSERIAL, &serialInt, 1, keys);
+    serialId = serialInt;
+    int toolId;
+    ptrWacomConfigGetRawParam (device, XWACOM_PARAM_TOOLID, &toolId, 1, keys);
+    switch(toolId) {
+    case 0x007: /* Mouse 4D and 2D */
+    case 0x017: /* Intuos3 2D Mouse */
+    case 0x094:
+    case 0x09c:
+        deviceType = QTabletEvent::FourDMouse;
+        break;
+    case 0x096: /* Lens cursor */
+    case 0x097: /* Intuos3 Lens cursor */
+        deviceType = QTabletEvent::Puck;
+        break;
+    case 0x0fa:
+    case 0x81b: /* Intuos3 Classic Pen Eraser */
+    case 0x82a: /* Eraser */
+    case 0x82b: /* Intuos3 Grip Pen Eraser */
+    case 0x85a:
+    case 0x91a:
+    case 0x91b: /* Intuos3 Airbrush Eraser */
+    case 0xd1a:
+        deviceType = QTabletEvent::XFreeEraser;
+        break;
+    case 0x112:
+    case 0x912:
+    case 0x913: /* Intuos3 Airbrush */
+    case 0xd12:
+        deviceType = QTabletEvent::Airbrush;
+        break;
+    case 0x012:
+    case 0x022:
+    case 0x032:
+    case 0x801: /* Intuos3 Inking pen */
+    case 0x812: /* Inking pen */
+    case 0x813: /* Intuos3 Classic Pen */
+    case 0x822: /* Pen */
+    case 0x823: /* Intuos3 Grip Pen */
+    case 0x832: /* Stroke pen */
+    case 0x842:
+    case 0x852:
+    case 0x885: /* Intuos3 Marker Pen */
+    default: /* Unknown tool */
+        deviceType = QTabletEvent::Stylus;
+    }
+
+    /* Close device and return */
+    ptrWacomConfigCloseDevice (device);
+    ptrWacomConfigTerm(config);
+}
+#endif
+
+bool QETWidget::translateXinputEvent(const XEvent *ev, QTabletDeviceData *tablet)
 {
 #if defined (Q_OS_IRIX)
     // Wacom has put defines in their wacom.h file so it would be quite wise
@@ -4133,6 +4584,10 @@ bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *
     const XProximityNotifyEvent *proximity = 0;
     QEvent::Type t;
     Qt::KeyboardModifiers modifiers = 0;
+    bool reinsertMouseEvent = false;
+    bool neverFoundMouseEvent = true;
+    XEvent xinputMotionEventNext;
+    XEvent mouseMotionEventSave;
 #if !defined (Q_OS_IRIX)
     XID device_id;
 #endif
@@ -4140,20 +4595,73 @@ bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *
     if (ev->type == tablet->xinput_motion) {
         motion = reinterpret_cast<const XDeviceMotionEvent*>(ev);
         for (;;) {
-            if (!XCheckTypedWindowEvent(X11->display, internalWinId(), MotionNotify, &mouseMotionEvent))
-                break;
-            if (!XCheckTypedWindowEvent(X11->display, internalWinId(), tablet->xinput_motion, &xinputMotionEvent)) {
-                XPutBackEvent(X11->display, &mouseMotionEvent);
-                break;
-            }
-            if (mouseMotionEvent.xmotion.time != motion->time) {
-                XPutBackEvent(X11->display, &mouseMotionEvent);
-                XPutBackEvent(X11->display, &xinputMotionEvent);
+            // get the corresponding mouseMotionEvent for motion
+            if (XCheckTypedWindowEvent(X11->display, internalWinId(), MotionNotify, &mouseMotionEvent)) {
+                mouseMotionEventSave = mouseMotionEvent;
+                reinsertMouseEvent = true;
+                neverFoundMouseEvent = false;
 
+                if (mouseMotionEvent.xmotion.time > motion->time) {
+                    XEvent xinputMotionEventLoop = *ev;
+
+                    // xinput event is older than the mouse event --> search for the corresponding xinput event for the given mouse event
+                    while (mouseMotionEvent.xmotion.time > (reinterpret_cast<const XDeviceMotionEvent*>(&xinputMotionEventLoop))->time) {
+                        if (XCheckTypedWindowEvent(X11->display, internalWinId(), tablet->xinput_motion, &xinputMotionEventLoop)) {
+                            xinputMotionEvent = xinputMotionEventLoop;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    motion = reinterpret_cast<const XDeviceMotionEvent*>(&xinputMotionEvent);
+                }
+
+                // get the next xinputMotionEvent, for the next loop run
+                if (!XCheckTypedWindowEvent(X11->display, internalWinId(), tablet->xinput_motion, &xinputMotionEventNext)) {
+                    XPutBackEvent(X11->display, &mouseMotionEvent);
+                    reinsertMouseEvent = false;
+                    break;
+                }
+
+                if (mouseMotionEvent.xmotion.time != motion->time) {
+                    // reinsert in order
+                    if (mouseMotionEvent.xmotion.time >= motion->time) {
+                        XPutBackEvent(X11->display, &mouseMotionEvent);
+                        XPutBackEvent(X11->display, &xinputMotionEventNext);
+                        // next entry in queue is xinputMotionEventNext
+                    }
+                    else {
+                        XPutBackEvent(X11->display, &xinputMotionEventNext);
+                        XPutBackEvent(X11->display, &mouseMotionEvent);
+                        // next entry in queue is mouseMotionEvent
+                    }
+                    reinsertMouseEvent = false;
+                    break;
+                }
             }
+            else {
+                break;
+            }
+
+            xinputMotionEvent = xinputMotionEventNext;
             motion = (reinterpret_cast<const XDeviceMotionEvent*>(&xinputMotionEvent));
-            break;
         }
+
+        if (reinsertMouseEvent) {
+          XPutBackEvent(X11->display, &mouseMotionEventSave);
+        }
+
+        if (neverFoundMouseEvent) {
+            XEvent xinputMotionEventLoop;
+            bool eventFound = false;
+            // xinput event without mouseMotionEvent --> search the newest xinputMotionEvent
+            while (XCheckTypedWindowEvent(X11->display, internalWinId(), tablet->xinput_motion, &xinputMotionEventLoop)) {
+                xinputMotionEvent = xinputMotionEventLoop;
+                eventFound = true;
+            }
+            if (eventFound) motion = reinterpret_cast<const XDeviceMotionEvent*>(&xinputMotionEvent);
+        }
+
         t = QEvent::TabletMove;
         global = QPoint(motion->x_root, motion->y_root);
         curr = QPoint(motion->x, motion->y);
@@ -4184,9 +4692,9 @@ bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *
 #endif
     }
 
-    qint64 uid;
-    QRect screenArea = qApp->desktop()->screenGeometry(this);
+    qint64 uid = 0;
 #if defined (Q_OS_IRIX)
+    QRect screenArea = qApp->desktop()->screenGeometry(this);
     s = XQueryDeviceState(X11->display, static_cast<XDevice *>(tablet->device));
     if (!s)
         return false;
@@ -4265,58 +4773,44 @@ bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *
         const QTabletDeviceData &t = tablet_list->at(i);
         if (device_id == static_cast<XDevice *>(t.device)->device_id) {
             deviceType = t.deviceType;
-            if (deviceType == QTabletEvent::XFreeEraser) {
+            if (t.deviceType == QTabletEvent::XFreeEraser) {
                 deviceType = QTabletEvent::Stylus;
                 pointerType = QTabletEvent::Eraser;
-            } else if (deviceType == QTabletEvent::Stylus) {
+            } else if (t.deviceType == QTabletEvent::Stylus) {
                 pointerType = QTabletEvent::Pen;
             }
-            // qDebug() << ((XDevice*)t.device)->device_id;
             break;
         }
     }
 
-    uint hibyte1 = 0;  // ID
-    uint hibyte2 = 0;  // Serial # part 1
-    uint hibyte3 = 0;  // Serial # part 2
+    fetchWacomToolId(deviceType, uid);
+
+    QRect screenArea = qApp->desktop()->rect();
     if (motion) {
-        hibyte1 = (motion->axis_data[3] & 0xffff0000) >> 16;
-        hibyte2 = (motion->axis_data[4] & 0xffff0000) >> 16;
-        hibyte3 = (motion->axis_data[5] & 0xffff0000) >> 16;
-        xTilt = short(motion->axis_data[3] & 0xffff);
-        yTilt = short(motion->axis_data[4] & 0xffff);
-        rotation = short(motion->axis_data[5] & 0xffff) / 64.0;
-        pressure = motion->axis_data[2];
+        xTilt = (short) motion->axis_data[3];
+        yTilt = (short) motion->axis_data[4];
+        rotation = ((short) motion->axis_data[5]) / 64.0;
+        pressure = (short) motion->axis_data[2];
         modifiers = X11->translateModifiers(motion->state);
         hiRes = tablet->scaleCoord(motion->axis_data[0], motion->axis_data[1],
                                     screenArea.x(), screenArea.width(),
                                     screenArea.y(), screenArea.height());
     } else if (button) {
-        hibyte1 = (button->axis_data[3] & 0xffff0000) >> 16;
-        hibyte2 = (button->axis_data[4] & 0xffff0000) >> 16;
-        hibyte3 = (button->axis_data[5] & 0xffff0000) >> 16;
-        xTilt = short(button->axis_data[3] & 0xffff);
-        yTilt = short(button->axis_data[4] & 0xffff);
-        rotation = short(button->axis_data[5] & 0xffff) / 64.0;
-        pressure = button->axis_data[2];
+        xTilt = (short) button->axis_data[3];
+        yTilt = (short) button->axis_data[4];
+        rotation = ((short) button->axis_data[5]) / 64.0;
+        pressure = (short) button->axis_data[2];
+        modifiers = X11->translateModifiers(button->state);
         hiRes = tablet->scaleCoord(button->axis_data[0], button->axis_data[1],
                                     screenArea.x(), screenArea.width(),
                                     screenArea.y(), screenArea.height());
-        modifiers = X11->translateModifiers(button->state);
     } else if (proximity) {
-        hibyte1 = (proximity->axis_data[3] & 0xffff0000) >> 16;
-        hibyte2 = (proximity->axis_data[4] & 0xffff0000) >> 16;
-        hibyte3 = (proximity->axis_data[5] & 0xffff0000) >> 16;
         pressure = 0;
         modifiers = 0;
     }
-    // There are newer drivers out that do report the serial number.
-    // But the older ones  will have values of 0xffff or 0;
-    if (hibyte1 == 0 || hibyte1 == 0xffff) {
-        uid = -1;
-    } else {
-        uid = hibyte1 & 0x0f06;
-        uid = (uid << 24) | ((hibyte2 << 16) | hibyte3);
+    if (deviceType == QTabletEvent::Airbrush) {
+        tangentialPressure = rotation;
+        rotation = 0.;
     }
 #endif
 
@@ -4325,6 +4819,15 @@ bool QETWidget::translateXinputEvent(const XEvent *ev, const QTabletDeviceData *
         w = child;
         curr = w->mapFromGlobal(global);
     }
+
+    if (t == QEvent::TabletPress) {
+        tablet->widgetToGetPress = w;
+    } else if (t == QEvent::TabletRelease && tablet->widgetToGetPress) {
+        w = tablet->widgetToGetPress;
+        curr = w->mapFromGlobal(global);
+        tablet->widgetToGetPress = 0;
+    }
+
     QTabletEvent e(t, curr, global, hiRes,
                    deviceType, pointerType,
                    qreal(pressure / qreal(tablet->maxPressure - tablet->minPressure)),
@@ -4358,7 +4861,7 @@ bool QETWidget::translatePropertyEvent(const XEvent *event)
             if (e == Success && ret == XA_CARDINAL &&
                 format == 32 && nitems == 4) {
                 long *strut = (long *) data;
-                d->topData()->frameStrut.setCoords(strut[0], strut[1], strut[2], strut[3]);
+                d->topData()->frameStrut.setCoords(strut[0], strut[2], strut[1], strut[3]);
                 this->data->fstrut_dirty = 0;
             }
         }
@@ -4583,11 +5086,6 @@ bool translateBySips(QWidget* that, QRect& paintRect)
     return false;
 }
 
-bool qt_sendSpontaneousEvent(QObject *receiver, QEvent *event)
-{
-    return QCoreApplication::sendSpontaneousEvent(receiver, event);
-}
-
 void QETWidget::translatePaintEvent(const XEvent *event)
 {
     if (!isWindow() && testAttribute(Qt::WA_NativeWindow))
@@ -4623,10 +5121,8 @@ void QETWidget::translatePaintEvent(const XEvent *event)
         }
     }
 
-    if (!paintRegion.isEmpty() && !(!testAttribute(Qt::WA_StaticContents) && testAttribute(Qt::WA_WState_ConfigPending))) {
-        extern void qt_syncBackingStore(QRegion rgn, QWidget *widget);
-        qt_syncBackingStore(paintRegion, this);
-    }
+    if (!paintRegion.isEmpty() && !testAttribute(Qt::WA_WState_ConfigPending))
+        d->syncBackingStore(paintRegion);
 }
 
 //
@@ -4772,25 +5268,28 @@ bool QETWidget::translateConfigEvent(const XEvent *event)
 
         if (isVisible() && data->crect.size() != oldSize) {
             Q_ASSERT(d->extra->topextra);
-            if (!slowResize)
+            QWidgetBackingStore *bs = d->extra->topextra->backingStore;
+            const bool hasStaticContents = bs && bs->hasStaticContents();
+            // If we have a backing store with static contents, we have to disable the top-level
+            // resize optimization in order to get invalidated regions for resized widgets.
+            // The optimization discards all invalidateBuffer() calls since we're going to
+            // repaint everything anyways, but that's not the case with static contents.
+            if (!slowResize && !hasStaticContents)
                 d->extra->topextra->inTopLevelResize = true;
             QResizeEvent e(data->crect.size(), oldSize);
             QApplication::sendSpontaneousEvent(this, &e);
         }
 
         const bool waitingForMapNotify = d->extra->topextra && d->extra->topextra->waitingForMapNotify;
-        if (!testAttribute(Qt::WA_StaticContents) && !waitingForMapNotify) {
-        XEvent xevent;
-        PaintEventInfo info;
-        info.window = internalWinId();
-        while (XCheckIfEvent(X11->display,&xevent,isPaintOrScrollDoneEvent,
-                             (XPointer)&info) &&
-               !qt_x11EventFilter(&xevent)  &&
-               !x11Event(&xevent)) // send event through filter
-            ;
-
-            extern void qt_syncBackingStore(QRegion rgn, QWidget *widget, bool);
-            qt_syncBackingStore(rect(), this, false);
+        if (!waitingForMapNotify) {
+            if (d->paintOnScreen()) {
+                QRegion updateRegion(rect());
+                if (testAttribute(Qt::WA_StaticContents))
+                    updateRegion -= QRect(0, 0, oldSize.width(), oldSize.height());
+                d->syncBackingStore(updateRegion);
+            } else {
+                d->syncBackingStore();
+            }
         }
 
         if (d->extra && d->extra->topextra)

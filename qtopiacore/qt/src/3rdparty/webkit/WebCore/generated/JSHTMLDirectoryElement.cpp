@@ -26,130 +26,131 @@
 
 #include "HTMLDirectoryElement.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLDirectoryElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLDirectoryElementTableEntries[] =
+static const HashTableValue JSHTMLDirectoryElementTableValues[3] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "compact", JSHTMLDirectoryElement::CompactAttrNum, DontDelete, 0, &JSHTMLDirectoryElementTableEntries[2] },
-    { "constructor", JSHTMLDirectoryElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "compact", DontDelete, (intptr_t)jsHTMLDirectoryElementCompact, (intptr_t)setJSHTMLDirectoryElementCompact },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLDirectoryElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDirectoryElementTable = 
-{
-    2, 3, JSHTMLDirectoryElementTableEntries, 2
-};
+static const HashTable JSHTMLDirectoryElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 3, JSHTMLDirectoryElementTableValues, 0 };
+#else
+    { 4, 3, JSHTMLDirectoryElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLDirectoryElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLDirectoryElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDirectoryElementConstructorTable = 
-{
-    2, 1, JSHTMLDirectoryElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLDirectoryElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLDirectoryElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLDirectoryElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLDirectoryElementConstructor : public DOMObject {
 public:
     JSHTMLDirectoryElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLDirectoryElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLDirectoryElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLDirectoryElementConstructor::info = { "HTMLDirectoryElementConstructor", 0, &JSHTMLDirectoryElementConstructorTable, 0 };
+const ClassInfo JSHTMLDirectoryElementConstructor::s_info = { "HTMLDirectoryElementConstructor", 0, &JSHTMLDirectoryElementConstructorTable, 0 };
 
 bool JSHTMLDirectoryElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLDirectoryElementConstructor, DOMObject>(exec, &JSHTMLDirectoryElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLDirectoryElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLDirectoryElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLDirectoryElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLDirectoryElementPrototypeTable = 
-{
-    2, 1, JSHTMLDirectoryElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLDirectoryElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLDirectoryElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLDirectoryElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLDirectoryElementPrototype::info = { "HTMLDirectoryElementPrototype", 0, &JSHTMLDirectoryElementPrototypeTable, 0 };
+const ClassInfo JSHTMLDirectoryElementPrototype::s_info = { "HTMLDirectoryElementPrototype", 0, &JSHTMLDirectoryElementPrototypeTable, 0 };
 
 JSObject* JSHTMLDirectoryElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLDirectoryElementPrototype>(exec, "[[JSHTMLDirectoryElement.prototype]]");
+    return getDOMPrototype<JSHTMLDirectoryElement>(exec);
 }
 
-const ClassInfo JSHTMLDirectoryElement::info = { "HTMLDirectoryElement", &JSHTMLElement::info, &JSHTMLDirectoryElementTable, 0 };
+const ClassInfo JSHTMLDirectoryElement::s_info = { "HTMLDirectoryElement", &JSHTMLElement::s_info, &JSHTMLDirectoryElementTable, 0 };
 
-JSHTMLDirectoryElement::JSHTMLDirectoryElement(ExecState* exec, HTMLDirectoryElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLDirectoryElement::JSHTMLDirectoryElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLDirectoryElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLDirectoryElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLDirectoryElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLDirectoryElementPrototype(JSHTMLDirectoryElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLDirectoryElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLDirectoryElement, JSHTMLElement>(exec, &JSHTMLDirectoryElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLDirectoryElement, Base>(exec, &JSHTMLDirectoryElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLDirectoryElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLDirectoryElementCompact(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CompactAttrNum: {
-        HTMLDirectoryElement* imp = static_cast<HTMLDirectoryElement*>(impl());
-
-        return jsBoolean(imp->compact());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLDirectoryElement* imp = static_cast<HTMLDirectoryElement*>(static_cast<JSHTMLDirectoryElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->compact());
 }
 
-void JSHTMLDirectoryElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLDirectoryElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLDirectoryElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLDirectoryElementTable, this);
+    return static_cast<JSHTMLDirectoryElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-void JSHTMLDirectoryElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+void JSHTMLDirectoryElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    switch (token) {
-    case CompactAttrNum: {
-        HTMLDirectoryElement* imp = static_cast<HTMLDirectoryElement*>(impl());
-
-        imp->setCompact(value->toBoolean(exec));
-        break;
-    }
-    }
+    lookupPut<JSHTMLDirectoryElement, Base>(exec, propertyName, value, &JSHTMLDirectoryElementTable, this, slot);
 }
 
-JSValue* JSHTMLDirectoryElement::getConstructor(ExecState* exec)
+void setJSHTMLDirectoryElementCompact(ExecState* exec, JSObject* thisObject, JSValuePtr value)
 {
-    return KJS::cacheGlobalObject<JSHTMLDirectoryElementConstructor>(exec, "[[HTMLDirectoryElement.constructor]]");
+    HTMLDirectoryElement* imp = static_cast<HTMLDirectoryElement*>(static_cast<JSHTMLDirectoryElement*>(thisObject)->impl());
+    imp->setCompact(value->toBoolean(exec));
 }
+
+JSValuePtr JSHTMLDirectoryElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLDirectoryElementConstructor>(exec);
+}
+
 
 }

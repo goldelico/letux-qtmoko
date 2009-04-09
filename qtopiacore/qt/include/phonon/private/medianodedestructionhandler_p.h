@@ -1,1 +1,1 @@
-#include "../../../src/phonon/../3rdparty/kdelibs/phonon/medianodedestructionhandler_p.h"
+#include "../../../src/phonon/../3rdparty/phonon/phonon/medianodedestructionhandler_p.h"

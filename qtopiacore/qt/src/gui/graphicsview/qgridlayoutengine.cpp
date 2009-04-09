@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -84,8 +88,8 @@ static qreal fixedDescent(qreal descent, qreal ascent, qreal targetSize)
 
 static qreal compare(const QGridLayoutBox &box1, const QGridLayoutBox &box2, int which)
 {
-    qreal size1 = box1.q_sizes[which];
-    qreal size2 = box2.q_sizes[which];
+    qreal size1 = box1.q_sizes(which);
+    qreal size2 = box2.q_sizes(which);
 
     if (which == MaximumSize) {
         return size2 - size1;
@@ -136,7 +140,7 @@ void QGridLayoutBox::dump(int indent) const
 bool operator==(const QGridLayoutBox &box1, const QGridLayoutBox &box2)
 {
     for (int i = 0; i < NSizes; ++i) {
-        if (box1.q_sizes[i] != box2.q_sizes[i])
+        if (box1.q_sizes(i) != box2.q_sizes(i))
             return false;
     }
     return box1.q_minimumDescent == box2.q_minimumDescent
@@ -150,6 +154,7 @@ void QGridLayoutRowData::reset(int count)
     multiCellMap.clear();
     stretches.fill(0, count);
     spacings.fill(0.0, count);
+    hasIgnoreFlag = false;
 }
 
 void QGridLayoutRowData::distributeMultiCells()
@@ -170,11 +175,11 @@ void QGridLayoutRowData::distributeMultiCells()
         for (int j = 0; j < NSizes; ++j) {
             qreal extra = compare(totalBox, box, j);
             if (extra > 0.0) {
-                calculateGeometries(start, end, totalBox.q_sizes[j], dummy.data(), newSizes.data(),
+                calculateGeometries(start, end, totalBox.q_sizes(j), dummy.data(), newSizes.data(),
                                     0, totalBox);
 
                 for (int k = 0; k < span; ++k)
-                    extras[k].q_sizes[j] = newSizes[k];
+                    extras[k].q_sizes(j) = newSizes[k];
             }
         }
 
@@ -259,7 +264,11 @@ void QGridLayoutRowData::calculateGeometries(int start, int end, qreal targetSiz
 
                     int stretch = stretches[start + i];
                     if (sumStretches == 0) {
-                        factors[i] = (stretch < 0) ? sizes[i] : 0.0;
+                        if (hasIgnoreFlag) {
+                            factors[i] = (stretch < 0) ? 1.0 : 0.0;
+                        } else {
+                            factors[i] = (stretch < 0) ? sizes[i] : 0.0;                        
+                        }
                     } else if (stretch == sumStretches) {
                         factors[i] = 1.0;
                     } else if (stretch <= 0) {
@@ -388,13 +397,13 @@ void QGridLayoutRowData::calculateGeometries(int start, int end, qreal targetSiz
 QGridLayoutBox QGridLayoutRowData::totalBox(int start, int end) const
 {
     QGridLayoutBox result;
-    result.q_maximumSize = 0.0;
-
-    qreal nextSpacing = 0.0;
-
-    for (int i = start; i < end; ++i) {
-        result.add(boxes.at(i), stretches.at(i), nextSpacing);
-        nextSpacing = spacings.at(i);
+    if (start < end) {
+        result.q_maximumSize = 0.0;
+        qreal nextSpacing = 0.0;
+        for (int i = start; i < end; ++i) {
+            result.add(boxes.at(i), stretches.at(i), nextSpacing);
+            nextSpacing = spacings.at(i);
+        }
     }
     return result;
 }
@@ -409,7 +418,7 @@ void QGridLayoutRowData::stealBox(int start, int end, int which, qreal *position
 
         if (!ignore.testBit(i)) {
             const QGridLayoutBox &box = boxes.at(i);
-            avail = box.q_sizes[which];
+            avail = box.q_sizes(which);
             offset += nextSpacing;
             nextSpacing = spacings.at(i);
         }
@@ -579,6 +588,9 @@ QGridLayoutBox QGridLayoutItem::box(Qt::Orientation orientation, qreal constrain
         if (result.q_minimumDescent >= 0.0)
             result.q_minimumAscent = result.q_minimumSize - result.q_minimumDescent;
     }
+    if (policy & QSizePolicy::IgnoreFlag)
+        result.q_preferredSize = result.q_minimumSize;
+
     return result;
 }
 
@@ -592,7 +604,7 @@ QRectF QGridLayoutItem::geometryWithin(qreal x, qreal y, qreal width, qreal heig
         qreal cellWidth = width;
         qreal cellHeight = height;
 
-        QSizeF size = layoutItem()->effectiveSizeHint(Qt::MaximumSize).boundedTo(QSizeF(cellWidth, cellHeight));
+        QSizeF size = effectiveMaxSize().boundedTo(QSizeF(cellWidth, cellHeight));
         width = size.width();
         height = size.height();
         
@@ -645,6 +657,36 @@ void QGridLayoutItem::insertOrRemoveRows(int row, int delta, Qt::Orientation ori
     } else if (lastRow(orientation) >= row) {
         setRowSpan(rowSpan(orientation) + delta, orientation);
     }
+}
+/*!
+    \internal
+    returns the effective maximumSize, will take the sizepolicy into
+    consideration. (i.e. if sizepolicy does not have QSizePolicy::Grow, then
+    maxSizeHint will be the preferredSize)
+    Note that effectiveSizeHint does not take sizePolicy into consideration,
+    (since it only evaluates the hints, as the name implies)
+*/
+QSizeF QGridLayoutItem::effectiveMaxSize() const
+{
+    QSizeF size;
+    bool vGrow = (sizePolicy(Qt::Vertical) & QSizePolicy::GrowFlag) == QSizePolicy::GrowFlag;
+    bool hGrow = (sizePolicy(Qt::Horizontal) & QSizePolicy::GrowFlag) == QSizePolicy::GrowFlag;
+    if (!vGrow || !hGrow) {
+        QSizeF pref = layoutItem()->effectiveSizeHint(Qt::PreferredSize);
+        if (!vGrow)
+            size.setHeight(pref.height());
+        if (!hGrow)
+            size.setWidth(pref.width());
+    }
+
+    if (!size.isValid()) {
+        QSizeF maxSize = layoutItem()->effectiveSizeHint(Qt::MaximumSize);
+        if (size.width() == -1)
+            size.setWidth(maxSize.width());
+        if (size.height() == -1)
+            size.setHeight(maxSize.height());
+    }
+    return size;
 }
 
 #ifdef QT_DEBUG
@@ -699,6 +741,7 @@ void QGridLayoutRowInfo::dump(int indent) const
 
 QGridLayoutEngine::QGridLayoutEngine()
 {
+    m_visualDirection = Qt::LeftToRight;
     invalidate();
 }
 
@@ -829,12 +872,12 @@ void QGridLayoutEngine::setRowSizeHint(Qt::SizeHint which, int row, qreal size,
     QGridLayoutRowInfo &rowInfo = q_infos[orientation == Qt::Vertical];
     if (row >= rowInfo.boxes.count())
         rowInfo.boxes.resize(row + 1);
-    rowInfo.boxes[row].q_sizes[which] = size;
+    rowInfo.boxes[row].q_sizes(which) = size;
 }
 
 qreal QGridLayoutEngine::rowSizeHint(Qt::SizeHint which, int row, Qt::Orientation orientation) const
 {
-    return q_infos[orientation == Qt::Vertical].boxes.value(row).q_sizes[which];
+    return q_infos[orientation == Qt::Vertical].boxes.value(row).q_sizes(which);
 }
 
 void QGridLayoutEngine::setRowAlignment(int row, Qt::Alignment alignment,
@@ -946,6 +989,12 @@ void QGridLayoutEngine::invalidate()
     q_cachedSize = QSizeF();
 }
 
+static void visualRect(QRectF *geom, Qt::LayoutDirection dir, const QRectF &contentsRect)
+{
+    if (dir == Qt::RightToLeft)
+        geom->moveRight(contentsRect.right() - (geom->left() - contentsRect.left()));
+}
+
 void QGridLayoutEngine::setGeometries(const QLayoutStyleInfo &styleInfo,
                                       const QRectF &contentsGeometry)
 {
@@ -967,8 +1016,10 @@ void QGridLayoutEngine::setGeometries(const QLayoutStyleInfo &styleInfo,
         if (item->rowSpan() != 1)
             height += q_yy[item->lastRow()] - y;
 
-        item->setGeometry(item->geometryWithin(contentsGeometry.x() + x, contentsGeometry.y() + y,
-                                               width, height, q_descents[item->lastRow()]));
+        QRectF geom = item->geometryWithin(contentsGeometry.x() + x, contentsGeometry.y() + y,
+                                               width, height, q_descents[item->lastRow()]);
+        visualRect(&geom, visualDirection(), contentsGeometry);
+        item->setGeometry(geom);
     }
 }
 
@@ -1044,6 +1095,16 @@ void QGridLayoutEngine::transpose()
     qSwap(q_infos[Hor], q_infos[Ver]);
 
     regenerateGrid();
+}
+
+void QGridLayoutEngine::setVisualDirection(Qt::LayoutDirection direction)
+{
+    m_visualDirection = direction;
+}
+
+Qt::LayoutDirection QGridLayoutEngine::visualDirection() const
+{
+    return m_visualDirection;
 }
 
 #ifdef QT_DEBUG
@@ -1230,6 +1291,7 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
     RowAdHocData nextToLastRowAdHocData;
     RowAdHocData nextToNextToLastRowAdHocData;
 
+    rowData->hasIgnoreFlag = false;
     for (int row = 0; row < rowInfo.count; ++row) {
         if (rowData->ignore.testBit(row))
             continue;
@@ -1249,6 +1311,7 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
         bool userRowStretch = rowInfo.stretches.value(row).isUser();
         int &rowStretch = rowData->stretches[row];
 
+        bool hasIgnoreFlag = true;
         for (int column = 0; column < columnInfo.count; ++column) {
             QGridLayoutItem *item = itemAt(row, column, orientation);
             if (item) {
@@ -1257,6 +1320,8 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
 
                 if (itemRow == row && itemColumn == column) {
                     int itemStretch = item->stretchFactor(orientation);
+                    if (!(item->sizePolicy(orientation) & QSizePolicy::IgnoreFlag))
+                        hasIgnoreFlag = false;
                     int itemRowSpan = item->rowSpan(orientation);
 
                     int effectiveRowSpan = 1;
@@ -1288,6 +1353,8 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
                 }
             }
         }
+        if (hasIgnoreFlag)
+            rowData->hasIgnoreFlag = true;
     }
 
     /*

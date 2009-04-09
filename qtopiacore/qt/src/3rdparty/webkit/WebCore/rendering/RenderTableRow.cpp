@@ -33,6 +33,10 @@
 #include "RenderTableCell.h"
 #include "RenderView.h"
 
+#if ENABLE(WML)
+#include "WMLNames.h"
+#endif
+
 namespace WebCore {
 
 using namespace HTMLNames;
@@ -54,14 +58,14 @@ void RenderTableRow::destroy()
         recalcSection->setNeedsCellRecalc();
 }
 
-void RenderTableRow::setStyle(RenderStyle* newStyle)
+void RenderTableRow::styleWillChange(RenderStyle::Diff diff, const RenderStyle* newStyle)
 {
     if (section() && style() && style()->height() != newStyle->height())
         section()->setNeedsCellRecalc();
 
-    newStyle->setDisplay(TABLE_ROW);
+    ASSERT(newStyle->display() == TABLE_ROW);
 
-    RenderContainer::setStyle(newStyle);
+    RenderContainer::styleWillChange(diff, newStyle);
 }
 
 void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
@@ -71,7 +75,12 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
         beforeChild = lastChild();
 
     bool isTableRow = element() && element()->hasTagName(trTag);
-    
+
+#if ENABLE(WML)
+    if (!isTableRow && element() && element()->isWMLElement())
+        isTableRow = element()->hasTagName(WMLNames::trTag);
+#endif
+
     if (!child->isTableCell()) {
         if (isTableRow && child->element() && child->element()->hasTagName(formTag) && document()->isHTMLDocument()) {
             RenderContainer::addChild(child, beforeChild);
@@ -93,17 +102,17 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
         }
 
         RenderTableCell* cell = new (renderArena()) RenderTableCell(document() /* anonymous object */);
-        RenderStyle* newStyle = new (renderArena()) RenderStyle();
+        RefPtr<RenderStyle> newStyle = RenderStyle::create();
         newStyle->inheritFrom(style());
         newStyle->setDisplay(TABLE_CELL);
-        cell->setStyle(newStyle);
+        cell->setStyle(newStyle.release());
         addChild(cell, beforeChild);
         cell->addChild(child);
         return;
     } 
     
     // If the next renderer is actually wrapped in an anonymous table cell, we need to go up and find that.
-    while (beforeChild && !beforeChild->isTableCell())
+    while (beforeChild && beforeChild->parent() != this)
         beforeChild = beforeChild->parent();
 
     RenderTableCell* cell = static_cast<RenderTableCell*>(child);
@@ -112,6 +121,7 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
     if (parent())
         section()->addCell(cell, this);
 
+    ASSERT(!beforeChild || beforeChild->isTableCell() || isTableRow && beforeChild->element() && beforeChild->element()->hasTagName(formTag) && document()->isHTMLDocument());
     RenderContainer::addChild(cell, beforeChild);
 
     if (beforeChild || nextSibling())
@@ -123,7 +133,7 @@ void RenderTableRow::layout()
     ASSERT(needsLayout());
 
     // Table rows do not add translation.
-    view()->pushLayoutState(this, IntSize());
+    LayoutStateMaintainer statePusher(view(), this, IntSize());
 
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
         if (child->isTableCell()) {
@@ -147,7 +157,7 @@ void RenderTableRow::layout()
         }
     }
 
-    view()->popLayoutState();
+    statePusher.pop();
     setNeedsLayout(false);
 }
 
@@ -200,11 +210,8 @@ void RenderTableRow::paint(PaintInfo& paintInfo, int tx, int ty)
     }
 }
 
-void RenderTableRow::imageChanged(CachedImage* image)
+void RenderTableRow::imageChanged(WrappedImagePtr, const IntRect*)
 {
-    if (!image || !image->canRender() || !parent())
-        return;
-    
     // FIXME: Examine cells and repaint only the rect the image paints in.
     repaint();
 }

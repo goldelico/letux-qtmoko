@@ -1,42 +1,52 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#define QT_XMLSTREAM_NO_UNDEFINE
 #include "QtCore/qxmlstream.h"
+
+#if defined(QT_BUILD_XML_LIB) && defined(Q_OS_MAC64)
+// No need to define this in the 64-bit Mac libraries.
+// Since Qt 4.4 and previous weren't supported in 64-bit, there are
+// no QXmlStream* symbols to keep compatibility with
+# define QT_NO_XMLSTREAM
+#endif
 
 #ifndef QT_NO_XMLSTREAM
 
@@ -75,11 +85,18 @@ QT_BEGIN_NAMESPACE
     This enum specifies the type of token the reader just read.
 
     \value NoToken The reader has not yet read anything.
-    \value Invalid An error has occurred, reported in error() and errorString().
-    \value StartDocument The reader reports the XML version number in documentVersion(), and the
-    encoding as specified in the XML document in documentEncoding().
-    If the document is declared standalone, isStandaloneDocument() returns true; otherwise it returns false.
+
+    \value Invalid An error has occurred, reported in error() and
+    errorString().
+
+    \value StartDocument The reader reports the XML version number in
+    documentVersion(), and the encoding as specified in the XML
+    document in documentEncoding().  If the document is declared
+    standalone, isStandaloneDocument() returns true; otherwise it
+    returns false.
+
     \value EndDocument The reader reports the end of the document.
+
     \value StartElement The reader reports the start of an element
     with namespaceUri() and name(). Empty elements are also reported
     as StartElement, followed directly by EndElement. The convenience
@@ -87,18 +104,28 @@ QT_BEGIN_NAMESPACE
     content until the corresponding EndElement. Attributes are
     reported in attributes(), namespace declarations in
     namespaceDeclarations().
-    \value EndElement The reader reports the end of an element with namespaceUri() and name().
+
+    \value EndElement The reader reports the end of an element with
+    namespaceUri() and name().
+
     \value Characters The reader reports characters in text(). If the
     characters are all white-space, isWhitespace() returns true. If
     the characters stem from a CDATA section, isCDATA() returns true.
+
     \value Comment The reader reports a comment in text().
-    \value DTD The reader reports a DTD in text(), notation declarations in notationDeclarations(),
-    and entity declarations in entityDeclarations(). Details of the DTD declaration are reported in
-    in dtdName(), dtdPublicId(), and dtdSystemId().
-    \value EntityReference The reader reports an entity reference that could not be resolved.
-    The name of the reference is reported in name(), the replacement text in text().
-    \value ProcessingInstruction The reader reports a processing instruction
-    in processingInstructionTarget() and processingInstructionData().
+
+    \value DTD The reader reports a DTD in text(), notation
+    declarations in notationDeclarations(), and entity declarations in
+    entityDeclarations(). Details of the DTD declaration are reported
+    in in dtdName(), dtdPublicId(), and dtdSystemId().
+
+    \value EntityReference The reader reports an entity reference that
+    could not be resolved.  The name of the reference is reported in
+    name(), the replacement text in text().
+
+    \value ProcessingInstruction The reader reports a processing
+    instruction in processingInstructionTarget() and
+    processingInstructionData().
 */
 
 /*!
@@ -107,20 +134,30 @@ QT_BEGIN_NAMESPACE
     This enum specifies different error cases
 
     \value NoError No error has occurred.
-    \value CustomError A custom error has been raised with raiseError()
-    \value NotWellFormedError The parser internally raised an error due to the read XML not being well-formed.
-    \value PrematureEndOfDocumentError The input stream ended before the document was parsed completely. This error can be recovered from.
-    \value UnexpectedElementError The parser encountered an element that was different to those it expected.
+
+    \value CustomError A custom error has been raised with
+    raiseError()
+
+    \value NotWellFormedError The parser internally raised an error
+    due to the read XML not being well-formed.
+
+    \value PrematureEndOfDocumentError The input stream ended before a
+    well-formed XML document was parsed. Recovery from this error is
+    possible if more XML arrives in the stream, either by calling
+    addData() or by waiting for it to arrive on the device().
+
+    \value UnexpectedElementError The parser encountered an element
+    that was different to those it expected.
+
 */
-
-
 
 /*!
   \class QXmlStreamEntityResolver
   \reentrant
   \since 4.4
 
-  \brief The QXmlStreamEntityResolver class provides an entity resolver for a QXmlStreamReader.
+  \brief The QXmlStreamEntityResolver class provides an entity
+  resolver for a QXmlStreamReader.
 
   \ingroup xml-tools
  */
@@ -143,8 +180,9 @@ QString QXmlStreamEntityResolver::resolveEntity(const QString& /*publicId*/, con
 
 
 /*!
-  Resolves the undeclared entity \a name and returns its replacement text. If the entity
-  is also unknown to the entity resolver, it returns an empty string.
+  Resolves the undeclared entity \a name and returns its replacement
+  text. If the entity is also unknown to the entity resolver, it
+  returns an empty string.
 
   The default implementation always returns an empty string.
 */
@@ -165,7 +203,7 @@ QString QXmlStreamReaderPrivate::resolveUndeclaredEntity(const QString &name)
 
 
 
-/*! 
+/*!
    \since 4.4
 
    Makes \a resolver the new entityResolver().
@@ -203,35 +241,38 @@ QXmlStreamEntityResolver *QXmlStreamReader::entityResolver() const
   \reentrant
   \since 4.3
 
-  \brief The QXmlStreamReader class provides a fast well-formed XML
-  parser with a simple streaming API.
+  \brief The QXmlStreamReader class provides a fast parser for reading
+  well-formed XML via a simple streaming API.
 
   \mainclass
   \ingroup xml-tools
 
   QXmlStreamReader is a faster and more convenient replacement for
-  Qt's own SAX parser (see QXmlSimpleReader), and in some cases also
-  for applications that would previously use a DOM tree (see QDomDocument).
+  Qt's own SAX parser (see QXmlSimpleReader). In some cases it might
+  also be a faster and more convenient alternative for use in
+  applications that would otherwise use a DOM tree (see QDomDocument).
   QXmlStreamReader reads data either from a QIODevice (see
-  setDevice()), or from a raw QByteArray (see addData()). With
-  QXmlStreamWriter, Qt provides a related class for writing XML.
+  setDevice()), or from a raw QByteArray (see addData()).
+
+  Qt provides QXmlStreamWriter for writing XML.
 
   The basic concept of a stream reader is to report an XML document as
   a stream of tokens, similar to SAX. The main difference between
-  QXmlStreamReader and SAX is \e how these XML tokens are
-  reported. With SAX, the application must provide handlers that
-  receive so-called XML \e events from the parser at the parser's
-  convenience. With QXmlStreamReader, the application code itself
-  drives the loop and pulls \e tokens from the reader one after
-  another as it needs them. This is done by calling readNext(), which
-  makes the reader read from the input stream until it has completed a
-  new token, and then returns its tokenType().  A set of convenient
-  functions like isStartElement() or text() then allows to examine
-  this token, and to obtain information about what has been read. The
-  big advantage of the pulling approach is the possibility to build
-  recursive descent parsers, meaning you can split your XML parsing
-  code easily into different methods or classes. This makes it easy to
-  keep track of the application's own state when parsing XML.
+  QXmlStreamReader and SAX is \e how these XML tokens are reported.
+  With SAX, the application must provide handlers (callback functions)
+  that receive so-called XML \e events from the parser at the parser's
+  convenience.  With QXmlStreamReader, the application code itself
+  drives the loop and pulls \e tokens from the reader, one after
+  another, as it needs them. This is done by calling readNext(), where
+  the reader reads from the input stream until it completes the next
+  token, at which point it returns the tokenType(). A set of
+  convenient functions including isStartElement() and text() can then
+  be used to examine the token to obtain information about what has
+  been read. The big advantage of this \e pulling approach is the
+  possibility to build recursive descent parsers with it, meaning you
+  can split your XML parsing code easily into different methods or
+  classes. This makes it easy to keep track of the application's own
+  state when parsing XML.
 
   A typical loop with QXmlStreamReader looks like this:
 
@@ -248,15 +289,13 @@ QXmlStreamEntityResolver *QXmlStreamReader::entityResolver() const
   been normalized or added according to the internal subset of the
   DTD.
 
-  If an error does occur while parsing, atEnd() returns true and
-  error() returns the kind of error that occurred. hasError() can also
-  be used to check whether an error has occurred. The functions
+  If an error occurs while parsing, atEnd() and hasError() return
+  true, and error() returns the error that occurred. The functions
   errorString(), lineNumber(), columnNumber(), and characterOffset()
-  make it possible to generate a verbose human-understandable error or
-  warning message. In order to simplify application code,
-  QXmlStreamReader contains a raiseError() mechanism that makes it
-  possible to raise custom errors that then trigger the same error
-  handling code path.
+  are for constructing an appropriate error or warning message. To
+  simplify application code, QXmlStreamReader contains a raiseError()
+  mechanism that lets you raise custom errors that trigger the same
+  error handling described.
 
   The \l{QXmlStream Bookmarks Example} illustrates how to use the
   recursive descent technique with a subclassed stream reader to read
@@ -285,15 +324,15 @@ QXmlStreamEntityResolver *QXmlStreamReader::entityResolver() const
 
   \section1 Incremental parsing
 
-  QXmlStreamReader is an incremental parser. If you can't parse the
-  entire input in one go (for example, it is huge, or is being
-  delivered over a network connection), data can be fed to the parser
-  in pieces. If the reader runs out of data before the document has
-  been parsed completely, it reports a
-  PrematureEndOfDocumentError. Once more data has arrived, either
-  through the device or because it has been added with addData(), it
-  recovers from that error and continues parsing on the next call to
-  read().
+  QXmlStreamReader is an incremental parser. It can handle the case
+  where the document can't be parsed all at once because it arrives in
+  chunks (e.g. from multiple files, or over a network connection).
+  When the reader runs out of data before the complete document has
+  been parsed, it reports a PrematureEndOfDocumentError. When more
+  data arrives, either because of a call to addData() or because more
+  data is available through the network device(), the reader recovers
+  from the PrematureEndOfDocumentError error and continues parsing the
+  new data with the next call to readNext().
 
   For example, if you read data from the network using QHttp, you
   would connect its \l{QHttp::readyRead()}{readyRead()} signal to a
@@ -431,11 +470,10 @@ QIODevice *QXmlStreamReader::device() const
 
 
 /*!
-  Adds more \a data for the reader to read.
+  Adds more \a data for the reader to read. This function does
+  nothing if the reader has a device().
 
-  This function does nothing if the reader has a device().
-
-  \sa clear()
+  \sa readNext(), clear()
  */
 void QXmlStreamReader::addData(const QByteArray &data)
 {
@@ -447,12 +485,11 @@ void QXmlStreamReader::addData(const QByteArray &data)
     d->dataBuffer += data;
 }
 
-/*!\overload
-  Adds more \a data for the reader to read.
+/*!
+  Adds more \a data for the reader to read. This function does
+  nothing if the reader has a device().
 
-  This function does nothing if the reader has a device().
-
-  \sa clear()
+  \sa readNext(), clear()
  */
 void QXmlStreamReader::addData(const QString &data)
 {
@@ -465,12 +502,11 @@ void QXmlStreamReader::addData(const QString &data)
 #endif
 }
 
-/*! \overload
-  Adds more \a data for the reader to read.
+/*!
+  Adds more \a data for the reader to read. This function does
+  nothing if the reader has a device().
 
-  This function does nothing if the reader has a device().
-
-  \sa clear()
+  \sa readNext(), clear()
  */
 void QXmlStreamReader::addData(const char *data)
 {
@@ -478,8 +514,8 @@ void QXmlStreamReader::addData(const char *data)
 }
 
 /*!
-    Removes any device() or data from the reader, and resets its
-    state to the initial state.
+    Removes any device() or data from the reader and resets its
+    internal state to the initial state.
 
     \sa addData()
  */
@@ -494,17 +530,20 @@ void QXmlStreamReader::clear()
     }
 }
 
-
 /*!
     Returns true if the reader has read until the end of the XML
-    document, or an error has occurred and reading has been aborted;
-    otherwise returns false.
+    document, or if an error() has occurred and reading has been
+    aborted. Otherwise, it returns false.
 
-    Has reading been aborted with a PrematureEndOfDocumentError
-    because the device no longer delivered data, atEnd() will return
-    true once more data has arrived.
+    When atEnd() and hasError() return true and error() returns
+    PrematureEndOfDocumentError, it means the XML has been well-formed
+    so far, but a complete XML document has not been parsed. The next
+    chunk of XML can be added with addData(), if the XML is being read
+    from a QByteArray, or by waiting for more data to arrive if the
+    XML is being read from a QIODevice. Either way, atEnd() will
+    return false once more adata is available.
 
-    \sa device(), QIODevice::atEnd()
+    \sa hasError(), error(), device(), QIODevice::atEnd()
  */
 bool QXmlStreamReader::atEnd() const
 {
@@ -521,18 +560,21 @@ bool QXmlStreamReader::atEnd() const
 }
 
 
-/*!  Reads the next token and returns its type.
+/*!
+  Reads the next token and returns its type.
 
-  If an error() has been reported, reading is no longer possible. In
-  this case, atEnd() always returns true, and this function will do
-  nothing but return Invalid.
+  With one exception, once an error() is reported by readNext(),
+  further reading of the XML stream is not possible. Then atEnd()
+  returns true, hasError() returns true, and this function returns
+  QXmlStreamReader::Invalid.
 
-  The one exception to this rule are errors of type
-  PrematureEndOfDocumentError.  Subsequent calls to atEnd() and readNext()
-  will resume this error type and try to read from the device
-  again. This iterative parsing approach makes sense if you can't or
-  don't want to read the entire data in one go, for example, if it is
-  huge, or it is being delivered over a network connection
+  The exception is when error() return PrematureEndOfDocumentError.
+  This error is reported when the end of an otherwise well-formed
+  chunk of XML is reached, but the chunk doesn't represent a complete
+  XML document.  In that case, parsing \e can be resumed by calling
+  addData() to add the next chunk of XML, when the stream is being
+  read from a QByteArray, or by waiting for more data to arrive when
+  the stream is being read from a device().
 
   \sa tokenType(), tokenString()
  */
@@ -565,7 +607,7 @@ QXmlStreamReader::TokenType QXmlStreamReader::readNext()
   The current token can also be queried with the convenience functions
   isStartDocument(), isEndDocument(), isStartElement(),
   isEndElement(), isCharacters(), isComment(), isDTD(),
-  isEntityReference(), and isProcessingInstruction()
+  isEntityReference(), and isProcessingInstruction().
 
   \sa tokenString()
  */
@@ -703,7 +745,7 @@ void QXmlStreamReaderPrivate::init()
     token = -1;
     token_char = 0;
     isEmptyElement = false;
-    isWhitespace = false;
+    isWhitespace = true;
     isCDATA = false;
     standalone = false;
     tos = 0;
@@ -714,6 +756,7 @@ void QXmlStreamReaderPrivate::init()
     putStack.reserve(32);
     textBuffer.clear();
     textBuffer.reserve(256);
+    tagStack.clear();
     tagsDone = false;
     attributes.clear();
     attributes.reserve(16);
@@ -1133,7 +1176,7 @@ inline int QXmlStreamReaderPrivate::fastScanContentCharList()
             if (c == 0) {
                 putString(textBuffer, pos);
                 textBuffer.resize(pos);
-            } else if (c == '>') {
+            } else if (c == '>' && textBuffer.at(textBuffer.size()-2) == QLatin1Char(']')) {
                 raiseWellFormedError(QXmlStream::tr("Sequence ']]>' not allowed in content."));
             } else {
                 putChar(c);
@@ -1872,7 +1915,7 @@ QXmlStreamEntityDeclarations QXmlStreamReader::entityDeclarations() const
     return d->publicEntityDeclarations;
 }
 
-/*!  
+/*!
   \since 4.4
 
   If the state() is \l DTD, this function returns the DTD's
@@ -1887,7 +1930,7 @@ QStringRef QXmlStreamReader::dtdName() const
    return QStringRef();
 }
 
-/*!  
+/*!
   \since 4.4
 
   If the state() is \l DTD, this function returns the DTD's
@@ -1902,7 +1945,7 @@ QStringRef QXmlStreamReader::dtdPublicId() const
    return QStringRef();
 }
 
-/*!  
+/*!
   \since 4.4
 
   If the state() is \l DTD, this function returns the DTD's
@@ -1969,8 +2012,8 @@ void QXmlStreamReader::addExtraNamespaceDeclarations(const QXmlStreamNamespaceDe
 
 /*!  Convenience function to be called in case a StartElement was
   read. Reads until the corresponding EndElement and returns all text
-  in-between. In case of no error, the token after having called this
-  function is EndElement.
+  in-between. In case of no error, the current token (see tokenType())
+  after having called this function is EndElement.
 
   The function concatenates text() when it reads either \l Characters
   or EntityReference tokens, but skips ProcessingInstruction and \l
@@ -2198,7 +2241,7 @@ QXmlStreamAttribute::QXmlStreamAttribute(const QString &qualifiedName, const QSt
    shouldn't use qualifiedName(), but the resolved namespaceUri() and
    the attribute's local name().
  */
-/*! 
+/*!
    \fn QStringRef QXmlStreamAttribute::prefix() const
    \since 4.4
    Returns the attribute's namespace prefix.
@@ -2705,7 +2748,7 @@ bool QXmlStreamReader::isStandaloneDocument() const
 }
 
 
-/*!  
+/*!
      \since 4.4
 
      If the state() is \l StartDocument, this function returns the
@@ -2720,7 +2763,7 @@ QStringRef QXmlStreamReader::documentVersion() const
    return QStringRef();
 }
 
-/*!  
+/*!
      \since 4.4
 
      If the state() is \l StartDocument, this function returns the
@@ -2746,6 +2789,7 @@ QStringRef QXmlStreamReader::documentEncoding() const
   simple streaming API.
 
   \mainclass
+  \inmodule QtXml
   \ingroup xml-tools
 
   QXmlStreamWriter is the pendent to QXmlStreamReader for writing
@@ -2976,7 +3020,8 @@ bool QXmlStreamWriterPrivate::finishStartElement(bool contents)
 
     if (inEmptyElement) {
         write("/>");
-        tagStack_pop();
+        QXmlStreamWriterPrivate::Tag &tag = tagStack_pop();
+        lastNamespaceDeclaration = tag.namespaceDeclarationsSize;
         lastWasStartElement = false;
     } else {
         write(">");
@@ -3120,6 +3165,10 @@ QIODevice *QXmlStreamWriter::device() const
     encoding any data that is written. By default, QXmlStreamWriter
     uses UTF-8.
 
+    The encoding information is stored in the initial xml tag which
+    gets written when you call writeStartDocument(). Call this
+    function before calling writeStartDocument().
+
     \sa codec()
 */
 void QXmlStreamWriter::setCodec(QTextCodec *codec)
@@ -3129,6 +3178,8 @@ void QXmlStreamWriter::setCodec(QTextCodec *codec)
         d->codec = codec;
         delete d->encoder;
         d->encoder = codec->makeEncoder();
+        if (codec->mibEnum() == 106)
+            d->encoder->fromUnicode(QLatin1String("")); // no byte order mark for utf8
     }
 }
 
@@ -3201,7 +3252,10 @@ bool QXmlStreamWriter::autoFormatting() const
 /*!
     \property QXmlStreamWriter::autoFormattingIndent
     \since 4.4
-    \brief the number of spaces used for indentation when auto-formatting is enabled
+
+    \brief the number of spaces or tabs used for indentation when
+    auto-formatting is enabled.  Positive numbers indicate spaces,
+    negative numbers tabs.
 
     The default indentation is 4.
 
@@ -3209,16 +3263,16 @@ bool QXmlStreamWriter::autoFormatting() const
 */
 
 
-void QXmlStreamWriter::setAutoFormattingIndent(int spaces)
+void QXmlStreamWriter::setAutoFormattingIndent(int spacesOrTabs)
 {
     Q_D(QXmlStreamWriter);
-    d->autoFormattingIndent = QByteArray(spaces, ' ');
+    d->autoFormattingIndent = QByteArray(qAbs(spacesOrTabs), spacesOrTabs >= 0 ? ' ' : '\t');
 }
 
 int QXmlStreamWriter::autoFormattingIndent() const
 {
     Q_D(const QXmlStreamWriter);
-    return d->autoFormattingIndent.size();
+    return d->autoFormattingIndent.count(' ') - d->autoFormattingIndent.count('\t');
 }
 
 
@@ -3457,6 +3511,16 @@ void QXmlStreamWriter::writeEndElement()
     Q_D(QXmlStreamWriter);
     if (d->tagStack.isEmpty())
         return;
+
+    // shortcut: if nothing was written, close as empty tag
+    if (d->inStartElement && !d->inEmptyElement) {
+        d->write("/>");
+        d->lastWasStartElement = d->inStartElement = false;
+        QXmlStreamWriterPrivate::Tag &tag = d->tagStack_pop();
+        d->lastNamespaceDeclaration = tag.namespaceDeclarationsSize;
+        return;
+    }
+
     if (!d->finishStartElement(false) && !d->lastWasStartElement && d->autoFormatting)
         d->indent(d->tagStack.size()-1);
     if (d->tagStack.isEmpty())
@@ -3566,9 +3630,12 @@ void QXmlStreamWriter::writeProcessingInstruction(const QString &target, const Q
 
 
 /*!\overload
-  Writes a document start with XML version number "1.0"
 
-  \sa writeEndDocument()
+  Writes a document start with XML version number "1.0". This also
+  writes the encoding information.
+
+  \sa writeEndDocument(), setCodec()
+  \since 4.5
  */
 void QXmlStreamWriter::writeStartDocument()
 {
@@ -3595,6 +3662,31 @@ void QXmlStreamWriter::writeStartDocument(const QString &version)
         d->write(d->codec->name().constData());
 #endif
     }
+    d->write("\"?>");
+}
+
+/*!  Writes a document start with the XML version number \a version
+  and a standalone attribute \a standalone.
+
+  \sa writeEndDocument()
+  \since 4.5
+ */
+void QXmlStreamWriter::writeStartDocument(const QString &version, bool standalone)
+{
+    Q_D(QXmlStreamWriter);
+    d->finishStartElement(false);
+    d->write("<?xml version=\"");
+    d->write(version);
+    if (d->device) { // stringDevice does not get any encoding
+        d->write("\" encoding=\"");
+#ifdef QT_NO_TEXTCODEC
+        d->write("iso-8859-1");
+#else
+        d->write(d->codec->name().constData());
+#endif
+    }
+    d->write("\" standalone=\"");
+    d->write(standalone ? "yes" : "no");
     d->write("\"?>");
 }
 
@@ -3707,6 +3799,39 @@ void QXmlStreamWriter::writeCurrentToken(const QXmlStreamReader &reader)
         break;
     }
 }
+
+/*!
+ \fn bool QXmlStreamAttributes::hasAttribute(const QString &qualifiedName) const
+ \since 4.5
+
+ Returns true if this QXmlStreamAttributes has an attribute whose
+ qualified name is \a qualifiedName; otherwise returns false.
+
+ Note that this is not namespace aware. For instance, if this
+ QXmlStreamAttributes contains an attribute whose lexical name is "xlink:href"
+ this doesn't tell that an attribute named \c href in the XLink namespace is
+ present, since the \c xlink prefix can be bound to any namespace. Use the
+ overload that takes a namespace URI and a local name as parameter, for
+ namespace aware code.
+*/
+
+/*!
+ \fn bool QXmlStreamAttributes::hasAttribute(const QLatin1String &qualifiedName) const
+ \overload
+ \since 4.5
+*/
+
+/*!
+ \fn bool QXmlStreamAttributes::hasAttribute(const QString &namespaceUri,
+                                             const QString &name) const
+ \overload
+ \since 4.5
+
+ Returns true if this QXmlStreamAttributes has an attribute whose
+ namespace URI and name correspond to \a namespaceUri and \a name;
+ otherwise returns false.
+*/
+
 #endif // QT_NO_XMLSTREAMREADER
 #endif // QT_NO_XMLSTREAMWRITER
 

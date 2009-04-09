@@ -31,7 +31,7 @@
 #define EditorClientQt_H
 
 #include "EditorClient.h"
-#include "Shared.h"
+#include "RefCounted.h"
 
 #include <wtf/Forward.h>
 
@@ -48,6 +48,7 @@ public:
     virtual bool shouldDeleteRange(Range*);
     virtual bool shouldShowDeleteInterface(HTMLElement*);
     virtual bool smartInsertDeleteEnabled(); 
+    virtual bool isSelectTrailingWhitespaceEnabled(); 
     virtual bool isContinuousSpellCheckingEnabled();
     virtual void toggleContinuousSpellChecking();
     virtual bool isGrammarCheckingEnabled();
@@ -60,7 +61,7 @@ public:
     virtual bool shouldBeginEditing(Range*);
     virtual bool shouldEndEditing(Range*);
     virtual bool shouldInsertNode(Node*, Range*, EditorInsertAction);
-    virtual bool shouldInsertText(String, Range*, EditorInsertAction);
+    virtual bool shouldInsertText(const String&, Range*, EditorInsertAction);
     virtual bool shouldChangeSelectedRange(Range* fromRange, Range* toRange, EAffinity, bool stillSelecting);
 
     virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*);
@@ -84,8 +85,8 @@ public:
     virtual void undo();
     virtual void redo();
 
-    virtual void handleKeypress(KeyboardEvent*);
-    virtual void handleInputMethodKeypress(KeyboardEvent*);
+    virtual void handleKeyboardEvent(KeyboardEvent*);
+    virtual void handleInputMethodKeydown(KeyboardEvent*);
 
     virtual void textFieldDidBeginEditing(Element*);
     virtual void textFieldDidEndEditing(Element*);

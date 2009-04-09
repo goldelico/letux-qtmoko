@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -462,11 +466,14 @@ bool QLibraryPrivate::unload()
 {
     if (!pHnd)
         return false;
-    if (!libraryUnloadCount.deref()) // only unload if ALL QLibrary instance wanted to
+    if (!libraryUnloadCount.deref()) { // only unload if ALL QLibrary instance wanted to
+        if (instance)
+            delete instance();
         if  (unload_sys()) {
             instance = 0;
             pHnd = 0;
         }
+    }
 
     return (pHnd == 0);
 }
@@ -616,9 +623,11 @@ bool QLibraryPrivate::isPlugin(QSettings *settings)
 #endif
             if (!pHnd) {
 #ifdef Q_OS_WIN
-                hTempModule = ::LoadLibraryExW((wchar_t*)QDir::toNativeSeparators(fileName).utf16(), 0, DONT_RESOLVE_DLL_REFERENCES);
-                //### optimization: for Win98, and WinMe we should call load_sys, 
-                //since they don't support the DONT_RESOLVE_DLL_REFERENCES flag.
+                QT_WA({
+                    hTempModule = ::LoadLibraryExW((wchar_t*)QDir::toNativeSeparators(fileName).utf16(), 0, DONT_RESOLVE_DLL_REFERENCES);
+                } , {
+                    temporary_load = load_sys();
+                });
 #else
                 temporary_load =  load_sys();
 #endif
@@ -629,7 +638,7 @@ bool QLibraryPrivate::isPlugin(QSettings *settings)
             typedef const char * (*QtPluginQueryVerificationDataFunction)();
 #  endif
 #ifdef Q_OS_WIN
-            QtPluginQueryVerificationDataFunction qtPluginQueryVerificationDataFunction = hTempModule 
+            QtPluginQueryVerificationDataFunction qtPluginQueryVerificationDataFunction = hTempModule
                 ? (QtPluginQueryVerificationDataFunction)
 #ifdef Q_OS_WINCE
                     ::GetProcAddressW(hTempModule, L"qt_plugin_query_verification_data")
@@ -702,7 +711,12 @@ bool QLibraryPrivate::isPlugin(QSettings *settings)
             .arg((qt_version&0xff00) >> 8)
             .arg(qt_version&0xff)
             .arg(debug ? QLatin1String("debug") : QLatin1String("release"));
-    } else if (key != QT_BUILD_KEY) {
+    } else if (key != QT_BUILD_KEY
+#ifdef QT_BUILD_KEY_COMPAT
+               // be sure to load plugins using an older but compatible build key
+               && key != QT_BUILD_KEY_COMPAT
+#endif
+               ) {
         if (qt_debug_component()) {
             qWarning("In %s:\n"
                  "  Plugin uses incompatible Qt library\n"

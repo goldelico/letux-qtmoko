@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -49,6 +53,7 @@
 #include <QtGui/qstyle.h>
 #include <QtGui/qtoolbutton.h>
 #include <QtGui/qvalidator.h>
+#include <QtGui/qfiledialog.h>
 #include <QtCore/QCoreApplication>
 
 #include <math.h>
@@ -193,6 +198,9 @@ public:
     QAction *printAction;
     QAction *pageSetupAction;
     QAction *closeAction;
+
+    QPointer<QObject> receiverToDisconnectOnClose;
+    QByteArray memberToDisconnectOnClose;
 };
 
 void QPrintPreviewDialogPrivate::init(QPrinter *_printer)
@@ -239,15 +247,9 @@ void QPrintPreviewDialogPrivate::init(QPrinter *_printer)
     LineEdit *zoomEditor = new LineEdit;
     zoomEditor->setValidator(new ZoomFactorValidator(1, 1000, 1, zoomEditor));
     zoomFactor->setLineEdit(zoomEditor);
-    zoomFactor->addItem(QLatin1String("12.5%"));
-    zoomFactor->addItem(QLatin1String("25%"));
-    zoomFactor->addItem(QLatin1String("50%"));
-    zoomFactor->addItem(QLatin1String("100%"));
-    zoomFactor->addItem(QLatin1String("125%"));
-    zoomFactor->addItem(QLatin1String("150%"));
-    zoomFactor->addItem(QLatin1String("200%"));
-    zoomFactor->addItem(QLatin1String("400%"));
-    zoomFactor->addItem(QLatin1String("800%"));
+    static const short factorsX2[] = { 25, 50, 100, 200, 250, 300, 400, 800, 1600 };
+    for (int i = 0; i < int(sizeof(factorsX2) / sizeof(factorsX2[0])); ++i)
+        zoomFactor->addItem(QPrintPreviewDialog::tr("%1%").arg(factorsX2[i] / 2.0));
     QObject::connect(zoomFactor->lineEdit(), SIGNAL(editingFinished()),
                      q, SLOT(_q_zoomFactorChanged()));
     QObject::connect(zoomFactor, SIGNAL(currentIndexChanged(int)),
@@ -330,6 +332,13 @@ void QPrintPreviewDialogPrivate::init(QPrinter *_printer)
     if (!printer->docName().isEmpty())
         caption += QString::fromLatin1(": ") + printer->docName();
     q->setWindowTitle(caption);
+
+    if (!printer->isValid()
+#if defined(Q_WS_WIN) || defined(Q_WS_MAC)
+        || printer->outputFormat() != QPrinter::NativeFormat
+#endif
+        )
+        pageSetupButton->setEnabled(false);
 }
 
 static inline void qt_setupActionIcon(QAction *action, const QLatin1String &name)
@@ -555,6 +564,31 @@ void QPrintPreviewDialogPrivate::_q_print()
 {
     Q_Q(QPrintPreviewDialog);
 
+#if defined(Q_WS_WIN) || defined(Q_WS_MAC)
+    if (printer->outputFormat() != QPrinter::NativeFormat) {
+        QString title;
+        QString suffix;
+        if (printer->outputFormat() == QPrinter::PdfFormat) {
+            title = QCoreApplication::translate("QPrintPreviewDialog", "Export to PDF");
+            suffix = QLatin1String(".pdf");
+        } else {
+            title = QCoreApplication::translate("QPrintPreviewDialog", "Export to PostScript");
+            suffix = QLatin1String(".ps");
+        }
+        QString fileName = QFileDialog::getSaveFileName(q, title, printer->outputFileName(),
+                                                        QLatin1String("*") + suffix);
+        if (!fileName.isEmpty()) {
+            if (QFileInfo(fileName).suffix().isEmpty())
+                fileName.append(suffix);
+            printer->setOutputFileName(fileName);
+        }
+        if (!printer->outputFileName().isEmpty())
+            preview->print();
+        q->accept();
+        return;
+    }
+#endif
+
     if (!printDialog)
         printDialog = new QPrintDialog(printer, q);
     if (printDialog->exec() == QDialog::Accepted) {
@@ -678,7 +712,8 @@ QPrintPreviewDialog::~QPrintPreviewDialog()
     delete d_ptr;
 }
 
-/*! \reimp
+/*!
+    \reimp
 */
 void QPrintPreviewDialog::setVisible(bool visible)
 {
@@ -689,6 +724,51 @@ void QPrintPreviewDialog::setVisible(bool visible)
         d->initialized = true;
     }
     QDialog::setVisible(visible);
+}
+
+/*!
+    \reimp
+*/
+void QPrintPreviewDialog::done(int result)
+{
+    Q_D(QPrintPreviewDialog);
+    QDialog::done(result);
+    if (d->receiverToDisconnectOnClose) {
+        disconnect(this, SIGNAL(finished(int)),
+                   d->receiverToDisconnectOnClose, d->memberToDisconnectOnClose);
+        d->receiverToDisconnectOnClose = 0;
+    }
+    d->memberToDisconnectOnClose.clear();
+}
+
+/*!
+    \overload
+    \since 4.5
+
+    Opens the dialog and connects its finished(int) signal to the slot specified
+    by \a receiver and \a member.
+
+    The signal will be disconnected from the slot when the dialog is closed.
+*/
+void QPrintPreviewDialog::open(QObject *receiver, const char *member)
+{
+    Q_D(QPrintPreviewDialog);
+    // the int parameter isn't very useful here; we could just as well connect
+    // to reject(), but this feels less robust somehow
+    connect(this, SIGNAL(finished(int)), receiver, member);
+    d->receiverToDisconnectOnClose = receiver;
+    d->memberToDisconnectOnClose = member;
+    QDialog::open();
+}
+
+/*!
+    Returns a pointer to the QPrinter object this dialog is currently
+    operating on.
+*/
+QPrinter *QPrintPreviewDialog::printer()
+{
+    Q_D(QPrintPreviewDialog);
+    return d->printer;
 }
 
 /*!

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -94,7 +98,7 @@ QT_BEGIN_NAMESPACE
  \section1 Changing Parsing Convention
 
  QApplicationArgumentParser by default parses the command line in the style
- of Qt's utilities, where arguments are preceeded by a single dash, and identified
+ of Qt's utilities, where arguments are preceded by a single dash, and identified
  by a single name. However, in some cases it might be of interest to parse
  another style, such as the well-established UNIX \c getopt convention(\c -l
  and \c --long).
@@ -120,6 +124,7 @@ class QApplicationArgumentParserPrivate
     Q_DECLARE_TR_FUNCTIONS(QApplicationArgumentParserPrivate)
 public:
     // TODO Isn't it like ten times better with QHash<QApplicationArgument, QList<QVariant> >?
+    // TODO test QApplicationArgument::nameless()
     typedef QList<QPair<QApplicationArgument, QVariant> > UsedList;
 
     /*!
@@ -133,7 +138,7 @@ public:
         Q_ASSERT(!aInput.isEmpty());
     }
 
-    QApplicationArgument nextNamelessArgument();
+    QApplicationArgument nextNamelessArgument() const;
     static QStringList argumentsFromLocal(const int argc, const char *const *const argv);
 
     bool error(const QString &message);
@@ -146,15 +151,20 @@ public:
     static inline bool isBuiltinVariant(const int type);
     void displayVersion() const;
     void displayHelp() const;
+    void parseNameless();
+    bool parseNamelessArguments(const QString &in);
 
     QApplicationArgumentParser::ExitCode    exitCode;
     const QStringList                       input;
 
     /*!
-      Since the QString is the QApplicationArgument name anyway, why
+      Since the QString is QApplicationArgument::name() anyway, why
       not use a QSet?
      */
     QHash<QString, QApplicationArgument>    declaredArguments;
+
+    QList<QApplicationArgument>             declaredNamelessArguments;
+
     UsedList                                usedArguments;
     QString                                 applicationDescription;
     QString                                 applicationVersion;
@@ -169,9 +179,34 @@ private:
     static QList<QApplicationArgument> builtinArguments();
 };
 
-QApplicationArgument QApplicationArgumentParserPrivate::nextNamelessArgument()
+QApplicationArgument QApplicationArgumentParserPrivate::nextNamelessArgument() const
 {
-    return declaredArguments.value(QString());
+    /* Count how many nameless arguments we have so far. */
+    int count = 0;
+
+    for(int i = 0; i < usedArguments.count(); ++i)
+    {
+        if(usedArguments.at(i).first.isNameless())
+            ++count;
+    }
+
+    /* TODO this doesn't work for arguments that have more than one
+     * mandatory value(e.g nameless ones), since several values should
+     * then only count for one argument. */
+    for(int i = 0; i < declaredNamelessArguments.count(); ++i)
+    {
+        if(count)
+        {
+            /* Skip the ones we already have processed. */
+            --count;
+            continue;
+        }
+
+        if(declaredNamelessArguments.at(i).isNameless())
+            return declaredNamelessArguments.at(i);
+    }
+
+    return QApplicationArgument();
 }
 
 int QApplicationArgumentParserPrivate::count(const QApplicationArgument &arg) const
@@ -281,7 +316,7 @@ public:
     inline bool operator()(const QApplicationArgument &o1,
                            const QApplicationArgument &o2) const
     {
-        return o1.name().compare(o2.name()) > 0;
+        return o1.name().compare(o2.name()) < 0;
     }
 };
 
@@ -309,16 +344,18 @@ void QApplicationArgumentParserPrivate::displayHelp() const
     QList<QApplicationArgument> args(declaredArguments.values());
     args += builtinArguments();
 
-    const int argCount = args.count();
     /* Sort them, such that we get the nameless options at the end, and it
      * generally looks tidy. */
-    qSort(args.begin(), args.end());
+    qSort(args);
 
     /* This is the basic approach:
      * Switches:
      *  -name description
      * Value arguments:
      *  -name <name-of-value-type> description
+     *
+     * Nameless arguments
+     *  name <type> description
      *
      * It all line-wraps at OutputWidth and the description is indented,
      * where the highest indent is the length of the name plus length of the name
@@ -327,9 +364,17 @@ void QApplicationArgumentParserPrivate::displayHelp() const
     /* First we find the name with the largest width. */
     int maxWidth = 0;
 
-    for(int i = 0; i < argCount; ++i)
+    QList<QApplicationArgument> nameless(declaredNamelessArguments);
+    qSort(nameless);
+
+    /* Note, here the nameless arguments appear last, but are sorted
+     * with themselves. */
+    QList<QApplicationArgument> allArgs(args + nameless);
+    const int allArgsCount = allArgs.count();
+
+    for(int i = 0; i < allArgsCount; ++i)
     {
-        const QApplicationArgument &at = args.at(i);
+        const QApplicationArgument &at = allArgs.at(i);
         const int nameLength = at.name().length();
         const QString typeName(q_ptr->typeToName(at));
         const int typeNameLength = typeName.length();
@@ -341,9 +386,10 @@ void QApplicationArgumentParserPrivate::displayHelp() const
     out << endl
         << QString(IndentPadding, QLatin1Char(' '))
         << QCoreApplication::applicationName()
-        << " -- "
+        << QLatin1String(" -- ")
         << applicationDescription
         << endl;
+    // TODO synopsis
 
     /* One extra so we get some space between the overview and the options. */
     out << endl;
@@ -351,9 +397,9 @@ void QApplicationArgumentParserPrivate::displayHelp() const
     const int indentWidth = maxWidth + 3;
 
     /* Ok, print them out. */
-    for(int i = 0; i < argCount; ++i)
+    for(int i = 0; i < allArgsCount; ++i)
     {
-        const QApplicationArgument &at = args.at(i);
+        const QApplicationArgument &at = allArgs.at(i);
         /* "  -name ". Indent a bit first, inspired by Qt's moc. */
         const QString &name = at.name();
         QString prolog(QLatin1String("  "));
@@ -361,8 +407,13 @@ void QApplicationArgumentParserPrivate::displayHelp() const
         /* We have a special case for the single dash. */
         if(name == QChar::fromLatin1('-'))
             prolog.append(name);
-        else if(!name.isEmpty())
-           prolog.append(QLatin1Char('-') + name + QLatin1Char(' '));
+        else
+        {
+            if(!at.isNameless())
+                prolog.append(QLatin1Char('-'));
+
+             prolog.append(name + QLatin1Char(' '));
+        }
 
         if(at.type() != QVariant::Invalid)
         {
@@ -545,7 +596,10 @@ QApplicationArgumentParser::~QApplicationArgumentParser()
  */
 void QApplicationArgumentParser::addArgument(const QApplicationArgument &argument)
 {
-    d->declaredArguments.insert(argument.name(), argument);
+    if(argument.isNameless())
+        d->declaredNamelessArguments.append(argument);
+    else
+        d->declaredArguments.insert(argument.name(), argument);
 }
 
 /*!
@@ -572,6 +626,21 @@ void QApplicationArgumentParser::setDeclaredArguments(const QList<QApplicationAr
 QList<QApplicationArgument> QApplicationArgumentParser::declaredArguments() const
 {
     return d->declaredArguments.values();
+}
+
+bool QApplicationArgumentParserPrivate::parseNamelessArguments(const QString &in)
+{
+    /* It's a nameless options, such as simply "value". */
+    const QApplicationArgument nameless(nextNamelessArgument());
+
+    const QVariant val(q_ptr->convertToValue(nameless, in));
+    if(val.isValid())
+    {
+        usedArguments.append(qMakePair(nameless, val));
+        return true;
+    }
+    else
+        return false; // TODO error msg?
 }
 
 /*!
@@ -606,19 +675,15 @@ bool QApplicationArgumentParser::parse()
 
             for(; i < inputCount; ++i)
             {
-                const QApplicationArgument nameless(d->nextNamelessArgument());
-
-                QVariant val(convertToValue(nameless, d->input.at(i)));
-                if(val.isValid())
-                    d->usedArguments.append(qMakePair(nameless, val));
-                else
+                if(!d->parseNamelessArguments(d->input.at(i)))
                     return false;
+                /* Process nameless options. Have code for this elsewhere, factor it out. */
             }
 
             break;
         }
 
-        if(in.startsWith(sep)) /* Is it "-name"? */
+        if(in.startsWith(sep)) /* It is "-name". */
         {
             const QString name(in.mid(1));
 
@@ -677,18 +742,16 @@ bool QApplicationArgumentParser::parse()
                     return false; // TODO error msg?
             }
         }
-
-        /* It's a nameless options, such as simply "value". */
-        const QApplicationArgument nameless(d->nextNamelessArgument());
-
-        const QVariant val(convertToValue(nameless, in));
-        if(val.isValid())
-            d->usedArguments.append(qMakePair(nameless, val));
         else
-                return false; // TODO error msg?
+        {
+            if(!d->parseNamelessArguments(in))
+                return false;
+        }
     }
 
-    const QList<QApplicationArgument> declaredArguments(d->declaredArguments.values());
+    /* Check that all arguments that have been declared as mandatory, are actually
+     * specified. */
+    const QList<QApplicationArgument> declaredArguments(d->declaredArguments.values() + d->declaredNamelessArguments);
     const int len = declaredArguments.count();
     for(int i = 0; i < len; ++i)
     {
@@ -736,7 +799,7 @@ bool QApplicationArgumentParser::parse()
 
  The default implementation uses QVariant::canConvert() and QVariant::convert() for doing conversions.
 
- QApplicationArgumentParser can be subclassed and this function subsequently overriden, to handle custom types.
+ QApplicationArgumentParser can be subclassed and this function subsequently overridden, to handle custom types.
 
  If \a input isn't valid input for \a argument, this function returns a default constructed
  QVariant.
@@ -844,7 +907,8 @@ QVariant QApplicationArgumentParser::defaultValue(const QApplicationArgument &ar
  */
 int QApplicationArgumentParser::count(const QApplicationArgument &argument) const
 {
-    Q_ASSERT_X(d->declaredArguments.contains(argument.name()), Q_FUNC_INFO,
+    Q_ASSERT_X(d->declaredArguments.contains(argument.name()) ||
+               d->declaredNamelessArguments.contains(argument), Q_FUNC_INFO,
                "The argument isn't known to the parser. Has addArgument() been called?");
     return d->count(argument);
 }
@@ -857,7 +921,8 @@ int QApplicationArgumentParser::count(const QApplicationArgument &argument) cons
  */
 bool QApplicationArgumentParser::has(const QApplicationArgument &argument) const
 {
-    Q_ASSERT_X(d->declaredArguments.contains(argument.name()), Q_FUNC_INFO,
+    Q_ASSERT_X(d->declaredArguments.contains(argument.name()) ||
+               d->declaredNamelessArguments.contains(argument), Q_FUNC_INFO,
                "The argument isn't known to the parser. Has addArgument() been called?");
     return d->contains(argument);
 }
@@ -869,7 +934,8 @@ bool QApplicationArgumentParser::has(const QApplicationArgument &argument) const
  */
 QVariant QApplicationArgumentParser::value(const QApplicationArgument &argument) const
 {
-    Q_ASSERT_X(d->declaredArguments.contains(argument.name()), Q_FUNC_INFO,
+    Q_ASSERT_X(d->declaredArguments.contains(argument.name()) ||
+               d->declaredNamelessArguments.contains(argument), Q_FUNC_INFO,
                "The argument isn't known to the parser. Has addArgument() been called?");
 
     const int len = d->usedArguments.count();
@@ -889,7 +955,9 @@ QVariant QApplicationArgumentParser::value(const QApplicationArgument &argument)
  */
 QVariantList QApplicationArgumentParser::values(const QApplicationArgument &argument) const
 {
-    Q_ASSERT_X(d->declaredArguments.contains(argument.name()), Q_FUNC_INFO,
+    Q_ASSERT_X(d->declaredArguments.contains(argument.name()) ||
+               d->declaredNamelessArguments.contains(argument),
+               Q_FUNC_INFO,
                "The argument isn't known to the parser. Has addArgument() been called?");
 
     const int len = d->usedArguments.count();

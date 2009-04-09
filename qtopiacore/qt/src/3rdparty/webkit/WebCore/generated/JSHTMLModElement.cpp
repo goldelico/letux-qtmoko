@@ -25,143 +25,147 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLModElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLModElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLModElementTableEntries[] =
+static const HashTableValue JSHTMLModElementTableValues[4] =
 {
-    { "constructor", JSHTMLModElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "cite", JSHTMLModElement::CiteAttrNum, DontDelete, 0, 0 },
-    { "dateTime", JSHTMLModElement::DateTimeAttrNum, DontDelete, 0, 0 }
+    { "cite", DontDelete, (intptr_t)jsHTMLModElementCite, (intptr_t)setJSHTMLModElementCite },
+    { "dateTime", DontDelete, (intptr_t)jsHTMLModElementDateTime, (intptr_t)setJSHTMLModElementDateTime },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLModElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLModElementTable = 
-{
-    2, 3, JSHTMLModElementTableEntries, 3
-};
+static const HashTable JSHTMLModElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 63, JSHTMLModElementTableValues, 0 };
+#else
+    { 10, 7, JSHTMLModElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLModElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLModElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLModElementConstructorTable = 
-{
-    2, 1, JSHTMLModElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLModElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLModElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLModElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLModElementConstructor : public DOMObject {
 public:
     JSHTMLModElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLModElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLModElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLModElementConstructor::info = { "HTMLModElementConstructor", 0, &JSHTMLModElementConstructorTable, 0 };
+const ClassInfo JSHTMLModElementConstructor::s_info = { "HTMLModElementConstructor", 0, &JSHTMLModElementConstructorTable, 0 };
 
 bool JSHTMLModElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLModElementConstructor, DOMObject>(exec, &JSHTMLModElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLModElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLModElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLModElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLModElementPrototypeTable = 
-{
-    2, 1, JSHTMLModElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLModElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLModElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLModElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLModElementPrototype::info = { "HTMLModElementPrototype", 0, &JSHTMLModElementPrototypeTable, 0 };
+const ClassInfo JSHTMLModElementPrototype::s_info = { "HTMLModElementPrototype", 0, &JSHTMLModElementPrototypeTable, 0 };
 
 JSObject* JSHTMLModElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLModElementPrototype>(exec, "[[JSHTMLModElement.prototype]]");
+    return getDOMPrototype<JSHTMLModElement>(exec);
 }
 
-const ClassInfo JSHTMLModElement::info = { "HTMLModElement", &JSHTMLElement::info, &JSHTMLModElementTable, 0 };
+const ClassInfo JSHTMLModElement::s_info = { "HTMLModElement", &JSHTMLElement::s_info, &JSHTMLModElementTable, 0 };
 
-JSHTMLModElement::JSHTMLModElement(ExecState* exec, HTMLModElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLModElement::JSHTMLModElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLModElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLModElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLModElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLModElementPrototype(JSHTMLModElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLModElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLModElement, JSHTMLElement>(exec, &JSHTMLModElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLModElement, Base>(exec, &JSHTMLModElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLModElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLModElementCite(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CiteAttrNum: {
-        HTMLModElement* imp = static_cast<HTMLModElement*>(impl());
-
-        return jsString(imp->cite());
-    }
-    case DateTimeAttrNum: {
-        HTMLModElement* imp = static_cast<HTMLModElement*>(impl());
-
-        return jsString(imp->dateTime());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLModElement* imp = static_cast<HTMLModElement*>(static_cast<JSHTMLModElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->cite());
 }
 
-void JSHTMLModElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLModElementDateTime(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLModElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLModElementTable, this);
+    HTMLModElement* imp = static_cast<HTMLModElement*>(static_cast<JSHTMLModElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->dateTime());
 }
 
-void JSHTMLModElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLModElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CiteAttrNum: {
-        HTMLModElement* imp = static_cast<HTMLModElement*>(impl());
-
-        imp->setCite(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    case DateTimeAttrNum: {
-        HTMLModElement* imp = static_cast<HTMLModElement*>(impl());
-
-        imp->setDateTime(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    return static_cast<JSHTMLModElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
-
-JSValue* JSHTMLModElement::getConstructor(ExecState* exec)
+void JSHTMLModElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLModElementConstructor>(exec, "[[HTMLModElement.constructor]]");
+    lookupPut<JSHTMLModElement, Base>(exec, propertyName, value, &JSHTMLModElementTable, this, slot);
 }
+
+void setJSHTMLModElementCite(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLModElement* imp = static_cast<HTMLModElement*>(static_cast<JSHTMLModElement*>(thisObject)->impl());
+    imp->setCite(valueToStringWithNullCheck(exec, value));
+}
+
+void setJSHTMLModElementDateTime(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLModElement* imp = static_cast<HTMLModElement*>(static_cast<JSHTMLModElement*>(thisObject)->impl());
+    imp->setDateTime(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLModElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLModElementConstructor>(exec);
+}
+
 
 }

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -129,8 +133,8 @@ QSize QDockWidgetTitleButton::sizeHint() const
     int size = 2*style()->pixelMetric(QStyle::PM_DockWidgetTitleBarButtonMargin, 0, this);
     if (!icon().isNull()) {
         int iconSize = style()->pixelMetric(QStyle::PM_SmallIconSize, 0, this);
-        const QPixmap pm = icon().pixmap(iconSize);
-        size += qMax(pm.width(), pm.height());
+        QSize sz = icon().actualSize(QSize(iconSize, iconSize));
+        size += qMax(sz.width(), sz.height());
     }
 
     return QSize(size, size);
@@ -157,9 +161,7 @@ void QDockWidgetTitleButton::paintEvent(QPaintEvent *)
     opt.init(this);
     opt.state |= QStyle::State_AutoRaise;
 
-#ifdef Q_WS_MAC
-    if (!qobject_cast<QMacStyle *>(style()))
-#endif
+    if (style()->styleHint(QStyle::SH_DockWidget_ButtonsHaveFrame, 0, this))
     {
         if (isEnabled() && underMouse() && !isChecked() && !isDown())
             opt.state |= QStyle::State_Raised;
@@ -196,12 +198,19 @@ QDockWidgetLayout::~QDockWidgetLayout()
 
 bool QDockWidgetLayout::nativeWindowDeco() const
 {
+    return nativeWindowDeco(parentWidget()->isWindow());
+}
+
+bool QDockWidgetLayout::nativeWindowDeco(bool floating) const
+{
 #if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_WINCE)
+    Q_UNUSED(floating);
     return false;
 #else
-    return parentWidget()->isWindow() && item_list[QDockWidgetLayout::TitleBar] == 0;
+    return floating && item_list[QDockWidgetLayout::TitleBar] == 0;
 #endif
 }
+
 
 void QDockWidgetLayout::addItem(QLayoutItem*)
 {
@@ -261,11 +270,7 @@ QSize QDockWidgetLayout::sizeFromContent(const QSize &content, bool floating) co
     }
 
     QDockWidget *w = qobject_cast<QDockWidget*>(parentWidget());
-    bool customTitleBar = item_list[TitleBar] != 0;
-    bool nativeDeco = floating && !customTitleBar;
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_WINCE)
-    nativeDeco = false;
-#endif
+    const bool nativeDeco = nativeWindowDeco(floating);
 
     int fw = floating && !nativeDeco
             ? w->style()->pixelMetric(QStyle::PM_DockWidgetFrameWidth, 0, w)
@@ -433,6 +438,7 @@ int QDockWidgetLayout::titleHeight() const
     QFontMetrics titleFontMetrics = q->fontMetrics();
 #ifdef Q_WS_MAC
     if (qobject_cast<QMacStyle *>(q->style())) {
+        //### this breaks on proxy styles.  (But is this code still called?)
         QFont font = qt_app_fonts_hash()->value("QToolButton", q->font());
         titleFontMetrics = QFontMetrics(font);
     }
@@ -547,7 +553,7 @@ QSize QDockWidgetItem::maximumSize() const
 QSize QDockWidgetItem::sizeHint() const
 {
     if (QLayoutItem *item = dockWidgetChildItem()) {
-        return dockWidgetLayout()->sizeFromContent(item->sizeHint(), false);
+         return dockWidgetLayout()->sizeFromContent(item->sizeHint(), false);
     } else {
         return QWidgetItem::sizeHint();
     }
@@ -776,7 +782,7 @@ bool QDockWidgetPrivate::isAnimating() const
     return (void*)mainWinLayout->pluggingWidget == (void*)q;
 }
 
-void QDockWidgetPrivate::mousePressEvent(QMouseEvent *event)
+bool QDockWidgetPrivate::mousePressEvent(QMouseEvent *event)
 {
 #if !defined(QT_NO_MAINWINDOW)
     Q_Q(QDockWidget);
@@ -787,35 +793,29 @@ void QDockWidgetPrivate::mousePressEvent(QMouseEvent *event)
     if (!layout->nativeWindowDeco()) {
         QRect titleArea = layout->titleArea();
 
-        if (event->button() != Qt::LeftButton)
-            return;
-        if (!titleArea.contains(event->pos()))
-            return;
-        // check if the tool window is movable... do nothing if it is not
-        if (!hasFeature(q, QDockWidget::DockWidgetMovable))
-            return;
-
-        if (qobject_cast<QMainWindow*>(q->parentWidget()) == 0)
-            return;
-
-        if (isAnimating())
-            return;
-
-        if (state != 0)
-            return;
+        if (event->button() != Qt::LeftButton ||
+            !titleArea.contains(event->pos()) ||
+            // check if the tool window is movable... do nothing if it
+            // is not (but allow moving if the window is floating)
+            (!hasFeature(q, QDockWidget::DockWidgetMovable) && !q->isFloating()) ||
+            qobject_cast<QMainWindow*>(q->parentWidget()) == 0 ||
+            isAnimating() || state != 0) {
+            return false;
+        }
 
         initDrag(event->pos(), false);
 
-        if (state == 0)
-            return;
+        if (state)
+            state->ctrlDrag = hasFeature(q, QDockWidget::DockWidgetFloatable) && event->modifiers() & Qt::ControlModifier;
 
-        state->ctrlDrag = event->modifiers() & Qt::ControlModifier;
+        return true;
     }
 
 #endif // !defined(QT_NO_MAINWINDOW)
+    return false;
 }
 
-void QDockWidgetPrivate::mouseDoubleClickEvent(QMouseEvent *event)
+bool QDockWidgetPrivate::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_Q(QDockWidget);
 
@@ -824,23 +824,23 @@ void QDockWidgetPrivate::mouseDoubleClickEvent(QMouseEvent *event)
     if (!layout->nativeWindowDeco()) {
         QRect titleArea = layout->titleArea();
 
-        if (event->button() != Qt::LeftButton)
-            return;
-        if (!titleArea.contains(event->pos()))
-            return;
-        if (!hasFeature(q, QDockWidget::DockWidgetFloatable))
-            return;
-        _q_toggleTopLevel();
+        if (event->button() == Qt::LeftButton && titleArea.contains(event->pos()) &&
+            hasFeature(q, QDockWidget::DockWidgetFloatable)) {
+            _q_toggleTopLevel();
+            return true;
+        }
     }
+    return false;
 }
 
-void QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
+bool QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
 {
+    bool ret = false;
 #if !defined(QT_NO_MAINWINDOW)
     Q_Q(QDockWidget);
 
     if (!state)
-        return;
+        return ret;
 
     QDockWidgetLayout *dwlayout
         = qobject_cast<QDockWidgetLayout*>(q->layout());
@@ -857,6 +857,7 @@ void QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
 #else
             q->grabMouse();
 #endif
+            ret = true;
         }
     }
 
@@ -866,25 +867,25 @@ void QDockWidgetPrivate::mouseMoveEvent(QMouseEvent *event)
 
         if (!state->ctrlDrag)
             mwlayout->hover(state->widgetItem, event->globalPos());
+
+        ret = true;
     }
 
 #endif // !defined(QT_NO_MAINWINDOW)
+    return ret;
 }
 
-void QDockWidgetPrivate::mouseReleaseEvent(QMouseEvent *event)
+bool QDockWidgetPrivate::mouseReleaseEvent(QMouseEvent *event)
 {
 #if !defined(QT_NO_MAINWINDOW)
 
-    if (event->button() != Qt::LeftButton)
-        return;
-    if (!state)
-        return;
-    if (state->nca)
-        return;
-
-    endDrag();
+    if (event->button() == Qt::LeftButton && state && !state->nca) {
+        endDrag();
+        return true; //filter out the event
+    }
 
 #endif // !defined(QT_NO_MAINWINDOW)
+    return false;
 }
 
 void QDockWidgetPrivate::nonClientAreaMouseEvent(QMouseEvent *event)
@@ -988,10 +989,9 @@ void QDockWidgetPrivate::unplug(const QRect &rect)
     Q_Q(QDockWidget);
     QRect r = rect;
     r.moveTopLeft(q->mapToGlobal(QPoint(0, 0)));
-#ifndef Q_WS_X11
     QDockWidgetLayout *layout = qobject_cast<QDockWidgetLayout*>(q->layout());
-    r.adjust(0, layout->titleHeight(), 0, 0);
-#endif
+    if (layout->nativeWindowDeco(true))
+        r.adjust(0, layout->titleHeight(), 0, 0);
     setWindowState(true, true, r);
 }
 
@@ -1013,15 +1013,12 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
     Qt::WindowFlags flags = floating ? Qt::Tool : Qt::Widget;
 
     QDockWidgetLayout *layout = qobject_cast<QDockWidgetLayout*>(q->layout());
-    bool nativeDeco = floating && layout->widgetForRole(QDockWidgetLayout::TitleBar) == 0;
-#if defined(Q_WS_X11) || defined(Q_WS_QWS) || defined(Q_OS_WINCE)
-    nativeDeco = false;
-#endif
+    const bool nativeDeco = layout->nativeWindowDeco(floating);
 
     if (nativeDeco) {
         flags |= Qt::CustomizeWindowHint | Qt::WindowTitleHint;
         if (hasFeature(q, QDockWidget::DockWidgetClosable))
-            flags |= Qt::WindowSystemMenuHint;
+            flags |= Qt::WindowCloseButtonHint;
     } else {
         flags |= Qt::FramelessWindowHint;
     }
@@ -1031,7 +1028,7 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
 
     q->setWindowFlags(flags);
 
-#ifdef Q_WS_MAC
+#if defined(Q_WS_MAC) && !defined(QT_MAC_USE_COCOA)
     if (floating && nativeDeco && (q->features() & QDockWidget::DockWidgetVerticalTitleBar)) {
         ChangeWindowAttributes(HIViewGetWindow(HIViewRef(q->winId())), kWindowSideTitlebarAttribute, 0);
     }
@@ -1047,7 +1044,7 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
 
     if (floating != wasFloating) {
         emit q->topLevelChanged(floating);
-        if (!floating) {
+        if (!floating && q->parentWidget()) {
             QMainWindowLayout *mwlayout = qobject_cast<QMainWindowLayout *>(q->parentWidget()->layout());
             if (mwlayout)
                 emit q->dockLocationChanged(mwlayout->dockWidgetArea(q));
@@ -1105,7 +1102,9 @@ void QDockWidgetPrivate::setWindowState(bool floating, bool unplug, const QRect 
 /*!
     \enum QDockWidget::DockWidgetFeature
 
-    \value DockWidgetClosable   The dock widget can be closed.
+    \value DockWidgetClosable   The dock widget can be closed. On some systems the dock
+	                            widget always has a close button when it's floating
+								(for example on MacOS 10.5).
     \value DockWidgetMovable    The dock widget can be moved between docks
                                 by the user.
     \value DockWidgetFloatable  The dock widget can be detached from the
@@ -1187,7 +1186,7 @@ QWidget *QDockWidget::widget() const
     Sets the widget for the dock widget to \a widget.
 
     If the dock widget is visible when \a widget is added, you must
-    \l{QWidget::}{show()} it explicitly. 
+    \l{QWidget::}{show()} it explicitly.
 
     Note that you must add the layout of the \a widget before you call
     this function; if not, the \a widget will not be visible.
@@ -1330,6 +1329,9 @@ void QDockWidget::changeEvent(QEvent *event)
 /*! \reimp */
 void QDockWidget::closeEvent(QCloseEvent *event)
 {
+    Q_D(QDockWidget);
+    if (d->state)
+        d->endDrag(true);
     QWidget::closeEvent(event);
 }
 
@@ -1413,14 +1415,17 @@ bool QDockWidget::event(QEvent *event)
         // return true after calling the handler since we don't want
         // them to be passed onto the default handlers
     case QEvent::MouseButtonPress:
-        d->mousePressEvent(static_cast<QMouseEvent *>(event));
-        return true;
+        if (d->mousePressEvent(static_cast<QMouseEvent *>(event)))
+            return true;
+        break;
     case QEvent::MouseButtonDblClick:
-        d->mouseDoubleClickEvent(static_cast<QMouseEvent *>(event));
-        return true;
+        if (d->mouseDoubleClickEvent(static_cast<QMouseEvent *>(event)))
+            return true;
+        break;
     case QEvent::MouseMove:
-        d->mouseMoveEvent(static_cast<QMouseEvent *>(event));
-        return true;
+        if (d->mouseMoveEvent(static_cast<QMouseEvent *>(event)))
+            return true;
+        break;
 #ifdef Q_OS_WIN
     case QEvent::Leave:
         if (d->state != 0 && d->state->dragging && !d->state->nca) {
@@ -1433,8 +1438,9 @@ bool QDockWidget::event(QEvent *event)
         break;
 #endif
     case QEvent::MouseButtonRelease:
-        d->mouseReleaseEvent(static_cast<QMouseEvent *>(event));
-        return true;
+        if (d->mouseReleaseEvent(static_cast<QMouseEvent *>(event)))
+            return true;
+        break;
     case QEvent::NonClientAreaMouseMove:
     case QEvent::NonClientAreaMouseButtonPress:
     case QEvent::NonClientAreaMouseButtonRelease:

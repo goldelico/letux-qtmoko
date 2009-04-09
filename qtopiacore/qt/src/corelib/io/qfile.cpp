@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -50,6 +54,10 @@
 
 #if !defined(Q_OS_WINCE)
 #include <errno.h>
+#endif
+
+#ifdef QT_NO_QOBJECT
+#define tr(X) QString::fromLatin1(X)
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -317,6 +325,18 @@ QFilePrivate::setError(QFile::FileError err, int errNum)
     platform-dependent: On Unix, the rights of the owner of the file
     are returned and on Windows the rights of the current user are
     returned. This behavior might change in a future Qt version.
+
+    Note that Qt does not by default check for permissions on NTFS
+    file systems, as this may decrease the performance of file
+    handling considerably. It is possible to force permission checking
+    on NTFS by including the following code in your source:
+
+    \snippet doc/src/snippets/ntfsp.cpp 0
+
+    Permission checking is then turned on and off by incrementing and
+    decrementing \c qt_ntfs_permission_lookup by 1.
+
+    \snippet doc/src/snippets/ntfsp.cpp 1
 */
 
 #ifdef QT3_SUPPORT
@@ -636,7 +656,11 @@ QFile::remove()
             unsetError();
             return true;
         }
+#if defined(Q_OS_WIN)
+        d->setError(QFile::RemoveError, GetLastError());
+#else
         d->setError(QFile::RemoveError, errno);
+#endif
     }
     return false;
 }
@@ -681,7 +705,7 @@ QFile::rename(const QString &newName)
         // ### Race condition. If a file is moved in after this, it /will/ be
         // overwritten. On Unix, the proper solution is to use hardlinks:
         // return ::link(old, new) && ::remove(old);
-        d->setError(QFile::RenameError, QLatin1String("Destination file exists"));
+        d->setError(QFile::RenameError, tr("Destination file exists"));
         return false;
     }
     close();
@@ -697,18 +721,17 @@ QFile::rename(const QString &newName)
             if (out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 bool error = false;
                 char block[4096];
-                while (!in.atEnd()) {
-                    qint64 read = in.read(block, sizeof(block));
-                    if (read == -1) {
-                        d->setError(QFile::RenameError, in.errorString());
-                        error = true;
-                        break;
-                    }
+                qint64 read;
+                while ((read = in.read(block, sizeof(block))) > 0) {
                     if (read != out.write(block, read)) {
                         d->setError(QFile::RenameError, out.errorString());
                         error = true;
                         break;
                     }
+                }
+                if (read == -1) {
+                    d->setError(QFile::RenameError, in.errorString());
+                    return true;
                 }
                 if(!error)
                     in.remove();
@@ -812,7 +835,7 @@ QFile::copy(const QString &newName)
         // ### Race condition. If a file is moved in after this, it /will/ be
         // overwritten. On Unix, the proper solution is to use hardlinks:
         // return ::link(old, new) && ::remove(old); See also rename().
-        d->setError(QFile::CopyError, QLatin1String("Destination file exists"));
+        d->setError(QFile::CopyError, tr("Destination file exists"));
         return false;
     }
     close();
@@ -824,8 +847,7 @@ QFile::copy(const QString &newName)
             bool error = false;
             if(!open(QFile::ReadOnly)) {
                 error = true;
-                QString errorMessage = QLatin1String("Cannot open %1 for input");
-                d->setError(QFile::CopyError, errorMessage.arg(d->fileName));
+                d->setError(QFile::CopyError, tr("Cannot open %1 for input").arg(d->fileName));
             } else {
                 QString fileTemplate = QLatin1String("%1/qt_temp.XXXXXX");
 #ifdef QT_NO_TEMPORARYFILE
@@ -842,7 +864,7 @@ QFile::copy(const QString &newName)
 #endif
                 if (error) {
                     out.close();
-                    d->setError(QFile::CopyError, QLatin1String("Cannot open for output"));
+                    d->setError(QFile::CopyError, tr("Cannot open for output"));
                 } else {
                     char block[4096];
                     qint64 totalRead = 0;
@@ -852,7 +874,7 @@ QFile::copy(const QString &newName)
                             break;
                         totalRead += in;
                         if(in != out.write(block, in)) {
-                            d->setError(QFile::CopyError, QLatin1String("Failure to write block"));
+                            d->setError(QFile::CopyError, tr("Failure to write block"));
                             error = true;
                             break;
                         }
@@ -865,8 +887,7 @@ QFile::copy(const QString &newName)
                     }
                     if (!error && !out.rename(newName)) {
                         error = true;
-                        QString errorMessage = QLatin1String("Cannot create %1 for output");
-                        d->setError(QFile::CopyError, errorMessage.arg(newName));
+                        d->setError(QFile::CopyError, tr("Cannot create %1 for output").arg(newName));
                     }
 #ifndef QT_NO_TEMPORARYFILE
                     if (!error)
@@ -1056,7 +1077,7 @@ bool QFile::open(FILE *fh, OpenMode mode)
     stderr), you may not be able to seek(). size() is set to \c
     LLONG_MAX (in \c <climits>).
 
-    \warning For Windows CE you may not be able to call seek(), setSize(), 
+    \warning For Windows CE you may not be able to call seek(), setSize(),
     fileTime(). size() is set to \c 0.
 
     \warning Since this function opens the file without specifying the file name,
@@ -1330,9 +1351,10 @@ QFile::flush()
 }
 
 /*!
-  \reimp
-*/
+  Flushes the file and then closes it.
 
+  \sa QIODevice::close()
+*/
 void
 QFile::close()
 {

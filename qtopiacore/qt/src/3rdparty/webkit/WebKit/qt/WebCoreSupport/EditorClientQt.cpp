@@ -1,7 +1,8 @@
 /*
  * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
  * Copyright (C) 2006 Zack Rusin <zack@kde.org>
- * Copyright (C) 2006 Apple Computer, Inc.
+ * Copyright (C) 2006, 2008 Apple Computer, Inc.
+ * Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
  *
  * All rights reserved.
  *
@@ -53,15 +54,10 @@
 #define methodDebug() qDebug("EditorClientQt: %s", __FUNCTION__);
 
 static bool dumpEditingCallbacks = false;
-static bool drt_run = false;
 static bool acceptsEditing = true;
 void QWEBKIT_EXPORT qt_dump_editing_callbacks(bool b)
 {
     dumpEditingCallbacks = b;
-}
-void QWEBKIT_EXPORT qt_drt_run(bool b)
-{
-    drt_run = b;
 }
 
 void QWEBKIT_EXPORT qt_dump_set_accepts_editing(bool b)
@@ -109,7 +105,7 @@ bool EditorClientQt::shouldDeleteRange(Range* range)
 
 bool EditorClientQt::shouldShowDeleteInterface(HTMLElement* element)
 {
-    if (drt_run)
+    if (QWebPagePrivate::drtRun)
         return element->className() == "needsDeletionUI";
     return false;
 }
@@ -143,7 +139,7 @@ bool EditorClientQt::shouldEndEditing(WebCore::Range* range)
     return true;
 }
 
-bool EditorClientQt::shouldInsertText(String string, Range* range, EditorInsertAction action)
+bool EditorClientQt::shouldInsertText(const String& string, Range* range, EditorInsertAction action)
 {
     if (dumpEditingCallbacks) {
         static const char *insertactionstring[] = {
@@ -204,6 +200,9 @@ void EditorClientQt::respondToChangedContents()
 {
     if (dumpEditingCallbacks)
         printf("EDITING DELEGATE: webViewDidChange:WebViewDidChangeNotification\n");
+    m_page->d->updateEditorActions();
+
+    emit m_page->contentsChanged();
 }
 
 void EditorClientQt::respondToChangedSelection()
@@ -242,9 +241,8 @@ bool EditorClientQt::selectWordBeforeMenuEvent()
 }
 
 bool EditorClientQt::isEditable()
-{
-    // FIXME: should be controllable by a setting in QWebPage
-    return false;
+{ 
+    return m_page->isContentEditable();
 }
 
 void EditorClientQt::registerCommandForUndo(WTF::PassRefPtr<WebCore::EditCommand> cmd)
@@ -331,6 +329,12 @@ bool EditorClientQt::smartInsertDeleteEnabled()
     return false;
 }
 
+bool EditorClientQt::isSelectTrailingWhitespaceEnabled()
+{
+    notImplemented();
+    return false;
+}
+
 void EditorClientQt::toggleContinuousSpellChecking()
 {
     notImplemented();
@@ -341,26 +345,49 @@ void EditorClientQt::toggleGrammarChecking()
     notImplemented();
 }
 
-void EditorClientQt::handleKeypress(KeyboardEvent* event)
+void EditorClientQt::handleKeyboardEvent(KeyboardEvent* event)
 {
     Frame* frame = m_page->d->page->focusController()->focusedOrMainFrame();
     if (!frame || !frame->document()->focusedNode())
         return;
 
     const PlatformKeyboardEvent* kevent = event->keyEvent();
-    if (!kevent || kevent->isKeyUp())
+    if (!kevent || kevent->type() == PlatformKeyboardEvent::KeyUp)
         return;
 
-    Node* start = frame->selectionController()->start().node();
+    Node* start = frame->selection()->start().node();
     if (!start)
         return;
 
     // FIXME: refactor all of this to use Actions or something like them
     if (start->isContentEditable()) {
-        switch(kevent->WindowsKeyCode()) {
+#ifndef QT_NO_SHORTCUT
+        QWebPage::WebAction action = QWebPagePrivate::editorActionForKeyEvent(kevent->qtEvent());
+        if (action != QWebPage::NoWebAction) {
+            const char* cmd = QWebPagePrivate::editorCommandForWebActions(action);
+            // WebKit doesn't have enough information about mode to decide how commands that just insert text if executed via Editor should be treated,
+            // so we leave it upon WebCore to either handle them immediately (e.g. Tab that changes focus) or let a keypress event be generated
+            // (e.g. Tab that inserts a Tab character, or Enter).
+            if (cmd && frame->editor()->command(cmd).isTextInsertion()
+                && kevent->type() == PlatformKeyboardEvent::RawKeyDown)
+                return;
+
+            m_page->triggerAction(action);
+        } else
+#endif // QT_NO_SHORTCUT
+        switch (kevent->windowsVirtualKeyCode()) {
+#if QT_VERSION < 0x040500
             case VK_RETURN:
-                frame->editor()->execCommand("InsertLineBreak");
+#ifdef QT_WS_MAC
+                if (kevent->shiftKey() || kevent->metaKey())
+#else
+                if (kevent->shiftKey())
+#endif
+                    frame->editor()->command("InsertLineBreak").execute();
+                else
+                    frame->editor()->command("InsertNewline").execute();
                 break;
+#endif
             case VK_BACK:
                 frame->editor()->deleteWithDirection(SelectionController::BACKWARD,
                         CharacterGranularity, false, true);
@@ -371,69 +398,54 @@ void EditorClientQt::handleKeypress(KeyboardEvent* event)
                 break;
             case VK_LEFT:
                 if (kevent->shiftKey())
-                    frame->editor()->execCommand("MoveLeftAndModifySelection");
-                else frame->editor()->execCommand("MoveLeft");
+                    frame->editor()->command("MoveLeftAndModifySelection").execute();
+                else frame->editor()->command("MoveLeft").execute();
                 break;
             case VK_RIGHT:
                 if (kevent->shiftKey())
-                    frame->editor()->execCommand("MoveRightAndModifySelection");
-                else frame->editor()->execCommand("MoveRight");
+                    frame->editor()->command("MoveRightAndModifySelection").execute();
+                else frame->editor()->command("MoveRight").execute();
                 break;
             case VK_UP:
                 if (kevent->shiftKey())
-                    frame->editor()->execCommand("MoveUpAndModifySelection");
-                else frame->editor()->execCommand("MoveUp");
+                    frame->editor()->command("MoveUpAndModifySelection").execute();
+                else frame->editor()->command("MoveUp").execute();
                 break;
             case VK_DOWN:
                 if (kevent->shiftKey())
-                    frame->editor()->execCommand("MoveDownAndModifySelection");
-                else frame->editor()->execCommand("MoveDown");
+                    frame->editor()->command("MoveDownAndModifySelection").execute();
+                else frame->editor()->command("MoveDown").execute();
                 break;
             case VK_PRIOR:  // PageUp
-                frame->editor()->execCommand("MoveUpByPageAndModifyCaret");
+                frame->editor()->command("MovePageUp").execute();
                 break;
             case VK_NEXT:  // PageDown
-                frame->editor()->execCommand("MoveDownByPageAndModifyCaret");
+                frame->editor()->command("MovePageDown").execute();
                 break;
             case VK_TAB:
                 return;
             default:
-                if (!kevent->ctrlKey() &&
+                if (kevent->type() != PlatformKeyboardEvent::KeyDown && !kevent->ctrlKey()
 #ifndef Q_WS_MAC
                     // We need to exclude checking for Alt because it is just a different Shift
-                    !kevent->altKey() &&
+                    && !kevent->altKey()
 #endif
-                    !kevent->text().isEmpty()) {
+                    && !kevent->text().isEmpty()) {
                     frame->editor()->insertText(kevent->text(), event);
                 } else if (kevent->ctrlKey()) {
-                    switch (kevent->WindowsKeyCode()) {
+                    switch (kevent->windowsVirtualKeyCode()) {
                         case VK_A:
-                            frame->editor()->execCommand("SelectAll");
+                            frame->editor()->command("SelectAll").execute();
                             break;
                         case VK_B:
-                            frame->editor()->execCommand("ToggleBold");
-                            break;
-                        case VK_C:
-                            frame->editor()->execCommand("Copy");
+                            frame->editor()->command("ToggleBold").execute();
                             break;
                         case VK_I:
-                            frame->editor()->execCommand("ToggleItalic");
-                            break;
-                        case VK_V:
-                            frame->editor()->execCommand("Paste");
-                            break;
-                        case VK_X:
-                            frame->editor()->execCommand("Cut");
-                            break;
-                        case VK_Y:
-                            frame->editor()->execCommand("Redo");
-                            break;
-                        case VK_Z:
-                            frame->editor()->execCommand("Undo");
+                            frame->editor()->command("ToggleItalic").execute();
                             break;
                         default:
                             // catch combination AltGr+key or Ctrl+Alt+key
-                            if (kevent->altKey() && !kevent->text().isEmpty()) {
+                            if (kevent->type() != PlatformKeyboardEvent::KeyDown && kevent->altKey() && !kevent->text().isEmpty()) {
                                 frame->editor()->insertText(kevent->text(), event);
                                 break;
                             }
@@ -442,35 +454,37 @@ void EditorClientQt::handleKeypress(KeyboardEvent* event)
                 } else return;
         }
     } else {
-        switch (kevent->WindowsKeyCode()) {
+#ifndef QT_NO_SHORTCUT
+        if (kevent->qtEvent() == QKeySequence::Copy) {
+            m_page->triggerAction(QWebPage::Copy);
+        } else
+#endif // QT_NO_SHORTCUT
+        switch (kevent->windowsVirtualKeyCode()) {
             case VK_UP:
-                frame->editor()->execCommand("MoveUp");
+                frame->editor()->command("MoveUp").execute();
                 break;
             case VK_DOWN:
-                frame->editor()->execCommand("MoveDown");
+                frame->editor()->command("MoveDown").execute();
                 break;
             case VK_PRIOR:  // PageUp
-                frame->editor()->execCommand("MoveUpByPageAndModifyCaret");
+                frame->editor()->command("MovePageUp").execute();
                 break;
             case VK_NEXT:  // PageDown
-                frame->editor()->execCommand("MoveDownByPageAndModifyCaret");
+                frame->editor()->command("MovePageDown").execute();
                 break;
             case VK_HOME:
                 if (kevent->ctrlKey())
-                    frame->editor()->execCommand("MoveToBeginningOfDocument");
+                    frame->editor()->command("MoveToBeginningOfDocument").execute();
                 break;
             case VK_END:
                 if (kevent->ctrlKey())
-                    frame->editor()->execCommand("MoveToEndOfDocument");
+                    frame->editor()->command("MoveToEndOfDocument").execute();
                 break;
             default:
                 if (kevent->ctrlKey()) {
-                    switch(kevent->WindowsKeyCode()) {
+                    switch (kevent->windowsVirtualKeyCode()) {
                         case VK_A:
-                            frame->editor()->execCommand("SelectAll");
-                            break;
-                        case VK_C: case VK_X:
-                            frame->editor()->execCommand("Copy");
+                            frame->editor()->command("SelectAll").execute();
                             break;
                         default:
                             return;
@@ -481,7 +495,7 @@ void EditorClientQt::handleKeypress(KeyboardEvent* event)
     event->setDefaultHandled();
 }
 
-void EditorClientQt::handleInputMethodKeypress(KeyboardEvent*)
+void EditorClientQt::handleInputMethodKeydown(KeyboardEvent*)
 {
 }
 

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -72,14 +76,24 @@
     \sa {opengl/pbuffers}{Pbuffers Example}
 */
 
+
 #include <qglpixelbuffer.h>
 #include <private/qglpixelbuffer_p.h>
-#include <private/qpaintengine_opengl_p.h>
 #include <qimage.h>
+
+#if !defined(QT_OPENGL_ES_2)
+#include <private/qpaintengine_opengl_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
+#if !defined(QT_OPENGL_ES_2)
 extern void qgl_cleanup_glyph_cache(QGLContext *);
+#else
+void qgl_cleanup_glyph_cache(QGLContext *) {}
+#endif
+
+extern QImage qt_gl_read_framebuffer(const QSize&, bool, bool);
 
 void QGLPixelBufferPrivate::common_init(const QSize &size, const QGLFormat &format, QGLWidget *shareWidget)
 {
@@ -91,26 +105,23 @@ void QGLPixelBufferPrivate::common_init(const QSize &size, const QGLFormat &form
         invalid = false;
         qctx = new QGLContext(format);
         qctx->d_func()->sharing = (shareWidget != 0);
+        if (shareWidget != 0 && shareWidget->d_func()->glcx)
+            qgl_share_reg()->addShare(qctx, shareWidget->d_func()->glcx);
+
         qctx->d_func()->paintDevice = q;
         qctx->d_func()->valid = true;
-#if defined(Q_WS_WIN)
+#if defined(Q_WS_WIN) && !defined(QT_OPENGL_ES)
         qctx->d_func()->dc = dc;
-#if !defined(QT_OPENGL_ES)
         qctx->d_func()->rc = ctx;
-#endif
-#elif defined(Q_WS_X11)
+#elif (defined(Q_WS_X11) && !defined(QT_OPENGL_ES))
         qctx->d_func()->cx = ctx;
         qctx->d_func()->pbuf = (void *) pbuf;
         qctx->d_func()->vi = 0;
 #elif defined(Q_WS_MAC)
         qctx->d_func()->cx = ctx;
         qctx->d_func()->vi = 0;
-#endif
-#if defined(QT_OPENGL_ES)
-        qctx->d_func()->dpy = dpy;
-        qctx->d_func()->cx = ctx;
-        qctx->d_func()->config = config;
-        qctx->d_func()->surface = pbuf;
+#elif defined(QT_OPENGL_ES)
+        qctx->d_func()->eglContext = ctx;
 #endif
     }
 }
@@ -219,7 +230,7 @@ bool QGLPixelBuffer::doneCurrent()
     \sa size()
 */
 
-#if defined(Q_WS_X11) || defined(Q_WS_WIN) && !defined(Q_OS_WINCE)
+#if (defined(Q_WS_X11) || defined(Q_WS_WIN)) && !defined(QT_OPENGL_ES)
 GLuint QGLPixelBuffer::generateDynamicTexture() const
 {
     Q_D(const QGLPixelBuffer);
@@ -329,34 +340,7 @@ QImage QGLPixelBuffer::toImage() const
         return QImage();
 
     const_cast<QGLPixelBuffer *>(this)->makeCurrent();
-    QImage::Format image_format = QImage::Format_RGB32;
-    if (format().alpha())
-        image_format = QImage::Format_ARGB32_Premultiplied;
-    QImage img(d->req_size, image_format);
-    int w = d->req_size.width();
-    int h = d->req_size.height();
-    glReadPixels(0, 0, d->req_size.width(), d->req_size.height(), GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-    if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
-        // OpenGL gives RGBA; Qt wants ARGB
-        uint *p = (uint*)img.bits();
-        uint *end = p + w*h;
-        if (1) {
-            while (p < end) {
-                uint a = *p << 24;
-                *p = (*p >> 8) | a;
-                p++;
-            }
-        } else {
-            while (p < end) {
-                *p = 0xFF000000 | (*p>>8);
-                ++p;
-            }
-        }
-    } else {
-        // OpenGL gives ABGR (i.e. RGBA backwards); Qt wants ARGB
-        img = img.rgbSwapped();
-    }
-    return img.mirrored();
+    return qt_gl_read_framebuffer(d->req_size, d->format.alpha(), true);
 }
 
 /*!
@@ -367,7 +351,7 @@ Qt::HANDLE QGLPixelBuffer::handle() const
     Q_D(const QGLPixelBuffer);
     if (d->invalid)
         return 0;
-    return d->pbuf;
+    return (Qt::HANDLE) d->pbuf;
 }
 
 /*!
@@ -379,12 +363,18 @@ bool QGLPixelBuffer::isValid() const
     return !d->invalid;
 }
 
+#if !defined(QT_OPENGL_ES_2)
 Q_GLOBAL_STATIC(QOpenGLPaintEngine, qt_buffer_paintengine)
+#endif
 
 /*! \reimp */
 QPaintEngine *QGLPixelBuffer::paintEngine() const
 {
+#if !defined(QT_OPENGL_ES_2)
     return qt_buffer_paintengine();
+#else
+    return 0;
+#endif
 }
 
 extern int qt_defaultDpi();

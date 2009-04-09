@@ -21,7 +21,7 @@
      <property name="childrenCollapsible" >
       <bool>false</bool>
      </property>
-     <widget class="QWidget" name="layoutWidget" >
+     <widget class="QWidget" name="qrcLayoutWidget" >
       <layout class="QGridLayout" name="qrcLayout" >
        <item row="0" column="0" colspan="4" >
         <widget class="QListWidget" name="qrcFileList" >
@@ -78,7 +78,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="layoutWidget" >
+     <widget class="QWidget" name="resourceLayoutWidget" >
       <layout class="QGridLayout" name="resourceLayout" >
        <item row="0" column="0" colspan="4" >
         <widget class="QTreeView" name="resourceTreeView" />

@@ -103,13 +103,13 @@ CL_NS_DEF(search)
 		return tmp;
 	}
 
-	float_t TermQuery::TermWeight::sumOfSquaredWeights() {
+	qreal TermQuery::TermWeight::sumOfSquaredWeights() {
 		idf = _this->getSimilarity(searcher)->idf(_term, searcher); // compute idf
 		queryWeight = idf * _this->getBoost();             // compute query weight
 		return queryWeight * queryWeight;           // square it
 	}
 
-	void TermQuery::TermWeight::normalize(float_t queryNorm) {
+	void TermQuery::TermWeight::normalize(qreal queryNorm) {
 		this->queryNorm = queryNorm;
 		queryWeight *= queryNorm;                   // normalize query weight
 		value = queryWeight * idf;                  // idf for document 
@@ -181,7 +181,7 @@ CL_NS_DEF(search)
 
 		Explanation* fieldNormExpl = _CLNEW Explanation();
 		uint8_t* fieldNorms = reader->norms(field);
-		float_t fieldNorm =
+		qreal fieldNorm =
 			fieldNorms!=NULL ? Similarity::decodeNorm(fieldNorms[doc]) : 0.0f;
 		fieldNormExpl->setValue(fieldNorm);
 

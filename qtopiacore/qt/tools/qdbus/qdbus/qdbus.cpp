@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -47,9 +51,32 @@
 #include <private/qdbusutil_p.h>
 
 static QDBusConnection connection(QLatin1String(""));
+static bool printArgumentsLiterally = false;
+
+static void showUsage()
+{
+    printf("Usage: qdbus [--system] [--literal] [servicename] [path] [method] [args]\n"
+           "\n"
+           "  servicename       the service to connect to (e.g., org.freedesktop.DBus)\n"
+           "  path              the path to the object (e.g., /)\n"
+           "  method            the method to call, with or without the interface\n"
+           "  args              arguments to pass to the call\n"
+           "With 0 arguments, qdbus will list the services available on the bus\n"
+           "With just the servicename, qdbus will list the object paths available on the service\n"
+           "With service name and object path, qdbus will list the methods, signals and properties available on the object\n"
+           "\n"
+           "Options:\n"
+           "  --system          connect to the system bus\n"
+           "  --literal         print replies literally\n");
+}
 
 static void printArg(const QVariant &v)
 {
+    if (printArgumentsLiterally) {
+        printf("%s\n", qPrintable(QDBusUtil::argumentToString(v)));
+        return;
+    }
+
     if (v.userType() == QVariant::StringList) {
         foreach (QString s, v.toStringList())
             printf("%s\n", qPrintable(s));
@@ -372,12 +399,22 @@ int main(int argc, char **argv)
     QStringList args = app.arguments();
     args.takeFirst();
 
-    if (args.value(0) == QLatin1String("--system")) {
-        connection = QDBusConnection::systemBus();
-        args.takeFirst();
-    } else {
-        connection = QDBusConnection::sessionBus();
+    bool connectionOpened = false;
+    while (!args.isEmpty() && args.at(0).startsWith('-')) {
+        QString arg = args.takeFirst();
+        if (arg == QLatin1String("--system")) {
+            connection = QDBusConnection::systemBus();
+            connectionOpened = true;
+        } else if (arg == QLatin1String("--literal")) {
+            printArgumentsLiterally = true;
+        } else if (arg == QLatin1String("--help")) {
+            showUsage();
+            return 0;
+        }
     }
+
+    if (!connectionOpened)
+        connection = QDBusConnection::sessionBus();
 
     if (!connection.isConnected()) {
         fprintf(stderr, "Could not connect to D-Bus server: %s: %s\n",

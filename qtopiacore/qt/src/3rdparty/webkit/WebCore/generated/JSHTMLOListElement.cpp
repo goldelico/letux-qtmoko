@@ -25,156 +25,160 @@
 #include <wtf/GetPtr.h>
 
 #include "HTMLOListElement.h"
-#include "PlatformString.h"
+#include "KURL.h"
 
-using namespace KJS;
+#include <runtime/JSNumberCell.h>
+#include <runtime/JSString.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSHTMLOListElement)
+
 /* Hash table */
 
-static const HashEntry JSHTMLOListElementTableEntries[] =
+static const HashTableValue JSHTMLOListElementTableValues[5] =
 {
-    { 0, 0, 0, 0, 0 },
-    { "constructor", JSHTMLOListElement::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 },
-    { "start", JSHTMLOListElement::StartAttrNum, DontDelete, 0, 0 },
-    { "compact", JSHTMLOListElement::CompactAttrNum, DontDelete, 0, &JSHTMLOListElementTableEntries[4] },
-    { "type", JSHTMLOListElement::TypeAttrNum, DontDelete, 0, 0 }
+    { "compact", DontDelete, (intptr_t)jsHTMLOListElementCompact, (intptr_t)setJSHTMLOListElementCompact },
+    { "start", DontDelete, (intptr_t)jsHTMLOListElementStart, (intptr_t)setJSHTMLOListElementStart },
+    { "type", DontDelete, (intptr_t)jsHTMLOListElementType, (intptr_t)setJSHTMLOListElementType },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsHTMLOListElementConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLOListElementTable = 
-{
-    2, 5, JSHTMLOListElementTableEntries, 4
-};
+static const HashTable JSHTMLOListElementTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSHTMLOListElementTableValues, 0 };
+#else
+    { 8, 7, JSHTMLOListElementTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSHTMLOListElementConstructorTableEntries[] =
+static const HashTableValue JSHTMLOListElementConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLOListElementConstructorTable = 
-{
-    2, 1, JSHTMLOListElementConstructorTableEntries, 1
-};
+static const HashTable JSHTMLOListElementConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLOListElementConstructorTableValues, 0 };
+#else
+    { 1, 0, JSHTMLOListElementConstructorTableValues, 0 };
+#endif
 
 class JSHTMLOListElementConstructor : public DOMObject {
 public:
     JSHTMLOListElementConstructor(ExecState* exec)
+        : DOMObject(JSHTMLOListElementConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSHTMLOListElementPrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSHTMLOListElementConstructor::info = { "HTMLOListElementConstructor", 0, &JSHTMLOListElementConstructorTable, 0 };
+const ClassInfo JSHTMLOListElementConstructor::s_info = { "HTMLOListElementConstructor", 0, &JSHTMLOListElementConstructorTable, 0 };
 
 bool JSHTMLOListElementConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSHTMLOListElementConstructor, DOMObject>(exec, &JSHTMLOListElementConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLOListElementConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSHTMLOListElementPrototypeTableEntries[] =
+static const HashTableValue JSHTMLOListElementPrototypeTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSHTMLOListElementPrototypeTable = 
-{
-    2, 1, JSHTMLOListElementPrototypeTableEntries, 1
-};
+static const HashTable JSHTMLOListElementPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSHTMLOListElementPrototypeTableValues, 0 };
+#else
+    { 1, 0, JSHTMLOListElementPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSHTMLOListElementPrototype::info = { "HTMLOListElementPrototype", 0, &JSHTMLOListElementPrototypeTable, 0 };
+const ClassInfo JSHTMLOListElementPrototype::s_info = { "HTMLOListElementPrototype", 0, &JSHTMLOListElementPrototypeTable, 0 };
 
 JSObject* JSHTMLOListElementPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSHTMLOListElementPrototype>(exec, "[[JSHTMLOListElement.prototype]]");
+    return getDOMPrototype<JSHTMLOListElement>(exec);
 }
 
-const ClassInfo JSHTMLOListElement::info = { "HTMLOListElement", &JSHTMLElement::info, &JSHTMLOListElementTable, 0 };
+const ClassInfo JSHTMLOListElement::s_info = { "HTMLOListElement", &JSHTMLElement::s_info, &JSHTMLOListElementTable, 0 };
 
-JSHTMLOListElement::JSHTMLOListElement(ExecState* exec, HTMLOListElement* impl)
-    : JSHTMLElement(exec, impl)
+JSHTMLOListElement::JSHTMLOListElement(PassRefPtr<Structure> structure, PassRefPtr<HTMLOListElement> impl)
+    : JSHTMLElement(structure, impl)
 {
-    setPrototype(JSHTMLOListElementPrototype::self(exec));
+}
+
+JSObject* JSHTMLOListElement::createPrototype(ExecState* exec)
+{
+    return new (exec) JSHTMLOListElementPrototype(JSHTMLOListElementPrototype::createStructure(JSHTMLElementPrototype::self(exec)));
 }
 
 bool JSHTMLOListElement::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSHTMLOListElement, JSHTMLElement>(exec, &JSHTMLOListElementTable, this, propertyName, slot);
+    return getStaticValueSlot<JSHTMLOListElement, Base>(exec, &JSHTMLOListElementTable, this, propertyName, slot);
 }
 
-JSValue* JSHTMLOListElement::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsHTMLOListElementCompact(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CompactAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        return jsBoolean(imp->compact());
-    }
-    case StartAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        return jsNumber(imp->start());
-    }
-    case TypeAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        return jsString(imp->type());
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(asObject(slot.slotBase()))->impl());
+    return jsBoolean(imp->compact());
 }
 
-void JSHTMLOListElement::put(ExecState* exec, const Identifier& propertyName, JSValue* value, int attr)
+JSValuePtr jsHTMLOListElementStart(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    lookupPut<JSHTMLOListElement, JSHTMLElement>(exec, propertyName, value, attr, &JSHTMLOListElementTable, this);
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(asObject(slot.slotBase()))->impl());
+    return jsNumber(exec, imp->start());
 }
 
-void JSHTMLOListElement::putValueProperty(ExecState* exec, int token, JSValue* value, int /*attr*/)
+JSValuePtr jsHTMLOListElementType(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case CompactAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        imp->setCompact(value->toBoolean(exec));
-        break;
-    }
-    case StartAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        imp->setStart(value->toInt32(exec));
-        break;
-    }
-    case TypeAttrNum: {
-        HTMLOListElement* imp = static_cast<HTMLOListElement*>(impl());
-
-        imp->setType(valueToStringWithNullCheck(exec, value));
-        break;
-    }
-    }
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(asObject(slot.slotBase()))->impl());
+    return jsString(exec, imp->type());
 }
 
-JSValue* JSHTMLOListElement::getConstructor(ExecState* exec)
+JSValuePtr jsHTMLOListElementConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSHTMLOListElementConstructor>(exec, "[[HTMLOListElement.constructor]]");
+    return static_cast<JSHTMLOListElement*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
+void JSHTMLOListElement::put(ExecState* exec, const Identifier& propertyName, JSValuePtr value, PutPropertySlot& slot)
+{
+    lookupPut<JSHTMLOListElement, Base>(exec, propertyName, value, &JSHTMLOListElementTable, this, slot);
+}
+
+void setJSHTMLOListElementCompact(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(thisObject)->impl());
+    imp->setCompact(value->toBoolean(exec));
+}
+
+void setJSHTMLOListElementStart(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(thisObject)->impl());
+    imp->setStart(value->toInt32(exec));
+}
+
+void setJSHTMLOListElementType(ExecState* exec, JSObject* thisObject, JSValuePtr value)
+{
+    HTMLOListElement* imp = static_cast<HTMLOListElement*>(static_cast<JSHTMLOListElement*>(thisObject)->impl());
+    imp->setType(valueToStringWithNullCheck(exec, value));
+}
+
+JSValuePtr JSHTMLOListElement::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSHTMLOListElementConstructor>(exec);
+}
+
 
 }

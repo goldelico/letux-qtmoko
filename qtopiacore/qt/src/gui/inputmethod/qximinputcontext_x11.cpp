@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -357,13 +361,13 @@ QXIMInputContext::QXIMInputContext()
 #ifdef USE_X11R6_XIM
     else if (XSetLocaleModifiers (ximServerName.constData()) == 0)
         qWarning("Qt: Cannot set locale modifiers: %s", ximServerName.constData());
-    else /* if (!noxim) */
+    else
         XRegisterIMInstantiateCallback(X11->display, 0, 0, 0,
                                        (XIMProc) xim_create_callback, reinterpret_cast<char *>(this));
 #else // !USE_X11R6_XIM
     else if (XSetLocaleModifiers ("") == 0)
         qWarning("Qt: Cannot set locale modifiers");
-    else /* if (!noxim) */
+    else
         QXIMInputContext::create_xim();
 #endif // USE_X11R6_XIM
 }
@@ -384,7 +388,7 @@ void QXIMInputContext::create_xim()
         destroy.callback = (XIMProc) xim_destroy_callback;
         destroy.client_data = XPointer(this);
         if (XSetIMValues(xim, XNDestroyCallback, &destroy, (char *) 0) != 0)
-            qWarning("Xlib dosn't support destroy callback");
+            qWarning("Xlib doesn't support destroy callback");
 #endif // USE_X11R6_XIM
 
         XIMStyles *styles = 0;
@@ -425,6 +429,13 @@ void QXIMInputContext::create_xim()
                                              (XIMProc) xim_create_callback, reinterpret_cast<char *>(this));
 #endif // USE_X11R6_XIM
 
+            if (QWidget *focusWidget = QApplication::focusWidget()) {
+                // reinitialize input context after the input method
+                // server (like SCIM) has been launched without
+                // requiring the user to manually switch focus.
+                if (focusWidget->testAttribute(Qt::WA_InputMethodEnabled))
+                    setFocusWidget(focusWidget);
+            }
             // following code fragment is not required for immodule
             // version of XIM
 #if 0
@@ -449,16 +460,14 @@ void QXIMInputContext::create_xim()
 */
 void QXIMInputContext::close_xim()
 {
-    QString errMsg(QLatin1String("QXIMInputContext::close_xim() has been called"));
-
-    // ###clean up ximData!
+    for(QHash<QWidget *, ICData *>::const_iterator i = ximData.constBegin(),
+                                                   e = ximData.constEnd(); i != e; ++i) {
+        ICData *data = i.value();
+        if (data->ic)
+            XDestroyIC(data->ic);
+        delete data;
+    }
     ximData.clear();
-
-    // ############## check this!
-    // Calling XCloseIM gives a Purify FMR error
-    // XCloseIM(xim);
-    // We prefer a less serious memory leak
-    xim = 0;
 
     if ( --fontsetRefCount == 0 ) {
 	Display *dpy = X11->display;
@@ -469,13 +478,19 @@ void QXIMInputContext::close_xim()
 	    }
 	}
     }
+
+    setFocusWidget(0);
+    xim = 0;
 }
 
 
 
 QXIMInputContext::~QXIMInputContext()
 {
+    XIM old_xim = xim; // close_xim clears xim pointer.
     close_xim();
+    if (old_xim)
+        XCloseIM(old_xim);
 }
 
 
@@ -521,6 +536,8 @@ void QXIMInputContext::reset()
             e.setCommitString(QString::fromLocal8Bit(mb));
             sendEvent(e);
             XFree(mb);
+
+            update();
         }
     }
     data->clear();
@@ -606,6 +623,8 @@ bool QXIMInputContext::x11FilterEvent(QWidget *keywidget, XEvent *event)
     if (XFilterEvent(event, keywidget->effectiveWinId())) {
         qt_ximComposingKeycode = xkey_keycode; // ### not documented in xlib
 
+        update();
+
         return true;
     }
     if (event->type != XKeyPress || event->xkey.keycode != 0)
@@ -653,6 +672,9 @@ bool QXIMInputContext::x11FilterEvent(QWidget *keywidget, XEvent *event)
     e.setCommitString(text);
     sendEvent(e);
     data->clear();
+
+    update();
+
     return true;
 }
 

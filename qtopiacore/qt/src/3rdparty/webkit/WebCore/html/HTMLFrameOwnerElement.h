@@ -29,12 +29,18 @@ class DOMWindow;
 class Frame;
 class KeyboardEvent;
 
+#if ENABLE(SVG)
+class SVGDocument;
+#endif
+
 class HTMLFrameOwnerElement : public HTMLElement {
 protected:
-    HTMLFrameOwnerElement(const QualifiedName& tagName, Document*);
+    HTMLFrameOwnerElement(const QualifiedName& tagName, Document*, bool createdByParser);
 
 public:
     virtual ~HTMLFrameOwnerElement();
+
+    virtual void willRemove();
 
     Frame* contentFrame() const { return m_contentFrame; }
     DOMWindow* contentWindow() const;
@@ -44,7 +50,12 @@ public:
     virtual bool isKeyboardFocusable(KeyboardEvent*) const { return m_contentFrame; }
     
     bool createdByParser() const { return m_createdByParser; }
-    void setCreatedByParser(bool createdByParser) { m_createdByParser = createdByParser; }
+
+    virtual ScrollbarMode scrollingMode() const { return ScrollbarAuto; }
+
+#if ENABLE(SVG)
+    SVGDocument* getSVGDocument(ExceptionCode&) const;
+#endif
 
 private:
     friend class Frame;

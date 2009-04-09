@@ -4,7 +4,7 @@
 * Distributable under the terms of either the Apache License (Version 2.0) or 
 * the GNU Lesser General Public License, as specified in the COPYING file.
 *
-* Changes are Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+* Changes are Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ------------------------------------------------------------------------------*/
 #include "CLucene/StdHeader.h"
 #include "Analyzers.h"
@@ -168,14 +168,29 @@ TokenStream* PerFieldAnalyzerWrapper::tokenStream(const TCHAR* fieldName, Reader
 
 bool ISOLatin1AccentFilter::next(Token* token){
 	if ( input->next(token) ){
-		StringBuffer output;
 		int32_t l = token->termTextLength();
 		const TCHAR* chars = token->termText();
-		for (int32_t i = 0; i < l; i++) {
+        bool doProcess = false;
+        for (int32_t i = 0; i < l; ++i) {
+#ifdef _UCS2
+            if ( chars[i] >= 0xC0 && chars[i] <= 0x178 ) {
+#else
+            if ( (chars[i] >= 0xC0 && chars[i] <= 0xFF) || chars[i] < 0 ) {
+#endif
+                doProcess = true;
+                break;
+            }
+        }
+        if ( !doProcess ) {
+            return true;
+        }
+
+        StringBuffer output(l*2);
+        for (int32_t j = 0; j < l; j++) {
 			#ifdef _UCS2
-			TCHAR c = chars[i];
+			TCHAR c = chars[j];
 			#else
-			unsigned char c = chars[i];
+			unsigned char c = chars[j];
 			#endif
 			switch (c) {
 				case 0xC0 :
@@ -299,7 +314,7 @@ bool ISOLatin1AccentFilter::next(Token* token){
 					break;
 				#endif
 				default :
-					output.appendChar(chars[i]);
+					output.appendChar(c);
 					break;
 			}
 		}

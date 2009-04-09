@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSVG module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -110,6 +114,9 @@ public:
     {
         delete render;
     }
+
+    static void callRepaintNeeded(QSvgRenderer *const q);
+
     QSvgTinyDocument *render;
     QTimer *timer;
     int fps;
@@ -134,10 +141,22 @@ QSvgRenderer::QSvgRenderer(const QString &filename, QObject *parent)
 }
 
 /*!
-    Constructs a new renderer with the given \a parent and loads the specified SVG format
-    \a contents.
+    Constructs a new renderer with the given \a parent and loads the SVG data
+    from the byte array specified by \a contents.
 */
 QSvgRenderer::QSvgRenderer(const QByteArray &contents, QObject *parent)
+    : QObject(*new QSvgRendererPrivate, parent)
+{
+    load(contents);
+}
+
+/*!
+    \since 4.5
+
+    Constructs a new renderer with the given \a parent and loads the SVG data
+    using the stream reader specified by \a contents.
+*/
+QSvgRenderer::QSvgRenderer(QXmlStreamReader *contents, QObject *parent)
     : QObject(*new QSvgRendererPrivate, parent)
 {
     load(contents);
@@ -278,30 +297,50 @@ int QSvgRenderer::animationDuration() const
 }
 
 /*!
-    Loads the SVG file specified by \a filename, returning true if the content
-    was successfully parsed; otherwise returns false.
-*/
-bool QSvgRenderer::load(const QString &filename)
+ \internal
+ \since 4.5
+
+ We can't have template functions, that's loadDocument(), as friends, for this
+ code, so we let this function be a friend of QSvgRenderer instead.
+ */
+void QSvgRendererPrivate::callRepaintNeeded(QSvgRenderer *const q)
 {
-    Q_D(QSvgRenderer);
+    q->repaintNeeded();
+}
+
+template<typename TInputType>
+static bool loadDocument(QSvgRenderer *const q,
+                         QSvgRendererPrivate *const d,
+                         const TInputType &in)
+{
     delete d->render;
-    d->render = QSvgTinyDocument::load(filename);
+    d->render = QSvgTinyDocument::load(in);
     if (d->render && d->render->animated() && d->fps > 0) {
         if (!d->timer)
-            d->timer = new QTimer(this);
+            d->timer = new QTimer(q);
         else
             d->timer->stop();
-        connect(d->timer, SIGNAL(timeout()),
-                this, SIGNAL(repaintNeeded()));
+        q->connect(d->timer, SIGNAL(timeout()),
+                   q, SIGNAL(repaintNeeded()));
         d->timer->start(1000/d->fps);
     } else if (d->timer) {
         d->timer->stop();
     }
 
     //force first update
-    emit repaintNeeded();
+    QSvgRendererPrivate::callRepaintNeeded(q);
 
     return d->render;
+}
+
+/*!
+    Loads the SVG file specified by \a filename, returning true if the content
+    was successfully parsed; otherwise returns false.
+*/
+bool QSvgRenderer::load(const QString &filename)
+{
+    Q_D(QSvgRenderer);
+    return loadDocument(this, d, filename);
 }
 
 /*!
@@ -311,24 +350,22 @@ bool QSvgRenderer::load(const QString &filename)
 bool QSvgRenderer::load(const QByteArray &contents)
 {
     Q_D(QSvgRenderer);
-    delete d->render;
-    d->render = QSvgTinyDocument::load(contents);
-    if (d->render && d->render->animated() && d->fps > 0) {
-        if (!d->timer)
-            d->timer = new QTimer(this);
-        else
-            d->timer->stop();
-        connect(d->timer, SIGNAL(timeout()),
-                this, SIGNAL(repaintNeeded()));
-        d->timer->start(1000/d->fps);
-    } else if (d->timer) {
-        d->timer->stop();
-    }
+    return loadDocument(this, d, contents);
+}
 
-    //force first update
-    emit repaintNeeded();
+/*!
+  Loads the specified SVG in \a contents, returning true if the content
+  was successfully parsed; otherwise returns false.
 
-    return d->render;
+  The reader will be used from where it currently is positioned. If \a contents
+  is \c null, behavior is undefined.
+
+  \since 4.5
+*/
+bool QSvgRenderer::load(QXmlStreamReader *contents)
+{
+    Q_D(QSvgRenderer);
+    return loadDocument(this, d, contents);
 }
 
 /*!
@@ -400,6 +437,8 @@ void QSvgRenderer::setViewBox(const QRectF &viewbox)
     Returns bounding rectangle of the item with the given \a id.
     The transformation matrix of parent elements is not affecting
     the bounds of the element.
+
+    \sa matrixForElement()
 */
 QRectF QSvgRenderer::boundsOnElement(const QString &id) const
 {
@@ -436,9 +475,15 @@ bool QSvgRenderer::elementExists(const QString &id) const
 /*!
     \since 4.2
 
-    Returns the transformation matrix setup for the element
-    with the given \a id. That includes the transformation on
-    the element itself.
+    Returns the transformation matrix for the element
+    with the given \a id. The matrix is a product of
+    the transformation of the element's parents. The transformation of
+    the element itself is not included.
+
+    To find the bounding rectangle of the element in logical coordinates,
+    you can apply the matrix on the rectangle returned from boundsOnElement().
+
+    \sa boundsOnElement()
 */
 QMatrix QSvgRenderer::matrixForElement(const QString &id) const
 {

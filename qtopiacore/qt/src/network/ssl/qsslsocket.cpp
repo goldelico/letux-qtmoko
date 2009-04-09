@@ -1,48 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** In addition, as a special exception, Nokia gives permission to link
-** the code of its release of Qt with the OpenSSL project's "OpenSSL"
-** library (or modified versions of it that use the same license as the
-** "OpenSSL" library), and distribute the linked executables.  You must
-** comply with the GNU General Public License versions 2.0 or 3.0 in all
-** respects for all of the code used other than the "OpenSSL" code.  If
-** you modify this file, you may extend this exception to your version
-** of the file, but you are not obligated to do so.  If you do not wish
-** to do so, delete this exception statement from your version of this
-** file.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -58,7 +51,7 @@
     \reentrant
     \ingroup io
     \ingroup ssl
-    \module network
+    \inmodule QtNetwork
 
     QSslSocket establishes a secure, encrypted TCP connection you can
     use for transmitting encrypted data. It can operate in both client
@@ -310,15 +303,10 @@ class QSslSocketGlobalData
 {
 public:
     QSslSocketGlobalData() : config(new QSslConfigurationPrivate) {}
-    ~QSslSocketGlobalData()
-    {
-        if (!config->ref.deref())
-            delete config;
-    }
 
     QMutex mutex;
     QList<QSslCipher> supportedCiphers;
-    QSslConfigurationPrivate *config;
+    QExplicitlySharedDataPointer<QSslConfigurationPrivate> config;
 };
 Q_GLOBAL_STATIC(QSslSocketGlobalData, globalData)
 
@@ -482,7 +470,7 @@ bool QSslSocket::isEncrypted() const
 /*!
     Returns the socket's SSL protocol. By default, \l QSsl::SslV3 is used.
 
-    \value setProtocol()
+    \sa setProtocol()
 */
 QSsl::SslProtocol QSslSocket::protocol() const
 {
@@ -742,6 +730,7 @@ void QSslSocket::abort()
 #endif
     if (d->plainSocket)
         d->plainSocket->abort();
+    close();
 }
 
 /*!
@@ -1593,10 +1582,10 @@ void QSslSocket::connectToHostImplementation(const QString &hostName, quint16 po
         qDebug() << "\tcreating internal plain socket";
 #endif
         d->createPlainSocket(openMode);
-#ifndef QT_NO_NETWORKPROXY
-        d->plainSocket->setProxy(proxy());
-#endif
     }
+#ifndef QT_NO_NETWORKPROXY
+    d->plainSocket->setProxy(proxy());
+#endif
     QIODevice::open(openMode);
     d->plainSocket->connectToHost(hostName, port, openMode);
     d->cachedSocketDescriptor = d->plainSocket->socketDescriptor();
@@ -1715,6 +1704,7 @@ void QSslSocketPrivate::init()
     readBuffer.clear();
     writeBuffer.clear();
     configuration.peerCertificate.clear();
+    configuration.peerCertificateChain.clear();
 }
 
 /*!
@@ -1742,7 +1732,7 @@ QList<QSslCipher> QSslSocketPrivate::supportedCiphers()
 void QSslSocketPrivate::setDefaultCiphers(const QList<QSslCipher> &ciphers)
 {
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->config->ciphers = ciphers;
 }
 
@@ -1752,7 +1742,7 @@ void QSslSocketPrivate::setDefaultCiphers(const QList<QSslCipher> &ciphers)
 void QSslSocketPrivate::setDefaultSupportedCiphers(const QList<QSslCipher> &ciphers)
 {
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->supportedCiphers = ciphers;
 }
 
@@ -1773,7 +1763,7 @@ void QSslSocketPrivate::setDefaultCaCertificates(const QList<QSslCertificate> &c
 {
     QSslSocketPrivate::ensureInitialized();
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->config->caCertificates = certs;
 }
 
@@ -1789,7 +1779,7 @@ bool QSslSocketPrivate::addDefaultCaCertificates(const QString &path, QSsl::Enco
         return false;
 
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->config->caCertificates += certs;
     return true;
 }
@@ -1801,7 +1791,7 @@ void QSslSocketPrivate::addDefaultCaCertificate(const QSslCertificate &cert)
 {
     QSslSocketPrivate::ensureInitialized();
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->config->caCertificates += cert;
 }
 
@@ -1812,7 +1802,7 @@ void QSslSocketPrivate::addDefaultCaCertificates(const QList<QSslCertificate> &c
 {
     QSslSocketPrivate::ensureInitialized();
     QMutexLocker locker(&globalData()->mutex);
-    qAtomicDetach(globalData()->config);
+    globalData()->config.detach();
     globalData()->config->caCertificates += certs;
 }
 
@@ -1823,7 +1813,7 @@ QSslConfiguration QSslConfigurationPrivate::defaultConfiguration()
 {
     QSslSocketPrivate::ensureInitialized();
     QMutexLocker locker(&globalData()->mutex);
-    return QSslConfiguration(globalData()->config);
+    return QSslConfiguration(globalData()->config.data());
 }
 
 /*!
@@ -1836,7 +1826,7 @@ void QSslConfigurationPrivate::setDefaultConfiguration(const QSslConfiguration &
     if (globalData()->config == configuration.d)
         return;                 // nothing to do
 
-    qAtomicAssign(globalData()->config, configuration.d);
+    globalData()->config = const_cast<QSslConfigurationPrivate*>(configuration.d.constData());
 }
 
 /*!
@@ -1846,8 +1836,19 @@ void QSslConfigurationPrivate::deepCopyDefaultConfiguration(QSslConfigurationPri
 {
     QSslSocketPrivate::ensureInitialized();
     QMutexLocker locker(&globalData()->mutex);
-    *ptr = *globalData()->config;
+    const QSslConfigurationPrivate *global = globalData()->config.constData();
+
     ptr->ref = 1;
+    ptr->peerCertificate = global->peerCertificate;
+    ptr->peerCertificateChain = global->peerCertificateChain;
+    ptr->localCertificate = global->localCertificate;
+    ptr->privateKey = global->privateKey;
+    ptr->sessionCipher = global->sessionCipher;
+    ptr->ciphers = global->ciphers;
+    ptr->caCertificates = global->caCertificates;
+    ptr->protocol = global->protocol;
+    ptr->peerVerifyMode = global->peerVerifyMode;
+    ptr->peerVerifyDepth = global->peerVerifyDepth;
 }
 
 /*!
@@ -2021,7 +2022,7 @@ void QSslSocketPrivate::_q_bytesWrittenSlot(qint64 written)
     else
         emit q->encryptedBytesWritten(written);
     if (state == QAbstractSocket::ClosingState && writeBuffer.isEmpty())
-        q->close();
+        q->disconnectFromHost();
 }
 
 /*!

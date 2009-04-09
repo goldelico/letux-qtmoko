@@ -22,7 +22,7 @@ include(../lib/uilib/uilib.pri)
 HEADERS += quiloader.h
 SOURCES += quiloader.cpp
 
-include($$QT_SOURCE_TREE/include/QtUiTools/headers.pri)
+include($$QT_BUILD_TREE/include/QtUiTools/headers.pri)
 quitools_headers.files = $$SYNCQT.HEADER_FILES $$SYNCQT.HEADER_CLASSES
 quitools_headers.path = $$[QT_INSTALL_HEADERS]/QtUiTools
 INSTALLS        += quitools_headers
@@ -36,5 +36,6 @@ unix {
    QMAKE_PKGCONFIG_INCDIR = $$[QT_INSTALL_HEADERS]/$$TARGET
    QMAKE_PKGCONFIG_CFLAGS = -I$$[QT_INSTALL_HEADERS]
    QMAKE_PKGCONFIG_DESTDIR = pkgconfig
+   QMAKE_PKGCONFIG_REQUIRES += QtXml
 }
 

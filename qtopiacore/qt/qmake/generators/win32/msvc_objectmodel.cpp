@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the qmake application of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -153,6 +157,7 @@ const char _ModuleDefinitionFile[]              = "ModuleDefinitionFile";
 const char _Name[]                              = "Name";
 const char _ObjectFile[]                        = "ObjectFile";
 const char _OmitFramePointers[]                 = "OmitFramePointers";
+const char _OpenMP[]                            = "OpenMP";
 const char _Optimization[]                      = "Optimization ";
 const char _OptimizeForProcessor[]              = "OptimizeForProcessor";
 const char _OptimizeForWindows98[]              = "OptimizeForWindows98";
@@ -306,6 +311,7 @@ VCCLCompilerTool::VCCLCompilerTool()
         KeepComments(unset),
         MinimalRebuild(unset),
         OmitFramePointers(unset),
+        OpenMP(unset),
         Optimization(optimizeCustom),
         OptimizeForProcessor(procOptimizeBlended),
         OptimizeForWindowsApplication(unset),
@@ -408,6 +414,7 @@ XmlOutput &operator<<(XmlOutput &xml, const VCCLCompilerTool &tool)
             << attrT(_MinimalRebuild, tool.MinimalRebuild)
             << attrS(_ObjectFile, tool.ObjectFile)
             << attrT(_OmitFramePointers, tool.OmitFramePointers)
+            << attrT(_OpenMP, tool.OpenMP)
             << attrE(_Optimization, tool.Optimization, /*ifNot*/ optimizeDefault)
             << attrE(_OptimizeForProcessor, tool.OptimizeForProcessor, /*ifNot*/ procOptimizeBlended)
             << attrT(_OptimizeForWindowsApplication, tool.OptimizeForWindowsApplication)
@@ -477,6 +484,8 @@ bool VCCLCompilerTool::parseOption(const char* option)
             QString opt(option);
             if (opt.contains('a') && !opt.contains('s') && !opt.contains('c'))
                 ExceptionHandling = ehSEH;
+            else if (!opt.contains('a') && opt.contains("s-") && opt.contains("c-")) 
+                ExceptionHandling = ehNone;
             else if (!opt.contains('a') && opt.contains('s') && opt.contains('c'))
                 ExceptionHandling = ehNoSEH;
             else {
@@ -595,6 +604,8 @@ bool VCCLCompilerTool::parseOption(const char* option)
         case 'X':
             // Same as the /EHsc option, which is Exception Handling without SEH
             ExceptionHandling = ehNoSEH;
+            if (third == '-')
+                ExceptionHandling = ehNone;
             break;
         case 'Z':
         case 'e':
@@ -743,6 +754,40 @@ bool VCCLCompilerTool::parseOption(const char* option)
                 break;
             } else if (opt == "arch5T") {
                 CompileForArchitecture = archArmv5T;
+                break;
+            }
+        } else if (second == 'M') {
+            QString opt = option + 3;
+            if (opt == "mips1") {
+                CompileForArchitecture = archMips1;
+                break;
+            }
+            else if (opt == "mips2") {
+                CompileForArchitecture = archMips2;
+                break;
+            }
+            else if (opt == "mips3") {
+                CompileForArchitecture = archMips3;
+                break;
+            }
+            else if (opt == "mips4") {
+                CompileForArchitecture = archMips4;
+                break;
+            }
+            else if (opt == "mips5") {
+                CompileForArchitecture = archMips5;
+                break;
+            }
+            else if (opt == "mips16") {
+                CompileForArchitecture = archMips16;
+                break;
+            }
+            else if (opt == "mips32") {
+                CompileForArchitecture = archMips32;
+                break;
+            }
+            else if (opt == "mips64") {
+                CompileForArchitecture = archMips64;
                 break;
             }
         }
@@ -1014,6 +1059,12 @@ bool VCCLCompilerTool::parseOption(const char* option)
         }
         if(second == 'o' && third == 'l' && fourth == 'o') {
             SuppressStartupBanner = _True;
+            break;
+        }
+        found = false; break;
+    case 'o':
+        if (second == 'p' && third == 'e' && fourth == 'n') {
+            OpenMP = _True;
             break;
         }
         found = false; break;
@@ -2017,7 +2068,8 @@ XmlOutput &operator<<(XmlOutput &xml, const VCConfiguration &tool)
 }
 // VCFilter ---------------------------------------------------------
 VCFilter::VCFilter()
-    :   ParseFiles(unset)
+    :   ParseFiles(unset),
+        Config(0)
 {
     useCustomBuildTool = false;
     useCompilerTool = false;
@@ -2171,7 +2223,7 @@ bool VCFilter::addExtraCompiler(const VCFilterFile &info)
                             break;
                         indeps += QByteArray(buff, read_in);
                     }
-                    fclose(proc);
+                    QT_PCLOSE(proc);
                     if(!indeps.isEmpty()) {
                         QStringList extradeps = indeps.split(QLatin1Char('\n'));
                         for (int i = 0; i < extradeps.count(); ++i) {
@@ -2464,7 +2516,9 @@ void VCProject::outputFileConfigs(XmlOutput &xml,
             // ExtraCompilers
             filter = SingleProjects[i].filterForExtraCompiler(filtername);
         }
-        filter.outputFileConfig(xml, info.file);
+
+        if (filter.Config) // only if the filter is not empty
+            filter.outputFileConfig(xml, info.file);
     }
     xml << closetag(_File);
 }

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,13 +48,23 @@ TRANSLATOR qdesigner_internal::FormWindowBase
 #include "qdesigner_command_p.h"
 #include "qdesigner_propertysheet_p.h"
 #include "qdesigner_propertyeditor_p.h"
+#include "qdesigner_menu_p.h"
+#include "qdesigner_menubar_p.h"
+#include "shared_settings_p.h"
+#include "grid_p.h" 
+#include "deviceprofile_p.h"
+#include "qdesigner_utils_p.h"
+
 #include <abstractformbuilder.h>
 
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerContainerExtension>
 #include <QtDesigner/QExtensionManager>
+#include <QtDesigner/QDesignerTaskMenuExtension>
 
 #include <QtCore/qdebug.h>
+#include <QtCore/QList>
+#include <QtCore/QTimer>
 #include <QtGui/QMenu>
 #include <QtGui/QListWidget>
 #include <QtGui/QTreeWidget>
@@ -58,105 +72,93 @@ TRANSLATOR qdesigner_internal::FormWindowBase
 #include <QtGui/QComboBox>
 #include <QtGui/QTabWidget>
 #include <QtGui/QToolBox>
+#include <QtGui/QToolBar>
+#include <QtGui/QStatusBar>
+#include <QtGui/QMenu>
+#include <QtGui/QAction>
 
 QT_BEGIN_NAMESPACE
 
 namespace qdesigner_internal {
 
-QPixmap DesignerPixmapCache::pixmap(const PropertySheetPixmapValue &value) const
-{
-    QMap<PropertySheetPixmapValue, QPixmap>::const_iterator it = m_cache.constFind(value);
-    if (it != m_cache.constEnd())
-        return it.value();
+class FormWindowBasePrivate {
+public:
+    explicit FormWindowBasePrivate(QDesignerFormEditorInterface *core);
 
-    QPixmap pix = QPixmap(value.path());
-    m_cache.insert(value, pix);
-    return pix;
-}
+    static Grid m_defaultGrid;
 
-void DesignerPixmapCache::clear()
-{
-    m_cache.clear();
-}
+    QDesignerFormWindowInterface::Feature m_feature;
+    Grid m_grid;
+    bool m_hasFormGrid;
+    DesignerPixmapCache *m_pixmapCache;
+    DesignerIconCache *m_iconCache;
+    QtResourceSet *m_resourceSet;
+    QMap<QDesignerPropertySheet *, QMap<int, bool> > m_reloadableResources; // bool is dummy, QMap used as QSet
+    QMap<QDesignerPropertySheet *, QObject *> m_reloadablePropertySheets;
+    const DeviceProfile m_deviceProfile;
+    FormWindowBase::LineTerminatorMode m_lineTerminatorMode;
+    FormWindowBase::SaveResourcesBehaviour m_saveResourcesBehaviour;
+};
 
-DesignerPixmapCache::DesignerPixmapCache(QObject *parent)
-    : QObject(parent)
-{
-}
-
-QIcon DesignerIconCache::icon(const PropertySheetIconValue &value) const
-{
-    QMap<PropertySheetIconValue, QIcon>::const_iterator it = m_cache.constFind(value);
-    if (it != m_cache.constEnd())
-        return it.value();
-
-    QIcon icon;
-    QMap<QPair<QIcon::Mode, QIcon::State>, PropertySheetPixmapValue> paths = value.paths();
-    QMapIterator<QPair<QIcon::Mode, QIcon::State>, PropertySheetPixmapValue> itPath(paths);
-    while (itPath.hasNext()) {
-        QPair<QIcon::Mode, QIcon::State> pair = itPath.next().key();
-        icon.addPixmap(m_pixmapCache->pixmap(itPath.value()), pair.first, pair.second);
-    }
-    m_cache.insert(value, icon);
-    return icon;
-}
-
-void DesignerIconCache::clear()
-{
-    m_cache.clear();
-}
-
-DesignerIconCache::DesignerIconCache(DesignerPixmapCache *pixmapCache, QObject *parent)
-    : QObject(parent),
-      m_pixmapCache(pixmapCache)
-{
-
-}
-
-Grid FormWindowBase::m_defaultGrid;
-
-FormWindowBase::FormWindowBase(QWidget *parent, Qt::WindowFlags flags) :
-    QDesignerFormWindowInterface(parent, flags),
-    m_feature(DefaultFeature),
+FormWindowBasePrivate::FormWindowBasePrivate(QDesignerFormEditorInterface *core) :
+    m_feature(QDesignerFormWindowInterface::DefaultFeature),
     m_grid(m_defaultGrid),
     m_hasFormGrid(false),
-    m_resourceSet(0)
+    m_pixmapCache(0),
+    m_iconCache(0),
+    m_resourceSet(0),
+    m_deviceProfile(QDesignerSharedSettings(core).currentDeviceProfile()),
+    m_lineTerminatorMode(FormWindowBase::NativeLineTerminator),
+    m_saveResourcesBehaviour(FormWindowBase::SaveAll)
+{
+}
+
+Grid FormWindowBasePrivate::m_defaultGrid;
+
+FormWindowBase::FormWindowBase(QDesignerFormEditorInterface *core, QWidget *parent, Qt::WindowFlags flags) :
+    QDesignerFormWindowInterface(parent, flags),
+    m_d(new FormWindowBasePrivate(core))
 {
     syncGridFeature();
-    m_pixmapCache = new DesignerPixmapCache(this);
-    m_iconCache = new DesignerIconCache(m_pixmapCache, this);
+    m_d->m_pixmapCache = new DesignerPixmapCache(this);
+    m_d->m_iconCache = new DesignerIconCache(m_d->m_pixmapCache, this);
+}
+
+FormWindowBase::~FormWindowBase()
+{
+    delete m_d;
 }
 
 DesignerPixmapCache *FormWindowBase::pixmapCache() const
 {
-    return m_pixmapCache;
+    return m_d->m_pixmapCache;
 }
 
 DesignerIconCache *FormWindowBase::iconCache() const
 {
-    return m_iconCache;
+    return m_d->m_iconCache;
 }
 
 QtResourceSet *FormWindowBase::resourceSet() const
 {
-    return m_resourceSet;
+    return m_d->m_resourceSet;
 }
 
 void FormWindowBase::setResourceSet(QtResourceSet *resourceSet)
 {
-    m_resourceSet = resourceSet;
+    m_d->m_resourceSet = resourceSet;
 }
 
 void FormWindowBase::addReloadableProperty(QDesignerPropertySheet *sheet, int index)
 {
-    m_reloadableResources[sheet][index] = true;
+    m_d->m_reloadableResources[sheet][index] = true;
 }
 
 void FormWindowBase::removeReloadableProperty(QDesignerPropertySheet *sheet, int index)
 {
-    m_reloadableResources[sheet].remove(index);
-    if (m_reloadableResources[sheet].count() == 0)
-        m_reloadableResources.remove(sheet);
+    m_d->m_reloadableResources[sheet].remove(index);
+    if (m_d->m_reloadableResources[sheet].count() == 0)
+        m_d->m_reloadableResources.remove(sheet);
 }
 
 void FormWindowBase::addReloadablePropertySheet(QDesignerPropertySheet *sheet, QObject *object)
@@ -165,19 +167,19 @@ void FormWindowBase::addReloadablePropertySheet(QDesignerPropertySheet *sheet, Q
             qobject_cast<QTableWidget *>(object) ||
             qobject_cast<QListWidget *>(object) ||
             qobject_cast<QComboBox *>(object))
-        m_reloadablePropertySheets[sheet] = object;
+        m_d->m_reloadablePropertySheets[sheet] = object;
 }
 
 void FormWindowBase::removeReloadablePropertySheet(QDesignerPropertySheet *sheet)
 {
-    m_reloadablePropertySheets.remove(sheet);
+    m_d->m_reloadablePropertySheets.remove(sheet);
 }
 
 void FormWindowBase::reloadProperties()
 {
     pixmapCache()->clear();
     iconCache()->clear();
-    QMapIterator<QDesignerPropertySheet *, QMap<int, bool> > itSheet(m_reloadableResources);
+    QMapIterator<QDesignerPropertySheet *, QMap<int, bool> > itSheet(m_d->m_reloadableResources);
     while (itSheet.hasNext()) {
         QDesignerPropertySheet *sheet = itSheet.next().key();
         QMapIterator<int, bool> itIndex(itSheet.value());
@@ -207,7 +209,7 @@ void FormWindowBase::reloadProperties()
             toolBox->setCurrentIndex(current);
         }
     }
-    QMapIterator<QDesignerPropertySheet *, QObject *> itSh(m_reloadablePropertySheets);
+    QMapIterator<QDesignerPropertySheet *, QObject *> itSh(m_d->m_reloadablePropertySheets);
     while (itSh.hasNext()) {
         QObject *object = itSh.next().value();
         reloadIconResources(iconCache(), object);
@@ -228,33 +230,33 @@ void FormWindowBase::resourceSetActivated(QtResourceSet *resource, bool resource
 QVariantMap FormWindowBase::formData()
 {
     QVariantMap rc;
-    if (m_hasFormGrid)
-        m_grid.addToVariantMap(rc, true);
+    if (m_d->m_hasFormGrid)
+        m_d->m_grid.addToVariantMap(rc, true);
     return rc;
 }
 
 void FormWindowBase::setFormData(const QVariantMap &vm)
 {
     Grid formGrid;
-    m_hasFormGrid = formGrid.fromVariantMap(vm);
-    if (m_hasFormGrid)
-         m_grid = formGrid;
+    m_d->m_hasFormGrid = formGrid.fromVariantMap(vm);
+    if (m_d->m_hasFormGrid)
+         m_d->m_grid = formGrid;
 }
 
 QPoint FormWindowBase::grid() const
 {
-    return QPoint(m_grid.deltaX(), m_grid.deltaY());
+    return QPoint(m_d->m_grid.deltaX(), m_d->m_grid.deltaY());
 }
 
 void FormWindowBase::setGrid(const QPoint &grid)
 {
-    m_grid.setDeltaX(grid.x());
-    m_grid.setDeltaY(grid.y());
+    m_d->m_grid.setDeltaX(grid.x());
+    m_d->m_grid.setDeltaY(grid.y());
 }
 
 bool FormWindowBase::hasFeature(Feature f) const
 {
-    return f & m_feature;
+    return f & m_d->m_feature;
 }
 
 static void recursiveUpdate(QWidget *w)
@@ -271,43 +273,73 @@ static void recursiveUpdate(QWidget *w)
 
 void FormWindowBase::setFeatures(Feature f)
 {
-    m_feature = f;
+    m_d->m_feature = f;
     const bool enableGrid = f & GridFeature;
-    m_grid.setVisible(enableGrid);
-    m_grid.setSnapX(enableGrid);
-    m_grid.setSnapY(enableGrid);
+    m_d->m_grid.setVisible(enableGrid);
+    m_d->m_grid.setSnapX(enableGrid);
+    m_d->m_grid.setSnapY(enableGrid);
     emit featureChanged(f);
     recursiveUpdate(this);
 }
 
 FormWindowBase::Feature FormWindowBase::features() const
 {
-    return m_feature;
+    return m_d->m_feature;
 }
 
 bool FormWindowBase::gridVisible() const
 {
-    return m_grid.visible() && currentTool() == 0;
+    return m_d->m_grid.visible() && currentTool() == 0;
+}
+
+FormWindowBase::SaveResourcesBehaviour FormWindowBase::saveResourcesBehaviour() const
+{
+    return m_d->m_saveResourcesBehaviour;
+}
+
+void FormWindowBase::setSaveResourcesBehaviour(SaveResourcesBehaviour behaviour)
+{
+    m_d->m_saveResourcesBehaviour = behaviour;
 }
 
 void FormWindowBase::syncGridFeature()
 {
-    if (m_grid.snapX() || m_grid.snapY())
-        m_feature |= GridFeature;
+    if (m_d->m_grid.snapX() || m_d->m_grid.snapY())
+        m_d->m_feature |= GridFeature;
     else
-        m_feature &= ~GridFeature;
+        m_d->m_feature &= ~GridFeature;
 }
 
 void FormWindowBase::setDesignerGrid(const  Grid& grid)
 {
-    m_grid = grid;
+    m_d->m_grid = grid;
     syncGridFeature();
     recursiveUpdate(this);
 }
 
-void FormWindowBase::setDefaultDesignerGrid(const  Grid& grid)
+const Grid &FormWindowBase::designerGrid() const
 {
-    m_defaultGrid = grid;
+    return m_d->m_grid;
+}
+
+bool FormWindowBase::hasFormGrid() const
+{
+    return m_d->m_hasFormGrid;
+}
+
+void FormWindowBase::setHasFormGrid(bool b)
+{
+    m_d->m_hasFormGrid = b;
+}
+
+void FormWindowBase::setDefaultDesignerGrid(const Grid& grid)
+{
+    FormWindowBasePrivate::m_defaultGrid = grid;
+}
+
+const Grid &FormWindowBase::defaultDesignerGrid()
+{
+    return FormWindowBasePrivate::m_defaultGrid;
 }
 
 QMenu *FormWindowBase::initializePopupMenu(QWidget * /*managedWidget*/)
@@ -358,29 +390,96 @@ QWidget *FormWindowBase::widgetUnderMouse(const QPoint &formPos, WidgetUnderMous
 
 void FormWindowBase::deleteWidgetList(const QWidgetList &widget_list)
 {
-    switch (widget_list.size()) {
-    case 0:
-        break;
-    case 1: {
-        commandHistory()->beginMacro(tr("Delete '%1'").arg(widget_list.front()->objectName()));
-        emit widgetRemoved(widget_list.front());
+    // We need a macro here even for single widgets because the some components (for example,
+    // the signal slot editor are connected to widgetRemoved() and add their
+    // own commands (for example, to delete w's connections)
+    const QString description = widget_list.size() == 1 ?
+        tr("Delete '%1'").arg(widget_list.front()->objectName()) : tr("Delete");
+
+    commandHistory()->beginMacro(description);
+    foreach (QWidget *w, widget_list) {
+        emit widgetRemoved(w);
         DeleteWidgetCommand *cmd = new DeleteWidgetCommand(this);
-        cmd->init(widget_list.front());
+        cmd->init(w);
         commandHistory()->push(cmd);
-        commandHistory()->endMacro();
     }
-        break;
-    default:
-        commandHistory()->beginMacro(tr("Delete"));
-        foreach (QWidget *w, widget_list) {
-            emit widgetRemoved(w);
-            DeleteWidgetCommand *cmd = new DeleteWidgetCommand(this);
-            cmd->init(w);
-            commandHistory()->push(cmd);
+    commandHistory()->endMacro();
+}
+
+QMenu *FormWindowBase::createExtensionTaskMenu(QDesignerFormWindowInterface *fw, QObject *o, bool trailingSeparator)
+{
+    typedef QList<QAction *> ActionList;
+    ActionList actions;
+    // 1) Standard public extension
+    QExtensionManager *em = fw->core()->extensionManager();
+    if (const QDesignerTaskMenuExtension *extTaskMenu = qt_extension<QDesignerTaskMenuExtension*>(em, o))
+        actions += extTaskMenu->taskActions();
+    if (const QDesignerTaskMenuExtension *intTaskMenu = qobject_cast<QDesignerTaskMenuExtension *>(em->extension(o, QLatin1String("QDesignerInternalTaskMenuExtension")))) {
+        if (!actions.empty()) {
+            QAction *a = new QAction(fw);
+            a->setSeparator(true);
+            actions.push_back(a);
         }
-        commandHistory()->endMacro();
-        break;
+        actions += intTaskMenu->taskActions();
     }
+    if (actions.empty())
+        return 0;
+    if (trailingSeparator && !actions.back()->isSeparator()) {
+        QAction *a  = new QAction(fw);
+        a->setSeparator(true);
+        actions.push_back(a);
+    }
+    QMenu *rc = new QMenu;
+    const ActionList::const_iterator cend = actions.constEnd();
+    for (ActionList::const_iterator it = actions.constBegin(); it != cend; ++it)
+        rc->addAction(*it);
+    return rc;
+}
+
+void FormWindowBase::emitObjectRemoved(QObject *o)
+{
+    emit objectRemoved(o);
+}
+
+DeviceProfile FormWindowBase::deviceProfile() const
+{
+    return m_d->m_deviceProfile;
+}
+
+QString FormWindowBase::styleName() const
+{
+    return m_d->m_deviceProfile.isEmpty() ? QString() : m_d->m_deviceProfile.style();
+}
+
+void FormWindowBase::emitWidgetRemoved(QWidget *w)
+{
+    emit widgetRemoved(w);
+}
+
+QString FormWindowBase::deviceProfileName() const
+{
+    return m_d->m_deviceProfile.isEmpty() ? QString() : m_d->m_deviceProfile.name();
+}
+
+void FormWindowBase::setLineTerminatorMode(FormWindowBase::LineTerminatorMode mode)
+{
+    m_d->m_lineTerminatorMode = mode;
+}
+
+FormWindowBase::LineTerminatorMode FormWindowBase::lineTerminatorMode() const
+{
+    return m_d->m_lineTerminatorMode;
+}
+
+void FormWindowBase::triggerDefaultAction(QWidget *widget)
+{
+    if (QAction *action = qdesigner_internal::preferredEditAction(core(), widget))
+        QTimer::singleShot(0, action, SIGNAL(triggered()));
+}
+
+void FormWindowBase::setupDefaultAction(QDesignerFormWindowInterface *fw)
+{
+    QObject::connect(fw, SIGNAL(activated(QWidget*)), fw, SLOT(triggerDefaultAction(QWidget*)));
 }
 
 } // namespace qdesigner_internal

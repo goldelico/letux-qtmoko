@@ -26,7 +26,7 @@
 
 #include "Event.h"
 #include "HTMLCollection.h"
-#include "HTMLGenericFormElement.h"
+#include "HTMLFormControlElement.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -37,8 +37,7 @@ class KeyboardEvent;
 
 class HTMLSelectElement : public HTMLFormControlElementWithState {
 public:
-    HTMLSelectElement(Document*, HTMLFormElement* = 0);
-    HTMLSelectElement(const QualifiedName& tagName, Document*, HTMLFormElement* = 0);
+    HTMLSelectElement(const QualifiedName&, Document*, HTMLFormElement* = 0);
 
     virtual int tagPriority() const { return 6; }
     virtual bool checkDTD(const Node* newChild);
@@ -82,13 +81,12 @@ public:
     virtual bool saveState(String& value) const;
     virtual void restoreState(const String&);
 
-    virtual bool insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode&);
-    virtual bool replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode&);
+    virtual bool insertBefore(PassRefPtr<Node> newChild, Node* refChild, ExceptionCode&, bool shouldLazyAttach = false);
+    virtual bool replaceChild(PassRefPtr<Node> newChild, Node* oldChild, ExceptionCode&, bool shouldLazyAttach = false);
     virtual bool removeChild(Node* child, ExceptionCode&);
-    virtual bool appendChild(PassRefPtr<Node> newChild, ExceptionCode&);
-    virtual ContainerNode* addChild(PassRefPtr<Node>);
-
-    virtual void childrenChanged();
+    virtual bool appendChild(PassRefPtr<Node> newChild, ExceptionCode&, bool shouldLazyAttach = false);
+    virtual bool removeChildren();
+    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 
     virtual void parseMappedAttribute(MappedAttribute*);
 
@@ -106,12 +104,15 @@ public:
     {
         if (m_recalcListItems)
             recalcListItems();
+        else
+            checkListItems();
         return m_listItems;
     }
     virtual void reset();
 
     virtual void defaultEventHandler(Event*);
     virtual void accessKeyAction(bool sendToAnyElement);
+    void accessKeySetSelectedIndex(int);
 
     void setMultiple(bool);
 
@@ -120,7 +121,7 @@ public:
     void setOption(unsigned index, HTMLOptionElement*, ExceptionCode&);
     void setLength(unsigned, ExceptionCode&);
 
-    Node* namedItem(const String& name, bool caseSensitive = true);
+    Node* namedItem(const AtomicString& name);
     Node* item(unsigned index);
 
     HTMLCollection::CollectionInfo* collectionInfo() { return &m_collectionInfo; }
@@ -137,7 +138,9 @@ public:
     void scrollToSelection();
 
 private:
-    void recalcListItems() const;
+    void recalcListItems(bool updateSelectedStates = true) const;
+    void checkListItems() const;
+
     void deselectItems(HTMLOptionElement* excludeElement = 0);
     bool usesMenuList() const { return !m_multiple && m_size <= 1; }
     int nextSelectableListIndex(int startIndex);
@@ -167,6 +170,14 @@ private:
 
     HTMLCollection::CollectionInfo m_collectionInfo;
 };
+
+#ifdef NDEBUG
+
+inline void HTMLSelectElement::checkListItems() const
+{
+}
+
+#endif
 
 } // namespace
 

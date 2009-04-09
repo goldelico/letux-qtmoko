@@ -26,170 +26,169 @@
 
 #include "CSSMediaRule.h"
 #include "CSSRuleList.h"
-#include "ExceptionCode.h"
 #include "JSCSSRuleList.h"
 #include "JSMediaList.h"
 #include "MediaList.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+#include <runtime/JSNumberCell.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCSSMediaRule)
+
 /* Hash table */
 
-static const HashEntry JSCSSMediaRuleTableEntries[] =
+static const HashTableValue JSCSSMediaRuleTableValues[4] =
 {
-    { "media", JSCSSMediaRule::MediaAttrNum, DontDelete|ReadOnly, 0, &JSCSSMediaRuleTableEntries[3] },
-    { 0, 0, 0, 0, 0 },
-    { 0, 0, 0, 0, 0 },
-    { "cssRules", JSCSSMediaRule::CssRulesAttrNum, DontDelete|ReadOnly, 0, &JSCSSMediaRuleTableEntries[4] },
-    { "constructor", JSCSSMediaRule::ConstructorAttrNum, DontDelete|DontEnum|ReadOnly, 0, 0 }
+    { "media", DontDelete|ReadOnly, (intptr_t)jsCSSMediaRuleMedia, (intptr_t)0 },
+    { "cssRules", DontDelete|ReadOnly, (intptr_t)jsCSSMediaRuleCssRules, (intptr_t)0 },
+    { "constructor", DontEnum|ReadOnly, (intptr_t)jsCSSMediaRuleConstructor, (intptr_t)0 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSMediaRuleTable = 
-{
-    2, 5, JSCSSMediaRuleTableEntries, 3
-};
+static const HashTable JSCSSMediaRuleTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 7, JSCSSMediaRuleTableValues, 0 };
+#else
+    { 8, 7, JSCSSMediaRuleTableValues, 0 };
+#endif
 
 /* Hash table for constructor */
 
-static const HashEntry JSCSSMediaRuleConstructorTableEntries[] =
+static const HashTableValue JSCSSMediaRuleConstructorTableValues[1] =
 {
-    { 0, 0, 0, 0, 0 }
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSMediaRuleConstructorTable = 
-{
-    2, 1, JSCSSMediaRuleConstructorTableEntries, 1
-};
+static const HashTable JSCSSMediaRuleConstructorTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCSSMediaRuleConstructorTableValues, 0 };
+#else
+    { 1, 0, JSCSSMediaRuleConstructorTableValues, 0 };
+#endif
 
 class JSCSSMediaRuleConstructor : public DOMObject {
 public:
     JSCSSMediaRuleConstructor(ExecState* exec)
+        : DOMObject(JSCSSMediaRuleConstructor::createStructure(exec->lexicalGlobalObject()->objectPrototype()))
     {
-        setPrototype(exec->lexicalInterpreter()->builtinObjectPrototype());
         putDirect(exec->propertyNames().prototype, JSCSSMediaRulePrototype::self(exec), None);
     }
     virtual bool getOwnPropertySlot(ExecState*, const Identifier&, PropertySlot&);
-    JSValue* getValueProperty(ExecState*, int token) const;
-    virtual const ClassInfo* classInfo() const { return &info; }
-    static const ClassInfo info;
+    virtual const ClassInfo* classInfo() const { return &s_info; }
+    static const ClassInfo s_info;
 
-    virtual bool implementsHasInstance() const { return true; }
+    static PassRefPtr<Structure> createStructure(JSValuePtr proto) 
+    { 
+        return Structure::create(proto, TypeInfo(ObjectType, ImplementsHasInstance)); 
+    }
 };
 
-const ClassInfo JSCSSMediaRuleConstructor::info = { "CSSMediaRuleConstructor", 0, &JSCSSMediaRuleConstructorTable, 0 };
+const ClassInfo JSCSSMediaRuleConstructor::s_info = { "CSSMediaRuleConstructor", 0, &JSCSSMediaRuleConstructorTable, 0 };
 
 bool JSCSSMediaRuleConstructor::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     return getStaticValueSlot<JSCSSMediaRuleConstructor, DOMObject>(exec, &JSCSSMediaRuleConstructorTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSMediaRuleConstructor::getValueProperty(ExecState*, int token) const
-{
-    // The token is the numeric value of its associated constant
-    return jsNumber(token);
-}
-
 /* Hash table for prototype */
 
-static const HashEntry JSCSSMediaRulePrototypeTableEntries[] =
+static const HashTableValue JSCSSMediaRulePrototypeTableValues[3] =
 {
-    { "insertRule", JSCSSMediaRule::InsertRuleFuncNum, DontDelete|Function, 2, 0 },
-    { "deleteRule", JSCSSMediaRule::DeleteRuleFuncNum, DontDelete|Function, 1, 0 }
+    { "insertRule", DontDelete|Function, (intptr_t)jsCSSMediaRulePrototypeFunctionInsertRule, (intptr_t)2 },
+    { "deleteRule", DontDelete|Function, (intptr_t)jsCSSMediaRulePrototypeFunctionDeleteRule, (intptr_t)1 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCSSMediaRulePrototypeTable = 
-{
-    2, 2, JSCSSMediaRulePrototypeTableEntries, 2
-};
+static const HashTable JSCSSMediaRulePrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 1, JSCSSMediaRulePrototypeTableValues, 0 };
+#else
+    { 4, 3, JSCSSMediaRulePrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCSSMediaRulePrototype::info = { "CSSMediaRulePrototype", 0, &JSCSSMediaRulePrototypeTable, 0 };
+const ClassInfo JSCSSMediaRulePrototype::s_info = { "CSSMediaRulePrototype", 0, &JSCSSMediaRulePrototypeTable, 0 };
 
 JSObject* JSCSSMediaRulePrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCSSMediaRulePrototype>(exec, "[[JSCSSMediaRule.prototype]]");
+    return getDOMPrototype<JSCSSMediaRule>(exec);
 }
 
 bool JSCSSMediaRulePrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSCSSMediaRulePrototypeFunction, JSObject>(exec, &JSCSSMediaRulePrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSCSSMediaRulePrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSCSSMediaRule::info = { "CSSMediaRule", &JSCSSRule::info, &JSCSSMediaRuleTable, 0 };
+const ClassInfo JSCSSMediaRule::s_info = { "CSSMediaRule", &JSCSSRule::s_info, &JSCSSMediaRuleTable, 0 };
 
-JSCSSMediaRule::JSCSSMediaRule(ExecState* exec, CSSMediaRule* impl)
-    : JSCSSRule(exec, impl)
+JSCSSMediaRule::JSCSSMediaRule(PassRefPtr<Structure> structure, PassRefPtr<CSSMediaRule> impl)
+    : JSCSSRule(structure, impl)
 {
-    setPrototype(JSCSSMediaRulePrototype::self(exec));
+}
+
+JSObject* JSCSSMediaRule::createPrototype(ExecState* exec)
+{
+    return new (exec) JSCSSMediaRulePrototype(JSCSSMediaRulePrototype::createStructure(JSCSSRulePrototype::self(exec)));
 }
 
 bool JSCSSMediaRule::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSCSSMediaRule, JSCSSRule>(exec, &JSCSSMediaRuleTable, this, propertyName, slot);
+    return getStaticValueSlot<JSCSSMediaRule, Base>(exec, &JSCSSMediaRuleTable, this, propertyName, slot);
 }
 
-JSValue* JSCSSMediaRule::getValueProperty(ExecState* exec, int token) const
+JSValuePtr jsCSSMediaRuleMedia(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    switch (token) {
-    case MediaAttrNum: {
-        CSSMediaRule* imp = static_cast<CSSMediaRule*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->media()));
-    }
-    case CssRulesAttrNum: {
-        CSSMediaRule* imp = static_cast<CSSMediaRule*>(impl());
-
-        return toJS(exec, WTF::getPtr(imp->cssRules()));
-    }
-    case ConstructorAttrNum:
-        return getConstructor(exec);
-    }
-    return 0;
+    CSSMediaRule* imp = static_cast<CSSMediaRule*>(static_cast<JSCSSMediaRule*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->media()));
 }
 
-JSValue* JSCSSMediaRule::getConstructor(ExecState* exec)
+JSValuePtr jsCSSMediaRuleCssRules(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    return KJS::cacheGlobalObject<JSCSSMediaRuleConstructor>(exec, "[[CSSMediaRule.constructor]]");
+    CSSMediaRule* imp = static_cast<CSSMediaRule*>(static_cast<JSCSSMediaRule*>(asObject(slot.slotBase()))->impl());
+    return toJS(exec, WTF::getPtr(imp->cssRules()));
 }
-JSValue* JSCSSMediaRulePrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+
+JSValuePtr jsCSSMediaRuleConstructor(ExecState* exec, const Identifier&, const PropertySlot& slot)
 {
-    if (!thisObj->inherits(&JSCSSMediaRule::info))
-      return throwError(exec, TypeError);
-
-    CSSMediaRule* imp = static_cast<CSSMediaRule*>(static_cast<JSCSSMediaRule*>(thisObj)->impl());
-
-    switch (id) {
-    case JSCSSMediaRule::InsertRuleFuncNum: {
-        ExceptionCode ec = 0;
-        String rule = args[0]->toString(exec);
-        bool indexOk;
-        unsigned index = args[1]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-
-        KJS::JSValue* result = jsNumber(imp->insertRule(rule, index, ec));
-        setDOMException(exec, ec);
-        return result;
-    }
-    case JSCSSMediaRule::DeleteRuleFuncNum: {
-        ExceptionCode ec = 0;
-        bool indexOk;
-        unsigned index = args[0]->toInt32(exec, indexOk);
-        if (!indexOk) {
-            setDOMException(exec, TYPE_MISMATCH_ERR);
-            return jsUndefined();
-        }
-
-        imp->deleteRule(index, ec);
-        setDOMException(exec, ec);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    return static_cast<JSCSSMediaRule*>(asObject(slot.slotBase()))->getConstructor(exec);
 }
+JSValuePtr JSCSSMediaRule::getConstructor(ExecState* exec)
+{
+    return getDOMConstructor<JSCSSMediaRuleConstructor>(exec);
+}
+
+JSValuePtr jsCSSMediaRulePrototypeFunctionInsertRule(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCSSMediaRule::s_info))
+        return throwError(exec, TypeError);
+    JSCSSMediaRule* castedThisObj = static_cast<JSCSSMediaRule*>(asObject(thisValue));
+    CSSMediaRule* imp = static_cast<CSSMediaRule*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    const UString& rule = args.at(exec, 0)->toString(exec);
+    unsigned index = args.at(exec, 1)->toInt32(exec);
+
+
+    JSC::JSValuePtr result = jsNumber(exec, imp->insertRule(rule, index, ec));
+    setDOMException(exec, ec);
+    return result;
+}
+
+JSValuePtr jsCSSMediaRulePrototypeFunctionDeleteRule(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
+{
+    if (!thisValue->isObject(&JSCSSMediaRule::s_info))
+        return throwError(exec, TypeError);
+    JSCSSMediaRule* castedThisObj = static_cast<JSCSSMediaRule*>(asObject(thisValue));
+    CSSMediaRule* imp = static_cast<CSSMediaRule*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    unsigned index = args.at(exec, 0)->toInt32(exec);
+
+    imp->deleteRule(index, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
+}
+
 
 }

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -80,9 +84,9 @@ QT_BEGIN_NAMESPACE
 
     Adding a Q_DECLARE_METATYPE() makes the type known to all template
     based functions, including QVariant. Note that if you intend to
-    use the type in \e queued signal and slot connections, you also
-    have to call qRegisterMetaType() since such connections are
-    resolved at runtime.
+    use the type in \e queued signal and slot connections or in
+    QObject's property system, you also have to call
+    qRegisterMetaType() since the names are resolved at runtime.
 
     This example shows a typical use case of Q_DECLARE_METATYPE():
 
@@ -141,6 +145,7 @@ QT_BEGIN_NAMESPACE
     \value QTextLength QTextLength
     \value QStringList QStringList
     \value QVariantMap QVariantMap
+    \value QVariantHash QVariantHash
     \value QIcon QIcon
     \value QPen QPen
     \value QLineF QLineF
@@ -242,6 +247,7 @@ static const struct { const char * typeName; int type; } types[] = {
     {"QPoint", QMetaType::QPoint},
     {"QPointF", QMetaType::QPointF},
     {"QRegExp", QMetaType::QRegExp},
+    {"QVariantHash", QMetaType::QVariantHash},
 
     /* All GUI types */
     {"QColorGroup", 63},
@@ -293,6 +299,7 @@ static const struct { const char * typeName; int type; } types[] = {
     {"quint64", QMetaType::ULongLong},
     {"QList<QVariant>", QMetaType::QVariantList},
     {"QMap<QString,QVariant>", QMetaType::QVariantMap},
+    {"QHash<QString,QVariant>", QMetaType::QVariantHash},
     // let QMetaTypeId2 figure out the type at compile time
     {"qreal", QMetaTypeId2<qreal>::MetaType},
 
@@ -434,10 +441,10 @@ int QMetaType::registerType(const char *typeName, Destructor destructor,
     return idx;
 }
 
-/*! 
+/*!
     \since 4.4
 
-    Unregisters a user type, with \a typeName. 
+    Unregisters a user type, with \a typeName.
 
     \sa type(), typeName()
  */
@@ -570,6 +577,9 @@ bool QMetaType::save(QDataStream &stream, int type, const void *data)
 #ifndef QT_BOOTSTRAPPED
     case QMetaType::QVariantMap:
         stream << *static_cast<const NS(QVariantMap)*>(data);
+        break;
+    case QMetaType::QVariantHash:
+        stream << *static_cast<const NS(QVariantHash)*>(data);
         break;
     case QMetaType::QVariantList:
         stream << *static_cast<const NS(QVariantList)*>(data);
@@ -760,6 +770,9 @@ bool QMetaType::load(QDataStream &stream, int type, void *data)
     case QMetaType::QVariantMap:
         stream >> *static_cast< NS(QVariantMap)*>(data);
         break;
+    case QMetaType::QVariantHash:
+        stream >> *static_cast< NS(QVariantHash)*>(data);
+        break;
     case QMetaType::QVariantList:
         stream >> *static_cast< NS(QVariantList)*>(data);
         break;
@@ -916,6 +929,8 @@ void *QMetaType::construct(int type, const void *copy)
 #ifndef QT_BOOTSTRAPPED
         case QMetaType::QVariantMap:
             return new NS(QVariantMap)(*static_cast<const NS(QVariantMap)*>(copy));
+        case QMetaType::QVariantHash:
+            return new NS(QVariantHash)(*static_cast<const NS(QVariantHash)*>(copy));
         case QMetaType::QVariantList:
             return new NS(QVariantList)(*static_cast<const NS(QVariantList)*>(copy));
 #endif
@@ -1005,6 +1020,8 @@ void *QMetaType::construct(int type, const void *copy)
 #ifndef QT_BOOTSTRAPPED
         case QMetaType::QVariantMap:
             return new NS(QVariantMap);
+        case QMetaType::QVariantHash:
+            return new NS(QVariantHash);
         case QMetaType::QVariantList:
             return new NS(QVariantList);
 #endif
@@ -1137,6 +1154,9 @@ void QMetaType::destroy(int type, void *data)
 #ifndef QT_BOOTSTRAPPED
     case QMetaType::QVariantMap:
         delete static_cast< NS(QVariantMap)* >(data);
+        break;
+    case QMetaType::QVariantHash:
+        delete static_cast< NS(QVariantHash)* >(data);
         break;
     case QMetaType::QVariantList:
         delete static_cast< NS(QVariantList)* >(data);
@@ -1300,7 +1320,7 @@ void QMetaType::destroy(int type, void *data)
     sufficient. To use the type \c T in queued signal and slot connections,
     \c{qRegisterMetaType<T>()} must be called before the first connection
     is established.
-    
+
     Also, to use type \c T with the QObject::property() API,
     \c{qRegisterMetaType<T>()} must be called before it is used, typically
     in the constructor of the class that uses \c T, or in the \c{main()}

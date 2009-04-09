@@ -2,9 +2,9 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /home/qt/mkdist-qt-4.4.3-1222864207/qt-embedded-linux-opensource-src-4.4.3/doc/src/porting4.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/porting4.qdoc -->
 <head>
-  <title>Qt 4.4: Porting to Qt 4</title>
+  <title>Qt 4.5: Porting to Qt 4</title>
   <link rel="prev" href="porting.html" />
   <link rel="contents" href="porting.html" />
   <link rel="next" href="porting4-virtual-functions.html" />
@@ -13,7 +13,7 @@
 <body>
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tr>
-<td align="left" valign="top" width="32"><a href="http://www.trolltech.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
+<td align="left" valign="top" width="32"><a href="http://qtsoftware.com/products/qt"><img src="images/qt-logo.png" align="left" border="0" /></a></td>
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><p>
 [Previous: <a href="porting.html">Porting Guides</a>]
@@ -743,7 +743,7 @@
 <a name="qasyncio"></a>
 <h3>QAsyncIO</h3>
 <p>The <tt>QAsyncIO</tt> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e;</p>
-<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.trolltech.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
+<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.qtsoftware.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
 <a name="qbackinsertiterator"></a>
 <h3>QBackInsertIterator</h3>
 <p>The undocumented <tt>QBackInsertIterator</tt> class has been removed from the Qt library. If you need it in your application, feel free to copy the source code from the Qt 3 <tt>&lt;qtl.h&gt;</tt> header file.</p>
@@ -935,14 +935,14 @@
 <li>QByteArray::contains(const char *)</li>
 </ul>
 <p>In both cases, the solution is to convert the <tt>QCString</tt> to a <a href="qstring.html">QString</a> and use the corresponding <a href="qstring.html">QString</a> functions instead.</p>
-<p>Also be aware that <tt>QCString::size()</tt> (inherited from <a href="qbytearray.html">QByteArray</a>) used to return the size of the character data <i>including</i> the '\0'-terminator, whereas the new <a href="qbytearray.html#size">QByteArray::size</a>() is just a synonym for <a href="qbytearray.html#length">QByteArray::length</a>(). This brings <a href="qbytearray.html">QByteArray</a> in line with <a href="qstring.html">QString</a>.</p>
+<p>Also be aware that <tt>QCString::size()</tt> (inherited from <a href="qbytearray.html">QByteArray</a>) used to return the size of the character data <i>including</i> the '\0'-terminator, whereas the new <a href="qbytearray.html#size">QByteArray::size</a>() is just a synonym for <a href="qbytearray.html#lengthx">QByteArray::length</a>(). This brings <a href="qbytearray.html">QByteArray</a> in line with <a href="qstring.html">QString</a>.</p>
 <p>When porting to Qt 4, occurrences of <tt>QCString</tt> should be replaced with <a href="qbytearray.html">QByteArray</a> or <a href="qstring.html">QString</a>. The following table summarizes the API differences between the <a href="q3cstring.html">Q3CString</a> class and the Qt 4 <a href="qbytearray.html">QByteArray</a> and <a href="qstring.html">QString</a> classes:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th><a href="q3cstring.html">Q3CString</a> function</th><th>Qt 4 equivalent</th></tr></thead>
 <tr valign="top" class="odd"><td>Q3CString::Q3CString(const char *, uint)</td><td>See remark below</td></tr>
 <tr valign="top" class="even"><td>Q3CString::Q3CString(int)</td><td>QByteArray::QByteArray(int, char)</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#leftJustify">Q3CString::leftJustify</a>()</td><td><a href="qstring.html#leftJustified">QString::leftJustified</a>()</td></tr>
-<tr valign="top" class="even"><td><a href="qbytearray.html#length">Q3CString::length</a>()</td><td><a href="qbytearray.html#length">QByteArray::length</a>() or <a href="qbytearray.html#size">QByteArray::size</a>() (equivalent)</td></tr>
+<tr valign="top" class="even"><td><a href="qbytearray.html#lengthx">Q3CString::length</a>()</td><td><a href="qbytearray.html#lengthx">QByteArray::length</a>() or <a href="qbytearray.html#size">QByteArray::size</a>() (equivalent)</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#lower">Q3CString::lower</a>()</td><td><a href="qbytearray.html#toLower">QByteArray::toLower</a>()</td></tr>
 <tr valign="top" class="even"><td><a href="q3cstring.html#rightJustify">Q3CString::rightJustify</a>()</td><td><a href="qstring.html#rightJustified">QString::rightJustified</a>()</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#setExpand">Q3CString::setExpand</a>()</td><td>See remark below</td></tr>
@@ -991,14 +991,14 @@
 <a name="qdatapump"></a>
 <h3>QDataPump</h3>
 <p>The <tt>QDataPump</tt> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e;</p>
-<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.trolltech.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
+<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.qtsoftware.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
 <a name="qdatasink"></a>
 <h3>QDataSink</h3>
 <p>The <tt>QDataSink</tt> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e;</p>
-<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.trolltech.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
+<p>If you use this mechanism in your application, please submit a report to the <a href="http://www.qtsoftware.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
 <a name="qdatasource"></a>
 <h3>QDataSource</h3>
-<p>The <tt>QDataSource</tt> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e; If you use this mechanism in your application, please submit a report to the <a href="http://www.trolltech.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
+<p>The <tt>QDataSource</tt> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e; If you use this mechanism in your application, please submit a report to the <a href="http://www.qtsoftware.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
 <a name="qdatatable"></a>
 <h3>QDataTable</h3>
 <p>The <tt>QDataTable</tt> class has been renamed <a href="q3datatable.html">Q3DataTable</a> and moved to the <a href="qt3support.html">Qt3Support</a> library. In Qt 4.2, you should use the <a href="qdatawidgetmapper.html">QDataWidgetMapper</a> class to create data-aware forms.</p>
@@ -1041,7 +1041,7 @@
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>Qt 4 class</th><th>When to use it</th></tr></thead>
 <tr valign="top" class="odd"><td><a href="qmultihash.html">QMultiHash</a>&lt;<a href="qstring.html">QString</a>, T *&gt;</td><td>Since <a href="q3dict.html">Q3Dict</a>&lt;T&gt; is pointer-based and allows duplicate keys, this is usually the most straightforward conversion.</td></tr>
-<tr valign="top" class="even"><td><a href="qmultihash.html">QMultiHash</a>&lt;<a href="qstring.html">QString</a>, T&gt;</td><td>If type <tt>T</tt> is an <a href="containers.html#assignable-data-types">assignable data type</a>, you can use <tt>T</tt> as the value type rather than <tt>T *</tt>. This often leads to nicer code.</td></tr>
+<tr valign="top" class="even"><td><a href="qmultihash.html">QMultiHash</a>&lt;<a href="qstring.html">QString</a>, T&gt;</td><td>If type <tt>T</tt> is an <a href="containers.html#assignable-data-type">assignable data type</a>, you can use <tt>T</tt> as the value type rather than <tt>T *</tt>. This often leads to nicer code.</td></tr>
 <tr valign="top" class="odd"><td><a href="qhash.html">QHash</a>&lt;<a href="qstring.html">QString</a>, T *&gt;</td><td rowspan="2">If you don't use duplicate keys, you can use <a href="qhash.html">QHash</a> instead of <a href="qmultihash.html">QMultiHash</a>. <a href="qmultihash.html">QMultiHash</a> inherits from <a href="qhash.html">QHash</a>.</td></tr>
 <tr valign="top" class="even"><td><a href="qhash.html">QHash</a>&lt;<a href="qstring.html">QString</a>, T&gt;</td></tr>
 </table></p>
@@ -1473,7 +1473,7 @@
 </table></p>
 <a name="qiodevicesource"></a>
 <h3>QIODeviceSource</h3>
-<p>The <a href="#qiodevicesource">QIODeviceSource</a> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e; If you use this mechanism in your application, please submit a report to the <a href="http://www.trolltech.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
+<p>The <a href="#qiodevicesource">QIODeviceSource</a> class was used internally in Qt 2.x in conjunction with QImageConsumer. It was obsoleted in Qt 3.0&#x2e; If you use this mechanism in your application, please submit a report to the <a href="http://www.qtsoftware.com/developer/task-tracker">Task Tracker</a> on the Trolltech website and we will try to find a satisfactory substitute.</p>
 <a name="qlabel"></a>
 <h3>QLabel</h3>
 <p><a href="qlabel.html">QLabel</a> doesn't enable word-wrap automatically anymore when rich text is used. You can enable it by calling <a href="qlabel.html#wordWrap-prop">QLabel::setWordWrap</a>() or by setting the <a href="qlabel.html#wordWrap-prop">wordWrap</a> property. The reason for this change is that the old behavior was confusing to many users.</p>
@@ -2425,6 +2425,28 @@
 <li>The <tt>QVariant::CString</tt> enum value is now a synonym for <a href="qvariant.html#Type-enum">QVariant::ByteArray</a>.</li>
 </ol>
 <p>Also, the <a href="qvariant.html">QVariant</a>(bool, int) constructor has been replaced by <a href="qvariant.html">QVariant</a>(bool). Old code like <a href="qvariant.html">QVariant</a>(true, 0) should be replaced with <a href="qvariant.html">QVariant</a>(true); otherwise, the <a href="qvariant.html">QVariant</a>(int, void *) overload might accidentally be triggered.</p>
+<p>Many of <a href="qvariant.html">QVariant</a>'s convenience functions in Qt 3, such as toColor() and toKeySequence(), have been removed to enable <a href="qvariant.html">QVariant</a> to be part of the <a href="qtcore.html">QtCore</a> module. <a href="qvariant.html">QVariant</a> is still able to hold values of these types.</p>
+<p>Types which are not supported by any of the <a href="qvariant.html">QVariant</a> constructors can be stored as variants with the <a href="qvariant.html#fromValue">QVariant::fromValue</a>() function. Types with no suitable convenience function for unpacking can be retrieved with the <a href="qvariant.html#value">QVariant::value</a>() function or passed directly to classes that implement the QVariant() operator.</p>
+<p><table align="center" cellpadding="2" cellspacing="1" border="0">
+<thead><tr valign="top" class="qt-style"><th>Qt 3 function</th><th>Qt 4 function</th></tr></thead>
+<tr valign="top" class="odd"><td>toBitmap ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toBrush ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toColorGroup ()</td><td>Use <a href="qvariant.html#value">QVariant::value</a>() with <a href="qpalette.html">QPalette</a> instead.</td></tr>
+<tr valign="top" class="even"><td>toColor ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toCString ()</td><td><a href="qvariant.html#toByteArray">QVariant::toByteArray</a>()</td></tr>
+<tr valign="top" class="even"><td>toCursor ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toFont ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toIconSet ()</td><td>Use <a href="qvariant.html#value">QVariant::value</a>() with <a href="qicon.html">QIcon</a> instead.</td></tr>
+<tr valign="top" class="odd"><td>toImage ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toKeySequence ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toPalette ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toPen ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toPixmap ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toPointArray ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="odd"><td>toRegion ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+<tr valign="top" class="even"><td>toSizePolicy ()</td><td><a href="qvariant.html#value">QVariant::value</a>()</td></tr>
+</table></p>
+<p>See the <a href="qvariant.html#Type-enum">QVariant::Type</a> enum for a list of types supported by <a href="qvariant.html">QVariant</a>.</p>
 <a name="qvbox"></a>
 <h3>QVBox</h3>
 <p>The <tt>QVBox</tt> class is now only available as <a href="q3vbox.html">Q3VBox</a> in Qt 4. You can achieve the same result as <tt>QVBox</tt> by creating a <a href="qwidget.html">QWidget</a> with a vertical layout:</p>
@@ -2591,8 +2613,8 @@
 </p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
-<td width="30%" align="left">Copyright &copy; 2008 Nokia</td>
+<td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.4.3</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
 </tr></table></div></address></body>
 </html>

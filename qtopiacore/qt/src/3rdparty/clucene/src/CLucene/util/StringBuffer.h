@@ -38,8 +38,8 @@ CL_NS_DEF(util)
    void append(const TCHAR* value, size_t appendedLength);
    ///Appends an integer (after conversion to a character string)
    void appendInt(const int32_t value);
-   ///Appends a float_t (after conversion to a character string)
-   void appendFloat(const float_t value, const int32_t digits);
+   ///Appends a qreal (after conversion to a character string)
+   void appendFloat(const qreal value, const int32_t digits);
    ///Puts a copy of the string value in front of the current string in the StringBuffer
    void prepend(const TCHAR* value);
    ///Puts a copy of the string value in front of the current string in the StringBuffer

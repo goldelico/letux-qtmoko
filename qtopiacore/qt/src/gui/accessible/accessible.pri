@@ -14,7 +14,7 @@ contains(QT_CONFIG, accessibility) {
 
       mac:!embedded {
         HEADERS += accessible/qaccessible_mac_p.h
-        SOURCES += accessible/qaccessible_mac.cpp
+        OBJECTIVE_SOURCES += accessible/qaccessible_mac.mm
       } else:win32 { 
         SOURCES += accessible/qaccessible_win.cpp
       } else {

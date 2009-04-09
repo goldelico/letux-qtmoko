@@ -1,72 +1,73 @@
 TEMPLATE = app
 LANGUAGE = C++
+DESTDIR = ../../../bin
+
 QT += xml \
     network
+
 CONFIG += qt \
     warn_on \
     uitools
+
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 build_all:!build_pass { 
     CONFIG -= build_all
     CONFIG += release
 }
-include(previewtool/previewtool.pri)
-SOURCES += batchtranslationdialog.cpp \
+
+include(../shared/formats.pri)
+
+DEFINES += QFORMINTERNAL_NAMESPACE
+INCLUDEPATH += ../../designer/src/uitools
+INCLUDEPATH += ../../designer/src/lib/uilib
+
+SOURCES += \
+    batchtranslationdialog.cpp \
+    errorsview.cpp \
     finddialog.cpp \
+    formpreviewview.cpp \
     main.cpp \
-    messagemodel.cpp \
-    messagestreeview.cpp \
+    mainwindow.cpp \
     messageeditor.cpp \
     messageeditorwidgets.cpp \
     messagehighlighter.cpp \
+    messagemodel.cpp \
     phrasebookbox.cpp \
     phrase.cpp \
     phrasemodel.cpp \
     phraseview.cpp \
-    sourcecodeview.cpp \
-    errorsview.cpp \
     printout.cpp \
     recentfiles.cpp \
-    sortedmessagesmodel.cpp \
+    sourcecodeview.cpp \
     statistics.cpp \
     translatedialog.cpp \
     translationsettingsdialog.cpp \
-    trwindow.cpp \
-    languagesdialog.cpp \
-    languagesmanager.cpp \
-    ../shared/xliff.cpp \
-    ../shared/simtexth.cpp \
-    ../shared/metatranslator.cpp \
-    ../shared/translator.cpp
-HEADERS += batchtranslationdialog.h \
+    ../shared/simtexth.cpp 
+
+HEADERS += \
+    batchtranslationdialog.h \
+    errorsview.h \
     finddialog.h \
-    messagemodel.h \
-    messagestreeview.h \
+    formpreviewview.h \
+    mainwindow.h \
     messageeditor.h \
     messageeditorwidgets.h \
     messagehighlighter.h \
+    messagemodel.h \
     phrasebookbox.h \
     phrase.h \
     phrasemodel.h \
     phraseview.h \
-    sourcecodeview.h \
-    errorsview.h \
     printout.h \
     recentfiles.h \
-    sortedmessagesmodel.h \
+    sourcecodeview.h \
     statistics.h \
     translatedialog.h \
     translationsettingsdialog.h \
-    trwindow.h \
-    languagesdialog.h \
-    languagesmanager.h \
-    ../shared/xliff.h \
-    ../shared/simtexth.h \
-    ../shared/metatranslator.h \
-    ../shared/translator.h
+    ../shared/simtexth.h
+
 contains(QT_PRODUCT, OpenSource.*):DEFINES *= QT_OPENSOURCE
 DEFINES += QT_KEYWORDS
-DESTDIR = ../../../bin
 TARGET = linguist
 win32:RC_FILE = linguist.rc
 mac { 
@@ -93,10 +94,7 @@ FORMS += statistics.ui \
     translatedialog.ui \
     mainwindow.ui \
     translationsettings.ui \
-    finddialog.ui \
-    languagesdialog.ui
-INCLUDEPATH += ../shared \
-    ../../assistant/lib
+    finddialog.ui
 RESOURCES += linguist.qrc
 
 TRANSLATIONS=$$[QT_INSTALL_TRANSLATIONS]/linguist_ja.ts \

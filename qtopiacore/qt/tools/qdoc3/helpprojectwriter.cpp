@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -56,7 +60,7 @@ HelpProjectWriter::HelpProjectWriter(const Config &config, const QString &defaul
 
     QStringList names = config.getStringList(CONFIG_QHP + Config::dot + "projects");
 
-    foreach (QString projectName, names) {
+    foreach (const QString &projectName, names) {
         HelpProject project;
         project.name = projectName;
 
@@ -71,21 +75,22 @@ HelpProjectWriter::HelpProjectWriter(const Config &config, const QString &defaul
         project.indexRoot = config.getString(prefix + "indexRoot");
         project.filterAttributes = config.getStringList(prefix + "filterAttributes").toSet();
         QSet<QString> customFilterNames = config.subVars(prefix + "customFilters");
-        foreach (QString filterName, customFilterNames) {
+        foreach (const QString &filterName, customFilterNames) {
             QString name = config.getString(prefix + "customFilters" + Config::dot + filterName + Config::dot + "name");
             QSet<QString> filters = config.getStringList(prefix + "customFilters" + Config::dot + filterName + Config::dot + "filterAttributes").toSet();
             project.customFilters[name] = filters;
         }
         //customFilters = config.defs.
-        
+
         foreach (QString name, config.getStringSet(prefix + "excluded"))
             project.excluded.insert(name.replace("\\", "/"));
-        
-        foreach (QString name, config.getStringList(prefix + "subprojects")) {
+
+        foreach (const QString &name, config.getStringList(prefix + "subprojects")) {
             SubProject subproject;
             QString subprefix = prefix + "subprojects" + Config::dot + name + Config::dot;
             subproject.title = config.getString(subprefix + "title");
             subproject.indexTitle = config.getString(subprefix + "indexTitle");
+            subproject.sortPages = config.getBool(subprefix + "sortPages");
             readSelectors(subproject, config.getStringList(subprefix + "selectors"));
             project.subprojects[name] = subproject;
         }
@@ -112,7 +117,7 @@ void HelpProjectWriter::readSelectors(SubProject &subproject, const QStringList 
     typeHash["property"] = Node::Property;
     typeHash["variable"] = Node::Variable;
     typeHash["target"] = Node::Target;
-    
+
     QHash<QString, FakeNode::SubType> subTypeHash;
     subTypeHash["example"] = FakeNode::Example;
     subTypeHash["headerfile"] = FakeNode::HeaderFile;
@@ -121,10 +126,10 @@ void HelpProjectWriter::readSelectors(SubProject &subproject, const QStringList 
     subTypeHash["module"] = FakeNode::Module;
     subTypeHash["page"] = FakeNode::Page;
     subTypeHash["externalpage"] = FakeNode::ExternalPage;
-    
+
     QSet<FakeNode::SubType> allSubTypes = QSet<FakeNode::SubType>::fromList(subTypeHash.values());
-    
-    foreach (QString selector, selectors) {
+
+    foreach (const QString &selector, selectors) {
         QStringList pieces = selector.split(":");
         if (pieces.size() == 1) {
             QString lower = selector.toLower();
@@ -216,7 +221,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
     // Only add nodes to the set for each subproject if they match a selector.
     // Those that match will be listed in the table of contents.
 
-    foreach (QString name, project.subprojects.keys()) {
+    foreach (const QString &name, project.subprojects.keys()) {
         SubProject subproject = project.subprojects[name];
         // No selectors: accept all nodes.
         if (subproject.selectors.isEmpty())
@@ -232,7 +237,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
                 if (subproject.selectors[node->type()].contains(fakeNode->subType()) &&
                     fakeNode->subType() != FakeNode::ExternalPage &&
                     !fakeNode->fullTitle().isEmpty())
-                
+
                     project.subprojects[name].nodes[objName] = node;
             }
         }
@@ -254,7 +259,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
             project.keywords.append(keywordDetails(node));
             {
                 const EnumNode *enumNode = static_cast<const EnumNode*>(node);
-                foreach (EnumItem item, enumNode->items()) {
+                foreach (const EnumItem &item, enumNode->items()) {
                     QStringList details;
                     
                     if (enumNode->itemAccess(item.name()) == Node::Private)
@@ -280,7 +285,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
         case Node::Function:
             {
                 const FunctionNode *funcNode = static_cast<const FunctionNode *>(node);
-                
+
                 // Only insert keywords for non-constructors. Constructors are covered
                 // by the classes themselves.
 
@@ -324,7 +329,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
 
                 if (fakeNode->subType() != FakeNode::File) {
                     if (fakeNode->doc().hasKeywords()) {
-                        foreach (Atom *keyword, fakeNode->doc().keywords()) {
+                        foreach (const Atom *keyword, fakeNode->doc().keywords()) {
                             if (!keyword->string().isEmpty()) {
                                 QStringList details;
                                 details << keyword->string()
@@ -341,7 +346,7 @@ bool HelpProjectWriter::generateSection(HelpProject &project,
                 }
 /*
                 if (fakeNode->doc().hasTableOfContents()) {
-                    foreach (Atom *item, fakeNode->doc().tableOfContents()) {
+                    foreach (const Atom *item, fakeNode->doc().tableOfContents()) {
                         QString title = Text::sectionHeading(item).toString();
                         if (!title.isEmpty()) {
                             QStringList details;
@@ -389,12 +394,12 @@ void HelpProjectWriter::generateSections(HelpProject &project,
         const InnerNode *inner = static_cast<const InnerNode *>(node);
 
         // Ensure that we don't visit nodes more than once.
-        QMap<QString, Node*> childMap;
-        foreach (Node *node, inner->childNodes()) {
+        QMap<QString, const Node*> childMap;
+        foreach (const Node *node, inner->childNodes()) {
             if (node->access() == Node::Private)
                 continue;
             if (node->type() == Node::Fake)
-                childMap[static_cast<FakeNode *>(node)->fullTitle()] = node;
+                childMap[static_cast<const FakeNode *>(node)->fullTitle()] = node;
             else {
                 if (node->type() == Node::Function) {
                     const FunctionNode *funcNode = static_cast<const FunctionNode *>(node);
@@ -405,7 +410,7 @@ void HelpProjectWriter::generateSections(HelpProject &project,
             }
         }
 
-        foreach (Node *child, childMap)
+        foreach (const Node *child, childMap)
             generateSections(project, writer, child);
     }
 }
@@ -459,7 +464,7 @@ void HelpProjectWriter::writeNode(HelpProject &project, QXmlStreamWriter &writer
                 writer.writeEndElement(); // section
                 project.files.insert(obsoletePath);
             }
-            
+
             writer.writeEndElement(); // section
             break;
 
@@ -478,7 +483,8 @@ void HelpProjectWriter::writeNode(HelpProject &project, QXmlStreamWriter &writer
             writer.writeStartElement("section");
             writer.writeAttribute("ref", href);
             writer.writeAttribute("title", fakeNode->fullTitle());
-
+            //            qDebug() << "Title:" << fakeNode->fullTitle();
+            
             if (fakeNode->subType() == FakeNode::HeaderFile) {
 
                 // Write subsections for all members, obsolete members and Qt 3
@@ -550,7 +556,7 @@ void HelpProjectWriter::generateProject(HelpProject &project)
     for (it = project.customFilters.begin(); it != project.customFilters.end(); ++it) {
         writer.writeStartElement("customFilter");
         writer.writeAttribute("name", it.key());
-        foreach (QString filter, it.value())
+        foreach (const QString &filter, it.value())
             writer.writeTextElement("filterAttribute", filter);
         writer.writeEndElement(); // customFilter
     }
@@ -559,7 +565,7 @@ void HelpProjectWriter::generateProject(HelpProject &project)
     writer.writeStartElement("filterSection");
 
     // Write filterAttribute elements.
-    foreach (QString filterName, project.filterAttributes)
+    foreach (const QString &filterName, project.filterAttributes)
         writer.writeTextElement("filterAttribute", filterName);
 
     writer.writeStartElement("toc");
@@ -573,7 +579,7 @@ void HelpProjectWriter::generateProject(HelpProject &project)
 
     generateSections(project, writer, rootNode);
 
-    foreach (QString name, project.subprojects.keys()) {
+    foreach (const QString &name, project.subprojects.keys()) {
         SubProject subproject = project.subprojects[name];
 
         if (!name.isEmpty()) {
@@ -583,9 +589,32 @@ void HelpProjectWriter::generateProject(HelpProject &project)
             writer.writeAttribute("title", subproject.title);
             project.files.insert(indexPath);
         }
+        if (subproject.sortPages) {
+            QStringList titles = subproject.nodes.keys();
+            titles.sort();
+            foreach (const QString &title, titles)
+                writeNode(project, writer, subproject.nodes[title]);
+        } else {
+            // Find a contents node and navigate from there, using the NextLink values.
+            foreach (const Node *node, subproject.nodes) {
+                QString nextTitle = node->links().value(Node::NextLink).first;
+                if (!nextTitle.isEmpty() &&
+                    node->links().value(Node::ContentsLink).first.isEmpty()) {
 
-        foreach (const Node *node, subproject.nodes)
-            writeNode(project, writer, node);
+                    FakeNode *nextPage = const_cast<FakeNode *>(tree->findFakeNodeByTitle(nextTitle));
+
+                    // Write the contents node.
+                    writeNode(project, writer, node);
+
+                    while (nextPage) {
+                        writeNode(project, writer, nextPage);
+                        nextTitle = nextPage->links().value(Node::NextLink).first;
+                        nextPage = const_cast<FakeNode *>(tree->findFakeNodeByTitle(nextTitle));
+                    }
+                    break;
+                }
+            }
+        }
 
         if (!name.isEmpty())
             writer.writeEndElement(); // section
@@ -595,7 +624,7 @@ void HelpProjectWriter::generateProject(HelpProject &project)
     writer.writeEndElement(); // toc
 
     writer.writeStartElement("keywords");
-    foreach (QStringList details, project.keywords) {
+    foreach (const QStringList &details, project.keywords) {
         writer.writeStartElement("keyword");
         writer.writeAttribute("name", details[0]);
         writer.writeAttribute("id", details[1]);
@@ -605,11 +634,11 @@ void HelpProjectWriter::generateProject(HelpProject &project)
     writer.writeEndElement(); // keywords
 
     writer.writeStartElement("files");
-    foreach (QString usedFile, project.files) {
+    foreach (const QString &usedFile, project.files) {
         if (!usedFile.isEmpty())
             writer.writeTextElement("file", usedFile);
     }
-    foreach (QString usedFile, project.extraFiles)
+    foreach (const QString &usedFile, project.extraFiles)
         writer.writeTextElement("file", usedFile);
     writer.writeEndElement(); // files
 

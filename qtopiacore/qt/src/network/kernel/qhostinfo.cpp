@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -68,7 +72,7 @@ void QHostInfoAgent::staticCleanup()
     \brief The QHostInfo class provides static functions for host name lookups.
 
     \reentrant
-    \module network
+    \inmodule QtNetwork
     \ingroup io
 
     QHostInfo uses the lookup mechanisms provided by the operating
@@ -158,17 +162,26 @@ int QHostInfo::lookupHost(const QString &name, QObject *receiver,
     QWindowsSockInit bust; // makes sure WSAStartup was callled
 #endif
 
-    // Support for IDNA by first splitting the name into labels, then
-    // running the punycode decoder on each part, then merging
-    // together before passing the name to the lookup agent.
+    // Support for IDNA
     QString lookup = QString::fromLatin1(QUrl::toAce(name));
 
-    QHostInfoAgent *agent = theAgent();
-
     QHostInfoResult *result = new QHostInfoResult;
+    result->autoDelete = false;
     QObject::connect(result, SIGNAL(resultsReady(QHostInfo)),
                      receiver, member);
     int id = result->lookupId = theIdCounter.fetchAndAddRelaxed(1);
+
+    if (lookup.isEmpty()) {
+        QHostInfo info(id);
+        info.setError(QHostInfo::HostNotFound);
+        info.setErrorString(QObject::tr("No host name given"));
+        QMetaObject::invokeMethod(result, "emitResultsReady", Qt::QueuedConnection,
+                                  Q_ARG(QHostInfo, info));
+        result->autoDelete = true;
+        return id;
+    }
+
+    QHostInfoAgent *agent = theAgent();
     agent->addHostName(lookup, result);
 
 #if !defined QT_NO_THREAD
@@ -213,7 +226,13 @@ QHostInfo QHostInfo::fromName(const QString &name)
     qDebug("QHostInfo::fromName(\"%s\")",name.toLatin1().constData());
 #endif
 
-    return QHostInfoAgent::fromName(QLatin1String(QUrl::toAce(name)));
+    if (!name.isEmpty())
+        return QHostInfoAgent::fromName(QLatin1String(QUrl::toAce(name)));
+
+    QHostInfo retval;
+    retval.d->err = HostNotFound;
+    retval.d->errorStr = QObject::tr("No host name given");
+    return retval;
 }
 
 /*!
@@ -442,6 +461,17 @@ void QHostInfo::setErrorString(const QString &str)
     \fn QString QHostInfo::localHostName()
 
     Returns the host name of this machine.
+
+    \sa hostName()
+*/
+
+/*!
+    \fn QString QHostInfo::localDomainName()
+
+    Returns the DNS domain of this machine.
+
+    Note: DNS domains are not related to domain names found in
+    Windows networks.
 
     \sa hostName()
 */

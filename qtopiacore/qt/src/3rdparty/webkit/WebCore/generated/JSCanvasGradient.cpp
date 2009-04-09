@@ -27,72 +27,82 @@
 #include "CanvasGradient.h"
 #include "PlatformString.h"
 
-using namespace KJS;
+#include <runtime/Error.h>
+
+using namespace JSC;
 
 namespace WebCore {
 
+ASSERT_CLASS_FITS_IN_CELL(JSCanvasGradient)
+
 /* Hash table for prototype */
 
-static const HashEntry JSCanvasGradientPrototypeTableEntries[] =
+static const HashTableValue JSCanvasGradientPrototypeTableValues[2] =
 {
-    { "addColorStop", JSCanvasGradient::AddColorStopFuncNum, DontDelete|Function, 2, 0 }
+    { "addColorStop", DontDelete|Function, (intptr_t)jsCanvasGradientPrototypeFunctionAddColorStop, (intptr_t)2 },
+    { 0, 0, 0, 0 }
 };
 
-static const HashTable JSCanvasGradientPrototypeTable = 
-{
-    2, 1, JSCanvasGradientPrototypeTableEntries, 1
-};
+static const HashTable JSCanvasGradientPrototypeTable =
+#if ENABLE(PERFECT_HASH_SIZE)
+    { 0, JSCanvasGradientPrototypeTableValues, 0 };
+#else
+    { 2, 1, JSCanvasGradientPrototypeTableValues, 0 };
+#endif
 
-const ClassInfo JSCanvasGradientPrototype::info = { "CanvasGradientPrototype", 0, &JSCanvasGradientPrototypeTable, 0 };
+const ClassInfo JSCanvasGradientPrototype::s_info = { "CanvasGradientPrototype", 0, &JSCanvasGradientPrototypeTable, 0 };
 
 JSObject* JSCanvasGradientPrototype::self(ExecState* exec)
 {
-    return KJS::cacheGlobalObject<JSCanvasGradientPrototype>(exec, "[[JSCanvasGradient.prototype]]");
+    return getDOMPrototype<JSCanvasGradient>(exec);
 }
 
 bool JSCanvasGradientPrototype::getOwnPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticFunctionSlot<JSCanvasGradientPrototypeFunction, JSObject>(exec, &JSCanvasGradientPrototypeTable, this, propertyName, slot);
+    return getStaticFunctionSlot<JSObject>(exec, &JSCanvasGradientPrototypeTable, this, propertyName, slot);
 }
 
-const ClassInfo JSCanvasGradient::info = { "CanvasGradient", 0, 0, 0 };
+const ClassInfo JSCanvasGradient::s_info = { "CanvasGradient", 0, 0, 0 };
 
-JSCanvasGradient::JSCanvasGradient(ExecState* exec, CanvasGradient* impl)
-    : m_impl(impl)
+JSCanvasGradient::JSCanvasGradient(PassRefPtr<Structure> structure, PassRefPtr<CanvasGradient> impl)
+    : DOMObject(structure)
+    , m_impl(impl)
 {
-    setPrototype(JSCanvasGradientPrototype::self(exec));
 }
 
 JSCanvasGradient::~JSCanvasGradient()
 {
-    ScriptInterpreter::forgetDOMObject(m_impl.get());
+    forgetDOMObject(*Heap::heap(this)->globalData(), m_impl.get());
+
 }
 
-JSValue* JSCanvasGradientPrototypeFunction::callAsFunction(ExecState* exec, JSObject* thisObj, const List& args)
+JSObject* JSCanvasGradient::createPrototype(ExecState* exec)
 {
-    if (!thisObj->inherits(&JSCanvasGradient::info))
-      return throwError(exec, TypeError);
-
-    CanvasGradient* imp = static_cast<CanvasGradient*>(static_cast<JSCanvasGradient*>(thisObj)->impl());
-
-    switch (id) {
-    case JSCanvasGradient::AddColorStopFuncNum: {
-        float offset = args[0]->toFloat(exec);
-        String color = args[1]->toString(exec);
-
-        imp->addColorStop(offset, color);
-        return jsUndefined();
-    }
-    }
-    return 0;
+    return new (exec) JSCanvasGradientPrototype(JSCanvasGradientPrototype::createStructure(exec->lexicalGlobalObject()->objectPrototype()));
 }
-KJS::JSValue* toJS(KJS::ExecState* exec, CanvasGradient* obj)
+
+JSValuePtr jsCanvasGradientPrototypeFunctionAddColorStop(ExecState* exec, JSObject*, JSValuePtr thisValue, const ArgList& args)
 {
-    return KJS::cacheDOMObject<CanvasGradient, JSCanvasGradient>(exec, obj);
+    if (!thisValue->isObject(&JSCanvasGradient::s_info))
+        return throwError(exec, TypeError);
+    JSCanvasGradient* castedThisObj = static_cast<JSCanvasGradient*>(asObject(thisValue));
+    CanvasGradient* imp = static_cast<CanvasGradient*>(castedThisObj->impl());
+    ExceptionCode ec = 0;
+    float offset = args.at(exec, 0)->toFloat(exec);
+    const UString& color = args.at(exec, 1)->toString(exec);
+
+    imp->addColorStop(offset, color, ec);
+    setDOMException(exec, ec);
+    return jsUndefined();
 }
-CanvasGradient* toCanvasGradient(KJS::JSValue* val)
+
+JSC::JSValuePtr toJS(JSC::ExecState* exec, CanvasGradient* object)
 {
-    return val->isObject(&JSCanvasGradient::info) ? static_cast<JSCanvasGradient*>(val)->impl() : 0;
+    return getDOMObjectWrapper<JSCanvasGradient>(exec, object);
+}
+CanvasGradient* toCanvasGradient(JSC::JSValuePtr value)
+{
+    return value->isObject(&JSCanvasGradient::s_info) ? static_cast<JSCanvasGradient*>(asObject(value))->impl() : 0;
 }
 
 }

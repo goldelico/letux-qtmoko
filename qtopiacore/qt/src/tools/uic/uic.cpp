@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -52,7 +56,7 @@
 #include "javawritedeclaration.h"
 #endif
 
-#include <QtXml/QDomDocument>
+#include <QtCore/QXmlStreamReader>
 #include <QtCore/QFileInfo>
 #include <QtCore/QRegExp>
 #include <QtCore/QTextStream>
@@ -90,20 +94,13 @@ bool Uic::printDependencies()
             return false;
     }
 
-    QDomDocument doc;                        // ### generalize. share more code with the other tools!
-    if (!doc.setContent(&f))
-        return false;
-
-    QDomElement root = doc.firstChildElement();
-    DomUI *ui = new DomUI();
-    ui->read(root);
-
-    double version = ui->attributeVersion().toDouble();
-    if (version < 4.0) {
-        delete ui;
-
-        fprintf(stderr, "uic: File generated with too old version of Qt Designer\n");
-        return false;
+    DomUI *ui = 0;
+    {
+        QXmlStreamReader reader;
+        reader.setDevice(&f);
+        ui = parseUiFile(reader);
+        if (!ui)
+            return false;
     }
 
     if (DomIncludes *includes = ui->elementIncludes()) {
@@ -149,20 +146,68 @@ void Uic::writeCopyrightHeader(DomUI *ui)
         out << "********************************************************************************/\n\n";
 }
 
+// Check the version with a stream reader at the <ui> element.
+
+static double versionFromUiAttribute(QXmlStreamReader &reader)
+{
+    const QXmlStreamAttributes attributes = reader.attributes();
+    const QString versionAttribute = QLatin1String("version");
+    if (!attributes.hasAttribute(versionAttribute))
+        return 4.0;
+    const QString version = attributes.value(versionAttribute).toString();
+    return version.toDouble();
+}
+
+DomUI *Uic::parseUiFile(QXmlStreamReader &reader)
+{
+    DomUI *ui = 0;
+
+    const QString uiElement = QLatin1String("ui");
+    while (!reader.atEnd()) {
+        if (reader.readNext() == QXmlStreamReader::StartElement) {
+            if (reader.name().compare(uiElement, Qt::CaseInsensitive) == 0
+                && !ui) {
+                const double version = versionFromUiAttribute(reader);
+                if (version < 4.0) {
+                    const QString msg = QString::fromLatin1("uic: File generated with too old version of Qt Designer (%1)").arg(version);
+                    fprintf(stderr, "%s\n", qPrintable(msg));
+                    return 0;
+                }
+
+                ui = new DomUI();
+                ui->read(reader);
+            } else {
+                reader.raiseError(QLatin1String("Unexpected element ") + reader.name().toString());
+            }
+        }
+    }
+    if (reader.hasError()) {
+        delete ui;
+        ui = 0;
+        fprintf(stderr, "uic: Error in line %llu, column %llu : %s\n",
+                reader.lineNumber(), reader.columnNumber(),
+                reader.errorString().toAscii().constData());
+    }
+
+    return ui;
+}
+
 bool Uic::write(QIODevice *in)
 {
-    QDomDocument doc;
-    if (!doc.setContent(in))
-        return false;
-
     if (option().generator == Option::JavaGenerator) {
          // the Java generator ignores header protection
         opt.headerProtection = false;
     }
 
-    QDomElement root = doc.firstChildElement();
-    DomUI *ui = new DomUI();
-    ui->read(root);
+    DomUI *ui = 0;
+    {
+        QXmlStreamReader reader;
+        reader.setDevice(in);
+        ui = parseUiFile(reader);
+
+        if (!ui)
+            return false;
+    }
 
     double version = ui->attributeVersion().toDouble();
     if (version < 4.0) {
@@ -303,7 +348,8 @@ bool Uic::isButton(const QString &className) const
     return customWidgetsInfo()->extends(className, QLatin1String("QRadioButton"))
         || customWidgetsInfo()->extends(className, QLatin1String("QToolButton"))
         || customWidgetsInfo()->extends(className, QLatin1String("QCheckBox"))
-        || customWidgetsInfo()->extends(className, QLatin1String("QPushButton"));
+        || customWidgetsInfo()->extends(className, QLatin1String("QPushButton"))
+        || customWidgetsInfo()->extends(className, QLatin1String("QCommandLinkButton"));
 }
 
 bool Uic::isContainer(const QString &className) const

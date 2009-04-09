@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2006 Nikolas Zimmermann <zimmermann@kde.org>
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
+ * Copyright (C) 2008 Holger Hans Peter Freyther
  *
  * All rights reserved.
  *
@@ -31,7 +32,6 @@
 #include "Frame.h"
 #include "DocLoader.h"
 #include "ResourceHandle.h"
-#include "DeprecatedString.h"
 #include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
 #include "qwebpage_p.h"
@@ -134,7 +134,7 @@ bool ResourceHandle::start(Frame* frame)
     return QWebNetworkManager::self()->add(this, getInternal()->m_frame->page()->d->networkInterface);
 #else
     ResourceHandleInternal *d = getInternal();
-    d->m_job = new QNetworkReplyHandler(this);
+    d->m_job = new QNetworkReplyHandler(this, QNetworkReplyHandler::LoadMode(d->m_defersLoading));
     return true;
 #endif
 }
@@ -171,7 +171,7 @@ PassRefPtr<SharedBuffer> ResourceHandle::bufferedData()
     return 0;
 }
 
-void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& data, FrameLoader* loader)
+void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, ResourceError& error, ResourceResponse& response, Vector<char>& data, Frame* frame)
 {
     WebCoreSynchronousLoader syncLoader;
     ResourceHandle handle(request, &syncLoader, true, false, true);
@@ -184,8 +184,8 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
     }
 #else
     ResourceHandleInternal *d = handle.getInternal();
-    d->m_frame = static_cast<FrameLoaderClientQt*>(loader->client())->webFrame();
-    d->m_job = new QNetworkReplyHandler(&handle);
+    d->m_frame = static_cast<FrameLoaderClientQt*>(frame->loader()->client())->webFrame();
+    d->m_job = new QNetworkReplyHandler(&handle, QNetworkReplyHandler::LoadNormal);
 #endif
 
     syncLoader.waitForCompletion();
@@ -198,6 +198,11 @@ void ResourceHandle::loadResourceSynchronously(const ResourceRequest& request, R
 void ResourceHandle::setDefersLoading(bool defers)
 {
     d->m_defersLoading = defers;
+
+#if QT_VERSION >= 0x040400
+    if (d->m_job)
+        d->m_job->setLoadMode(QNetworkReplyHandler::LoadMode(defers));
+#endif
 }
 
 } // namespace WebCore

@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -75,7 +79,13 @@ QT_BEGIN_NAMESPACE
 class QMYSQLDriverPrivate
 {
 public:
-    QMYSQLDriverPrivate() : mysql(0), tc(0), preparedQuerys(false), preparedQuerysEnabled(false) {}
+    QMYSQLDriverPrivate() : mysql(0),
+#ifndef QT_NO_TEXTCODEC
+        tc(QTextCodec::codecForLocale()),
+#else
+        tc(0),
+#endif
+        preparedQuerys(false), preparedQuerysEnabled(false) {}
     MYSQL *mysql;
     QTextCodec *tc;
 
@@ -153,15 +163,10 @@ static inline QVariant qDateTimeFromString(QString &val)
 #endif
 }
 
-class QMYSQLResultPrivate : public QMYSQLDriverPrivate
+class QMYSQLResultPrivate
 {
 public:
-    QMYSQLResultPrivate() : QMYSQLDriverPrivate(), result(0),
-#ifndef QT_NO_TEXTCODEC
-        tc(QTextCodec::codecForLocale()),
-#else
-        tc(0),
-#endif
+    QMYSQLResultPrivate(QMYSQLDriverPrivate* dp) : d(dp), result(0),
         rowsAffected(0), hasBlobs(false)
 #if MYSQL_VERSION_ID >= 40108
         , stmt(0), meta(0), inBinds(0), outBinds(0)
@@ -169,9 +174,9 @@ public:
         , precisionPolicy(QSql::HighPrecision)
         {}
 
+    QMYSQLDriverPrivate* d;
     MYSQL_RES *result;
     MYSQL_ROW row;
-    QTextCodec *tc;
 
     int rowsAffected;
 
@@ -374,10 +379,7 @@ bool QMYSQLResultPrivate::bindInValues()
 QMYSQLResult::QMYSQLResult(const QMYSQLDriver* db)
 : QSqlResult(db)
 {
-    d = new QMYSQLResultPrivate();
-    d->mysql = db->d->mysql;
-    d->tc = db->d->tc;
-    d->preparedQuerysEnabled = db->d->preparedQuerysEnabled;
+    d = new QMYSQLResultPrivate(db->d);
 }
 
 QMYSQLResult::~QMYSQLResult()
@@ -389,10 +391,11 @@ QMYSQLResult::~QMYSQLResult()
 QVariant QMYSQLResult::handle() const
 {
 #if MYSQL_VERSION_ID >= 40108
-    return d->meta ? qVariantFromValue(d->meta) : qVariantFromValue(d->stmt);
-#else
-    return qVariantFromValue(d->result);
+    if(d->d->preparedQuerys)
+        return d->meta ? qVariantFromValue(d->meta) : qVariantFromValue(d->stmt);
+    else
 #endif
+        return qVariantFromValue(d->result);
 }
 
 void QMYSQLResult::cleanup()
@@ -403,8 +406,8 @@ void QMYSQLResult::cleanup()
 // must iterate trough leftover result sets from multi-selects or stored procedures
 // if this isn't done subsequent queries will fail with "Commands out of sync"
 #if MYSQL_VERSION_ID >= 40100
-    while (mysql_next_result(d->mysql) == 0) {
-        MYSQL_RES *res = mysql_store_result(d->mysql);
+    while (d->d->mysql && mysql_next_result(d->d->mysql) == 0) {
+        MYSQL_RES *res = mysql_store_result(d->d->mysql);
         if (res)
             mysql_free_result(res);
     }
@@ -444,7 +447,7 @@ void QMYSQLResult::cleanup()
     setAt(-1);
     setActive(false);
 
-    d->preparedQuerys = d->preparedQuerysEnabled;
+    d->d->preparedQuerys = d->d->preparedQuerysEnabled;
 }
 
 bool QMYSQLResult::fetch(int i)
@@ -452,7 +455,7 @@ bool QMYSQLResult::fetch(int i)
     if (isForwardOnly()) { // fake a forward seek
         if (at() < i) {
             int x = i - at();
-            while (--x && fetchNext());
+            while (--x && fetchNext()) {};
             return fetchNext();
         } else {
             return false;
@@ -460,7 +463,7 @@ bool QMYSQLResult::fetch(int i)
     }
     if (at() == i)
         return true;
-    if (d->preparedQuerys) {
+    if (d->d->preparedQuerys) {
 #if MYSQL_VERSION_ID >= 40108
         mysql_stmt_data_seek(d->stmt, i);
 
@@ -491,7 +494,7 @@ bool QMYSQLResult::fetch(int i)
 
 bool QMYSQLResult::fetchNext()
 {
-    if (d->preparedQuerys) {
+    if (d->d->preparedQuerys) {
 #if MYSQL_VERSION_ID >= 40108
         if (mysql_stmt_fetch(d->stmt))
             return false;
@@ -511,12 +514,12 @@ bool QMYSQLResult::fetchLast()
 {
     if (isForwardOnly()) { // fake this since MySQL can't seek on forward only queries
         bool success = fetchNext(); // did we move at all?
-        while (fetchNext());
+        while (fetchNext()) {};
         return success;
     }
 
     my_ulonglong numRows;
-    if (d->preparedQuerys) {
+    if (d->d->preparedQuerys) {
 #if MYSQL_VERSION_ID >= 40108
         numRows = mysql_stmt_num_rows(d->stmt);
 #else
@@ -553,12 +556,12 @@ QVariant QMYSQLResult::data(int field)
     int fieldLength = 0;
     const QMYSQLResultPrivate::QMyField &f = d->fields.at(field);
     QString val;
-    if (d->preparedQuerys) {
+    if (d->d->preparedQuerys) {
         if (f.nullIndicator)
             return QVariant(f.type);
 
         if (f.type != QVariant::ByteArray)
-            val = toUnicode(d->tc, f.outField, f.bufLength);
+            val = toUnicode(d->d->tc, f.outField, f.bufLength);
     } else {
         if (d->row[field] == NULL) {
             // NULL value
@@ -566,7 +569,7 @@ QVariant QMYSQLResult::data(int field)
         }
         fieldLength = mysql_fetch_lengths(d->result)[field];
         if (f.type != QVariant::ByteArray)
-            val = toUnicode(d->tc, d->row[field], fieldLength);
+            val = toUnicode(d->d->tc, d->row[field], fieldLength);
     }
 
     switch(f.type) {
@@ -584,14 +587,18 @@ QVariant QMYSQLResult::data(int field)
         switch(d->precisionPolicy) {
             case QSql::LowPrecisionInt32:
                 v=val.toInt(&ok);
+                break;
             case QSql::LowPrecisionInt64:
                 v = val.toLongLong(&ok);
+                break;
             case QSql::LowPrecisionDouble:
                 v = val.toDouble(&ok);
+                break;
             case QSql::HighPrecision:
             default:
                 v = val;
                 ok = true;
+                break;
         }
         if(ok)
             return v;
@@ -607,7 +614,7 @@ QVariant QMYSQLResult::data(int field)
     case QVariant::ByteArray: {
 
         QByteArray ba;
-        if (d->preparedQuerys) {
+        if (d->d->preparedQuerys) {
             ba = QByteArray(f.outField, f.bufLength);
         } else {
             ba = QByteArray(d->row[field], fieldLength);
@@ -624,7 +631,7 @@ QVariant QMYSQLResult::data(int field)
 
 bool QMYSQLResult::isNull(int field)
 {
-   if (d->preparedQuerys)
+   if (d->d->preparedQuerys)
        return d->fields.at(field).nullIndicator;
    else
        return d->row[field] == NULL;
@@ -635,25 +642,28 @@ bool QMYSQLResult::reset (const QString& query)
     if (!driver() || !driver()->isOpen() || driver()->isOpenError())
         return false;
 
-    cleanup();
-    d->preparedQuerys = false;
+    if(d->d->preparedQuerysEnabled && prepare(query)) {
+        d->d->preparedQuerys = true;
+        return exec();
+    }
+    d->d->preparedQuerys = false;
 
-    const QByteArray encQuery(fromUnicode(d->tc, query));
-    if (mysql_real_query(d->mysql, encQuery.data(), encQuery.length())) {
+    const QByteArray encQuery(fromUnicode(d->d->tc, query));
+    if (mysql_real_query(d->d->mysql, encQuery.data(), encQuery.length())) {
         setLastError(qMakeError(QCoreApplication::translate("QMYSQLResult", "Unable to execute query"),
-                     QSqlError::StatementError, d));
+                     QSqlError::StatementError, d->d));
         return false;
     }
-    d->result = mysql_store_result(d->mysql);
-    if (!d->result && mysql_field_count(d->mysql) > 0) {
+    d->result = mysql_store_result(d->d->mysql);
+    if (!d->result && mysql_field_count(d->d->mysql) > 0) {
         setLastError(qMakeError(QCoreApplication::translate("QMYSQLResult", "Unable to store result"),
-                    QSqlError::StatementError, d));
+                    QSqlError::StatementError, d->d));
         return false;
     }
-    int numFields = mysql_field_count(d->mysql);
+    int numFields = mysql_field_count(d->d->mysql);
     setSelect(numFields != 0);
     d->fields.resize(numFields);
-    d->rowsAffected = mysql_affected_rows(d->mysql);
+    d->rowsAffected = mysql_affected_rows(d->d->mysql);
     if (isSelect()) {
         for(int i = 0; i < numFields; i++) {
             MYSQL_FIELD* field = mysql_fetch_field_direct(d->result, i);
@@ -661,15 +671,15 @@ bool QMYSQLResult::reset (const QString& query)
         }
     }
     setActive(true);
-    return true;
+    return isActive();
 }
 
 int QMYSQLResult::size()
 {
     if (isSelect())
-        if (d->preparedQuerys)
+        if (d->d->preparedQuerys)
 #if MYSQL_VERSION_ID >= 40108
-            return int(mysql_stmt_num_rows(d->stmt));
+            return mysql_stmt_num_rows(d->stmt);
 #else
             return -1;
 #endif
@@ -689,14 +699,14 @@ QVariant QMYSQLResult::lastInsertId() const
     if (!isActive())
         return QVariant();
 
-    if (d->preparedQuerys) {
+    if (d->d->preparedQuerys) {
 #if MYSQL_VERSION_ID >= 40108
         quint64 id = mysql_stmt_insert_id(d->stmt);
         if (id)
             return QVariant(id);
 #endif
     } else {
-        quint64 id = mysql_insert_id(d->mysql);
+        quint64 id = mysql_insert_id(d->d->mysql);
         if (id)
             return QVariant(id);
     }
@@ -711,16 +721,16 @@ QSqlRecord QMYSQLResult::record() const
         return info;
 
 #if MYSQL_VERSION_ID >= 40108
-    res = d->preparedQuerys ? d->meta : d->result;
+    res = d->d->preparedQuerys ? d->meta : d->result;
 #else
     res = d->result;
 #endif
 
-    if (!mysql_errno(d->mysql)) {
+    if (!mysql_errno(d->d->mysql)) {
         mysql_field_seek(res, 0);
         MYSQL_FIELD* field = mysql_fetch_field(res);
         while(field) {
-            info.append(qToField(field, d->tc));
+            info.append(qToField(field, d->d->tc));
             field = mysql_fetch_field(res);
         }
     }
@@ -743,26 +753,26 @@ bool QMYSQLResult::nextResult()
         delete[] d->fields[i].outField;
     d->fields.clear();
 
-    int status = mysql_next_result(d->mysql);
+    int status = mysql_next_result(d->d->mysql);
     if (status > 0) {
         setLastError(qMakeError(QCoreApplication::translate("QMYSQLResult", "Unable to execute next query"),
-                     QSqlError::StatementError, d));
+                     QSqlError::StatementError, d->d));
         return false;
     } else if (status == -1) {
         return false;   // No more result sets
     }
 
-    d->result = mysql_store_result(d->mysql);
-    int numFields = mysql_field_count(d->mysql);
+    d->result = mysql_store_result(d->d->mysql);
+    int numFields = mysql_field_count(d->d->mysql);
     if (!d->result && numFields > 0) {
         setLastError(qMakeError(QCoreApplication::translate("QMYSQLResult", "Unable to store next result"),
-                     QSqlError::StatementError, d));
+                     QSqlError::StatementError, d->d));
         return false;
     }
 
     setSelect(numFields > 0);
     d->fields.resize(numFields);
-    d->rowsAffected = mysql_affected_rows(d->mysql);
+    d->rowsAffected = mysql_affected_rows(d->d->mysql);
 
     if (isSelect()) {
         for (int i = 0; i < numFields; i++) {
@@ -822,8 +832,9 @@ static MYSQL_TIME *toMySqlDate(QDate date, QTime time, QVariant::Type type)
 
 bool QMYSQLResult::prepare(const QString& query)
 {
+#if MYSQL_VERSION_ID >= 40108
     cleanup();
-    if (!d->preparedQuerys)
+    if (!d->d->preparedQuerys)
         return QSqlResult::prepare(query);
 
     int r;
@@ -832,14 +843,14 @@ bool QMYSQLResult::prepare(const QString& query)
         return false;
 
     if (!d->stmt)
-        d->stmt = mysql_stmt_init(d->mysql);
+        d->stmt = mysql_stmt_init(d->d->mysql);
     if (!d->stmt) {
         setLastError(qMakeError(QCoreApplication::translate("QMYSQLResult", "Unable to prepare statement"),
-                     QSqlError::StatementError, d));
+                     QSqlError::StatementError, d->d));
         return false;
     }
 
-    const QByteArray encQuery(fromUnicode(d->tc, query));
+    const QByteArray encQuery(fromUnicode(d->d->tc, query));
     r = mysql_stmt_prepare(d->stmt, encQuery.constData(), encQuery.length());
     if (r != 0) {
         setLastError(qMakeStmtError(QCoreApplication::translate("QMYSQLResult",
@@ -854,11 +865,14 @@ bool QMYSQLResult::prepare(const QString& query)
 
     setSelect(d->bindInValues());
     return true;
+#else
+    return false;
+#endif
 }
 
 bool QMYSQLResult::exec()
 {
-    if (!d->preparedQuerys)
+    if (!d->d->preparedQuerys)
         return QSqlResult::exec();
     if (!d->stmt)
         return false;
@@ -948,7 +962,7 @@ bool QMYSQLResult::exec()
                     break;
                 case QVariant::String:
                 default: {
-                    QByteArray ba = fromUnicode(d->tc, val.toString());
+                    QByteArray ba = fromUnicode(d->d->tc, val.toString());
                     stringVector.append(ba);
                     currBind->buffer_type = MYSQL_TYPE_STRING;
                     currBind->buffer = const_cast<char *>(ba.constData());
@@ -1223,6 +1237,7 @@ bool QMYSQLDriver::open(const QString& db,
         setLastError(qMakeError(tr("Unable to connect"),
                      QSqlError::ConnectionError, d));
         mysql_close(d->mysql);
+        d->mysql = NULL;
         setOpenError(true);
         return false;
     }
@@ -1251,6 +1266,7 @@ void QMYSQLDriver::close()
 {
     if (isOpen()) {
         mysql_close(d->mysql);
+        d->mysql = NULL;
         setOpen(false);
         setOpenError(false);
     }

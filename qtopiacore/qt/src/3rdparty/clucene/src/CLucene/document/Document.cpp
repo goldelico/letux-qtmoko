@@ -106,11 +106,11 @@ CL_NS_DEF(document)
 		fieldList = _CLNEW DocumentFieldEnumeration::DocumentFieldList(&field, fieldList);
 	}
 
-   void Document::setBoost(float_t boost) {
+   void Document::setBoost(qreal boost) {
       this->boost = boost;
    }
 
-   float_t Document::getBoost() const {
+   qreal Document::getBoost() const {
       return boost;
    }
 

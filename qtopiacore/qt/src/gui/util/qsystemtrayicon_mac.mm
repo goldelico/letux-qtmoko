@@ -1,37 +1,75 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/****************************************************************************
+**
+** Copyright (c) 2007-2008, Apple, Inc.
+**
+** All rights reserved.
+**
+** Redistribution and use in source and binary forms, with or without
+** modification, are permitted provided that the following conditions are met:
+**
+**   * Redistributions of source code must retain the above copyright notice,
+**     this list of conditions and the following disclaimer.
+**
+**   * Redistributions in binary form must reproduce the above copyright notice,
+**     this list of conditions and the following disclaimer in the documentation
+**     and/or other materials provided with the distribution.
+**
+**   * Neither the name of Apple, Inc. nor the names of its contributors
+**     may be used to endorse or promote products derived from this software
+**     without specific prior written permission.
+**
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+** "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+** LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+** A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+** CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+** EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+** PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+** PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+** LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+** NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+** SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **
 ****************************************************************************/
 
@@ -39,7 +77,8 @@
 
 @class QNSMenu;
 
-#include "qsystemtrayicon_p.h"
+#include <private/qt_cocoa_helpers_mac_p.h>
+#include <private/qsystemtrayicon_p.h>
 #include <qtemporaryfile.h>
 #include <qimagewriter.h>
 #include <qapplication.h>
@@ -52,8 +91,8 @@
 QT_BEGIN_NAMESPACE
 extern bool qt_mac_execute_apple_script(const QString &script, AEDesc *ret); //qapplication_mac.cpp
 extern void qtsystray_sendActivated(QSystemTrayIcon *i, int r); //qsystemtrayicon.cpp
-extern void qt_mac_get_accel(quint32 accel_key, quint32 *modif, quint32 *key); //qmenu_mac.cpp
-extern QString qt_mac_no_ampersands(QString str); //qmenu_mac.cpp
+extern NSString *keySequenceToKeyEqivalent(const QKeySequence &accel); // qmenu_mac.mm
+extern NSUInteger keySequenceModifierMask(const QKeySequence &accel);  // qmenu_mac.mm
 QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
@@ -63,9 +102,10 @@ QT_USE_NAMESPACE
 @interface QNSStatusItem : NSObject {
     NSStatusItem *item;
     QSystemTrayIcon *icon;
+    QSystemTrayIconPrivate *iconPrivate;
     QNSImageView *imageCell;
 }
--(id)initWithIcon:(QSystemTrayIcon*)icon;
+-(id)initWithIcon:(QSystemTrayIcon*)icon iconPrivate:(QSystemTrayIconPrivate *)iprivate;
 -(void)dealloc;
 -(QSystemTrayIcon*)icon;
 -(NSStatusItem*)item;
@@ -80,9 +120,8 @@ QT_USE_NAMESPACE
 }
 -(id)initWithParent:(QNSStatusItem*)myParent;
 -(QSystemTrayIcon*)icon;
--(void)mouseDown:(NSEvent *)mouseEvent;
--(void)drawRect:(NSRect)rect;
 -(void)menuTrackingDone:(NSNotification*)notification;
+-(void)mousePressed:(NSEvent *)mouseEvent;
 @end
 
 @interface QNSMenu : NSMenu {
@@ -95,34 +134,12 @@ QT_USE_NAMESPACE
 @end
 
 QT_BEGIN_NAMESPACE
-void qt_mac_trayicon_activate_action(QMenu *menu, QAction *action)
-{
-    emit menu->triggered(action);
-}
-
-NSImage *qt_mac_create_ns_image(const QPixmap &pm)
-{
-    QMacCocoaAutoReleasePool pool;
-    if(CGImageRef image = pm.toMacCGImageRef()) {
-        NSRect imageRect = NSMakeRect(0.0, 0.0, CGImageGetWidth(image), CGImageGetHeight(image));
-        NSImage *newImage = [[NSImage alloc] initWithSize:imageRect.size];
-        [newImage lockFocus];
-        {
-            CGContextRef imageContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-            CGContextDrawImage(imageContext, *(CGRect*)&imageRect, image);
-        }
-        [newImage unlockFocus];
-        return newImage;
-    }
-    return 0;
-}
-
 class QSystemTrayIconSys
 {
 public:
-    QSystemTrayIconSys(QSystemTrayIcon *icon) {
+    QSystemTrayIconSys(QSystemTrayIcon *icon, QSystemTrayIconPrivate *d) {
         QMacCocoaAutoReleasePool pool;
-        item = [[QNSStatusItem alloc] initWithIcon:icon];
+        item = [[QNSStatusItem alloc] initWithIcon:icon iconPrivate:d];
     }
     ~QSystemTrayIconSys() {
         QMacCocoaAutoReleasePool pool;
@@ -136,7 +153,7 @@ void QSystemTrayIconPrivate::install_sys()
 {
     Q_Q(QSystemTrayIcon);
     if (!sys) {
-        sys = new QSystemTrayIconSys(q);
+        sys = new QSystemTrayIconSys(q, this);
         updateIcon_sys();
         updateMenu_sys();
         updateToolTip_sys();
@@ -163,8 +180,13 @@ void QSystemTrayIconPrivate::updateIcon_sys()
 {
     if(sys && !icon.isNull()) {
         QMacCocoaAutoReleasePool pool;
+#ifndef QT_MAC_USE_COCOA
         const short scale = GetMBarHeight()-4;
-        NSImage *nsimage = qt_mac_create_ns_image(icon.pixmap(QSize(scale, scale)));
+#else
+        CGFloat hgt = [[[NSApplication sharedApplication] mainMenu] menuBarHeight];
+        const short scale = hgt - 4;
+#endif
+        NSImage *nsimage = static_cast<NSImage *>(qt_mac_create_nsimage(icon.pixmap(QSize(scale, scale))));
         [(NSImageView*)[[sys->item item] view] setImage: nsimage];
         [nsimage release];
     }
@@ -187,7 +209,7 @@ void QSystemTrayIconPrivate::updateToolTip_sys()
     if(sys) {
         QMacCocoaAutoReleasePool pool;
         QCFString string(toolTip);
-        [(NSImageView*)[[sys->item item] view] setToolTip:(NSString*)static_cast<CFStringRef>(string)];
+        [[[sys->item item] view] setToolTip:(NSString*)static_cast<CFStringRef>(string)];
     }
 }
 
@@ -289,7 +311,8 @@ QT_END_NAMESPACE
     [self setNeedsDisplay:YES];
 }
 
--(void)mouseDown:(NSEvent *)mouseEvent {
+-(void)mousePressed:(NSEvent *)mouseEvent
+{
     int clickCount = [mouseEvent clickCount];
     down = !down;
     if(!down && [self icon]->contextMenu())
@@ -301,18 +324,33 @@ QT_END_NAMESPACE
     else if ((clickCount%2))
         [parent doubleClickSelector:self];
     while (down) {
-        mouseEvent = [[self window] nextEventMatchingMask: NSLeftMouseDownMask | NSLeftMouseUpMask | NSLeftMouseDraggedMask];
+        mouseEvent = [[self window] nextEventMatchingMask:NSLeftMouseDownMask | NSLeftMouseUpMask
+                        | NSLeftMouseDraggedMask | NSRightMouseDownMask | NSRightMouseUpMask
+                        | NSRightMouseDraggedMask];
         switch ([mouseEvent type]) {
+            case NSRightMouseDown:
+            case NSRightMouseUp:
             case NSLeftMouseDown:
             case NSLeftMouseUp:
                 [self menuTrackingDone:nil];
                 break;
+            case NSRightMouseDragged:
             case NSLeftMouseDragged:
             default:
                 /* Ignore any other kind of event. */
                 break;
         }
     };
+}
+
+-(void)mouseDown:(NSEvent *)mouseEvent
+{
+    [self mousePressed:mouseEvent];
+}
+
+- (void)rightMouseDown:(NSEvent *)mouseEvent
+{
+    [self mousePressed:mouseEvent];
 }
 
 
@@ -323,10 +361,13 @@ QT_END_NAMESPACE
 @end
 
 @implementation QNSStatusItem
--(id)initWithIcon:(QSystemTrayIcon*)i {
+
+-(id)initWithIcon:(QSystemTrayIcon*)i iconPrivate:(QSystemTrayIconPrivate *)iPrivate
+{
     self = [super init];
     if(self) {
         icon = i;
+        iconPrivate = iPrivate;
         item = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
         imageCell = [[QNSImageView alloc] initWithParent:self];
         [item setView: imageCell];
@@ -374,6 +415,10 @@ QT_END_NAMESPACE
         } else 
 #endif
         {
+#ifndef QT_MAC_USE_COCOA
+            [[[self item] view] removeAllToolTips];
+            iconPrivate->updateToolTip_sys();
+#endif
             NSMenu *m = [[QNSMenu alloc] initWithQMenu:icon->contextMenu()];
             [m setAutoenablesItems: NO];
             [[NSNotificationCenter defaultCenter] addObserver:imageCell
@@ -442,14 +487,14 @@ private:
             if(accel.count() > 1)
                 text += QLatin1String(" (****)"); //just to denote a multi stroke shortcut
 
-            [item setTitle:(NSString*)QCFString::toCFStringRef(qt_mac_no_ampersands(text))];
-            [item setEnabled:action->isEnabled()];
+            [item setTitle:(NSString*)QCFString::toCFStringRef(qt_mac_removeMnemonics(text))];
+            [item setEnabled:menu->qmenu->isEnabled() && action->isEnabled()];
             [item setState:action->isChecked() ? NSOnState : NSOffState];
             [item setToolTip:(NSString*)QCFString::toCFStringRef(action->toolTip())];
             const QIcon icon = action->icon();
             if(!icon.isNull()) {
-                const short scale = GetMBarHeight()-4;
-                NSImage *nsimage = qt_mac_create_ns_image(icon.pixmap(QSize(scale, scale)));
+                const short scale = [[NSApp mainMenu] menuBarHeight];
+                NSImage *nsimage = static_cast<NSImage *>(qt_mac_create_nsimage(icon.pixmap(QSize(scale, scale))));
                 [item setImage: nsimage];
                 [nsimage release];
             }
@@ -461,10 +506,8 @@ private:
                 [item setTarget:self];
             }
             if(!accel.isEmpty()) {
-                quint32 modifier, key;
-                qt_mac_get_accel(accel[0], &modifier, &key);
-                [item setKeyEquivalentModifierMask:modifier];
-                [item setKeyEquivalent:(NSString*)QCFString::toCFStringRef(QString((QChar*)&key, 2))];
+                [item setKeyEquivalent:keySequenceToKeyEqivalent(accel)];
+                [item setKeyEquivalentModifierMask:keySequenceModifierMask(accel)];
             }
         }
         if(item)
@@ -485,7 +528,6 @@ private:
     }
     if(action) {
         action->activate(QAction::Trigger);
-        qt_mac_trayicon_activate_action(qmenu, action);
     }
 }
 @end

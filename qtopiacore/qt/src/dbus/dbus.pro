@@ -14,6 +14,7 @@ contains(QT_CONFIG, dbus-linked) {
 
 unix {
    QMAKE_PKGCONFIG_DESCRIPTION = Qt DBus module
+   QMAKE_PKGCONFIG_REQUIRES = QtCore QtXml
 }
 
 win32 {
@@ -37,6 +38,8 @@ PUB_HEADERS =  qdbusargument.h \
 	       qdbusabstractadaptor.h \
 	       qdbusreply.h \
 	       qdbusmetatype.h \
+	       qdbuspendingcall.h \
+	       qdbuspendingreply.h \
 	       qdbuscontext.h
 
 HEADERS += $$PUB_HEADERS \
@@ -44,7 +47,7 @@ HEADERS += $$PUB_HEADERS \
            qdbusinterface_p.h qdbusxmlparser_p.h qdbusabstractadaptor_p.h \
            qdbusargument_p.h qdbusutil_p.h qdbusabstractinterface_p.h \
 	   qdbuscontext_p.h qdbusthreaddebug_p.h qdbusintegrator_p.h \
-	   qdbus_symbols_p.h
+	   qdbuspendingcall_p.h qdbus_symbols_p.h
 
 SOURCES += qdbusconnection.cpp  \
 	qdbusconnectioninterface.cpp \
@@ -69,5 +72,7 @@ SOURCES += qdbusconnection.cpp  \
 	qdbusextratypes.cpp	\
 	qdbusmarshaller.cpp	\
 	qdbuscontext.cpp        \
+	qdbuspendingcall.cpp	\
+	qdbuspendingreply.cpp	\
 	qdbus_symbols.cpp
 

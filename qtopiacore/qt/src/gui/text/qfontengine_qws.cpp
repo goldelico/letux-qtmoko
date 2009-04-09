@@ -1,34 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -60,6 +67,12 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
+
+#  if defined(QT_LINUXBASE) && !defined(MAP_FILE)
+     // LSB 3.2 does not define MAP_FILE
+#    define MAP_FILE 0
+#  endif
+
 #endif
 
 #endif // QT_NO_QWS_QPF
@@ -382,7 +395,7 @@ QFontEngineQPF1::QFontEngineQPF1(const QFontDef&, const QString &fn)
     uchar* data = (uchar*)mmap( 0, // any address
                                 st.st_size, // whole file
                                 PROT_READ, // read-only memory
-#if !defined(Q_OS_SOLARIS) && !defined(Q_OS_QNX4) && !defined(QT_LSB) && !defined(Q_OS_INTEGRITY)
+#if !defined(Q_OS_SOLARIS) && !defined(Q_OS_QNX4) && !defined(Q_OS_INTEGRITY)
                                 MAP_FILE | MAP_PRIVATE, // swap-backed map from file
 #else
                                 MAP_PRIVATE,
@@ -400,7 +413,8 @@ QFontEngineQPF1::QFontEngineQPF1(const QFontDef&, const QString &fn)
 
     data += sizeof(d->fm);
     d->tree = new QPFGlyphTree(data);
-
+    glyphFormat = (d->fm.flags & FM_SMOOTH) ? QFontEngineGlyphCache::Raster_A8
+                  : QFontEngineGlyphCache::Raster_Mono;
 #if 0
     qDebug() << "font file" << fn
              << "ascent" << d->fm.ascent << "descent" << d->fm.descent
@@ -429,31 +443,35 @@ bool QFontEngineQPF1::stringToCMap(const QChar *str, int len, QGlyphLayout *glyp
     }
     *nglyphs = 0;
 
+    bool mirrored = flags & QTextEngine::RightToLeft;
     for(int i = 0; i < len; i++) {
         unsigned int uc = getChar(str, i, len);
-        glyphs[*nglyphs].glyph = uc < 0x10000 ? uc : 0;
+        if (mirrored)
+            uc = QChar::mirroredChar(uc);
+        glyphs->glyphs[*nglyphs] = uc < 0x10000 ? uc : 0;
         ++*nglyphs;
     }
+
+    glyphs->numGlyphs = *nglyphs;
 
     if (flags & QTextEngine::GlyphIndicesOnly)
         return true;
 
-    recalcAdvances(*nglyphs, glyphs, flags);
+    recalcAdvances(glyphs, flags);
 
     return true;
 }
 
-void QFontEngineQPF1::recalcAdvances(int len, QGlyphLayout *glyphs, QTextEngine::ShaperFlags) const
+void QFontEngineQPF1::recalcAdvances(QGlyphLayout *glyphs, QTextEngine::ShaperFlags) const
 {
-    for(int i = 0; i < len; i++) {
-        QGlyphLayout &g=glyphs[i];
-        QPFGlyph *glyph = d->tree->get(g.glyph);
+    for(int i = 0; i < glyphs->numGlyphs; i++) {
+        QPFGlyph *glyph = d->tree->get(glyphs->glyphs[i]);
 
-        g.advance.x = glyph ? glyph->metrics->advance : 0;
-        g.advance.y = 0;
+        glyphs->advances_x[i] = glyph ? glyph->metrics->advance : 0;
+        glyphs->advances_y[i] = 0;
 
         if (!glyph)
-            g.glyph = 0;
+            glyphs->glyphs[i] = 0;
     }
 }
 
@@ -469,21 +487,20 @@ void QFontEngineQPF1::draw(QPaintEngine *p, qreal _x, qreal _y, const QTextItemI
 
     QVarLengthArray<QFixedPoint> positions;
     QVarLengthArray<glyph_t> glyphs;
-    getGlyphPositions(si.glyphs, si.num_glyphs, matrix, si.flags, glyphs, positions);
+    getGlyphPositions(si.glyphs, matrix, si.flags, glyphs, positions);
     if (glyphs.size() == 0)
         return;
 
+    int depth = (d->fm.flags & FM_SMOOTH) ? 8 : 1;
     for(int i = 0; i < glyphs.size(); i++) {
         const QPFGlyph *glyph = d->tree->get(glyphs[i]);
         if (!glyph)
             continue;
 
-
-        int mono = !(d->fm.flags & FM_SMOOTH);
         int bpl = glyph->metrics->linestep;
 
         if(glyph->data)
-            paintEngine->alphaPenBlt(glyph->data, bpl, mono,
+            paintEngine->alphaPenBlt(glyph->data, bpl, depth,
                                      qRound(positions[i].x) + glyph->metrics->bearingx,
                                      qRound(positions[i].y) - glyph->metrics->bearingy,
                                      glyph->metrics->width,glyph->metrics->height);
@@ -491,20 +508,46 @@ void QFontEngineQPF1::draw(QPaintEngine *p, qreal _x, qreal _y, const QTextItemI
 }
 
 
-void QFontEngineQPF1::addOutlineToPath(qreal x, qreal y, const QGlyphLayout *glyphs, int numGlyphs, QPainterPath *path, QTextItem::RenderFlags flags)
+QImage QFontEngineQPF1::alphaMapForGlyph(glyph_t g)
 {
-    addBitmapFontToPath(x, y, glyphs, numGlyphs, path, flags);
+    const QPFGlyph *glyph = d->tree->get(g);
+    if (!glyph)
+	return QImage();
+
+    int mono = !(d->fm.flags & FM_SMOOTH);
+
+    const uchar *bits = glyph->data;//((const uchar *) glyph);
+
+    QImage image;
+    if (mono) {
+        image = QImage((glyph->metrics->width+7)&~7, glyph->metrics->height, QImage::Format_Mono);
+    } else {
+        image = QImage(glyph->metrics->width, glyph->metrics->height, QImage::Format_Indexed8);
+        for (int j=0; j<256; ++j)
+            image.setColor(j, 0xff000000 | j | (j<<8) | (j<<16));
+    }
+    for (int i=0; i<glyph->metrics->height; ++i) {
+        memcpy(image.scanLine(i), bits, glyph->metrics->linestep);
+        bits += glyph->metrics->linestep;
+    }
+    return image;
 }
 
-glyph_metrics_t QFontEngineQPF1::boundingBox(const QGlyphLayout *glyphs, int numGlyphs)
+
+
+void QFontEngineQPF1::addOutlineToPath(qreal x, qreal y, const QGlyphLayout &glyphs, QPainterPath *path, QTextItem::RenderFlags flags)
 {
-   if (numGlyphs == 0)
+    addBitmapFontToPath(x, y, glyphs, path, flags);
+}
+
+glyph_metrics_t QFontEngineQPF1::boundingBox(const QGlyphLayout &glyphs)
+{
+   if (glyphs.numGlyphs == 0)
         return glyph_metrics_t();
 
     QFixed w = 0;
-    const QGlyphLayout *end = glyphs + numGlyphs;
-    while(end > glyphs)
-        w += (--end)->advance.x;
+    for (int i = 0; i < glyphs.numGlyphs; ++i)
+        w += glyphs.effectiveAdvance(i);
     return glyph_metrics_t(0, -ascent(), w, ascent()+descent()+1, w, 0);
 }
 

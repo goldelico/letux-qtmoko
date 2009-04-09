@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -44,7 +48,7 @@
 #include "qscriptcontext_p.h"
 #include "qscriptmember_p.h"
 #include "qscriptobject_p.h"
-#include "qscriptsyntaxchecker_p.h"
+#include "qscriptsyntaxcheckresult_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -122,10 +126,8 @@ QT_BEGIN_NAMESPACE
 
   \snippet doc/src/snippets/code/src_script_qscriptengine.cpp 4
 
-  When handling possibly incomplete input, the canEvaluate() function
-  can be used to determine whether code can usefully be passed to
-  evaluate(). This can be useful when implementing tools that allow
-  code to be written incrementally, such as command line interpreters.
+  The checkSyntax() function can be used to determine whether code can be
+  usefully passed to evaluate().
 
   \section1 Script Object Creation
 
@@ -257,6 +259,8 @@ QT_BEGIN_NAMESPACE
     \value ExcludeChildObjects The script object will not expose child objects as properties.
     \value ExcludeSuperClassMethods The script object will not expose signals and slots inherited from the superclass.
     \value ExcludeSuperClassProperties The script object will not expose properties inherited from the superclass.
+    \value ExcludeSuperClassContents Shorthand form for ExcludeSuperClassMethods | ExcludeSuperClassProperties
+    \value ExcludeDeleteLater The script object will not expose the QObject::deleteLater() slot.
     \value AutoCreateDynamicProperties Properties that don't already exist in the QObject will be created as dynamic properties of that object, rather than as properties of the script object.
     \value PreferExistingWrapperObject If a wrapper object with the requested configuration already exists, return that object.
     \value SkipMethodsInEnumeration Don't include methods (signals and slots) when enumerating the object's properties.
@@ -324,8 +328,8 @@ QScriptEngine::QScriptEngine(QScriptEnginePrivate &dd, QObject *parent)
 QScriptEngine::~QScriptEngine()
 {
     Q_D(QScriptEngine);
-    d->popContext();
-    d->objectAllocator.destruct(this);
+    d->m_frameRepository.release(currentContext());
+    d->objectAllocator.destruct();
 #ifdef QT_NO_QOBJECT
     delete d_ptr;
     d_ptr = 0;
@@ -345,7 +349,41 @@ QScriptEngine::~QScriptEngine()
 QScriptValue QScriptEngine::globalObject() const
 {
     Q_D(const QScriptEngine);
-    return d->m_globalObject;
+    return const_cast<QScriptEnginePrivate*>(d)->toPublic(d->m_globalObject);
+}
+
+/*!
+  \since 4.5
+
+  Sets this engine's Global Object to be the given \a object.
+  If \a object is not a valid script object, this function does
+  nothing.
+
+  When setting a custom global object, you may want to use
+  QScriptValueIterator to copy the properties of the standard Global
+  Object; alternatively, you can set the internal prototype of your
+  custom object to be the original Global Object.
+*/
+void QScriptEngine::setGlobalObject(const QScriptValue &object)
+{
+    Q_D(QScriptEngine);
+    if (!object.isObject())
+        return;
+    QScriptValueImpl objectImpl = d->toImpl(object);
+
+    // update properties of the global context
+    QScriptValueImpl old = d->m_globalObject;
+    QScriptContextPrivate *ctx = d->currentContext();
+    while (ctx->parentContext() != 0)
+        ctx = ctx->parentContext();
+    if (QScriptEnginePrivate::strictlyEquals(ctx->m_thisObject, old))
+        ctx->m_thisObject = objectImpl;
+    if (QScriptEnginePrivate::strictlyEquals(ctx->m_activation, old))
+        ctx->m_activation = objectImpl;
+    if (QScriptEnginePrivate::strictlyEquals(ctx->m_scopeChain, old))
+        ctx->m_scopeChain = objectImpl;
+
+    d->m_globalObject = objectImpl;
 }
 
 /*!
@@ -356,7 +394,7 @@ QScriptValue QScriptEngine::globalObject() const
 QScriptValue QScriptEngine::nullValue()
 {
     Q_D(QScriptEngine);
-    return d->nullValue();
+    return d->toPublic(d->nullValue());
 }
 
 /*!
@@ -367,7 +405,7 @@ QScriptValue QScriptEngine::nullValue()
 QScriptValue QScriptEngine::undefinedValue()
 {
     Q_D(QScriptEngine);
-    return d->undefinedValue();
+    return d->toPublic(d->undefinedValue());
 }
 
 /*!
@@ -401,13 +439,13 @@ QScriptValue QScriptEngine::newFunction(QScriptEngine::FunctionSignature fun,
 {
     Q_D(QScriptEngine);
     QScriptValueImpl v = d->createFunction(new QScript::CFunction(fun, length));
-    QScriptValueImpl proto = QScriptValuePrivate::valueOf(prototype);
+    QScriptValueImpl proto = d->toImpl(prototype);
     v.setProperty(d->idTable()->id_prototype, proto,
                   QScriptValue::Undeletable);
     proto.setProperty(d->idTable()->id_constructor, v,
                       QScriptValue::Undeletable
                       | QScriptValue::SkipInEnumeration);
-    return v;
+    return d->toPublic(v);
 }
 
 #ifndef QT_NO_REGEXP
@@ -422,7 +460,7 @@ QScriptValue QScriptEngine::newRegExp(const QRegExp &regexp)
     Q_D(QScriptEngine);
     QScriptValueImpl v;
     d->regexpConstructor->newRegExp(&v, regexp);
-    return v;
+    return d->toPublic(v);
 }
 
 #endif // QT_NO_REGEXP
@@ -442,7 +480,7 @@ QScriptValue QScriptEngine::newVariant(const QVariant &value)
     Q_D(QScriptEngine);
     QScriptValueImpl result;
     d->newVariant(&result, value);
-    return result;
+    return d->toPublic(result);
 }
 
 /*!
@@ -495,6 +533,10 @@ QScriptValue QScriptEngine::newVariant(const QScriptValue &object,
 
   If \a object is a null pointer, this function returns nullValue().
 
+  If a default prototype has been registered for the \a object's class
+  (or its superclass, recursively), the prototype of the new script
+  object will be set to be that default prototype.
+
   If the given \a object is deleted outside of QtScript's control, any
   attempt to access the deleted QObject's members through the QtScript
   wrapper object (either by script code or C++) will result in a
@@ -508,7 +550,7 @@ QScriptValue QScriptEngine::newQObject(QObject *object, ValueOwnership ownership
     Q_D(QScriptEngine);
     QScriptValueImpl result;
     d->newQObject(&result, object, ownership, options);
-    return result;
+    return d->toPublic(result);
 }
 
 /*!
@@ -574,7 +616,7 @@ QScriptValue QScriptEngine::newObject()
     Q_D(QScriptEngine);
     QScriptValueImpl v;
     d->newObject(&v, d->objectConstructor->publicPrototype);
-    return v;
+    return d->toPublic(v);
 }
 
 /*!
@@ -595,7 +637,7 @@ QScriptValue QScriptEngine::newObject(QScriptClass *scriptClass,
                                       const QScriptValue &data)
 {
     Q_D(QScriptEngine);
-    return d->newObject(scriptClass, QScriptValuePrivate::valueOf(data));
+    return d->toPublic(d->newObject(scriptClass, d->toImpl(data)));
 }
 
 /*!
@@ -606,7 +648,7 @@ QScriptValue QScriptEngine::newActivationObject()
     Q_D(QScriptEngine);
     QScriptValueImpl v;
     d->newActivation(&v);
-    return v;
+    return d->toPublic(v);
 }
 
 /*!
@@ -657,9 +699,10 @@ QScriptValue QScriptEngine::newFunction(QScriptEngine::FunctionSignature fun, in
     Q_D(QScriptEngine);
     QScriptValueImpl v = d->createFunction(new QScript::CFunction(fun, length));
     QScriptValueImpl prototype = d->newObject();
-    v.setProperty(d->idTable()->id_prototype, prototype);
-    prototype.setProperty(d->idTable()->id_constructor, v);
-    return v;
+    v.setProperty(d->idTable()->id_prototype, prototype, QScriptValue::Undeletable);
+    prototype.setProperty(d->idTable()->id_constructor, v,
+                          QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
+    return d->toPublic(v);
 }
 
 /*!
@@ -671,9 +714,10 @@ QScriptValue QScriptEngine::newFunction(QScriptEngine::FunctionWithArgSignature 
     Q_D(QScriptEngine);
     QScriptValueImpl v = d->createFunction(new QScript::C3Function(fun, arg, /*length=*/0));
     QScriptValueImpl prototype = d->newObject();
-    v.setProperty(d->idTable()->id_prototype, prototype);
-    prototype.setProperty(d->idTable()->id_constructor, v);
-    return v;
+    v.setProperty(d->idTable()->id_prototype, prototype, QScriptValue::Undeletable);
+    prototype.setProperty(d->idTable()->id_constructor, v,
+                          QScriptValue::Undeletable | QScriptValue::SkipInEnumeration);
+    return d->toPublic(v);
 }
 
 /*!
@@ -685,22 +729,28 @@ QScriptValue QScriptEngine::newArray(uint length)
 {
     Q_D(QScriptEngine);
     QScriptValueImpl v;
-    QScript::Array a;
+    QScript::Array a(d);
     a.resize(length);
     d->newArray(&v, a);
-    return v;
+    return d->toPublic(v);
 }
 
 /*!
   Creates a QtScript object of class RegExp with the given
   \a pattern and \a flags.
+
+  The legal flags are 'g' (global), 'i' (ignore case), and 'm'
+  (multiline).
 */
 QScriptValue QScriptEngine::newRegExp(const QString &pattern, const QString &flags)
 {
     Q_D(QScriptEngine);
+    int bitflags = 0;
+    for (int i = 0; i < flags.size(); ++i)
+        bitflags |= QScript::Ecma::RegExp::flagFromChar(flags.at(i));
     QScriptValueImpl v;
-    d->regexpConstructor->newRegExp(&v, pattern, flags);
-    return v;
+    d->regexpConstructor->newRegExp(&v, pattern, bitflags);
+    return d->toPublic(v);
 }
 
 /*!
@@ -713,7 +763,7 @@ QScriptValue QScriptEngine::newDate(qsreal value)
     Q_D(QScriptEngine);
     QScriptValueImpl v;
     d->dateConstructor->newDate(&v, value);
-    return v;
+    return d->toPublic(v);
 }
 
 /*!
@@ -726,7 +776,7 @@ QScriptValue QScriptEngine::newDate(const QDateTime &value)
     Q_D(QScriptEngine);
     QScriptValueImpl v;
     d->dateConstructor->newDate(&v, value);
-    return v;
+    return d->toPublic(v);
 }
 
 #ifndef QT_NO_QOBJECT
@@ -750,8 +800,8 @@ QScriptValue QScriptEngine::newQMetaObject(
 {
     Q_D(QScriptEngine);
     QScriptValueImpl v;
-    d->qmetaObjectConstructor->newQMetaObject(&v, metaObject, QScriptValuePrivate::valueOf(ctor));
-    return v;
+    d->qmetaObjectConstructor->newQMetaObject(&v, metaObject, d->toImpl(ctor));
+    return d->toPublic(v);
 }
 
 /*!
@@ -789,6 +839,8 @@ QScriptValue QScriptEngine::newQMetaObject(
 #endif // QT_NO_QOBJECT
 
 /*!
+  \obsolete
+
   Returns true if \a program can be evaluated; i.e. the code is
   sufficient to determine whether it appears to be a syntactically
   correct program, or contains a syntax error.
@@ -840,12 +892,22 @@ QScriptValue QScriptEngine::newQMetaObject(
   ReferenceError if \c{foo} is not defined in the script
   environment.
 
-  \sa evaluate()
+  \sa evaluate(), checkSyntax()
 */
 bool QScriptEngine::canEvaluate(const QString &program) const
 {
-    QScript::SyntaxChecker checker;
-    return checker.parse(program);
+    return QScriptEnginePrivate::canEvaluate(program);
+}
+
+/*!
+  \since 4.5
+
+  Checks the syntax of the given \a program. Returns a
+  QScriptSyntaxCheckResult object that contains the result of the check.
+*/
+QScriptSyntaxCheckResult QScriptEngine::checkSyntax(const QString &program)
+{
+    return QScriptEnginePrivate::checkSyntax(program);
 }
 
 /*!
@@ -878,9 +940,9 @@ bool QScriptEngine::canEvaluate(const QString &program) const
 QScriptValue QScriptEngine::evaluate(const QString &program, const QString &fileName, int lineNumber)
 {
     Q_D(QScriptEngine);
-    QScriptContextPrivate *ctx_p = QScriptContextPrivate::get(d->currentContext());
+    QScriptContextPrivate *ctx_p = d->currentContext();
     d->evaluate(ctx_p, program, lineNumber, fileName);
-    return ctx_p->m_result;
+    return d->toPublic(ctx_p->m_result);
 }
 
 /*!
@@ -893,7 +955,7 @@ QScriptValue QScriptEngine::evaluate(const QString &program, const QString &file
 QScriptContext *QScriptEngine::currentContext() const
 {
     Q_D(const QScriptEngine);
-    return d->currentContext();
+    return QScriptContextPrivate::get(d->currentContext());
 }
 
 /*!
@@ -922,14 +984,13 @@ QScriptContext *QScriptEngine::currentContext() const
 QScriptContext *QScriptEngine::pushContext()
 {
     Q_D(QScriptEngine);
-    QScriptContext *context = d->pushContext();
-    QScriptContextPrivate *ctx_p = QScriptContextPrivate::get(context);
+    QScriptContextPrivate *ctx_p = d->pushContext();
     ctx_p->setThisObject(d->globalObject());
     QScriptValueImpl activation;
     d->newActivation(&activation);
     activation.setScope(d->globalObject());
     ctx_p->setActivationObject(activation);
-    return context;
+    return QScriptContextPrivate::get(ctx_p);
 }
 
 /*!
@@ -974,7 +1035,7 @@ bool QScriptEngine::hasUncaughtException() const
 QScriptValue QScriptEngine::uncaughtException() const
 {
     Q_D(const QScriptEngine);
-    return d->uncaughtException();
+    return const_cast<QScriptEnginePrivate*>(d)->toPublic(d->uncaughtException());
 }
 
 /*!
@@ -1025,7 +1086,7 @@ void QScriptEngine::clearExceptions()
 QScriptValue QScriptEngine::defaultPrototype(int metaTypeId) const
 {
     Q_D(const QScriptEngine);
-    return d->defaultPrototype(metaTypeId);
+    return const_cast<QScriptEnginePrivate*>(d)->toPublic(d->defaultPrototype(metaTypeId));
 }
 
 /*!
@@ -1051,7 +1112,7 @@ QScriptValue QScriptEngine::defaultPrototype(int metaTypeId) const
 void QScriptEngine::setDefaultPrototype(int metaTypeId, const QScriptValue &prototype)
 {
     Q_D(QScriptEngine);
-    d->setDefaultPrototype(metaTypeId, QScriptValuePrivate::valueOf(prototype));
+    d->setDefaultPrototype(metaTypeId, d->toImpl(prototype));
 }
 
 /*!
@@ -1090,7 +1151,7 @@ void QScriptEngine::setDefaultPrototype(int metaTypeId, const QScriptValue &prot
 QScriptValue QScriptEngine::create(int type, const void *ptr)
 {
     Q_D(QScriptEngine);
-    return d->create(type, ptr);
+    return d->toPublic(d->create(type, ptr));
 }
 
 /*!
@@ -1099,7 +1160,16 @@ QScriptValue QScriptEngine::create(int type, const void *ptr)
 bool QScriptEngine::convert(const QScriptValue &value, int type, void *ptr)
 {
     Q_D(QScriptEngine);
-    return d->convert(QScriptValuePrivate::valueOf(value), type, ptr);
+    return QScriptEnginePrivate::convert(d->toImpl(value), type, ptr, d);
+}
+
+/*!
+    \internal
+*/
+bool QScriptEngine::convertV2(const QScriptValue &value, int type, void *ptr)
+{
+    QScriptValueImpl impl = QScriptValuePrivate::valueOf(value);
+    return QScriptEnginePrivate::convert(impl, type, ptr, /*engine=*/0);
 }
 
 /*!
@@ -1113,8 +1183,35 @@ void QScriptEngine::registerCustomType(int type, MarshalFunction mf,
     QScriptCustomTypeInfo info = d->m_customTypes.value(type);
     info.marshal = mf;
     info.demarshal = df;
-    info.prototype = QScriptValuePrivate::valueOf(prototype);
+    info.prototype = d->toImpl(prototype);
     d->m_customTypes.insert(type, info);
+}
+
+/*!
+  \since 4.5
+
+  Installs translator functions on the given \a object, or on the Global
+  Object if no object is specified.
+
+  The relation between Qt Script translator functions and C++ translator
+  functions is described in the following table:
+
+    \table
+    \header \o Script Function \o Corresponding C++ Function
+    \row    \o qsTr()       \o QObject::tr()
+    \row    \o QT_TR_NOOP() \o QT_TR_NOOP()
+    \row    \o qsTranslate() \o QCoreApplication::translate()
+    \row    \o QT_TRANSLATE_NOOP() \o QT_TRANSLATE_NOOP()
+    \endtable
+
+  \sa {Internationalization with Qt}
+*/
+void QScriptEngine::installTranslatorFunctions(const QScriptValue &object)
+{
+    Q_D(QScriptEngine);
+    QScriptValue target = object.isObject() ? object : globalObject();
+    QScriptValueImpl impl = QScriptValuePrivate::valueOf(target);
+    d->installTranslatorFunctions(impl);
 }
 
 /*!
@@ -1133,7 +1230,7 @@ void QScriptEngine::registerCustomType(int type, MarshalFunction mf,
 QScriptValue QScriptEngine::importExtension(const QString &extension)
 {
     Q_D(QScriptEngine);
-    return d->importExtension(extension);
+    return d->toPublic(d->importExtension(extension));
 }
 
 /*!
@@ -1218,7 +1315,7 @@ QStringList QScriptEngine::importedExtensions() const
 */
 
 /*!
-    \fn T qScriptValueToValue(const QScriptValue &value)
+    \fn T qScriptValueToValue<T>(const QScriptValue &value)
     \since 4.3
     \relates QScriptEngine
 
@@ -1273,7 +1370,7 @@ QStringList QScriptEngine::importedExtensions() const
 */
 
 /*!
-    \fn T qscriptvalue_cast(const QScriptValue &value)
+    \fn T qscriptvalue_cast<T>(const QScriptValue &value)
     \since 4.3
     \relates QScriptValue
 
@@ -1490,7 +1587,7 @@ bool QScriptEngine::isEvaluating() const
 void QScriptEngine::abortEvaluation(const QScriptValue &result)
 {
     Q_D(QScriptEngine);
-    d->abortEvaluation(QScriptValuePrivate::valueOf(result));
+    d->abortEvaluation(d->toImpl(result));
 }
 
 #ifndef QT_NO_QOBJECT
@@ -1517,8 +1614,8 @@ bool qScriptConnect(QObject *sender, const char *signal,
         return false;
     QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(function.engine());
     return eng_p->scriptConnect(sender, signal,
-                                QScriptValuePrivate::valueOf(receiver),
-                                QScriptValuePrivate::valueOf(function));
+                                eng_p->toImpl(receiver),
+                                eng_p->toImpl(function));
 }
 
 /*!
@@ -1542,8 +1639,8 @@ bool qScriptDisconnect(QObject *sender, const char *signal,
         return false;
     QScriptEnginePrivate *eng_p = QScriptEnginePrivate::get(function.engine());
     return eng_p->scriptDisconnect(sender, signal,
-                                   QScriptValuePrivate::valueOf(receiver),
-                                   QScriptValuePrivate::valueOf(function));
+                                   eng_p->toImpl(receiver),
+                                   eng_p->toImpl(function));
 }
 
 /*!
@@ -1614,6 +1711,31 @@ QScriptString QScriptEngine::toStringHandle(const QString &str)
 }
 
 /*!
+  \since 4.5
+
+  Converts the given \a value to an object, if such a conversion is
+  possible; otherwise returns an invalid QScriptValue. The conversion
+  is performed according to the following table:
+
+    \table
+    \header \o Input Type \o Result
+    \row    \o Undefined  \o An invalid QScriptValue.
+    \row    \o Null       \o An invalid QScriptValue.
+    \row    \o Boolean    \o A new Boolean object whose internal value is set to the value of the boolean.
+    \row    \o Number     \o A new Number object whose internal value is set to the value of the number.
+    \row    \o String     \o A new String object whose internal value is set to the value of the string.
+    \row    \o Object     \o The result is the object itself (no conversion).
+    \endtable
+
+    \sa newObject()
+*/
+QScriptValue QScriptEngine::toObject(const QScriptValue &value)
+{
+    Q_D(QScriptEngine);
+    return d->toPublic(d->toObject(d->toImpl(value)));
+}
+
+/*!
   \internal
 
   Returns the object with the given \a id, or an invalid
@@ -1624,7 +1746,132 @@ QScriptString QScriptEngine::toStringHandle(const QString &str)
 QScriptValue QScriptEngine::objectById(qint64 id) const
 {
     Q_D(const QScriptEngine);
-    return d->objectById(id);
+    return const_cast<QScriptEnginePrivate*>(d)->toPublic(d->objectById(id));
+}
+
+/*!
+  \since 4.5
+  \class QScriptSyntaxCheckResult
+
+  \brief The QScriptSyntaxCheckResult class provides the result of a script syntax check.
+
+  \ingroup script
+  \mainclass
+
+  QScriptSyntaxCheckResult is returned by QScriptEngine::checkSyntax() to
+  provide information about the syntactical (in)correctness of a script.
+*/
+
+/*!
+    \enum QScriptSyntaxCheckResult::State
+
+    This enum specifies the state of a syntax check.
+
+    \value Error The program contains a syntax error.
+    \value Intermediate The program is incomplete.
+    \value Valid The program is a syntactically correct Qt Script program.
+*/
+
+/*!
+  Constructs a new QScriptSyntaxCheckResult from the \a other result.
+*/
+QScriptSyntaxCheckResult::QScriptSyntaxCheckResult(const QScriptSyntaxCheckResult &other)
+    : d_ptr(other.d_ptr)
+{
+    if (d_ptr)
+        d_ptr->ref.ref();
+}
+
+/*!
+  \internal
+*/
+QScriptSyntaxCheckResult::QScriptSyntaxCheckResult(QScriptSyntaxCheckResultPrivate *d)
+    : d_ptr(d)
+{
+    if (d_ptr)
+        d_ptr->ref.ref();
+}
+
+/*!
+  \internal
+*/
+QScriptSyntaxCheckResult::QScriptSyntaxCheckResult()
+    : d_ptr(0)
+{
+}
+
+/*!
+  Destroys this QScriptSyntaxCheckResult.
+*/
+QScriptSyntaxCheckResult::~QScriptSyntaxCheckResult()
+{
+    if (d_ptr && !d_ptr->ref.deref()) {
+        delete d_ptr;
+        d_ptr = 0;
+    }
+}
+
+/*!
+  Returns the state of this QScriptSyntaxCheckResult.
+*/
+QScriptSyntaxCheckResult::State QScriptSyntaxCheckResult::state() const
+{
+    Q_D(const QScriptSyntaxCheckResult);
+    return d->state;
+}
+
+/*!
+  Returns the error line number of this QScriptSyntaxCheckResult, or -1 if
+  there is no error.
+
+  \sa state(), errorMessage()
+*/
+int QScriptSyntaxCheckResult::errorLineNumber() const
+{
+    Q_D(const QScriptSyntaxCheckResult);
+    return d->errorLineNumber;
+}
+
+/*!
+  Returns the error column number of this QScriptSyntaxCheckResult, or -1 if
+  there is no error.
+
+  \sa state(), errorLineNumber()
+*/
+int QScriptSyntaxCheckResult::errorColumnNumber() const
+{
+    Q_D(const QScriptSyntaxCheckResult);
+    return d->errorColumnNumber;
+}
+
+/*!
+  Returns the error message of this QScriptSyntaxCheckResult, or an empty
+  string if there is no error.
+
+  \sa state(), errorLineNumber()
+*/
+QString QScriptSyntaxCheckResult::errorMessage() const
+{
+    Q_D(const QScriptSyntaxCheckResult);
+    return d->errorMessage;
+}
+
+/*!
+  Assigns the \a other result to this QScriptSyntaxCheckResult, and returns a
+  reference to this QScriptSyntaxCheckResult.
+*/
+QScriptSyntaxCheckResult &QScriptSyntaxCheckResult::operator=(const QScriptSyntaxCheckResult &other)
+{
+    if (d_ptr == other.d_ptr)
+        return *this;
+    if (d_ptr && !d_ptr->ref.deref()) {
+        delete d_ptr;
+        d_ptr = 0;
+    }
+    d_ptr = other.d_ptr;
+    if (d_ptr)
+        d_ptr->ref.ref();
+    return *this;
 }
 
 QT_END_NAMESPACE

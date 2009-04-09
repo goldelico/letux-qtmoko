@@ -1,37 +1,41 @@
 /****************************************************************************
 **
-** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and Nokia.
 **
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU Lesser General Public License version 2.1 requirements
+** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+**
+** In addition, as a special exception, Nokia gives you certain
+** additional rights. These rights are described in the Nokia Qt LGPL
+** Exception version 1.0, included in the file LGPL_EXCEPTION.txt in this
+** package.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License versions 2.0 or 3.0 as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file.  Please review the following information
-** to ensure GNU General Public Licensing requirements will be met:
-** http://www.fsf.org/licensing/licenses/info/GPLv2.html and
-** http://www.gnu.org/copyleft/gpl.html.  In addition, as a special
-** exception, Nokia gives you certain additional rights. These rights
-** are described in the Nokia Qt GPL Exception version 1.3, included in
-** the file GPL_EXCEPTION.txt in this package.
-**
-** Qt for Windows(R) Licensees
-** As a special exception, Nokia, as the sole copyright holder for Qt
-** Designer, grants users of the Qt/Eclipse Integration plug-in the
-** right for the Qt/Eclipse Integration to link to functionality
-** provided by Qt Designer and its related libraries.
+** General Public License version 3.0 as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL included in the
+** packaging of this file.  Please review the following information to
+** ensure the GNU General Public License version 3.0 requirements will be
+** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
+** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
@@ -53,6 +57,7 @@
 #include "qplatformdefs.h"
 
 #include "qclipboard.h"
+#include "qclipboard_p.h"
 
 #ifndef QT_NO_CLIPBOARD
 
@@ -73,6 +78,10 @@
 #include "qimagewriter.h"
 #include "qvariant.h"
 #include "qdnd_p.h"
+
+#ifndef QT_NO_XFIXES
+#include <X11/extensions/Xfixes.h>
+#endif // QT_NO_XFIXES
 
 QT_BEGIN_NAMESPACE
 
@@ -359,6 +368,86 @@ int QClipboardINCRTransaction::x11Event(XEvent *event)
   QClipboard member functions for X11.
  *****************************************************************************/
 
+struct qt_init_timestamp_data
+{
+    Time timestamp;
+};
+
+#if defined(Q_C_CALLBACKS)
+extern "C" {
+#endif
+
+static Bool qt_init_timestamp_scanner(Display*, XEvent *event, XPointer arg)
+{
+    qt_init_timestamp_data *data =
+        reinterpret_cast<qt_init_timestamp_data*>(arg);
+    switch(event->type)
+    {
+    case ButtonPress:
+    case ButtonRelease:
+        data->timestamp = event->xbutton.time;
+        break;
+    case MotionNotify:
+        data->timestamp = event->xmotion.time;
+        break;
+    case XKeyPress:
+    case XKeyRelease:
+        data->timestamp = event->xkey.time;
+        break;
+    case PropertyNotify:
+        data->timestamp = event->xproperty.time;
+        break;
+    case EnterNotify:
+    case LeaveNotify:
+        data->timestamp = event->xcrossing.time;
+        break;
+    case SelectionClear:
+        data->timestamp = event->xselectionclear.time;
+        break;
+    default:
+        break;
+    }
+#ifndef QT_NO_XFIXES
+    if (X11->use_xfixes && event->type == (X11->xfixes_eventbase + XFixesSelectionNotify)) {
+        XFixesSelectionNotifyEvent *req =
+            reinterpret_cast<XFixesSelectionNotifyEvent *>(event);
+        data->timestamp = req->selection_timestamp;
+    }
+#endif
+    return false;
+}
+
+#if defined(Q_C_CALLBACKS)
+}
+#endif
+
+QClipboard::QClipboard(QObject *parent)
+    : QObject(*new QClipboardPrivate, parent)
+{
+    // create desktop widget since we need it to get PropertyNotify or
+    // XFixesSelectionNotify events when someone changes the
+    // clipboard.
+    (void)QApplication::desktop();
+    if (X11->time == CurrentTime) {
+        // send a dummy event to myself to get the timestamp from X11.
+        qt_init_timestamp_data data;
+        data.timestamp = CurrentTime;
+        XEvent ev;
+        XCheckIfEvent(X11->display, &ev, &qt_init_timestamp_scanner, (XPointer)&data);
+        if (data.timestamp == CurrentTime) {
+            setupOwner();
+            int dummy = 0;
+            Window ownerId = owner->internalWinId();
+            XChangeProperty(X11->display, ownerId,
+                            ATOM(CLIP_TEMPORARY), XA_INTEGER, 32,
+                            PropModeReplace, (uchar*)&dummy, 1);
+            XWindowEvent(X11->display, ownerId, PropertyChangeMask, &ev);
+            data.timestamp = ev.xproperty.time;
+            XDeleteProperty(X11->display, ownerId, ATOM(CLIP_TEMPORARY));
+        }
+        X11->time = data.timestamp;
+    }
+}
 
 void QClipboard::clear(Mode mode)
 {
@@ -1278,16 +1367,17 @@ void QClipboard::setMimeData(QMimeData* src, Mode mode)
 
 
 /*
-  Called by the main event loop in qapplication_x11.cpp when the
-  _QT_SELECTION_SENTINEL property has been changed (i.e. when some Qt
-  process has performed QClipboard::setData(). If it returns true, the
-  QClipBoard dataChanged() signal should be emitted.
+  Called by the main event loop in qapplication_x11.cpp when either
+  the _QT_SELECTION_SENTINEL property has been changed (i.e. when some
+  Qt process has performed QClipboard::setData()) or when Xfixes told
+  us that an other application changed the selection. If it returns
+  true, the QClipBoard dataChanged() signal should be emitted.
 */
 
 bool qt_check_selection_sentinel()
 {
     bool doIt = true;
-    if (owner) {
+    if (owner && !X11->use_xfixes) {
         /*
           Since the X selection mechanism cannot give any signal when
           the selection has changed, we emulate it (for Qt processes) here.
@@ -1339,7 +1429,7 @@ bool qt_check_selection_sentinel()
 bool qt_check_clipboard_sentinel()
 {
     bool doIt = true;
-    if (owner) {
+    if (owner && !X11->use_xfixes) {
         unsigned char *retval;
         Atom actualType;
         int actualFormat;
@@ -1373,6 +1463,34 @@ bool qt_check_clipboard_sentinel()
     }
 
     return doIt;
+}
+
+bool qt_xfixes_selection_changed(Window selectionOwner, Time timestamp)
+{
+    QClipboardData *d = selectionData();
+#ifdef QCLIPBOARD_DEBUG
+    DEBUG("qt_xfixes_selection_changed: owner = %u; selectionOwner = %u; internal timestamp = %u; external timestamp = %u",
+          (unsigned int)(owner ? (int)owner->internalWinId() : 0), (unsigned int)selectionOwner,
+          (unsigned int)(d ? d->timestamp : 0), (unsigned int)timestamp);
+#endif
+    if (!owner || (selectionOwner && selectionOwner != owner->internalWinId()) ||
+        (!selectionOwner && d->timestamp != CurrentTime && d->timestamp < timestamp))
+        return qt_check_selection_sentinel();
+    return false;
+}
+
+bool qt_xfixes_clipboard_changed(Window clipboardOwner, Time timestamp)
+{
+    QClipboardData *d = clipboardData();
+#ifdef QCLIPBOARD_DEBUG
+    DEBUG("qt_xfixes_clipboard_changed: owner = %u; clipboardOwner = %u; internal timestamp = %u; external timestamp = %u",
+          (unsigned int)(owner ? (int)owner->internalWinId() : 0), (unsigned int)clipboardOwner,
+          (unsigned int)(d ? d->timestamp : 0), (unsigned int)timestamp);
+#endif
+    if (!owner || (clipboardOwner && clipboardOwner != owner->internalWinId()) ||
+        (!clipboardOwner && d->timestamp != CurrentTime && d->timestamp < timestamp))
+        return qt_check_clipboard_sentinel();
+    return false;
 }
 
 QT_END_NAMESPACE
