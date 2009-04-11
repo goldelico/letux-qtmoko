@@ -58,6 +58,7 @@ enum NeoAudioScenario {
     Scenario_GSMBluetooth,
     Scenario_GSMSpeakerout,
     Scenario_CaptureHandset,
+    Scenario_VoipHandset,
     Scenario_MediaHeadset
 };
 
@@ -68,6 +69,7 @@ static const char* mode_to_string[] = {
     "gsmbluetooth",
     "gsmspeakerout",
     "capturehandset",
+    "voip-handset",
     "headset",
 };
 
@@ -437,7 +439,7 @@ bool MediaCaptureAudioState::enter(QAudio::AudioCapability capability)
 
     qLog(AudioState) << "MediaCaptureAudioState::enter()" << "isPhone" << m_isPhone;
 
-    return setAudioScenario(Scenario_CaptureHandset);
+    return setAudioScenario(Scenario_VoipHandset);
 }
 
 bool MediaCaptureAudioState::leave()
