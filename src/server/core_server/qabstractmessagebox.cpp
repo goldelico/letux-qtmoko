@@ -204,6 +204,8 @@ static int QAbstractMessageBox_exec(QWidget *parent, QAbstractMessageBox::Icon i
         box->setTitle(title);
         box->setText(text);
         box->setButtons(button1, button2);
+	// Always windowmodal
+	box->setWindowModality(Qt::WindowModal);
         int rv = QtopiaApplication::execDialog(box);
         delete box;
         return rv;
