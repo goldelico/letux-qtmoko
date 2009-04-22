@@ -32,6 +32,8 @@
 #include <qmodemnetworkregistration.h>
 #include <qmodemsiminfo.h>
 #include <qmodemcallvolume.h>
+#include <qmodemsimfiles.h>
+#include <qmodemservicenumbers.h>
 
 #include <alsa/asoundlib.h>
 
@@ -45,9 +47,9 @@ public:
 protected:
     QModemCallProvider::AtdBehavior atdBehavior() const;
     void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );
+    void resetModem();
     QString acceptCallCommand( bool otherActiveCalls ) const;
     QModemService *modemService;
-
     QString dialVoiceCommand(const QDialOptions& options) const;
 
 private slots:
@@ -183,6 +185,22 @@ public:
 public slots:
     void setVibrateNow( const bool value );
     void setVibrateOnRing( const bool value );
+};
+
+class NeoServiceNumbers : public QModemServiceNumbers
+{
+    Q_OBJECT
+public:
+    NeoServiceNumbers( QModemService *service );
+    ~NeoServiceNumbers();
+
+public slots:
+    void requestServiceNumber( QServiceNumbers::NumberId id );
+    void setServiceNumber
+            ( QServiceNumbers::NumberId id, const QString& number );
+
+private:
+    QModemService *service;
 };
 
 class NeoCallVolume : public QModemCallVolume

@@ -44,6 +44,8 @@ NeoCallProvider::NeoCallProvider( QModemService *service )
         ( "%CPI:", this, SLOT(cpiNotification(QString)) );
     service->primaryAtChat()->registerNotificationType
         ( "%CNAP:", this, SLOT(cnapNotification(QString)) );
+    setUseMissedTimer(false);
+    setUseDetectTimer(false);
 }
 
 NeoCallProvider::~NeoCallProvider()
@@ -52,9 +54,10 @@ NeoCallProvider::~NeoCallProvider()
 
 QModemCallProvider::AtdBehavior NeoCallProvider::atdBehavior() const
 {
-    // When ATD reports OK, it indicates that it is back in command
-    // mode and a %CPI notification will indicate when we are connected.
-    return AtdOkIsDialingWithStatus;
+    // When ATD reports OK or NO CARRIER, it indicates that it is
+    // back in command mode. We just want to ignore these in QModemCall
+    // as we will have %CPI that is going to give us the right state.
+    return AtdOkIgnore;
 }
 
 void NeoCallProvider::abortDial( uint id, QPhoneCall::Scope scope )
@@ -82,10 +85,15 @@ void NeoCallProvider::cpiNotification( const QString& msg )
     // 0 = SETUP, 1 = DISCONNECT, 2 = ALERT, 3 = PROCEED,
     // 4 = SYNCHRONIZATION, 5 = PROGRESS, 6 = CONNECTED,
     // 7 = RELEASE, 8 = REJECT
+    // dir: 0 = mobile originated, 1 = mobile terminated, 2 = network initiaited mobile
+    // originated call, 3 = redialing mobile originated
     uint posn = 5;
     uint identifier = QAtUtils::parseNumber( msg, posn );
 
     uint status = QAtUtils::parseNumber( msg, posn );
+    QAtUtils::skipField( msg, posn );
+    QAtUtils::skipField( msg, posn );
+    uint direction = QAtUtils::parseNumber( msg, posn );
     QModemCall *call = callForIdentifier( identifier );
 
     if ( status == 6 && call &&
@@ -122,12 +130,9 @@ void NeoCallProvider::cpiNotification( const QString& msg )
         // This is an indication that an incoming call was missed.
         call->setState( QPhoneCall::Missed );
 
-    } else if ( ( status == 2 || status == 4 ) && !call ) {
+    } else if ( ( status == 2 || status == 4 || status == 0) && !call && direction == 1) {
 
         // This is a newly waiting call.  Treat it the same as "RING".
-        QAtUtils::skipField( msg, posn );
-        QAtUtils::skipField( msg, posn );
-        QAtUtils::skipField( msg, posn );
         uint mode = QAtUtils::parseNumber( msg, posn );
         QString callType;
         if ( mode == 1 || mode == 6 || mode == 7 )
@@ -140,6 +145,8 @@ void NeoCallProvider::cpiNotification( const QString& msg )
         uint type = QAtUtils::parseNumber( msg, posn );
         ringing( QAtUtils::decodeNumber( number, type ), callType, identifier );
 
+	// We got everything we need, indicate the call to the outside world
+	announceCall();
     }
 }
 
@@ -270,6 +277,24 @@ void NeoSimToolkit::sataNotification( const QString& msg )
 void NeoSimToolkit::satnNotification( const QString& )
 {
     // Nothing to do here at present.  Just ignore the %SATN notifications.
+}
+
+/*
+ * Reimplementation because we don't want the standard notifications
+ * as we have a CPI which should give us everything that we need.
+ * We don't need:
+ *    +CRING (CPI gives us the calltype)
+ *    +CLIP  (CPI gives us the number)
+ *    RING
+ */
+void NeoCallProvider::resetModem()
+{
+    // We don't want RING, CRING, CLIP, COLP, COWA  but callNotification
+    // disable all of these and do not call the base class
+    atchat()->chat( "AT+CRC=0" );
+    service()->retryChat( "AT+CLIP=0" );
+    service()->retryChat( "AT+COLP=0" );
+    service()->retryChat( "AT+CCWA=1" );
 }
 
 NeoPhoneBook::NeoPhoneBook( QModemService *service )
@@ -607,6 +632,9 @@ void NeoModemService::initialize()
    if ( !supports<QVibrateAccessory>() )
         addInterface( new NeoVibrateAccessory( this ) );
 
+   if ( !supports<QServiceNumbers>() )
+        addInterface( new NeoServiceNumbers( this ) );
+
     if ( !supports<QCallVolume>() )
         addInterface( new NeoCallVolume(this));
 
@@ -771,13 +799,13 @@ NeoVibrateAccessory::~NeoVibrateAccessory()
 
 void NeoVibrateAccessory::setVibrateOnRing( const bool value )
 {
-    qLog(Modem)<<"setVibrateOnRing";
+    qLog(Modem)<<"setVibrateOnRing "<<value;
     setVibrateNow(value);
 }
 
 void NeoVibrateAccessory::setVibrateNow( const bool value )
 {
-    qLog(Modem)<<"setVibrateNow";
+    qLog(Modem)<<"setVibrateNow "<<value;
     QString vibFile;
     if (QFileInfo("/sys/class/leds/gta01:vibrator").exists())
         vibFile = "/sys/class/leds/gta01:vibrator";
@@ -814,6 +842,35 @@ void NeoVibrateAccessory::setVibrateNow( const bool value )
     QVibrateAccessoryProvider::setVibrateNow( value );
 }
 
+NeoServiceNumbers::NeoServiceNumbers( QModemService *service )
+    : QModemServiceNumbers( service )
+{
+    this->service = service;
+}
+
+NeoServiceNumbers::~NeoServiceNumbers()
+{
+}
+
+void NeoServiceNumbers::requestServiceNumber
+        ( QServiceNumbers::NumberId id )
+{
+    if ( id == QServiceNumbers::VoiceMail ) {
+        QModemServiceNumbers::requestServiceNumberFromFile( id );
+    } else {
+        QModemServiceNumbers::requestServiceNumber( id );
+    }
+}
+
+void NeoServiceNumbers::setServiceNumber
+        ( QServiceNumbers::NumberId id, const QString& number )
+{
+    if ( id == QServiceNumbers::VoiceMail ) {
+        QModemServiceNumbers::setServiceNumberInFile( id, number );
+    } else {
+        QModemServiceNumbers::setServiceNumber( id, number );
+    }
+}
 
 NeoCallVolume::NeoCallVolume(NeoModemService *service)
     : QModemCallVolume(service)

@@ -63,6 +63,8 @@ class QModemCallProviderPrivate
 {
 public:
     QModemCallProviderPrivate()
+	: useDetectTimer(true)
+	, useMisssedTimer(true)
     {
         incomingModemIdentifier = 0;
         ringBlock = false;
@@ -82,6 +84,8 @@ public:
     uint usedIds;
     int vtsType;
     QModemPPPdManager *pppdManager;
+    bool useDetectTimer;
+    bool useMisssedTimer;
 };
 
 // Time to wait between first seeing an incoming call and actually
@@ -119,15 +123,6 @@ QModemCallProvider::QModemCallProvider( QModemService *service )
 
     // Create the pppd manager object for data calls on the internal modem.
     d->pppdManager = new QModemPPPdManager( service->multiplexer(), this );
-
-    // Register for standard notifications that indicate incoming calls.
-    atchat()->registerNotificationType( "RING", this, SLOT(ring()) );
-    atchat()->registerNotificationType( "+CRING:", this, SLOT(cring(QString)) );
-    connect( atchat(), SIGNAL(callNotification(QString)),
-             this, SLOT(callNotification(QString)) );
-    atchat()->registerNotificationType( "+CLIP:", this, SLOT(clip(QString)), true );
-    atchat()->registerNotificationType( "+COLP:", this, SLOT(colp(QString)), true );
-    atchat()->registerNotificationType( "+CCWA: \"", this, SLOT(ccwa(QString)) );
 
     // Advertise the call types that we understand.
     QStringList types;
@@ -173,7 +168,7 @@ void QModemCallProvider::ringing
     // missed call timer but otherwise ignore this.  This prevents
     // us from creating a new incoming call for every new RING.
     if ( incomingCall() ) {
-        if ( hasRepeatingRings() )
+        if ( hasRepeatingRings() && useMissedTimer() )
             d->missedTimer->start( INCOMING_MISSED_TIMEOUT );
         return;
     }
@@ -192,11 +187,11 @@ void QModemCallProvider::ringing
     }
 
     // Start the detection timer if it isn't already running.
-    if ( !d->detectTimer->isActive() )
+    if ( !d->detectTimer->isActive() && useDetectTimer() )
         d->detectTimer->start( INCOMING_DETECT_TIMEOUT );
 
     // Reset the missed call timer if necessary.
-    if ( hasRepeatingRings() )
+    if ( hasRepeatingRings() && useMissedTimer() )
         d->missedTimer->start( INCOMING_MISSED_TIMEOUT );
 }
 
@@ -641,6 +636,15 @@ QSerialIODeviceMultiplexer *QModemCallProvider::multiplexer() const
 */
 void QModemCallProvider::resetModem()
 {
+    // Register for standard notifications that indicate incoming calls.
+    atchat()->registerNotificationType( "RING", this, SLOT(ring()) );
+    atchat()->registerNotificationType( "+CRING:", this, SLOT(cring(QString)) );
+    atchat()->registerNotificationType( "+CLIP:", this, SLOT(clip(QString)), true );
+    atchat()->registerNotificationType( "+COLP:", this, SLOT(colp(QString)), true );
+    atchat()->registerNotificationType( "+CCWA: \"", this, SLOT(ccwa(QString)) );
+    connect( atchat(), SIGNAL(callNotification(QString)),
+             this, SLOT(callNotification(QString)) );
+
     // Turn on +CRING notifications because they give us more info than RING.
     atchat()->chat( "AT+CRC=1" );
 
@@ -943,4 +947,29 @@ int QModemCallProvider::vtsType() const
 void QModemCallProvider::setVtsType( int type )
 {
     d->vtsType = type;
+}
+
+/*
+ * Setting this to false means that we won't listen to CRING, RING, CLIP and other
+ * indications but assume someone will call ring with the right parameter
+ * and then announce the call
+*/
+void QModemCallProvider::setUseDetectTimer(bool useTimer)
+{
+    d->useDetectTimer = useTimer;
+}
+
+bool QModemCallProvider::useDetectTimer() const
+{
+    return d->useDetectTimer;
+}
+
+void QModemCallProvider::setUseMissedTimer(bool useTimer)
+{
+    d->useMisssedTimer = useTimer;
+}
+
+bool QModemCallProvider::useMissedTimer() const
+{
+    return d->useMisssedTimer;
 }
