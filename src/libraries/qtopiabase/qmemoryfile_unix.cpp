@@ -127,6 +127,7 @@ QMemoryFileData * QMemoryFile::openData (const QString &fileName, int flags,
         int f = ::open(tmpFile.toLatin1(), O_WRONLY);
 
         if (!f)
+            //f = ::open(tmpFile.toLatin1(), O_CREAT | O_WRONLY);
             f = ::open(tmpFile.toLatin1(), O_CREAT | O_WRONLY, 00644);
 
         if (f){
@@ -215,6 +216,7 @@ QMemoryFileData * QMemoryFile::openData (const QString &fileName, int flags,
             if ((f == -1) && (flags & QMemoryFile::Create)){
                 // create an empty file with a zero at the end
                 f = ::open(fileName.toLocal8Bit(), fileMode | O_CREAT, 00644);
+                //f = ::open(fileName.toLocal8Bit(), fileMode | O_CREAT);
 
                 if ((::lseek(f, size, SEEK_SET) == -1) || (::write(f, "", 1) == -1)){
                   qWarning(QString("QMemoryFile result: %1").arg(strerror(errno)).toLatin1().constData());
