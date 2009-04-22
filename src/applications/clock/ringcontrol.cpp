@@ -124,14 +124,16 @@ void RingControl::start()
 void RingControl::stop()
 {
     if ( d->alertSound ) {
-        stopNoise();
         stopTimer( d->startNoiseTimer );
         stopTimer( d->stopNoiseTimer );
+        stopNoise();
     }
 
-    stopVibrate();
     stopTimer( d->startVibrateTimer );
     stopTimer( d->stopVibrateTimer );
+    stopVibrate_notimer();
+    // just in case ...
+    stopVibrate_notimer();
 
     d->active = false;
 }
@@ -182,6 +184,12 @@ void RingControl::stopVibrate()
     vib.setVibrateNow( false);
     // start vibrating in 2 seconds
     startTimer( d->startVibrateTimer, d->vibrateOff );
+}
+
+void RingControl::stopVibrate_notimer()
+{
+    QVibrateAccessory vib;
+    vib.setVibrateNow( false);
 }
 
 void RingControl::timerEvent( QTimerEvent *e )
