@@ -574,6 +574,8 @@ void QModemSMSReader::storeListDone( bool ok, const QAtResult& result )
         d->pendingPosn = 0;
         nextMessage();
     }
+    // Delete all SMS's in state "received read" or "stored sent" from SIM
+    d->service->primaryAtChat()->chat( "AT+CMGD=0,2" );
 }
 
 void QModemSMSReader::fetchMessages()
