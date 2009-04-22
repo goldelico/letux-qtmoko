@@ -1,9 +1,8 @@
 #!/bin/sh
-PKGCONFIG=/usr/bin/pkg-config
+PKGCONFIG=pkg-config
 
 if [ -z "$PKG_CONFIG_PREFIX" ]; then
-    echo "ERROR: PKG_CONFIG_PREFIX is not set!" >&2
-    exit 1
+    exec $PKGCONFIG "$@"
 fi
 
 # Dodgy, assume all arguments without a - as the first char are package names
