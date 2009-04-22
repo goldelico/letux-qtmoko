@@ -785,12 +785,12 @@ void AtGsmNonCellCommands::atccwa( const QString& params )
                         if ( callSettings->available() ) {
                             requestingCallWaiting = true;
                             callSettings->requestCallWaiting();
-                            return;
                         } else {
                             // We don't have call settings support on this
                             // system at all, so report no classes enabled.
                             atc->send( "+CCWA: 0" );
                         }
+                        return;
                     }
                     break;
 
