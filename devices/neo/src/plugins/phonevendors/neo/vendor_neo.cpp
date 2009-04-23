@@ -131,6 +131,10 @@ void NeoCallProvider::cpiNotification( const QString& msg )
         call->setState( QPhoneCall::Missed );
 
     } else if ( ( status == 2 || status == 4 || status == 0) && !call && direction == 1) {
+        // only for incoming calls
+        // if you make an outgoing call, these states can occur, but
+        // we don't want an aborted outgoing call to be registered as missed
+        // therefore we use the direction parameter
 
         // This is a newly waiting call.  Treat it the same as "RING".
         uint mode = QAtUtils::parseNumber( msg, posn );
