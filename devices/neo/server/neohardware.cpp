@@ -17,197 +17,238 @@
 **
 ****************************************************************************/
 
-#include "neobattery.h"
-#include "qtopiaserverapplication.h"
+#ifdef QT_QWS_NEO
 
-#include <QPowerSourceProvider>
+#include "neohardware.h"
+
+#include <QSocketNotifier>
 #include <QTimer>
-#include <QFileMonitor>
+#include <QLabel>
+#include <QDesktopWidget>
+#include <QProcess>
+#include <QtopiaIpcAdaptor>
 
-#include <math.h>
-#include <errno.h>
-#include <stdlib.h>
+#include <qcontentset.h>
+#include <qtopiaapplication.h>
+#include <qtopialog.h>
+#include <qtopiaipcadaptor.h>
+
+#include <qbootsourceaccessory.h>
+#include <qtopiaipcenvelope.h>
+
+#include <qtopiaserverapplication.h>
+
 #include <fcntl.h>
+#include <errno.h>
 #include <unistd.h>
-#include <QValueSpaceItem>
-#include <QtopiaIpcEnvelope>
+#include <linux/input.h>
 
-/* gtaa01
-   cat /sys/devices/platform/s3c2410-i2c/i2c-adapter/i2c-0/0-0008/battvol
-*/
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <linux/types.h>
+#include <linux/netlink.h>
+#include <QTcpSocket>
+#include <QtDebug>
 
-NeoBattery::NeoBattery(QObject *parent)
-: QObject(parent),
-  ac(0),
-  battery(0),
-  vsUsbCable(0),
-  cableEnabled(0),
-  charging(0),
-  isSmartBattery(0),
-  percentCharge(0)
+QTOPIA_TASK(NeoHardware, NeoHardware);
+
+
+NeoHardware::NeoHardware()
+    : vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
+      vsoUsbCable("/Hardware/UsbGadget"),
+      vsoNeoHardware("/Hardware/Neo")
 {
-    bool apm = APMEnabled();
-    if(!apm) return;
-    qWarning()<<"NeoBattery::NeoBattery";
+    struct sockaddr_nl snl;
+    adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
+    qLog(Hardware) << "neohardware";
 
-    QtopiaServerApplication::taskValueSpaceSetAttribute("NeoBattery",
-                                                        "APMAvailable", apm);
+    memset(&snl, 0x00, sizeof(struct sockaddr_nl));
+    snl.nl_family = AF_NETLINK;
+    snl.nl_pid = getpid();
+    snl.nl_groups = 1;
+    snl.nl_groups = 0x1;
 
-    ac = new QPowerSourceProvider(QPowerSource::Wall, "PrimaryAC", this);
-    battery = new QPowerSourceProvider(QPowerSource::Battery, "NeoBattery", this);
-
-
-    vsUsbCable = new QValueSpaceItem("/Hardware/UsbGadget/cableConnected", this);
-    connect( vsUsbCable, SIGNAL(contentsChanged()), SLOT(cableChanged()));
-
-    cableChanged();
-
-    startTimer(60 * 1000);
-
-    if ( QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
-        QTimer::singleShot( 10 * 1000, this, SLOT(updateSysStatus()));
-        isSmartBattery = true;
-    }else if ( QFileInfo("/sys/class/power_supply/battery/status").exists()) {
-        QTimer::singleShot( 10 * 1000, this, SLOT(updateSysStatus()));
-        isSmartBattery = true;
+    int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+    if (hotplug_sock == -1) {
+        qLog(Hardware) << "error getting uevent socket: "<< strerror(errno);
     } else {
-// 1973 only has dumb battery and must use apm
-        QTimer::singleShot( 10 * 1000, this, SLOT(updateDumbStatus()));
-        isSmartBattery = false;
+       if ( bind(hotplug_sock, (struct sockaddr *) &snl, sizeof(struct sockaddr_nl)) < 0) {
+         qLog(Hardware) << "uevent bind failed: "<< strerror(errno);
+         hotplug_sock = -1;
+       }else {
+         ueventSocket = new QTcpSocket(this);
+         ueventSocket->setSocketDescriptor(hotplug_sock);
+         connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+       }
     }
+
+    cableConnected(getCableStatus());
+
+    vsoPortableHandsfree.setAttribute("Present", false);
+    vsoPortableHandsfree.sync();
+
+// Handle Audio State Changes
+    audioMgr = new QtopiaIpcAdaptor("QPE/AudioStateManager", this);
+
+
+    QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
+                              this, SLOT(headphonesInserted(bool)));
+
+    QtopiaIpcAdaptor::connect(adaptor, MESSAGE(cableConnected(bool)),
+                              this, SLOT(cableConnected(bool)));
+    findHardwareVersion();
 }
 
-/*! \internal */
-bool NeoBattery::APMEnabled() const
+NeoHardware::~NeoHardware()
 {
-    int apm_install_flags;
-    FILE *f = fopen("/proc/apm", "r");
-    if ( f ) {
-        //I 1.13 1.2 0x02 0x00 0xff 0xff 49% 147 sec
-        fscanf(f, "%*[^ ] %*d.%*d 0x%x 0x%*x 0x%*x 0x%*x %*d%% %*i %*c",
-               &apm_install_flags);
-        fclose(f);
-
-        if (!(apm_install_flags & 0x08)) //!APM_BIOS_DISABLED
-        {
-            qLog(PowerManagement)<<"Neo APM Enabled";
-            return true;
-        }
-    }
-    qLog(PowerManagement)<<"Neo APM Disabled";
-    return false;
 }
 
-void NeoBattery::apmFileChanged(const QString &/* file*/)
+char *NeoHardware::findAttribute(char *buf, int len, const char *token)
 {
-    updateDumbStatus();
+int pos=0;
+
+  while (pos<len)
+  {
+    if(strncmp(&buf[pos],token,strlen(token))==0)
+	return(&buf[pos+strlen(token)]);
+    pos=pos+strlen(&buf[pos])+1;
+  }
+  return(buf);
 }
 
-void NeoBattery::updateSysStatus()
+void NeoHardware::uevent()
 {
-    charging = isCharging();
-    qLog(PowerManagement) << __PRETTY_FUNCTION__ << charging;
+#define UEVENT_BUFFER_SIZE 1024
+char buffer[UEVENT_BUFFER_SIZE];
+char *value;
 
-    int capacity = getCapacity();
-
-    battery->setCharging(charging);
-    battery->setCharge(capacity);
-    battery->setTimeRemaining(getTimeRemaining());
-    // stop the charging animation when fully charged and plugged in
-    // otherwise it looks like it never gets full
-   if (capacity > 98 && charging)
-       battery->setCharging(false);
-
+  int bytesAvail = ueventSocket->bytesAvailable();
+  int readCount = UEVENT_BUFFER_SIZE;
+  if (bytesAvail < readCount)
+      readCount = bytesAvail;
+  ueventSocket->read(&buffer[0],readCount);
+  if(strcmp(buffer,"change@/class/power_supply/usb")==0)
+  {
+    qDebug()<<"usb change event";
+    cableConnected(getCableStatus());
+  }else if(strcmp(buffer,"change@/class/power_supply/ac")==0)
+  {
+    qDebug()<<"ac change event";
+    cableConnected(getCableStatus());
+  }else if(strcmp(buffer,"change@/class/power_supply/adapter")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
+    qDebug()<<"power_supply change event; online="<<value;
+  }else if(strcmp(buffer,"change@/class/power_supply/battery")==0)
+  {
+    value=findAttribute(buffer,readCount,"POWER_SUPPLY_CAPACITY=");
+    qDebug()<<"battery change event charge%="<<value<<"%";
+  }else if(strcmp(buffer,"change@/class/switch/headset")==0)
+  {
+    value=findAttribute(buffer,readCount,"SWITCH_STATE=");
+    qDebug()<<"headset change event, switch_state="<<value;
+  }
 }
 
-void NeoBattery::updateDumbStatus()
+void NeoHardware::findHardwareVersion()
 {
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    int min = -1; // Remaining battery (minutes)
-
-    // apm on freerunner is borked.
-
-    bool isFull = batteryIsFull();
-
-    battery->setCharge( percentCharge);
-
-    qLog(PowerManagement) << __PRETTY_FUNCTION__ << cableEnabled << percentCharge;
-
-    battery->setCharging( cableEnabled && !isFull);
-    battery->setTimeRemaining(min);
-}
-
-int NeoBattery::getDumbCapacity()
-{
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    int voltage = 0;
-    QString batteryVoltage;
+    QFile cpuinfo( "/proc/cpuinfo");
     QString inStr;
-    if ( QFileInfo("/sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073").exists()) {
-        //gta02
-        batteryVoltage = "/sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/battvolt";
+    cpuinfo.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&cpuinfo);
+    QString line;
+    do {
+        line  = in.readLine();
+        if (line.contains("Hardware") ){
+            QStringList token = line.split(":");
+            inStr = token.at(1).simplified();
+        }
+    } while (!line.isNull());
+
+    cpuinfo.close();
+    qLog(Hardware)<<"Neo"<< inStr;
+
+    vsoNeoHardware.setAttribute("Device", inStr);
+    vsoNeoHardware.sync();
+}
+
+void NeoHardware::headphonesInserted(bool b)
+{
+    qLog(Hardware)<< __PRETTY_FUNCTION__ << b;
+    vsoPortableHandsfree.setAttribute("Present", b);
+    vsoPortableHandsfree.sync();
+    if (b) {
+        QByteArray mode("Headphone");
+        audioMgr->send("setProfile(QByteArray)", mode);
     } else {
-        //gta01
-        batteryVoltage = "/sys/devices/platform/s3c2410-i2c/i2c-adapter/i2c-0/0-0008/battvolt";
+        QByteArray mode("MediaSpeaker");
+        audioMgr->send("setProfile(QByteArray)", mode);
     }
 
-    QFile battvolt( batteryVoltage);
-    battvolt.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&battvolt);
-    in >> inStr;
-    voltage = inStr.toInt();
-    battvolt.close();
-    qLog(PowerManagement)<<"voltage"<< inStr;
 
-    // lets use 3400 as empty, for all intensive purposes,
-    // 2 minutes left of battery life till neo shuts off might
-    // as well be empty
-
-    voltage = voltage - 3400;
-    float perc = voltage  / 8;
-    percentCharge = (int)round( perc + 0.5);
-    percentCharge = qBound<quint16>(0, percentCharge, 100);
-    qLog(PowerManagement)<<"Battery volt"<< voltage + 3400 << percentCharge<<"%";
-    return voltage;
 }
 
-/*! \internal */
-bool NeoBattery::batteryIsFull()
+void NeoHardware::cableConnected(bool b)
 {
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    if(getDumbCapacity() + 3400 > 4170)
-        return true;
-    return false;
+    qLog(Hardware)<< __PRETTY_FUNCTION__ << b;
+    vsoUsbCable.setAttribute("cableConnected", b);
+    vsoUsbCable.sync();
 }
 
-/*!
-  \internal */
-void NeoBattery::timerEvent(QTimerEvent *)
+void NeoHardware::shutdownRequested()
 {
-    updateStatus();
+    qLog(PowerManagement)<< __PRETTY_FUNCTION__;
+
+    QFile powerFile;
+    QFile btPower;
+
+    if ( QFileInfo("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on").exists()) {
+//neo
+        powerFile.setFileName("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on");
+        btPower.setFileName("/sys/bus/platform/devices/gta01-pm-bt.0/power_on");
+    } else {
+//ficgta02
+        powerFile.setFileName("/sys/bus/platform/devices/neo1973-pm-gsm.0/power_on");
+        btPower.setFileName("/sys/bus/platform/devices/neo1973-pm-bt.0/power_on");
+    }
+
+    if( !powerFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning()<<"File not opened";
+    } else {
+        QTextStream out(&powerFile);
+        out << "0";
+        powerFile.close();
+    }
+
+        if( !btPower.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning()<<"File not opened";
+    } else {
+        QTextStream out(&btPower);
+        out <<  "0";
+        powerFile.close();
+    }
+
+
+    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::ShutdownSystem);
 }
 
-/*!
-  \internal */
-void NeoBattery::updateStatus()
+bool NeoHardware::getCableStatus()
 {
-    if (isSmartBattery)
-        QTimer::singleShot( 1000, this, SLOT(updateSysStatus()));
-    else
-        QTimer::singleShot( 1000, this, SLOT(updateDumbStatus()));
-}
-
-/*!
-  \internal */
-bool NeoBattery::isCharging()
-{
-
+    // These code from NeoBattery::isCharging()
+    // Seems better than the origin method
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QString chargeFile;
     if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
          //freerunner
         chargeFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/status";
-    }else if ( QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+    }
+    else if (QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+         //freerunner kernel > 2.6.28
         chargeFile = "/sys/class/power_supply/battery/status";
     }
 
@@ -219,125 +260,11 @@ bool NeoBattery::isCharging()
     QTextStream in(&chargeState);
     in >> charge;
     qLog(PowerManagement) << __PRETTY_FUNCTION__ << charge;
-// Charging  Discharging  Not charging
-// ac        battery      ac/full
+    // Charging  Discharging  Not charging
+    // ac        battery      ac/full
     chargeState.close();
-    if (charge != ("Discharging")) {
-        return true;
-    }
-
-    return false;
+    return (charge != ("Discharging"));
 }
 
-/*!
-  \internal */
-void NeoBattery::cableChanged()
-{
-    cableEnabled = vsUsbCable->value().toBool();
-    qLog(PowerManagement) << __PRETTY_FUNCTION__ << cableEnabled;
+#endif // QT_QWS_NEO
 
-    charging = cableEnabled;
-
-    if(cableEnabled) {
-        qLog(PowerManagement) << "charging";
-        ac->setAvailability(QPowerSource::Available);
-    } else {
-        qLog(PowerManagement) << "not charging";
-        ac->setAvailability(QPowerSource::NotAvailable);
-    }
-    updateStatus();
-}
-
-/*!
-  \internal */
-int NeoBattery::getCapacity()
-{
-    if (!isSmartBattery)
-        return 0;
-
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QString strCapacityFile;
-    if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/capacity").exists()) {
-         //freerunner
-        strCapacityFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/capacity";
-    }else if ( QFileInfo("/sys/class/power_supply/battery/capacity").exists()) {
-        strCapacityFile = "/sys/class/power_supply/battery/capacity";
-    }
-
-    int capacity = 0;
-
-    QFile capacityState( strCapacityFile);
-    capacityState.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&capacityState);
-    in >> capacity;
-
-    capacityState.close();
-    qLog(PowerManagement) << capacity;
-
-// might be gta02 with dumb battery
-    if (capacity == 0) {
-        isSmartBattery = false;
-        updateDumbStatus();
-    }
-    return capacity;
-}
-
-/*!
-  \internal */
-int NeoBattery::getTimeToFull()
-{
-    if (!isSmartBattery)
-        return 0;
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-
-    QString timeToFullFile;
-    if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_full_now").exists()) {
-         //freerunner
-        timeToFullFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_full_now";
-    }else if ( QFileInfo("/sys/class/power_supply/battery/time_to_full_now").exists()) {
-        timeToFullFile = "/sys/class/power_supply/battery/time_to_full_now";
-    }
-
-    int time = 0;
-    QFile timeState( timeToFullFile);
-
-    timeState.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&timeToFullFile);
-    in >> time;
-
-    timeState.close();
-    qLog(PowerManagement) << time/60;
-
-    return time/60;
-
-}
-
-/*!
-  \internal */
-int NeoBattery::getTimeRemaining()
-{
-    if (!isSmartBattery)
-        return 0;
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QString timeToEmptyFile;
-    if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_empty_now").exists()) {
-         //freerunner
-        timeToEmptyFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/time_to_empty_now";
-    }else if ( QFileInfo("/sys/class/power_supply/battery/time_to_empty_now").exists()) {
-        timeToEmptyFile = "/sys/class/power_supply/battery/time_to_empty_now";
-    }
-
-    int time = 0;
-    QFile timeState( timeToEmptyFile);
-
-    timeState.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&timeState);
-    in >> time;
-
-    timeState.close();
-    qLog(PowerManagement) << time/60;
-
-    return time/60;
-}
-
-QTOPIA_TASK(NeoBattery, NeoBattery);
