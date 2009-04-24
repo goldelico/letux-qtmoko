@@ -480,7 +480,7 @@ void RingControl::startRinging(RingType t)
         initSound();
 #ifdef MEDIA_SERVER
         if ( !d->videoTone ) {
-            if(d->soundcontrol && d->ringtonecontrol->sound()->fileName() != ringToneDoc) {
+            if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
                 d->ringtonecontrol = 0;
