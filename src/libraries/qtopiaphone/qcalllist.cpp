@@ -819,15 +819,14 @@ void QCallListPrivate::record( QCallListItem item, bool permitDuplicates )
                 qLog(Sql) << "Failed to execute query," << statement;
             } else {
                 // if there is more than one contacts that has the same number
-                // we take the first one found
+                // it can not be decided which one is calling.
                 int i = 0;
                 while ( query.next() ) {
-                    if ( i == 0) 
-                       contactid = QUniqueId::fromUInt( query.value( 0 ).toUInt() );
+                    contactid = QUniqueId::fromUInt( query.value( 0 ).toUInt() );
                     ++i;
                 }
-//                if ( i != 1 )
-//                    contactid = QUniqueId();
+                if ( i != 1 )
+                    contactid = QUniqueId();
             }
         }
     }
