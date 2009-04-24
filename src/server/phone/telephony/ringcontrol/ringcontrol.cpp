@@ -483,9 +483,9 @@ void RingControl::startRinging(RingType t)
             if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
-                d->ringtonecontrol = 0;
+                d->soundcontrol = 0;
             }
-            if (!d->ringtonecontrol) {
+            if (!d->soundcontrol) {
                 d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
                 connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
             }
