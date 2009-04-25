@@ -411,8 +411,8 @@ void RingControl::startRinging(RingType t)
     QPhoneProfile profile = d->profileManager->activeProfile();
 
     // try contact ringtone
-    if (t == Call) {
         QString ringToneDoc;
+    if (t == Call) {
 
         // try personalized ring tone
         ringToneDoc = findRingTone();
@@ -451,7 +451,6 @@ void RingControl::startRinging(RingType t)
             d->msgTid = startTimer(msgRingTime());
         }
 
-        QString ringToneDoc;
         ringToneDoc = profile.messageTone().fileName();
 
         // fall back if above settings lead to non-existent ringtone.
