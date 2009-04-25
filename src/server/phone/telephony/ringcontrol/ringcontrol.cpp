@@ -483,8 +483,7 @@ void RingControl::startRinging(RingType t)
             if(d->soundcontrol ) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
-                d->ringtonecontrol = 0;
-            }
+                  }
                 d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
                 connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
 
