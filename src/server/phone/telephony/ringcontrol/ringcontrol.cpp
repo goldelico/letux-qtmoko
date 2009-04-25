@@ -480,13 +480,15 @@ void RingControl::startRinging(RingType t)
         initSound();
 #ifdef MEDIA_SERVER
         if ( !d->videoTone ) {
-            if(d->soundcontrol ) {
+        if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
+                d->soundcontrol = 0;
                   }
+         if(!d->soundcontrol) {
                 d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
                 connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
-
+          }
             d->soundcontrol->setPriority(QSoundControl::RingTone);
             d->soundcontrol->setVolume(volmap[d->lastRingVolume]);
 
