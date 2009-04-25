@@ -71,3 +71,18 @@ contains(QTOPIAMEDIA_ENGINES,cruxus) {
         plugins/codecs/wavplay
 }
 
+enable_qtopiamedia:contains(QTOPIAMEDIA_ENGINES,cruxus):!enable_singleexec {
+    # MP3 support for cruxus
+    # not in source packages
+    PROJECTS*=\
+        3rdparty/libraries/libmad\
+        3rdparty/plugins/codecs/libmad
+}
+
+enable_qtopiamedia:contains(QTOPIAMEDIA_ENGINES,cruxus):!enable_singleexec {
+    # MP3 support for cruxus
+    # not in source packages
+    PROJECTS*=\
+        3rdparty/libraries/libmad\
+        3rdparty/plugins/codecs/libmad
+}
