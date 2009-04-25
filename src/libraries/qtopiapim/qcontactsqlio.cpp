@@ -1289,7 +1289,7 @@ QUniqueId ContactSqlIO::matchPhoneNumber(const QString &phnumber, int &bestMatch
     if (mLocalNumberCache.isEmpty()) {
         QPreparedSqlQuery q(database());
         // Ensure numbers are added in a deterministic order
-        q.prepare("SELECT recid, phone_number FROM contactphonenumbers ORDER BY recid");
+        q.prepare("SELECT recid, phone_number FROM contactphonenumbers ORDER BY recid desc");
         q.exec();
 
         while (q.next()) {
@@ -1312,12 +1312,10 @@ QUniqueId ContactSqlIO::matchPhoneNumber(const QString &phnumber, int &bestMatch
     local = local.right(5);
 
     LocalNumberCache::const_iterator it = mLocalNumberCache.find(local), end = mLocalNumberCache.end();
-    if (it != end) {
-        // We have at least one exact match on the local number - see if there is a better one
-        for ( ; (bestMatch != 100) && (it != end) && (it.key() == local); ++it) {
+    while (it != end && it.key() == local) {
             const QPair<QUniqueId, QString>& matched(it.value());
+            ++it;
 
-            // The cache has everything in it, we may have filtered something out
             if (!contains(matched.first))
                 continue;
 
@@ -1326,7 +1324,10 @@ QUniqueId ContactSqlIO::matchPhoneNumber(const QString &phnumber, int &bestMatch
                 bestMatch = match;
                 bestContact = matched.first;
             }
-        }
+
+            // best match found, exit loop
+            if (bestMatch == 100)
+                it=end;
     }
 
     qLog(Sql) << "QContactSqlIO::matchPhoneNumber() result:" << bestMatch << bestContact.toString();
