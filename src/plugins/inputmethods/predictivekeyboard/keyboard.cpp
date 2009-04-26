@@ -94,7 +94,7 @@ Board::Board(const QStringList &lines,
              KeyboardWidget::BoardType type, int lowerboard)
 : m_size(boardSize), m_lines(lines), m_type(type), m_lowerboard(lowerboard)
 {
-  initBoard();
+    initBoard();
 }
 
 void Board::initBoard()
@@ -1021,6 +1021,7 @@ void KeyboardWidget::dumpPossibleMotion()
     if(m_possibleMotion & Left) res += "Left ";
     if(m_possibleMotion & Up) res += "Up ";
     if(m_possibleMotion & Down) res += "Down ";
+    if(m_possibleMotion & MainDiag) res += "MainDiag ";
 }
 
 KeyboardWidget::KeyboardWidget(const Config &config,
@@ -1179,7 +1180,7 @@ void KeyboardWidget::mousePressEvent(QMouseEvent *e)
     m_mousePressPoint = e->pos();
     m_lastSamplePoint = m_mousePressPoint;
     m_mouseMovePoint = m_mousePressPoint;
-    m_possibleMotion = (Motion)(Left | Right | Up | Down);
+    m_possibleMotion = (Motion)(Left | Right | Up | Down | MainDiag);
 
     m_pressAndHold = false;
     m_mouseClick = true;
@@ -1225,10 +1226,17 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
 
     stopMouseTimer();
 
+
+// LM do we need slides gestures also if board is empty ?
     if(m_boards.isEmpty())
         return;
 
+
     QPoint rp = e->pos();
+    QScreen *screen;
+    screen = QScreen::instance();
+    int sWidth = screen->width();
+    int sHeight = screen->height();
 
     if(m_mouseClick) {
         QPoint p((rp.x() + m_mousePressPoint.x()) / 2,
@@ -1246,15 +1254,20 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
 
 
     Stroke updown = NoStroke;
+    Stroke diag = NoStroke;
+    Stroke leftright = NoStroke;
+
     int y_delta = e->pos().y() - m_mousePressPoint.y();
     int x_delta = e->pos().x() - m_mousePressPoint.x();
 
-    Stroke leftright = NoStroke;
 
     if(m_possibleMotion & Down && y_delta > (m_boardRect.height() / 3))
         updown = StrokeDown;
     else if(m_possibleMotion & Up && -y_delta > (m_boardRect.height() / 3))
         updown = StrokeUp;
+    if(m_possibleMotion & MainDiag && -y_delta > sWidth * 0.3 &&
+        -x_delta > sHeight * 0.3)
+        diag = StrokeMainDiag;
 
     if(m_possibleMotion & Right && x_delta > (m_boardRect.width() / 3))
         leftright = StrokeRight;
@@ -1272,9 +1285,19 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
         }
     }
 
-    if(updown != NoStroke) {
-        stroke(updown);
-    } else if(leftright != NoStroke) {
+    if(diag != NoStroke) 
+    {
+    //    emit commit(QString("Diag"));
+        stroke(diag);
+    }
+    else if(updown != NoStroke) 
+    {   
+    //    emit commit(QString("down"));
+         stroke(updown);
+    }
+    else if(leftright != NoStroke) 
+    {
+    //    emit commit(QString("left"));
         stroke(leftright);
     }
 
@@ -1346,6 +1369,10 @@ void KeyboardWidget::timerEvent(QTimerEvent *)
         if((m_lastSamplePoint.y() - m_mouseMovePoint.y()) < m_config.minimumStrokeMotionPerPeriod)
             m_possibleMotion = (Motion)(m_possibleMotion & ~Up);
     }
+    if(!(m_possibleMotion & Left && m_possibleMotion & Up)) {
+        m_possibleMotion = (Motion)(m_possibleMotion & ~MainDiag);
+    }
+
 
     m_lastSamplePoint = m_mouseMovePoint;
 
@@ -1489,6 +1516,12 @@ void KeyboardWidget::mouseClick(const QPoint &p)
         }
     }
 
+
+// LM trying to move prediction away
+   if(m_config.unpredictive)
+        pressAndHoldChar(closestCharacter(p, m_boards.at(m_currentBoard)));
+   else 
+   {
     if(m_boards.at(m_currentBoard)->type() == Numeric) {
         pressAndHoldChar(closestCharacter(p, m_boards.at(m_currentBoard)));
         return;
@@ -1511,6 +1544,7 @@ void KeyboardWidget::mouseClick(const QPoint &p)
     m_predict->addTouch(point);
 
     updateWords();
+    }
 }
 
 void KeyboardWidget::pressAndHoldChar(const QChar &c)
@@ -1747,6 +1781,9 @@ void KeyboardWidget::stroke(Stroke s)
             acceptWord();
             break;
 
+        case StrokeMainDiag:
+            m_config.unpredictive = !m_config.unpredictive;
+            break;
         case NoStroke:
             break;
     }
@@ -1856,12 +1893,14 @@ void KeyboardWidget::resizeEvent(QResizeEvent *event)
     int sWidth = screen->width();
     int sHeight = screen->height();
 
+/* LM
     if (sHeight > sWidth) //portrait
         m_config.keySize.setHeight(sHeight / 4);
     else //landscape
+*/ 
         m_config.keySize.setHeight(sHeight / 3 );
 
-    m_config.keyMargin = sWidth / 10;
+    m_config.keyMargin = sWidth / 20;
 
     m_boardRect = QRect(m_config.keyMargin,
                         m_config.bottomMargin,
