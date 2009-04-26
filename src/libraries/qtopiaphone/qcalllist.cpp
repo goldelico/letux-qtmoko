@@ -809,7 +809,8 @@ void QCallListPrivate::record( QCallListItem item, bool permitDuplicates )
     QUniqueId contactid;
     if ( item.type() != QCallListItem::Dialed || item.isSIMRecord() ) {
         statement = "SELECT recid FROM contactphonenumbers \
-                     WHERE phone_number = :number";
+                     WHERE phone_number = :number \
+                     ORDER BY recid DESC";
         if ( !query.prepare( statement ) ) {
             qLog(Sql) << "Failed to prepare query, " << statement;
         } else {
@@ -819,11 +820,13 @@ void QCallListPrivate::record( QCallListItem item, bool permitDuplicates )
                 qLog(Sql) << "Failed to execute query," << statement;
             } else {
                 // if there is more than one contacts that has the same number
-                // it can not be decieded which one is calling.
+                // we take the last one found (ORDER BY recid desc does this)
+//                // it can not be decided which one is calling.
                 int i = 0;
                 while ( query.next() ) {
                     contactid = QUniqueId::fromUInt( query.value( 0 ).toUInt() );
-                    ++i;
+//                    ++i;
+                    i=1;
                 }
                 if ( i != 1 )
                     contactid = QUniqueId();

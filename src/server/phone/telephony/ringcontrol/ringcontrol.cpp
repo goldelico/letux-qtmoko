@@ -409,9 +409,10 @@ void RingControl::startRinging(RingType t)
     d->ringtime.start();
 
     QPhoneProfile profile = d->profileManager->activeProfile();
+    QString ringToneDoc;
 
     // try contact ringtone
-        QString ringToneDoc;
+
     if (t == Call) {
 
         // try personalized ring tone
@@ -479,12 +480,12 @@ void RingControl::startRinging(RingType t)
         initSound();
 #ifdef MEDIA_SERVER
         if ( !d->videoTone ) {
-        if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
+            if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
                 d->soundcontrol = 0;
-                  }
-         if(!d->soundcontrol) {
+            }
+            if (!d->soundcontrol) {
                 d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
                 connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
           }

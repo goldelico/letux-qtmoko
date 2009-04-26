@@ -349,7 +349,7 @@ MineField::MineField( QWidget* parent )
     topMargin = 0;
     leftMargin = 0;
 
-    _minGrid = 16;
+    _minGrid = 12;
     _preferredGrid = 22;
 
     if(style() && style()->inherits("QThumbStyle"))
