@@ -69,6 +69,7 @@ public:
         int reallyNoMoveSensitivity;
         int moveSensitivity;
         int excludeDistance;
+        bool unpredictive;
     };
 
     KeyboardWidget(const Config &, QWidget *parent = 0);
@@ -134,7 +135,7 @@ private:
     bool m_speedMouseTimer;
 
     void mouseClick(const QPoint &);
-    enum Stroke { NoStroke, StrokeLeft, StrokeRight, StrokeUp, StrokeDown };
+    enum Stroke { NoStroke, StrokeLeft, StrokeRight, StrokeUp, StrokeDown, StrokeMainDiag};
     void stroke(Stroke);
     void pressAndHold();
     void pressAndHoldChar(const QChar &);
@@ -146,7 +147,7 @@ private:
     QRect m_boardRect;
     QPoint toBoardPoint(const QPoint &) const;
 
-    enum Motion { Left = 0x01, Right = 0x02, Up = 0x04, Down = 0x08 };
+    enum Motion { Left = 0x01, Right = 0x02, Up = 0x04, Down = 0x08 , MainDiag = 0x10};
     Motion m_possibleMotion;
     QPoint m_mouseMovePoint;
     QPoint m_lastSamplePoint;
