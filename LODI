@@ -5,7 +5,8 @@ This LODI contains a listing of all files that can be found in the package
 .
 LICENSE.GPL
 LODI
-README.html
+README
+READMEHTML
 bin
 bin/Cwd.dll
 bin/Glob.dll
