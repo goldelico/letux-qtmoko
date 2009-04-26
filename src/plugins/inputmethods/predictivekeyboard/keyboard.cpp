@@ -1575,8 +1575,9 @@ void KeyboardWidget::pressAndHoldChar(const QChar &c)
         m_dontAddPreeditSpace = false;
         emit commit("\n");
         clear();
-    }
-    else {
+    } else if(c == QChar(0x2190)) {// backspace key
+        doBackspace();
+    } else {
         KeyOccurance occurance;
         occurance.type = KeyOccurance::CharSelect;
         // Special-case carriage returns
