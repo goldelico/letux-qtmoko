@@ -291,7 +291,7 @@ public:
     enum ClearType { ClearImmediate, ClearSoon, ClearEventually };
     void clear(ClearType = ClearImmediate);
 
-    QString acceptWord(bool animate = true);
+    QString acceptWord(bool animate = true, bool addtodict = true);
     void setAcceptDest(const QPoint &);
     QString selectedWord() const;
 
@@ -586,23 +586,25 @@ QString OptionsWindow::selectedWord() const
         return m_words.at(m_selectedWord).first;
 }
 
-QString OptionsWindow::acceptWord(bool animate)
+QString OptionsWindow::acceptWord(bool animate, bool addtodict)
 {
     QString word = m_words.at(m_selectedWord).first;
 
-    bool newword = !Qtopia::isWord(word.toLower()) && !Qtopia::isWord(word);
-    for (int i=0; i<word.length() && newword; ++i)
-        newword = newword && word[i].isLetter();
-    if (newword)
-        Qtopia::addWords(QStringList() << word);
+    if (addtodict) {
+        bool newword = !Qtopia::isWord(word.toLower()) && !Qtopia::isWord(word);
+        for (int i=0; i<word.length() && newword; ++i)
+            newword = newword && word[i].isLetter();
+        if (newword)
+            Qtopia::addWords(QStringList() << word);
 
-    QRect startRect = wordRect(m_selectedWord);
+        QRect startRect = wordRect(m_selectedWord);
 
-    if(animate) {
-        AcceptWindow *win = new AcceptWindow(500 /* XXX */, newword);
-        win->accept(word,
+        if(animate) {
+            AcceptWindow *win = new AcceptWindow(500 /* XXX */, newword);
+            win->accept(word,
                 QRect(mapToGlobal(startRect.topLeft()), startRect.size()));
-        m_lastAccept = win;
+            m_lastAccept = win;
+        }
     }
     m_words.clear();
     update();
@@ -1870,8 +1872,16 @@ void KeyboardWidget::acceptWord()
         return;
     }
 
-    QString word = m_options->acceptWord(m_animate_accept /* XXX microfocushint */);
-    m_options->clear(OptionsWindow::ClearEventually);
+    bool addtodict;
+    if(m_config.unpredictive) {
+       m_animate_accept = false;
+       addtodict = false;
+       m_options->clear(OptionsWindow::ClearImmediate);
+    } else {
+       m_options->clear(OptionsWindow::ClearEventually);
+       addtodict = true;
+    }
+    QString word = m_options->acceptWord(m_animate_accept /* XXX microfocushint */, addtodict);
     clear();
     m_autoCap = m_autoCapitaliseEveryWord;
 
