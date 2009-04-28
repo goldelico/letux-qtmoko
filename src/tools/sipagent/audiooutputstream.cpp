@@ -21,7 +21,7 @@
 
 #include <qtimer.h>
 #include "audiooutputstream.h"
-#include <qtopia/audio/qaudiooutput.h>
+#include <qtopiaaudio/qaudiooutput.h>
 #include <qtopiaipcenvelope.h>
 #include <qvaluespace.h>
 #include <qtopialog.h>

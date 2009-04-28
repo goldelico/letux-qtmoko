@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 #include "audioinputstream.h"
-#include <qtopia/audio/qaudioinput.h>
+#include <qtopiaaudio/qaudioinput.h>
 #include <qvaluespace.h>
 #include <qtopialog.h>
 
