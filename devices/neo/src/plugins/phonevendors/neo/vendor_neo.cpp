@@ -1086,8 +1086,8 @@ NeoModemNetworkRegistration::NeoModemNetworkRegistration( QModemService *service
     d = new QModemNetworkRegistrationPrivate( service );
     service->primaryAtChat()->registerNotificationType
         ( "+CREG:", this, SLOT(cregNotify(QString)), true );
-//    service->connectToPost( "cfunDone", this, SLOT(cfunDone()) );
-//    connect( service, SIGNAL(resetModem()), this, SLOT(resetModem()) );
+    service->connectToPost( "cfunDone", this, SLOT(cfunDone()) );
+    connect( service, SIGNAL(resetModem()), this, SLOT(resetModem()) );
 
     // Set up the one-shot timer that can be used to filter out outages
     // (i.e. the "bouncy rubber calypso" problem with the Openmoko GTA01/GTA02)
@@ -1209,7 +1209,7 @@ void NeoModemNetworkRegistration::cregNotify( const QString& msg )
         QSettings cfg("Trolltech", "Modem");
         cfg.beginGroup("General");
         deepsleep = cfg.value("DeepSleep", deepsleep).toString();
-        if (deepsleep == "adaptive")
+        if (deepsleep == "adaptive") {
             // Log the statistics
             qLog(Modem) <<
                 "LoR -> Lost reg:" << d->nTotalLosses <<
