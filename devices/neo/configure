@@ -6,4 +6,3 @@
 -extra-qt-embedded-config "-qt-mouse-tslib" 
 
 -sound-system alsa
--add-module ipcomms
