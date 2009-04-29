@@ -412,6 +412,7 @@ void RingControl::startRinging(RingType t)
     QString ringToneDoc;
 
     // try contact ringtone
+
     if (t == Call) {
 
         // try personalized ring tone
@@ -487,8 +488,7 @@ void RingControl::startRinging(RingType t)
             if (!d->soundcontrol) {
                 d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
                 connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
-            }
-
+          }
             d->soundcontrol->setPriority(QSoundControl::RingTone);
             d->soundcontrol->setVolume(volmap[d->lastRingVolume]);
 
