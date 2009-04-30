@@ -66,6 +66,13 @@ QModemNetworkRegistration::QModemNetworkRegistration( QModemService *service )
         ( "+CREG:", this, SLOT(cregNotify(QString)), true );
     service->connectToPost( "cfunDone", this, SLOT(cfunDone()) );
     connect( service, SIGNAL(resetModem()), this, SLOT(resetModem()) );
+
+    // Set up the one-shot timer that can be used to filter out outages
+    // (i.e. the "bouncy rubber calypso" problem with the Openmoko GTA01/GTA02)
+    d->cregTimer = new QTimer( this );
+    d->cregTimer->setSingleShot( true );
+    connect ( d->cregTimer, SIGNAL(timeout ()), this, SLOT(cregTimeOut()) );
+    d->lastTime.start();
 }
 
 /*!
@@ -170,18 +177,108 @@ void QModemNetworkRegistration::cregNotify( const QString& msg )
     uint stat = QAtUtils::parseNumber( msg, posn );
     QString lac = QAtUtils::nextString( msg, posn );
     QString ci = QAtUtils::nextString( msg, posn );
-    if ( !lac.isEmpty() && !ci.isEmpty() ) {
-        // We have location information after the state value.
-        updateRegistrationState( (QTelephony::RegistrationState)stat,
-                                 lac.toInt( 0, 16 ), ci.toInt( 0, 16 ) );
+ 
+    int t = d->lastTime.elapsed();
+    d->lastTime.restart();
+ 
+    // Don't be too hasty to call out a loss of network registration.
+    // Instead, start a one-shot timer -- and cancel the timer if
+    // if we get a positive registration before it expires.
+    if ( stat == 0 ) {
+ 
+        if ( !d->cregTimer->isActive() ) {
+            d->cregTimer->start( 9000 ); // 9 second one-shot timer
+            qLog(Modem) << "LoR -> Timer started. (ms=" << t << ")";
+ 
+            d->nTotalUnsticks++;
+            d->tTotalStickTime = d->tTotalStickTime + t;
+            if (t > d->tLongestStickTime)
+                d->tLongestStickTime = t;
+            if (t < d->tShortestStickTime || d->tShortestStickTime == 0)
+                d->tShortestStickTime = t;
+        }
+ 
     } else {
-        // We don't have any location information.
-        updateRegistrationState( (QTelephony::RegistrationState)stat );
+ 
+        if ( d->cregTimer->isActive() ) {
+            d->cregTimer->stop();
+            qLog(Modem) << "LoR -> Timer cancelled. (ms=" << t << ")";
+ 
+            d->nTotalBounces++;
+            d->nRecentBounces++;
+            d->tTotalBounceTime = d->tTotalBounceTime + t;
+            if (t > d->tLongestBounceTime)
+                d->tLongestBounceTime = t;
+            if (t < d->tShortestBounceTime || d->tShortestBounceTime == 0)
+                d->tShortestBounceTime = t;
+        }
+ 
+        // If we have a positive registration here, go ahead and update
+        // the registration status.
+ 
+        if ( stat != 0 ) {
+            if ( !lac.isEmpty() && !ci.isEmpty() ) {
+                // We have location information after the state value.
+                updateRegistrationState( (QTelephony::RegistrationState)stat,
+                                         lac.toInt( 0, 16 ), ci.toInt( 0, 16 ) );
+            } else {
+                // We don't have any location information.
+                updateRegistrationState( (QTelephony::RegistrationState)stat );
+            }
+        }
+ 
+        // Query for the operator name if home or roaming, and the lac or ci
+        // has actually changed.
+        if ( ( stat == 1 || stat == 5 ) &&
+             ( lac != d->currentLac ||
+               ci != d->currentCi ) ) {
+            queryCurrentOperator();
+ 
+            if ( lac != d->currentLac ) {
+                d->nTotalLacOperQueries++;
+                qLog(Modem) << "LoR -> Location changed; queryed operator.";
+            } else {
+                d->nTotalCiOperQueries++;
+                qLog(Modem) << "LoR -> Cell ID changed; queryed operator.";
+            }
+        }
+ 
+        // Save the new lac and ci values
+        d->currentLac = lac;
+        d->currentCi = ci;
+ 
+        QString deepsleep;
+        QSettings cfg("Trolltech", "Modem");
+        cfg.beginGroup("General");
+        deepsleep = cfg.value("DeepSleep", deepsleep).toString();
+        if (deepsleep == "adaptive") {
+            // Log the statistics
+            qLog(Modem) <<
+                "LoR -> Lost reg:" << d->nTotalLosses <<
+                "Lac queries:" << d->nTotalLacOperQueries <<
+                "Ci queries:" << d->nTotalCiOperQueries;
+            qLog(Modem) <<
+                "LoR -> unsticks:" << d->nTotalUnsticks <<
+                "ms=(" << d->tShortestStickTime << "/" <<
+                (d->nTotalUnsticks ? (d->tTotalStickTime / d->nTotalUnsticks) : 0) <<
+                "/" << d->tLongestStickTime << ")";
+            qLog(Modem) << "LoR -> bounces:" << d->nTotalBounces <<
+                "ms=(" << d->tShortestBounceTime << "/" <<
+                (d->nTotalBounces ? (d->tTotalBounceTime / d->nTotalBounces) : 0) <<
+                "/" << d->tLongestBounceTime << ")";
+ 
+            // See if we have begun bouncing; three bounces and we'll disable deep sleep.
+            if (d->nRecentBounces > 2) {
+                d->nRecentBounces = 0;
+                qLog(Modem) << "LoR -> Bouncing detected; limiting sleep.";
+                // Disable deep sleep mode.
+                // TODO: We really should find a good place in the code to attempt
+                // to re-enable deep sleep mode, but since we don't know the root
+                // cause at this time it is difficult to know when to attempt this.
+                d->service->chat("AT%SLEEP=2");
+            }
+        }
     }
-
-    // Query for the operator name if home or roaming.
-    if ( stat == 1 || stat == 5 )
-        queryCurrentOperator();
 }
 
 void QModemNetworkRegistration::cregQuery( bool, const QAtResult& result )
@@ -419,4 +516,20 @@ void QModemNetworkRegistration::queryCurrentOperator()
     d->service->secondaryAtChat()->chat( "AT+COPS=3,0" );
     d->service->secondaryAtChat()->chat
         ( "AT+COPS?", this, SLOT(copsDone(bool,QAtResult)) );
+}
+
+void QModemNetworkRegistration::cregTimeOut()
+{
+    // Timeout on a de-register event; must have been legitimate; report it now.
+    d->currentLac = "";
+    d->currentCi = "";
+    qLog(Modem) << "LoR -> Timer expired (registration lost).";
+    d->nTotalLosses++;
+    updateRegistrationState( (QTelephony::RegistrationState)0 );
+    // If we de-registered for real, we may be in weak signal area, this is a
+    // good reason to restart whatever progress has happened to disabling deep
+    // sleep mode.
+    // TODO: There should be other "disablers" too, but we don't yet
+    // know what the best heuristics for this might actually be...
+    d->nRecentBounces = 0;
 }
