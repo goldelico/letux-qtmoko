@@ -6,10 +6,11 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 #ifdef QT_QWS_FICGTA01
     this->setWindowState(Qt::WindowMaximized);
 #endif
-
     lw = new QListWidget(this);
 
     scanItem = new QListWidgetItem(tr("Scan"), lw);
+    scanItem->setSelected(true);
+
     settingsItem = new QListWidgetItem(tr("Settings"), lw);
 
     bOk = new QPushButton(">", this);
@@ -18,24 +19,27 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     bBack = new QPushButton("Back", this);
     connect(bBack, SIGNAL(clicked()), this, SLOT(backClicked()));
 
-    bVolUp = new QPushButton("Volume up", this);
-    connect(bVolUp, SIGNAL(clicked()), this, SLOT(volUpClicked()));
+    bUp = new QPushButton("Vol up", this);
+    connect(bUp, SIGNAL(clicked()), this, SLOT(upClicked()));
 
-    bVolDown = new QPushButton("Volume down", this);
-    connect(bVolDown, SIGNAL(clicked()), this, SLOT(volDownClicked()));
+    bDown = new QPushButton("Vol down", this);
+    connect(bDown, SIGNAL(clicked()), this, SLOT(downClicked()));
 
     label = new QLabel(this);
-
     progress = new QProgressBar(this);
+
+    buttonLayout = new QHBoxLayout();
+    buttonLayout->setAlignment(Qt::AlignBottom);
+    buttonLayout->addWidget(bOk);
+    buttonLayout->addWidget(bBack);
+    buttonLayout->addWidget(bUp);
+    buttonLayout->addWidget(bDown);
+    buttonLayout->addWidget(label);
+    buttonLayout->addWidget(progress);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lw);
-    layout->addWidget(bOk);
-    layout->addWidget(bBack);
-    layout->addWidget(bVolUp);
-    layout->addWidget(bVolDown);
-    layout->addWidget(label);
-    layout->addWidget(progress);
+    layout->addLayout(buttonLayout);
 
     maxScanLevel = 0;
 
@@ -49,37 +53,7 @@ QMplayer::~QMplayer()
 
 void QMplayer::mousePressEvent(QMouseEvent * event)
 {
-    if(screen != QMplayer::ScreenPlay && screen != QMplayer::ScreenStopped)
-    {
-        return;
-    }
-    if(process == NULL)
-    {
-        return;
-    }
-    QProcess::ProcessState state = process->state();
-    if(state == QProcess::NotRunning)
-    {
-        setRes(640480);
-        showScreen(QMplayer::ScreenInit);
-        delete(process);
-        process = NULL;
-        return;
-    }
-    if(state != QProcess::Running)
-    {
-        return;
-    }
-
-    process->write(" ");
-    process->waitForBytesWritten();
-    if(screen == QMplayer::ScreenPlay)
-    {
-        setRes(640480);
-        showNormal();
-        showScreen(QMplayer::ScreenStopped);
-    }
-    else if(screen == QMplayer::ScreenStopped)
+    if(screen == QMplayer::ScreenFullscreen)
     {
         showScreen(QMplayer::ScreenPlay);
     }
@@ -107,6 +81,14 @@ void QMplayer::okClicked()
         }
         play(sel->text());
     }
+    else if(screen == QMplayer::ScreenPlay)
+    {
+        if(process != NULL && (process->state() == QProcess::Running))
+        {
+            process->write(" ");
+        }
+        showScreen(QMplayer::ScreenStopped);
+    }
     else if(screen == QMplayer::ScreenStopped)
     {
         if(process != NULL && (process->state() == QProcess::Running))
@@ -123,6 +105,10 @@ void QMplayer::backClicked()
     {
         close();
     }
+    else if(screen == QMplayer::ScreenPlay)
+    {
+        showScreen(QMplayer::ScreenFullscreen);
+    }
     else if(screen == QMplayer::ScreenStopped)
     {
         process->write("q");
@@ -132,13 +118,13 @@ void QMplayer::backClicked()
     }
 }
 
-void QMplayer::volUpClicked()
+void QMplayer::upClicked()
 {
     if(process != NULL && (process->state() == QProcess::Running))
     {
         if(screen == QMplayer::ScreenStopped)
         {
-            process->write("0 ");
+            process->write("\x1b""[C ");
         }
         else
         {
@@ -147,13 +133,13 @@ void QMplayer::volUpClicked()
     }
 }
 
-void QMplayer::volDownClicked()
+void QMplayer::downClicked()
 {
     if(process != NULL && (process->state() == QProcess::Running))
     {
         if(screen == QMplayer::ScreenStopped)
         {
-            process->write("9 ");
+            process->write("\x1b""[D ");
         }
         else
         {
@@ -164,11 +150,18 @@ void QMplayer::volDownClicked()
 
 void QMplayer::showScreen(QMplayer::Screen scr)
 {
+    if(screen == QMplayer::ScreenFullscreen)
+    {
+        setRes(640480);
+    }
+
+    this->screen = scr;
+
     lw->setVisible(scr == QMplayer::ScreenInit);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped);
-    bVolUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    bVolDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     label->setVisible(scr == QMplayer::ScreenScan);
     progress->setVisible(scr == QMplayer::ScreenScan);
 
@@ -178,14 +171,24 @@ void QMplayer::showScreen(QMplayer::Screen scr)
     }
     else if(scr == QMplayer::ScreenPlay)
     {
-        bBack->setText(tr("Back"));
-        setRes(320240);
-        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-        setWindowState(Qt::WindowFullScreen);
-        raise();
+        bOk->setText(tr("Pause"));
+        bBack->setText(tr("Full screen"));
+        bUp->setText(tr("Vol up"));
+        bDown->setText(tr("Vol down"));
     }
-
-    this->screen = scr;
+    else if(scr == QMplayer::ScreenFullscreen)
+    {
+#ifdef QT_QWS_FICGTA01
+        setRes(320240);
+#endif
+    }
+    else if(scr == QMplayer::ScreenStopped)
+    {
+        bOk->setText("Play");
+        bBack->setText(tr("Back"));
+        bUp->setText(tr(">>"));
+        bDown->setText(tr("<<"));
+    }
 }
 
 void QMplayer::scan()
@@ -263,10 +266,6 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
 
 void QMplayer::settings()
 {
-    // Full screen test
-    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    setWindowState(Qt::WindowFullScreen);
-    raise();
 }
 
 void QMplayer::play(QString const& filename)
@@ -274,26 +273,21 @@ void QMplayer::play(QString const& filename)
     showScreen(QMplayer::ScreenPlay);
 
     QStringList args;
-#ifdef QT_QWS_FICGTA01
-    args.append("-vo");
-    args.append("fbdev");
-    args.append("-framedrop");
-#endif
-    if(filename.endsWith(".mp3", Qt::CaseInsensitive) ||
-       filename.endsWith(".avi", Qt::CaseInsensitive))
-    {
-        args.append("-afm");
-        args.append("ffmpeg");
-        args.append("-vfm");
-        args.append("ffmpeg");
-    }
-
-    if(filename.endsWith(".ogg", Qt::CaseInsensitive) ||
-       filename.endsWith(".ogv", Qt::CaseInsensitive))
-    {
-        args.append("-afm");
-        args.append("libvorbis");
-    }
+//    if(filename.endsWith(".mp3", Qt::CaseInsensitive) ||
+//       filename.endsWith(".avi", Qt::CaseInsensitive))
+//    {
+//        args.append("-afm");
+//        args.append("ffmpeg");
+//        args.append("-vfm");
+//        args.append("ffmpeg");
+//    }
+//
+//    if(filename.endsWith(".ogg", Qt::CaseInsensitive) ||
+//       filename.endsWith(".ogv", Qt::CaseInsensitive))
+//    {
+//        args.append("-afm");
+//        args.append("libvorbis");
+//    }
 
     args.append(filename);
 
@@ -304,11 +298,10 @@ void QMplayer::play(QString const& filename)
 
 void QMplayer::setRes(int xy)
 {
-    return;
 #ifdef QT_QWS_FICGTA01
     if(xy == 320240 || xy == 640480)
     {
-        QFile f("/sys/class/i2c-adapter/i2c-0/0-0073/pcf50633-regltr.9/glamo3362.0/glamo-spi-gpio.0/spi2.0/state");
+        QFile f("/sys/bus/spi/devices/spi2.0/state");
         f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         if(xy == 320240)
         {
