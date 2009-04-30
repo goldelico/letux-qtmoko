@@ -37,6 +37,8 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addWidget(label);
     layout->addWidget(progress);
 
+    maxScanLevel = 0;
+
     showScreen(QMplayer::ScreenInit);
 }
 
@@ -197,18 +199,21 @@ void QMplayer::scan()
 
     progress->setMinimum(0);
     progress->setMaximum(0x7fffffff);
-#ifdef QT_QWS_FICGTA01
-    scanDir("/mnt", 0, 0, 0x2fffffff);
-    scanDir("/media", 0, 0, 0x4fffffff);
-    scanDir("/home", 0, 0, 0x7fffffff);
-    scanDir("/root", 0, 0, 0x7fffffff);
-#else
-    scanDir("/home/radek/Desktop", 0, 0, 0x7fffffff);
-#endif
+
+    scanDir("/", 0, 0, 0, 0x1fffffff);
+    scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
+    scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
+    scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
+    scanDir("/home/root/Documents", 0, maxScanLevel + 2, 0, 0x5fffffff);
+    scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+
+    maxScanLevel++;
+    scanItem->setText(tr("Scan more"));
+
     showScreen(QMplayer::ScreenInit);
 }
 
-void QMplayer::scanDir(QString const& path, int level, int min, int max)
+void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max)
 {
     QDir dir(path);
     QFileInfoList list = dir.entryInfoList(QDir::AllEntries, QDir::Name);
@@ -230,10 +235,15 @@ void QMplayer::scanDir(QString const& path, int level, int min, int max)
         }
     }
 
+    if(level >= maxLevel)
+    {
+        return;
+    }
+
     for(int i = 0; i < list.count(); i++)
     {
         QFileInfo fi = list.at(i);
-        if(fi.isFile() || fi.isSymLink() || fi.fileName() == "." || fi.fileName() == "..")
+        if(fi.isFile() || fi.fileName() == "." || fi.fileName() == "..")
         {
             continue;
         }
@@ -247,7 +257,7 @@ void QMplayer::scanDir(QString const& path, int level, int min, int max)
         progress->setValue(value);
         label->setText(fi.fileName());
         label->repaint();
-        scanDir(fi.filePath(), level + 1, value, value + unit);
+        scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit);
     }
 }
 

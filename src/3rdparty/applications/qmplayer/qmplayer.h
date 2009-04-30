@@ -33,6 +33,7 @@ private:
     };
 
     Screen screen;
+    int maxScanLevel;
     QVBoxLayout* layout;
     QListWidget* lw;
     QListWidgetItem *scanItem;
@@ -47,7 +48,7 @@ private:
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    void scanDir(QString const& path, int level, int min, int max);
+    void scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
     void play(QString const& filename);
     void setRes(int xy);
