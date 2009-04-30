@@ -29,19 +29,21 @@ private:
         ScreenInit,
         ScreenScan,
         ScreenPlay,
+        ScreenFullscreen,
         ScreenStopped,
     };
 
     Screen screen;
     QVBoxLayout* layout;
+    QHBoxLayout* buttonLayout;
     QListWidget* lw;
     QListWidgetItem *scanItem;
     QListWidgetItem *settingsItem;
     QLabel* label;
     QPushButton* bOk;
     QPushButton* bBack;
-    QPushButton* bVolUp;
-    QPushButton* bVolDown;
+    QPushButton* bUp;
+    QPushButton* bDown;
     QProcess* process;
     QProgressBar *progress;
 
@@ -58,8 +60,8 @@ protected:
 private slots:
     void okClicked();
     void backClicked();
-    void volUpClicked();
-    void volDownClicked();
+    void upClicked();
+    void downClicked();
 };
 
 #endif // QMPLAYER_H
