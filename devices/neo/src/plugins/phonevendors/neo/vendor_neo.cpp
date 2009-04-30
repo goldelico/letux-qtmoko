@@ -653,8 +653,8 @@ void NeoModemService::initialize()
     if ( !supports<QPreferredNetworkOperators>() )
         addInterface( new NeoPreferredNetworkOperators(this));
 
-    if ( ! supports <QModemNetworkRegistration>())
-        addInterface( new NeoModemNetworkRegistration(this));
+//    if ( ! supports <QModemNetworkRegistration>())
+//        addInterface( new NeoModemNetworkRegistration(this));
 
    QModemService::initialize();
 }

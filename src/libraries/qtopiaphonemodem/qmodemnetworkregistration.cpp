@@ -23,6 +23,10 @@
 #include <qatutils.h>
 #include <qatresult.h>
 #include <qatresultparser.h>
+#include <qtopialog.h>
+#include <qtimer.h>
+#include <qdatetime.h>
+#include <QSettings>
 
 /*!
     \class QModemNetworkRegistration
@@ -48,11 +52,44 @@ public:
         this->service = service;
         supportsOperatorTechnology = false;
         operatorId = -1;
+        currentLac = "";
+        currentCi = "";
+
+        nTotalLosses = 0;
+        nRecentBounces = 0;
+        nTotalBounces = 0;
+        tShortestBounceTime = 0;
+        tLongestBounceTime = 0;
+        tTotalBounceTime = 0;
+
+        nTotalUnsticks = 0;
+        tShortestStickTime = 0;
+        tLongestStickTime = 0;
+        tTotalStickTime = 0;
+
+        nTotalLacOperQueries = 0;
+        nTotalCiOperQueries = 0;
     }
 
     QModemService *service;
     bool supportsOperatorTechnology;
     int operatorId;
+    QString currentLac;
+    QString currentCi;
+    QTimer *cregTimer;
+    QTime lastTime;
+    int nRecentBounces;
+    int nTotalLosses;
+    int nTotalBounces;
+    int tShortestBounceTime;
+    int tLongestBounceTime;
+    int tTotalBounceTime;
+    int nTotalUnsticks;
+    int tShortestStickTime;
+    int tLongestStickTime;
+    int tTotalStickTime;
+    int nTotalLacOperQueries;
+    int nTotalCiOperQueries;
 };
 
 /*!
