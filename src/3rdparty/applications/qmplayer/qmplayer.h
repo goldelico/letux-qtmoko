@@ -36,6 +36,7 @@ private:
 
     Screen screen;
     int maxScanLevel;
+    bool fbset;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
