@@ -28,6 +28,7 @@ private:
     {
         ScreenInit,
         ScreenScan,
+        ScreenMplayerInstall,
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
@@ -54,6 +55,8 @@ private:
     void settings();
     void play(QString const& filename);
     void setRes(int xy);
+    bool installMplayer();
+    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
     void mousePressEvent(QMouseEvent * event);

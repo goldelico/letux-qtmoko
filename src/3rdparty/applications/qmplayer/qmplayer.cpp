@@ -157,7 +157,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 
     this->screen = scr;
 
-    lw->setVisible(scr == QMplayer::ScreenInit);
+    lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenMplayerInstall);
     bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
@@ -294,6 +294,26 @@ void QMplayer::play(QString const& filename)
     process = new QProcess(this);
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start("mplayer", args, QIODevice::ReadWrite);
+
+    if(!process->waitForStarted(5000))
+    {
+       delete(process);
+       process = NULL;
+
+       if(QMessageBox::question(this, tr("qmplayer"),
+                             tr("Program MPlayer must be downloaded. Please make sure you have internet connection and press yes to confirm download"),
+                             QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+       {
+           if(installMplayer())
+           {
+               QMessageBox::information(this, tr("qmplayer"), tr("MPlayer installed sucessfully"));
+               play(filename);
+               return;
+           }
+           QMessageBox::warning(this, tr("qmplayer"), tr("Failed to install MPlayer"));
+           showScreen(QMplayer::ScreenInit);
+       }
+    }
 }
 
 void QMplayer::setRes(int xy)
@@ -315,4 +335,93 @@ void QMplayer::setRes(int xy)
         f.close();
     }
 #endif
+}
+
+bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args)
+{
+    while(lw->count() > 2)
+    {
+        delete(lw->takeItem(2));
+    }
+
+    scanItem->setText(info);
+    QString argText(program);
+    settingsItem->setText(program);
+    for(int i = 0; i < args.count(); i++)
+    {
+        argText.append(' ');
+        argText.append(args[i]);
+    }
+    settingsItem->setText(argText);
+
+    p->start(program, args);
+
+    if(!p->waitForStarted(5000))
+    {
+        QMessageBox::warning(this, tr("qmplayer"), tr("Failed to start ") + program);
+        return false;
+    }
+
+    QString str("");
+    for(;;)
+    {
+        p->waitForFinished(100);
+        bool finished = (p->state() != QProcess::Running);
+
+        str += p->readAllStandardOutput();
+        str += p->readAllStandardError();
+        for(int i = 0; i < str.length(); i++)
+        {
+            if(str.at(i) != '\n')
+            {
+                continue;
+            }
+            lw->addItem(str.left(i));
+            str.remove(0, i + 1);
+            lw->scrollToBottom();
+        }
+        QApplication::processEvents();
+        QApplication::processEvents();
+        QApplication::processEvents();
+
+        if(finished)
+        {
+            break;
+        }
+    }
+
+    return true;
+}
+
+bool QMplayer::installMplayer()
+{
+    QProcess wget;
+    QStringList wgetArgs;
+    QProcess tar;
+    QStringList tarArgs;
+
+    showScreen(QMplayer::ScreenMplayerInstall);
+
+    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
+
+    // "http://activationrecord.net/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz
+    wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz");
+    wget.setWorkingDirectory("/tmp");
+    if(!runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs))
+    {
+        return false;
+    }
+
+    tarArgs.append("xzvpf");
+    tarArgs.append("/tmp/mplayer_glamo_install.tar.gz");
+    tar.setWorkingDirectory("/");
+
+    if(!runProcess(tr("Unpacking MPlayer"), &tar, "tar", tarArgs))
+    {
+        return false;
+    }
+
+    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
+
+    return QFile::exists("/usr/bin/mplayer");
 }
