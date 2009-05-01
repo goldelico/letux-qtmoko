@@ -586,10 +586,12 @@ NeoModemService::NeoModemService
 
     //  chat("AT%CMGRS=1"); //message transmission to get any failed sms during suspend
 
-    QString deepsleep;
+    QString deepsleep="adaptive";
     QSettings cfg("Trolltech", "Modem");
     cfg.beginGroup("General");
-    deepsleep = cfg.value("DeepSleep", deepsleep).toString();
+    deepsleep = cfg.value("DeepSleep",deepsleep).toString();
+    qLog(Modem) << "DeepSleep value:" << deepsleep;
+
     if (deepsleep == "never")
         chat("AT%SLEEP=2"); 
     else 

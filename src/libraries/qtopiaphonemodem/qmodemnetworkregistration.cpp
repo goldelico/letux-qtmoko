@@ -284,29 +284,30 @@ void QModemNetworkRegistration::cregNotify( const QString& msg )
         d->currentLac = lac;
         d->currentCi = ci;
  
-        QString deepsleep;
-        QSettings cfg("Trolltech", "Modem");
-        cfg.beginGroup("General");
-        deepsleep = cfg.value("DeepSleep", deepsleep).toString();
-        if (deepsleep == "adaptive") {
-            // Log the statistics
-            qLog(Modem) <<
-                "LoR -> Lost reg:" << d->nTotalLosses <<
-                "Lac queries:" << d->nTotalLacOperQueries <<
-                "Ci queries:" << d->nTotalCiOperQueries;
-            qLog(Modem) <<
-                "LoR -> unsticks:" << d->nTotalUnsticks <<
-                "ms=(" << d->tShortestStickTime << "/" <<
-                (d->nTotalUnsticks ? (d->tTotalStickTime / d->nTotalUnsticks) : 0) <<
-                "/" << d->tLongestStickTime << ")";
-            qLog(Modem) << "LoR -> bounces:" << d->nTotalBounces <<
-                "ms=(" << d->tShortestBounceTime << "/" <<
-                (d->nTotalBounces ? (d->tTotalBounceTime / d->nTotalBounces) : 0) <<
-                "/" << d->tLongestBounceTime << ")";
+        // Log the statistics
+        qLog(Modem) <<
+            "LoR -> Lost reg:" << d->nTotalLosses <<
+            "Lac queries:" << d->nTotalLacOperQueries <<
+            "Ci queries:" << d->nTotalCiOperQueries;
+        qLog(Modem) <<
+            "LoR -> unsticks:" << d->nTotalUnsticks <<
+            "ms=(" << d->tShortestStickTime << "/" <<
+            (d->nTotalUnsticks ? (d->tTotalStickTime / d->nTotalUnsticks) : 0) <<
+            "/" << d->tLongestStickTime << ")";
+        qLog(Modem) << "LoR -> bounces:" << d->nTotalBounces <<
+            "ms=(" << d->tShortestBounceTime << "/" <<
+            (d->nTotalBounces ? (d->tTotalBounceTime / d->nTotalBounces) : 0) <<
+            "/" << d->tLongestBounceTime << ")";
  
-            // See if we have begun bouncing; three bounces and we'll disable deep sleep.
-            if (d->nRecentBounces > 2) {
-                d->nRecentBounces = 0;
+        // See if we have begun bouncing; three bounces and we'll disable deep sleep.
+        if (d->nRecentBounces > 2) {
+            d->nRecentBounces = 0;
+            QString deepsleep="adaptive";
+            QSettings cfg("Trolltech", "Modem");
+            cfg.beginGroup("General");
+            deepsleep = cfg.value("DeepSleep",deepsleep).toString();
+            qLog(Modem) << "DeepSleep value:" << deepsleep;
+            if (deepsleep == "adaptive") {
                 qLog(Modem) << "LoR -> Bouncing detected; limiting sleep.";
                 // Disable deep sleep mode.
                 // TODO: We really should find a good place in the code to attempt
