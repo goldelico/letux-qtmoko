@@ -79,7 +79,32 @@ void QMplayer::okClicked()
             settings();
             return;
         }
-        play(sel->text());
+        QString dir = "";
+        bool hit = false;
+        QStringList list;
+        for(int i = 2; i < lw->count(); i++)
+        {
+            QListWidgetItem *item = lw->item(i);
+            QString path = item->text();
+            bool isDir = path.startsWith('/');
+            if(isDir)
+            {
+                if(hit)
+                {
+                    break;
+                }
+                dir = path;
+            }
+            hit |= (item == sel);
+            if(hit && !isDir)
+            {
+                list.append(dir + "/" + path);
+            }
+        }
+        if(list.count() > 0)
+        {
+            play(list);
+        }
     }
     else if(screen == QMplayer::ScreenPlay)
     {
@@ -221,6 +246,8 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
     QDir dir(path);
     QFileInfoList list = dir.entryInfoList(QDir::AllEntries, QDir::Name);
 
+    bool found = false;
+    int index = lw->count();
     for(int i = 0; i < list.count(); i++)
     {
         QFileInfo fi = list.at(i);
@@ -228,14 +255,22 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
         {
             continue;
         }
-        QString absPath = fi.absoluteFilePath();
-        if(absPath.endsWith(".mp3", Qt::CaseInsensitive)
-            || absPath.endsWith(".ogg", Qt::CaseInsensitive)
-            || absPath.endsWith(".ogv", Qt::CaseInsensitive)
-            || absPath.endsWith(".avi", Qt::CaseInsensitive))
+        QString fileName = fi.fileName();
+        if(fileName.endsWith(".mp3", Qt::CaseInsensitive)
+            || fileName.endsWith(".ogg", Qt::CaseInsensitive)
+            || fileName.endsWith(".ogv", Qt::CaseInsensitive)
+            || fileName.endsWith(".avi", Qt::CaseInsensitive))
         {
-            lw->addItem(absPath);
+            QListWidgetItem *fileItem = new QListWidgetItem(fileName);
+            fileItem->setTextAlignment(Qt::AlignHCenter);
+            lw->addItem(fileItem);
+            found = true;
         }
+    }
+
+    if(found)
+    {
+        lw->insertItem(index, path);
     }
 
     if(level >= maxLevel)
@@ -268,28 +303,9 @@ void QMplayer::settings()
 {
 }
 
-void QMplayer::play(QString const& filename)
+void QMplayer::play(QStringList const& args)
 {
     showScreen(QMplayer::ScreenPlay);
-
-    QStringList args;
-//    if(filename.endsWith(".mp3", Qt::CaseInsensitive) ||
-//       filename.endsWith(".avi", Qt::CaseInsensitive))
-//    {
-//        args.append("-afm");
-//        args.append("ffmpeg");
-//        args.append("-vfm");
-//        args.append("ffmpeg");
-//    }
-//
-//    if(filename.endsWith(".ogg", Qt::CaseInsensitive) ||
-//       filename.endsWith(".ogv", Qt::CaseInsensitive))
-//    {
-//        args.append("-afm");
-//        args.append("libvorbis");
-//    }
-
-    args.append(filename);
 
     process = new QProcess(this);
     process->setProcessChannelMode(QProcess::ForwardedChannels);
@@ -307,7 +323,7 @@ void QMplayer::play(QString const& filename)
            if(installMplayer())
            {
                QMessageBox::information(this, tr("qmplayer"), tr("MPlayer installed sucessfully"));
-               play(filename);
+               play(args);
                return;
            }
            QMessageBox::warning(this, tr("qmplayer"), tr("Failed to install MPlayer"));

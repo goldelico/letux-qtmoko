@@ -53,7 +53,7 @@ private:
     void scan();
     void scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
-    void play(QString const& filename);
+    void play(QStringList const& args);
     void setRes(int xy);
     bool installMplayer();
     bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
