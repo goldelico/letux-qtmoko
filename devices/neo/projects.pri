@@ -19,11 +19,4 @@ PROJECTS*=\
     ../examples/webviewer \
     ../examples/whereabouts/mappingdemo \
     3rdparty/applications/qterminal \
-    3rdparty/applications/screenshot \
-    3rdparty/libraries/libmad\
-    3rdparty/plugins/codecs/libmad \
-    3rdparty/libraries/amr\
-    3rdparty/plugins/codecs/libamr \
-    3rdparty/libraries/dissipate2\
-    settings/sipsettings \
-    tools/sipagent 
+    3rdparty/applications/screenshot
