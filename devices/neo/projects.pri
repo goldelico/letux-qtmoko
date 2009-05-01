@@ -19,4 +19,5 @@ PROJECTS*=\
     ../examples/webviewer \
     ../examples/whereabouts/mappingdemo \
     3rdparty/applications/qterminal \
-    3rdparty/applications/screenshot
+    3rdparty/applications/screenshot \
+    3rdparty/applications/qmplayer
