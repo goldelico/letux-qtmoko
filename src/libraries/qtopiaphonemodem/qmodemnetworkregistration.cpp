@@ -304,8 +304,8 @@ void QModemNetworkRegistration::cregNotify( const QString& msg )
             d->nRecentBounces = 0;
             QString deepsleep="adaptive";
             QSettings cfg("Trolltech", "Modem");
-            cfg.beginGroup("General");
-            deepsleep = cfg.value("DeepSleep",deepsleep).toString();
+            cfg.beginGroup("DeepSleep");
+            deepsleep = cfg.value("Active",deepsleep).toString();
             qLog(Modem) << "DeepSleep value:" << deepsleep;
             if (deepsleep == "adaptive") {
                 qLog(Modem) << "LoR -> Bouncing detected; limiting sleep.";
