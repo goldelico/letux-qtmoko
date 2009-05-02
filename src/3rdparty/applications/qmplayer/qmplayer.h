@@ -14,6 +14,9 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QMessageBox>
+#ifdef QT_QWS_FICGTA01
+#include <QtopiaApplication>
+#endif
 
 class QMplayer : public QWidget
 {

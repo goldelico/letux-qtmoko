@@ -330,7 +330,11 @@ void QMplayer::play(QStringList const& args)
            QMessageBox::warning(this, tr("qmplayer"), tr("Failed to install MPlayer"));
            showScreen(QMplayer::ScreenInit);
        }
+       return;
     }
+#ifdef QT_QWS_FICGTA01
+    QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+#endif
 }
 
 void QMplayer::setRes(int xy)
