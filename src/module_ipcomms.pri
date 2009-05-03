@@ -12,7 +12,10 @@ SERVER_PROJECTS*=\
       
 PROJECTS*=\
     3rdparty/libraries/g711 \
-    settings/gtalksettings 
+    settings/gtalksettings \
+    3rdparty/libraries/dissipate2\
+    settings/sipsettings \
+    tools/sipagent 
 
 enable_dbus:PROJECTS*=\
     tools/telepathyagent
