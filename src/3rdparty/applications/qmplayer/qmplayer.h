@@ -14,6 +14,9 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QMessageBox>
+#ifdef QT_QWS_FICGTA01
+#include <QtopiaApplication>
+#endif
 
 class QMplayer : public QWidget
 {
@@ -28,12 +31,15 @@ private:
     {
         ScreenInit,
         ScreenScan,
+        ScreenMplayerInstall,
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
     };
 
     Screen screen;
+    int maxScanLevel;
+    bool fbset;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -49,10 +55,12 @@ private:
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    void scanDir(QString const& path, int level, int min, int max);
+    void scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
-    void play(QString const& filename);
+    void play(QStringList const& args);
     void setRes(int xy);
+    bool installMplayer();
+    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
     void mousePressEvent(QMouseEvent * event);

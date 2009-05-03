@@ -444,7 +444,8 @@ void QBluetoothLocalDevice_Private::emitError(const QDBusError &error)
     emit m_parent->error(err, error.message());
 }
 
-void QBluetoothLocalDevice_Private::modeChanged(const QString &mode)
+//void QBluetoothLocalDevice_Private::modeChanged(const QString &mode)
+void QBluetoothLocalDevice_Private::PropertyChanged(const QString & property, const QVariant &value)
 {
     if (mode == "off") {
         emit m_parent->stateChanged(QBluetoothLocalDevice::Off);
