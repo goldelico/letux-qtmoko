@@ -134,6 +134,7 @@ private:
     QModemService *service;
 };
 
+/*
  class NeoModemNetworkRegistration : public QModemNetworkRegistration
  {
          Q_OBJECT
@@ -145,6 +146,7 @@ private:
           ( QTelephony::OperatorMode mode, const QString& id,
             const QString& technology );
  };
+*/
 
 class NeoModemService : public QModemService
 {
@@ -158,7 +160,8 @@ public:
     void initialize();
 
 private:
-    NeoModemNetworkRegistration *neoNetRego;
+//    NeoModemNetworkRegistration *neoNetRego;
+    QModemNetworkRegistration *neoNetRego;
 
 private slots:
     void csq( const QString& msg );

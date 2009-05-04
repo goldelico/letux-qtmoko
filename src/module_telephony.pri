@@ -50,4 +50,10 @@ equals(QTOPIA_UI,home) {
 
 enable_qtopiamedia:SERVER_PROJECTS*=server/phone/telephony/videoringtone   #video ringtone support
 
+enable_voip:!enable_singleexec:PROJECTS*=\
+    3rdparty/libraries/dissipate2\
+    settings/sipsettings \
+    tools/sipagent 
+
+contains(PROJECTS,tools/phonesim):enable_cell:PROJECTS*=tools/phonesim_target
 
