@@ -581,12 +581,22 @@ NeoModemService::NeoModemService
         ( "%CTZV:", this, SLOT(ctzu(QString)), true );
     chat( "AT%CTZV=1" );
 
-// Turn on call progress indications, with phone number information.
+    // Turn on call progress indications, with phone number information.
     chat( "AT%CPI=2" );
 
     //  chat("AT%CMGRS=1"); //message transmission to get any failed sms during suspend
 
-   chat("AT%SLEEP=2"); //makes my Moko8 not respond to calls during sosuend
+    QString deepsleep="adaptive";
+    QSettings cfg("Trolltech", "Modem");
+    cfg.beginGroup("DeepSleep");
+    deepsleep = cfg.value("Active",deepsleep).toString();
+    qLog(Modem) << "DeepSleep value:" << deepsleep;
+
+    if (deepsleep == "never")
+        chat("AT%SLEEP=2"); 
+    else 
+        chat("AT%SLEEP=4");
+
     // Turn cell id information back on.
     chat( "AT+CREG=2" );
     chat( "AT+CGREG=2" );
@@ -645,8 +655,8 @@ void NeoModemService::initialize()
     if ( !supports<QPreferredNetworkOperators>() )
         addInterface( new NeoPreferredNetworkOperators(this));
 
-    if ( ! supports <QModemNetworkRegistration>())
-        addInterface( new NeoModemNetworkRegistration(this));
+//    if ( ! supports <QModemNetworkRegistration>())
+//        addInterface( new NeoModemNetworkRegistration(this));
 
    QModemService::initialize();
 }
@@ -1070,44 +1080,4 @@ NeoPreferredNetworkOperators::NeoPreferredNetworkOperators( QModemService *servi
 NeoPreferredNetworkOperators::~NeoPreferredNetworkOperators()
 {
 }
-
-NeoModemNetworkRegistration::NeoModemNetworkRegistration( QModemService *service )
-    : QModemNetworkRegistration( service )
-{
-    qLog(Modem) << __PRETTY_FUNCTION__;
-}
-
-QString NeoModemNetworkRegistration::setCurrentOperatorCommand
-( QTelephony::OperatorMode mode,   const QString& id, const QString& technology )
-{
-    qLog(AtChat) << __PRETTY_FUNCTION__ << mode << id << technology;
-
-    QString cmd = "AT+COPS=";                       // No tr
-    switch ( mode ) {
-    case QTelephony::OperatorModeAutomatic:         cmd += "0"; break;
-    case QTelephony::OperatorModeManual:            cmd += "1"; break;
-    case QTelephony::OperatorModeDeregister:        cmd += "2"; break;
-    case QTelephony::OperatorModeManualAutomatic:   cmd += "4"; break;
-    }
-    QString name = operatorNameForId( id );
-    if ( mode == QTelephony::OperatorModeManual ||
-         mode == QTelephony::OperatorModeManualAutomatic ) {
-        if ( id.startsWith( "2" ) ) {
-         // Short or long operator identifier.
-         // apparently calypso needs quotes for both operator id and name
-            cmd += "," + id.left(1) + ",\"" + QAtUtils::quote( name ) + "\"";
-        }
-        if ( supportsOperatorTechnology() ) {
-            if ( technology == "GSM" )             // No tr
-                cmd += ",0";
-            else if ( technology == "GSMCompact" ) // No tr
-                cmd += ",1";
-            else if ( technology == "UTRAN" )      // No tr
-                cmd += ",2";
-        }
-    }
-    return cmd;
-}
-
-
 

@@ -14,6 +14,9 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QMessageBox>
+#ifdef QT_QWS_FICGTA01
+#include <QtopiaApplication>
+#endif
 
 class QMplayer : public QWidget
 {
@@ -28,29 +31,36 @@ private:
     {
         ScreenInit,
         ScreenScan,
+        ScreenMplayerInstall,
         ScreenPlay,
+        ScreenFullscreen,
         ScreenStopped,
     };
 
     Screen screen;
+    int maxScanLevel;
+    bool fbset;
     QVBoxLayout* layout;
+    QHBoxLayout* buttonLayout;
     QListWidget* lw;
     QListWidgetItem *scanItem;
     QListWidgetItem *settingsItem;
     QLabel* label;
     QPushButton* bOk;
     QPushButton* bBack;
-    QPushButton* bVolUp;
-    QPushButton* bVolDown;
+    QPushButton* bUp;
+    QPushButton* bDown;
     QProcess* process;
     QProgressBar *progress;
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    void scanDir(QString const& path, int level, int min, int max);
+    void scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
-    void play(QString const& filename);
+    void play(QStringList const& args);
     void setRes(int xy);
+    bool installMplayer();
+    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
@@ -58,8 +68,8 @@ protected:
 private slots:
     void okClicked();
     void backClicked();
-    void volUpClicked();
-    void volDownClicked();
+    void upClicked();
+    void downClicked();
 };
 
 #endif // QMPLAYER_H
