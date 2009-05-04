@@ -72,11 +72,13 @@ target [
 ]
 
 telephonyservice [
+    hint=image
     files=services/Telephony/sipagent
     path=/services/Telephony
 ]
 
 mediaservice [
+    hint=image
     files=services/MediaSession/sipagent
     path=/services/MediaSession
 ]
