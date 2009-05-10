@@ -14,6 +14,10 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QMessageBox>
+#include <QHttp>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QBuffer>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
@@ -51,7 +55,9 @@ private:
     QPushButton* bUp;
     QPushButton* bDown;
     QProcess* process;
+    QProcess* encoder;
     QProgressBar *progress;
+    QTcpServer *tcpServer;
 
     void showScreen(QMplayer::Screen scr);
     void scan();
@@ -70,6 +76,7 @@ private slots:
     void backClicked();
     void upClicked();
     void downClicked();
+    void newConnection();
 };
 
 #endif // QMPLAYER_H

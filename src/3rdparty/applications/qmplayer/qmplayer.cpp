@@ -11,7 +11,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
 
-    settingsItem = new QListWidgetItem(tr("Settings"), lw);
+    settingsItem = new QListWidgetItem(tr("Web server"), lw);
 
     bOk = new QPushButton(">", this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
@@ -302,6 +302,255 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
 
 void QMplayer::settings()
 {
+     tcpServer = new QTcpServer(this);
+
+     if(!tcpServer->listen(QHostAddress::Any, 7654))
+     {
+         QMessageBox::critical(this, tr("qmplayer"),
+                               tr("Unable to start the server on port 7654: ") + tcpServer->errorString());
+         delete(tcpServer);
+         return;
+     }
+
+     connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
+
+     QMessageBox::information(this, tr("qmplayer"),
+                              tr("The server is running on port 7654"));
+
+
+
+}
+
+void QMplayer::newConnection()
+{
+    QTcpSocket *con = tcpServer->nextPendingConnection();
+    connect(con, SIGNAL(disconnected()),
+            con, SLOT(deleteLater()));
+
+    QByteArray req;
+    while(con->waitForReadyRead(100))
+    {
+        req += con->readAll();
+    }
+
+    QByteArray res;
+    QBuffer buf(&req);
+    QByteArray line;
+    QString reqPath = "";
+    QString encPath = "";
+    QString host = "";
+    QFile file;
+    bool sendFile = false;
+    int itemIndex = 0;
+
+    buf.open(QBuffer::ReadOnly);
+    for(;;)
+    {
+        line = buf.readLine();
+        if(line.isEmpty())
+        {
+            break;
+        }
+        if(line.startsWith("GET "))
+        {
+            int index = req.indexOf(' ', 4);
+            if(index > 0)
+            {
+                reqPath = req.mid(4, index - 4);
+            }
+        }
+        if(line.startsWith("Host: "))
+        {
+            host = line.right(line.length() - 6).trimmed();
+        }
+    }
+
+    res.append("HTTP/1.0 200 OK\r\n");
+    res.append("Content-Type: text/html; charset=utf-8\r\n\r\n");
+    res.append("<html>");
+    res.append("<body>");
+
+    if(reqPath.length() == 0)
+    {
+        res.append("Valid GET request not found");
+    }
+    else if(host.length() == 0)
+    {
+        res.append("Host not found in html header");
+    }
+    else if(reqPath == "/")
+    {
+        QString dir = "";
+        for(int i = 2; i < lw->count(); i++)
+        {
+            QListWidgetItem *item = lw->item(i);
+            QString path = item->text();
+            bool isDir = path.startsWith('/');
+            if(isDir)
+            {
+                dir = path;
+                res.append(dir);
+                res.append("</br>");
+            }
+            else
+            {
+                res.append("<a href=\"http://");
+                res.append(host);
+                res.append(dir);
+                res.append('/');
+                res.append(path);
+                res.append("\">");
+                res.append(path);
+                res.append("</a></br>");
+            }
+        }
+        res.append("</body>");
+        res.append("</html>");
+    }
+    else
+    {
+        res.append(reqPath);
+        res.append("</br>");
+        QString dir = "";
+        bool ok = false;
+        for(int i = 2; i < lw->count(); i++)
+        {
+            QListWidgetItem *item = lw->item(i);
+            QString path = item->text();
+            bool isDir = path.startsWith('/');
+            if(isDir)
+            {
+                dir = path;
+            }
+            else if(reqPath.startsWith(dir) && reqPath.endsWith(path))
+            {
+                itemIndex = i;
+                ok = true;
+                break;
+            }
+        }
+        if(!ok)
+        {
+            res.append("file not found");
+        }
+        else
+        {
+            encPath = QString(reqPath);
+            encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
+            QFileInfo fi(encPath);
+            if(fi.exists())
+            {
+                QString size;
+                size.setNum(fi.size());
+                res.append("file size: ");
+                res.append(size);
+
+                if(process != NULL &&
+                   process->state() == QProcess::Running ||
+                   process->state() == QProcess::Starting)
+                {
+                    res.append("</br>encoding in progress<br>");
+                    res.append("<a href=\"http://");
+                    res.append(host);
+                    res.append(reqPath);
+                    res.append("\">Check status or download</a></br>");
+                }
+                else
+                {
+                    QString mime = "text/plain";
+                    if(reqPath.endsWith(".avi"))
+                    {
+                        mime ="video/avi";
+                    }
+                    else if(reqPath.endsWith(".ogv"))
+                    {
+                        mime = "video/theora";
+                    }
+                    else if(reqPath.endsWith(".ogg"))
+                    {
+                        mime = "audio/vorbis";
+                    }
+                    else if(reqPath.endsWith(".mp3"))
+                    {
+                        mime = "audio/mpeg";
+                    }
+
+                    res.clear();
+                    res.append("HTTP/1.0 200 OK\r\n");
+                    res.append("Content-Type: ");
+                    res.append(mime);
+                    res.append("\r\nContent-Length: ");
+                    res.append(size);
+                    res.append("\r\n\r\n");
+
+                    sendFile = true;
+                }
+            }
+            else if(process != NULL &&
+                   process->state() == QProcess::Running ||
+                   process->state() == QProcess::Starting)
+            {
+                   res.append("Another encoding is in progress");
+            }
+            else
+            {
+                QStringList args;
+                args.append(reqPath);
+                args.append("-ovc");
+                args.append("lavc");
+                args.append("-lavcopts");
+                args.append("vcodec=mpeg4:vhq:vbitrate=300");
+                args.append("-vf");
+                args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
+                args.append("-oac");
+                args.append("mp3lame");
+                args.append("-ofps");
+                args.append("15");
+                args.append("-lameopts");
+                args.append("br=64:cbr");
+                args.append("-o");
+                args.append(encPath);
+
+                process = new QProcess(this);
+                process->setProcessChannelMode(QProcess::ForwardedChannels);
+                process->start("mencoder", args, QIODevice::ReadWrite);
+
+                if(process->waitForStarted(200))
+                {
+                    res.append("encoding started<br>");
+                    res.append("<a href=\"http://");
+                    res.append(host);
+                    res.append(reqPath);
+                    res.append("\">Check status or download</a></br>");
+                }
+                else
+                {
+                    delete(process);
+                    process = NULL;
+                    res.append("failed to start mencoder");
+                }
+            }
+        }
+    }
+
+    con->write(res);
+    con->flush();
+
+    if(sendFile)
+    {
+        QFile f(encPath);
+        char buf[4096];
+        f.open(QFile::ReadOnly);
+        int count;
+        while((count = f.read(buf, 4096)) > 0)
+        {
+            con->write(buf, count);
+            con->flush();
+        }
+    }
+
+    con->close();
+    con->disconnectFromHost();
 }
 
 void QMplayer::play(QStringList const& args)
