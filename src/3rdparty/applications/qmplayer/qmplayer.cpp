@@ -357,6 +357,19 @@ void QMplayer::newConnection()
             if(index > 0)
             {
                 reqPath = req.mid(4, index - 4);
+                for(int i = 0; i < reqPath.count(); i++)
+                {
+                    if(reqPath.at(i) == '%')
+                    {
+                        i += 2;
+                        if(i >= reqPath.count())
+                        {
+                            break;
+                        }
+                        QChar ch = (QChar)(reqPath.mid(i - 1, 2).toInt(0, 16));
+                        reqPath.replace(i - 2, 3, ch);
+                    }
+                }
             }
         }
         if(line.startsWith("Host: "))
@@ -436,7 +449,10 @@ void QMplayer::newConnection()
         else
         {
             encPath = QString(reqPath);
-            encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
+            if(reqPath.endsWith(".avi"))
+            {
+                encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
+            }
             QFileInfo fi(encPath);
             if(fi.exists())
             {
