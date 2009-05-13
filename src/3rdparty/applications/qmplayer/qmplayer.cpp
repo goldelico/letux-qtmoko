@@ -302,23 +302,20 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
 
 void QMplayer::settings()
 {
-     tcpServer = new QTcpServer(this);
+    tcpServer = new QTcpServer(this);
 
-     if(!tcpServer->listen(QHostAddress::Any, 7654))
-     {
-         QMessageBox::critical(this, tr("qmplayer"),
-                               tr("Unable to start the server on port 7654: ") + tcpServer->errorString());
-         delete(tcpServer);
-         return;
-     }
+    if(!tcpServer->listen(QHostAddress::Any, 7654))
+    {
+        QMessageBox::critical(this, tr("qmplayer"),
+                              tr("Unable to start the server on port 7654: ") + tcpServer->errorString());
+        delete(tcpServer);
+        return;
+    }
 
-     connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
+    connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
 
-     QMessageBox::information(this, tr("qmplayer"),
-                              tr("The server is running on port 7654"));
-
-
-
+    QMessageBox::information(this, tr("qmplayer"),
+                             tr("The server is running on port 7654"));
 }
 
 void QMplayer::newConnection()
