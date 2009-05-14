@@ -177,6 +177,7 @@ void QMplayer::downClicked()
 
 void QMplayer::showScreen(QMplayer::Screen scr)
 {
+    // Full screen -> normal
     if(screen == QMplayer::ScreenFullscreen)
     {
         setRes(640480);
@@ -216,6 +217,17 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         bUp->setText(tr(">>"));
         bDown->setText(tr("<<"));
     }
+
+#ifdef QT_QWS_FICGTA01
+    if(scr == QMplayer::ScreenPlay)
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+    }
+    if(scr == QMplayer::ScreenStopped)
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+    }
+#endif
 }
 
 void QMplayer::scan()
@@ -342,17 +354,20 @@ bool QMplayer::runClient()
         return true;
     }
 
-    bool ok;
-    QString host = QInputDialog::getText(this, "qmplayer", tr("Host to connect to:"),
-                                         QLineEdit::Normal, "192.168.0.200", &ok);
+    bool ok = true;
+
+    QString host = "192.168.0.200";
+    //QString host = QInputDialog::getText(this, "qmplayer", tr("Host to connect to:"),
+    //                                     QLineEdit::Normal, "192.168.0.200", &ok);
 
     if(!ok)
     {
         return false;
     }
 
-    int port = QInputDialog::getInteger(this, "qmplayer", tr("port:"), 7654, 0,
-                                        65535, 1, &ok);
+    int port = 7654;
+    //int port = QInputDialog::getInteger(this, "qmplayer", tr("port:"), 7654, 0,
+    //                                    65535, 1, &ok);
     
     if(!ok)
     {
@@ -722,9 +737,6 @@ void QMplayer::play(QStringList const& args)
        }
        return;
     }
-#ifdef QT_QWS_FICGTA01
-    QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-#endif
 }
 
 void QMplayer::setRes(int xy)
