@@ -43,6 +43,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     maxScanLevel = 0;
     fbset = false;
+    process = NULL;
 
     showScreen(QMplayer::ScreenInit);
 }
@@ -50,6 +51,16 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 QMplayer::~QMplayer()
 {
 
+}
+
+static bool isDirectory(QString path)
+{
+    return path != NULL &&
+#ifdef Q_WS_WIN
+    (path.length() >= 3) && (path.at(1) == ':');
+#else
+    path.startsWith('/');
+#endif
 }
 
 void QMplayer::mousePressEvent(QMouseEvent * event)
@@ -87,7 +98,7 @@ void QMplayer::okClicked()
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
-            bool isDir = path.startsWith('/');
+            bool isDir = isDirectory(path);
             if(isDir)
             {
                 if(hit)
@@ -229,12 +240,16 @@ void QMplayer::scan()
     progress->setMinimum(0);
     progress->setMaximum(0x7fffffff);
 
+#ifdef Q_WS_WIN
+    scanDir("c:\\", 0, 0, 0, 0x1fffffff);
+#else
     scanDir("/", 0, 0, 0, 0x1fffffff);
     scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
     scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
     scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
     scanDir("/home/root/Documents", 0, maxScanLevel + 2, 0, 0x5fffffff);
     scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+#endif
 
     maxScanLevel++;
     scanItem->setText(tr("Scan more"));
@@ -359,7 +374,7 @@ void QMplayer::newConnection()
                 reqPath = req.mid(4, index - 4);
             }
         }
-        if(line.startsWith("Host: "))
+        else if(line.startsWith("Host: "))
         {
             host = line.right(line.length() - 6).trimmed();
         }
@@ -385,7 +400,7 @@ void QMplayer::newConnection()
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
-            bool isDir = path.startsWith('/');
+            bool isDir = isDirectory(path);
             if(isDir)
             {
                 dir = path;
@@ -417,16 +432,18 @@ void QMplayer::newConnection()
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
-            bool isDir = path.startsWith('/');
+            bool isDir = isDirectory(path);
             if(isDir)
             {
                 dir = path;
             }
-            else if(reqPath.startsWith(dir) && reqPath.endsWith(path))
+            else if(reqPath.endsWith(path))
             {
-                itemIndex = i;
-                ok = true;
-                break;
+                if(!ok || reqPath.startsWith(dir))
+                {
+                    itemIndex = i;
+                    ok = true;
+                }
             }
         }
         if(!ok)

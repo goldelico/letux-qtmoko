@@ -55,7 +55,6 @@ private:
     QPushButton* bUp;
     QPushButton* bDown;
     QProcess* process;
-    QProcess* encoder;
     QProgressBar *progress;
     QTcpServer *tcpServer;
 
