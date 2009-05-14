@@ -18,6 +18,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QBuffer>
+#include <QInputDialog>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
@@ -65,6 +66,8 @@ private:
     void play(QStringList const& args);
     void setRes(int xy);
     bool installMplayer();
+    bool runServer();
+    bool runClient();
     bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:

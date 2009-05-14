@@ -11,7 +11,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
 
-    settingsItem = new QListWidgetItem(tr("Web server"), lw);
+    settingsItem = new QListWidgetItem(tr("Web sharing"), lw);
 
     bOk = new QPushButton(">", this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
@@ -44,6 +44,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     maxScanLevel = 0;
     fbset = false;
     process = NULL;
+    tcpServer = NULL;
 
     showScreen(QMplayer::ScreenInit);
 }
@@ -187,6 +188,7 @@ void QMplayer::downClicked()
 
 void QMplayer::showScreen(QMplayer::Screen scr)
 {
+    // Full screen -> normal
     if(screen == QMplayer::ScreenFullscreen)
     {
         setRes(640480);
@@ -226,6 +228,17 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         bUp->setText(tr(">>"));
         bDown->setText(tr("<<"));
     }
+
+#ifdef QT_QWS_FICGTA01
+    if(scr == QMplayer::ScreenPlay)
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+    }
+    if(scr == QMplayer::ScreenStopped)
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+    }
+#endif
 }
 
 void QMplayer::scan()
@@ -315,25 +328,152 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
     }
 }
 
+bool QMplayer::runServer()
+{
+    if(tcpServer != NULL)
+    {
+        return false;
+    }
+    if(QMessageBox::question(this, "qmplayer", tr("Start server?"),
+                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+    {
+        return false;
+    }
+
+    tcpServer = new QTcpServer(this);
+
+    if(!tcpServer->listen(QHostAddress::Any, 7654))
+    {
+        QMessageBox::critical(this, tr("qmplayer"),
+                              tr("Unable to start the server on port 7654: ") + tcpServer->errorString());
+        delete(tcpServer);
+        tcpServer = NULL;
+        return true;
+    }
+
+    connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
+
+    QMessageBox::information(this, tr("qmplayer"),
+                             tr("The server is running on port 7654"));
+
+    settingsItem->setText(tr("Web server running on port 7654"));
+    return true;
+}
+
+bool QMplayer::runClient()
+{
+    if(tcpServer != NULL)
+    {
+        QMessageBox::critical(this, tr("qmplayer"),
+                              tr("Point your web browser to http://localhost:7654 (replace localhost with this computer IP address)"));
+        return true;
+    }
+
+    bool ok = true;
+
+    QString host = "192.168.0.200";
+    //QString host = QInputDialog::getText(this, "qmplayer", tr("Host to connect to:"),
+    //                                     QLineEdit::Normal, "192.168.0.200", &ok);
+
+    if(!ok)
+    {
+        return false;
+    }
+
+    int port = 7654;
+    //int port = QInputDialog::getInteger(this, "qmplayer", tr("port:"), 7654, 0,
+    //                                    65535, 1, &ok);
+    
+    if(!ok)
+    {
+        return false;
+    }
+
+    QTcpSocket sock(this);
+    sock.connectToHost(host, port);
+    if(!sock.waitForConnected(5000))
+    {
+        QMessageBox::critical(this, tr("qmplayer"), sock.errorString());
+        return true;
+    }
+
+    QByteArray req("GET / HTTP/1.1\r\nHost: ");
+    req.append(host);
+    req.append(':');
+    req.append(QByteArray::number(port));
+    req.append("\r\n");
+
+    sock.write(req);
+    sock.flush();
+    sock.waitForBytesWritten();
+
+    QByteArray res;
+    while(sock.waitForReadyRead(5000))
+    {
+        res += sock.readAll();
+    }
+    sock.close();
+
+    if(res.length() == 0)
+    {
+        QMessageBox::critical(this, tr("qmplayer"),
+                              tr("No response from ") + host);
+        return true;
+    }
+
+    QBuffer buf(&res);
+    QByteArray line;
+    QString dir = ":";
+
+    buf.open(QBuffer::ReadOnly);
+    for(;;)
+    {
+        line = buf.readLine();
+        if(line.isEmpty())
+        {
+            break;
+        }
+        if(line.indexOf("<a href=\"http://") == 0)
+        {
+            int urlEnd = line.indexOf('"', 17);
+            if(urlEnd < 0)
+            {
+                continue;
+            }
+            QString url = line.mid(9, urlEnd - 9);
+            int fileStart = url.lastIndexOf('/');
+            if(fileStart < 0)
+            {
+                continue;
+            }
+            if(!url.startsWith(dir))
+            {
+                dir = url.left(fileStart);
+                lw->addItem(dir);
+            }
+            QString file = url.right(url.length() - fileStart - 1);
+            QListWidgetItem *item = new QListWidgetItem(file);
+            item->setTextAlignment(Qt::AlignHCenter);
+            lw->addItem(item);
+        }
+    }
+
+    return true;
+}
+
 void QMplayer::settings()
 {
-     tcpServer = new QTcpServer(this);
-
-     if(!tcpServer->listen(QHostAddress::Any, 7654))
-     {
-         QMessageBox::critical(this, tr("qmplayer"),
-                               tr("Unable to start the server on port 7654: ") + tcpServer->errorString());
-         delete(tcpServer);
-         return;
-     }
-
-     connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
-
-     QMessageBox::information(this, tr("qmplayer"),
-                              tr("The server is running on port 7654"));
-
-
-
+#ifdef QT_QWS_FICGTA01
+    if(!runClient())
+    {
+        runServer();
+    }
+#else
+    if(!runServer())
+    {
+        runClient();
+    }
+#endif
 }
 
 void QMplayer::newConnection()
@@ -372,6 +512,19 @@ void QMplayer::newConnection()
             if(index > 0)
             {
                 reqPath = req.mid(4, index - 4);
+                for(int i = 0; i < reqPath.count(); i++)
+                {
+                    if(reqPath.at(i) == '%')
+                    {
+                        i += 2;
+                        if(i >= reqPath.count())
+                        {
+                            break;
+                        }
+                        QChar ch = (QChar)(reqPath.mid(i - 1, 2).toInt(0, 16));
+                        reqPath.replace(i - 2, 3, ch);
+                    }
+                }
             }
         }
         else if(line.startsWith("Host: "))
@@ -409,14 +562,14 @@ void QMplayer::newConnection()
             }
             else
             {
-                res.append("<a href=\"http://");
+                res.append("\r\n<a href=\"http://");
                 res.append(host);
                 res.append(dir);
                 res.append('/');
                 res.append(path);
                 res.append("\">");
                 res.append(path);
-                res.append("</a></br>");
+                res.append("</a></br>\r\n");
             }
         }
         res.append("</body>");
@@ -453,7 +606,10 @@ void QMplayer::newConnection()
         else
         {
             encPath = QString(reqPath);
-            encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
+            if(reqPath.endsWith(".avi"))
+            {
+                encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
+            }
             QFileInfo fi(encPath);
             if(fi.exists())
             {
@@ -598,9 +754,6 @@ void QMplayer::play(QStringList const& args)
        }
        return;
     }
-#ifdef QT_QWS_FICGTA01
-    QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-#endif
 }
 
 void QMplayer::setRes(int xy)
