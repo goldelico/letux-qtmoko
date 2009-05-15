@@ -64,6 +64,43 @@ static bool isDirectory(QString path)
 #endif
 }
 
+// Return directory suitable for placing as url
+static QString dirToUrl(QString dir)
+{
+    QString res(dir);
+    for(int i = 0; i < res.length(); i++)
+    {
+        QChar ch = res.at(i);
+        if(ch == ':')
+        {
+            res[i] = '_';
+        }
+        else if(ch == '\\')
+        {
+            res[i] = '/';
+        }
+    }
+    while(res.endsWith('/') && res.length() > 0)
+    {
+        res.remove(res.length() - 1, 1);
+    }
+    if(res.at(0) != '/')
+    {
+        res.prepend('/');
+    }
+    return res;
+}
+
+// Returns if process is running. If process is starting then waits for start
+// and returns start result.
+bool processRunning(QProcess *p)
+{
+    return p != NULL &&
+            (p->state() == QProcess::Running ||
+             (p->state() == QProcess::Starting &&
+              p->waitForStarted(1000)));
+}
+
 void QMplayer::mousePressEvent(QMouseEvent * event)
 {
     if(screen == QMplayer::ScreenFullscreen)
@@ -121,7 +158,7 @@ void QMplayer::okClicked()
     }
     else if(screen == QMplayer::ScreenPlay)
     {
-        if(process != NULL && (process->state() == QProcess::Running))
+        if(processRunning(process))
         {
             process->write(" ");
         }
@@ -129,7 +166,7 @@ void QMplayer::okClicked()
     }
     else if(screen == QMplayer::ScreenStopped)
     {
-        if(process != NULL && (process->state() == QProcess::Running))
+        if(processRunning(process))
         {
             process->write(" ");
         }
@@ -152,13 +189,14 @@ void QMplayer::backClicked()
         process->write("q");
         process->waitForFinished(4000);
         delete(process);
+        process = NULL;
         showScreen(QMplayer::ScreenInit);
     }
 }
 
 void QMplayer::upClicked()
 {
-    if(process != NULL && (process->state() == QProcess::Running))
+    if(processRunning(process))
     {
         if(screen == QMplayer::ScreenStopped)
         {
@@ -173,7 +211,7 @@ void QMplayer::upClicked()
 
 void QMplayer::downClicked()
 {
-    if(process != NULL && (process->state() == QProcess::Running))
+    if(processRunning(process))
     {
         if(screen == QMplayer::ScreenStopped)
         {
@@ -491,8 +529,9 @@ void QMplayer::newConnection()
     QByteArray res;
     QBuffer buf(&req);
     QByteArray line;
-    QString reqPath = "";
-    QString encPath = "";
+    QString reqPath = "";           // path from http request
+    QString filename = "";          // file on the disk
+    QString encPath = "";           // transcoded file
     QString host = "";
     QFile file;
     bool sendFile = false;
@@ -556,9 +595,9 @@ void QMplayer::newConnection()
             bool isDir = isDirectory(path);
             if(isDir)
             {
-                dir = path;
-                res.append(dir);
+                res.append(path);
                 res.append("</br>");
+                dir = dirToUrl(path);
             }
             else
             {
@@ -572,8 +611,6 @@ void QMplayer::newConnection()
                 res.append("</a></br>\r\n");
             }
         }
-        res.append("</body>");
-        res.append("</html>");
     }
     else
     {
@@ -592,8 +629,15 @@ void QMplayer::newConnection()
             }
             else if(reqPath.endsWith(path))
             {
-                if(!ok || reqPath.startsWith(dir))
+                QString testPath = dirToUrl(dir) + '/' + path;
+                if(!ok || reqPath == testPath)
                 {
+                    filename = dir;
+                    if(!filename.endsWith('/') && !filename.endsWith('\\'))
+                    {
+                        filename.append('/');
+                    }
+                    filename.append(path);
                     itemIndex = i;
                     ok = true;
                 }
@@ -605,8 +649,9 @@ void QMplayer::newConnection()
         }
         else
         {
-            encPath = QString(reqPath);
-            if(reqPath.endsWith(".avi"))
+            encPath = filename;
+            // Encode just avi files for now
+            if(encPath.endsWith(".avi"))
             {
                 encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
             }
@@ -618,15 +663,9 @@ void QMplayer::newConnection()
                 res.append("file size: ");
                 res.append(size);
 
-                if(process != NULL &&
-                   process->state() == QProcess::Running ||
-                   process->state() == QProcess::Starting)
+                if(processRunning(process))
                 {
-                    res.append("</br>encoding in progress<br>");
-                    res.append("<a href=\"http://");
-                    res.append(host);
-                    res.append(reqPath);
-                    res.append("\">Check status or download</a></br>");
+                    res.append("</br>encoding in progress</br>Reload page to check status or download");
                 }
                 else
                 {
@@ -659,16 +698,14 @@ void QMplayer::newConnection()
                     sendFile = true;
                 }
             }
-            else if(process != NULL &&
-                   process->state() == QProcess::Running ||
-                   process->state() == QProcess::Starting)
+            else if(processRunning(process))
             {
-                   res.append("Another encoding is in progress");
+                res.append("Another encoding is in progress");
             }
             else
             {
                 QStringList args;
-                args.append(reqPath);
+                args.append(filename);
                 args.append("-ovc");
                 args.append("lavc");
                 args.append("-lavcopts");
@@ -686,28 +723,33 @@ void QMplayer::newConnection()
 
                 process = new QProcess(this);
                 process->setProcessChannelMode(QProcess::ForwardedChannels);
-                process->start("mencoder", args, QIODevice::ReadWrite);
-
-                if(process->waitForStarted(200))
+                process->start("mencoder", args);
+#ifdef Q_WS_WIN
+                PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *) process->pid();
+                SetPriorityClass(pi->hProcess, IDLE_PRIORITY_CLASS);
+#endif
+                // FIXME: whatever we send to back, browser wont show anything
+                if(process->waitForStarted(10000))
                 {
-                    res.append("encoding started<br>");
-                    res.append("<a href=\"http://");
-                    res.append(host);
-                    res.append(reqPath);
-                    res.append("\">Check status or download</a></br>");
+                    res.append("Encoding started</br>Reload page to check status or download");
                 }
                 else
                 {
+                    res.append("Failed to start mencoder:</br>");
+                    res.append(process->errorString());
                     delete(process);
                     process = NULL;
-                    res.append("failed to start mencoder");
                 }
             }
         }
     }
 
+    if(!sendFile)
+    {
+        res.append("</body>");
+        res.append("</html>");
+    }
     con->write(res);
-    con->flush();
 
     if(sendFile)
     {

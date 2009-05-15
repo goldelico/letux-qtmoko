@@ -22,6 +22,9 @@
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
+#ifdef Q_WS_WIN
+#include <Windows.h>
+#endif
 
 class QMplayer : public QWidget
 {
