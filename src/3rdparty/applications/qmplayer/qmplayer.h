@@ -31,7 +31,7 @@ class QMplayer : public QWidget
     Q_OBJECT
 
 public:
-    QMplayer(QWidget *parent = 0);
+    QMplayer(QWidget *parent = 0, Qt::WFlags f = 0);
     ~QMplayer();
 
 private:
@@ -43,11 +43,13 @@ private:
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
+        ScreenRemoteEncoding,
     };
 
     Screen screen;
     int maxScanLevel;
     bool fbset;
+    int delTmpFiles;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -71,6 +73,7 @@ private:
     bool installMplayer();
     bool runServer();
     bool runClient();
+    bool download(QString url, QString destPath, bool justCheck);
     bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:

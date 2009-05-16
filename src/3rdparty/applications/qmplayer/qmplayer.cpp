@@ -1,10 +1,12 @@
 #include "qmplayer.h"
 
-QMplayer::QMplayer(QWidget *parent)
+QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
 {
 #ifdef QT_QWS_FICGTA01
     this->setWindowState(Qt::WindowMaximized);
+#else
+    Q_UNUSED(f);
 #endif
     lw = new QListWidget(this);
 
@@ -43,6 +45,7 @@ QMplayer::QMplayer(QWidget *parent)
 
     maxScanLevel = 0;
     fbset = false;
+    delTmpFiles = -1;
     process = NULL;
     tcpServer = NULL;
 
@@ -134,6 +137,7 @@ void QMplayer::okClicked()
         QString dir = "";
         bool hit = false;
         QStringList list;
+        QStringList downList;
         for(int i = 2; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
@@ -148,10 +152,50 @@ void QMplayer::okClicked()
                 dir = path;
             }
             hit |= (item == sel);
-            if(hit && !isDir)
+            if(!hit || isDir)
             {
-                list.append(dir + "/" + path);
+                continue;
             }
+            QString file = dir + "/" + path;
+            if(!dir.startsWith("http://"))
+            {
+                list.append(file);
+                continue;
+            }
+            QMessageBox::StandardButton answer =
+                    QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+
+            if(answer == QMessageBox::Cancel)
+            {
+                break;
+            }
+            if(answer == QMessageBox::Open)
+            {
+                list.append(file);  // Append to playlist if we just play (no download)
+            }
+            downList.append(file);
+        }
+        for(int i = 0; i < downList.count(); i++)
+        {
+            QString url = downList[i];
+            int slashIndex = url.lastIndexOf('/');
+            if(slashIndex < 0)
+            {
+                continue;
+            }
+            QString filename = url.right(url.length() - slashIndex - 1);
+            QString destPath = QDir::homePath() + "/" + filename;
+            bool justCheck = list.contains(url);
+            if(!download(url, destPath, justCheck))
+            {
+                return;
+            }
+            if(justCheck)
+            {
+                continue;
+            }
+            // Add downloaded file to list
+            list.append(destPath);
         }
         if(list.count() > 0)
         {
@@ -174,6 +218,120 @@ void QMplayer::okClicked()
         }
         showScreen(QMplayer::ScreenPlay);
     }
+}
+
+bool QMplayer::download(QString url, QString destPath, bool justCheck)
+{
+    QString host = url;
+    QString reqPath;
+    int port = 80;
+
+    if(url.startsWith("http://"))
+    {
+        host.remove(0, 7);
+    }
+
+    int colonIndex = host.indexOf(':');
+    int slashIndex = host.indexOf('/');
+    if(slashIndex < 0)
+    {
+        return false;
+    }
+    reqPath = host.right(host.length() - slashIndex);
+    host = host.left(slashIndex);
+    if(colonIndex > 0)
+    {
+        QString portStr = host.right(host.length() - colonIndex - 1);
+        host = host.left(colonIndex);
+        port = portStr.toInt(0, 10);
+    }
+
+    QTcpSocket sock(this);
+    sock.connectToHost(host, port);
+    if(!sock.waitForConnected(5000))
+    {
+        QMessageBox::critical(this, tr("qmplayer"), sock.errorString());
+        return false;
+    }
+
+    QByteArray req("GET ");
+    req.append(reqPath);
+    req.append(" HTTP/1.1\r\nHost: ");
+    req.append(host);
+    req.append(':');
+    req.append(QByteArray::number(port));
+    req.append("\r\n");
+
+    sock.write(req);
+    sock.flush();
+    sock.waitForBytesWritten();
+
+    bool html = false;
+    QByteArray line;
+    for(;;)
+    {
+        line = sock.readLine();
+        if(line.isEmpty())
+        {
+            if(sock.waitForReadyRead(5000))
+            {
+                continue;
+            }
+            break;
+        }
+        if(line.trimmed().isEmpty())
+        {
+            break;
+        }
+        html |= (line.indexOf("Content-Type: text/html") == 0);
+    }
+
+    if(html)
+    {
+        QByteArray text = sock.readAll();
+        if(text.length() == 0)
+        {
+            QMessageBox::critical(this, tr("qmplayer"),
+                                  tr("No response from ") + host);
+            sock.close();
+            return false;
+        }
+        QMessageBox::information(this, tr("qmplayer"), text);
+        sock.close();
+        return false;
+    }
+    else if(justCheck)
+    {
+        sock.close();
+        return true;
+    }
+
+    QFile f(destPath);
+    if(!f.open(QFile::WriteOnly))
+    {
+        QMessageBox::critical(this, tr("qmplayer"),
+                              tr("Unable to save file:\r\n\r\n") + f.errorString());
+        sock.close();
+        return false;
+    }
+    char buf[4096];
+    int count;
+    for(;;)
+    {
+        count = sock.read(buf, 4096);
+        if(count > 0)
+        {
+            f.write(buf, count);
+        }
+        else if(!sock.waitForReadyRead(5000))
+        {
+            break;
+        }
+    }
+    f.close();
+    sock.close();
+
+    return true;
 }
 
 void QMplayer::backClicked()
@@ -330,6 +488,19 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
             || fileName.endsWith(".ogv", Qt::CaseInsensitive)
             || fileName.endsWith(".avi", Qt::CaseInsensitive))
         {
+            if(fileName.contains(".qmplayer."))
+            {
+                if(delTmpFiles < 0)
+                {
+                    delTmpFiles = (QMessageBox::question(this, "qmplayer", tr("Delete qmplayer temporary files?"),
+                                                        QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes);
+                }
+                if(delTmpFiles)
+                {
+                    QFile::remove(fileName);
+                }
+                continue;
+            }
             QListWidgetItem *fileItem = new QListWidgetItem(fileName);
             fileItem->setTextAlignment(Qt::AlignHCenter);
             lw->addItem(fileItem);
@@ -463,7 +634,7 @@ bool QMplayer::runClient()
 
     QBuffer buf(&res);
     QByteArray line;
-    QString dir = ":";
+    QString dir;
 
     buf.open(QBuffer::ReadOnly);
     for(;;)
@@ -486,10 +657,14 @@ bool QMplayer::runClient()
             {
                 continue;
             }
-            if(!url.startsWith(dir))
+            for(int i = fileStart - 1; i >= 0; i--)
             {
-                dir = url.left(fileStart);
-                lw->addItem(dir);
+                if(dir.length() <= i || dir.at(i) != url.at(i))
+                {
+                    dir = url.left(fileStart);
+                    lw->addItem(dir);
+                    break;
+                }
             }
             QString file = url.right(url.length() - fileStart - 1);
             QListWidgetItem *item = new QListWidgetItem(file);
