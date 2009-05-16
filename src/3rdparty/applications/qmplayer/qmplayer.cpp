@@ -56,12 +56,13 @@ QMplayer::~QMplayer()
 
 static bool isDirectory(QString path)
 {
-    return path != NULL &&
+    return path != NULL && (
 #ifdef Q_WS_WIN
-    (path.length() >= 3) && (path.at(1) == ':');
+    (path.length() >= 3) && (path.at(1) == ':')
 #else
-    path.startsWith('/');
+    path.startsWith('/')
 #endif
+    || path.startsWith("http://"));
 }
 
 // Return directory suitable for placing as url
