@@ -31,7 +31,7 @@ class QMplayer : public QWidget
     Q_OBJECT
 
 public:
-    QMplayer(QWidget *parent = 0, Qt::WFlags f = 0);
+    QMplayer(QWidget *parent = 0);
     ~QMplayer();
 
 private:

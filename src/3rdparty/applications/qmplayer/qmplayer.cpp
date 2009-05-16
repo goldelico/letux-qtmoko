@@ -1,6 +1,6 @@
 #include "qmplayer.h"
 
-QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
+QMplayer::QMplayer(QWidget *parent)
     : QWidget(parent)
 {
 #ifdef QT_QWS_FICGTA01
@@ -102,8 +102,9 @@ bool processRunning(QProcess *p)
               p->waitForStarted(1000)));
 }
 
-void QMplayer::mousePressEvent(QMouseEvent * event)
+void QMplayer::mousePressEvent(QMouseEvent *event)
 {
+    Q_UNUSED(event);
     if(screen == QMplayer::ScreenFullscreen)
     {
         showScreen(QMplayer::ScreenPlay);
@@ -823,6 +824,8 @@ void QMplayer::setRes(int xy)
         }
         f.close();
     }
+#else
+    Q_UNUSED(xy);
 #endif
 }
 
