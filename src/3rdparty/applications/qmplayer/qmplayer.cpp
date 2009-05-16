@@ -200,7 +200,7 @@ void QMplayer::upClicked()
     {
         if(screen == QMplayer::ScreenStopped)
         {
-            process->write("\x1b""[C ");
+            process->write("\x1b""[A ");
         }
         else
         {
@@ -215,7 +215,7 @@ void QMplayer::downClicked()
     {
         if(screen == QMplayer::ScreenStopped)
         {
-            process->write("\x1b""[D ");
+            process->write("\x1b""[B ");
         }
         else
         {
