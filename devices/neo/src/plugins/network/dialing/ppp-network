@@ -80,10 +80,10 @@ install()
                     echo "nameserver $1" >> $TMP_FILE 
                     shift;
                 done
-                mv $TMP_FILE /var/run/ppp/resolv.conf
+                mv $TMP_FILE /var/run/resolv.conf
             fi
             rm -f $RESOLVCONF
-            ln -s /var/run/ppp/resolv.conf $RESOLVCONF
+            ln -s /var/run/resolv.conf $RESOLVCONF
             ;;    
         *)
             print_debug "Unknown option: $ACTION";

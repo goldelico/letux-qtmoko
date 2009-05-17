@@ -7,6 +7,7 @@
 TARGET = qmplayer
 TEMPLATE = app
 
+QT          += core gui network
 
 SOURCES += main.cpp\
         qmplayer.cpp
