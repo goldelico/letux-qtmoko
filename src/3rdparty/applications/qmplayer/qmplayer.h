@@ -22,6 +22,9 @@
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
+#ifdef Q_WS_WIN
+#include <Windows.h>
+#endif
 
 class QMplayer : public QWidget
 {
@@ -40,11 +43,13 @@ private:
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
+        ScreenRemoteEncoding,
     };
 
     Screen screen;
     int maxScanLevel;
     bool fbset;
+    int delTmpFiles;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -56,7 +61,6 @@ private:
     QPushButton* bUp;
     QPushButton* bDown;
     QProcess* process;
-    QProcess* encoder;
     QProgressBar *progress;
     QTcpServer *tcpServer;
 
@@ -69,6 +73,7 @@ private:
     bool installMplayer();
     bool runServer();
     bool runClient();
+    bool download(QString url, QString destPath, bool justCheck);
     bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
