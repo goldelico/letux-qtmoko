@@ -43,7 +43,7 @@ private:
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
-        ScreenRemoteEncoding,
+        ScreenDownload,
     };
 
     Screen screen;
@@ -73,7 +73,7 @@ private:
     bool installMplayer();
     bool runServer();
     bool runClient();
-    bool download(QString url, QString destPath, bool justCheck);
+    bool download(QString url, QString destPath, QString filename, bool justCheck);
     bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
