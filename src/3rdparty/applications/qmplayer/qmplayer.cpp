@@ -147,6 +147,8 @@ void QMplayer::okClicked()
         bool hit = false;
         QStringList list;
         QStringList downList;
+        QMessageBox::StandardButton answer = QMessageBox::NoButton;
+        QMessageBox::StandardButton moreAnswer = QMessageBox::NoButton;
         for(int i = 2; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
@@ -168,21 +170,32 @@ void QMplayer::okClicked()
             QString file = dir + "/" + path;
             if(!dir.startsWith("http://"))
             {
-                list.append(file);
+                list.append(file);      // add local files to playlist
                 continue;
             }
-            QMessageBox::StandardButton answer =
-                    QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
-
+            if(moreAnswer == QMessageBox::NoButton)
+            {
+                answer = QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+            }
             if(answer == QMessageBox::Cancel)
             {
                 break;
             }
             if(answer == QMessageBox::Open)
             {
-                list.append(file);  // Append to playlist if we just play (no download)
+                list.append(file);      // append to playlist if we just play (no download)
             }
             downList.append(file);
+            if(moreAnswer != QMessageBox::YesToAll)
+            {
+                moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
+                                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
+
+                if(moreAnswer == QMessageBox::No)
+                {
+                    break;
+                }
+            }
         }
         for(int i = 0; i < downList.count(); i++)
         {
@@ -1010,6 +1023,8 @@ void QMplayer::play(QStringList const& args)
 
 void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
     showScreen(QMplayer::ScreenInit);
 }
 
