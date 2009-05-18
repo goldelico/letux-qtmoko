@@ -489,9 +489,12 @@ void QMplayer::scan()
 {
     showScreen(QMplayer::ScreenScan);
     delItems(lw);
+    abort = false;
 
     progress->setMinimum(0);
     progress->setMaximum(0x7fffffff);
+
+scan_files:
 
 #ifdef Q_WS_WIN
     scanDir("c:\\", 0, 0, 0, 0x1fffffff);
@@ -506,6 +509,13 @@ void QMplayer::scan()
 
     maxScanLevel++;
     scanItem->setText(tr("Scan more"));
+
+    if(lw->count() <= 2 && !abort &&
+       QMessageBox::question(this, "qmplayer", tr("No media files found, scan more?"),
+                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        goto scan_files;
+    }
 
     showScreen(QMplayer::ScreenInit);
 }

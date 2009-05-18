@@ -50,6 +50,7 @@ private:
     int maxScanLevel;
     bool fbset;
     int delTmpFiles;
+    bool abort;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
