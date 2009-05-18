@@ -97,12 +97,21 @@ static QString dirToUrl(QString dir)
 
 // Returns if process is running. If process is starting then waits for start
 // and returns start result.
-bool processRunning(QProcess *p)
+static bool processRunning(QProcess *p)
 {
     return p != NULL &&
             (p->state() == QProcess::Running ||
              (p->state() == QProcess::Starting &&
               p->waitForStarted(1000)));
+}
+
+// Removes items from listview except top 2 items.
+static void delItems(QListWidget *lw)
+{
+    while(lw->count() > 2)
+    {
+        delete(lw->takeItem(2));
+    }
 }
 
 void QMplayer::mousePressEvent(QMouseEvent *event)
@@ -466,11 +475,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 void QMplayer::scan()
 {
     showScreen(QMplayer::ScreenScan);
-
-    while(lw->count() > 2)
-    {
-        delete(lw->takeItem(2));
-    }
+    delItems(lw);
 
     progress->setMinimum(0);
     progress->setMaximum(0x7fffffff);
@@ -590,7 +595,7 @@ bool QMplayer::runServer()
     connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
 
     QMessageBox::information(this, tr("qmplayer"),
-                             tr("The server is running on port 7654"));
+                             tr("Web server is running on port 7654"));
 
     settingsItem->setText(tr("Web server running on port 7654"));
     return true;
@@ -656,6 +661,8 @@ bool QMplayer::runClient()
                               tr("No response from ") + host);
         return true;
     }
+
+    delItems(lw);
 
     QBuffer buf(&res);
     QByteArray line;
@@ -975,6 +982,7 @@ void QMplayer::play(QStringList const& args)
     showScreen(QMplayer::ScreenPlay);
 
     process = new QProcess(this);
+    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start("mplayer", args, QIODevice::ReadWrite);
 
@@ -998,6 +1006,11 @@ void QMplayer::play(QStringList const& args)
        }
        return;
     }
+}
+
+void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    showScreen(QMplayer::ScreenInit);
 }
 
 void QMplayer::setRes(int xy)
@@ -1031,11 +1044,7 @@ void QMplayer::setRes(int xy)
 
 bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args)
 {
-    while(lw->count() > 2)
-    {
-        delete(lw->takeItem(2));
-    }
-
+    delItems(lw);
     scanItem->setText(info);
     QString argText(program);
     settingsItem->setText(program);

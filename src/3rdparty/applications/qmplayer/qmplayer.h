@@ -85,6 +85,7 @@ private slots:
     void upClicked();
     void downClicked();
     void newConnection();
+    void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
 #endif // QMPLAYER_H
