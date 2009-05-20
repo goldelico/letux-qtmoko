@@ -1,5 +1,5 @@
 TEMPLATE=plugin
-TARGET=qkeyboard
+TARGET=fingerkeyboard
 
 PLUGIN_FOR=qtopia
 PLUGIN_TYPE=inputmethods
@@ -11,12 +11,12 @@ AVAILABLE_LANGUAGES=$$QTOPIA_AVAILABLE_LANGUAGES
 LANGUAGES=$$QTOPIA_LANGUAGES
 
 pkg [
-    name=keyboard-inputmethod
+    name=fingerkeyboard-inputmethod
     desc="Keyboard inputmethod plugin for Qt Extended."
     version=$$QTOPIA_VERSION
     license=$$QTOPIA_LICENSE
     maintainer=$$QTOPIA_MAINTAINER
-    multi=plugins/inputmethods/dockedkeyboard
+    multi=plugins/inputmethods/fingerkeyboard
 ]
 
 HEADERS=\
