@@ -13,7 +13,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
 
-    settingsItem = new QListWidgetItem(tr("Web sharing"), lw);
+    settingsItem = new QListWidgetItem(tr("Sharing"), lw);
 
     bOk = new QPushButton(">", this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
@@ -36,12 +36,12 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     buttonLayout->addWidget(bBack);
     buttonLayout->addWidget(bUp);
     buttonLayout->addWidget(bDown);
-    buttonLayout->addWidget(label);
-    buttonLayout->addWidget(progress);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lw);
     layout->addLayout(buttonLayout);
+    layout->addWidget(label);
+    layout->addWidget(progress);
 
     maxScanLevel = 0;
     fbset = false;
@@ -97,12 +97,21 @@ static QString dirToUrl(QString dir)
 
 // Returns if process is running. If process is starting then waits for start
 // and returns start result.
-bool processRunning(QProcess *p)
+static bool processRunning(QProcess *p)
 {
     return p != NULL &&
             (p->state() == QProcess::Running ||
              (p->state() == QProcess::Starting &&
               p->waitForStarted(1000)));
+}
+
+// Removes items from listview except top 2 items.
+static void delItems(QListWidget *lw)
+{
+    while(lw->count() > 2)
+    {
+        delete(lw->takeItem(2));
+    }
 }
 
 void QMplayer::mousePressEvent(QMouseEvent *event)
@@ -138,6 +147,8 @@ void QMplayer::okClicked()
         bool hit = false;
         QStringList list;
         QStringList downList;
+        QMessageBox::StandardButton answer = QMessageBox::NoButton;
+        QMessageBox::StandardButton moreAnswer = QMessageBox::NoButton;
         for(int i = 2; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
@@ -159,21 +170,32 @@ void QMplayer::okClicked()
             QString file = dir + "/" + path;
             if(!dir.startsWith("http://"))
             {
-                list.append(file);
+                list.append(file);      // add local files to playlist
                 continue;
             }
-            QMessageBox::StandardButton answer =
-                    QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
-
+            if(moreAnswer == QMessageBox::NoButton)
+            {
+                answer = QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+            }
             if(answer == QMessageBox::Cancel)
             {
                 break;
             }
             if(answer == QMessageBox::Open)
             {
-                list.append(file);  // Append to playlist if we just play (no download)
+                list.append(file);      // append to playlist if we just play (no download)
             }
             downList.append(file);
+            if(moreAnswer != QMessageBox::YesToAll)
+            {
+                moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
+                                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
+
+                if(moreAnswer == QMessageBox::No)
+                {
+                    break;
+                }
+            }
         }
         for(int i = 0; i < downList.count(); i++)
         {
@@ -186,7 +208,7 @@ void QMplayer::okClicked()
             QString filename = url.right(url.length() - slashIndex - 1);
             QString destPath = QDir::homePath() + "/" + filename;
             bool justCheck = list.contains(url);
-            if(!download(url, destPath, justCheck))
+            if(!download(url, destPath, filename, justCheck))
             {
                 return;
             }
@@ -220,7 +242,7 @@ void QMplayer::okClicked()
     }
 }
 
-bool QMplayer::download(QString url, QString destPath, bool justCheck)
+bool QMplayer::download(QString url, QString destPath, QString filename, bool justCheck)
 {
     QString host = url;
     QString reqPath;
@@ -266,6 +288,7 @@ bool QMplayer::download(QString url, QString destPath, bool justCheck)
     sock.flush();
     sock.waitForBytesWritten();
 
+    int contentLen = 0;
     bool html = false;
     QByteArray line;
     for(;;)
@@ -283,7 +306,11 @@ bool QMplayer::download(QString url, QString destPath, bool justCheck)
         {
             break;
         }
-        html |= (line.indexOf("Content-Type: text/html") == 0);
+        html = html | (line.indexOf("Content-Type: text/html") == 0);
+        if(line.indexOf("Content-Length: ") == 0)
+        {
+            contentLen = line.remove(0, 16).trimmed().toInt(0, 10);
+        }
     }
 
     if(html)
@@ -314,10 +341,23 @@ bool QMplayer::download(QString url, QString destPath, bool justCheck)
         sock.close();
         return false;
     }
+
+    showScreen(QMplayer::ScreenDownload);
+    label->setText(tr("Downloading") + " " + filename);
+
+    if(contentLen <= 0)
+    {
+        contentLen = 1024 * 1024;
+    }
+    progress->setMaximum(contentLen);
+    progress->setValue(0);
+    int remains = contentLen;
+
     char buf[4096];
     int count;
     for(;;)
     {
+        QApplication::processEvents();
         count = sock.read(buf, 4096);
         if(count > 0)
         {
@@ -327,6 +367,12 @@ bool QMplayer::download(QString url, QString destPath, bool justCheck)
         {
             break;
         }
+        remains -= count;
+        if(remains <= 0)
+        {
+            remains = contentLen;
+        }
+        progress->setValue(contentLen - remains);
     }
     f.close();
     sock.close();
@@ -399,8 +445,8 @@ void QMplayer::showScreen(QMplayer::Screen scr)
     bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    label->setVisible(scr == QMplayer::ScreenScan);
-    progress->setVisible(scr == QMplayer::ScreenScan);
+    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
+    progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
 
     if(scr == QMplayer::ScreenInit)
     {
@@ -442,14 +488,13 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 void QMplayer::scan()
 {
     showScreen(QMplayer::ScreenScan);
-
-    while(lw->count() > 2)
-    {
-        delete(lw->takeItem(2));
-    }
+    delItems(lw);
+    abort = false;
 
     progress->setMinimum(0);
     progress->setMaximum(0x7fffffff);
+
+scan_files:
 
 #ifdef Q_WS_WIN
     scanDir("c:\\", 0, 0, 0, 0x1fffffff);
@@ -464,6 +509,13 @@ void QMplayer::scan()
 
     maxScanLevel++;
     scanItem->setText(tr("Scan more"));
+
+    if(lw->count() <= 2 && !abort &&
+       QMessageBox::question(this, "qmplayer", tr("No media files found, scan more?"),
+                             QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        goto scan_files;
+    }
 
     showScreen(QMplayer::ScreenInit);
 }
@@ -533,8 +585,9 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
             value++;
         }
         progress->setValue(value);
-        label->setText(fi.fileName());
-        label->repaint();
+        label->setText(fi.absolutePath());
+        QApplication::processEvents();
+
         scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit);
     }
 }
@@ -565,7 +618,7 @@ bool QMplayer::runServer()
     connect(tcpServer, SIGNAL(newConnection()), this, SLOT(newConnection()));
 
     QMessageBox::information(this, tr("qmplayer"),
-                             tr("The server is running on port 7654"));
+                             tr("Web server is running on port 7654"));
 
     settingsItem->setText(tr("Web server running on port 7654"));
     return true;
@@ -631,6 +684,8 @@ bool QMplayer::runClient()
                               tr("No response from ") + host);
         return true;
     }
+
+    delItems(lw);
 
     QBuffer buf(&res);
     QByteArray line;
@@ -950,6 +1005,7 @@ void QMplayer::play(QStringList const& args)
     showScreen(QMplayer::ScreenPlay);
 
     process = new QProcess(this);
+    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start("mplayer", args, QIODevice::ReadWrite);
 
@@ -973,6 +1029,13 @@ void QMplayer::play(QStringList const& args)
        }
        return;
     }
+}
+
+void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+    showScreen(QMplayer::ScreenInit);
 }
 
 void QMplayer::setRes(int xy)
@@ -1006,11 +1069,7 @@ void QMplayer::setRes(int xy)
 
 bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args)
 {
-    while(lw->count() > 2)
-    {
-        delete(lw->takeItem(2));
-    }
-
+    delItems(lw);
     scanItem->setText(info);
     QString argText(program);
     settingsItem->setText(program);
