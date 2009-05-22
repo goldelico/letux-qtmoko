@@ -1114,12 +1114,14 @@ void KeyboardWidget::addBoard(BoardType type, const QStringList &rows, const QSt
     Board *board = new Board(rows, m_boardRect.size(), type, -1);
 
     if (type==Words || type==Letters) {
-        QString chars = board->characters();
-        for(int ii = 0; ii < chars.length(); ++ii) {
-            if (!chars.at(ii).isSpace())
-                m_predict->setLetter(chars.at(ii), board->rect(chars.at(ii)).center());
+        if(!m_config.unpredictive) {
+            QString chars = board->characters();
+            for(int ii = 0; ii < chars.length(); ++ii) {
+                if (!chars.at(ii).isSpace())
+                    m_predict->setLetter(chars.at(ii), board->rect(chars.at(ii)).center());
+            }
+            m_predict->setEquivalences(equivalences);
         }
-        m_predict->setEquivalences(equivalences);
         if (m_currentBoard < 0 || m_boards.at(m_currentBoard)->type() != Words)
             m_currentBoard = m_boards.count()+1;
         if (caps.count())
@@ -1577,6 +1579,16 @@ void KeyboardWidget::pressAndHoldChar(const QChar &c)
         clear();
     } else if(c == QChar(0x2190)) {// backspace key
         doBackspace();
+    } else if(c == QChar(0x21D1)) {// uppercase
+        setBoardCaps(true);
+    } else if(c == QChar(0x21D3)) {// lowercase
+        setBoardCaps(false);
+    } else if(c == QChar(0x00B1)) {// Other
+        setBoardByType(Other);
+    } else if(c == QChar(0x2205)) {// Numeric
+        setBoardByType(Numeric);
+    } else if(c == QChar(0x2200)) {// Words
+        setBoardByType(Words);
     } else {
         KeyOccurance occurance;
         occurance.type = KeyOccurance::CharSelect;
