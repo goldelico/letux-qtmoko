@@ -1127,8 +1127,6 @@ bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& progr
             lw->scrollToBottom();
         }
         QApplication::processEvents();
-        QApplication::processEvents();
-        QApplication::processEvents();
 
         if(finished)
         {
@@ -1146,12 +1144,14 @@ bool QMplayer::installMplayer()
 
     showScreen(QMplayer::ScreenMplayerInstall);
 
+    QFile::remove("/usr/bin/mplayer");
+
     wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer");
     wget.setWorkingDirectory("/usr/bin");
-    if(!runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs))
-    {
-        return false;
-    }
-
-    return QFile::exists("/usr/bin/mplayer");
+    return runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs) &&
+            QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
+                                  QFile::WriteOwner | QFile::ExeOwner |
+                                  QFile::ReadUser | QFile::ExeUser |
+                                  QFile::ReadGroup | QFile::ExeGroup |
+                                  QFile::ReadOther | QFile::ExeOther);
 }
