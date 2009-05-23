@@ -1,0 +1,7 @@
+This device configuration profile is for the HTC Universal.
+
+You can either configure Qtopia with -device htcuniversal and use a binary toolchain, or use the 
+Makefile in the oe/ directory to download, configure and build OpenEmbedded.
+
+For more information about OpenEmbedded, visit their web site at
+http://openembedded.org
