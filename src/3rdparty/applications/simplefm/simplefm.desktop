@@ -1,0 +1,11 @@
+[Translation]
+File=QtopiaApplications
+Context=Applications
+Comment[Desktop Entry/Name]=Simple File Manager
+[Desktop Entry]
+CanFastload=0
+Type=Application
+Exec=simplefm
+Icon=simplefm/file-manager
+Name[]=File Manager
+CanFastload=0

@@ -1,0 +1,20 @@
+AUTHOR:		Alessandro Briosi
+LAST UPDATED:	2008.01.11
+PROJECT NAME:	simplefm
+LICENSE:	GPL v2 (and up)
+
+DESCRIPTION:
+A Simple File Manager for Qtopia
+
+Right now copy, delete, rename, move should work
+Launching applications also should work.
+
+TODO:
+* fix all the bugs, and fix implementation ugly code :)
+* make the copy / move / rename functions more stable :)
+* add properies and preferences dialogs
+* having some progress during operations would be nice
+* a detail view could be implemented
+* ask for action confirmation
+* show failed actions messages...
+* handle mime types to be opened with right program
