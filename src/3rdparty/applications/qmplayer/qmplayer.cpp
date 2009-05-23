@@ -1143,31 +1143,15 @@ bool QMplayer::installMplayer()
 {
     QProcess wget;
     QStringList wgetArgs;
-    QProcess tar;
-    QStringList tarArgs;
 
     showScreen(QMplayer::ScreenMplayerInstall);
 
-    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
-
-    // "http://activationrecord.net/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz
-    wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz");
-    wget.setWorkingDirectory("/tmp");
+    wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer");
+    wget.setWorkingDirectory("/usr/bin");
     if(!runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs))
     {
         return false;
     }
-
-    tarArgs.append("xzvpf");
-    tarArgs.append("/tmp/mplayer_glamo_install.tar.gz");
-    tar.setWorkingDirectory("/");
-
-    if(!runProcess(tr("Unpacking MPlayer"), &tar, "tar", tarArgs))
-    {
-        return false;
-    }
-
-    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
 
     return QFile::exists("/usr/bin/mplayer");
 }
