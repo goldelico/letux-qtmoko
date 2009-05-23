@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name[]=QSameGame
+Comment[]=Qtopia Same Game
+Exec=qsamegame
+Icon=qsamegame/qsamegame

@@ -1,0 +1,31 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="" >
+	<file>background.png</file>
+	<file>backgrounds.png</file>
+	<file>cable0001.png</file>
+	<file>cable0010.png</file>
+	<file>cable0011.png</file>
+	<file>cable0100.png</file>
+	<file>cable0101.png</file>
+	<file>cable0110.png</file>
+	<file>cable0111.png</file>
+	<file>cable1000.png</file>
+	<file>cable1001.png</file>
+	<file>cable1010.png</file>
+	<file>cable1011.png</file>
+	<file>cable1100.png</file>
+	<file>cable1101.png</file>
+	<file>cable1110.png</file>
+	<file>computer1.png</file>
+	<file>computer2.png</file>
+	<file>highscores.png</file>
+	<file>homepage.png</file>
+	<file>newgame.png</file>
+	<file>qnetwalk.png</file>
+	<file>quit.png</file>
+	<file>server.png</file>
+	<file>rotate_ccw.png</file>
+	<file>rotate_cw.png</file>
+</qresource>
+</RCC>
