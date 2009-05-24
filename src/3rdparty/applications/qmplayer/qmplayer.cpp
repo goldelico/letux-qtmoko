@@ -505,14 +505,19 @@ void QMplayer::scan()
 scan_files:
 
 #ifdef Q_WS_WIN
-    scanDir("c:\\", 0, 0, 0, 0x1fffffff);
+    scanDir("c:\\", 0, maxScanLevel, 0, 0x1fffffff);
 #else
-    scanDir("/", 0, 0, 0, 0x1fffffff);
-    scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
-    scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
-    scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
-    scanDir("/home/root/Documents", 0, maxScanLevel + 2, 0, 0x5fffffff);
-    scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+    // For the first time scan /home/root/Documents and dont scan other dirs if
+    // something found there.
+    if(maxScanLevel > 0 || !scanDir("/home/root/Documents", 0, 2, 0, 0x1fffffff))
+    {
+        scanDir("/", 0, 0, 0, 0x1fffffff);
+        scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
+        scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
+        scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
+        scanDir("/home/root/Documents", 0, 2, 0, 0x5fffffff);
+        scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+    }
 #endif
 
     maxScanLevel++;
