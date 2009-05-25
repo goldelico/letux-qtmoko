@@ -15,20 +15,21 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     settingsItem = new QListWidgetItem(tr("Sharing"), lw);
 
-    bOk = new QPushButton(">", this);
+    bOk = new QPushButton(this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
 
-    bBack = new QPushButton("Back", this);
+    bBack = new QPushButton(this);
     connect(bBack, SIGNAL(clicked()), this, SLOT(backClicked()));
 
-    bUp = new QPushButton("Vol up", this);
+    bUp = new QPushButton(this);
     connect(bUp, SIGNAL(clicked()), this, SLOT(upClicked()));
 
-    bDown = new QPushButton("Vol down", this);
+    bDown = new QPushButton(this);
     connect(bDown, SIGNAL(clicked()), this, SLOT(downClicked()));
 
     label = new QLabel(this);
-    progress = new QProgressBar(this);
+    lineEdit = new QLineEdit(this);
+    progress = new QProgressBar(this);    
 
     buttonLayout = new QHBoxLayout();
     buttonLayout->setAlignment(Qt::AlignBottom);
@@ -40,6 +41,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout = new QVBoxLayout(this);
     layout->addWidget(lw);
     layout->addWidget(label);
+    layout->addWidget(lineEdit);
     layout->addWidget(progress);
     layout->addLayout(buttonLayout);
 
@@ -245,6 +247,10 @@ void QMplayer::okClicked()
         }
         showScreen(QMplayer::ScreenPlay);
     }
+    else if(screen == QMplayer::ScreenConnect)
+    {
+        runClient();
+    }
 }
 
 bool QMplayer::download(QString url, QString destPath, QString filename, bool justCheck)
@@ -408,6 +414,10 @@ void QMplayer::backClicked()
         process = NULL;
         showScreen(QMplayer::ScreenInit);
     }
+    else if(screen == QMplayer::ScreenConnect)
+    {
+        showScreen(QMplayer::ScreenInit);
+    }
     else
     {
         abort = true;
@@ -454,17 +464,19 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 
     this->screen = scr;
 
-    lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenMplayerInstall);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || QMplayer::ScreenScan);
+    lw->setVisible(scr == QMplayer::ScreenInit);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || QMplayer::ScreenScan || scr == QMplayer::ScreenConnect);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
+    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect);
+    lineEdit->setVisible(scr == QMplayer::ScreenConnect);
     progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
 
     switch(scr)
     {
         case QMplayer::ScreenInit:
+            bOk->setText(">");
             bBack->setText(tr("Quit"));
             break;
         case QMplayer::ScreenPlay:
@@ -490,10 +502,13 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
 #endif
             break;
+        case QMplayer::ScreenConnect:
+            label->setText(tr("Enter host and port to connect to"));
+            bOk->setText(tr("Ok"));
+            bBack->setText(tr("Cancel"));
+            break;
         case QMplayer::ScreenScan:
         case QMplayer::ScreenDownload:
-        case QMplayer::ScreenMplayerInstall:
-            bBack->setText(tr("Abort"));
             break;
     }
 }
@@ -657,24 +672,21 @@ bool QMplayer::runClient()
         return true;
     }
 
-    bool ok = true;
-
-    QString host = "192.168.0.200";
-    //QString host = QInputDialog::getText(this, "qmplayer", tr("Host to connect to:"),
-    //                                     QLineEdit::Normal, "192.168.0.200", &ok);
-
-    if(!ok)
+    if(screen != QMplayer::ScreenConnect)
     {
-        return false;
+        lineEdit->setText("192.168.0.200:7654");
+        showScreen(QMplayer::ScreenConnect);
+        return true;
     }
+    showScreen(QMplayer::ScreenInit);
 
-    int port = 7654;
-    //int port = QInputDialog::getInteger(this, "qmplayer", tr("port:"), 7654, 0,
-    //                                    65535, 1, &ok);
-    
-    if(!ok)
+    QString host = lineEdit->text();
+    int port = 80;
+    int colonIndex = host.indexOf(':');
+    if(colonIndex > 0)
     {
-        return false;
+        port = host.right(host.length() - colonIndex - 1).toInt(0, 10);
+        host = host.remove(colonIndex, host.length() - colonIndex);
     }
 
     QTcpSocket sock(this);
