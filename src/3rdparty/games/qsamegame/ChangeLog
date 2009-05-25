@@ -1,0 +1,17 @@
+1999-06-20  Mario Weilguni <mweilguni@kde.org>
+
+	* made it work again with Qt-2
+	* fixed some old-style (K&R-C) declartions to C++ decl.
+	* removed debug messages when compiling with --enable-final
+
+1999-06-07  Petter Reinholdtsen <pere@td.org.uit.no>
+	* knotes.cpp: Changed text Quit to Exit to match KDE style guide.
+
+0.5: Mario Weilguni <mweilguni@kde.org>
+
+	* fixes for Qt 2.0 (fixed highscore list, added layout)
+
+0.2.1
+    * [Robert Williams]  Add -caption "%c" to ksame.kdelnk
+    * [Robert Williams]  getHelpMenu(true, 0)
+    * [Robert Williams]  Added version.h and ChangeLog
