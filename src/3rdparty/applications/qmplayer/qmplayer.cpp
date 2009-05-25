@@ -237,6 +237,11 @@ void QMplayer::okClicked()
         if(processRunning(process))
         {
             process->write(" ");
+#ifdef QT_QWS_FICGTA01
+            // Workaround unpause not working for alsa out in mplayer glamo.
+            // We send left key to make mplayer start playing.
+            process->write("\x1b""[D");
+#endif
         }
         showScreen(QMplayer::ScreenPlay);
     }
