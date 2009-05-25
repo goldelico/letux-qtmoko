@@ -1091,62 +1091,6 @@ void QMplayer::setRes(int xy)
 #endif
 }
 
-bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args)
-{
-    delItems(lw);
-    scanItem->setText(info);
-    QString argText(program);
-    settingsItem->setText(program);
-    for(int i = 0; i < args.count(); i++)
-    {
-        argText.append(' ');
-        argText.append(args[i]);
-    }
-    settingsItem->setText(argText);
-
-    p->start(program, args);
-
-    if(!p->waitForStarted(5000))
-    {
-        QMessageBox::warning(this, tr("qmplayer"), tr("Failed to start ") + program);
-        return false;
-    }
-
-    QString str("");
-    abort = false;
-    for(;;)
-    {
-        if(abort)
-        {
-            p->kill();
-            return false;
-        }
-        p->waitForFinished(100);
-        bool finished = (p->state() != QProcess::Running);
-
-        str += p->readAllStandardOutput();
-        str += p->readAllStandardError();
-        for(int i = 0; i < str.length(); i++)
-        {
-            if(str.at(i) != '\n')
-            {
-                continue;
-            }
-            lw->addItem(str.left(i));
-            str.remove(0, i + 1);
-            lw->scrollToBottom();
-        }
-        QApplication::processEvents();
-
-        if(finished)
-        {
-            break;
-        }
-    }
-
-    return true;
-}
-
 bool QMplayer::installMplayer()
 {
 #ifdef QT_QWS_FICGTA01
@@ -1159,5 +1103,6 @@ bool QMplayer::installMplayer()
                           QFile::ReadOther | QFile::ExeOther);
 #else
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
+    return false;
 #endif
 }

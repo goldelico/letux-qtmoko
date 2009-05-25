@@ -75,7 +75,6 @@ private:
     bool runServer();
     bool runClient();
     bool download(QString url, QString destPath, QString filename, bool justCheck);
-    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
