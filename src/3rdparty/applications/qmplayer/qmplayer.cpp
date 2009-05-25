@@ -1094,6 +1094,12 @@ void QMplayer::setRes(int xy)
 bool QMplayer::installMplayer()
 {
 #ifdef QT_QWS_FICGTA01
+    QDir("/home/root").mkdir(".mplayer");
+    QFile f("/home/root/.mplayer/config");
+    f.open(QFile::WriteOnly);
+    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+    f.close();
+
     return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
                     "/usr/bin/mplayer", "mplayer", false) &&
     QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
