@@ -287,7 +287,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     req.append(host);
     req.append(':');
     req.append(QByteArray::number(port));
-    req.append("\r\n");
+    req.append("\r\n\r\n");
 
     sock.write(req);
     sock.flush();
@@ -1149,19 +1149,15 @@ bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& progr
 
 bool QMplayer::installMplayer()
 {
-    QProcess wget;
-    QStringList wgetArgs;
-
-    showScreen(QMplayer::ScreenMplayerInstall);
-
-    QFile::remove("/usr/bin/mplayer");
-
-    wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer");
-    wget.setWorkingDirectory("/usr/bin");
-    return runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs) &&
-            QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
-                                  QFile::WriteOwner | QFile::ExeOwner |
-                                  QFile::ReadUser | QFile::ExeUser |
-                                  QFile::ReadGroup | QFile::ExeGroup |
-                                  QFile::ReadOther | QFile::ExeOther);
+#ifdef QT_QWS_FICGTA01
+    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
+                    "/usr/bin/mplayer", "mplayer", false) &&
+    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
+                          QFile::WriteOwner | QFile::ExeOwner |
+                          QFile::ReadUser | QFile::ExeUser |
+                          QFile::ReadGroup | QFile::ExeGroup |
+                          QFile::ReadOther | QFile::ExeOther);
+#else
+    QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
+#endif
 }
