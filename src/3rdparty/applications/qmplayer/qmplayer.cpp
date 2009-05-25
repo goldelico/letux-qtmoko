@@ -39,9 +39,9 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lw);
-    layout->addLayout(buttonLayout);
     layout->addWidget(label);
     layout->addWidget(progress);
+    layout->addLayout(buttonLayout);
 
     maxScanLevel = 0;
     fbset = false;
@@ -237,6 +237,11 @@ void QMplayer::okClicked()
         if(processRunning(process))
         {
             process->write(" ");
+#ifdef QT_QWS_FICGTA01
+            // Workaround unpause not working for alsa out in mplayer glamo.
+            // We send left key to make mplayer start playing.
+            process->write("\x1b""[D");
+#endif
         }
         showScreen(QMplayer::ScreenPlay);
     }
@@ -282,7 +287,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     req.append(host);
     req.append(':');
     req.append(QByteArray::number(port));
-    req.append("\r\n");
+    req.append("\r\n\r\n");
 
     sock.write(req);
     sock.flush();
@@ -355,9 +360,14 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
 
     char buf[4096];
     int count;
+    abort = false;
     for(;;)
     {
         QApplication::processEvents();
+        if(abort)
+        {
+            break;
+        }
         count = sock.read(buf, 4096);
         if(count > 0)
         {
@@ -397,6 +407,10 @@ void QMplayer::backClicked()
         delete(process);
         process = NULL;
         showScreen(QMplayer::ScreenInit);
+    }
+    else
+    {
+        abort = true;
     }
 }
 
@@ -442,47 +456,46 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 
     lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenMplayerInstall);
     bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || QMplayer::ScreenScan);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
     progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
 
-    if(scr == QMplayer::ScreenInit)
+    switch(scr)
     {
-        bBack->setText(tr("Quit"));
-    }
-    else if(scr == QMplayer::ScreenPlay)
-    {
-        bOk->setText(tr("Pause"));
-        bBack->setText(tr("Full screen"));
-        bUp->setText(tr("Vol up"));
-        bDown->setText(tr("Vol down"));
-    }
-    else if(scr == QMplayer::ScreenFullscreen)
-    {
+        case QMplayer::ScreenInit:
+            bBack->setText(tr("Quit"));
+            break;
+        case QMplayer::ScreenPlay:
+            bOk->setText(tr("Pause"));
+            bBack->setText(tr("Full screen"));
+            bUp->setText(tr("Vol up"));
+            bDown->setText(tr("Vol down"));
 #ifdef QT_QWS_FICGTA01
-        setRes(320240);
+            QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
 #endif
-    }
-    else if(scr == QMplayer::ScreenStopped)
-    {
-        bOk->setText("Play");
-        bBack->setText(tr("Back"));
-        bUp->setText(tr(">>"));
-        bDown->setText(tr("<<"));
-    }
-
+            break;
+        case QMplayer::ScreenFullscreen:
 #ifdef QT_QWS_FICGTA01
-    if(scr == QMplayer::ScreenPlay)
-    {
-        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-    }
-    if(scr == QMplayer::ScreenStopped)
-    {
-        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
-    }
+            setRes(320240);
 #endif
+            break;
+        case QMplayer::ScreenStopped:
+            bOk->setText("Play");
+            bBack->setText(tr("Back"));
+            bUp->setText(tr(">>"));
+            bDown->setText(tr("<<"));
+#ifdef QT_QWS_FICGTA01
+            QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+#endif
+            break;
+        case QMplayer::ScreenScan:
+        case QMplayer::ScreenDownload:
+        case QMplayer::ScreenMplayerInstall:
+            bBack->setText(tr("Abort"));
+            break;
+    }
 }
 
 void QMplayer::scan()
@@ -497,14 +510,19 @@ void QMplayer::scan()
 scan_files:
 
 #ifdef Q_WS_WIN
-    scanDir("c:\\", 0, 0, 0, 0x1fffffff);
+    scanDir("c:\\", 0, maxScanLevel, 0, 0x1fffffff);
 #else
-    scanDir("/", 0, 0, 0, 0x1fffffff);
-    scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
-    scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
-    scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
-    scanDir("/home/root/Documents", 0, maxScanLevel + 2, 0, 0x5fffffff);
-    scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+    // For the first time scan /home/root/Documents and dont scan other dirs if
+    // something found there.
+    if(maxScanLevel > 0 || !scanDir("/home/root/Documents", 0, 2, 0, 0x1fffffff))
+    {
+        scanDir("/", 0, 0, 0, 0x1fffffff);
+        scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
+        scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
+        scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
+        scanDir("/home/root/Documents", 0, 2, 0, 0x5fffffff);
+        scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+    }
 #endif
 
     maxScanLevel++;
@@ -520,12 +538,17 @@ scan_files:
     showScreen(QMplayer::ScreenInit);
 }
 
-void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max)
+int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max)
 {
+    if(abort)
+    {
+        return 0;
+    }
+
     QDir dir(path);
     QFileInfoList list = dir.entryInfoList(QDir::AllEntries, QDir::Name);
 
-    bool found = false;
+    int found = 0;
     int index = lw->count();
     for(int i = 0; i < list.count(); i++)
     {
@@ -556,7 +579,7 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
             QListWidgetItem *fileItem = new QListWidgetItem(fileName);
             fileItem->setTextAlignment(Qt::AlignHCenter);
             lw->addItem(fileItem);
-            found = true;
+            found++;
         }
     }
 
@@ -567,7 +590,7 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
 
     if(level >= maxLevel)
     {
-        return;
+        return found;
     }
 
     for(int i = 0; i < list.count(); i++)
@@ -588,8 +611,9 @@ void QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, in
         label->setText(fi.absolutePath());
         QApplication::processEvents();
 
-        scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit);
+        found += scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit);
     }
+    return found;
 }
 
 bool QMplayer::runServer()
@@ -1067,87 +1091,24 @@ void QMplayer::setRes(int xy)
 #endif
 }
 
-bool QMplayer::runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args)
-{
-    delItems(lw);
-    scanItem->setText(info);
-    QString argText(program);
-    settingsItem->setText(program);
-    for(int i = 0; i < args.count(); i++)
-    {
-        argText.append(' ');
-        argText.append(args[i]);
-    }
-    settingsItem->setText(argText);
-
-    p->start(program, args);
-
-    if(!p->waitForStarted(5000))
-    {
-        QMessageBox::warning(this, tr("qmplayer"), tr("Failed to start ") + program);
-        return false;
-    }
-
-    QString str("");
-    for(;;)
-    {
-        p->waitForFinished(100);
-        bool finished = (p->state() != QProcess::Running);
-
-        str += p->readAllStandardOutput();
-        str += p->readAllStandardError();
-        for(int i = 0; i < str.length(); i++)
-        {
-            if(str.at(i) != '\n')
-            {
-                continue;
-            }
-            lw->addItem(str.left(i));
-            str.remove(0, i + 1);
-            lw->scrollToBottom();
-        }
-        QApplication::processEvents();
-        QApplication::processEvents();
-        QApplication::processEvents();
-
-        if(finished)
-        {
-            break;
-        }
-    }
-
-    return true;
-}
-
 bool QMplayer::installMplayer()
 {
-    QProcess wget;
-    QStringList wgetArgs;
-    QProcess tar;
-    QStringList tarArgs;
+#ifdef QT_QWS_FICGTA01
+    QDir("/home/root").mkdir(".mplayer");
+    QFile f("/home/root/.mplayer/config");
+    f.open(QFile::WriteOnly);
+    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+    f.close();
 
-    showScreen(QMplayer::ScreenMplayerInstall);
-
-    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
-
-    // "http://activationrecord.net/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz
-    wgetArgs.append("http://72.249.85.183/radekp/openmoko/qtmoko/download/mplayer_glamo_install.tar.gz");
-    wget.setWorkingDirectory("/tmp");
-    if(!runProcess(tr("Downloading MPlayer"), &wget, "wget", wgetArgs))
-    {
-        return false;
-    }
-
-    tarArgs.append("xzvpf");
-    tarArgs.append("/tmp/mplayer_glamo_install.tar.gz");
-    tar.setWorkingDirectory("/");
-
-    if(!runProcess(tr("Unpacking MPlayer"), &tar, "tar", tarArgs))
-    {
-        return false;
-    }
-
-    QFile::remove("/tmp/mplayer_glamo_install.tar.gz");
-
-    return QFile::exists("/usr/bin/mplayer");
+    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
+                    "/usr/bin/mplayer", "mplayer", false) &&
+    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
+                          QFile::WriteOwner | QFile::ExeOwner |
+                          QFile::ReadUser | QFile::ExeUser |
+                          QFile::ReadGroup | QFile::ExeGroup |
+                          QFile::ReadOther | QFile::ExeOther);
+#else
+    QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
+    return false;
+#endif
 }

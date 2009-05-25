@@ -67,7 +67,7 @@ private:
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    void scanDir(QString const& path, int level, int maxLevel, int min, int max);
+    int scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
     void play(QStringList const& args);
     void setRes(int xy);
@@ -75,7 +75,6 @@ private:
     bool runServer();
     bool runClient();
     bool download(QString url, QString destPath, QString filename, bool justCheck);
-    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
