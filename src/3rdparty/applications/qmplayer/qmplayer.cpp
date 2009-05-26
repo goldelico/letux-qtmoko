@@ -270,7 +270,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     {
         return false;
     }
-    reqPath = host.right(host.length() - slashIndex);
+    reqPath = host.right(host.length() - slashIndex).replace(" ", "%20");
     host = host.left(slashIndex);
     if(colonIndex > 0)
     {
