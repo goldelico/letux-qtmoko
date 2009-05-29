@@ -1,7 +1,7 @@
 TEMPLATE=app
 TARGET=qmplayer
 
-CONFIG+=qtopia
+CONFIG+=qtopia quicklaunch
 
 # I18n info
 STRING_LANGUAGE=en_US
@@ -10,10 +10,10 @@ LANGUAGES=en_US
 # Package info
 pkg [
     name=qmplayer
-    desc="No Description"
-    license=Unknown
+    desc="MPlayer frontend"
+    license=GPLv2
     version=1.0
-    maintainer="Unknown <unknown@example.com>"
+    maintainer="Radek Polak <psonek2@seznam.cz>"
 ]
 
 # Input files
@@ -28,5 +28,17 @@ SOURCES=\
 target [
     hint=sxe
     domain=untrusted
+]
+
+desktop [
+    hint=desktop
+    files=qmplayer.desktop
+    path=/apps/Applications
+]
+
+pics [
+    hint=pics
+    files=pics/*
+    path=/pics/qmplayer
 ]
 

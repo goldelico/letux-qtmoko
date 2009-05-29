@@ -18,9 +18,12 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QBuffer>
-#include <QInputDialog>
+#include <QLineEdit>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
+#endif
+#ifdef Q_WS_WIN
+#include <Windows.h>
 #endif
 
 class QMplayer : public QWidget
@@ -36,40 +39,43 @@ private:
     {
         ScreenInit,
         ScreenScan,
-        ScreenMplayerInstall,
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
+        ScreenDownload,
+        ScreenConnect,
     };
 
     Screen screen;
     int maxScanLevel;
     bool fbset;
+    int delTmpFiles;
+    bool abort;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
     QListWidgetItem *scanItem;
     QListWidgetItem *settingsItem;
     QLabel* label;
+    QLineEdit *lineEdit;
     QPushButton* bOk;
     QPushButton* bBack;
     QPushButton* bUp;
     QPushButton* bDown;
     QProcess* process;
-    QProcess* encoder;
     QProgressBar *progress;
     QTcpServer *tcpServer;
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    void scanDir(QString const& path, int level, int maxLevel, int min, int max);
+    int scanDir(QString const& path, int level, int maxLevel, int min, int max);
     void settings();
     void play(QStringList const& args);
     void setRes(int xy);
     bool installMplayer();
     bool runServer();
     bool runClient();
-    bool runProcess(QString const& info, QProcess *p, QString const& program, QStringList const& args);
+    bool download(QString url, QString destPath, QString filename, bool justCheck);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
@@ -80,6 +86,7 @@ private slots:
     void upClicked();
     void downClicked();
     void newConnection();
+    void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
 #endif // QMPLAYER_H
