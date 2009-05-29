@@ -16,7 +16,7 @@ class LoginWindow : public QMainWindow
 {
     Q_OBJECT
     public:
-        LoginWindow( QWidget *parent = 0, Qt::WindowFlags wf = 0 );
+        LoginWindow(QWidget *parent = 0, Qt::WindowFlags wf = 0);
 
     private:
         QLabel* loginLabel;
