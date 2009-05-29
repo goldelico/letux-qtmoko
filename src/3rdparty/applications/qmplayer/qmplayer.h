@@ -18,7 +18,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QBuffer>
-#include <QInputDialog>
+#include <QLineEdit>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
@@ -39,11 +39,11 @@ private:
     {
         ScreenInit,
         ScreenScan,
-        ScreenMplayerInstall,
         ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
         ScreenDownload,
+        ScreenConnect,
     };
 
     Screen screen;
@@ -57,6 +57,7 @@ private:
     QListWidgetItem *scanItem;
     QListWidgetItem *settingsItem;
     QLabel* label;
+    QLineEdit *lineEdit;
     QPushButton* bOk;
     QPushButton* bBack;
     QPushButton* bUp;
