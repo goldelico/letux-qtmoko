@@ -26,9 +26,6 @@ class LoginWindow : public QMainWindow
         QLineEdit* login;
         QLineEdit* passw;
 
-        QPushButton* startButton;
-        QPushButton* exitButton;
-
         QCheckBox* save;
         QCheckBox* skip;
 

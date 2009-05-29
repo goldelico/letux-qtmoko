@@ -264,6 +264,10 @@ void Board::loadSettings()
 
 void Board::keyPressEvent(QKeyEvent* event)
 {
+    if(event->key() == Qt::Key_Back) {
+        event->ignore();
+    }
+    
 	// Prevent player from changing a paused or finished maze
 	if (m_done || m_paused) {
 		return;

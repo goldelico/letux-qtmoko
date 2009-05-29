@@ -317,6 +317,7 @@ Window::Window(QWidget *parent, Qt::WindowFlags wf)
 
 bool Window::eventFilter(QObject* watched, QEvent* event)
 {
+    qWarning() << "event";
 	if (watched == m_settings || watched == m_scores) {
 		// Pause game when a dialog is shown
 		if (event->type() == QEvent::Show) {
@@ -349,6 +350,7 @@ bool Window::eventFilter(QObject* watched, QEvent* event)
 
 void Window::closeEvent(QCloseEvent* event)
 {
+    qWarning() << __PRETTY_FUNCTION__;
 	QSettings().setValue("Size", size());
 	m_board->saveGame();
 	QMainWindow::closeEvent(event);
@@ -366,6 +368,7 @@ void Window::initMenuBar()
 	game_menu->addAction(tr("High Scores"), m_scores, SLOT(show()));
 	m_pause_action = game_menu->addAction(tr("Pause Game"));
 	game_menu->addAction(tr("New Game"), m_board, SLOT(newGame()));
+	game_menu->addAction(tr("Quit"), this, SLOT(close()));
 #else
 	QMenu* game_menu = menuBar()->addMenu(tr("Game"));
 	game_menu->addAction(tr("New Game"), m_board, SLOT(newGame()), tr("Ctrl+N"));
