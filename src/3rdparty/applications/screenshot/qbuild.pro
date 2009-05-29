@@ -1,10 +1,6 @@
-#qtopia_project(qtopia app) # see buildsystem.html for more project keywords
 TEMPLATE=app
 TARGET=screenshot
-CONFIG+=qtopia
-CONFIG+=no_singleexec
-CONFIG+=no_quicklaunch
-CONFIG+=no_tr
+CONFIG+=qtopia no_singleexec no_quicklaunch no_tr
 
 
 HEADERS             = screenshot.h
@@ -22,13 +18,15 @@ pics [
 	hint=pics
 ]
 
-#INSTALLS+=desktop pics
-
 pkg [
 	name=screenshot
-	desc=Screenshot Application
-	version=1.0.0-1
-	maintainer=Trolltech (www.trolltech.com)
-	license=GPL
-	domain=window
+	desc="Screenshot Application"
+    version=$$QTOPIA_VERSION
+    license=$$QTOPIA_LICENSE
+    maintainer=$$QTOPIA_MAINTAINER
+]
+
+target [
+    hint=sxe
+    domain=trusted
 ]
