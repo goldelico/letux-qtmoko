@@ -23,7 +23,8 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
   login = new QLineEdit(cfg->value("login/email").toString(),this );
   passw = new QLineEdit(cfg->value("login/password").toString(),this);
 
-  passw->setEchoMode(QLineEdit::Password);
+//  I'have removed this because in this EchoMode the keyboard was not actived
+//  passw->setEchoMode(QLineEdit::Password);
 
   startButton =   new QPushButton("Start sync",this);
   exitButton  =   new QPushButton("Exit",this);
@@ -37,8 +38,8 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
   connect( startButton, SIGNAL( clicked() ),
       SLOT( start () ) );
 
-  connect( exitButton,  SIGNAL( clicked() ),
-                  qApp, SLOT( quit () ) );
+  connect( exitButton, SIGNAL( clicked() ),
+                 qApp, SLOT( quit () ) );
 
   grid->addWidget(loginLabel,0,0);
   grid->addWidget(login,0,1);
@@ -73,7 +74,7 @@ void LoginWindow::start() {
     cfg->setValue("login/password", passw->text() );
 
   connect(sync, SIGNAL(stateChanged(GoogleSession::State) ),
-      this, SLOT(stateChanged(GoogleSession::State) ) );
+          this, SLOT(stateChanged(GoogleSession::State) ) );
 
   sync->start( 
       login->text() , 
