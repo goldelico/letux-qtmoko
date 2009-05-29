@@ -283,53 +283,35 @@ void Board::keyPressEvent(QKeyEvent* event)
 	const Cell& cell = m_maze->cell(m_player.x(), m_player.y());
 
 	unsigned int keypress = event->key();
-
-  switch( event->key()) {
-    case m_controls_left:
-    {
-        m_player_angle = 270;
-        if (!cell.leftWall()) {
-            Q_ASSERT(m_player.x() > 0);
-            m_player.rx()--;
-        }
-    }break;
-
-    case m_controls_right:
-    {
-        m_player_angle = 90;
-        if (!cell.rightWall()){
-            Q_ASSERT(m_player.x() < m_maze->columns() - 1);
-            m_player.rx()++;
-        }
-    }
-    break;
-
-    case m_controls_up:
-    {
-        m_player_angle = 360;
-        if (!cell.topWall()) {
-            Q_ASSERT(m_player.y() > 0);
-            m_player.ry()--;
-        }
-    }
-    break;
-
-    case m_controls_down:
-    {
-        m_player_angle = 180;
-        if (!cell.bottomWall()) {
-            Q_ASSERT(m_player.y() < m_maze->rows() - 1);
-            m_player.ry()++;
-        }
-    }
-    break;
-    case m_controls_flag:
-        m_maze->cellMutable(m_player.x(), m_player.y()).toggleFlag();
-        break;
-    default:
-        return;
-        break;
-  };
+	if (keypress == m_controls_left) {
+		m_player_angle = 270;
+		if (!cell.leftWall()) {
+			Q_ASSERT(m_player.x() > 0);
+			m_player.rx()--;
+		}
+	} else if (keypress == m_controls_right) {
+		m_player_angle = 90;
+		if (!cell.rightWall()) {
+			Q_ASSERT(m_player.x() < m_maze->columns() - 1);
+			m_player.rx()++;
+		}
+	} else if (keypress == m_controls_up) {
+		m_player_angle = 360;
+		if (!cell.topWall()) {
+			Q_ASSERT(m_player.y() > 0);
+			m_player.ry()--;
+		}
+	} else if (keypress == m_controls_down) {
+		m_player_angle = 180;
+		if (!cell.bottomWall()) {
+			Q_ASSERT(m_player.y() < m_maze->rows() - 1);
+			m_player.ry()++;
+		}
+	} else if (keypress == m_controls_flag) {
+		m_maze->cellMutable(m_player.x(), m_player.y()).toggleFlag();
+	} else {
+		return;
+	}
 
 	// Handle player movement
 	if (position != m_player) {
