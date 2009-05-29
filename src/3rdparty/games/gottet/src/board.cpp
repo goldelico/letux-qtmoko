@@ -201,9 +201,10 @@ void Board::resumeGame()
 
 void Board::keyPressEvent(QKeyEvent* event)
 {
-	if (!m_piece || m_paused)
+    if (!m_piece || m_paused) {
+      event->ignore();
 		return;
-
+    }
 	switch (event->key()) {
 	case Qt::Key_Left:
 		m_piece->moveLeft();
@@ -219,6 +220,7 @@ void Board::keyPressEvent(QKeyEvent* event)
 		landPiece();
 		break;
 	default:
+      event->ignore();
 		break;
 	}
 
