@@ -7,82 +7,74 @@
 #include "googlesync.h"
 #include "googlesession.h"
 
-LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf) 
-  : QMainWindow(parent, wf)
-{
+LoginWindow::LoginWindow (QWidget *parent, Qt::WindowFlags wf) : QMainWindow(parent, wf) {
+    cfg = new QSettings ("ezxdev.org", "google");
 
-  cfg = new QSettings ("ezxdev.org","google");
+    QGridLayout *grid = new QGridLayout;
 
-  QGridLayout *grid = new QGridLayout;
+    loginLabel = new QLabel("Email", this);
+    passwLabel = new QLabel("Password", this);
+    state = new QLabel(this);
 
-  loginLabel = new QLabel("Email",    this);
-  passwLabel = new QLabel("Password", this);
-  state      = new QLabel(this);
+    login = new QLineEdit(cfg->value("login/email").toString(),this );
+    passw = new QLineEdit(cfg->value("login/password").toString(),this);
 
+    //  I'have removed this because in this EchoMode the keyboard was not actived
+    //  passw->setEchoMode(QLineEdit::Password);
 
-  login = new QLineEdit(cfg->value("login/email").toString(),this );
-  passw = new QLineEdit(cfg->value("login/password").toString(),this);
+    startButton = new QPushButton("Start sync", this);
+    exitButton = new QPushButton("Exit", this);
 
-  passw->setEchoMode(QLineEdit::Password);
+    save = new QCheckBox("Save password", this);
+    save->setCheckState((Qt::CheckState) cfg->value("login/save").toInt());
 
-  startButton =   new QPushButton("Start sync",this);
-  exitButton  =   new QPushButton("Exit",this);
+    skip = new QCheckBox("Skip without numbers", this);
+    skip->setCheckState((Qt::CheckState) cfg->value("login/skip").toInt());
 
-  save = new QCheckBox("Save password", this);
-  save->setCheckState( (Qt::CheckState) cfg->value("login/save" ).toInt() );
+    connect(startButton, SIGNAL(clicked()), SLOT(start()));
+    connect(exitButton, SIGNAL(clicked()), qApp, SLOT(quit()));
 
-  skip = new QCheckBox("Skip without numbers", this);
-  skip->setCheckState( (Qt::CheckState) cfg->value("login/skip" ).toInt() );
+    grid->addWidget(loginLabel, 0, 0);
+    grid->addWidget(login, 0, 1);
+    grid->addWidget(passwLabel, 1, 0);
+    grid->addWidget(passw, 1, 1);
 
-  connect( startButton, SIGNAL( clicked() ),
-      SLOT( start () ) );
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addLayout(grid);
+    layout->addWidget(state);
+    layout->addWidget(skip);
+    layout->addWidget(save);
+    layout->addWidget(startButton);
+    layout->addWidget(exitButton);
 
-  connect( exitButton,  SIGNAL( clicked() ),
-                  qApp, SLOT( quit () ) );
+    QWidget *central = new QWidget();
+    central->setLayout(layout);
 
-  grid->addWidget(loginLabel,0,0);
-  grid->addWidget(login,0,1);
-  grid->addWidget(passwLabel,1,0);
-  grid->addWidget(passw,1,1);
+    setCentralWidget(central);
 
-
-  QVBoxLayout *layout = new QVBoxLayout;
-  layout->addLayout(grid);
-  layout->addWidget(state);
-  layout->addWidget(skip);
-  layout->addWidget(save);
-  layout->addWidget(startButton);
-  layout->addWidget(exitButton);
-
-  QWidget *central = new QWidget();
-  central->setLayout(layout);
-
-  setCentralWidget(central);
-
-  sync = new GoogleSync();
-
+    sync = new GoogleSync();
 }
 
 
 void LoginWindow::start() {
   // Qt::Checked  
-  cfg->setValue("login/save", (int) save->checkState() );
-  cfg->setValue("login/skip", (int) skip->checkState() );
-  cfg->setValue("login/email", login->text() );
-  if (save->checkState() == Qt::Checked )
-    cfg->setValue("login/password", passw->text() );
+  cfg->setValue("login/save", (int) save->checkState());
+  cfg->setValue("login/skip", (int) skip->checkState());
+  cfg->setValue("login/email", login->text());
+  if (save->checkState() == Qt::Checked)
+    cfg->setValue("login/password", passw->text());
 
-  connect(sync, SIGNAL(stateChanged(GoogleSession::State) ),
-      this, SLOT(stateChanged(GoogleSession::State) ) );
+  connect(sync, SIGNAL(stateChanged(GoogleSession::State)),
+          this, SLOT(stateChanged(GoogleSession::State)));
 
   sync->start( 
-      login->text() , 
-      passw->text() ,
+      login->text(),
+      passw->text(),
       (bool) skip->checkState()
   );
 }
 
 
 void LoginWindow::stateChanged(GoogleSession::State s) {
-  state->setText(GoogleSession::stateName(s) );
+    state->setText(GoogleSession::stateName(s));
 }
