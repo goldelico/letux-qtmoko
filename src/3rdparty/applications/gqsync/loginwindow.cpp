@@ -71,4 +71,3 @@ void LoginWindow::stateChanged(GoogleSession::State s)
 {
     state->setText(GoogleSession::stateName(s) );
 }
-
