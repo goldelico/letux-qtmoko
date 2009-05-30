@@ -4,6 +4,7 @@
 
 #include <QVBoxLayout>
 #include <QGridLayout>
+#include <QMenu>
 
 #include "googlesync.h"
 #include "googlesession.h"
@@ -11,7 +12,9 @@
 LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf) 
   : QMainWindow(parent, wf)
 {
-    QSoftMenuBar::menuFor( this );
+    QMenu *contextMenu = QSoftMenuBar::menuFor( this );
+    contextMenu->addAction( tr("Start Sync"), this, SLOT(start()));
+    contextMenu->addAction( tr("Quit"), this, SLOT(quit()));
 
     cfg = new QSettings ("ezxdev.org","google");
 
@@ -21,20 +24,11 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
     login = new QLineEdit(cfg->value("login/email", tr("Email")).toString(),this );
     passw = new QLineEdit(cfg->value("login/password", tr("Password")).toString(),this);
 
-    startButton =   new QPushButton("Start sync",this);
-    exitButton  =   new QPushButton("Exit",this);
-
     save = new QCheckBox("Save password", this);
     save->setCheckState( (Qt::CheckState) cfg->value("login/save" ).toInt() );
 
     skip = new QCheckBox("Skip without numbers", this);
     skip->setCheckState( (Qt::CheckState) cfg->value("login/skip" ).toInt() );
-
-    connect( startButton, SIGNAL( clicked() ),
-             SLOT( start () ) );
-
-    connect( exitButton,  SIGNAL( clicked() ),
-             qApp, SLOT( quit () ) );
 
     grid->addWidget(login,0,0);
     grid->addWidget(passw,1,0);
@@ -42,8 +36,6 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
     grid->addWidget(state, 2, 0);
     grid->addWidget(skip, 3, 0);
     grid->addWidget(save, 4, 0);
-    grid->addWidget(startButton, 5, 0);
-    grid->addWidget(exitButton, 6, 0);
     grid->setSizeConstraint(QLayout::SetMaximumSize);
     QWidget *central = new QWidget();
     central->setLayout(grid);
