@@ -280,6 +280,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     }
 
     QTcpSocket sock(this);
+    sock.setReadBufferSize(65535);
     sock.connectToHost(host, port);
     if(!sock.waitForConnected(5000))
     {
@@ -364,7 +365,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     progress->setValue(0);
     int remains = contentLen;
 
-    char buf[4096];
+    char buf[65535];
     int count;
     abort = false;
     for(;;)
@@ -374,15 +375,19 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
         {
             break;
         }
-        count = sock.read(buf, 4096);
-        if(count > 0)
+        if(sock.bytesAvailable() < 65535
+           && sock.state() == QAbstractSocket::ConnectedState)
         {
-            f.write(buf, count);
+            sock.waitForReadyRead(1000);
+            continue;
         }
-        else if(!sock.waitForReadyRead(5000))
+        count = sock.read(buf, 65535);
+        if(count <= 0)
         {
             break;
         }
+        f.write(buf, count);
+        f.flush();
         remains -= count;
         if(remains <= 0)
         {
@@ -1029,6 +1034,7 @@ void QMplayer::newConnection()
         {
             con->write(buf, count);
             con->flush();
+            con->waitForBytesWritten(-1);
         }
     }
 
