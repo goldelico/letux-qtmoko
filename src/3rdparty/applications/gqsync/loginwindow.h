@@ -14,11 +14,12 @@
 
 class LoginWindow : public QMainWindow
 {
-    Q_OBJECT
-    public:
-        LoginWindow(QWidget *parent = 0, Qt::WindowFlags wf = 0);
+	Q_OBJECT
+public:
+             LoginWindow(QWidget *parent = 0, Qt::WindowFlags wf = 0);
 
-    private:
+
+private:
         QLabel* loginLabel;
         QLabel* passwLabel;
         QLabel* state;
@@ -31,10 +32,10 @@ class LoginWindow : public QMainWindow
 
         QSettings* cfg;
         GoogleSync* sync;
-
-    private slots:
+private slots:
         void start();
         void stateChanged(GoogleSession::State state);
 };
 
 #endif
+

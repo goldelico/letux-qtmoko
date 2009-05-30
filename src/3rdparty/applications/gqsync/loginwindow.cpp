@@ -43,9 +43,7 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
     setCentralWidget(central);
 
     sync = new GoogleSync();
-
 }
-
 
 void LoginWindow::start()
 {
@@ -71,4 +69,3 @@ void LoginWindow::stateChanged(GoogleSession::State s)
 {
     state->setText(GoogleSession::stateName(s) );
 }
-
