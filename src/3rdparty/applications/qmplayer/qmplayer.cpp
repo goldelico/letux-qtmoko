@@ -356,6 +356,9 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
 
     showScreen(QMplayer::ScreenDownload);
     label->setText(tr("Downloading") + " " + filename);
+#ifdef QT_QWS_FICGTA01
+     QtopiaApplication::setPowerConstraint(QtopiaApplication::DisableSuspend);
+#endif
 
     if(contentLen <= 0)
     {
@@ -397,6 +400,10 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     }
     f.close();
     sock.close();
+
+#ifdef QT_QWS_FICGTA01
+    QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+#endif
 
     return true;
 }
