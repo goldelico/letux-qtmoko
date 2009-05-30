@@ -29,6 +29,7 @@ bool GoogleSync::start(const QString &login, const QString &passwd, bool setskip
 
 void GoogleSync::googleError(GoogleSession::Error err, const QString &reason)
 {
+    inProgress = false;
     qCritical() << "Google error" << reason;
 }
 
