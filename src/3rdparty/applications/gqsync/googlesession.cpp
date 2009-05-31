@@ -3,6 +3,7 @@
 #include <QStringList>
 
 #include <QHttp>
+#include <QUrl>
 #include <QHttpResponseHeader>
 #include <QHttpRequestHeader>
 
@@ -65,16 +66,19 @@ void GoogleSession::login(const QString &login, const QString &passwd)
     connect(http, SIGNAL(requestFinished(int, bool)), SLOT(httpResult(int, bool)));
   }
   
-  QHttpRequestHeader header("POST", "https://www.google.com/accounts/ClientLogin");
-  http->setHost("google.com");
-  
-  header.setValue("Host", "google.com");
+  QHttpRequestHeader header("POST", "/accounts/ClientLogin",1,0);
+  http->setHost("www.google.com",QHttp::ConnectionModeHttps);
+  http->ignoreSslErrors();
+  connect(http, SIGNAL(sslErrors(const QList<QSslError> &)),
+          this, SLOT(sslErrors(const QList<QSslError> &)));
+
+  header.setValue("Host", "www.google.com");
   header.setValue( "User-Agent", USER_AGENT);
   header.setContentType("application/x-www-form-urlencoded");
   
   QString queryString = QString("Email=%1&Passwd=%2&accountType=GOOGLE&service=cp").arg(login).arg(passwd);
   
-  authReqId = http->request(header, queryString.toUtf8());
+  authReqId = http->request(header,queryString.toUtf8());
   setState(Authenticating);    
 }
 
@@ -90,6 +94,11 @@ void GoogleSession::httpResult(int id, bool errorFlag)
     qDebug() << "GoogleSession: Invalid response id" << id << "error:" << errorFlag;
 }
 
+void GoogleSession::sslErrors(const QList<QSslError> &errors)
+{
+    http->ignoreSslErrors();
+}
+
 void GoogleSession::authResult(bool errorFlag)
 {
     if (errorFlag)
@@ -101,7 +110,7 @@ void GoogleSession::authResult(bool errorFlag)
     else
     {
       QString resp = http->readAll(); 
-      //qDebug() << resp;
+      // qDebug() << resp;
       QStringList keys = resp.split("\n");
       QHash<QString, QString> keyMap;
       for (QStringList::iterator it = keys.begin(); it!=keys.end(); it++)
@@ -110,7 +119,7 @@ void GoogleSession::authResult(bool errorFlag)
         QString key = it->left(sep);
         QString value = it->right(it->length()-sep-1);
         keyMap[key] = value;
-        //qDebug() << key << value;
+        // qDebug() << key << value;
       }
       if (http->lastResponse().statusCode()==200) // OK
       {

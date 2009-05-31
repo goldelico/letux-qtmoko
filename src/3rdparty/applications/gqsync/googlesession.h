@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QString>
 #include <QHash>
+#include <QSslError>
 
 #include <QDomElement>
 #include <QContact>
@@ -56,6 +57,7 @@ class GoogleSession: public QObject
     
   private slots:
     void httpResult(int id, bool error);
+    void sslErrors(const QList<QSslError> &errors);
   private:
     void parseGroups(const QString &xml, QHash<QString, QString> &groupMap);
     void parseContacts(const QString &xml, QList<QContact> &contacts);
