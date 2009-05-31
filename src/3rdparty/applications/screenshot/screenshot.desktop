@@ -1,6 +1,6 @@
 [Desktop Entry]
 Comment[]=A Screenshot Program
 Exec=screenshot
-Icon=screenshot/Screenshot
+Icon=screenshot/screenshot
 Type=Application
 Name[]=Screenshot
