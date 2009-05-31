@@ -541,14 +541,17 @@ scan_files:
 #else
     // For the first time scan /home/root/Documents and dont scan other dirs if
     // something found there.
-    if(maxScanLevel > 0 || !scanDir("/home/root/Documents", 0, 2, 0, 0x1fffffff))
+    if(maxScanLevel > 0 ||
+       !scanDir(QDir::homePath() + "/" + "Documents", 0, 2, 0, 0x1fffffff, true) ||
+       !scanDir("/media/card/Documents", 0, 2, 0, 0x2fffffff, true))
     {
-        scanDir("/", 0, 0, 0, 0x1fffffff);
-        scanDir("/mnt", 0, maxScanLevel, 0, 0x2fffffff);
-        scanDir("/media", 0, maxScanLevel, 0, 0x3fffffff);
-        scanDir("/home", 0, maxScanLevel, 0, 0x4fffffff);
-        scanDir("/home/root/Documents", 0, 2, 0, 0x5fffffff);
-        scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff);
+        scanDir("/", 0, 0, 0, 0x1fffffff, true);
+        scanDir("/mnt", 0, maxScanLevel + 1, 0, 0x2fffffff, false);
+        scanDir("/media", 0, maxScanLevel + 1, 0, 0x3fffffff, false);
+        scanDir(QDir::homePath(), 0, maxScanLevel, 0, 0x4fffffff, true);
+        scanDir(QDir::homePath() + "/" + "Documents", 0, 2, 0, 0x5fffffff, true);
+        scanDir("/media/card/Documents", 0, 2, 0, 0x5fffffff, true);
+        scanDir("/root", 0, maxScanLevel, 0, 0x6fffffff, true);
     }
 #endif
 
@@ -565,7 +568,7 @@ scan_files:
     showScreen(QMplayer::ScreenInit);
 }
 
-int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max)
+int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks)
 {
     if(abort)
     {
@@ -624,7 +627,8 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
     for(int i = 0; i < list.count(); i++)
     {
         QFileInfo fi = list.at(i);
-        if(fi.isFile() || fi.fileName() == "." || fi.fileName() == "..")
+        if(fi.isFile() || fi.fileName() == "." || fi.fileName() == ".." ||
+           (!followSymLinks && fi.isSymLink()))
         {
             continue;
         }
@@ -639,7 +643,7 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
         label->setText(fi.absolutePath());
         QApplication::processEvents();
 
-        found += scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit);
+        found += scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit, true);
     }
     return found;
 }

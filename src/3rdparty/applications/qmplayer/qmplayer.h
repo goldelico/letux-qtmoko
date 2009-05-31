@@ -68,7 +68,7 @@ private:
 
     void showScreen(QMplayer::Screen scr);
     void scan();
-    int scanDir(QString const& path, int level, int maxLevel, int min, int max);
+    int scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks);
     void settings();
     void play(QStringList const& args);
     void setRes(int xy);
