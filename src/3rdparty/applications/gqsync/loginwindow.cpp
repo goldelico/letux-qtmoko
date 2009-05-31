@@ -20,22 +20,27 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
 
     QGridLayout *grid = new QGridLayout;
 
+    loginLabel = new QLabel(tr("Email"), this);
+    passwLabel = new QLabel(tr("Password"), this);
     state      = new QLabel(this);
-    login = new QLineEdit(cfg->value("login/email", tr("Email")).toString(),this );
-    passw = new QLineEdit(cfg->value("login/password", tr("Password")).toString(),this);
-
-    save = new QCheckBox("Save password", this);
-    save->setCheckState( (Qt::CheckState) cfg->value("login/save" ).toInt() );
+    login = new QLineEdit(cfg->value("login/email").toString(),this );
+    passw = new QLineEdit(cfg->value("login/password").toString(),this);
+    passw->setEchoMode(QLineEdit::PasswordEchoOnEdit);
 
     skip = new QCheckBox("Skip without numbers", this);
     skip->setCheckState( (Qt::CheckState) cfg->value("login/skip" ).toInt() );
 
-    grid->addWidget(login,0,0);
-    grid->addWidget(passw,1,0);
+    save = new QCheckBox("Save password", this);
+    save->setCheckState( (Qt::CheckState) cfg->value("login/save" ).toInt() );
+
+    grid->addWidget(loginLabel,0,0);
+    grid->addWidget(login,0,1);
+    grid->addWidget(passwLabel,1,0);
+    grid->addWidget(passw,1,1);
 
     grid->addWidget(state, 2, 0);
-    grid->addWidget(skip, 3, 0);
-    grid->addWidget(save, 4, 0);
+    grid->addWidget(skip, 3, 0, 1, 2);
+    grid->addWidget(save, 4, 0, 1, 2);
     grid->setSizeConstraint(QLayout::SetMaximumSize);
     QWidget *central = new QWidget();
     central->setLayout(grid);
