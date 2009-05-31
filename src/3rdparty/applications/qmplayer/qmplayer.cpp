@@ -588,7 +588,8 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
         if(fileName.endsWith(".mp3", Qt::CaseInsensitive)
             || fileName.endsWith(".ogg", Qt::CaseInsensitive)
             || fileName.endsWith(".ogv", Qt::CaseInsensitive)
-            || fileName.endsWith(".avi", Qt::CaseInsensitive))
+            || fileName.endsWith(".avi", Qt::CaseInsensitive)
+            || fileName.endsWith(".wav", Qt::CaseInsensitive))
         {
             if(fileName.contains(".qmplayer."))
             {
