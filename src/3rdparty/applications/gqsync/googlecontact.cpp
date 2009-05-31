@@ -1,5 +1,5 @@
 #include <googlecontact.h>
-#include <QDebug>
+#include <qtopialog.h>
 
 #include <QDomElement>
 
@@ -59,7 +59,7 @@ GoogleContact::GoogleContact(QContact& contact):
 void GoogleContact::parse(const QDomNode &node)
 {
   fillHashes();
-  qDebug() << "\nGoogleContact: parsing XML node...";
+  qLog(Synchronization) << "\nGoogleContact: parsing XML node...";
   for(QDomNode nn = node.firstChild(); !nn.isNull(); nn = nn.nextSibling()) 
   {
     QDomElement field = nn.toElement();
@@ -70,28 +70,28 @@ void GoogleContact::parse(const QDomNode &node)
       {
         case Id:
           setGoogleId(field.text());
-          qDebug() << "Id:" << field.text();
+          qLog(Synchronization) << "Id:" << field.text();
           break;
         case Title:
           setFirstName(field.text());
-          qDebug() << "Title:" << field.text();
+          qLog(Synchronization) << "Title:" << field.text();
           break;
         case Content:
           setNotes(field.text());
-          qDebug() << "Content:" << field.text();
+          qLog(Synchronization) << "Content:" << field.text();
           break;
         case Email:
           insertEmail(field.attribute("address"));
-          qDebug() << "Email:" << field.attribute("address");
+          qLog(Synchronization) << "Email:" << field.attribute("address");
           break;
         case IM:
-          qDebug() << "Got IM of type" << field.attribute("protocol") << "-" << field.attribute("address") << "(don't know what to do with it)";
+          qLog(Synchronization) << "Got IM of type" << field.attribute("protocol") << "-" << field.attribute("address") << "(don't know what to do with it)";
           break;
         case PhoneNumber:
         {
           PhoneType pt = phoneTypes[field.attribute("rel", "http://schemas.google.com/g/2005#other")];
           setPhoneNumber(pt, field.text());
-          qDebug() << "Phone number:" << field.text() << "type" << pt;
+          qLog(Synchronization) << "Phone number:" << field.text() << "type" << pt;
         }
           break;
         case PostalAddress:
@@ -100,18 +100,18 @@ void GoogleContact::parse(const QDomNode &node)
           QContactAddress addr;
           addr.street = field.text(); // FIXME need real parsing here
           setAddress(lc, addr);
-          qDebug() << "Postal Address:" << field.text() << "type" << lc;
+          qLog(Synchronization) << "Postal Address:" << field.text() << "type" << lc;
         }
           break;
         case Organisation:
           setOffice(field.text());
-          qDebug() << "Organisation:" << field.text();
+          qLog(Synchronization) << "Organisation:" << field.text();
           break;
         case GroupMembershipInfo:
           QList<QString> mCategories = categories();
           mCategories  << field.attribute("href");
           setCategories(mCategories);
-          qDebug() << "Group:" << field.attribute("href");
+          qLog(Synchronization) << "Group:" << field.attribute("href");
           break;
       }
     }
