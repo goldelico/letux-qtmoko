@@ -17,7 +17,7 @@
 #include <QHttp>
 #include <QTcpServer>
 #include <QTcpSocket>
-#include <QBuffer>
+#include <QTextCodec>
 #include <QLineEdit>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
