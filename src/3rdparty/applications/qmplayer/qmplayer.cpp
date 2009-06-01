@@ -31,7 +31,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     label = new QLabel(this);
     lineEdit = new QLineEdit(this);
-    progress = new QProgressBar(this);
+    progress = new QProgressBar(this);    
 
     buttonLayout = new QHBoxLayout();
     buttonLayout->setAlignment(Qt::AlignBottom);
@@ -72,20 +72,25 @@ static bool isDirectory(QString path)
     || path.startsWith("http://"));
 }
 
-// Return directory suitable for placing as url
-static QString dirToUrl(QString dir)
+// Return directory or filename suitable for placing as url.
+// Result always starts and never ends with slash.
+static QString pathToUrl(QString path)
 {
-    QString res(dir);
+    QString res(path);
     for(int i = 0; i < res.length(); i++)
     {
         QChar ch = res.at(i);
-        if(ch == ':')
+        if(ch == ':' || ch == ' ')
         {
             res[i] = '_';
         }
         else if(ch == '\\')
         {
             res[i] = '/';
+        }
+        else if(ch > 127)
+        {
+            res.remove(i, 1);
         }
     }
     while(res.endsWith('/') && res.length() > 0)
@@ -116,6 +121,14 @@ static void delItems(QListWidget *lw)
     {
         delete(lw->takeItem(2));
     }
+}
+
+// Add item with directory name in list view.
+static QListWidgetItem *getDirItem(QListView *lw, QString dir)
+{
+    QListWidgetItem *res = new QListWidgetItem(dir);
+    res->setIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon, 0, lw));
+    return res;
 }
 
 void QMplayer::mousePressEvent(QMouseEvent *event)
@@ -151,6 +164,7 @@ void QMplayer::okClicked()
         bool hit = false;
         QStringList list;
         QStringList downList;
+        QStringList nameList;
         QMessageBox::StandardButton answer = QMessageBox::NoButton;
         QMessageBox::StandardButton moreAnswer = QMessageBox::NoButton;
         for(int i = 2; i < lw->count(); i++)
@@ -171,15 +185,14 @@ void QMplayer::okClicked()
             {
                 continue;
             }
-            QString file = dir + "/" + path;
             if(!dir.startsWith("http://"))
             {
-                list.append(file);      // add local files to playlist
+                list.append(dir + "/" + path);      // add local files to playlist
                 continue;
             }
             if(moreAnswer == QMessageBox::NoButton)
             {
-                answer = QMessageBox::question(this, "qmplayer", file, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+                answer = QMessageBox::question(this, "qmplayer", path, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
             }
             if(answer == QMessageBox::Cancel)
             {
@@ -187,9 +200,10 @@ void QMplayer::okClicked()
             }
             if(answer == QMessageBox::Open)
             {
-                list.append(file);      // append to playlist if we just play (no download)
+                list.append(dir + pathToUrl(path));      // append to playlist if we just play (no download)
             }
-            downList.append(file);
+            downList.append(dir + pathToUrl(path));
+            nameList.append(path);
             if(moreAnswer != QMessageBox::YesToAll)
             {
                 moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
@@ -209,7 +223,7 @@ void QMplayer::okClicked()
             {
                 continue;
             }
-            QString filename = url.right(url.length() - slashIndex - 1);
+            QString filename = nameList[i];
             QString destPath = QDir::homePath() + "/" + filename;
             bool justCheck = list.contains(url);
             if(!download(url, destPath, filename, justCheck))
@@ -616,9 +630,7 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
 
     if(found)
     {
-        QListWidgetItem *dirItem = new QListWidgetItem(path);
-        dirItem->setIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon, 0, lw));
-        lw->insertItem(index, dirItem);
+        lw->insertItem(index, getDirItem(lw, path));
     }
 
     if(level >= maxLevel)
@@ -742,15 +754,15 @@ bool QMplayer::runClient()
 
     delItems(lw);
 
-    QBuffer buf(&res);
-    QByteArray line;
+    QTextStream buf(&res);
+    buf.setCodec(QTextCodec::codecForName("utf8"));
+    QString line;
     QString dir;
 
-    buf.open(QBuffer::ReadOnly);
     for(;;)
     {
         line = buf.readLine();
-        if(line.isEmpty())
+        if(line.isNull())
         {
             break;
         }
@@ -762,24 +774,28 @@ bool QMplayer::runClient()
                 continue;
             }
             QString url = line.mid(9, urlEnd - 9);
-            int fileStart = url.lastIndexOf('/');
-            if(fileStart < 0)
+            int start = url.lastIndexOf('/');
+            if(start < 0)
             {
                 continue;
             }
-            for(int i = fileStart - 1; i >= 0; i--)
+            for(int i = start - 1; i >= 0; i--)
             {
                 if(dir.length() <= i || dir.at(i) != url.at(i))
                 {
-                    dir = url.left(fileStart);
-                    lw->addItem(dir);
+                    dir = url.left(start);
+                    lw->addItem(getDirItem(lw, dir));
                     break;
                 }
             }
-            QString file = url.right(url.length() - fileStart - 1);
-            QListWidgetItem *item = new QListWidgetItem(file);
-            item->setTextAlignment(Qt::AlignHCenter);
-            lw->addItem(item);
+            int fileStart = line.indexOf('>', 17) + 1;
+            int fileEnd = line.indexOf('<', 17);
+            if(fileStart <= 17 || fileEnd <= 17 || fileEnd < fileStart)
+            {
+                continue;
+            }
+            QString file = line.mid(fileStart, fileEnd - fileStart);
+            lw->addItem(file);
         }
     }
 
@@ -813,9 +829,10 @@ void QMplayer::newConnection()
         req += con->readAll();
     }
 
-    QByteArray res;
-    QBuffer buf(&req);
-    QByteArray line;
+    QString res;
+    QTextStream buf(&req);
+    buf.setCodec(QTextCodec::codecForName("utf8"));
+    QString line;
     QString reqPath = "";           // path from http request
     QString filename = "";          // file on the disk
     QString encPath = "";           // transcoded file
@@ -824,11 +841,10 @@ void QMplayer::newConnection()
     bool sendFile = false;
     int itemIndex = 0;
 
-    buf.open(QBuffer::ReadOnly);
     for(;;)
     {
         line = buf.readLine();
-        if(line.isEmpty())
+        if(line.isNull())
         {
             break;
         }
@@ -884,15 +900,14 @@ void QMplayer::newConnection()
             {
                 res.append(path);
                 res.append("</br>");
-                dir = dirToUrl(path);
+                dir = pathToUrl(path);
             }
             else
             {
                 res.append("\r\n<a href=\"http://");
                 res.append(host);
                 res.append(dir);
-                res.append('/');
-                res.append(path);
+                res.append(pathToUrl(path));
                 res.append("\">");
                 res.append(path);
                 res.append("</a></br>\r\n");
@@ -904,33 +919,31 @@ void QMplayer::newConnection()
         res.append(reqPath);
         res.append("</br>");
         QString dir = "";
-        bool ok = false;
+        QString testDir;
         for(int i = 2; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
+            QString testPath = pathToUrl(path);
             bool isDir = isDirectory(path);
             if(isDir)
             {
                 dir = path;
+                testDir = testPath;
             }
-            else if(reqPath.endsWith(path))
+            else if(reqPath == (testDir + testPath))
             {
-                QString testPath = dirToUrl(dir) + '/' + path;
-                if(!ok || reqPath == testPath)
+                filename = dir;
+                if(!filename.endsWith('/') && !filename.endsWith('\\'))
                 {
-                    filename = dir;
-                    if(!filename.endsWith('/') && !filename.endsWith('\\'))
-                    {
-                        filename.append('/');
-                    }
-                    filename.append(path);
-                    itemIndex = i;
-                    ok = true;
+                    filename.append('/');
                 }
+                filename.append(path);
+                itemIndex = i;
+                break;
             }
         }
-        if(!ok)
+        if(filename.length() == 0)
         {
             res.append("file not found");
         }
@@ -1036,7 +1049,7 @@ void QMplayer::newConnection()
         res.append("</body>");
         res.append("</html>");
     }
-    con->write(res);
+    con->write(res.toUtf8());
 
     if(sendFile)
     {
