@@ -9,6 +9,8 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     Q_UNUSED(f);
 #endif
     lw = new QListWidget(this);
+    int h = lw->fontMetrics().height();
+    lw->setIconSize(QSize(h, h));
 
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
@@ -29,7 +31,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     label = new QLabel(this);
     lineEdit = new QLineEdit(this);
-    progress = new QProgressBar(this);    
+    progress = new QProgressBar(this);
 
     buttonLayout = new QHBoxLayout();
     buttonLayout->setAlignment(Qt::AlignBottom);
