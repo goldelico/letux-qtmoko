@@ -10,7 +10,7 @@
 #include <QContactModel>
 #include <QCategoryManager>
 
-#include <QDebug>
+#include <qtopialog.h>
 
 #include "googlesession.h"
 #include "gzip.h"
