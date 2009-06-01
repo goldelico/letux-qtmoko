@@ -25,7 +25,7 @@ prepare_device()
 install_image()
 {
 
-cat $QTOPIA_IMAGE | ssh "root@$PHONEIP" '(set -x;rm -f /tmp/restart-qtopia;killall qpe;sleep 2; rm -rf /opt/Trolltech; rm -rf /opt/Qtopia/*; mkdir -p /opt/Trolltech/Qtopia; cd /opt/Trolltech/Qtopia;gunzip |tar xvf -  )'
+cat $QTOPIA_IMAGE | ssh "root@$PHONEIP" '(set -x;rm -f /tmp/restart-qtopia;killall qpe;sleep 2; rm -rf /opt/Trolltech; rm -rf /opt/Qtopia/*; mkdir -p /opt/qtmoko; cd /opt/qtmoko;gunzip |tar xvf -  )'
 
  RESULT=$?
 

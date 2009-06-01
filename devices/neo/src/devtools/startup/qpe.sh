@@ -3,7 +3,7 @@
 export QWS_MOUSE_PROTO="tslib"
 export QWS_KEYBOARD="neokbdhandler"
 export QTOPIA_PHONE_DEVICE="/dev/ttySAC0:115200"
-export QPEDIR=/opt/Trolltech/Qtopia
+export QPEDIR=/opt/qtmoko
 export PATH=$QPEDIR/bin:$PATH
 export LD_LIBRARY_PATH=$QPEDIR/lib:$LD_LIBRARY_PATH
 

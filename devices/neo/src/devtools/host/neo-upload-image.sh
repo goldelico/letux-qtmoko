@@ -32,11 +32,11 @@ if [ ! -e "$QTOPIA_IMAGE" ]; then
 	cp -p "$DEPOT_DIR/devices/neo/src/devtools/startup/qpe.sh" "$BUILD_DIR/image/qpe.sh"
 	cp -p "$DEPOT_DIR/devices/neo/src/devtools/startup/qpe.env" "$BUILD_DIR/image/qpe.env"
 	cd "$BUILD_DIR/image"
-	tar cf - * | gzip | ssh "root@$DEVICE" '(set -x;rm -f /tmp/restart-qtopia;killall qpe;sleep 2; rm -rf /opt/Qtopia;rm -rf /opt/Trolltech/Qtopia/*; mkdir -p /opt/Trolltech/Qtopia;cd /opt/Trolltech/Qtopia;gunzip |tar xvf -;/etc/init.d/qpe start &)'
+	tar cf - * | gzip | ssh "root@$DEVICE" '(set -x;rm -f /tmp/restart-qtopia;killall qpe;sleep 2; rm -rf /opt/Qtopia;rm -rf /opt/qtmoko/*; mkdir -p /opt/qtmoko;cd /opt/qtmoko;gunzip |tar xvf -;/etc/init.d/qpe start &)'
 
 else
 
-	cat $QTOPIA_IMAGE | ssh "root@DEVICE" '(set -x;rm -f /tmp/restart-qtopia;killall qpe; rm -rf /opt/Qtopia;rm -rf /opt/Trolltech/Qtopia/*; mkdir -p /opt/Trolltech/Qtopia; cd /opt/Trolltech/Qtopia;gunzip |tar xvf -;/etc/init.d/qpe start &)'
+	cat $QTOPIA_IMAGE | ssh "root@DEVICE" '(set -x;rm -f /tmp/restart-qtopia;killall qpe; rm -rf /opt/Qtopia;rm -rf /opt/qtmoko/*; mkdir -p /opt/qtmoko; cd /opt/qtmoko;gunzip |tar xvf -;/etc/init.d/qpe start &)'
 
 fi
 
