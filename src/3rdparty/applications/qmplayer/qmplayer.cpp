@@ -537,7 +537,7 @@ void QMplayer::scan()
 scan_files:
 
 #ifdef Q_WS_WIN
-    scanDir("c:\\", 0, maxScanLevel, 0, 0x1fffffff);
+    scanDir("c:\\", 0, maxScanLevel, 0, 0x1fffffff, false);
 #else
     // For the first time scan /home/root/Documents and dont scan other dirs if
     // something found there.
@@ -603,20 +603,20 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
                 }
                 if(delTmpFiles)
                 {
-                    QFile::remove(fileName);
+                    QFile::remove(fi.absoluteFilePath());
                 }
                 continue;
             }
-            QListWidgetItem *fileItem = new QListWidgetItem(fileName);
-            fileItem->setTextAlignment(Qt::AlignHCenter);
-            lw->addItem(fileItem);
+            lw->addItem(fileName);
             found++;
         }
     }
 
     if(found)
     {
-        lw->insertItem(index, path);
+        QListWidgetItem *dirItem = new QListWidgetItem(path);
+        dirItem->setIcon(QApplication::style()->standardIcon(QStyle::SP_DirIcon, 0, lw));
+        lw->insertItem(index, dirItem);
     }
 
     if(level >= maxLevel)
