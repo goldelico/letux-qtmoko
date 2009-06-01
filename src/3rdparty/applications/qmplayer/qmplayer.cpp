@@ -295,6 +295,7 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
         port = portStr.toInt(0, 10);
     }
 
+connect:
     QTcpSocket sock(this);
     sock.setReadBufferSize(65535);
     sock.connectToHost(host, port);
@@ -344,15 +345,20 @@ bool QMplayer::download(QString url, QString destPath, QString filename, bool ju
     if(html)
     {
         QByteArray text = sock.readAll();
+        sock.close();
         if(text.length() == 0)
         {
             QMessageBox::critical(this, tr("qmplayer"),
                                   tr("No response from ") + host);
-            sock.close();
             return false;
         }
-        QMessageBox::information(this, tr("qmplayer"), text);
-        sock.close();
+        text.replace("</br>", "\n");
+        if(QMessageBox::information(this, "qmplayer", text,
+                                 QMessageBox::Ok | QMessageBox::Retry) == QMessageBox::Retry)
+        {
+            goto connect;
+        }
+
         return false;
     }
     else if(justCheck)
