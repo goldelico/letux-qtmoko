@@ -36,6 +36,6 @@ desktop [
 
 pics [
     hint=pics
-    files=pics/Shopper.png
+    files=pics/*
     path=/pics/shopper
 ]
