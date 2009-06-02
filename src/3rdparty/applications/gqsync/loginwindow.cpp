@@ -38,7 +38,7 @@ LoginWindow::LoginWindow(QWidget *parent, Qt::WindowFlags wf)
     grid->addWidget(passwLabel,1,0);
     grid->addWidget(passw,1,1);
 
-    grid->addWidget(state, 2, 0);
+    grid->addWidget(state, 2, 0, 1, 2);
     grid->addWidget(skip, 3, 0, 1, 2);
     grid->addWidget(save, 4, 0, 1, 2);
     grid->setSizeConstraint(QLayout::SetMaximumSize);
