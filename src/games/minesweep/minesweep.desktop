@@ -4,6 +4,6 @@ Context=Mine Hunt
 [Desktop Entry]
 Comment[]=Find the mines
 Exec=minesweep
-Icon=minesweep/MineHunt
+Icon=minesweep/minesweep
 Type=Application
 Name[]=Mine Hunt
