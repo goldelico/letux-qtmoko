@@ -1,10 +1,10 @@
 [Translation]
 File=QtopiaApplications
 Context=VNC
-
+Comment[Desktop Entry/Name]=Virtual Network Computing (VNC) Viewer
 [Desktop Entry]
-Comment[]=Virtual Network Computing (VNC) Viewer
+Type=Application
 Exec=keypebble
-Icon=Keypebble
+Icon=keypebble/keypebble
 Type=Application
 Name[]=VNC
