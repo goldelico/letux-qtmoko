@@ -7,7 +7,6 @@ PROJECTS*=\
     settings/homescreen \
     settings/speeddial\ 
     ../examples/scribble \
-    ../examples/webviewer \
     ../examples/whereabouts/mappingdemo
 
 # homeui library - enabled for everything until other .pro files have been fixed
