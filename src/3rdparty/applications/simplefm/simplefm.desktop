@@ -6,6 +6,6 @@ Comment[Desktop Entry/Name]=Simple File Manager
 CanFastload=0
 Type=Application
 Exec=simplefm
-Icon=simplefm/file-manager
+Icon=simplefm/simplefm
 Name[]=File Manager
 CanFastload=0
