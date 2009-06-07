@@ -55,3 +55,5 @@
 #endif
 
 #define NMEA_GPS_DEVICE "/dev/ttySAC1"
+
+#define GOOGLE_CALENDAR_CONTEXT
